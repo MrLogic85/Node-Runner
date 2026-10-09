@@ -12,4 +12,5 @@ public sealed record CreatureShape(
     IReadOnlyList<ServoDef> Servos,
     IReadOnlyList<PistonDef> Pistons,
     IReadOnlyList<SpringDef> Springs,
-    IReadOnlyList<SensorDef> Sensors);
+    IReadOnlyList<SensorDef> Sensors,
+    IReadOnlyList<WheelDef> Wheels);

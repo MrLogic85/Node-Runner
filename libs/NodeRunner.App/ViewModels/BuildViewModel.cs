@@ -133,8 +133,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// True for a locked Creation (#896): it refuses every edit that would change its model, adding or
-    /// deleting a part with brain ports or clearing a Servo's link. Joints, beams and Springs have no
-    /// ports, so they can still be added and deleted.
+    /// deleting a part with brain ports or clearing a Servo's link. Joints, beams, Springs and Wheels
+    /// have no ports, so they can still be added and deleted.
     /// </summary>
     public bool IsLocked => _locked;
 
@@ -209,7 +209,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
         var selectedServoJoints = reselect is null ? SelectedServoJoints() : [];
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, nextPartId));
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, nextPartId));
         if (reselect is not null)
         {
             ClearSelectionSets();
@@ -222,7 +222,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         PruneSelection(selectedServoJoints);
         if (reselect is null)
         {
-            SelectServosInsteadOfTheirJoints();
+            SelectJointPartsInsteadOfTheirJoints();
         }
 
         PlacementNote = null;
@@ -351,10 +351,13 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// </summary>
     public BuildPart? PickedPart => _pickedPart;
 
-    /// <summary>Picks a tray part, or clears it if it is the picked one (#805). Parts that cannot be placed now do nothing.</summary>
+    /// <summary>
+    /// Picks a tray part, or clears it if it is the picked one (#805). Parts that cannot be placed
+    /// now do nothing, as a part with brain ports on a locked Creation (<see cref="PartTray.CanPick"/>).
+    /// </summary>
     public void PickPart(BuildPart part)
     {
-        if (_activeTool != BuildTool.Parts || !PartTray.IsAvailable(part) || _locked)
+        if (_activeTool != BuildTool.Parts || !PartTray.CanPick(part, _locked))
         {
             return;
         }
@@ -398,6 +401,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public IReadOnlyList<SensorDef> Sensors => _builder.Sensors;
 
     public IReadOnlyList<ServoDef> Servos => _builder.Servos;
+
+    public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;
 
     public IReadOnlyList<PistonDef> Pistons => _builder.Pistons;
 
@@ -588,6 +593,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         CreatureElementKind.Servo => _builder.Servos.Any(servo => servo.Id == element.Id),
         CreatureElementKind.Piston => _builder.Pistons.Any(piston => piston.Id == element.Id),
         CreatureElementKind.Spring => _builder.Springs.Any(spring => spring.Id == element.Id),
+        CreatureElementKind.Wheel => _builder.Wheels.Any(wheel => wheel.Id == element.Id),
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
@@ -690,10 +696,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, partId);
 
-    /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Accel 1" or "Camera 1".</summary>
-    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
+    /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Wheel 1", "Accel 1" or "Camera 1".</summary>
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -708,9 +714,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         if (!_builder.Nodes.Any(node => node.Id == partId)
             && !_builder.Beams.Any(beam => beam.Id == partId)
             && !_builder.Sensors.Any(sensor => sensor.Id == partId)
-        && !_builder.Servos.Any(servo => servo.Id == partId)
-        && !_builder.Pistons.Any(piston => piston.Id == partId)
-            && !_builder.Springs.Any(spring => spring.Id == partId))
+            && !_builder.Servos.Any(servo => servo.Id == partId)
+            && !_builder.Pistons.Any(piston => piston.Id == partId)
+            && !_builder.Springs.Any(spring => spring.Id == partId)
+            && !_builder.Wheels.Any(wheel => wheel.Id == partId))
         {
             return;
         }
@@ -726,7 +733,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         RaiseAnatomyChanged();
     }
 
-    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, partId);
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, partId);
 
     /// <summary>
     /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,
@@ -858,11 +865,24 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int SpringIndexOf(int springId) => _builder.SpringIndexOf(springId);
 
+    public int WheelIndexOf(int wheelId) => _builder.WheelIndexOf(wheelId);
+
     public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
 
     public bool ServoNeedsTwoLinks(int nodeId) => _builder.ServoNeedsTwoLinks(nodeId);
 
     public int? ServoAtNode(int nodeId) => _builder.Servos.FirstOrDefault(servo => servo.NodeId == nodeId)?.Id;
+
+    public int? WheelAtNode(int nodeId) => _builder.Wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId)?.Id;
+
+    /// <summary>
+    /// The joint part, a Servo or a Wheel, on joint <paramref name="nodeId"/>, or null. To the player
+    /// it is that joint (#973): a tap, drag or box selects it, never the joint on its own.
+    /// </summary>
+    public CreatureElementSelection? JointPartAt(int nodeId) =>
+        ServoAtNode(nodeId) is { } servo ? new(CreatureElementKind.Servo, servo)
+        : WheelAtNode(nodeId) is { } wheel ? new(CreatureElementKind.Wheel, wheel)
+        : null;
 
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
 

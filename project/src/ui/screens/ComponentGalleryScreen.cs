@@ -116,7 +116,7 @@ public partial class ComponentGalleryScreen : GalleryScreen
             ],
             "LockedPicker" or "DisabledPicker" =>
             [
-                new("Wheel 1", UiIconId.Beam),
+                new("Back shin", UiIconId.Beam),
             ],
             "FixedPartPicker" =>
             [

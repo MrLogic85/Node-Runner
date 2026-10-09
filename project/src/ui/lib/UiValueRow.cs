@@ -10,6 +10,10 @@ public partial class UiValueRow : HBoxContainer
     private string _labelText = "";
     private string _valueText = "";
     private UiIconId _iconId = UiIconId.None;
+    private Func<string>? _labelSource;
+    private Func<string>? _valueSource;
+    private Label? _label;
+    private Label? _value;
 
     [Export]
     public string LabelText
@@ -30,6 +34,31 @@ public partial class UiValueRow : HBoxContainer
         {
             _valueText = value;
             Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Code-set label text, asked again when the language changes. While set it is shown instead
+    /// of <see cref="LabelText"/> and not translated again; null shows <see cref="LabelText"/>.
+    /// </summary>
+    public Func<string>? LabelSource
+    {
+        get => _labelSource;
+        set
+        {
+            _labelSource = value;
+            ShowTexts();
+        }
+    }
+
+    /// <summary>Code-set value text, as <see cref="LabelSource"/> is for the label.</summary>
+    public Func<string>? ValueSource
+    {
+        get => _valueSource;
+        set
+        {
+            _valueSource = value;
+            ShowTexts();
         }
     }
 
@@ -56,6 +85,14 @@ public partial class UiValueRow : HBoxContainer
     {
         if (_unsaved.Handle(this, what, Refresh))
         {
+            return;
+        }
+
+        // Godot sends a language change while it walks the tree, when this node may not add
+        // children, so the labels keep their nodes and only take the new text.
+        if (what == NotificationTranslationChanged)
+        {
+            ShowTexts();
             return;
         }
 
@@ -88,6 +125,7 @@ public partial class UiValueRow : HBoxContainer
         UiTranslation.ShareContext(this, label);
         label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         AddChild(label);
+        _label = label;
         var readout = new HBoxContainer
         {
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
@@ -110,5 +148,22 @@ public partial class UiValueRow : HBoxContainer
         value.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
         value.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         readout.AddChild(value);
+        _value = value;
+        ShowTexts();
+    }
+
+    private void ShowTexts()
+    {
+        if (_label is null || _value is null || !IsInstanceValid(_label) || !IsInstanceValid(_value))
+        {
+            return;
+        }
+
+        UiTranslation.ShareContext(this, _label);
+        UiTranslation.ShareContext(this, _value);
+        _label.AutoTranslateMode = _labelSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        _label.Text = _labelSource?.Invoke() ?? LabelText;
+        _value.AutoTranslateMode = _valueSource is null ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        _value.Text = _valueSource?.Invoke() ?? ValueText;
     }
 }

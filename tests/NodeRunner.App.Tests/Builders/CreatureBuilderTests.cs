@@ -525,6 +525,101 @@ public sealed class CreatureBuilderTests
         return builder;
     }
 
+    [Fact]
+    public void AddWheel_OnAJoint_AddsADefaultWheel_ThatGrowsTheJoint()
+    {
+        var builder = PairBuilder();
+        var joint = builder.Nodes[0].Id;
+        var freshId = builder.Build().NextPartId;
+
+        var wheel = builder.AddWheel(joint);
+
+        wheel.ShouldBe(freshId);
+        builder.Wheels.ShouldBe([new WheelDef(wheel, joint)]);
+        builder.NodeRadius(joint).ShouldBe(WheelDef.DefaultRadius);
+        builder.Build().Wheels.ShouldBe(builder.Wheels);
+    }
+
+    [Fact]
+    public void CanAddWheel_RefusesANonJoint_ASecondWheel_AndAJointWithAnotherPart()
+    {
+        var builder = PairBuilder();
+        var withWheel = builder.Nodes[0].Id;
+        var withServo = builder.Nodes[1].Id;
+        builder.AddWheel(withWheel);
+        builder.AddServo(withServo);
+
+        builder.CanAddWheel(builder.Beams[0].Id, out var notAJoint).ShouldBeFalse();
+        builder.CanAddWheel(withWheel, out var secondWheel).ShouldBeFalse();
+        builder.CanAddWheel(withServo, out var servoThere).ShouldBeFalse();
+        builder.CanAddServo(withWheel, out var wheelThere).ShouldBeFalse();
+
+        notAJoint.ShouldBe(UiText.Plain("Wheels go on a joint"));
+        secondWheel.ShouldBe(UiText.Plain("One wheel per joint"));
+        servoThere.ShouldBe(CreatureBuilder.OnePartPerJointReason);
+        wheelThere.ShouldBe(CreatureBuilder.OnePartPerJointReason);
+        Should.Throw<ArgumentException>(() => builder.AddWheel(withWheel));
+    }
+
+    [Fact]
+    public void ParametersOf_AWheel_AreItsRadiusAndGrip_InWorldUnitsAndAShare()
+    {
+        var builder = PairBuilder();
+        var wheel = builder.AddWheel(builder.Nodes[0].Id);
+
+        builder.ParametersOf(wheel).ShouldBe([PartParameterId.WheelRadius, PartParameterId.Grip]);
+        builder.SetParameter(wheel, PartParameterId.WheelRadius, 100);
+        builder.SetParameter(wheel, PartParameterId.Grip, 0.3);
+
+        builder.Wheels.Single().Radius.ShouldBe(100);
+        builder.Wheels.Single().Grip.ShouldBe(0.3);
+        builder.ParameterValue(wheel, PartParameterId.WheelRadius).ShouldBe(100);
+        builder.ParameterValue(wheel, PartParameterId.Grip).ShouldBe(0.3);
+        builder.NodeRadius(builder.Nodes[0].Id).ShouldBe(100);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(wheel, PartParameterId.Stroke, 0.5));
+    }
+
+    [Fact]
+    public void RemoveNode_TakesItsWheel_AndRemoveWheel_LeavesTheJoint()
+    {
+        var builder = PairBuilder();
+        var first = builder.Nodes[0].Id;
+        var second = builder.Nodes[1].Id;
+        builder.AddWheel(first);
+        var kept = builder.AddWheel(second);
+
+        builder.RemoveNode(first);
+        builder.Wheels.Select(wheel => wheel.Id).ShouldBe([kept]);
+        builder.RemoveWheel(kept);
+
+        builder.Wheels.ShouldBeEmpty();
+        builder.Nodes.Select(node => node.Id).ShouldBe([second]);
+    }
+
+    [Fact]
+    public void Rename_AWheel_KeepsItsSettings()
+    {
+        var builder = PairBuilder();
+        var wheel = builder.AddWheel(builder.Nodes[0].Id);
+        builder.SetParameter(wheel, PartParameterId.Grip, 0.5);
+
+        builder.Rename(wheel, "Front");
+
+        builder.Wheels.Single().ShouldBe(new WheelDef(wheel, builder.Nodes[0].Id, "Front", grip: 0.5));
+    }
+
+    [Fact]
+    public void Constructor_FromACreatureWithAWheel_KeepsIt()
+    {
+        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], [], [], [], [], [new WheelDef(2, 1, radius: 70)], nextPartId: 3);
+
+        var builder = new CreatureBuilder(creature);
+
+        builder.Wheels.ShouldBe(creature.Wheels);
+        builder.Build().Wheels.ShouldBe(creature.Wheels);
+        builder.Build().NextPartId.ShouldBe(3);
+    }
+
     private static CreatureBuilder PairBuilder()
     {
         var builder = new CreatureBuilder();

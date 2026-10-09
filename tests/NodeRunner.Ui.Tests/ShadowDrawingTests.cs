@@ -26,6 +26,7 @@ public sealed class ShadowDrawingTests
         AsShadow<RigidHatchVisual>().ShouldBe(ShadowDrawing.Simplified);
         AsShadow<CameraRaysVisual>().ShouldBe(ShadowDrawing.Hidden);
         AsShadow<KnockoutVisual>().ShouldBe(ShadowDrawing.Hidden);
+        AsShadow<WheelVisual>().ShouldBe(ShadowDrawing.Simplified);
     }
 
     private static ShadowDrawing AsShadow<T>()

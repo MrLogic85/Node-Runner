@@ -77,6 +77,25 @@ strokes under it, all with round ends.
 - Turns spread and bunch as the Spring moves; their number never changes.
 - Passive: `detail`, no `accent`. All `danger` when too short.
 
+### Wheel
+
+A tyre on a hub, standing in for its joint (#129); the same geometry in
+every theme, with no tint:
+
+- an opaque `background` face of the Wheel's Radius, so beams stop at the
+  tyre;
+- the tyre, a `detail` `stroke-signal` ring whose outer edge is the Radius,
+  and a `detail` `stroke-hair` inner line 6 units in;
+- the rotation cue: three `detail` tubes in the tyre band, a third of a turn
+  apart, each a 26° arc 3.75 units inside the edge, `stroke-signal` with
+  round ends. They turn with the wheel in Training and sit at rotation 0 in
+  Build. Their number stays the same at every Radius;
+- the hub, while no motor sits on the joint: a `detail` `stroke-signal` ring
+  the size of a plain joint with a 2.6-unit axle dot.
+
+A loose Wheel is all `danger`. Thumbnails draw it in full, tubes
+included.
+
 ### Sensors
 
 A picture of itself at its beam's midpoint (#127, #576), never a circle,
@@ -102,6 +121,8 @@ drawn over it.
   the joint edges (outside a Spring's seats). In a selected group they run on
   to the selected joints' rings, so the group reads as one outline.
 - **Sensor:** its lines turn `halo`.
+- **Wheel:** the joint's ring, outside the tyre. The Wheel stands in for its
+  joint, which has no mark of its own.
 - **Servo:** a keyhole `halo` outline. Selected alone, a hatched `detail`
   band also marks its Fixed link and an `accent` band its Target link.
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
@@ -118,7 +139,7 @@ drawn over it.
 
 From the bottom up (#767): Training's knock-out outline, the rigid hatch,
 underlays (Build's placing and link-start marks), beams, links, a selected beam or link,
-sensors, a selected sensor, joints, a selected joint, then overlays (camera
+sensors, a selected sensor, joints (with Servos and Wheels), a selected joint, then overlays (camera
 rays, link travel marks, the link drag and sensor move lines, the selection
 frame). Joint rings cover link ends and sensors; rays and travel marks stay
 readable over joints.
@@ -151,10 +172,12 @@ ground, the shadows above it, and the followed creature above every shadow.
 - **Placing a part:** the glyph rides on a 48 px raised tile with an
   `accent` line above the finger. A dragged sensor shows free beams `halo`,
   taken beams dashed `danger`, and its picture where it would land. A
-  dragged Servo rings free joints `halo` and joints holding a part dashed
-  `danger`. A picked part (#1016) marks the same free and taken targets
-  from the moment it is picked, so a tap can find them. A Servo's ring is
-  also where a tap or drop lands (`docs/BUILD_MODE.md` → Parts tray).
+  dragged Servo or Wheel rings free joints `halo` and joints holding a part
+  dashed `danger`, each ring at the size the part will have there
+  (`BuildGestures.PlacingRingRadius`); a dragged Wheel also shows itself on
+  a free joint it would land on. A picked part (#1016) marks the same free and taken targets
+  from the moment it is picked, so a tap can find them. A Servo's or Wheel's
+  ring is also where a tap or drop lands (`docs/BUILD_MODE.md` → Parts tray).
 - **Moving a sensor (#806):** no tile follows the finger. The sensor stays
   on its beam drawn as selected, beams are outlined as for a tray drag
   (its own beam `halo`), and its picture shows on another beam that takes
@@ -211,6 +234,7 @@ rule 10):
 - **Joint:** its outer ring only.
 - **Servo:** its ring, housing outline, one range arc and one horn line,
   plus the 360° line.
+- **Wheel:** the plain circle at its Radius: no tubes, line or hub.
 - **Beam:** its line.
 - **Rigid triangle:** a faint fill instead of the hatch.
 - **Links (Piston, Spring):** drawn as on the followed creature.

@@ -72,7 +72,7 @@ public static class CreatureReadiness
         {
             if (IsMissingALink(servo))
             {
-                var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, servo.Id);
+                var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, servo.Id);
                 problems.Add(!ServoDef.HasTwoLinks(creature.LinksAt(servo.NodeId))
                     ? UiText.Format("{0} needs two links at its joint. Connect another link there or delete it.", name)
                     : UiText.Format("{0} is missing a link. Pick two links at its joint or delete it.", name));

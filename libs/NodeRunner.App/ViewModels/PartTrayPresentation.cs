@@ -27,7 +27,7 @@ public enum PartTrayRowState
     Selected,
     ComingLater,
 
-    /// <summary>Implemented, but the creation is locked and the part has brain ports, so adding it would change the model (#896).</summary>
+    /// <summary>Implemented, but the creation is locked and the part has brain ports, so adding it would change the model (#896, <see cref="PartTray.HasBrainPorts"/>).</summary>
     CreationLocked,
 }
 
@@ -65,7 +65,7 @@ public static class PartTray
     /// <summary>A Coming later part or link with the version that brings it (#992).</summary>
     public static UiText ComingIn(UiText name, string version) => UiText.Format("{0} comes in version {1}", name, version);
 
-    public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts.");
+    public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts the brain uses.");
 
     /// <summary>The tray's help line (#805).</summary>
     public static UiText PickHelp { get; } = UiText.Plain("Tap a part to pick it, or drag it onto the creature.");
@@ -73,26 +73,29 @@ public static class PartTray
     public static IReadOnlyList<PartTrayGroup> Groups() => Catalog();
 
     /// <summary>
-    /// The tray with <paramref name="picked"/> selected (#805). On a locked creation every tray part
-    /// has brain ports, so every row shows locked, the help says how to unlock, and no row looks like
-    /// it can be picked or dragged out (#896).
+    /// The tray with <paramref name="picked"/> selected (#805). On a locked creation each available
+    /// part with brain ports shows locked, so it does not look like it can be picked or dragged out,
+    /// and the help says how to unlock (#896); a part without, like the Wheel, stays available.
     /// </summary>
     public static PartTrayPresentation Create(BuildPart? picked, bool creationLocked = false)
     {
-        if (creationLocked)
-        {
-            return new(
-                [.. Catalog().Select(group => group with { Rows = [.. group.Rows.Select(row => row.IsAvailable ? row with { State = PartTrayRowState.CreationLocked } : row)] })],
-                PickedInfo: null,
-                CreationLockedHelp);
-        }
-
-        var pickedPart = picked is { } part && IsAvailable(part) ? part : (BuildPart?)null;
+        var pickedPart = picked is { } part && CanPick(part, creationLocked) ? part : (BuildPart?)null;
         return new(
-            [.. Catalog().Select(group => group with { Rows = [.. group.Rows.Select(row => row.Part == pickedPart ? row with { State = PartTrayRowState.Selected } : row)] })],
+            [.. Catalog().Select(group => group with { Rows = [.. group.Rows.Select(row => Shown(row, pickedPart, creationLocked))] })],
             pickedPart is { } shown ? PickedInfo(shown) : null,
-            PickHelp);
+            creationLocked ? CreationLockedHelp : PickHelp);
     }
+
+    /// <summary>Whether the part can be picked or dragged out now: available, and on a locked creation without brain ports (#896).</summary>
+    public static bool CanPick(BuildPart part, bool creationLocked) => IsAvailable(part) && !(creationLocked && HasBrainPorts(part));
+
+    /// <summary>Whether placing <paramref name="part"/> adds brain ports, so a locked creation refuses it (#896): every part but the Wheel (#129).</summary>
+    public static bool HasBrainPorts(BuildPart part) => part != BuildPart.Wheel;
+
+    private static PartTrayRow Shown(PartTrayRow row, BuildPart? picked, bool creationLocked) =>
+        creationLocked && row.IsAvailable && HasBrainPorts(row.Part) ? row with { State = PartTrayRowState.CreationLocked }
+        : row.Part == picked ? row with { State = PartTrayRowState.Selected }
+        : row;
 
     private static UiText PickedInfo(BuildPart part) =>
         Info(part) is { } info ? UiText.Format("{0}\n{1}", info, Placement(part)) : Placement(part);
@@ -101,6 +104,7 @@ public static class PartTray
     public static UiText? Info(BuildPart part) => part switch
     {
         BuildPart.Servo => PartInfo.Servo,
+        BuildPart.Wheel => PartInfo.Wheel,
         BuildPart.Accelerometer => PartInfo.Accelerometer,
         BuildPart.Camera => PartInfo.Camera,
         _ => null,
@@ -109,7 +113,9 @@ public static class PartTray
     /// <summary>Where a picked part goes, per part rather than per tab, as a tab can mix placements (#805).</summary>
     public static UiText Placement(BuildPart part) => SensorKindOf(part) is not null
         ? UiText.Plain("Tap a beam to place it. A beam holds one sensor.")
-        : UiText.Plain("Tap a joint to place it. A joint holds one part.");
+        : part == BuildPart.Wheel
+            ? UiText.Plain("Tap a joint to place it. A joint holds one wheel.")
+            : UiText.Plain("Tap a joint to place it. A joint holds one part.");
 
     /// <summary>
     /// The tab the tray opens on: the first with a part the player can place (#887), so a
@@ -133,6 +139,15 @@ public static class PartTray
         _ => null,
     };
 
+    /// <summary>Whether a tray part goes on a joint (a Servo or a Wheel, #129) rather than on a beam.</summary>
+    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Wheel;
+
+    /// <summary>
+    /// The Wheel stays Coming later on main until 0.14.0 ships (#129, #1087); the App test assembly sets this
+    /// once at load so its tests can place Wheels. Remove it, and the gated row, when the Wheel unlocks.
+    /// </summary>
+    internal static bool UnreleasedPartsUnlocked { get; set; }
+
     private static PartTrayGroup[] Catalog() =>
     [
         new(UiText.Plain("Moving parts"),
@@ -141,7 +156,7 @@ public static class PartTray
             Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.3"),
             Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor"), "0.14.2"),
             Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.2"),
-            Locked(BuildPart.Wheel, UiText.Plain("Wheel"), "0.14.1"),
+            UnreleasedPartsUnlocked ? Available(BuildPart.Wheel, UiText.Plain("Wheel")) : Locked(BuildPart.Wheel, UiText.Plain("Wheel"), "0.14.1"),
         ]),
         new(UiText.Plain("Sensors"),
         [

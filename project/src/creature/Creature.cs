@@ -52,6 +52,7 @@ public partial class Creature : Node2D
     private SensorVisual[] _sensorVisuals = [];
     private ServoJoint[] _servos = [];
     private ServoVisual[] _servoVisuals = [];
+    private WheelVisual[] _wheelVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
     private SpringVisual[] _springVisuals = [];
@@ -331,7 +332,9 @@ public partial class Creature : Node2D
                 var nodeId = Definition!.Nodes[nodeIndex].Id;
                 selection = Definition.Servos.FirstOrDefault(servo => servo.NodeId == nodeId) is { } servo
                     ? new CreatureElementSelection(CreatureElementKind.Servo, servo.Id)
-                    : new CreatureElementSelection(CreatureElementKind.Node, nodeId);
+                    : Definition.Wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId) is { } wheel
+                        ? new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)
+                        : new CreatureElementSelection(CreatureElementKind.Node, nodeId);
                 return true;
             }
         }
@@ -401,6 +404,7 @@ public partial class Creature : Node2D
             CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.Piston => Middle(_pistons[Definition!.PistonIndexOf(selection.Id)].NodeA, _pistons[Definition.PistonIndexOf(selection.Id)].NodeB),
             CreatureElementKind.Spring => Middle(_springVisuals[Definition!.SpringIndexOf(selection.Id)].NodeA, _springVisuals[Definition.SpringIndexOf(selection.Id)].NodeB),
+            CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(selection.Id)].GlobalPosition,
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
         };
 
@@ -416,7 +420,7 @@ public partial class Creature : Node2D
     // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
     private void ApplySelection()
     {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
+        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_pistonVisuals).Concat(_springVisuals).Concat(_wheelVisuals))
         {
             visual.Selected = false;
         }
@@ -434,6 +438,7 @@ public partial class Creature : Node2D
             CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(_selection.Id)],
             CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(_selection.Id)],
             CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(_selection.Id)],
+            CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(_selection.Id)],
             _ => throw new ArgumentOutOfRangeException(nameof(_selection), _selection.Kind, "Not a part of a creature."),
         };
         selected.Selected = true;
@@ -485,6 +490,11 @@ public partial class Creature : Node2D
         }
 
         foreach (var visual in _springVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
+        foreach (var visual in _wheelVisuals)
         {
             visual.IsShadow = _isShadow;
         }
@@ -563,13 +573,14 @@ public partial class Creature : Node2D
     // A node is its own body with a circle collider, weighing a quarter of each beam and half of each
     // link it joins (see _beamWeight). Its rotation is locked:
     // a free-spinning circle pinned at its centre would roll like a wheel and give
-    // the creature no grip on the ground.
+    // the creature no grip on the ground. A joint with a Wheel is that wheel on purpose (#129, MakeWheel).
     private void CreateNodes(CreatureDef definition)
     {
         var count = definition.Nodes.Count;
         _nodeBodies = new RigidBody2D[count];
         _nodeColliderRadii = new float[count];
         _nodeVisuals = new NodeVisual[count];
+        _wheelVisuals = new WheelVisual[definition.Wheels.Count];
 
         var masses = new float[count];
         foreach (var beam in definition.Beams)
@@ -588,6 +599,11 @@ public partial class Creature : Node2D
         {
             masses[definition.NodeIndexOf(spring.NodeA)] += _beamWeight / 2;
             masses[definition.NodeIndexOf(spring.NodeB)] += _beamWeight / 2;
+        }
+
+        foreach (var wheel in definition.Wheels)
+        {
+            masses[definition.NodeIndexOf(wheel.NodeId)] += ToGodotFloat(Wheel.Mass(wheel), nameof(Wheel.Mass));
         }
 
         for (var i = 0; i < count; i++)
@@ -614,10 +630,15 @@ public partial class Creature : Node2D
                 Name = $"Node{i}Visual",
                 Theme = Theme,
                 Radius = radius,
-                Visible = definition.Servos.All(servo => servo.NodeId != definition.Nodes[i].Id),
+                Visible = definition.Servos.All(servo => servo.NodeId != definition.Nodes[i].Id)
+                    && definition.Wheels.All(wheel => wheel.NodeId != definition.Nodes[i].Id),
             };
             body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, radius));
             body.AddChild(visual);
+            if (definition.Wheels.FirstOrDefault(wheel => wheel.NodeId == definition.Nodes[i].Id) is { } wheel)
+            {
+                _wheelVisuals[definition.WheelIndexOf(wheel.Id)] = MakeWheel(body, wheel, radius);
+            }
 
             AddChild(body);
             _nodeBodies[i] = body;

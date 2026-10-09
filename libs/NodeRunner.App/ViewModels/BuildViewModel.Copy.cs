@@ -5,9 +5,9 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// The selection panel's Copy (#937, #990): several selected parts duplicated beside themselves,
 /// inside the same Creation. A part copies only with what it sits on: a link with both its joints
-/// and a sensor with its beam. A Servo is its joint to the player (#973), so it brings that joint
-/// along (#1000). A locked Creation copies no part with brain ports, since a copy would change its
-/// model.
+/// and a sensor with its beam. A joint part, a Servo or a Wheel, is its joint to the player (#973),
+/// so it brings that joint along (#1000). A locked Creation copies no part with brain ports, since a
+/// copy would change its model; a Wheel has none.
 /// </summary>
 public sealed partial class BuildViewModel
 {
@@ -86,7 +86,7 @@ public sealed partial class BuildViewModel
     /// selects the originals again. Each copy keeps its settings but not its name; a copied Servo
     /// sits on the copy of its joint, uses the copies of its Fixed and Target links, and leaves a
     /// role empty whose link was not copied. The copy is selected as the original was: a Servo
-    /// stands in for its copied joint (#973). While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
+    /// or Wheel stands in for its copied joint (#973). While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
     /// <see cref="CanvasNotes"/>.
     /// </summary>
     public void CopySelectedParts()
@@ -111,7 +111,11 @@ public sealed partial class BuildViewModel
         var springs = Springs.Where(spring => _selectedSpringIds.Contains(spring.Id)).ToList();
         var sensors = Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id)).ToList();
         var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
-        var offset = CopyOffset(nodes);
+        var wheels = Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).ToList();
+
+        // A copied joint is as big as its original only when its joint part comes along.
+        var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.HasJointPart(node.Id, servos, wheels) ? NodeRadius(node.Id) : NodeDef.PlainJointRadius);
+        var offset = CopyOffset(nodes, copiedRadii);
         _history.Change(() =>
         {
             ClearSelectionSets();
@@ -121,7 +125,7 @@ public sealed partial class BuildViewModel
             {
                 var position = new Vector2D(node.Position.X + offset.X, node.Position.Y + offset.Y);
                 // Clamping too absorbs the rounding in a shortened offset, as in TranslateSelection.
-                nodeCopies[node.Id] = _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius));
+                nodeCopies[node.Id] = _builder.AddNode(BuildArea.Clamp(position, copiedRadii[node.Id]));
                 if (selectedJoints.Contains(node.Id))
                 {
                     _selectedNodeIds.Add(nodeCopies[node.Id]);
@@ -158,6 +162,11 @@ public sealed partial class BuildViewModel
                 _selectedServoIds.Add(CopySettings(servo.Id, copy));
             }
 
+            foreach (var wheel in wheels)
+            {
+                _selectedWheelIds.Add(CopySettings(wheel.Id, _builder.AddWheel(nodeCopies[wheel.NodeId])));
+            }
+
             int? CopyOf(int? linkId) => linkId is { } id && linkCopies.TryGetValue(id, out var copy) ? copy : null;
         }, Selection);
         NotifySelectionChanged();
@@ -176,9 +185,9 @@ public sealed partial class BuildViewModel
 
     // One grid step down and right, or the first other diagonal that keeps every copied joint inside
     // the build area; if none does, the first diagonal shortened so the copy keeps its shape.
-    private static Vector2D CopyOffset(IReadOnlyList<NodeDef> nodes)
+    private static Vector2D CopyOffset(IReadOnlyList<NodeDef> nodes, Dictionary<int, double> radii)
     {
-        var joints = nodes.Select(node => (node.Position, NodeDef.PlainJointRadius)).ToList();
+        var joints = nodes.Select(node => (node.Position, radii[node.Id])).ToList();
         Vector2D[] offsets =
         [
             new(BuildGridStep, BuildGridStep),

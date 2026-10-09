@@ -78,8 +78,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Fixed / Target** — The two links a Servo uses: it holds Fixed and turns
   Target.
 - **Joint** — A point where links meet and can turn; in code a node
-  (`NodeDef`). A plain joint is passive (#450); a Servo can sit on it. Not a
-  Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
+  (`NodeDef`). A plain joint is passive (#450); a Servo or Wheel can sit on
+  it. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
   their joint".
 - **Link** — A joint-to-joint connection a Servo may use as Fixed or Target:
   Beam, Piston or Spring. The Links tool lists them all, Beam included. Say
@@ -108,6 +108,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   maximum force, chosen in Build; the output is the brain's 0…1 choice of
   how much of it to use this tick.
 - **Stroke** — How far a Piston or Spring travels between its end stops.
+- **Wheel** — A passive joint part (#129) that turns freely on its joint and
+  rolls on the ground; no brain ports.
 
 ## Build canvas
 

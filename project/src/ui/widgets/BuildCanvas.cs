@@ -188,7 +188,7 @@ public partial class BuildCanvas : Node2D
     {
         // Godot drags in the window, not in the world this canvas lives in.
         var viewport = GetTree().Root;
-        BuildPart? part = viewport.GuiIsDragging() && TryReadPartDrag(viewport.GuiGetDragData(), out var dragged) && !_viewModel!.IsLocked
+        BuildPart? part = viewport.GuiIsDragging() && TryReadPartDrag(viewport.GuiGetDragData(), out var dragged) && PartTray.CanPick(dragged, _viewModel!.IsLocked)
             ? dragged
             : null;
         CreatureElementSelection? hover = null;
@@ -212,7 +212,7 @@ public partial class BuildCanvas : Node2D
     }
 
     private bool CanDropPart(Vector2 atPosition, Variant data) =>
-        _viewModel is { IsLocked: false } && _gestures is not null && TryReadPartDrag(data, out _);
+        _viewModel is not null && _gestures is not null && TryReadPartDrag(data, out var part) && PartTray.CanPick(part, _viewModel.IsLocked);
 
     /// <summary>Places the dropped part where it landed; a refused drop's note goes after a moment, or at the next touch.</summary>
     private void DropPart(Vector2 atPosition, Variant data)
@@ -354,7 +354,7 @@ public partial class BuildCanvas : Node2D
         }
 
         (BeamDef, SensorKind, double?)? previewSensor = null;
-        int? previewServoNode = null;
+        (BuildPart, int)? previewJointPart = null;
         if (_gestures.MovedSensorPreview is { } moved)
         {
             previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(moved.BeamId)], moved.Kind, moved.Aim);
@@ -365,23 +365,23 @@ public partial class BuildCanvas : Node2D
         {
             previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind, null);
         }
-        else if (_partDrag == BuildPart.Servo
-            && _dropHover is { Kind: CreatureElementKind.Node } servoHover
-            && _viewModel.CanPlacePart(BuildPart.Servo, servoHover, out _))
+        else if (_partDrag is { } jointPart && PartTray.IsJointPart(jointPart)
+            && _dropHover is { Kind: CreatureElementKind.Node } jointHover
+            && _viewModel.CanPlacePart(jointPart, jointHover, out _))
         {
-            previewServoNode = servoHover.Id;
+            previewJointPart = (jointPart, jointHover.Id);
         }
 
         _creature.Transform = ViewTransform();
         _creature.Theme = Theme;
         _creature.Show(
-            new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Servos, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors),
+            new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Servos, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors, _viewModel.Wheels),
             new CreatureMarks(
                 selected,
                 ShowsAsLoose,
                 _sensorMotion.WeightOffset,
                 previewSensor,
-                previewServoNode,
+                previewJointPart,
                 ShowsTooShort: true));
     }
 
@@ -516,7 +516,7 @@ public partial class BuildCanvas : Node2D
             return _viewModel!.BeamTakesMovingSensor(sensor, beamId);
         }
 
-        return PlacingPart is { } part && part != BuildPart.Servo
+        return PlacingPart is { } part && !PartTray.IsJointPart(part)
             ? _viewModel!.CanPlacePart(part, new CreatureElementSelection(CreatureElementKind.Beam, beamId), out _)
             : null;
     }

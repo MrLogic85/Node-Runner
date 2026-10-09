@@ -14,6 +14,8 @@ public static class PartInfo
 
     public static UiText Servo { get; } = UiText.Plain("A motor that tries to hold a target angle.");
 
+    public static UiText Wheel { get; } = UiText.Plain("Rolls freely on the ground.");
+
     public static UiText Accelerometer { get; } = UiText.Plain("Measures its beam's acceleration.");
 
     public static UiText Camera { get; } = UiText.Plain("Three rays see how near the ground is.");

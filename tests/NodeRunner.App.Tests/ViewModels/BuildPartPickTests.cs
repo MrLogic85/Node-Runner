@@ -22,10 +22,10 @@ public class BuildPartPickTests
     }
 
     [Fact]
-    public void PickPart_AComingLaterPart_OrOutsideParts_OrOnALockedCreation_PicksNothing()
+    public void PickPart_AComingLaterPart_OrOutsideParts_OrAPartWithPortsOnALockedCreation_PicksNothing()
     {
         var build = PartsBuild();
-        build.PickPart(BuildPart.Wheel);
+        build.PickPart(BuildPart.Stepper);
         build.PickedPart.ShouldBeNull();
 
         build.ActiveTool = BuildTool.Joint;
@@ -36,6 +36,8 @@ public class BuildPartPickTests
         build.ActiveTool = BuildTool.Parts;
         build.PickPart(BuildPart.Servo);
         build.PickedPart.ShouldBeNull();
+        build.PickPart(BuildPart.Wheel);
+        build.PickedPart.ShouldBe(BuildPart.Wheel);
     }
 
     [Fact]

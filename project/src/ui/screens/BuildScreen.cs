@@ -636,14 +636,14 @@ public partial class BuildScreen : Control
         Apply();
     }
 
-    /// <summary>The part a tray row can be dragged out as (#376, #577): an available sensor or joint part, or null.</summary>
+    /// <summary>The part a tray row can be dragged out as (#376, #577): an available sensor or joint part (Servo or Wheel, #129), or null.</summary>
     public static BuildPart? DraggablePart(PartTrayRow row) =>
-        row.IsAvailable && (PartTray.SensorKindOf(row.Part) is not null || row.Part == BuildPart.Servo) ? row.Part : null;
+        row.IsAvailable && (PartTray.SensorKindOf(row.Part) is not null || PartTray.IsJointPart(row.Part)) ? row.Part : null;
 
     /// <summary>Lifts the part out of its row: the canvas takes the drop, and the row's glyph floats above the finger.</summary>
     private Variant StartPartDrag(UiPartRow row, BuildPart part)
     {
-        if (_presentation?.IsLocked != false)
+        if (_presentation is null || !PartTray.CanPick(part, _presentation.IsLocked))
         {
             return default;
         }
@@ -701,10 +701,36 @@ public partial class BuildScreen : Control
             part.BasicSettings,
             part.AdvancedSettings,
             _presentation?.AdvancedSettingsOpen == true);
+        ApplyPartReadouts(GetNode<Container>("%PartReadouts"), part.Readouts ?? []);
         ApplyPartPickers(part);
 
         GetNode<UiLabel>("%PartNote").ShowText(part.Note);
         GetNode<UiButton>("%PartDelete").Unavailable = !part.CanDelete;
+    }
+
+    /// <summary>One read-only value row per readout, such as a Wheel's Weight (#129), after the basic settings.</summary>
+    private static void ApplyPartReadouts(Container container, IReadOnlyList<PartReadout> readouts)
+    {
+        container.Visible = readouts.Count > 0;
+        var rows = container.GetChildren().OfType<UiValueRow>().ToList();
+        foreach (var extra in rows.Skip(readouts.Count))
+        {
+            container.RemoveChild(extra);
+            extra.QueueFree();
+        }
+
+        for (var index = 0; index < readouts.Count; index++)
+        {
+            var row = index < rows.Count ? rows[index] : AddChildTo(container, new UiValueRow());
+            row.LabelSource = UiTextTranslation.Source(readouts[index].Label);
+            row.ValueSource = UiTextTranslation.Source(readouts[index].Value);
+        }
+
+        static UiValueRow AddChildTo(Container container, UiValueRow row)
+        {
+            container.AddChild(row);
+            return row;
+        }
     }
 
     private void ApplyPartPickers(PartSettingsPresentation part)
@@ -775,6 +801,7 @@ public partial class BuildScreen : Control
         PartSettingsKind.Servo => UiIconId.PartServo,
         PartSettingsKind.Piston => UiIconId.PartPiston,
         PartSettingsKind.Spring => UiIconId.PartSpring,
+        PartSettingsKind.Wheel => UiIconId.PartWheel,
         _ => UiIconId.None,
     };
 

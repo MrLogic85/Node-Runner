@@ -1,5 +1,6 @@
 using Godot;
 using NodeRunner.App.Lifecycle;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Mechanics;
 using NodeRunner.Theme;
@@ -8,7 +9,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// A creature shown still, made of the same part visuals Training draws (#769, #770): one
-/// <see cref="JointPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
+/// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
 /// <see cref="SpringPart"/> and <see cref="SensorPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
 /// its <see cref="CreatureLayers"/> layer. Its points are creature units; its owner places it and
 /// hands it what to show after every change. Build's <see cref="BuildCanvas"/> shows its edits
@@ -18,6 +19,7 @@ public partial class CreatureParts : Node2D
 {
     private readonly Dictionary<int, JointPart> _joints = [];
     private readonly Dictionary<int, ServoPart> _servos = [];
+    private readonly Dictionary<int, WheelPart> _wheels = [];
     private readonly Dictionary<int, BeamPart> _beams = [];
     private readonly Dictionary<int, PistonPart> _pistons = [];
     private readonly Dictionary<int, SpringPart> _springs = [];
@@ -38,7 +40,7 @@ public partial class CreatureParts : Node2D
     public void Show(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors), CreatureMarks.None);
+        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels), CreatureMarks.None);
     }
 
     /// <summary>
@@ -53,6 +55,7 @@ public partial class CreatureParts : Node2D
         var nodes = shape.Nodes.ToDictionary(node => node.Id);
         ShowJoints(shape, marks);
         ShowServos(shape, nodes, marks);
+        ShowWheels(shape, nodes, marks);
         ShowBeams(shape, nodes, marks);
         ShowPistons(shape, nodes, marks);
         ShowSprings(shape, nodes, marks);
@@ -70,14 +73,41 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)NodeRadius(shape, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !shape.Servos.Any(servo => servo.NodeId == node.Id);
-            part.Visible = !shape.Servos.Any(servo => servo.NodeId == node.Id) && marks.PreviewServoNode != node.Id;
+            var hasPart = CreatureDef.HasJointPart(node.Id, shape.Servos, shape.Wheels);
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !hasPart;
+            part.Visible = !hasPart && marks.PreviewJointPart?.NodeId != node.Id;
         }
+    }
+
+    // A Wheel stands in for its joint (#129), so it shows the joint's loose mark too. Build shows it
+    // unturned; a tray drag previews the smallest Wheel on the joint it would take.
+    private void ShowWheels(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
+    {
+        var ids = shape.Wheels.Select(wheel => wheel.Id).Concat(marks.PreviewNodeOf(BuildPart.Wheel) is { } nodeId ? [-nodeId] : []);
+        Prune(_wheels, ids);
+        foreach (var wheel in shape.Wheels)
+        {
+            ShowWheelPart(PartFor(_wheels, wheel.Id), nodes[wheel.NodeId], wheel.Radius, marks.ShowsAsLoose(wheel.NodeId), marks.Selected.Wheels.Contains(wheel.Id));
+        }
+
+        if (marks.PreviewNodeOf(BuildPart.Wheel) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
+        {
+            ShowWheelPart(PartFor(_wheels, -previewNode), node, WheelDef.DefaultRadius, loose: false, selected: true);
+        }
+    }
+
+    private static void ShowWheelPart(WheelPart part, NodeDef joint, double radius, bool loose, bool selected)
+    {
+        part.Position = ToGodot(joint.Position);
+        part.Radius = (float)radius;
+        part.Loose = loose;
+        part.Selected = selected;
+        part.Simplified = false;
     }
 
     private void ShowServos(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
     {
-        var ids = shape.Servos.Select(servo => servo.Id).Concat(marks.PreviewServoNode is { } nodeId ? [-nodeId] : []);
+        var ids = shape.Servos.Select(servo => servo.Id).Concat(marks.PreviewNodeOf(BuildPart.Servo) is { } nodeId ? [-nodeId] : []);
         Prune(_servos, ids);
         foreach (var servo in shape.Servos)
         {
@@ -85,7 +115,7 @@ public partial class CreatureParts : Node2D
             ShowServoPart(part, shape, nodes, servo.NodeId, servo.FixedLinkId, servo.TargetLinkId, servo.Range, servo.Start, marks.Selected.Servos.Contains(servo.Id));
         }
 
-        if (marks.PreviewServoNode is { } previewNode && nodes.TryGetValue(previewNode, out var node))
+        if (marks.PreviewNodeOf(BuildPart.Servo) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var part = PartFor(_servos, -previewNode);
             var links = LinksAtNode(shape, previewNode).OrderBy(link => link.Id).Take(2).ToArray();
@@ -370,7 +400,7 @@ public partial class CreatureParts : Node2D
     private static Vector2 ToGodot(Vector2D position) => new((float)position.X, (float)position.Y);
 
     private static double NodeRadius(CreatureShape shape, int nodeId) =>
-        NodeDef.RadiusWithServo(shape.Servos.Any(servo => servo.NodeId == nodeId));
+        CreatureDef.JointRadius(nodeId, shape.Servos, shape.Wheels);
 
     private static bool IsTooShort(CreatureShape shape, NodeDef a, NodeDef b) =>
         CreatureReadiness.IsTooShort(a, b, NodeRadius(shape, a.Id), NodeRadius(shape, b.Id));

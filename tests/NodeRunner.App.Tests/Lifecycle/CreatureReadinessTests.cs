@@ -103,7 +103,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
             [UiText.Format("{0} is missing a link. Pick two links at its joint or delete it.",
-                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, 6))]);
+                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, 6))]);
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
             [UiText.Format("{0} needs two links at its joint. Connect another link there or delete it.",
-                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, 6))]);
+                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, 6))]);
     }
 
     [Fact]

@@ -25,13 +25,13 @@ boundary. `reference design/components/Build/README.md`,
   the list.
 - **Locked Build.** A locked creation (`CreationLock`) opens in Joint like
   any other, and `BuildViewModel` refuses on its own what changes the model
-  (#638, #896). Joints, beams and Springs have no brain ports, so they can
-  be added and deleted; joints move, sensors move to another beam (#806),
+  (#638, #896). Joints, beams, Springs and Wheels have no brain ports, so
+  they can be added, copied and deleted; joints move, sensors move to another beam (#806),
   cameras aim, the selection handles all work (scaling changes only beam
   lengths), parameters change and parts can be renamed. A part with ports (a sensor, Piston or Servo) can be neither
-  added nor deleted: every tray row and the Piston row are locked, the
-  tray's help line says "Unlock to add parts.", and tapping a row so
-  locked shows "The creation is locked to avoid changes to the model, unlock to enable."
+  added nor deleted: every tray row except the Wheel's is locked, and so is
+  the Piston row; the tray's help line says "Unlock to add parts the brain
+  uses.", and tapping a row so locked shows "The creation is locked to avoid changes to the model, unlock to enable."
   (`BuildViewModel.LockedReason`) in a notification; a Coming later row
   still names its version (see Parts tray). Delete stays,
   Unavailable, when it would take a part with ports along, also by cascade,
@@ -98,7 +98,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     tap on empty canvas clears the selection; a tap on a handle over empty
     canvas does nothing.
   - **Parts stand in for their joint** (#973, #1044): while any part sits
-    on a joint (today a Servo), the joint itself is never selected, so it
+    on a joint (today a Servo or Wheel), the joint itself is never selected, so it
     gets no selection mark and no panel; only a bare joint does. Links
     still start and end on it. Selecting a part never also
     selects the joint under it, but the selection moves that joint, and
@@ -108,7 +108,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     **Scale** at the bottom-right corner.
   - A drag is settled by where it starts, first match wins: a handle moves,
     turns or scales the selection; in Links, with a link picked, an
-    unselected joint or a selected Servo's draws it; a selected joint moves
+    unselected joint or a selected Servo's or Wheel's draws it; a selected joint moves
     the selection;
     anywhere inside a group's frame moves the group; an unselected joint is
     selected alone and moved; a sensor is moved to another beam (see
@@ -159,7 +159,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   would catch as selected. It selects every part whose centre is in it (a
   joint's centre, a beam's or link's midpoint, a sensor's beam midpoint)
   and replaces the selection, so a box can catch only beams. A joint with
-  a Servo comes in as the Servo (#973).
+  a Servo or Wheel comes in as that part (#973).
 - **Sensors (#127, #575):** placed from the tray on a beam, by drag or tap
   (see Parts tray), one per beam (#376). A joint, Piston or Spring refuses
   with the part's own reason, "Accelerometers go on a beam" or "Cameras go
@@ -185,6 +185,14 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   (#1006).
   Tapping or dragging that joint selects the Servo; dragging moves the
   joint with it.
+- **Wheel (#129):** placed from Parts → Moving parts on any joint, by drag
+  or tap, like a Servo. A beam, sensor or link refuses with "Wheels go on a
+  joint"; a joint with a Wheel refuses with "One wheel per joint", and one
+  with a Servo, as a Servo on a Wheel's joint, with "One part per joint"
+  (until #1044). A placement is one Undo step; a drop also selects the
+  Wheel. Tapping or dragging its joint selects the Wheel, as a Servo's.
+  Until 0.14.0 ships, its tray row on main says "Wheel comes in version
+  0.14.1" (`PartTray.UnreleasedPartsUnlocked`; the App tests unlock it; #1087).
 - **Camera aim (#594, #622):** a Camera selected alone shows its rays and an
   Aim handle out along its centre ray, in any tool; the handle may cover a
   joint, which then cannot be tapped there (#639). Dragging the handle
@@ -193,8 +201,9 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   it, a tap on it does nothing, and a second finger puts the aim back.
 - **Deleting:** there is no Delete tool; the Part settings and selection
   panels delete the selection. Deleting a joint removes every link on it,
-  its Servo and those beams' sensors (`CreatureBuilder.RemoveNode`), and
-  deleting a beam removes its sensor. Deleting a Servo leaves its joint,
+  its Servo or Wheel and those beams' sensors (`CreatureBuilder.RemoveNode`),
+  and deleting a beam removes its sensor. Deleting a Servo or Wheel leaves
+  its joint,
   unless the same delete takes every link on that joint: then the joint
   goes too, so a box that clears an area leaves no bare joint (#973). Deleting a link a Servo holds keeps
   the Servo with that role missing, which blocks training until a
@@ -250,8 +259,9 @@ several the selection panel instead.
 - An available row is dragged out (#376). The drop lands on what the part
   is over (a joint's ring, a sensor picture's beam, a Piston or Spring
   outside any joint's reach, a beam within reach, then a joint within
-  reach; `BuildGestures.DropTargetAt`). A Servo lands first on the joint
-  whose placing ring it is inside, ahead of the beams the ring crosses
+  reach; `BuildGestures.DropTargetAt`). A Servo or Wheel lands first on the
+  joint whose placing ring (`BuildGestures.PlacingRingRadius`; a Wheel's is
+  its 0.4 m size) it is inside, ahead of the beams the ring crosses
   (#1055). `BuildViewModel.PlacePart` places it with
   a fresh id and selects it, or refuses it with a canvas note at that part
   (`PlacementNote`) until the next touch or for 3 s. A Piston or Spring
@@ -261,7 +271,7 @@ several the selection panel instead.
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
   settings note) and where it goes ("Tap a joint to place it. A joint holds
-  one part."), per part, not per tab, as a tab can mix placements. Under
+  one part.", a Wheel's "… holds one wheel."), per part, not per tab, as a tab can mix placements. Under
   the rows the help line says "Tap a part to pick it, or drag it onto the
   creature." A canvas tap then places the part where a drop there would
   land, with the same refusals, notes and Undo. The placed part is not
@@ -324,6 +334,9 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   and the play-blocked reason asks to connect another link there, because
   no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
   "Editing identity rules".
+- **Wheel:** Radius (0.4–1.0 m, step 0.1) and Grip (0–100%, step 10),
+  then a read-only Weight ("1.2 kg", `PartSettingsPresentation.Readouts`)
+  that follows Radius. Its note: "Rolls freely on the ground."
 - **Camera:** Aim, set on the canvas, one Camera at a time.
 
 A finger on a slider shows what that setting does in a box at the canvas's
@@ -377,8 +390,8 @@ Several selected parts show the selection panel instead (#558, #704), titled
   with their settings but not their names, and selects the copy; Undo
   removes it. A part copies only with what it sits on: a beam, Spring or
   Piston with both its joints and a sensor with its beam. A Servo is its
-  joint to the player, so it brings that joint along (#1000); a Servo is
-  copied only when it is selected itself. A copied Servo uses the copies of its Fixed
+  joint to the player, so it brings that joint along (#1000), as does a
+  Wheel; either is copied only when it is selected itself. A copied Servo uses the copies of its Fixed
   and Target links and leaves a role empty whose link was not copied, so
   it shows its error note. On a locked creation a sensor, Piston or Servo
   would change the model, so it blocks Copy too, with the note "Locked:

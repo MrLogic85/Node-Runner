@@ -50,6 +50,7 @@ public sealed class VisualTheme
         ServoFixedBand = UiThemes.Color(theme, UiTokens.Color.Detail) with { A = _servoFixedBandOpacity },
         ServoFixedHatch = UiThemes.Color(theme, UiTokens.Color.Detail) with { A = _servoFixedHatchOpacity },
         ServoFixedBandEdge = UiThemes.Color(theme, UiTokens.Color.Detail) with { A = _servoFixedEdgeOpacity },
+        WheelLine = UiThemes.Color(theme, UiTokens.Color.Detail),
         ServoTargetBand = UiThemes.Color(theme, UiTokens.Color.Accent) with { A = _servoTargetBandOpacity },
         ServoTargetBandEdge = UiThemes.Color(theme, UiTokens.Color.Accent) with { A = _servoTargetEdgeOpacity },
         Danger = UiThemes.Color(theme, UiTokens.Color.Danger),
@@ -142,6 +143,9 @@ public sealed class VisualTheme
 
     /// <summary>The hairline edges of a selected Servo's Fixed-link band.</summary>
     public Color ServoFixedBandEdge { get; private init; }
+
+    /// <summary>A Wheel's tyre, rotation cue and passive hub (#129): <c>detail</c>, as it is passive.</summary>
+    public Color WheelLine { get; private init; }
 
     /// <summary>The translucent band under a selected Servo's Target link.</summary>
     public Color ServoTargetBand { get; private init; }

@@ -10,19 +10,20 @@ types, and no rules that differ by how a part happens to be simulated. How
 Godot realises each part is in `project/src/creature/AGENTS.md` and the code
 comments there.
 
-## Parts: Node, Beam, Sensor, Servo, Piston, Spring
+## Parts: Node, Beam, Sensor, Servo, Piston, Spring, Wheel
 
 A creature is built from two structural parts (Node, Beam), sensor parts
-that sit on beams (the Accelerometer and the Camera), a joint motor (the
-Servo) and links between two nodes (the Piston and the Spring). Plain joints
+that sit on beams (the Accelerometer and the Camera), joint parts (the
+Servo, a motor, and the Wheel, which rolls) and links between two nodes
+(the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
 parts with brain ports move the body. "What senses" (sensors) and "what
 thinks" (the brain) stay separate; this is the most important rule here:
 **a sensor is not the brain.**
 
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
-so it sits on a beam; a part acting between two beams sits on a joint
-(Servo); one joining two nodes is a link (Piston, Spring). Each sensor is
+so it sits on a beam; a part acting between two beams or on the ground
+around a joint sits on that joint (Servo, Wheel); one joining two nodes is a link (Piston, Spring). Each sensor is
 one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
@@ -39,8 +40,12 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Beginner:** A physical attachment point. Links meet here and can rotate
   relative to each other. Nodes are where the creature touches the world.
 - `NodeDef`. Its radius is not saved but follows from what is on the joint
-  (#626): a plain joint is `NodeDef.PlainJointRadius` (15), a Servo joint
-  `ServoDef.JointRadius` (27).
+  (#626, #129): the largest of the plain joint's `NodeDef.PlainJointRadius`
+  (15) and each part on it, a Servo's `ServoDef.JointRadius` (27) or a
+  Wheel's Radius (`CreatureDef.NodeRadius`). Link ends, bounds, hit testing
+  and the minimum link length all use it.
+- **One part per joint** (until #1044): a joint holds at most one Servo or
+  Wheel.
 - **Degree rules** (links touching a node, counting Beams, Pistons and
   Springs):
   - **0 links:** a loose point that cannot be simulated. It can be saved,
@@ -163,6 +168,22 @@ fold.
   Start position (0–100% inside the range), Max speed (°/s) and Rise time
   (s).
 
+### Wheel
+
+- **Beginner:** A wheel on a joint. It turns freely there and rolls on the
+  ground, so a body on wheels can roll instead of walk. It has no brain
+  ports: on its own it never pushes; something else has to move the body.
+- `WheelDef` (#129). It sits on one joint. Build takes any joint, even a
+  loose one, which is drawn `danger` and blocks training by the degree
+  rules (see Node). The links keep their own rules: a Wheel changes no link
+  and moves no node, and Wheels may overlap when built.
+- **Settings:** **Radius** 0.4–1 m (the joint's radius, see Node) and
+  **Grip** 0–100%, how well its tyre holds the ground: its friction, which
+  the ground can only lower.
+- **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
+  at 0.4 m, added to its joint. Derived, never saved.
+- **Driving it later:** #1068, #1070, #1044.
+
 ### Piston
 
 - **Beginner:** A powered link between two nodes that pushes them apart or
@@ -254,7 +275,7 @@ fold.
   - **Servo (#452):** inputs `angle` (−1 lower end, 0 built, +1 upper end)
     and `speed` (`tanh(ω / maxSpeed)`, counter-clockwise positive); outputs
     `angle` and `strength`.
-  - Nodes, beams and plain joints declare none.
+  - Nodes, beams, plain joints, Springs and Wheels declare none.
 - **Output conventions (#535, `PortSignals`):** the signal fixes the
   output's activation and how a new output starts.
   - **Velocity** (#454) and **position** use `tanh`: −1…1, where 0 means
@@ -296,8 +317,9 @@ fold.
   counter (`CreatureDef.NextPartId`), saved with the creature. Creating a
   part takes `NextPartId` and advances it; it never goes down.
 - Removing a part retires its id forever, so a part removed and added again
-  is a new part. Removing a Node also removes the beams and links on it,
-  and removing a Beam removes its sensor; the survivors keep their ids.
+  is a new part. Removing a Node also removes the beams, links and joint
+  parts on it, and removing a Beam removes its sensor; the survivors keep
+  their ids.
 - Saving, loading, moving, renaming, rebuilding a body and copying a whole
   Creation keep part ids and the counter.
 - Changing a Servo's Fixed or Target link gives it a new id, because the

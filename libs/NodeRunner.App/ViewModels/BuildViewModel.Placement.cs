@@ -12,19 +12,20 @@ public sealed partial class BuildViewModel
 {
     /// <summary>
     /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
-    /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet.
+    /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet, and joint
+    /// parts, a Servo or a Wheel, on a joint that has none yet.
     /// </summary>
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
         ArgumentNullException.ThrowIfNull(target);
-        // Every tray part has brain ports (#896).
-        if (_locked)
+        // Every tray part but the Wheel has brain ports (#896, #129).
+        if (_locked && PartTray.HasBrainPorts(part))
         {
             reason = LockedReason;
             return false;
         }
 
-        if (!PartTray.IsAvailable(part) || (PartTray.SensorKindOf(part) is null && part != BuildPart.Servo))
+        if (!PartTray.IsAvailable(part) || (PartTray.SensorKindOf(part) is null && !PartTray.IsJointPart(part)))
         {
             reason = PartTray.ComingLater;
             return false;
@@ -39,6 +40,17 @@ public sealed partial class BuildViewModel
             }
 
             return _builder.CanAddServo(target.Id, out reason);
+        }
+
+        if (part == BuildPart.Wheel)
+        {
+            if (target.Kind != CreatureElementKind.Node)
+            {
+                reason = CreatureBuilder.WheelsGoOnAJointReason;
+                return false;
+            }
+
+            return _builder.CanAddWheel(target.Id, out reason);
         }
 
         return TakesSensor(PartTray.SensorKindOf(part)!.Value, target, movingSensorId: null, out reason);
@@ -60,7 +72,8 @@ public sealed partial class BuildViewModel
 
         if (!CanPlacePart(part, target, out var reason))
         {
-            if (!_locked)
+            // A locked Creation says why in a notification instead (#896).
+            if (!(_locked && PartTray.HasBrainPorts(part)))
             {
                 PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target, reason);
             }
@@ -73,6 +86,13 @@ public sealed partial class BuildViewModel
             var servoId = _history.Change(() => _builder.AddServo(target.Id));
             SelectPlaced(PartSet.None with { Servos = new HashSet<int> { servoId } }, select);
             return servoId;
+        }
+
+        if (part == BuildPart.Wheel)
+        {
+            var wheelId = _history.Change(() => _builder.AddWheel(target.Id));
+            SelectPlaced(PartSet.None with { Wheels = new HashSet<int> { wheelId } }, select);
+            return wheelId;
         }
 
         var sensorId = _history.Change(() =>

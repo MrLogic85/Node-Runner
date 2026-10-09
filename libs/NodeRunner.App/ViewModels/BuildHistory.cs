@@ -166,7 +166,8 @@ public sealed class BuildHistory
         && a.Sensors.SequenceEqual(b.Sensors)
         && a.Servos.SequenceEqual(b.Servos)
         && a.Pistons.SequenceEqual(b.Pistons)
-        && a.Springs.SequenceEqual(b.Springs);
+        && a.Springs.SequenceEqual(b.Springs)
+        && a.Wheels.SequenceEqual(b.Wheels);
 
     private void Record(CreatureDef before, PartSet? reselect)
     {

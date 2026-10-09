@@ -87,6 +87,28 @@ public sealed class PartParametersTests
     }
 
     [Fact]
+    public void ANewWheel_ShowsItsRadiusInMetresAndItsGripInPercent()
+    {
+        var wheel = new WheelDef(5, 1);
+
+        PartParameters.SliderOver(PartParameterId.WheelRadius, [wheel.Radius]).Readout.ShouldBe(UiText.Format("{0} m", new FixedNumber(0.4, 1)));
+        PartParameters.SliderOver(PartParameterId.Grip, [wheel.Grip]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(80, 0)));
+        PartParameters.WheelRadius.Slider!.Help.ShouldBe(UiText.Plain("Bigger wheels roll over bumps but weigh more"));
+        PartParameters.Grip.Slider!.Help.ShouldBe(UiText.Plain("How well the tyre holds the ground. Low grip slides"));
+    }
+
+    [Fact]
+    public void WheelRadius_RunsFromFortyCentimetresToAMetre_InStepsOfTen_AndGripInStepsOfTenPercent()
+    {
+        PartParameters.ValueAt(PartParameterId.WheelRadius, 0).ShouldBe(WheelDef.MinRadius);
+        PartParameters.ValueAt(PartParameterId.WheelRadius, 1).ShouldBe(WheelDef.MaxRadius);
+        PartParameters.ValueAt(PartParameterId.WheelRadius, 0.26).ShouldBe(60, tolerance: 1e-9);
+        PartParameters.ValueAt(PartParameterId.Grip, 0).ShouldBe(0);
+        PartParameters.ValueAt(PartParameterId.Grip, 1).ShouldBe(1);
+        PartParameters.ValueAt(PartParameterId.Grip, 0.34).ShouldBe(0.3, tolerance: 1e-9);
+    }
+
+    [Fact]
     public void CoilLength_RunsFromZeroToAHundredPercent_InStepsOfOne()
     {
         PartParameters.ValueAt(PartParameterId.CoilLength, 0).ShouldBe(SpringDef.MinCoilLength);
@@ -113,6 +135,8 @@ public sealed class PartParametersTests
     [InlineData(PartParameterId.Damping, 45)]
     [InlineData(PartParameterId.RiseTime, 0.5)]
     [InlineData(PartParameterId.CoilLength, 0.35)]
+    [InlineData(PartParameterId.WheelRadius, 70)]
+    [InlineData(PartParameterId.Grip, 0.6)]
     public void ASharedValue_RoundTripsThroughItsSlider(PartParameterId id, double value)
     {
         var slider = PartParameters.SliderOver(id, [value, value]);

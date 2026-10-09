@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Nodes;
+using NodeRunner.App.Builders;
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
@@ -38,6 +39,22 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
+    public void Code_RoundTripsAWheel_WithItsRadiusAndGrip()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var wheel = builder.AddWheel(walker.Creature.Nodes[0].Id);
+        builder.SetParameter(wheel, PartParameterId.WheelRadius, 70);
+        builder.SetParameter(wheel, PartParameterId.Grip, 0.3);
+        var rolling = walker.WithCreature(builder.Build(), training: null);
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(rolling)).Build.ShouldNotBeNull();
+
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(rolling.Creature));
+        build.Creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(70);
+    }
+
+    [Fact]
     public void Code_IsItsVersionAndUrlSafeBase64_ShortEnoughToTypeIntoAChat()
     {
         var code = CreationShareCode.Create(LoadFixture013("trained-walker.creation.json"));
@@ -63,6 +80,7 @@ public sealed class CreationShareCodeTests
         var build = CreationShareCode.Read(code).Build.ShouldNotBeNull();
 
         build.Creature.Servos.ShouldBeEmpty();
+        build.Creature.Wheels.ShouldBeEmpty();
         build.Creature.Pistons.ShouldAllBe(piston => piston.Start == 0.5);
     }
 
@@ -223,6 +241,22 @@ public sealed class CreationShareCodeTests
         var file = WalkerFile();
         var part = file["creature"]![parts]![0]!;
         (inner is null ? part : part[inner]!)[field] = value;
+
+        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
+    }
+
+    [Fact]
+    public void Read_AWheelBuildCouldNotMake_IsRefusedAsDamaged()
+    {
+        var file = WalkerFile();
+        var creature = file["creature"]!;
+        var id = creature["nextPartId"]!.GetValue<int>();
+        creature["nextPartId"] = id + 1;
+        var wheel = new JsonObject { ["id"] = id, ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(), ["name"] = null, ["radius"] = WheelDef.MaxRadius, ["grip"] = 0.8 };
+        creature["wheels"] = new JsonArray(wheel);
+        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBeNull();
+
+        wheel["radius"] = WheelDef.MaxRadius + 1;
 
         CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
     }

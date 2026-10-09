@@ -31,7 +31,7 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 - `PartVisual.cs` — the base of every part visual: theme, selection and
   layer, and the redraw on a new pixel scale every view that holds parts calls
 - `JointPart.cs`, `BeamPart.cs`, `ServoPart.cs`, `PistonPart.cs`, `SpringPart.cs`,
-  `SensorPart.cs`, `HatchPart.cs` — one visual per part kind
+  `WheelPart.cs`, `SensorPart.cs`, `HatchPart.cs` — one visual per part kind
 - `KnockoutPart.cs` — the arena background around a beam or joint, under the
   whole creature (#818)
 - `CreatureLayers.cs`, `ArenaLayers.cs` — the named draw layers

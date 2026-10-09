@@ -148,6 +148,10 @@ msgstr ""
 msgid "Between"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Bigger wheels roll over bumps but weigh more"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Blocks"
 msgstr ""
@@ -390,6 +394,10 @@ msgstr ""
 msgid "Generator"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Grip"
+msgstr ""
+
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Handles"
 msgstr ""
@@ -420,6 +428,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How quickly it stops bouncing"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How well the tyre holds the ground. Low grip slides"
 msgstr ""
 
 #: project/scenes/screens/ImportScreen.tscn
@@ -584,6 +596,10 @@ msgstr ""
 msgid "One sensor per beam"
 msgstr ""
 
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "One wheel per joint"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 #: project/scenes/screens/TrainingScreen.tscn
 msgid "Outputs"
@@ -659,6 +675,10 @@ msgid "Pulse"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Radius"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "Range"
 msgstr ""
 
@@ -688,6 +708,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "Rise time"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Rolls freely on the ground."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -881,6 +905,10 @@ msgstr ""
 msgid "Tap a joint to place it. A joint holds one part."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Tap a joint to place it. A joint holds one wheel."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
 msgid "Tap a link to pick it."
 msgstr ""
@@ -1056,7 +1084,7 @@ msgid "Unlock"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Unlock to add parts."
+msgid "Unlock to add parts the brain uses."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs
@@ -1096,8 +1124,25 @@ msgstr ""
 msgid "Warning, no powered parts added! There is nothing to train"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Weight"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Wheel"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Wheel {0}"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Wheels"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "Wheels go on a joint"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1216,8 +1261,13 @@ msgid_plural "{0} joints not connected"
 msgstr[0] ""
 msgstr[1] ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "{0} kg"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/DistanceRuler.cs
 #: libs/NodeRunner.App/ViewModels/Metres.cs
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0} m"
 msgstr ""
 
@@ -1357,6 +1407,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0}–{1} N·s/m"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0}–{1} m"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
