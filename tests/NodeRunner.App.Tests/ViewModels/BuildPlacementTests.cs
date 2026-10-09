@@ -164,14 +164,14 @@ public sealed class BuildPlacementTests
         build.PlacePart(BuildPart.Accelerometer, _secondBeam);
         var gestures = new BuildGestures(build);
 
-        gestures.DropTargetAt(new Vector2D(5, 0)).ShouldBe(_firstJoint);
-        gestures.DropTargetAt(new Vector2D(150, 9)).ShouldBe(_secondBeam);
-        gestures.DropTargetAt(new Vector2D(30, 10)).ShouldBe(_firstBeam);
-        gestures.DropTargetAt(new Vector2D(300, 300)).ShouldBeNull();
+        gestures.DropTargetAt(new Vector2D(5, 0), BuildPart.Accelerometer).ShouldBe(_firstJoint);
+        gestures.DropTargetAt(new Vector2D(150, 9), BuildPart.Accelerometer).ShouldBe(_secondBeam);
+        gestures.DropTargetAt(new Vector2D(30, 10), BuildPart.Accelerometer).ShouldBe(_firstBeam);
+        gestures.DropTargetAt(new Vector2D(300, 300), BuildPart.Accelerometer).ShouldBeNull();
 
         // Zoomed in, the beam's finger-sized reach is shorter than the joint's gap.
         gestures.View.ZoomAbout(new Vector2D(0, 0), 2);
-        gestures.DropTargetAt(gestures.View.ToView(new Vector2D(-17, 0))).ShouldBe(_firstJoint);
+        gestures.DropTargetAt(gestures.View.ToView(new Vector2D(-17, 0)), BuildPart.Accelerometer).ShouldBe(_firstJoint);
     }
 
     // A Piston or Spring takes no tray part, but is a target so a drop on it says why (#1033).
@@ -183,10 +183,23 @@ public sealed class BuildPlacementTests
         var (build, link) = BeamCrossedBy(kind);
         var gestures = new BuildGestures(build);
 
-        gestures.DropTargetAt(new Vector2D(50, 0)).ShouldBe(link);
-        gestures.DropTargetAt(new Vector2D(50, 30)).ShouldBe(link);
-        gestures.DropTargetAt(new Vector2D(20, 0)).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 5));
-        gestures.DropTargetAt(new Vector2D(50, -33)).ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 3));
+        gestures.DropTargetAt(new Vector2D(50, 0), BuildPart.Accelerometer).ShouldBe(link);
+        gestures.DropTargetAt(new Vector2D(50, 30), BuildPart.Accelerometer).ShouldBe(link);
+        gestures.DropTargetAt(new Vector2D(20, 0), BuildPart.Accelerometer).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 5));
+        gestures.DropTargetAt(new Vector2D(50, -33), BuildPart.Accelerometer).ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 3));
+    }
+
+    // A Servo being placed rings every joint, and the ring is where a finger aims (#1055).
+    [Fact]
+    public void DropTargetAt_ForAServo_LandsOnAJointAnywhereInsideItsRing_BeforeABeam()
+    {
+        var gestures = new BuildGestures(TwoBeams());
+        var ring = SelectionMarks.JointHalo(ServoDef.JointRadius);
+
+        gestures.DropTargetAt(new Vector2D(20, 0), BuildPart.Servo).ShouldBe(_firstJoint);
+        gestures.DropTargetAt(new Vector2D(20, 0), BuildPart.Accelerometer).ShouldBe(_firstBeam);
+        gestures.DropTargetAt(new Vector2D(0, ring), BuildPart.Servo).ShouldBe(_firstJoint);
+        gestures.DropTargetAt(new Vector2D(0, ring + 1), BuildPart.Servo).ShouldBeNull();
     }
 
     [Fact]

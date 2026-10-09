@@ -116,7 +116,7 @@ public class BuildPartPickTests
     }
 
     [Fact]
-    public void Tap_OnEmptyCanvas_PlacesNothing_AndKeepsThePick()
+    public void Tap_OnEmptyCanvas_PlacesNothing_AndClearsThePick()
     {
         var build = PartsBuild();
         var gestures = new BuildGestures(build);
@@ -125,6 +125,20 @@ public class BuildPartPickTests
         Tap(gestures, new Vector2D(50, 150));
 
         build.Servos.ShouldBeEmpty();
+        build.PickedPart.ShouldBeNull();
+        build.ActiveTool.ShouldBe(BuildTool.Parts);
+    }
+
+    [Fact]
+    public void Tap_InsideAJointsServoRing_PlacesTheServo_AndKeepsThePick()
+    {
+        var build = PartsBuild();
+        var gestures = new BuildGestures(build);
+        build.PickPart(BuildPart.Servo);
+
+        Tap(gestures, new Vector2D(0, SelectionMarks.JointHalo(ServoDef.JointRadius) - 1));
+
+        build.Servos.Select(servo => servo.NodeId).ShouldBe([1]);
         build.PickedPart.ShouldBe(BuildPart.Servo);
     }
 

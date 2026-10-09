@@ -168,11 +168,18 @@ public sealed class BuildGestures
     /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): a
     /// joint's ring, then a sensor picture (its beam), then a Piston or Spring off any joint's reach
     /// (#1033), then a beam within reach, then a joint within reach, so a drop near a joint on a
-    /// short beam still reaches the beam. Null over empty canvas.
+    /// short beam still reaches the beam. Null over empty canvas. A Servo being placed
+    /// (<paramref name="placing"/>) is marked by a ring round each joint, so it lands on a joint
+    /// anywhere inside that ring first (#1055); <paramref name="placing"/> is null for a moved sensor.
     /// </summary>
-    public CreatureElementSelection? DropTargetAt(Vector2D viewPosition)
+    public CreatureElementSelection? DropTargetAt(Vector2D viewPosition, BuildPart? placing)
     {
         var position = View.ToCanvas(viewPosition);
+        if (placing == BuildPart.Servo && JointInServoRing(position) is { } ringed)
+        {
+            return new CreatureElementSelection(CreatureElementKind.Node, ringed);
+        }
+
         if (_build.TryFindNodeNear(position, 0, out var nodeId))
         {
             return new CreatureElementSelection(CreatureElementKind.Node, nodeId);
@@ -202,8 +209,20 @@ public sealed class BuildGestures
             : null;
     }
 
+    /// <summary>The joint nearest <paramref name="position"/> within the ring a Servo being placed draws round every joint, or null.</summary>
+    private int? JointInServoRing(Vector2D position)
+    {
+        var ring = SelectionMarks.JointHalo(ServoDef.JointRadius);
+        return _build.Nodes
+            .Select(node => (node.Id, Distance: Distance(node.Position, position)))
+            .Where(entry => entry.Distance <= ring)
+            .OrderBy(entry => entry.Distance)
+            .Select(entry => (int?)entry.Id)
+            .FirstOrDefault();
+    }
+
     /// <summary>Places a tray part dropped at <paramref name="viewPosition"/>; see <see cref="BuildViewModel.PlacePart"/>.</summary>
-    public int? DropPart(BuildPart part, Vector2D viewPosition) => _build.PlacePart(part, DropTargetAt(viewPosition));
+    public int? DropPart(BuildPart part, Vector2D viewPosition) => _build.PlacePart(part, DropTargetAt(viewPosition, part));
 
     /// <summary>A pointer touches down at <paramref name="viewPosition"/>.</summary>
     public void Press(Vector2D viewPosition, int pointer = 0)
@@ -436,7 +455,7 @@ public sealed class BuildGestures
         else if (MovingSensorId is not null)
         {
             SensorDragEnd = position;
-            SensorDropTarget = DropTargetAt(viewPosition);
+            SensorDropTarget = DropTargetAt(viewPosition, placing: null);
             Changed?.Invoke(this, EventArgs.Empty);
         }
         else if (_press == SharedPress.Pan)
@@ -474,7 +493,7 @@ public sealed class BuildGestures
         }
         else if (MovingSensorId is { } sensor)
         {
-            _build.MoveSensor(sensor, DropTargetAt(viewPosition));
+            _build.MoveSensor(sensor, DropTargetAt(viewPosition, placing: null));
         }
         else if (_pressedHandle == SelectionHandle.Rotate && _dragLayout is { } turned)
         {
@@ -546,13 +565,21 @@ public sealed class BuildGestures
     /// <summary>
     /// A tap in any tool (#803) adds or removes the part under it. A tap on empty canvas clears the
     /// selection, or with nothing selected adds a joint in Joint; one on a handle does nothing.
-    /// With a tray part to place, a tap places it where a drop there would (#805).
+    /// With a tray part to place, a tap places it where a drop there would (#805), and one on empty
+    /// canvas puts it back (#1055).
     /// </summary>
     private void Tap()
     {
         if (_build.PickedPart is { } part)
         {
-            _build.PlacePart(part, DropTargetAt(_pressViewPosition), select: false);
+            if (DropTargetAt(_pressViewPosition, part) is { } target)
+            {
+                _build.PlacePart(part, target, select: false);
+            }
+            else
+            {
+                _build.ClearPickedPart();
+            }
         }
         else if (PressedElement() is { } element)
         {

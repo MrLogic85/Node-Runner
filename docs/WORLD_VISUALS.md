@@ -146,7 +146,8 @@ ground, the shadows above it, and the followed creature above every shadow.
   taken beams dashed `danger`, and its picture where it would land. A
   dragged Servo rings free joints `halo` and joints holding a part dashed
   `danger`. A picked part (#1016) marks the same free and taken targets
-  from the moment it is picked, so a tap can find them.
+  from the moment it is picked, so a tap can find them. A Servo's ring is
+  also where a tap or drop lands (`docs/BUILD_MODE.md` → Parts tray).
 - **Moving a sensor (#806):** no tile follows the finger. The sensor stays
   on its beam drawn as selected, beams are outlined as for a tray drag
   (its own beam `halo`), and its picture shows on another beam that takes
