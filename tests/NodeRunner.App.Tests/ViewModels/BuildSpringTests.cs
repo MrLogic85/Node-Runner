@@ -26,7 +26,6 @@ public sealed class BuildSpringTests
     {
         var (build, gestures) = ThreeLooseJoints();
         build.ConnectLink(BuildLink.Piston, 1, 2).ShouldNotBeNull();
-        build.PickLink(BuildLink.Spring);
 
         Drag(gestures, new Vector2D(0, 0), new Vector2D(100, 0));
 

@@ -14,7 +14,6 @@ public sealed class BuildPistonTests
         var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
 
         build.PickLink(BuildLink.Piston);
-        build.PickLink(BuildLink.Piston);
 
         build.ActiveTool.ShouldBe(BuildTool.Beam);
         build.PickedLink.ShouldBe(BuildLink.Piston);

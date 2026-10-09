@@ -195,11 +195,38 @@ public sealed class BuildViewModelTests
         build.PickedLink.ShouldBe(BuildLink.Spring);
     }
 
+    [Theory]
+    [InlineData(BuildTool.Parts)]
+    [InlineData(BuildTool.Joint)]
+    [InlineData(BuildTool.Select)]
+    public void NoPickedLink_StaysAcrossToolSwitches(BuildTool other)
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
+        build.ClearPickedLink();
+
+        build.ActiveTool = other;
+        build.ActiveTool = BuildTool.Beam;
+
+        build.PickedLink.ShouldBeNull();
+    }
+
+    [Fact]
+    public void PickLink_ThePickedLinkAgain_ClearsIt_AndAnotherPicksIt()
+    {
+        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
+
+        build.PickLink(BuildLink.Beam);
+        build.PickedLink.ShouldBeNull();
+
+        build.PickLink(BuildLink.Spring);
+        build.PickedLink.ShouldBe(BuildLink.Spring);
+    }
+
     [Fact]
     public void Load_PicksBeamAgain()
     {
         var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
-        build.PickLink(BuildLink.Piston);
+        build.ClearPickedLink();
 
         build.Load(new CreatureBuilder().Build());
 

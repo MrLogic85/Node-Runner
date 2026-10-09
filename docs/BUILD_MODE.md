@@ -104,8 +104,9 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     handles: **Move** in the middle, **Rotate** on a stem above and
     **Scale** at the bottom-right corner.
   - A drag is settled by where it starts, first match wins: a handle moves,
-    turns or scales the selection; in Links, an unselected joint or a
-    selected Servo's draws a link; a selected joint moves the selection;
+    turns or scales the selection; in Links, with a link picked, an
+    unselected joint or a selected Servo's draws it; a selected joint moves
+    the selection;
     anywhere inside a group's frame moves the group; an unselected joint is
     selected alone and moved; a sensor is moved to another beam (see
     Sensors).
@@ -123,12 +124,18 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   with a selection, that tap only clears it. Beams are never split (#746).
 - **Links (#705, #913):** with nothing selected, the panel lists Beam,
   Piston, Spring and a locked Wing row (#130). The picked link's row shows
-  what it does right under it (`PartInfo`), and one help line says "Drag
-  from joint to joint to add the picked link." Beam is picked when Build
-  opens; the pick then stays for the visit, across tool switches and
-  selections (#874), and is not saved. Drag from an unselected joint to
-  another joint to draw the picked link; a new link is not selected, and
-  dropping away from a joint places nothing.
+  what it does right under it (`PartInfo`) and "Drag from joint to joint to
+  add it.", and the help line under the rows says "Tap a link to pick it."
+  Beam is picked when Build opens. Tapping the picked row again, or empty
+  canvas with nothing selected, clears the pick (#1057), as in Parts; with
+  a selection, that tap clears the selection first. Back does not clear a
+  link pick, since Beam is where Links starts. The pick, or none,
+  then stays for the visit, across tool switches and selections (#874),
+  and is not saved. Drag from an unselected joint to another joint to draw
+  the picked link; a new link is not selected, and dropping away from a
+  joint places nothing. While a link is picked, those joints are marked
+  (`BuildGestures.LinkDrawnFrom`; see `docs/WORLD_VISUALS.md` → "Picked
+  link"). With none picked, Links works like the other tools (#803).
   - While dragging, the line shows whether it will attach (#920): dashed
     over no joint, solid once it will attach, and dashed danger with a
     crossed ring when that joint would refuse. Dropping there shows the

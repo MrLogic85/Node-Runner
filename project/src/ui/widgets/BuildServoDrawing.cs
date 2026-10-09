@@ -65,11 +65,7 @@ public static class BuildServoDrawing
             }
             else
             {
-                for (var index = 0; index < _refusedRingDashes; index++)
-                {
-                    var start = index * Mathf.Tau / _refusedRingDashes;
-                    pen.Arc(center, radius, start, start + (Mathf.Tau / (_refusedRingDashes * 2)), _refusedDashSegments, theme.Danger, theme.SelectionRingWidth);
-                }
+                pen.DashedRing(center, radius, _refusedRingDashes, _refusedDashSegments, theme.Danger, theme.SelectionRingWidth);
             }
         }
     }

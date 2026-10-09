@@ -140,6 +140,16 @@ public readonly struct UiPixelPen : IDisposable
     public void Ring(Vector2 centre, float radius, Color color, float width, int segments = _ringSegments) =>
         _canvas.DrawArc(ToPixels * centre, radius * Scale, 0, Mathf.Tau, segments, color, width * Scale, antialiased: true);
 
+    /// <summary>A ring of <paramref name="dashes"/> equal dashes, each half its share of the turn, from angle 0.</summary>
+    public void DashedRing(Vector2 centre, float radius, int dashes, int segmentsPerDash, Color color, float width)
+    {
+        for (var dash = 0; dash < dashes; dash++)
+        {
+            var from = dash * Mathf.Tau / dashes;
+            Arc(centre, radius, from, from + (Mathf.Tau / dashes / 2), segmentsPerDash, color, width);
+        }
+    }
+
     public void Disc(Vector2 centre, float radius, Color color) =>
         _canvas.DrawCircle(ToPixels * centre, radius * Scale, color, filled: true, antialiased: true);
 

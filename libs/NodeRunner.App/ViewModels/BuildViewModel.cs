@@ -52,7 +52,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private CreatureBuilder _builder;
     private bool _isActive;
     private BuildTool _activeTool = BuildTool.Joint;
-    private BuildLink _pickedLink = BuildLink.Beam;
+    private BuildLink? _pickedLink = BuildLink.Beam;
     private BuildPart? _pickedPart;
     private bool _locked;
     private string _creationName = string.Empty;
@@ -300,12 +300,13 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The link the Links tool draws when a drag starts from an unselected joint (#705). Beam on
-    /// <see cref="Load"/>; a pick then stays for the visit, across tool switches (#874).
+    /// The link the Links tool draws when a drag starts from an unselected joint (#705), or null. Beam
+    /// on <see cref="Load"/>; a pick, or none, then stays for the visit, across tool switches and
+    /// selections (#874). With none, Links works like the other tools (#1057).
     /// </summary>
-    public BuildLink PickedLink => _pickedLink;
+    public BuildLink? PickedLink => _pickedLink;
 
-    /// <summary>Picks the link the Links tool draws. Locked and future links do nothing.</summary>
+    /// <summary>Picks the link the Links tool draws, or clears it if it is the picked one (#1057). Locked and future links do nothing.</summary>
     public void PickLink(BuildLink link)
     {
         if (_activeTool != BuildTool.Beam || !BuildLinkList.IsAvailable(link) || (_locked && BuildLinkList.HasBrainPorts(link)))
@@ -313,8 +314,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             return;
         }
 
-        SetPickedLink(link);
+        SetPickedLink(_pickedLink == link ? null : link);
     }
+
+    /// <summary>Clears <see cref="PickedLink"/> (#1057). Back does not, since Beam is where Links starts.</summary>
+    public void ClearPickedLink() => SetPickedLink(null);
 
     /// <summary>
     /// Whether the settings panels show their Advanced section (#903): one flag for the whole Build
@@ -371,7 +375,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(PickedPart));
     }
 
-    private void SetPickedLink(BuildLink link)
+    private void SetPickedLink(BuildLink? link)
     {
         if (_pickedLink == link)
         {

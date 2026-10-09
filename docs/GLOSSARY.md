@@ -28,9 +28,11 @@ textbook terms (population, candidate, genome).
   `docs/TRAINING_LOOP.md` → Generations.
 - **Latest** — The best trial of the most recently finished generation; it
   can go down. See: `docs/TRAINING_LOOP.md` → "Latest and best ever".
-- **Links tool** — The Build rail tool that draws a Beam by default, or a
-  link such as a Piston when that row is picked. Its rail label and
-  side-panel title say "Links" (#913); in code it is `BuildTool.Beam`.
+- **Links tool** — The Build rail tool that draws the picked link, such as
+  a Beam (picked when Build opens) or a Piston; with none picked it works
+  like the other tools (#1057). Its rail label and side-panel title say
+  "Links" (#913); in code it is `BuildTool.Beam`. See:
+  `docs/BUILD_MODE.md` → Interactions.
 - **Locked** — A Creation that has trained at least one generation: Build
   keeps what the trained model needs (`CreationLock.IsLocked`, #369). See:
   `docs/TRAINING_LOOP.md` → "Product lifecycle boundary".
