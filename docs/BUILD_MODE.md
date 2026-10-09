@@ -31,7 +31,7 @@ boundary. `reference design/components/Build/README.md`,
   lengths), parameters change and parts can be renamed. A part with ports (a sensor, Piston or Servo) can be neither
   added nor deleted: every tray row and the Piston row are locked, the
   tray's help line says "Unlock to add parts.", and tapping a row so
-  locked shows "Locked: the model is trained for these parts."
+  locked shows "The creation is locked to avoid changes to the model, unlock to enable."
   (`BuildViewModel.LockedReason`) in a notification; a Coming later row
   still names its version (see Parts tray). Delete stays,
   Unavailable, when it would take a part with ports along, also by cascade,

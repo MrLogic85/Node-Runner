@@ -9,7 +9,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 /// </summary>
 public sealed class BuildLockedTests
 {
-    private static readonly UiText _lockedReason = UiText.Plain("Locked: the model is trained for these parts.");
+    private static readonly UiText _lockedReason = UiText.Plain("The creation is locked to avoid changes to the model, unlock to enable.");
 
     [Fact]
     public void AJointABeamAndASpring_AreAdded_AndUndoneAndRedoneOneByOne()
