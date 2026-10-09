@@ -172,11 +172,11 @@ public sealed class PartParametersTests
     }
 
     [Fact]
-    public void CameraRange_RunsFrom1To4Metres_InStepsOfATenth_WithTheDefaultOnAStep()
+    public void CameraRange_RunsFrom1To10Metres_InStepsOfATenth_WithTheDefaultOnAStep()
     {
         PartParameters.ValueAt(PartParameterId.CameraRange, 0).ShouldBe(100, tolerance: 1e-9);
-        PartParameters.ValueAt(PartParameterId.CameraRange, 1).ShouldBe(400, tolerance: 1e-9);
-        PartParameters.SliderOver(PartParameterId.CameraRange, [SensorDef.DefaultRange]).Step.ShouldBe(0.1 / 3, tolerance: 1e-12);
+        PartParameters.ValueAt(PartParameterId.CameraRange, 1).ShouldBe(1000, tolerance: 1e-9);
+        PartParameters.SliderOver(PartParameterId.CameraRange, [SensorDef.DefaultRange]).Step.ShouldBe(0.1 / 9, tolerance: 1e-12);
         var slider = PartParameters.SliderOver(PartParameterId.CameraRange, [SensorDef.DefaultRange]);
         slider.Readout.ShouldBe(UiText.Format("{0} m", new FixedNumber(2.2, 1)));
         PartParameters.ValueAt(PartParameterId.CameraRange, slider.High).ShouldBe(SensorDef.DefaultRange, tolerance: 1e-9);

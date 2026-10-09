@@ -265,7 +265,7 @@ public sealed class CreationShareCodeTests
     [InlineData("spread", 10 * Math.PI / 180)]
     [InlineData("spread", Math.PI)]
     [InlineData("range", 50.0)]
-    [InlineData("range", 1000.0)]
+    [InlineData("range", 1050.0)]
     public void Read_ACameraOffItsSliders_IsRefusedAsDamaged(string field, double value)
     {
         var file = CameraWalkerFile();

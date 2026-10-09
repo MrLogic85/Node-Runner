@@ -162,9 +162,9 @@ public sealed class CreatureBuilderTests
     [InlineData(PartParameterId.Spread, 10 * Math.PI / 180, false)]
     [InlineData(PartParameterId.Spread, Math.PI, false)]
     [InlineData(PartParameterId.CameraRange, 100, true)]
-    [InlineData(PartParameterId.CameraRange, 400, true)]
+    [InlineData(PartParameterId.CameraRange, 1000, true)]
     [InlineData(PartParameterId.CameraRange, 90, false)]
-    [InlineData(PartParameterId.CameraRange, 450, false)]
+    [InlineData(PartParameterId.CameraRange, 1010, false)]
     public void IsWithinBuildLimits_ChecksACamerasSettings(PartParameterId parameter, double value, bool within)
     {
         var builder = PairBuilder();

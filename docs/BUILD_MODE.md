@@ -340,7 +340,7 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   that follows Radius. Its note: "Rolls freely on the ground."
 - **Camera:** Aim, set on the canvas, one Camera at a time; Rays (1, 3 or
   5, three evenly spaced stops, #578), Spread (15°–90°, step 5) and Range
-  (1.0–4.0 m, step 0.1) in the panel. Spread shows disabled while every
+  (1.0–10.0 m, step 0.1, #1097) in the panel. Spread shows disabled while every
   selected Camera has one ray, since one ray has no spread
   (`BuildViewModel.HasEffect`); a tap on it says so
   (`PartParameter.NoEffectReason`).
