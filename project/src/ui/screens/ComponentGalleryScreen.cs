@@ -21,6 +21,7 @@ public partial class ComponentGalleryScreen : GalleryScreen
         _scroll = GetNode<ScrollContainer>("%Scroll");
         _scrollContent = GetNode<MarginContainer>("%ContentFrame");
         BindAuthoredControls(_scrollContent);
+        GetNode<UiTextField>("%CreationNameFact").FactSource = () => "You already have one by this name.";
         UiNativeScroll.AllowGesturesToBubble(_scrollContent);
         Callable.From(ResetScrollPosition).CallDeferred();
     }

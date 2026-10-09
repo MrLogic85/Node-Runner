@@ -2,7 +2,10 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Single-line text input with standard and compact sizes.</summary>
+/// <summary>
+/// Single-line text input with standard and compact sizes. One line under it (the reference's
+/// <c>c_field_line</c>) says why the text is refused, in danger, or else a plain fact about it, muted.
+/// </summary>
 [Tool]
 [GlobalClass]
 public partial class UiTextField : VBoxContainer, ISerializationListener
@@ -23,12 +26,13 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
     private Label? _label;
     private LineEdit? _editor;
     private TextureRect? _stateIcon;
-    private Label? _errorLabel;
+    private Label? _lineLabel;
     private string _textValue = "Creation name";
     private string _labelText = string.Empty;
     private string _errorText = string.Empty;
     private string _placeholderText = string.Empty;
     private Func<string>? _placeholderSource;
+    private Func<string>? _factSource;
     private TextInputSize _size = TextInputSize.Standard;
     private TextInputState _state;
     private bool _holdErrorUntilTextChanges;
@@ -95,6 +99,20 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         {
             _placeholderSource = value;
             ApplyPlaceholder();
+        }
+    }
+
+    /// <summary>
+    /// Already translated fact shown muted under the field while it shows no error, such as a name
+    /// already in use (#1061); asked again when the language changes. Null shows none.
+    /// </summary>
+    public Func<string>? FactSource
+    {
+        get => _factSource;
+        set
+        {
+            _factSource = value;
+            ApplyLine();
         }
     }
 
@@ -178,9 +196,17 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         {
             UiThemeRefresh.Guarded(this, Refresh);
         }
-        else if (what == NotificationTranslationChanged && _placeholderSource is not null)
+        else if (what == NotificationTranslationChanged)
         {
-            ApplyPlaceholder();
+            if (_placeholderSource is not null)
+            {
+                ApplyPlaceholder();
+            }
+
+            if (_factSource is not null)
+            {
+                ApplyLine();
+            }
         }
     }
 
@@ -212,9 +238,9 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         _editor = GetChildren(includeInternal: true)
             .OfType<LineEdit>()
             .FirstOrDefault();
-        _errorLabel = GetChildren(includeInternal: true)
+        _lineLabel = GetChildren(includeInternal: true)
             .OfType<Label>()
-            .FirstOrDefault(label => label.Name == "ErrorLabel");
+            .FirstOrDefault(label => label.Name == "Line");
         _stateIcon = _editor?.GetChildren(includeInternal: true)
             .OfType<TextureRect>()
             .FirstOrDefault();
@@ -246,11 +272,11 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
         ConnectEditorEvents();
 
-        if (_errorLabel is null)
+        if (_lineLabel is null)
         {
-            _errorLabel = UiFieldAndRows.Label(string.Empty, UiTokens.Typography.Note, UiTokens.Color.Danger);
-            _errorLabel.Name = "ErrorLabel";
-            AddChild(_errorLabel, false, InternalMode.Front);
+            _lineLabel = UiFieldAndRows.Label(string.Empty, UiTokens.Typography.Note, UiTokens.Color.Danger);
+            _lineLabel.Name = "Line";
+            AddChild(_lineLabel, false, InternalMode.Front);
         }
     }
 
@@ -396,13 +422,23 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
         RefreshStateIcon(border);
         LayoutStateIcon();
 
-        if (_errorLabel is not null)
+        ApplyLine();
+    }
+
+    // The fact arrives translated; the error text is translated here.
+    private void ApplyLine()
+    {
+        if (_lineLabel is null || !IsInsideTree())
         {
-            UiTranslation.ShareContext(this, _errorLabel);
-            _errorLabel.Text = ErrorText;
-            _errorLabel.Visible = State == TextInputState.Error && !string.IsNullOrWhiteSpace(ErrorText);
-            UiThemeLookup.ApplyTextStyle(_errorLabel, UiTokens.Typography.Note, UiTokens.Color.Danger);
+            return;
         }
+
+        var (text, error) = UiComponentContracts.FieldLine(State == TextInputState.Error, ErrorText, _factSource?.Invoke());
+        UiTranslation.ShareContext(this, _lineLabel);
+        _lineLabel.AutoTranslateMode = error ? AutoTranslateModeEnum.Inherit : AutoTranslateModeEnum.Disabled;
+        _lineLabel.Text = text;
+        _lineLabel.Visible = text.Length > 0;
+        UiThemeLookup.ApplyTextStyle(_lineLabel, UiTokens.Typography.Note, error ? UiTokens.Color.Danger : UiTokens.Color.Muted);
     }
 
     private void RefreshStateIcon(Color iconColor)

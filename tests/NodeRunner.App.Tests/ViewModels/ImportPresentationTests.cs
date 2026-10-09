@@ -25,7 +25,7 @@ public sealed class ImportPresentationTests
         var walker = CreationExamples.Walker.Creature;
         var build = new CreationDef(Guid.NewGuid(), "Walker", walker);
 
-        var preview = ImportPresentation.For(new ShareCodeRead(build, null));
+        var preview = ImportPresentation.For(new ShareCodeRead(build, null), []);
 
         preview.State.ShouldBe(ImportState.Preview);
         preview.Build.ShouldBe(build);
@@ -51,7 +51,7 @@ public sealed class ImportPresentationTests
             [new SpringDef(8, 1, 3)],
             nextPartId: 12);
 
-        var preview = ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "All", creature), null));
+        var preview = ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "All", creature), null), []);
 
         preview.Parts.Select(row => (row.Kind, row.Count)).ShouldBe([
             (PartSettingsKind.Node, 4),
@@ -72,7 +72,7 @@ public sealed class ImportPresentationTests
     [InlineData(ShareCodeRefusal.NothingToBuild, "Nothing to build", "This creation has no parts yet.")]
     public void ARefusal_SaysWhy_AndCannotAdd(ShareCodeRefusal refusal, string title, string text)
     {
-        var refused = ImportPresentation.For(ShareCodeRead.Refused(refusal));
+        var refused = ImportPresentation.For(ShareCodeRead.Refused(refusal), []);
 
         refused.State.ShouldBe(ImportState.Refused);
         refused.Build.ShouldBeNull();
@@ -81,4 +81,39 @@ public sealed class ImportPresentationTests
         refused.NoteText.ShouldBe(UiText.Plain(text));
         refused.CanAdd.ShouldBeFalse();
     }
+
+    [Fact]
+    public void PasteIsPrimary_UntilABuildShows()
+    {
+        ImportPresentation.Waiting.PasteIsPrimary.ShouldBeTrue();
+        ImportPresentation.For(ShareCodeRead.Refused(ShareCodeRefusal.NotACreation), []).PasteIsPrimary.ShouldBeTrue();
+        Walker([]).PasteIsPrimary.ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("Walker")]
+    [InlineData("walker")]
+    [InlineData("  Walker ")]
+    public void NameLine_SaysTheNameIsTaken_InAnyCaseOrSpacing(string name)
+    {
+        Walker(["Strider", "Walker"]).NameLine(name).ShouldBe(UiText.Plain("You already have one by this name."));
+    }
+
+    [Theory]
+    [InlineData("Walker 2")]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void NameLine_IsNull_ForAFreeOrBlankName(string name)
+    {
+        Walker(["Walker"]).NameLine(name).ShouldBeNull();
+    }
+
+    [Fact]
+    public void NameLine_IsNull_WithNoBuild()
+    {
+        ImportPresentation.For(ShareCodeRead.Refused(ShareCodeRefusal.Damaged), ["Walker"]).NameLine("Walker").ShouldBeNull();
+    }
+
+    private static ImportPresentation Walker(IReadOnlyList<string> takenNames) =>
+        ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "Walker", CreationExamples.Walker.Creature), null), takenNames);
 }

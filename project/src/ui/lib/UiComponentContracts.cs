@@ -145,6 +145,15 @@ public static class UiComponentContracts
     public static int EditorMaxLength(int limit, int currentLength) =>
         limit <= 0 ? 0 : Math.Max(limit, currentLength);
 
+    /// <summary>
+    /// The one line under a text field (#1061): its error while it is in error and has error text,
+    /// otherwise its fact. Blank text hides the line.
+    /// </summary>
+    public static (string Text, bool IsError) FieldLine(bool inError, string errorText, string? fact) =>
+        inError && !string.IsNullOrWhiteSpace(errorText)
+            ? (errorText, true)
+            : (string.IsNullOrWhiteSpace(fact) ? string.Empty : fact, false);
+
     public static double ClampSliderPosition(double position)
     {
         if (!double.IsFinite(position))
