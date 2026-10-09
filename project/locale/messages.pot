@@ -407,6 +407,10 @@ msgid "Hills"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How far it can see"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How far it can turn"
 msgstr ""
 
@@ -423,6 +427,10 @@ msgid "How hard it springs back"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How many rays it looks along"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How quickly it reaches full force"
 msgstr ""
 
@@ -432,6 +440,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How well the tyre holds the ground. Low grip slides"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How wide its rays fan out"
 msgstr ""
 
 #: project/scenes/screens/ImportScreen.tscn
@@ -444,6 +456,14 @@ msgstr ""
 
 #: project/src/hosts/CreationActions.cs
 msgid "Import failed"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Its rays see how near the ground is."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Its rays see how near the ground is. Drag the round handle to aim it."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -592,6 +612,10 @@ msgstr ""
 msgid "One part per joint"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "One ray has no spread."
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "One sensor per beam"
 msgstr ""
@@ -680,6 +704,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "Range"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Rays"
 msgstr ""
 
 #: project/scenes/ui/UiNotificationContent.tscn
@@ -820,6 +848,10 @@ msgstr ""
 
 #: project/src/ui/lib/UiToggleRow.cs
 msgid "Sounds"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Spread"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
@@ -1020,14 +1052,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
 msgid "This text is not a Node Runner creation."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Three rays see how near the ground is."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Three rays see how near the ground is. Drag the round handle to aim it."
 msgstr ""
 
 #: project/scenes/screens/TrainingScreen.tscn
@@ -1363,6 +1387,14 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
 msgid "{0}: centre"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+msgid "{0}: far left"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+msgid "{0}: far right"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs

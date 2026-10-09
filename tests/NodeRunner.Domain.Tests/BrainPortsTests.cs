@@ -149,11 +149,31 @@ public sealed class BrainPortsTests
     public void SensorPorts_UseTheSavedChannelKeys()
     {
         BrainPorts.AccelerometerChannels.ShouldBe(["along", "across"]);
-        BrainPorts.CameraChannels.ShouldBe(["left1", "centre", "right1", "hit"]);
+        BrainPorts.CameraChannels(3).ShouldBe(["left1", "centre", "right1", "hit"]);
         BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Accelerometer)).Select(port => port.Channel)
             .ShouldBe(BrainPorts.AccelerometerChannels);
         BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Camera)).Select(port => port.Channel)
-            .ShouldBe(BrainPorts.CameraChannels);
+            .ShouldBe(BrainPorts.CameraChannels(SensorDef.DefaultRays));
+    }
+
+    [Theory]
+    [InlineData(1, new[] { "centre", "hit" })]
+    [InlineData(3, new[] { "left1", "centre", "right1", "hit" })]
+    [InlineData(5, new[] { "left2", "left1", "centre", "right1", "right2", "hit" })]
+    public void CameraPorts_AreOnePerRayFromLeftToRight_ThenHit(int rays, string[] channels)
+    {
+        BrainPorts.CameraChannels(rays).ShouldBe(channels);
+        BrainPorts.SensorPorts(new SensorDef(3, 1, SensorKind.Camera, rays: rays))
+            .ShouldBe(channels.Select(channel => BrainPort.Input(3, channel)));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    [InlineData(7)]
+    public void CameraChannels_OfAnUnknownRayCount_Throw(int rays)
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => BrainPorts.CameraChannels(rays));
     }
 
     // Three nodes in a row with passive joints: a Piston (6) links the end nodes, an

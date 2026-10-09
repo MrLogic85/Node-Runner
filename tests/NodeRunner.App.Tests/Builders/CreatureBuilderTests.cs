@@ -123,6 +123,60 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
+    public void ParametersOf_ACamera_AreItsAimRaysSpreadAndRange_AndSettingOneKeepsTheOthers()
+    {
+        var builder = PairBuilder();
+        builder.AddSensor(builder.Beams[0].Id, SensorKind.Camera, out var camera, out _);
+        var aim = builder.Sensors[0].Aim!.Value;
+
+        builder.ParametersOf(camera).ShouldBe([PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
+        builder.ParameterValue(camera, PartParameterId.Rays).ShouldBe(3);
+        builder.ParameterValue(camera, PartParameterId.Spread).ShouldBe(Math.PI / 2);
+        builder.ParameterValue(camera, PartParameterId.CameraRange).ShouldBe(220);
+
+        builder.SetParameter(camera, PartParameterId.Rays, 1);
+        builder.SetParameter(camera, PartParameterId.Spread, 0.5);
+        builder.SetParameter(camera, PartParameterId.CameraRange, 150);
+
+        builder.Sensors.ShouldBe([new SensorDef(camera, builder.Beams[0].Id, SensorKind.Camera, aim: aim, rays: 1, spread: 0.5, range: 150)]);
+        builder.ParameterHasEffect(camera, PartParameterId.Spread).ShouldBeFalse();
+        builder.ParameterHasEffect(camera, PartParameterId.CameraRange).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData(2.0)]
+    [InlineData(2.5)]
+    [InlineData(7.0)]
+    public void Rays_OtherThanOneThreeOrFive_Throw(double rays)
+    {
+        var builder = PairBuilder();
+        builder.AddSensor(builder.Beams[0].Id, SensorKind.Camera, out var camera, out _);
+
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(camera, PartParameterId.Rays, rays));
+        builder.Sensors[0].Rays.ShouldBe(3);
+    }
+
+    [Theory]
+    [InlineData(PartParameterId.Spread, 15 * Math.PI / 180, true)]
+    [InlineData(PartParameterId.Spread, Math.PI / 2, true)]
+    [InlineData(PartParameterId.Spread, 10 * Math.PI / 180, false)]
+    [InlineData(PartParameterId.Spread, Math.PI, false)]
+    [InlineData(PartParameterId.CameraRange, 100, true)]
+    [InlineData(PartParameterId.CameraRange, 400, true)]
+    [InlineData(PartParameterId.CameraRange, 90, false)]
+    [InlineData(PartParameterId.CameraRange, 450, false)]
+    public void IsWithinBuildLimits_ChecksACamerasSettings(PartParameterId parameter, double value, bool within)
+    {
+        var builder = PairBuilder();
+        builder.AddSensor(builder.Beams[0].Id, SensorKind.Camera, out var camera, out _);
+        builder.IsWithinBuildLimits().ShouldBeTrue();
+
+        builder.SetParameter(camera, parameter, value);
+
+        builder.IsWithinBuildLimits().ShouldBe(within);
+    }
+
+    [Fact]
     public void Aim_OnAnAccelerometer_Throws()
     {
         var builder = PairBuilder();
@@ -130,6 +184,8 @@ public sealed class CreatureBuilderTests
 
         builder.ParametersOf(sensor).ShouldBeEmpty();
         Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(sensor, PartParameterId.Aim, 1));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(sensor, PartParameterId.Rays, 1));
+        builder.IsWithinBuildLimits().ShouldBeTrue();
     }
 
     [Fact]
@@ -500,6 +556,20 @@ public sealed class CreatureBuilderTests
         builder.MoveSensor(camera, to, out _).ShouldBeTrue();
 
         builder.Sensors.Single().Aim!.Value.ShouldBe(expected, 1e-9);
+    }
+
+    [Fact]
+    public void MoveSensor_Camera_KeepsItsRaysSpreadAndRange()
+    {
+        var builder = TwoBeams(out var from, out var to);
+        builder.AddSensor(from, SensorKind.Camera, out var camera, out _);
+        builder.SetParameter(camera, PartParameterId.Rays, 5);
+        builder.SetParameter(camera, PartParameterId.Spread, 0.5);
+        builder.SetParameter(camera, PartParameterId.CameraRange, 300);
+
+        builder.MoveSensor(camera, to, out _).ShouldBeTrue();
+
+        builder.Sensors.Single().ShouldBe(new SensorDef(camera, to, SensorKind.Camera, aim: builder.Sensors.Single().Aim, rays: 5, spread: 0.5, range: 300));
     }
 
     [Fact]

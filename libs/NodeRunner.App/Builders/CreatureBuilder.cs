@@ -289,13 +289,33 @@ public sealed class CreatureBuilder
     /// </summary>
     public bool IsWithinBuildLimits() =>
         _nodes.All(node => BuildViewModel.BuildArea.Contains(node.Position))
-        && _pistons.Select(piston => piston.Id).Concat(_servos.Select(servo => servo.Id)).Concat(_springs.Select(spring => spring.Id)).Concat(_wheels.Select(wheel => wheel.Id))
+        && _pistons.Select(piston => piston.Id).Concat(_servos.Select(servo => servo.Id)).Concat(_springs.Select(spring => spring.Id)).Concat(_wheels.Select(wheel => wheel.Id)).Concat(_sensors.Select(sensor => sensor.Id))
             .All(partId => ParametersOf(partId).All(parameter =>
                 PartParameters.Of(parameter).Slider is not { } slider || slider.Range.Allows(slider.Shown(ParameterValue(partId, parameter)))));
+
+    /// <summary>
+    /// Whether <paramref name="parameter"/> does anything on part <paramref name="partId"/> as it is
+    /// set now: a one-ray Camera has no Spread (#578).
+    /// </summary>
+    public bool ParameterHasEffect(int partId, PartParameterId parameter) =>
+        parameter != PartParameterId.Spread || Camera(partId).Rays > 1;
 
     /// <summary>Part <paramref name="partId"/>'s <paramref name="parameter"/>, in world units.</summary>
     public double ParameterValue(int partId, PartParameterId parameter)
     {
+        if (_sensors.Any(sensor => sensor.Id == partId))
+        {
+            var camera = Camera(partId);
+            return parameter switch
+            {
+                PartParameterId.Aim => camera.Aim ?? DefaultAim(camera.BeamId),
+                PartParameterId.Rays => camera.Rays!.Value,
+                PartParameterId.Spread => camera.Spread!.Value,
+                PartParameterId.CameraRange => camera.Range!.Value,
+                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+            };
+        }
+
         if (_springs.Any(spring => spring.Id == partId))
         {
             var spring = _springs[SpringIndexOf(partId)];
@@ -341,7 +361,6 @@ public sealed class CreatureBuilder
             PartParameterId.StartPosition => _pistons[PistonIndexOf(partId)].Start,
             PartParameterId.MaxSpeed => _pistons[PistonIndexOf(partId)].MaxSpeed,
             PartParameterId.RiseTime => _pistons[PistonIndexOf(partId)].RiseTime,
-            PartParameterId.Aim => Camera(partId).Aim ?? DefaultAim(Camera(partId).BeamId),
             _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
         };
     }
@@ -349,10 +368,19 @@ public sealed class CreatureBuilder
     /// <summary>Sets part <paramref name="partId"/>'s <paramref name="parameter"/>, in world units, keeping its other settings.</summary>
     public void SetParameter(int partId, PartParameterId parameter, double value)
     {
-        if (parameter == PartParameterId.Aim)
+        if (_sensors.Any(sensor => sensor.Id == partId))
         {
             var camera = Camera(partId);
-            _sensors[SensorIndexOf(partId)] = camera.WithAim(value);
+            _sensors[SensorIndexOf(partId)] = parameter switch
+            {
+                PartParameterId.Aim => camera.WithAim(value),
+                PartParameterId.Rays => camera.WithRays(value == Math.Round(value) && value is >= int.MinValue and <= int.MaxValue
+                    ? (int)value
+                    : throw new ArgumentOutOfRangeException(nameof(value), "A Camera's rays are a whole number.")),
+                PartParameterId.Spread => camera.WithSpread(value),
+                PartParameterId.CameraRange => camera.WithRange(value),
+                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+            };
             return;
         }
 
@@ -421,11 +449,11 @@ public sealed class CreatureBuilder
 
     private static readonly PartParameterId[] _wheelParameters = [PartParameterId.WheelRadius, PartParameterId.Grip];
 
-    private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim];
+    private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange];
 
     private SensorDef Camera(int sensorId) => _sensors[SensorIndexOf(sensorId)] is { Kind: SensorKind.Camera } camera
         ? camera
-        : throw new ArgumentOutOfRangeException(nameof(sensorId), "Only a Camera has an aim.");
+        : throw new ArgumentOutOfRangeException(nameof(sensorId), "Only a Camera has settings.");
 
     private double DefaultAim(int beamId)
     {
@@ -685,8 +713,8 @@ public sealed class CreatureBuilder
 
     /// <summary>
     /// The sensor as it would be on <paramref name="beamId"/> (#806): the same id, so the same brain
-    /// ports, kind and name. A Camera keeps the world direction it looks in as built, so its aim
-    /// along the new beam changes.
+    /// ports, kind, name and settings. A Camera keeps the world direction it looks in as built, so
+    /// its aim along the new beam changes.
     /// </summary>
     public SensorDef SensorMovedTo(int sensorId, int beamId)
     {
@@ -700,7 +728,7 @@ public sealed class CreatureBuilder
             aim = CameraRays.AimAlong(CameraRays.BeamAngle(fromA, fromB) + beamAim, toA, toB);
         }
 
-        return new SensorDef(sensor.Id, beamId, sensor.Kind, sensor.Name, aim);
+        return sensor.OnBeam(beamId, aim);
     }
 
     private (Vector2D NodeA, Vector2D NodeB) BeamEnds(int beamId)

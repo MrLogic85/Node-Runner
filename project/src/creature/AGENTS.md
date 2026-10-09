@@ -61,7 +61,7 @@ file owns how Godot realises it.
 - `IBeamSensor.cs` — what `Creature` needs from a sensor: value names,
   `Read`, `Reset`
 - `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is
-  three `RayCast2D` children aimed by `CameraRays`)
+  one `RayCast2D` child per ray, aimed and sized by `CameraRays`)
 - `ServoJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
 - `*Visual.cs` — rendering only: Training's adapters over the shared part
   visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds

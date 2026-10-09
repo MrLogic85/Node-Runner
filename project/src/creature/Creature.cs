@@ -730,7 +730,7 @@ public partial class Creature : Node2D
             _sensors[i] = sensor.Kind switch
             {
                 SensorKind.Accelerometer => CreateAccelerometer(definition, beamIndex, gravity),
-                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], sensor.Aim ?? 0),
+                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], sensor),
                 _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
             };
         }
@@ -830,8 +830,8 @@ public partial class Creature : Node2D
             .ToArray();
     }
 
-    // Each sensor part writes its values (Accelerometer: along, across; Camera: left1, centre,
-    // right1, hit), then each Piston its length and speed, into the raw buffer in sim order;
+    // Each sensor part writes its values (Accelerometer: along, across; Camera: one per ray from
+    // left to right, then hit), then each Piston its length and speed, into the raw buffer in sim order;
     // they are then copied into the brain's port order (BrainPorts).
     private void ReadSensors(double[] values, double delta)
     {

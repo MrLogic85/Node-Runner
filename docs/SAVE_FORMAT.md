@@ -73,7 +73,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 |---|---|---|
 | `nodes[]` | `{ id, position: { x, y }, name }` | Joints. `name` is `null` until renamed. A joint's radius follows from its parts and is not saved (#626). |
 | `beams[]` | `{ id, nodeA, nodeB, name }` | Beams between two node ids. |
-| `sensors[]` | `{ id, beamId, kind, name, aim }` | One sensor per beam. `kind` is `accelerometer` or `camera`. `aim` is the Camera's centre ray from its beam, and `null` for other kinds. |
+| `sensors[]` | `{ id, beamId, kind, name, aim, rays, spread, range }` | One sensor per beam. `kind` is `accelerometer` or `camera`. A Camera's `aim` is its centre ray from its beam, `rays` its odd ray count (1, 3 or 5), `spread` the radians between its outer rays and `range` its rays' length in world units (#578); all four are `null` for other kinds. |
 | `servos[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, range, start, maxSpeed, riseTime }` | Servo joint motors (#452). `fixedLinkId` and `targetLinkId` name a Beam, Piston or Spring touching `nodeId`, or `null` once that link is deleted (training is then blocked until the player picks one). `strength` in world torque units (N·m × 10⁴), `range` rad, `maxSpeed` rad/s, `start` 0–1, `riseTime` s. |
 | `pistons[]` | `{ id, nodeA, nodeB, name, strength, stroke, start, maxSpeed, riseTime }` | Pistons between two node ids (#451). `strength` in world force units (100 per N), `stroke` (0, 1] (#870, #835), `start` 0–1, `maxSpeed` world units/s (100 per m/s), `riseTime` s (#801; missing reads as 0.2). |
 | `springs[]` | `{ id, nodeA, nodeB, name, stiffness, damping, stroke, coilLength }` | Springs between two node ids (#453). `stiffness` N/m, `damping` N·s/m (#801; saves from before it damp almost nothing), both the same number in world units; `stroke` (0, 1] and `coilLength` 0…1 (#835), missing reads as a new Spring's 1 and ⅔. |
@@ -158,6 +158,7 @@ Current `creation.json` migrations:
 | 2 | 3 | #870: a Piston's `stroke` ±s (missing: 0.3) becomes `2s / (1 − s)`, capped at 1, with `start: 0.5`, which keeps its shortest and longest lengths up to ±⅓. Its `length` input went from −1…1 around the built length to 0…1 over its travel, so each enabled connection from it doubles its `weight` and takes the old weight off the target neuron's `bias`: a trained brain drives its Pistons as before. |
 | 3 | 4 | #835: each Spring gets `stroke: 1` and `coilLength: 0.55`: stops about a third of its gap either side of its drawn length (0.325 in, 0.35 out, #974), resting free near the middle as before. A Piston's travel now runs on the gap between its joints' edges, which shortens it a little, but its saved shape is unchanged, so Piston saves load without migration. |
 | 4 | 5 | #129: add required `creature.wheels: []`. |
+| 5 | 6 | #578: each Camera gets `rays: 3`, `spread: π/2` and `range: 220`, the fan every Camera had, so it sees and reads as before. |
 
 ### Changing a saved shape
 
@@ -190,7 +191,7 @@ owns it.
   on one line with `training` and `trainSettings` `null` and the id
   `00000000-0000-0000-0000-000000000001`, zlib-compressed against that
   version's share dictionary, in URL-safe base64 without padding. The
-  Walker's is about 70 characters, starting `NR5.`. It holds the build
+  Walker's is about 70 characters, starting `NR6.`. It holds the build
   only, so the copy trains from scratch.
 - A share dictionary is a `creation.json` in its version with every kind
   of part (`libs/NodeRunner.App/Repositories/ShareDictionaries/`), so a

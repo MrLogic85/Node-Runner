@@ -49,6 +49,14 @@ public sealed class CreationVersioningTests : IDisposable
             piston["start"] = 0.5;
         }
 
+        // Its sensor is an Accelerometer, which has no Camera settings (#578).
+        foreach (var sensor in expected["creature"]!["sensors"]!.AsArray())
+        {
+            sensor!["rays"] = null;
+            sensor["spread"] = null;
+            sensor["range"] = null;
+        }
+
         // The brain's Piston length weights move too; Fixture013_ItsTrainedBrainDrivesItsPistonsAsBefore covers them.
         written["training"]?.AsObject().Remove("brain");
         expected["training"]?.AsObject().Remove("brain");
@@ -89,6 +97,63 @@ public sealed class CreationVersioningTests : IDisposable
         var spring = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Springs.ShouldHaveSingleItem();
 
         spring.ShouldBe(new SpringDef(50, 3, 4, null, 300, 5, stroke: 1, coilLength: 0.55));
+    }
+
+    // #578: a Camera saved before it had settings keeps today's fan.
+    [Fact]
+    public void AVersion5Save_WithACamera_GivesItTodaysFan()
+    {
+        var file = Version5Walker();
+        file["creature"]!["sensors"]![0]!["kind"] = "camera";
+        file["creature"]!["sensors"]![0]!["aim"] = 0.25;
+        WriteCreation(file.ToJsonString());
+
+        var camera = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Sensors.ShouldHaveSingleItem();
+
+        camera.ShouldBe(new SensorDef(8, 5, SensorKind.Camera, aim: 0.25, rays: 3, spread: Math.PI / 2, range: 220));
+        BrainPorts.SensorPorts(camera).Select(port => port.Channel).ShouldBe(["left1", "centre", "right1", "hit"]);
+    }
+
+    [Fact]
+    public void AVersion5Save_WithAnAccelerometer_LoadsWithoutCameraSettings()
+    {
+        WriteCreation(Version5Walker().ToJsonString());
+
+        var sensor = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Sensors.ShouldHaveSingleItem();
+
+        sensor.Rays.ShouldBeNull();
+        sensor.Spread.ShouldBeNull();
+        sensor.Range.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("5")]
+    public void AVersion5Save_WithASensorThatIsNotAnObject_IsSkipped_AndTheOthersStillList(string sensor)
+    {
+        var bad = Version5Walker();
+        bad["id"] = Guid.NewGuid().ToString();
+        bad["creature"]!["sensors"] = JsonNode.Parse($"[{sensor}]");
+        WriteCreation(bad.ToJsonString());
+        WriteCreation(Fixture013("walker.creation.json"));
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public void AVersion6Save_WithACameraOffItsSettings_IsSkipped()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file[_versionField]!.GetValue<int>().ShouldBe(6);
+        file["creature"]!["sensors"]![0]!["kind"] = "camera";
+        file["creature"]!["sensors"]![0]!["rays"] = 3;
+        WriteCreation(file.ToJsonString());
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Sensors[0].Rays.ShouldBe(3);
+
+        file["creature"]!["sensors"]![0]!["rays"] = 4;
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
     }
 
     [Fact]
@@ -356,6 +421,21 @@ public sealed class CreationVersioningTests : IDisposable
 
     private static CreationDef LoadFixture013(string name) =>
         FileCreationRepository.Format.Deserialize(Fixture013(name), name).Value;
+
+    // The Walker as version 5 wrote it: its sensors without Camera settings.
+    private static JsonObject Version5Walker()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file[_versionField] = 5;
+        foreach (var sensor in file["creature"]!["sensors"]!.AsArray())
+        {
+            sensor!.AsObject().Remove("rays");
+            sensor.AsObject().Remove("spread");
+            sensor.AsObject().Remove("range");
+        }
+
+        return file;
+    }
 
     private static string WithVersion(string json, int version)
     {

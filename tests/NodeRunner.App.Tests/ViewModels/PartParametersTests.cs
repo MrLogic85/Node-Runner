@@ -137,12 +137,50 @@ public sealed class PartParametersTests
     [InlineData(PartParameterId.CoilLength, 0.35)]
     [InlineData(PartParameterId.WheelRadius, 70)]
     [InlineData(PartParameterId.Grip, 0.6)]
+    [InlineData(PartParameterId.Rays, 5)]
+    [InlineData(PartParameterId.Spread, Math.PI / 4)]
+    [InlineData(PartParameterId.CameraRange, 220)]
+    [InlineData(PartParameterId.CameraRange, 370)]
     public void ASharedValue_RoundTripsThroughItsSlider(PartParameterId id, double value)
     {
         var slider = PartParameters.SliderOver(id, [value, value]);
 
         slider.ValuesDiffer.ShouldBeFalse();
         PartParameters.ValueAt(id, slider.High).ShouldBe(value, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Rays_SnapToOneThreeOrFive_AndChangeTheBrainsPorts()
+    {
+        double[] stops = [1, 3, 5];
+        stops.Select((stop, i) => PartParameters.ValueAt(PartParameterId.Rays, i / 2.0)).ShouldBe(stops);
+        PartParameters.ValueAt(PartParameterId.Rays, 0.2).ShouldBe(1);
+        PartParameters.ValueAt(PartParameterId.Rays, 0.3).ShouldBe(3);
+        PartParameters.SliderOver(PartParameterId.Rays, [3]).Readout.ShouldBe(UiText.Format("{0}", new FixedNumber(3, 0)));
+        PartParameters.Rays.ChangesPorts.ShouldBeTrue();
+        PartParameters.Rays.MultiEditable.ShouldBeTrue();
+        Enum.GetValues<PartParameterId>().Where(id => PartParameters.Of(id).ChangesPorts).ShouldBe([PartParameterId.Rays]);
+    }
+
+    [Fact]
+    public void Spread_RunsFrom15To90Degrees_InStepsOf5()
+    {
+        PartParameters.ValueAt(PartParameterId.Spread, 0).ShouldBe(15 * Math.PI / 180, tolerance: 1e-12);
+        PartParameters.ValueAt(PartParameterId.Spread, 1).ShouldBe(Math.PI / 2, tolerance: 1e-12);
+        PartParameters.SliderOver(PartParameterId.Spread, [SensorDef.DefaultSpread]).Readout.ShouldBe(UiText.Format("{0}°", new FixedNumber(90, 0)));
+        PartParameters.SliderOver(PartParameterId.Spread, [SensorDef.DefaultSpread]).Step.ShouldBe(5.0 / 75, tolerance: 1e-12);
+    }
+
+    [Fact]
+    public void CameraRange_RunsFrom1To4Metres_InStepsOfATenth_WithTheDefaultOnAStep()
+    {
+        PartParameters.ValueAt(PartParameterId.CameraRange, 0).ShouldBe(100, tolerance: 1e-9);
+        PartParameters.ValueAt(PartParameterId.CameraRange, 1).ShouldBe(400, tolerance: 1e-9);
+        PartParameters.SliderOver(PartParameterId.CameraRange, [SensorDef.DefaultRange]).Step.ShouldBe(0.1 / 3, tolerance: 1e-12);
+        var slider = PartParameters.SliderOver(PartParameterId.CameraRange, [SensorDef.DefaultRange]);
+        slider.Readout.ShouldBe(UiText.Format("{0} m", new FixedNumber(2.2, 1)));
+        PartParameters.ValueAt(PartParameterId.CameraRange, slider.High).ShouldBe(SensorDef.DefaultRange, tolerance: 1e-9);
+        (slider.High / slider.Step).ShouldBe(Math.Round(slider.High / slider.Step), tolerance: 1e-9);
     }
 
     [Fact]

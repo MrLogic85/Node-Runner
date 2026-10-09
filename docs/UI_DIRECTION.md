@@ -248,7 +248,9 @@ The shell is filled `panel` over the frame card's `bg` (#347).
   (#704). Uneven stops sit evenly along the track (#801). `TouchStarted`
   and `TouchEnded` bracket a finger on a slider: it ends when the finger
   lifts, even after a scroll took over, or when the slider is disabled or
-  hidden.
+  hidden. A disabled slider is dashed; one the screen can explain answers
+  a tap (`DisabledPressed`, not after a scroll began) like an Unavailable
+  button (#578).
 - **Hint card** (`UiHintCard`, #867): a `UiCard` that ignores input, fades
   in over 0.12 s, and after `HideAfterLinger` stays `LingerSeconds` (2 s)
   then fades out over 0.2 s. The scene that uses it authors its children.
@@ -373,3 +375,4 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Speed control | None (#787) | TL → No speed-up |
 | Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
 | UI size multiplies the canvas | Pixels per unit (#299, #738) | UI size |
+| Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim (#578) | BM → Parameters |

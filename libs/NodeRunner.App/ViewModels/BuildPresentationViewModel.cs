@@ -180,18 +180,25 @@ public sealed class BuildPresentationViewModel
         }
     }
 
-    /// <summary>A slider for each setting the selection can change in the panel (#704).</summary>
+    /// <summary>
+    /// A slider for each setting the panel shows for the selection (#704), disabled where it can't
+    /// change now: kept by a locked Creation, or doing nothing on these parts (#578).
+    /// </summary>
     private List<ParameterSlider> PanelSliders() =>
-        [.. _build.EditableParameters
+        [.. _build.ShownParameters
             .Where(id => PartParameters.Of(id).InPanel)
-            .Select(id => PartParameters.SliderOver(id, _build.SelectedValuesOf(id)))];
+            .Select(id => PartParameters.SliderOver(id, _build.SelectedValuesOf(id)) with
+            {
+                Locked = !_build.CanEdit(id),
+                NoEffect = !_build.HasEffect(id),
+            })];
 
     /// <summary>What a sensor does; an <paramref name="aimable"/> Camera's note also says what its Aim handle does (#594).</summary>
     public static UiText SensorNote(SensorKind kind, bool aimable) => kind switch
     {
         SensorKind.Accelerometer => PartInfo.Accelerometer,
         SensorKind.Camera => aimable
-            ? UiText.Plain("Three rays see how near the ground is. Drag the round handle to aim it.")
+            ? UiText.Plain("Its rays see how near the ground is. Drag the round handle to aim it.")
             : PartInfo.Camera,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };

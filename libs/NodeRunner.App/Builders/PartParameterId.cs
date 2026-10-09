@@ -18,4 +18,7 @@ public enum PartParameterId
     CoilLength,
     WheelRadius,
     Grip,
+    Rays,
+    Spread,
+    CameraRange,
 }

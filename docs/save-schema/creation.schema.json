@@ -114,6 +114,27 @@
                   "null"
                 ],
                 "default": null
+              },
+              "rays": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "spread": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "default": null
+              },
+              "range": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "default": null
               }
             },
             "required": [

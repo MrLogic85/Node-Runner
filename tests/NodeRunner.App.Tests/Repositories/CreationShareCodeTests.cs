@@ -261,6 +261,67 @@ public sealed class CreationShareCodeTests
         CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
     }
 
+    [Theory]
+    [InlineData("spread", 10 * Math.PI / 180)]
+    [InlineData("spread", Math.PI)]
+    [InlineData("range", 50.0)]
+    [InlineData("range", 1000.0)]
+    public void Read_ACameraOffItsSliders_IsRefusedAsDamaged(string field, double value)
+    {
+        var file = CameraWalkerFile();
+        file["creature"]!["sensors"]![0]![field] = value;
+
+        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
+    }
+
+    [Fact]
+    public void Code_RoundTripsACamerasSettings()
+    {
+        var file = CameraWalkerFile();
+        var camera = file["creature"]!["sensors"]![0]!;
+        camera["rays"] = 5;
+        camera["spread"] = Math.PI / 6;
+        camera["range"] = 350.0;
+        var creation = FileCreationRepository.Format.Deserialize(file.ToJsonString(), "camera walker").Value;
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(creation)).Build.ShouldNotBeNull();
+
+        build.Creature.Sensors.ShouldHaveSingleItem().ShouldBe(creation.Creature.Sensors[0]);
+        build.Creature.Sensors[0].Rays.ShouldBe(5);
+        build.Creature.Sensors[0].Range.ShouldBe(350);
+    }
+
+    [Fact]
+    public void Read_AVersion5CodeWithACamera_GivesItTodaysFan()
+    {
+        var file = CameraWalkerFile();
+        file[VersionedSaveFile<CreationDef>.VersionField] = 5;
+        foreach (var field in new[] { "rays", "spread", "range" })
+        {
+            file["creature"]!["sensors"]![0]!.AsObject().Remove(field);
+        }
+
+        var build = CreationShareCode.Read(CreationShareCode.Pack(5, Encoding.UTF8.GetBytes(file.ToJsonString()))).Build.ShouldNotBeNull();
+
+        var camera = build.Creature.Sensors.ShouldHaveSingleItem();
+        camera.Rays.ShouldBe(3);
+        camera.Spread.ShouldBe(Math.PI / 2);
+        camera.Range.ShouldBe(220);
+    }
+
+    // The walker with its Accelerometer swapped for a default Camera.
+    private static JsonObject CameraWalkerFile()
+    {
+        var file = WalkerFile();
+        var sensor = file["creature"]!["sensors"]![0]!;
+        sensor["kind"] = "camera";
+        sensor["aim"] = 0.0;
+        sensor["rays"] = 3;
+        sensor["spread"] = Math.PI / 2;
+        sensor["range"] = 220.0;
+        return file;
+    }
+
     private static JsonObject WalkerFile() =>
         JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
 

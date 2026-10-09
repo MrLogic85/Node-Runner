@@ -180,6 +180,21 @@ public sealed class SaveFormatTests : IDisposable
         Directory.EnumerateFileSystemEntries(_directory).ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Repository_KeepsACamerasRaysSpreadAndRange()
+    {
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        var camera = new SensorDef(3, 2, SensorKind.Camera, "Eye", aim: -0.5, rays: 5, spread: Math.PI / 6, range: 350);
+        var creation = new CreationDef(
+            Guid.NewGuid(),
+            "Looker",
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(4, new Vector2D(2, 0))], [new BeamDef(2, 1, 4)], [camera], [], nextPartId: 5));
+
+        repository.Save(creation);
+
+        repository.Get(creation.Id).ShouldNotBeNull().Creature.Sensors.ShouldBe([camera]);
+    }
+
     private static CreationDef ExampleCreation() =>
         new(
             _exampleId,

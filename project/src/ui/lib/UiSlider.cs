@@ -112,6 +112,15 @@ public partial class UiSlider : Control, ISerializationListener
     [Signal]
     public delegate void TouchEndedEventHandler();
 
+    /// <summary>A tap on the slider while it is <see cref="Disabled"/>, so a screen can say why (#578).</summary>
+    [Signal]
+    public delegate void DisabledPressedEventHandler();
+
+    // How far a press on a disabled slider may move and still be a tap, not a scroll.
+    private const float _disabledTapSlop = 8;
+
+    private Vector2? _disabledPress;
+
     private string _labelText = "Value";
     private string _readoutText = "50";
     private UiSliderEndKind _lowEnd = UiSliderEndKind.Rounded;
@@ -312,6 +321,7 @@ public partial class UiSlider : Control, ISerializationListener
         set
         {
             _disabled = value;
+            _disabledPress = null;
             if (value)
             {
                 EndTouch();
@@ -369,6 +379,10 @@ public partial class UiSlider : Control, ISerializationListener
         {
             AskTextSources();
         }
+        else if (what == NotificationScrollBegin)
+        {
+            _disabledPress = null;
+        }
         else if (what == NotificationThemeChanged && IsNodeReady())
         {
             UiThemeRefresh.Guarded(this, () =>
@@ -393,6 +407,7 @@ public partial class UiSlider : Control, ISerializationListener
         if (Disabled)
         {
             EndTouch();
+            TrackDisabledTap(inputEvent);
             return;
         }
 
@@ -439,6 +454,24 @@ public partial class UiSlider : Control, ISerializationListener
             }
 
             EndTouch();
+        }
+    }
+
+    private void TrackDisabledTap(InputEvent inputEvent)
+    {
+        if (PointerInput.TryGetPressPosition(inputEvent, out var pressPosition))
+        {
+            _disabledPress = pressPosition;
+        }
+        else if (_disabledPress is { } start && PointerInput.TryGetDragPosition(inputEvent, out var dragPosition)
+            && dragPosition.DistanceTo(start) > _disabledTapSlop)
+        {
+            _disabledPress = null;
+        }
+        else if (_disabledPress is not null && PointerInput.TryGetReleasePosition(inputEvent, out _))
+        {
+            _disabledPress = null;
+            EmitSignal(SignalName.DisabledPressed);
         }
     }
 
