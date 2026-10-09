@@ -2,86 +2,94 @@
 
 All icons are pure white (`#ffffff`) on purpose: import them as SVG and tint them in Godot with `modulate` / `self_modulate`, or with the Button icon colour properties. Never bake a colour into the file.
 
-Two sets. **UI icons** are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. Every file is the plain 24 grid with the drawing 16 on its longer side, centred, so every icon has the same air round it; nothing is scaled to fit. **Part glyphs** are 20-grid pictures of parts, drawn with the dark theme colours. One SVG per icon in `icons/ui/` and `icons/parts/`.
+Three kinds, in one folder, `icons/`, each file named `<kind>_<name>.svg` in snake_case as the app names them. **UI icons** (`icon_`) are stroked glyphs on a 24 grid (stroke 2, round caps and joins, `currentColor`), used at 12, 16, 20 and 24. Every file is the plain 24 grid with the drawing 16 on its longer side, centred, so every icon has the same air round it; nothing is scaled to fit. **Marks** (`mark_`) are the launcher glyph used as an icon, drawn 20 on the same grid at the same stroke, because a network drawn 16 fills into lumps: only `mark_brain` today, the Brain button on Training and the default dialog and notification icon. **Part glyphs** (`part_`) are 20-grid pictures of parts.
 
-## UI icons (51)
+## UI icons (53)
 
-| Icon | Name |
+| Icon | File |
 |---|---|
-| <img src="icons/ui/beam.svg" width="24" style="background:#0d1424"> | `beam` |
-| <img src="icons/ui/bolt.svg" width="24" style="background:#0d1424"> | `bolt` |
-| <img src="icons/ui/build.svg" width="24" style="background:#0d1424"> | `build` |
-| <img src="icons/ui/chart.svg" width="24" style="background:#0d1424"> | `chart` |
-| <img src="icons/ui/check.svg" width="24" style="background:#0d1424"> | `check` |
-| <img src="icons/ui/chev-d.svg" width="24" style="background:#0d1424"> | `chev-d` |
-| <img src="icons/ui/chev-l.svg" width="24" style="background:#0d1424"> | `chev-l` |
-| <img src="icons/ui/chev-r.svg" width="24" style="background:#0d1424"> | `chev-r` |
-| <img src="icons/ui/chev-u.svg" width="24" style="background:#0d1424"> | `chev-u` |
-| <img src="icons/ui/copy.svg" width="24" style="background:#0d1424"> | `copy` |
-| <img src="icons/ui/core.svg" width="24" style="background:#0d1424"> | `core` |
-| <img src="icons/ui/distance.svg" width="24" style="background:#0d1424"> | `distance` |
-| <img src="icons/ui/edit.svg" width="24" style="background:#0d1424"> | `edit` |
-| <img src="icons/ui/elevation.svg" width="24" style="background:#0d1424"> | `elevation` |
-| <img src="icons/ui/eye.svg" width="24" style="background:#0d1424"> | `eye` |
-| <img src="icons/ui/flag.svg" width="24" style="background:#0d1424"> | `flag` |
-| <img src="icons/ui/gear.svg" width="24" style="background:#0d1424"> | `gear` |
-| <img src="icons/ui/height.svg" width="24" style="background:#0d1424"> | `height` |
-| <img src="icons/ui/joint.svg" width="24" style="background:#0d1424"> | `joint` |
-| <img src="icons/ui/lock.svg" width="24" style="background:#0d1424"> | `lock` |
-| <img src="icons/ui/map.svg" width="24" style="background:#0d1424"> | `map` |
-| <img src="icons/ui/map-flat.svg" width="24" style="background:#0d1424"> | `map-flat` |
-| <img src="icons/ui/map-hills.svg" width="24" style="background:#0d1424"> | `map-hills` |
-| <img src="icons/ui/map-stairs.svg" width="24" style="background:#0d1424"> | `map-stairs` |
-| <img src="icons/ui/menu.svg" width="24" style="background:#0d1424"> | `menu` |
-| <img src="icons/ui/model.svg" width="24" style="background:#0d1424"> | `model` |
-| <img src="icons/ui/more.svg" width="24" style="background:#0d1424"> | `more` |
-| <img src="icons/ui/move.svg" width="24" style="background:#0d1424"> | `move` |
-| <img src="icons/ui/mute.svg" width="24" style="background:#0d1424"> | `mute` |
-| <img src="icons/ui/parts.svg" width="24" style="background:#0d1424"> | `parts` |
-| <img src="icons/ui/pause.svg" width="24" style="background:#0d1424"> | `pause` |
-| <img src="icons/ui/phone.svg" width="24" style="background:#0d1424"> | `phone` |
-| <img src="icons/ui/play.svg" width="24" style="background:#0d1424"> | `play` |
-| <img src="icons/ui/plus.svg" width="24" style="background:#0d1424"> | `plus` |
-| <img src="icons/ui/redo.svg" width="24" style="background:#0d1424"> | `redo` |
-| <img src="icons/ui/restart.svg" width="24" style="background:#0d1424"> | `restart` |
-| <img src="icons/ui/rotate.svg" width="24" style="background:#0d1424"> | `rotate` |
-| <img src="icons/ui/scale.svg" width="24" style="background:#0d1424"> | `scale` |
-| <img src="icons/ui/select.svg" width="24" style="background:#0d1424"> | `select` |
-| <img src="icons/ui/shadow.svg" width="24" style="background:#0d1424"> | `shadow` |
-| <img src="icons/ui/sort.svg" width="24" style="background:#0d1424"> | `sort` |
-| <img src="icons/ui/sound.svg" width="24" style="background:#0d1424"> | `sound` |
-| <img src="icons/ui/speed.svg" width="24" style="background:#0d1424"> | `speed` |
-| <img src="icons/ui/stop.svg" width="24" style="background:#0d1424"> | `stop` |
-| <img src="icons/ui/top-speed.svg" width="24" style="background:#0d1424"> | `top-speed` |
-| <img src="icons/ui/trash.svg" width="24" style="background:#0d1424"> | `trash` |
-| <img src="icons/ui/trophy.svg" width="24" style="background:#0d1424"> | `trophy` |
-| <img src="icons/ui/undo.svg" width="24" style="background:#0d1424"> | `undo` |
-| <img src="icons/ui/unlock.svg" width="24" style="background:#0d1424"> | `unlock` |
-| <img src="icons/ui/warn.svg" width="24" style="background:#0d1424"> | `warn` |
-| <img src="icons/ui/x.svg" width="24" style="background:#0d1424"> | `x` |
+| <img src="icons/icon_beam.svg" width="24" style="background:#0d1424"> | `icon_beam.svg` |
+| <img src="icons/icon_bolt.svg" width="24" style="background:#0d1424"> | `icon_bolt.svg` |
+| <img src="icons/icon_build.svg" width="24" style="background:#0d1424"> | `icon_build.svg` |
+| <img src="icons/icon_chart.svg" width="24" style="background:#0d1424"> | `icon_chart.svg` |
+| <img src="icons/icon_check.svg" width="24" style="background:#0d1424"> | `icon_check.svg` |
+| <img src="icons/icon_chev_d.svg" width="24" style="background:#0d1424"> | `icon_chev_d.svg` |
+| <img src="icons/icon_chev_l.svg" width="24" style="background:#0d1424"> | `icon_chev_l.svg` |
+| <img src="icons/icon_chev_r.svg" width="24" style="background:#0d1424"> | `icon_chev_r.svg` |
+| <img src="icons/icon_chev_u.svg" width="24" style="background:#0d1424"> | `icon_chev_u.svg` |
+| <img src="icons/icon_copy.svg" width="24" style="background:#0d1424"> | `icon_copy.svg` |
+| <img src="icons/icon_core.svg" width="24" style="background:#0d1424"> | `icon_core.svg` |
+| <img src="icons/icon_distance.svg" width="24" style="background:#0d1424"> | `icon_distance.svg` |
+| <img src="icons/icon_edit.svg" width="24" style="background:#0d1424"> | `icon_edit.svg` |
+| <img src="icons/icon_elevation.svg" width="24" style="background:#0d1424"> | `icon_elevation.svg` |
+| <img src="icons/icon_eye.svg" width="24" style="background:#0d1424"> | `icon_eye.svg` |
+| <img src="icons/icon_flag.svg" width="24" style="background:#0d1424"> | `icon_flag.svg` |
+| <img src="icons/icon_gear.svg" width="24" style="background:#0d1424"> | `icon_gear.svg` |
+| <img src="icons/icon_height.svg" width="24" style="background:#0d1424"> | `icon_height.svg` |
+| <img src="icons/icon_joint.svg" width="24" style="background:#0d1424"> | `icon_joint.svg` |
+| <img src="icons/icon_lock.svg" width="24" style="background:#0d1424"> | `icon_lock.svg` |
+| <img src="icons/icon_map.svg" width="24" style="background:#0d1424"> | `icon_map.svg` |
+| <img src="icons/icon_map_flat.svg" width="24" style="background:#0d1424"> | `icon_map_flat.svg` |
+| <img src="icons/icon_map_hills.svg" width="24" style="background:#0d1424"> | `icon_map_hills.svg` |
+| <img src="icons/icon_map_stairs.svg" width="24" style="background:#0d1424"> | `icon_map_stairs.svg` |
+| <img src="icons/icon_menu.svg" width="24" style="background:#0d1424"> | `icon_menu.svg` |
+| <img src="icons/icon_model.svg" width="24" style="background:#0d1424"> | `icon_model.svg` |
+| <img src="icons/icon_more.svg" width="24" style="background:#0d1424"> | `icon_more.svg` |
+| <img src="icons/icon_move.svg" width="24" style="background:#0d1424"> | `icon_move.svg` |
+| <img src="icons/icon_mute.svg" width="24" style="background:#0d1424"> | `icon_mute.svg` |
+| <img src="icons/icon_parts.svg" width="24" style="background:#0d1424"> | `icon_parts.svg` |
+| <img src="icons/icon_paste.svg" width="24" style="background:#0d1424"> | `icon_paste.svg` |
+| <img src="icons/icon_pause.svg" width="24" style="background:#0d1424"> | `icon_pause.svg` |
+| <img src="icons/icon_phone.svg" width="24" style="background:#0d1424"> | `icon_phone.svg` |
+| <img src="icons/icon_play.svg" width="24" style="background:#0d1424"> | `icon_play.svg` |
+| <img src="icons/icon_plus.svg" width="24" style="background:#0d1424"> | `icon_plus.svg` |
+| <img src="icons/icon_redo.svg" width="24" style="background:#0d1424"> | `icon_redo.svg` |
+| <img src="icons/icon_restart.svg" width="24" style="background:#0d1424"> | `icon_restart.svg` |
+| <img src="icons/icon_rotate.svg" width="24" style="background:#0d1424"> | `icon_rotate.svg` |
+| <img src="icons/icon_scale.svg" width="24" style="background:#0d1424"> | `icon_scale.svg` |
+| <img src="icons/icon_select.svg" width="24" style="background:#0d1424"> | `icon_select.svg` |
+| <img src="icons/icon_shadow.svg" width="24" style="background:#0d1424"> | `icon_shadow.svg` |
+| <img src="icons/icon_share.svg" width="24" style="background:#0d1424"> | `icon_share.svg` |
+| <img src="icons/icon_sort.svg" width="24" style="background:#0d1424"> | `icon_sort.svg` |
+| <img src="icons/icon_sound.svg" width="24" style="background:#0d1424"> | `icon_sound.svg` |
+| <img src="icons/icon_speed.svg" width="24" style="background:#0d1424"> | `icon_speed.svg` |
+| <img src="icons/icon_stop.svg" width="24" style="background:#0d1424"> | `icon_stop.svg` |
+| <img src="icons/icon_top_speed.svg" width="24" style="background:#0d1424"> | `icon_top_speed.svg` |
+| <img src="icons/icon_trash.svg" width="24" style="background:#0d1424"> | `icon_trash.svg` |
+| <img src="icons/icon_trophy.svg" width="24" style="background:#0d1424"> | `icon_trophy.svg` |
+| <img src="icons/icon_undo.svg" width="24" style="background:#0d1424"> | `icon_undo.svg` |
+| <img src="icons/icon_unlock.svg" width="24" style="background:#0d1424"> | `icon_unlock.svg` |
+| <img src="icons/icon_warn.svg" width="24" style="background:#0d1424"> | `icon_warn.svg` |
+| <img src="icons/icon_x.svg" width="24" style="background:#0d1424"> | `icon_x.svg` |
+
+## Marks (1)
+
+| Mark | File |
+|---|---|
+| <img src="icons/mark_brain.svg" width="24" style="background:#0d1424"> | `mark_brain.svg` |
 
 ## Part glyphs (18)
 
-| Glyph | Name |
+| Glyph | File |
 |---|---|
-| <img src="icons/parts/accelerometer.svg" width="32"> | `accelerometer` |
-| <img src="icons/parts/battery.svg" width="32"> | `battery` |
-| <img src="icons/parts/beam.svg" width="32"> | `beam` |
-| <img src="icons/parts/brake.svg" width="32"> | `brake` |
-| <img src="icons/parts/core.svg" width="32"> | `core` |
-| <img src="icons/parts/fuel.svg" width="32"> | `fuel` |
-| <img src="icons/parts/generator.svg" width="32"> | `generator` |
-| <img src="icons/parts/los.svg" width="32"> | `los` |
-| <img src="icons/parts/node.svg" width="32"> | `node` |
-| <img src="icons/parts/piston.svg" width="32"> | `piston` |
-| <img src="icons/parts/pulse.svg" width="32"> | `pulse` |
-| <img src="icons/parts/servo.svg" width="32"> | `servo` |
-| <img src="icons/parts/spring.svg" width="32"> | `spring` |
-| <img src="icons/parts/stepper.svg" width="32"> | `stepper` |
-| <img src="icons/parts/touch.svg" width="32"> | `touch` |
-| <img src="icons/parts/velocity.svg" width="32"> | `velocity` |
-| <img src="icons/parts/wheel.svg" width="32"> | `wheel` |
-| <img src="icons/parts/wing.svg" width="32"> | `wing` |
+| <img src="icons/part_accelerometer.svg" width="32"> | `part_accelerometer.svg` |
+| <img src="icons/part_battery.svg" width="32"> | `part_battery.svg` |
+| <img src="icons/part_beam.svg" width="32"> | `part_beam.svg` |
+| <img src="icons/part_brake.svg" width="32"> | `part_brake.svg` |
+| <img src="icons/part_core.svg" width="32"> | `part_core.svg` |
+| <img src="icons/part_fuel.svg" width="32"> | `part_fuel.svg` |
+| <img src="icons/part_generator.svg" width="32"> | `part_generator.svg` |
+| <img src="icons/part_los.svg" width="32"> | `part_los.svg` |
+| <img src="icons/part_node.svg" width="32"> | `part_node.svg` |
+| <img src="icons/part_piston.svg" width="32"> | `part_piston.svg` |
+| <img src="icons/part_pulse.svg" width="32"> | `part_pulse.svg` |
+| <img src="icons/part_servo.svg" width="32"> | `part_servo.svg` |
+| <img src="icons/part_spring.svg" width="32"> | `part_spring.svg` |
+| <img src="icons/part_stepper.svg" width="32"> | `part_stepper.svg` |
+| <img src="icons/part_touch.svg" width="32"> | `part_touch.svg` |
+| <img src="icons/part_velocity.svg" width="32"> | `part_velocity.svg` |
+| <img src="icons/part_wheel.svg" width="32"> | `part_wheel.svg` |
+| <img src="icons/part_wing.svg" width="32"> | `part_wing.svg` |
 
 ## Energy blocks (3)
 
@@ -89,6 +97,6 @@ Battery, Generator and Fuel tank are drawn objects of one size each, with two **
 
 | Block | Fill | Lines |
 |---|---|---|
-| `generator` | <img src="icons/blocks/generator-fill.svg" height="40" style="background:#0d1424"> | <img src="icons/blocks/generator-lines.svg" height="40" style="background:#0d1424"> |
-| `battery` | <img src="icons/blocks/battery-fill.svg" height="40" style="background:#0d1424"> | <img src="icons/blocks/battery-lines.svg" height="40" style="background:#0d1424"> |
-| `fuel` | <img src="icons/blocks/fuel-fill.svg" height="40" style="background:#0d1424"> | <img src="icons/blocks/fuel-lines.svg" height="40" style="background:#0d1424"> |
+| `generator` | <img src="blocks/generator-fill.svg" height="40" style="background:#0d1424"> | <img src="blocks/generator-lines.svg" height="40" style="background:#0d1424"> |
+| `battery` | <img src="blocks/battery-fill.svg" height="40" style="background:#0d1424"> | <img src="blocks/battery-lines.svg" height="40" style="background:#0d1424"> |
+| `fuel` | <img src="blocks/fuel-fill.svg" height="40" style="background:#0d1424"> | <img src="blocks/fuel-lines.svg" height="40" style="background:#0d1424"> |

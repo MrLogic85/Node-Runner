@@ -105,8 +105,8 @@ session (Settings: #201).
 
 ## Touch and press feedback
 
-- **Tap only.** Nothing is press-and-hold, unlike the reference's
-  `c_hold` (#866); where care is needed, a dialog names the action.
+- **Tap only.** Nothing is press-and-hold (#866); where care is needed, a
+  dialog names the action.
 - **No hover look** (`project/src/ui/lib/AGENTS.md` → "Input and press
   feedback").
 - **No touch margins** (#275), unlike the reference's 40-in-48 targets.
@@ -148,7 +148,10 @@ entry (#315). The entries that are not a component of their own (#306):
   its text (#485).
 - **`c_call` in a figure** is `UiCalloutLayer` (#593); the look is in
   `docs/WORLD_VISUALS.md` → "Build canvas".
-- **`c_hold`** is dropped (#866).
+- **`c_fact_row`** is an authored row of a `UiIcon` and two `UiLabel`s,
+  as on Import (#899).
+- **`c_field_line`** is `UiTextField`'s error line; its muted fact line
+  comes with #1061.
 - **`c_panel_head`** is dropped; a side panel's header is `UiSidePanel`'s
   own row.
 
@@ -351,13 +354,10 @@ guide back by mistake. Departures stated in this doc's own sections are not
 repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 `docs/TRAINING_LOOP.md`, WV = `docs/WORLD_VISUALS.md`).
 
-The reference's Build, BuildLocked, Training and Creations sections now
-describe the app, but its Navigation, Parts and component-library sections
-still say the old thing, so those rows stay.
+Import's new inputs in the reference are planned, not departures (#1061).
 
 | Reference | Ours | Owner |
 | --- | --- | --- |
-| The padlock resets training | Unlocking keeps it; Reset training is an overflow item (#371, #687) | TL step 6; BM → Overflow menu |
 | Start training in the top bar | Play on the rail in both states (#370) | Screens → Build |
 | Rail says Beam and Move; Links tab | Links and Parts tools (#705, #706, #913) | BM → Interactions |
 | Part counts ("1 left") | Unlimited (#374, #525) | BM → Parts tray |

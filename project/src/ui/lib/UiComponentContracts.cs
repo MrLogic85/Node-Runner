@@ -122,7 +122,7 @@ public static class UiComponentContracts
     /// ("Reference component mapping") says what builds each one instead.
     /// </summary>
     public static IReadOnlyList<string> ReferenceEntriesWithoutComponent { get; } =
-        ["c_panel_head", "c_inspector", "c_rows", "c_hold", "c_status"];
+        ["c_panel_head", "c_inspector", "c_rows", "c_status", "c_fact_row", "c_field_line"];
 
     public static bool SharesImplementation(CanonicalComponent component, CanonicalComponent other) =>
         ControlTypeFor(component) == ControlTypeFor(other);
