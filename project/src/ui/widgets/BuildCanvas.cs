@@ -510,13 +510,14 @@ public partial class BuildCanvas : Node2D
     /// <summary>Whether the beam would take the sensor a drag moves or the <see cref="PlacingPart"/>; null while neither is placed.</summary>
     private bool? BeamTakesPlacing(int beamId)
     {
-        var beam = new CreatureElementSelection(CreatureElementKind.Beam, beamId);
         if (_gestures!.MovingSensorId is { } sensor)
         {
-            return _viewModel!.CanMoveSensor(sensor, beam, out _);
+            return _viewModel!.BeamTakesMovingSensor(sensor, beamId);
         }
 
-        return PlacingPart is { } part && part != BuildPart.Servo ? _viewModel!.CanPlacePart(part, beam, out _) : null;
+        return PlacingPart is { } part && part != BuildPart.Servo
+            ? _viewModel!.CanPlacePart(part, new CreatureElementSelection(CreatureElementKind.Beam, beamId), out _)
+            : null;
     }
 
     /// <summary>

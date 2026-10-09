@@ -1897,7 +1897,7 @@ public class BuildGesturesTests
         gestures.Release(new Vector2D(100, 150));
 
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, link, BuildViewModel.SensorsGoOnABeamReason));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, link, BuildViewModel.GoesOnABeamReason(SensorKind.Accelerometer)));
         changes.ShouldBe(0);
     }
 
@@ -1944,9 +1944,11 @@ public class BuildGesturesTests
         build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 6 } });
         gestures.Press(new Vector2D(100, 0));
         gestures.Drag(new Vector2D(100, 150));
+        build.BeamTakesMovingSensor(6, 7).ShouldBe(true);
 
         build.DeleteSelectedParts();
         gestures.MovedSensorPreview.ShouldBeNull();
+        build.BeamTakesMovingSensor(6, 7).ShouldBeNull();
         gestures.Release(new Vector2D(100, 150));
 
         build.Sensors.Select(sensor => sensor.Id).ShouldBe([9]);

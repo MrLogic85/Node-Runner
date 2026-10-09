@@ -41,7 +41,7 @@ public sealed partial class BuildViewModel
             return _builder.CanAddServo(target.Id, out reason);
         }
 
-        return TakesSensor(target, movingSensorId: null, out reason);
+        return TakesSensor(PartTray.SensorKindOf(part)!.Value, target, movingSensorId: null, out reason);
     }
 
     /// <summary>
@@ -99,10 +99,18 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Whether the sensor dragged onto <paramref name="target"/> would move there (#806): onto a
     /// beam no other sensor sits on, its own included. If not, <paramref name="reason"/> says why.
-    /// A move keeps the sensor's brain ports, so a locked Creation moves sensors too.
+    /// A move keeps the sensor's brain ports, so a locked Creation moves sensors too. The sensor
+    /// must exist.
     /// </summary>
     public bool CanMoveSensor(int sensorId, [NotNullWhen(true)] CreatureElementSelection? target, [NotNullWhen(false)] out UiText? reason) =>
-        TakesSensor(target, sensorId, out reason);
+        TakesSensor(_builder.Sensors[_builder.SensorIndexOf(sensorId)].Kind, target, sensorId, out reason);
+
+    /// <summary>
+    /// Whether the beam would take the sensor a drag moves (<see cref="CanMoveSensor"/>), for the
+    /// canvas to mark while it draws; null once the sensor is gone mid-drag, which moves nowhere.
+    /// </summary>
+    public bool? BeamTakesMovingSensor(int sensorId, int beamId) =>
+        SensorExists(sensorId) ? CanMoveSensor(sensorId, new CreatureElementSelection(CreatureElementKind.Beam, beamId), out _) : null;
 
     /// <summary>
     /// The sensor as a drop on <paramref name="target"/> would leave it (#806), for its preview:
@@ -147,13 +155,13 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// The one rule for where a sensor goes, placed or moved: on a beam (<see
-    /// cref="SensorsGoOnABeamReason"/>) the builder lets it mount on (<see cref="CreatureBuilder.CanMountSensor"/>).
+    /// cref="GoesOnABeamReason"/>) the builder lets it mount on (<see cref="CreatureBuilder.CanMountSensor"/>).
     /// </summary>
-    private bool TakesSensor([NotNullWhen(true)] CreatureElementSelection? target, int? movingSensorId, [NotNullWhen(false)] out UiText? reason)
+    private bool TakesSensor(SensorKind kind, [NotNullWhen(true)] CreatureElementSelection? target, int? movingSensorId, [NotNullWhen(false)] out UiText? reason)
     {
         if (target is not { Kind: CreatureElementKind.Beam })
         {
-            reason = SensorsGoOnABeamReason;
+            reason = GoesOnABeamReason(kind);
             return false;
         }
 

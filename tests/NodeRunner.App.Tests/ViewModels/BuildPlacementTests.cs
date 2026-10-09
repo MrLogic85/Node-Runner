@@ -64,7 +64,7 @@ public sealed class BuildPlacementTests
 
         build.Sensors.ShouldBeEmpty();
         changes().ShouldBe(0);
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstJoint, UiText.Plain("Sensors go on a beam")));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _firstJoint, UiText.Plain("Accelerometers go on a beam")));
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public sealed class BuildPlacementTests
         var build = TwoBeams();
         build.PlacePart(BuildPart.Accelerometer, _firstJoint);
 
-        build.CanvasNotes()[0].Text.ShouldBe(UiText.Plain("Sensors go on a beam"));
+        build.CanvasNotes()[0].Text.ShouldBe(UiText.Plain("Accelerometers go on a beam"));
         build.DismissPlacementNote();
         build.CanvasNotes().ShouldBeEmpty();
 
@@ -189,11 +189,21 @@ public sealed class BuildPlacementTests
         gestures.DropTargetAt(new Vector2D(50, -33)).ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 3));
     }
 
+    [Fact]
+    public void EverySensorKind_NamesItselfInItsGoesOnABeamReason()
+    {
+        // The reason names the part (#1053), so a new kind needs its own sentence.
+        foreach (var kind in Enum.GetValues<SensorKind>())
+        {
+            BuildViewModel.GoesOnABeamReason(kind).Message.ShouldStartWith(kind.ToString());
+        }
+    }
+
     [Theory]
-    [InlineData(BuildPart.Accelerometer, BuildLink.Piston, "Sensors go on a beam")]
-    [InlineData(BuildPart.Accelerometer, BuildLink.Spring, "Sensors go on a beam")]
-    [InlineData(BuildPart.Camera, BuildLink.Piston, "Sensors go on a beam")]
-    [InlineData(BuildPart.Camera, BuildLink.Spring, "Sensors go on a beam")]
+    [InlineData(BuildPart.Accelerometer, BuildLink.Piston, "Accelerometers go on a beam")]
+    [InlineData(BuildPart.Accelerometer, BuildLink.Spring, "Accelerometers go on a beam")]
+    [InlineData(BuildPart.Camera, BuildLink.Piston, "Cameras go on a beam")]
+    [InlineData(BuildPart.Camera, BuildLink.Spring, "Cameras go on a beam")]
     [InlineData(BuildPart.Servo, BuildLink.Piston, "Servos go on a joint")]
     [InlineData(BuildPart.Servo, BuildLink.Spring, "Servos go on a joint")]
     public void APartTappedOrDroppedOnAPistonOrSpring_ChangesNothing_AndNotesWhyThere(BuildPart part, BuildLink kind, string reason)
