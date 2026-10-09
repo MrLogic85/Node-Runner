@@ -240,7 +240,9 @@ several the selection panel instead.
 - An available row is dragged out (#376). The drop lands on what the part
   is over (a joint's ring, a sensor picture's beam, a Piston or Spring
   outside any joint's reach, a beam within reach, then a joint within
-  reach; `BuildGestures.DropTargetAt`), and `BuildViewModel.PlacePart` places it with
+  reach; `BuildGestures.DropTargetAt`). A Servo lands first on the joint
+  whose placing ring it is inside, ahead of the beams the ring crosses
+  (#1055). `BuildViewModel.PlacePart` places it with
   a fresh id and selects it, or refuses it with a canvas note at that part
   (`PlacementNote`) until the next touch or for 3 s. A Piston or Spring
   takes no tray part, so a drop on it refuses (#1033). A drop on empty
@@ -254,8 +256,9 @@ several the selection panel instead.
   creature." A canvas tap then places the part where a drop there would
   land, with the same refusals, notes and Undo. The placed part is not
   selected, so the tray stays and the part stays picked for the next one.
-  Tapping the row again, another tab or tool, a selection (which replaces
-  the tray), collapsing the side panel, or Back clears the pick; Back
+  Tapping the row again or empty canvas (#1055), another tab or tool, a
+  selection (which replaces the tray), collapsing the side panel, or Back
+  clears the pick; Back
   leaves Build only once nothing is picked. While a part is picked, the
   canvas marks where it can go as a drag would (#1016; see
   `docs/WORLD_VISUALS.md` → "Placing a part").

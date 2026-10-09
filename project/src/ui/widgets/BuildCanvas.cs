@@ -195,7 +195,7 @@ public partial class BuildCanvas : Node2D
         if (part is not null && _slot is { } slot && _gestures is { } gestures
             && new Rect2(Vector2.Zero, slot.Size).HasPoint(slot.GetLocalMousePosition()))
         {
-            hover = gestures.DropTargetAt(ToDomain(SlotTransform().AffineInverse() * slot.GetLocalMousePosition()));
+            hover = gestures.DropTargetAt(ToDomain(SlotTransform().AffineInverse() * slot.GetLocalMousePosition()), part);
         }
 
         if (PartDropZone is { } zone)
