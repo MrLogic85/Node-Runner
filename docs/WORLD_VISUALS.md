@@ -66,8 +66,8 @@ shorter cylinder (#835). The cap sits at the second joint's edge.
 
 A coilover (#807): a thin `line-strong` rod, a seat plate outside each
 joint, and a `panel` damper body as long as the travel. A helix winds round
-the body, `muted` front strokes over it and `line-strong` back strokes
-under it, all with round ends.
+the body, `detail` front strokes over it (#1059) and `line-strong` back
+strokes under it, all with round ends.
 
 - The wire grows with Stiffness, from a hairline at 50 N/m to a beam's
   width at 2000 N/m; a stiffer Spring gets fewer, thicker turns.
@@ -75,8 +75,7 @@ under it, all with round ends.
   span, at least 3, and past 2 m grow only with the square root of the span.
   Preload shows as more or less coil.
 - Turns spread and bunch as the Spring moves; their number never changes.
-- No `accent`, which marks the parts the brain drives. All `danger` when
-  too short.
+- Passive: `detail`, no `accent`. All `danger` when too short.
 
 ### Sensors
 
