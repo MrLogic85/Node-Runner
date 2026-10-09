@@ -73,6 +73,10 @@ msgstr ""
 msgid "Accelerometers"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "Accelerometers go on a beam"
+msgstr ""
+
 #: project/scenes/screens/CreationsScreen.tscn
 #: project/src/hosts/CreationsHost.cs
 msgid "Achievements"
@@ -175,6 +179,10 @@ msgstr ""
 
 #: project/scenes/screens/ImportScreen.tscn
 msgid "Cameras"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "Cameras go on a beam"
 msgstr ""
 
 #: project/scenes/ui/UiDialogContent.tscn
@@ -740,10 +748,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Sensors"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "Sensors go on a beam"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs

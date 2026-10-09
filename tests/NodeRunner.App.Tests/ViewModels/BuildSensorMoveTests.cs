@@ -87,7 +87,7 @@ public sealed class BuildSensorMoveTests
 
         build.MoveSensor(20, joint).ShouldBeFalse();
 
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, joint, UiText.Plain("Sensors go on a beam")));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, joint, UiText.Plain("Cameras go on a beam")));
     }
 
     [Fact]

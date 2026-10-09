@@ -112,7 +112,7 @@ public class BuildPartPickTests
         build.PlacementNote.ShouldBe(new CanvasNote(
             CanvasNoteKind.Danger,
             new CreatureElementSelection(CreatureElementKind.Node, 1),
-            BuildViewModel.SensorsGoOnABeamReason));
+            BuildViewModel.GoesOnABeamReason(SensorKind.Accelerometer)));
     }
 
     [Fact]

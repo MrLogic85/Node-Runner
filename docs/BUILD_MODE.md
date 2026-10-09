@@ -152,14 +152,16 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   a Servo comes in as the Servo (#973).
 - **Sensors (#127, #575):** placed from the tray on a beam, by drag or tap
   (see Parts tray), one per beam (#376). A joint, Piston or Spring refuses
-  with "Sensors go on a beam".
+  with the part's own reason, "Accelerometers go on a beam" or "Cameras go
+  on a beam" (#1053).
   - **Moving a sensor (#806):** drag its picture to another beam in any
     tool, locked or not. It keeps its id, name and settings, so its brain
     ports and trained weights stay (`CreatureBuilder.MoveSensor`); a
     Camera keeps the direction it looks in the world. How the drag looks
     is in `docs/WORLD_VISUALS.md` → "Moving a sensor". A drop on a beam
     with another sensor, a joint, or a Piston or Spring leaves it where it was with the
-    reason as a note ("One sensor per beam", "Sensors go on a beam"); a
+    reason as a note ("One sensor per beam", or the sensor's own "goes on a
+    beam" reason above); a
     drop on empty canvas leaves it where it was and says nothing (#1026).
     A good drop selects it.
 - **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by

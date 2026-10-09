@@ -71,8 +71,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private bool _shownCanUndo;
     private bool _shownCanRedo;
 
-    /// <summary>Why a sensor dropped on anything but a beam is refused.</summary>
-    public static UiText SensorsGoOnABeamReason { get; } = UiText.Plain("Sensors go on a beam");
+    /// <summary>
+    /// Why a sensor of <paramref name="kind"/> dropped on anything but a beam is refused (#1053): it
+    /// names the part, as a later sensor may go elsewhere.
+    /// </summary>
+    public static UiText GoesOnABeamReason(SensorKind kind) => kind switch
+    {
+        SensorKind.Accelerometer => UiText.Plain("Accelerometers go on a beam"),
+        SensorKind.Camera => UiText.Plain("Cameras go on a beam"),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
+    };
 
     /// <summary>Why a locked Creation refuses an edit that would change its model (#896): see <see cref="IsLocked"/>.</summary>
     public static UiText LockedReason { get; } = UiText.Plain("Locked: the model is trained for these parts.");
