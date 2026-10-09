@@ -40,12 +40,49 @@ public sealed class BuildViewModelTests
         viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - NodeDef.PlainJointRadius - 100, 30));
     }
 
+    [Theory]
+    [InlineData(12.4, -7.6, 12, -8)]
+    [InlineData(0.5, -0.5, 1, -1)]
+    [InlineData(-0.4, 0.4, 0, 0)]
+    public void PlaceNode_AndMoveNode_LandOnWholeUnits(double x, double y, double wholeX, double wholeY)
+    {
+        var viewModel = new BuildViewModel();
+
+        viewModel.PlaceNode(new Vector2D(x, y));
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(wholeX, wholeY));
+        viewModel.MoveNode(1, new Vector2D(x + 100, y));
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(wholeX + 100, wholeY));
+    }
+
+    [Fact]
+    public void RotateSelection_LandsTheJointsOnWholeUnits()
+    {
+        var viewModel = SelectedPair();
+
+        viewModel.RotateSelection(viewModel.SnapshotSelection(), Math.PI / 6);
+
+        // 50 ∓ 50·cos 30° = 6.70… and 93.30…; ∓ 50·sin 30° = ∓25.
+        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(7, -25));
+        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(93, 25));
+    }
+
+    [Fact]
+    public void CopySelectedParts_OfJointsOffWholeUnits_LandsTheCopiesOnThem()
+    {
+        var viewModel = new BuildViewModel(new CreatureBuilder(OldSaveWithFractionalJoints()));
+        viewModel.ReplaceSelection([1, 2]);
+
+        viewModel.CopySelectedParts();
+
+        viewModel.Nodes.Skip(2).Select(node => node.Position).ShouldAllBe(position =>
+            position.X == Math.Round(position.X) && position.Y == Math.Round(position.Y));
+    }
+
+    // A save from before #1094 may hold joints off whole units; Build keeps them until one moves.
     [Fact]
     public void TranslateSelection_WithFractionalCoordinates_StillReachesTheEdge()
     {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0.1, 0));
-        viewModel.PlaceNode(new Vector2D(100.1, 0));
+        var viewModel = new BuildViewModel(new CreatureBuilder(OldSaveWithFractionalJoints()));
         viewModel.ReplaceSelection([1, 2]);
 
         viewModel.TranslateSelection(viewModel.SnapshotSelection(), new Vector2D(1500.3, 0));
@@ -53,6 +90,9 @@ public sealed class BuildViewModelTests
         viewModel.Nodes[1].Position.X.ShouldBe(_area.Max.X - NodeDef.PlainJointRadius);
         viewModel.Nodes[0].Position.X.ShouldBe(_area.Max.X - NodeDef.PlainJointRadius - 100, 1e-9);
     }
+
+    private static CreatureDef OldSaveWithFractionalJoints() =>
+        new([new NodeDef(1, new Vector2D(0.1, 0.3)), new NodeDef(2, new Vector2D(100.1, 0.3))], [], [], 3);
 
     [Fact]
     public void ToggleSelected_AddsAndRemovesAnyPart_KeepingTheRest()
@@ -444,8 +484,9 @@ public sealed class BuildViewModelTests
 
         viewModel.ScaleSelection(viewModel.SnapshotSelection(), factor);
 
-        viewModel.Nodes[0].Position.X.ShouldBe(50 - (50 * applied), 1e-9);
-        viewModel.Nodes[1].Position.X.ShouldBe(50 + (50 * applied), 1e-9);
+        // Each joint lands on the whole unit nearest (CreatureBuilder.OnWholeUnits).
+        viewModel.Nodes[0].Position.X.ShouldBe(Math.Round(50 - (50 * applied), MidpointRounding.AwayFromZero));
+        viewModel.Nodes[1].Position.X.ShouldBe(Math.Round(50 + (50 * applied), MidpointRounding.AwayFromZero));
     }
 
     [Fact]

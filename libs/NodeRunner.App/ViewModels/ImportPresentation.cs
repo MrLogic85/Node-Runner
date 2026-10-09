@@ -36,6 +36,12 @@ public sealed record ImportPresentation(
     public static ImportPresentation Waiting { get; } =
         new(ImportState.Waiting, null, null, [], null, UiText.Plain("Copy a creation's share code, then tap Paste."), []);
 
+    /// <summary>
+    /// The warning that a code from an older version was updated to this one, so its build may
+    /// differ from the one shared (#1094); null for a code in this version.
+    /// </summary>
+    public UiText? UpdatedNote { get; init; }
+
     public bool CanAdd => State == ImportState.Preview;
 
     /// <summary>The next step is the one Primary (#1061): Paste until a build shows, then Add to Creations.</summary>
@@ -55,7 +61,10 @@ public sealed record ImportPresentation(
             return new(ImportState.Refused, null, null, [], title, text, takenNames);
         }
 
-        return new(ImportState.Preview, build, build.Name, PartsOf(build.Creature), null, null, takenNames);
+        return new(ImportState.Preview, build, build.Name, PartsOf(build.Creature), null, null, takenNames)
+        {
+            UpdatedNote = read.UpdatedFrom is null ? null : UiText.Plain("Shared from an older version, import may differ from original."),
+        };
     }
 
     /// <summary>
