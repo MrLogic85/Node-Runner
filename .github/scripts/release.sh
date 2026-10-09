@@ -5,17 +5,18 @@
 #   release.sh              tag, export, verify and publish vX.Y.Z
 #   release.sh --dry-run    export and verify only; no tag, branch or release
 #
-# Run X.Y.0 from an up-to-date main and X.Y.Z (Z > 0) from an up-to-date release/vX.Y whose
-# CI checks passed and that has docs/release-notes/X.Y.Z.md, the player-facing release text.
-# A new minor also creates release/vX.Y at the tag. The gh login must be able to push to the
-# repo (see LOCAL_CONFIG.md). Signing key (never committed):
+# Run a milestone's X.Y.Z from an up-to-date main, or a fix X.Y.Z (Z > 0) from an up-to-date
+# release/vX.Y, whose CI checks passed and that has docs/release-notes/X.Y.Z.md, the
+# player-facing release text. A release from main creates or moves release/vX.Y to its tag.
+# The gh login must be able to push to the repo (see LOCAL_CONFIG.md). Signing key (never
+# committed):
 #   NODE_RUNNER_KEYSTORE           default ~/Documents/Godot/node-runner-release.jks
 #   NODE_RUNNER_KEYSTORE_ALIAS     default noderunner
 #   NODE_RUNNER_KEYSTORE_PASSWORD  default: macOS Keychain item "node-runner-release-keystore"
 # Also: GODOT (Godot Mono binary), ANDROID_HOME.
 set -euo pipefail
 
-usage() { sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 dry_run=false
 case ${1:-} in
   '') ;;
@@ -54,14 +55,21 @@ if [[ ! -s $notes ]]; then
 fi
 
 if ! $dry_run; then
-  if (( patch == 0 )); then expected=main; else expected=$release_branch; fi
-  [[ $(git branch --show-current) == "$expected" ]] || fail "Release $version from $expected."
+  branch=$(git branch --show-current)
+  [[ $branch == main || ($branch == "$release_branch" && patch -gt 0) ]] \
+    || fail "Release $version from main, or a fix from $release_branch."
   [[ -z $(git status --porcelain) ]] || fail "The working tree is not clean."
-  git fetch --quiet origin "$expected" --tags
-  [[ $(git rev-parse HEAD) == "$(git rev-parse "origin/$expected")" ]] || fail "$expected is not in sync with origin."
+  git fetch --quiet origin "$branch" --tags
+  [[ $(git rev-parse HEAD) == "$(git rev-parse "origin/$branch")" ]] || fail "$branch is not in sync with origin."
   ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null || fail "Tag $tag already exists."
-  if (( patch == 0 )); then
-    [[ -z $(git ls-remote --heads origin "$release_branch") ]] || fail "$release_branch already exists."
+  latest=$(git tag --list "v$major.$minor.*" | sort -V | tail -n 1)
+  [[ -z $latest || $(printf '%s\n' "$latest" "$tag" | sort -V | tail -n 1) == "$tag" ]] \
+    || fail "$tag is older than $latest."
+  if [[ $branch == main ]]; then
+    # Moving release/vX.Y must not drop a merged fix that was never released.
+    old_tip=$(git ls-remote --heads origin "$release_branch" | cut -f1)
+    [[ -z $old_tip || -n $(git tag --points-at "$old_tip" 2>/dev/null) ]] \
+      || fail "$release_branch has an unreleased commit; release it from that branch first."
   fi
   [[ $(gh api "repos/$repo" --jq .permissions.push 2>/dev/null) == true ]] \
     || fail "The active gh login cannot push to $repo; see LOCAL_CONFIG.md."
@@ -117,14 +125,17 @@ if $dry_run; then
 fi
 
 git tag -a "$tag" -m "Node Runner $version"
-git push origin "$tag"
-if (( patch == 0 )); then
-  git push origin "$tag^{commit}:refs/heads/$release_branch"
+if [[ $branch == main ]]; then
+  git push --atomic --force-with-lease="refs/heads/$release_branch:$old_tip" origin \
+    "refs/tags/$tag" "$tag^{commit}:refs/heads/$release_branch" \
+    || fail "Pushing $tag and $release_branch failed, so nothing was pushed. Run git tag -d $tag before retrying."
+else
+  git push origin "$tag"
 fi
 gh release create "$tag" "$apk" --repo "$repo" --verify-tag --title "Node Runner $version" \
   --notes-file "$notes" \
   || fail "$tag is pushed but the release was not created. Retry: gh release create $tag ${apk#"$root"/} --repo $repo --verify-tag --title \"Node Runner $version\" --notes-file $notes"
 
-if (( patch == 0 )); then
-  echo "Next: open a PR on main that runs .github/scripts/set-version.sh $major.$((minor + 1)).0"
+if [[ $branch == main ]]; then
+  echo "Next: open a PR on main that runs .github/scripts/set-version.sh with the next milestone's version."
 fi
