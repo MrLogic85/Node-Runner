@@ -138,17 +138,17 @@ public static class PartTray
         new(UiText.Plain("Moving parts"),
         [
             Available(BuildPart.Servo, UiText.Plain("Servo")),
-            Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.0"),
-            Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor"), "0.14.0"),
-            Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.0"),
-            Locked(BuildPart.Wheel, UiText.Plain("Wheel"), "0.14.0"),
+            Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.3"),
+            Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor"), "0.14.2"),
+            Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.2"),
+            Locked(BuildPart.Wheel, UiText.Plain("Wheel"), "0.14.1"),
         ]),
         new(UiText.Plain("Sensors"),
         [
             Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
             Available(BuildPart.Camera, UiText.Plain("Camera")),
-            Locked(BuildPart.TouchSensor, UiText.Plain("Touch sensor"), "0.14.0"),
-            Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.0"),
+            Locked(BuildPart.TouchSensor, UiText.Plain("Touch sensor"), "0.14.1"),
+            Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.4"),
         ]),
         new(UiText.Plain("Blocks"),
         [
