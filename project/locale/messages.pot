@@ -781,6 +781,10 @@ msgstr ""
 msgid "Share build"
 msgstr ""
 
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Shared creations come untrained."
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Simulate"
 msgstr ""
@@ -1110,6 +1114,10 @@ msgstr ""
 
 #: project/scenes/widgets/ShadowStrip.tscn
 msgid "Worse shadows"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "You already have one by this name."
 msgstr ""
 
 #: project/scenes/ui/UiDialogContent.tscn

@@ -52,7 +52,7 @@ mouse_filter = 1
 text = "Paste"
 script = ExtResource("5_button")
 IconId = 71
-Kind = 1
+Kind = 0
 
 [node name="Add" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="2"]
 unique_name_in_owner = true
@@ -62,7 +62,7 @@ mouse_filter = 1
 text = "Add to Creations"
 script = ExtResource("5_button")
 IconId = 25
-Kind = 0
+Kind = 1
 
 [node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell"]
 layout_mode = 2
@@ -354,6 +354,14 @@ horizontal_alignment = 2
 vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+
+[node name="Untrained" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn"]
+layout_mode = 2
+text = "Shared creations come untrained."
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

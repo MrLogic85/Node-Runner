@@ -33,7 +33,9 @@ public partial class ImportHost : Node, IRoutedScene
 
     private void Paste()
     {
-        _presentation = ImportPresentation.For(CreationShareCode.Read(DisplayServer.ClipboardGet()));
+        _presentation = ImportPresentation.For(
+            CreationShareCode.Read(DisplayServer.ClipboardGet()),
+            [.. Saves.List().Select(creation => creation.Name)]);
         Screen.Bind(_presentation);
     }
 

@@ -21,7 +21,8 @@ public sealed record ImportPartRow(PartSettingsKind Kind, int Count);
 
 /// <summary>
 /// The Import screen (#899) for the last paste: the build, the name its Name field starts with and
-/// its parts by kind; or a note on what to do or why the paste was refused.
+/// its parts by kind; or a note on what to do or why the paste was refused. <paramref name="TakenNames"/>
+/// are the player's creations' names, for the line under the Name field (#1061).
 /// </summary>
 public sealed record ImportPresentation(
     ImportState State,
@@ -29,24 +30,45 @@ public sealed record ImportPresentation(
     string? Name,
     IReadOnlyList<ImportPartRow> Parts,
     UiText? NoteTitle,
-    UiText? NoteText)
+    UiText? NoteText,
+    IReadOnlyList<string> TakenNames)
 {
     public static ImportPresentation Waiting { get; } =
-        new(ImportState.Waiting, null, null, [], null, UiText.Plain("Copy a creation's share code, then tap Paste."));
+        new(ImportState.Waiting, null, null, [], null, UiText.Plain("Copy a creation's share code, then tap Paste."), []);
 
     public bool CanAdd => State == ImportState.Preview;
 
-    /// <summary>The screen for <paramref name="read"/>; the Name field starts with the build's own name, even one already in Creations.</summary>
-    public static ImportPresentation For(ShareCodeRead read)
+    /// <summary>The next step is the one Primary (#1061): Paste until a build shows, then Add to Creations.</summary>
+    public bool PasteIsPrimary => !CanAdd;
+
+    /// <summary>
+    /// The screen for <paramref name="read"/>; the Name field starts with the build's own name, even
+    /// one already in <paramref name="takenNames"/>, since two creations may share a name.
+    /// </summary>
+    public static ImportPresentation For(ShareCodeRead read, IReadOnlyList<string> takenNames)
     {
         ArgumentNullException.ThrowIfNull(read);
+        ArgumentNullException.ThrowIfNull(takenNames);
         if (read.Build is not { } build)
         {
             var (title, text) = Refusal(read.Refusal ?? ShareCodeRefusal.Damaged);
-            return new(ImportState.Refused, null, null, [], title, text);
+            return new(ImportState.Refused, null, null, [], title, text, takenNames);
         }
 
-        return new(ImportState.Preview, build, build.Name, PartsOf(build.Creature), null, null);
+        return new(ImportState.Preview, build, build.Name, PartsOf(build.Creature), null, null, takenNames);
+    }
+
+    /// <summary>
+    /// The muted line under the Name field while a creation has <paramref name="name"/>, or null. It does not
+    /// repeat the name: an article cannot fit every name or language, and the name shows just above.
+    /// </summary>
+    public UiText? NameLine(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        var trimmed = name.Trim();
+        return CanAdd && trimmed.Length > 0 && CreationNames.IsTaken(trimmed, TakenNames)
+            ? UiText.Plain("You already have one by this name.")
+            : null;
     }
 
     private static (UiText Title, UiText Text) Refusal(ShareCodeRefusal refusal) => refusal switch

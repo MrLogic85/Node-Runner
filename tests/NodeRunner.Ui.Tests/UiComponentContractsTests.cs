@@ -460,4 +460,15 @@ public sealed partial class UiComponentContractsTests
     {
         UiComponentContracts.EditorMaxLength(limit, currentLength).ShouldBe(expected);
     }
+
+    [Theory]
+    [InlineData(true, "Name it", "You already have a Walker.", "Name it", true)]
+    [InlineData(true, " ", "You already have a Walker.", "You already have a Walker.", false)]
+    [InlineData(false, "Name it", "You already have a Walker.", "You already have a Walker.", false)]
+    [InlineData(false, "Name it", null, "", false)]
+    [InlineData(false, "Name it", " ", "", false)]
+    public void FieldLine_ShowsTheErrorOverTheFact(bool inError, string errorText, string? fact, string text, bool isError)
+    {
+        UiComponentContracts.FieldLine(inError, errorText, fact).ShouldBe((text, isError));
+    }
 }

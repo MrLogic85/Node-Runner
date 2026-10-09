@@ -46,7 +46,7 @@ public partial class ImportScreen : Control
         GetNode<UiButton>("%Add").Activated += () => EmitSignal(SignalName.AddRequested, NameField.TextValue.Trim());
         NameField.ValidateValue = static value => !string.IsNullOrWhiteSpace(value);
         NameField.MaxLength = NameLimits.Creation;
-        NameField.TextEdited += _ => ApplyCanAdd();
+        NameField.TextEdited += _ => ApplyName();
         UiNativeScroll.AllowGesturesToBubble(GetNode<Control>("%InfoColumn"));
         Apply();
     }
@@ -55,9 +55,12 @@ public partial class ImportScreen : Control
 
     private void RequestBack() => EmitSignal(SignalName.BackRequested);
 
-    // A blank name cannot be saved, as in Build.
-    private void ApplyCanAdd() =>
+    // A blank name cannot be saved, as in Build; a taken one can, but the line under the field says so.
+    private void ApplyName()
+    {
         GetNode<UiButton>("%Add").Disabled = !_presentation.CanAdd || string.IsNullOrWhiteSpace(NameField.TextValue);
+        NameField.FactSource = UiTextTranslation.Source(_presentation.NameLine(NameField.TextValue));
+    }
 
     private void Apply()
     {
@@ -71,7 +74,9 @@ public partial class ImportScreen : Control
         ShowOptional(GetNode<UiLabel>("%NoteText"), UiTextTranslation.Source(_presentation.NoteText));
         GetNode<Control>("%InfoScroll").Visible = preview;
         NameField.TextValue = _presentation.Name ?? string.Empty;
-        ApplyCanAdd();
+        ApplyName();
+        GetNode<UiButton>("%Paste").Kind = _presentation.PasteIsPrimary ? UiButtonKind.Primary : UiButtonKind.Secondary;
+        GetNode<UiButton>("%Add").Kind = _presentation.PasteIsPrimary ? UiButtonKind.Secondary : UiButtonKind.Primary;
         ApplyParts();
     }
 

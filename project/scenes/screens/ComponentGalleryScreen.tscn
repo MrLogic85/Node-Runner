@@ -541,7 +541,7 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "standard and compact, rest, editing, and error"
+text = "standard and compact, rest, editing, error, and a muted fact"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -570,6 +570,15 @@ TextValue = "Creation name"
 LabelText = "Creation name"
 ErrorText = "A creation needs a name"
 State = 2
+
+[node name="CreationNameFact" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextInput/Examples"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+script = ExtResource("24_text_field")
+TextValue = "Walker"
+LabelText = "Creation name"
 
 [node name="PartNameCompact" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TextInput/Examples" unique_id=748190243]
 layout_mode = 2

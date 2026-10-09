@@ -150,8 +150,8 @@ entry (#315). The entries that are not a component of their own (#306):
   `docs/WORLD_VISUALS.md` → "Build canvas".
 - **`c_fact_row`** is an authored row of a `UiIcon` and two `UiLabel`s,
   as on Import (#899).
-- **`c_field_line`** is `UiTextField`'s error line; its muted fact line
-  comes with #1061.
+- **`c_field_line`** is `UiTextField`'s one line: its error, or else its
+  muted `FactSource` (#1061).
 - **`c_panel_head`** is dropped; a side panel's header is `UiSidePanel`'s
   own row.
 
@@ -276,16 +276,21 @@ The trophy is Unavailable (#199).
 ### Import
 
 Import creation in Creations' overflow menu (`icon_paste`) opens it (#899).
-Its toolbar holds Back, the title, Secondary Paste and Primary Add to
-Creations, enabled only while a build shows and its name is not blank.
+Its toolbar holds Back, the title, Paste and Add to Creations, enabled
+only while a build shows and its name is not blank. The next step is the
+one Primary: Paste until a build shows, then Add (#1061).
 There is no field for the code: Paste reads the clipboard only when
 tapped. The left card says what to do, shows the build, or shows why the
 code was refused under a danger `icon_warn`. The build draws on Build's
 grid, as large as Build at 1:1, never larger: what it previews is what
-Build opens with (cards stop at half and show no grid). Beside it, a
-column at least 176 px wide holds a Name field with the build's name and
-one authored row per kind of part it has (icon, name in `Body`, count in
-`ReadoutSmall`, no border: they are facts, not buttons). Add saves it
+Build opens with (cards stop at half and show no grid). It does not pan
+or zoom (#1061). Beside it, a column at least 176 px wide holds a Name
+field with the build's name, a muted "You already have one by this
+name." under it while a creation has that name (the reference's "You
+already have a {0}." fits no article to every name or language), one
+authored row per kind of part it has (icon, name in `Body`, count in
+`ReadoutSmall`, no border: they are facts, not buttons), and a muted
+"Shared creations come untrained.". Add saves it
 under that name and opens it in Build in place of Import, like an
 example's Copy. Build's Share build uses `icon_share`, three linked nodes,
 and confirms with a "Code copied" notification.
@@ -353,8 +358,6 @@ Where the app differs from `reference design/` and someone might follow the
 guide back by mistake. Departures stated in this doc's own sections are not
 repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 `docs/TRAINING_LOOP.md`, WV = `docs/WORLD_VISUALS.md`).
-
-Import's new inputs in the reference are planned, not departures (#1061).
 
 | Reference | Ours | Owner |
 | --- | --- | --- |
