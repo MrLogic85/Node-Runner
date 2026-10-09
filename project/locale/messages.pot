@@ -478,10 +478,6 @@ msgid "Locked"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "Locked: the model is trained for these parts."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Locked: would change the model"
 msgstr ""
 
@@ -940,6 +936,10 @@ msgstr ""
 
 #: project/src/hosts/CreationActions.cs
 msgid "The creation is locked so you do not change the size or values of its model by accident. Changes to how the model behaves are still allowed. Unlock to use every tool that changes the model. Adding or removing a part keeps the training, but adds or removes that part of the model. Removing a part and adding the same kind back does not bring its training back; use Undo instead."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "The creation is locked to avoid changes to the model, unlock to enable."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

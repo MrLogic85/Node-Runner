@@ -83,7 +83,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     };
 
     /// <summary>Why a locked Creation refuses an edit that would change its model (#896): see <see cref="IsLocked"/>.</summary>
-    public static UiText LockedReason { get; } = UiText.Plain("Locked: the model is trained for these parts.");
+    public static UiText LockedReason { get; } = UiText.Plain("The creation is locked to avoid changes to the model, unlock to enable.");
 
     // On each part that makes a locked Creation refuse Copy (#990) or Delete (#987).
     private static readonly UiText _wouldChangeModelNote = UiText.Plain("Locked: would change the model");
