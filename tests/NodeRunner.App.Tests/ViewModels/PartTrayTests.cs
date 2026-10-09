@@ -154,8 +154,8 @@ public sealed class PartTrayTests
     {
         var list = BuildLinkList.Create(BuildLink.Beam);
 
-        list.PickedInfo.ShouldBe(UiText.Plain("A rigid rod."));
-        list.HelpText.ShouldBe(UiText.Plain("Drag from joint to joint to add the picked link."));
+        list.PickedInfo.ShouldBe(UiText.Format("{0}\n{1}", UiText.Plain("A rigid rod."), UiText.Plain("Drag from joint to joint to add it.")));
+        list.HelpText.ShouldBe(UiText.Plain("Tap a link to pick it."));
         list.Rows.Select(row => (row.Link, row.Name, row.State)).ShouldBe([
             (BuildLink.Beam, UiText.Plain("Beam"), LinkListRowState.Selected),
             (BuildLink.Piston, UiText.Plain("Piston"), LinkListRowState.Rest),
@@ -166,7 +166,17 @@ public sealed class PartTrayTests
     [Fact]
     public void LinkList_InfoFollowsPickedLink()
     {
-        BuildLinkList.Create(BuildLink.Piston).PickedInfo.ShouldBe(UiText.Plain("Extends and retracts."));
+        BuildLinkList.Create(BuildLink.Piston).PickedInfo.ShouldBe(UiText.Format("{0}\n{1}", UiText.Plain("Extends and retracts."), BuildLinkList.DrawHelp));
+    }
+
+    [Fact]
+    public void LinkList_WithNothingPicked_SelectsNoRow_AndShowsNoInfo()
+    {
+        var list = BuildLinkList.Create(picked: null);
+
+        list.PickedInfo.ShouldBeNull();
+        list.HelpText.ShouldBe(BuildLinkList.HelpText);
+        list.Rows.ShouldNotContain(row => row.State == LinkListRowState.Selected);
     }
 
     private static UiText[] Plain(params string[] messages) => [.. messages.Select(UiText.Plain)];

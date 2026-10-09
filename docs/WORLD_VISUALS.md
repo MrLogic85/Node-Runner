@@ -118,7 +118,7 @@ drawn over it.
 ## Draw layers
 
 From the bottom up (#767): Training's knock-out outline, the rigid hatch,
-underlays (Build's placing feedback), beams, links, a selected beam or link,
+underlays (Build's placing and link-start marks), beams, links, a selected beam or link,
 sensors, a selected sensor, joints, a selected joint, then overlays (camera
 rays, link travel marks, the link drag and sensor move lines, the selection
 frame). Joint rings cover link ends and sensors; rays and travel marks stay
@@ -141,6 +141,14 @@ ground, the shadows above it, and the followed creature above every shadow.
   a finger often covers the target. A Piston or Spring that will replace a
   beam (#849) outlines it with two dashed `line-strong` lines under the
   creature.
+- **Picked link (#1057):** while a link is picked, each joint a drag draws
+  it from has a dashed `halo` ring at `JointHalo` (12 dashes, the selection
+  ring's width), under the creature. It is dashed, as the drag line is
+  before it will attach, so it never reads as the solid selection ring.
+  Selected joints are left unmarked, and so is a selected Servo's joint,
+  which still draws a link but has its own outline there. No ring is
+  `danger` until a drag, since a refusal depends on the target. A link
+  drag hides the rings; its start joint takes the solid ring.
 - **Placing a part:** the glyph rides on a 48 px raised tile with an
   `accent` line above the finger. A dragged sensor shows free beams `halo`,
   taken beams dashed `danger`, and its picture where it would land. A

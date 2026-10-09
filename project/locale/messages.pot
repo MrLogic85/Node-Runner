@@ -332,7 +332,7 @@ msgid "Drag a box"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
-msgid "Drag from joint to joint to add the picked link."
+msgid "Drag from joint to joint to add it."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -879,6 +879,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Tap a joint to place it. A joint holds one part."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
+msgid "Tap a link to pick it."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn

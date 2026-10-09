@@ -64,6 +64,75 @@ public class BuildGesturesTests
     }
 
     [Fact]
+    public void Links_TapOnEmptyCanvas_WithNothingSelected_ClearsThePickedLink()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+
+        Tap(gestures, _empty);
+
+        build.PickedLink.ShouldBeNull();
+        build.Nodes.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Links_TapOnEmptyCanvas_WithASelection_ClearsItAndKeepsThePickedLink()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+        build.ReplaceSelection([1]);
+
+        Tap(gestures, _empty);
+
+        build.SelectedPartCount.ShouldBe(0);
+        build.PickedLink.ShouldBe(BuildLink.Beam);
+    }
+
+    [Fact]
+    public void Links_WithNoPickedLink_ADragFromAJointMovesIt_AndATapSelectsIt()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+        build.ClearPickedLink();
+
+        Drag(gestures, new Vector2D(0, 0), new Vector2D(0, 40));
+        Tap(gestures, new Vector2D(100, 0));
+
+        gestures.BeamStartNodeId.ShouldBeNull();
+        build.Beams.ShouldBeEmpty();
+        build.Nodes[0].Position.ShouldBe(new Vector2D(0, 40));
+        build.SelectedNodeIds.ShouldBe([1, 2]);
+    }
+
+    [Fact]
+    public void Links_LinkDrawnFrom_IsThePickedLink_FromAJointNotSelected()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+        build.ReplaceSelection([1]);
+
+        gestures.LinkDrawnFrom(1).ShouldBeNull();
+        gestures.LinkDrawnFrom(2).ShouldBe(BuildLink.Beam);
+        build.ClearPickedLink();
+        gestures.LinkDrawnFrom(2).ShouldBeNull();
+        build.ActiveTool = BuildTool.Parts;
+        build.ActiveTool = BuildTool.Beam;
+        build.PickLink(BuildLink.Spring);
+        build.ActiveTool = BuildTool.Joint;
+        gestures.LinkDrawnFrom(2).ShouldBeNull();
+    }
+
+    [Fact]
+    public void Links_ALinkDrag_DrawsTheLinkPickedWhenItStarted()
+    {
+        var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
+
+        gestures.Press(new Vector2D(0, 0), 0);
+        gestures.Drag(new Vector2D(100, 0), 0);
+        build.PickLink(BuildLink.Piston);
+        gestures.Release(new Vector2D(100, 0), 0);
+
+        build.Beams.ShouldBe([new BeamDef(4, 1, 2)]);
+        build.Pistons.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Joint_TapOnEmptyCanvas_WithOnlyABeamSelected_ClearsItAndAddsNothing()
     {
         var (build, gestures) = TwoJointsAndABeam();

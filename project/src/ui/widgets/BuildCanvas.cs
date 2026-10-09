@@ -385,7 +385,7 @@ public partial class BuildCanvas : Node2D
                 ShowsTooShort: true));
     }
 
-    /// <summary>What goes under the links: the placing feedback of a tray part dragged or picked or a sensor moved, and the beam a link drag replaces.</summary>
+    /// <summary>What goes under the links: the placing feedback of a tray part dragged or picked or a sensor moved, the picked link's start rings, and the beam a link drag replaces.</summary>
     private void DrawUnderlay(CanvasItem canvas)
     {
         if (_viewModel is null || _gestures is null)
@@ -405,6 +405,7 @@ public partial class BuildCanvas : Node2D
         }
 
         BuildServoDrawing.DrawPlacingFeedback(canvas, _viewModel, PlacingPart, Theme, ViewTransform());
+        DrawLinkStarts(canvas);
     }
 
     /// <summary>What goes over the whole creature: the aimed camera's rays, warnings, the beam drag's rings and the selection frame.</summary>
@@ -788,7 +789,7 @@ public partial class BuildCanvas : Node2D
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote) or nameof(BuildViewModel.CanvasNotes) or nameof(BuildViewModel.PickedPart))
+        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote) or nameof(BuildViewModel.CanvasNotes) or nameof(BuildViewModel.PickedPart) or nameof(BuildViewModel.PickedLink))
         {
             QueueRedraw();
         }

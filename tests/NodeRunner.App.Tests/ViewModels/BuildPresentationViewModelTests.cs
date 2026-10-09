@@ -68,7 +68,7 @@ public sealed class BuildPresentationViewModelTests
 
         changes.ShouldBe(1);
         var list = presentation.LinkList.ShouldNotBeNull();
-        list.PickedInfo.ShouldBe(PartInfo.Piston);
+        list.PickedInfo.ShouldBe(UiText.Format("{0}\n{1}", PartInfo.Piston, BuildLinkList.DrawHelp));
         list.Rows.Single(row => row.Link == BuildLink.Piston).State.ShouldBe(LinkListRowState.Selected);
         list.Rows.Single(row => row.Link == BuildLink.Beam).State.ShouldBe(LinkListRowState.Rest);
     }

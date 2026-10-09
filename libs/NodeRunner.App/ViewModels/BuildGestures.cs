@@ -75,6 +75,9 @@ public sealed class BuildGestures
     private double _frameAngle;
     private (int Sensor, double Aim)? _aimStart;
 
+    // The link picked when a link drag started, so a pick changed mid-drag does not change it.
+    private BuildLink _drawnLink;
+
     public BuildGestures(BuildViewModel build)
     {
         _build = build ?? throw new ArgumentNullException(nameof(build));
@@ -93,6 +96,13 @@ public sealed class BuildGestures
 
     /// <summary>Raised when the gesture's own visuals change (beam preview, selection box), so the canvas can redraw.</summary>
     public event EventHandler? Changed;
+
+    /// <summary>
+    /// The link a drag from <paramref name="nodeId"/> draws (#705), or null for a drag that moves it:
+    /// the picked link, in Links, from a joint that is not selected (#1057). The canvas marks these joints.
+    /// </summary>
+    public BuildLink? LinkDrawnFrom(int nodeId) =>
+        _build.ActiveTool == BuildTool.Beam && !_build.Selection.Nodes.Contains(nodeId) ? _build.PickedLink : null;
 
     /// <summary>The node a Beam or link drag started from.</summary>
     public int? BeamStartNodeId { get; private set; }
@@ -360,8 +370,9 @@ public sealed class BuildGestures
         }
 
         // A selected Servo's joint still starts a link, so a dropped Servo can get its links (#973).
-        if (_pressTool == BuildTool.Beam && _pressedNode is { } start && !_selectionBefore.Nodes.Contains(start))
+        if (_pressedNode is { } start && LinkDrawnFrom(start) is { } drawn)
         {
+            _drawnLink = drawn;
             BeamStartNodeId = start;
             BeamEnd = position;
             Changed?.Invoke(this, EventArgs.Empty);
@@ -436,7 +447,7 @@ public sealed class BuildGestures
             BeamEnd = position;
             var target = FindLinkTarget(start, position);
             int? replaced = null;
-            var refused = target is { } end && !_build.CanConnectLink(_build.PickedLink, start, end, out _, out replaced);
+            var refused = target is { } end && !_build.CanConnectLink(_drawnLink, start, end, out _, out replaced);
             BeamTargetNodeId = refused ? null : target;
             RefusedTargetNodeId = refused ? target : null;
             ReplacedBeamId = replaced;
@@ -484,7 +495,7 @@ public sealed class BuildGestures
             // A link never makes a joint, so a drop away from one places nothing.
             if (FindLinkTarget(start, position) is { } end)
             {
-                _build.ConnectLink(_build.PickedLink, start, end);
+                _build.ConnectLink(_drawnLink, start, end);
             }
         }
         else if (SelectionBox is { } box)
@@ -564,9 +575,9 @@ public sealed class BuildGestures
 
     /// <summary>
     /// A tap in any tool (#803) adds or removes the part under it. A tap on empty canvas clears the
-    /// selection, or with nothing selected adds a joint in Joint; one on a handle does nothing.
-    /// With a tray part to place, a tap places it where a drop there would (#805), and one on empty
-    /// canvas puts it back (#1055).
+    /// selection, or with nothing selected adds a joint in Joint or clears the picked link in
+    /// Links (#1057); one on a handle does nothing. With a tray part to place, a tap places it where
+    /// a drop there would (#805), and one on empty canvas puts it back (#1055).
     /// </summary>
     private void Tap()
     {
@@ -595,6 +606,10 @@ public sealed class BuildGestures
             {
                 _build.PlaceNode(_pressPosition);
             }
+        }
+        else if (_pressTool == BuildTool.Beam && _build.Selection.Count == 0)
+        {
+            _build.ClearPickedLink();
         }
         else
         {

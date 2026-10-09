@@ -26,8 +26,8 @@ public sealed record LinkListRow(BuildLink Link, UiText Name, LinkListRowState S
 }
 
 /// <summary>
-/// The Links list: its rows, what the picked link does (<see cref="PickedInfo"/>, shown right
-/// under its row), and one help line for the whole list.
+/// The Links list: its rows, what the picked link does and how it is drawn (<see cref="PickedInfo"/>,
+/// shown right under its row, null with nothing picked), and one help line for the whole list.
 /// </summary>
 public sealed record LinkListPresentation(
     IReadOnlyList<LinkListRow> Rows,
@@ -40,14 +40,14 @@ public sealed record LinkListPresentation(
 /// </summary>
 public static class BuildLinkList
 {
-    public static LinkListPresentation Create(BuildLink picked, bool creationLocked = false) => new(
+    public static LinkListPresentation Create(BuildLink? picked, bool creationLocked = false) => new(
         [
             Row(BuildLink.Beam, UiText.Plain("Beam"), picked, creationLocked),
             Row(BuildLink.Piston, UiText.Plain("Piston"), picked, creationLocked),
             Row(BuildLink.Spring, UiText.Plain("Spring"), picked, creationLocked),
             Locked(BuildLink.Wing, UiText.Plain("Wing"), "0.18.0"),
         ],
-        Info(picked),
+        picked is { } shown ? PickedInfo(shown) : null,
         HelpText);
 
     public static bool IsAvailable(BuildLink link) => link is BuildLink.Beam or BuildLink.Piston or BuildLink.Spring;
@@ -61,7 +61,10 @@ public static class BuildLinkList
     /// <summary>Whether drawing <paramref name="link"/> adds brain ports, so a locked creation refuses it (#896).</summary>
     public static bool HasBrainPorts(BuildLink link) => link == BuildLink.Piston;
 
-    public static UiText HelpText { get; } = UiText.Plain("Drag from joint to joint to add the picked link.");
+    public static UiText HelpText { get; } = UiText.Plain("Tap a link to pick it.");
+
+    /// <summary>How the picked link is drawn, under its <see cref="Info"/> (#1057).</summary>
+    public static UiText DrawHelp { get; } = UiText.Plain("Drag from joint to joint to add it.");
 
     /// <summary>What the link does, or null for a link that cannot be picked yet.</summary>
     public static UiText? Info(BuildLink link) => link switch
@@ -72,7 +75,10 @@ public static class BuildLinkList
         _ => null,
     };
 
-    private static LinkListRow Row(BuildLink link, UiText name, BuildLink picked, bool creationLocked) =>
+    private static UiText PickedInfo(BuildLink link) =>
+        Info(link) is { } info ? UiText.Format("{0}\n{1}", info, DrawHelp) : DrawHelp;
+
+    private static LinkListRow Row(BuildLink link, UiText name, BuildLink? picked, bool creationLocked) =>
         new(link, name, creationLocked && HasBrainPorts(link) ? LinkListRowState.CreationLocked
             : link == picked ? LinkListRowState.Selected
             : LinkListRowState.Rest,
