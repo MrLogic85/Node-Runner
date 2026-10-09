@@ -113,7 +113,7 @@ public partial class BuildHost : Node, IRoutedScene
     {
         _buildScreen = GetNode<BuildScreen>("%BuildScreen");
         _buildScreen.Setup(Build);
-        _buildScreen.ToolRequested += tool => Build.ActiveTool = tool;
+        _buildScreen.ToolRequested += Build.PickTool;
         _buildScreen.LinkPicked += link => Build.PickLink((BuildLink)link);
         _buildScreen.PartPicked += part => Build.PickPart((BuildPart)part);
         _buildScreen.PartPickHidden += () => Build.ClearPickedPart();

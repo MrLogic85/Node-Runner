@@ -288,6 +288,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// A tap on a rail tool, even the active one: clears the selection so the side panel shows the
+    /// tool's panel (#1096).
+    /// </summary>
+    public void PickTool(BuildTool tool)
+    {
+        ClearSelection();
+        ActiveTool = tool;
+    }
+
     public BuildTool ActiveTool
     {
         get => _activeTool;
