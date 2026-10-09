@@ -14,31 +14,44 @@ and sets `version/code` to 1000000·major + 1000·minor + patch (0.13.0 →
 
 ## Releasing a milestone
 
-Every milestone has a "Release X.Y.0" issue (`type: chore`, `area: android`).
-When it is the milestone's last open issue:
+A milestone is named after the version it ships. Usually that is X.Y.0, but
+a minor can ship in steps from `main` as milestones X.Y.0, X.Y.1, … (0.14 is
+split this way, #1072). Every milestone has a "Release X.Y.Z" issue
+(`type: chore`, `area: android`), blocked by the milestone's other issues
+and by the previous release issue. When it is the milestone's last open
+issue:
 
-1. A PR titled `docs(#N): Release notes for X.Y.0` adds
-   `docs/release-notes/X.Y.0.md` (`docs/release-notes/AGENTS.md`) with
+1. A PR titled `docs(#N): Release notes for X.Y.Z` adds
+   `docs/release-notes/X.Y.Z.md` (`docs/release-notes/AGENTS.md`) with
    `Part of #N`, not a closing keyword, so the issue stays open until the
    release is out.
 2. From an up-to-date `main`, run `.github/scripts/release.sh`. It exports a
-   signed release APK, checks its version and signature, tags `vX.Y.0`, pushes
-   `release/vX.Y` at the tag, and creates the GitHub release with the APK
-   attached. The release text is exactly the notes file.
-   `release.sh --dry-run` exports and checks without publishing.
-3. A PR titled `chore(#N): Bump main to X.(Y+1).0` runs
-   `.github/scripts/set-version.sh X.(Y+1).0` and closes the release issue.
+   signed release APK, checks its version and signature, tags `vX.Y.Z`,
+   creates or moves `release/vX.Y` to the tag, and creates the GitHub
+   release with the APK attached. The release text is exactly the notes
+   file. `release.sh --dry-run` exports and checks without publishing.
+3. A PR titled `chore(#N): Bump main to <next>` runs
+   `.github/scripts/set-version.sh <next>`, where `<next>` is the next
+   milestone's version, and closes the release issue.
 
-## Patch releases
+## Fix releases
 
-A fix for a released version lands on `release/vX.Y` by PR (also on `main`
-when it applies there). That PR bumps the patch with `set-version.sh X.Y.Z`
-and adds `docs/release-notes/X.Y.Z.md`; after it merges, `release.sh` from
-that branch publishes it. GitHub only honours closing keywords on PRs into
-`main`, so close the fix's issue by hand after the patch release unless its
-`main` PR closes it. CI runs on `release/**` as on `main`, but no
-ruleset protects those branches, so `release.sh` refuses to publish unless
-`Build`, `Test & coverage` and `Format check` passed on HEAD.
+A fix that cannot wait for the next milestone lands on `release/vX.Y` by PR
+(also on `main` when it applies there). That PR bumps the patch to the next
+free number with `set-version.sh X.Y.Z` and adds
+`docs/release-notes/X.Y.Z.md`; after it merges, `release.sh` from that
+branch publishes it. If a milestone on `main` planned that number, rename
+it and the later ones up by one, and bump `main` to match. A fix that
+applies to `main` must be merged there before the next release from `main`,
+which force-moves `release/vX.Y`. `release.sh` refuses that move while the
+branch tip has no tag, and refuses any version older than the newest
+`vX.Y.*` tag.
+
+GitHub only honours closing keywords on PRs into `main`, so close the fix's
+issue by hand after the fix release unless its `main` PR closes it. CI runs
+on `release/**` as on `main`, but no ruleset protects those branches, so
+`release.sh` refuses to publish unless `Build`, `Test & coverage` and
+`Format check` passed on HEAD.
 
 ## Publishing safeguards
 

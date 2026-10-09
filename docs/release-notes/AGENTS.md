@@ -10,7 +10,8 @@ An AI agent writes the notes, not a script; the owner approves the text in
 the notes PR.
 
 - **Sources:** the milestone's closed issues and the PRs merged since the
-  previous release (for a patch, the fixes on `release/vX.Y`). Check what
+  previous release from `main`, minus fixes a fix release has already
+  shipped (for a fix release, the fixes on `release/vX.Y`). Check what
   actually changed for the player, not only the titles.
 - **Audience:** players, in English. Say what they can now do or will
   notice, not how it was built.
