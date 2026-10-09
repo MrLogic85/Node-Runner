@@ -241,7 +241,9 @@ the reference's "a training session has finished" (#369).
     so UI layout and scale never touch physics distances or gravity. A tap
     on the arena selects a part of the followed shadow; a part takes a tap
     within 16 px of it on screen at least, so it stays easy to hit zoomed
-    out. The selected part's Build name shows in a callout above the
+    out; a tap on a joint with a part on it selects the part
+    (`docs/BUILD_MODE.md` → "Parts stand in for their joint"). The
+    selected part's Build name shows in a callout above the
     followed shadow and moves with it (#388).
   - **Resume (warm start, #538).** Opening Training continues from the
     saved `TrainingStateDef`: the generation count goes on, and the saved

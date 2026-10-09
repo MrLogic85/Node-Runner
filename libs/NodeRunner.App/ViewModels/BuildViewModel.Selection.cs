@@ -155,6 +155,18 @@ public sealed partial class BuildViewModel
         _selectedServoIds.UnionWith(_builder.Servos.Where(servo => servoJoints.Contains(servo.NodeId)).Select(servo => servo.Id));
     }
 
+    // A Servo stands in for its joint (#973), also when Undo or Redo brings one back under a kept joint selection.
+    private void SelectServosInsteadOfTheirJoints()
+    {
+        foreach (var servo in _builder.Servos)
+        {
+            if (_selectedNodeIds.Remove(servo.NodeId))
+            {
+                _selectedServoIds.Add(servo.Id);
+            }
+        }
+    }
+
     private void SelectionChanged()
     {
         NotifySelectionChanged();

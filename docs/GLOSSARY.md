@@ -79,7 +79,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   Target.
 - **Joint** — A point where links meet and can turn; in code a node
   (`NodeDef`). A plain joint is passive (#450); a Servo can sit on it. Not a
-  Godot physics joint. See: `docs/BUILD_MODE.md`.
+  Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
+  their joint".
 - **Link** — A joint-to-joint connection a Servo may use as Fixed or Target:
   Beam, Piston or Spring. The Links tool lists them all, Beam included. Say
   Links for the group and Beam for a beam (#913).
