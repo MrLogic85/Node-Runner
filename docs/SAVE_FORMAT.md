@@ -187,15 +187,34 @@ text to paste in a chat; Import creation in Creations' overflow menu reads
 it back (#899). `CreationShareCode` (`libs/NodeRunner.App/Repositories/`)
 owns it.
 
-- The code is `NR`, the format version and a dot, then `creation.json`
-  on one line with `training` and `trainSettings` `null` and the id
-  `00000000-0000-0000-0000-000000000001`, zlib-compressed against that
-  version's share dictionary, in URL-safe base64 without padding. The
-  Walker's is about 70 characters, starting `NR6.`. It holds the build
-  only, so the copy trains from scratch.
-- A share dictionary is a `creation.json` in its version with every kind
-  of part (`libs/NodeRunner.App/Repositories/ShareDictionaries/`), so a
-  code only holds where its build differs from it. The code leaves out the
+- The code is `NR`, the format version and a dot, then its JSON
+  zlib-compressed against that version's share dictionary, in URL-safe
+  base64 without padding. It holds the build only, so the copy trains from
+  scratch. The Walker example's is about 50 characters, starting `NR6.`;
+  two joints and a Spring about 60 (#1094).
+- Its JSON is `creation.json` on one line with `training` and
+  `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,
+  made short (#1094):
+  - **Rounded.** Every joint is on whole world units, as Build places them
+    (`CreatureBuilder.OnWholeUnits`), and every other setting is kept to 3
+    decimals when its slider still allows the result.
+  - **Renumbered.** Part ids become 1, 2, 3 … in the order of the old ids,
+    which keeps the brain's ports in their order (`BrainPorts`). A part
+    leaves out its id when it is one more than the one before it in its
+    list, and the creature leaves out `nextPartId`, one more than its
+    largest id.
+  - **Without defaults.** A field equal to the dictionary's template, or to
+    it rounded as above, is left out, and so is an empty list. The nth part
+    in a list is compared with the template's nth in that list, or its
+    first past its last.
+  Reading puts back what was left out, from the dictionary that made the
+  code, so a later change to Build's defaults does not change old codes.
+- A share dictionary (`libs/NodeRunner.App/Repositories/ShareDictionaries/`)
+  has two lines. The first is the template: a `creation.json` in its
+  version with every kind of part at Build's settings, named "Untitled
+  Creation". The second is a varied creation as a code holds it, so a code
+  finds its own shape in the dictionary. `ShareDictionaryTests` makes a new
+  version's dictionary. The code leaves out the
   dictionary's compressed bytes: the dictionary is compressed first and
   sync-flushed so its bytes end on a whole byte, and reading compresses it
   again in front of the code. zlib's checksum covers both and catches a
@@ -203,14 +222,16 @@ owns it.
   by a few characters at its end still loads if its build is complete,
   which then is unchanged.
 - A dictionary never changes once released, or its codes stop reading;
-  `ShareDictionaryTests` reads a pinned version-4 code.
+  `ShareDictionaryTests` reads a pinned version-6 code. Codes began with
+  version 6 in 0.14.0.
 - An older code is unpacked with its own version's dictionary and goes
-  through the same migrations as a saved file. A code from a newer version
-  is refused as newer.
+  through the same migrations as a saved file. Import then warns that it
+  may differ from the shared creation. A code from a newer version is
+  refused as newer.
 - The code is someone else's text, so reading it is strict and capped:
   white space is ignored, but any other text around it is not; a code over
-  32,768 characters, or one that unpacks to over 1 MB, is refused as
-  damaged, as is anything the migrations or the strict load fail on. A
+  32,768 characters, one that unpacks to over 1 MB, or one whose parts
+  fill out to over 1 MB more, is refused as damaged, as is anything the migrations or the strict load fail on. A
   build with no joints is refused.
 - Its name is cut to the creation name limit. A build Build could not
   make is refused as damaged: a name blank once cut, a joint outside the

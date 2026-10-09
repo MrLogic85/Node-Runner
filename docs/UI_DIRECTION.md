@@ -295,7 +295,10 @@ name." under it while a creation has that name (the reference's "You
 already have a {0}." fits no article to every name or language), one
 authored row per kind of part it has (icon, name in `Body`, count in
 `ReadoutSmall`, no border: they are facts, not buttons), and a muted
-"Shared creations come untrained.". Add saves it
+"Shared creations come untrained.", then, for a code from an older
+version, the warn icon in `halo` beside a muted "Shared from an older
+version, import may differ from original." (#1094), like Train setup's
+Shadows note. Add saves it
 under that name and opens it in Build in place of Import, like an
 example's Copy. Build's Share build uses `icon_share`, three linked nodes,
 and confirms with a "Code copied" notification.

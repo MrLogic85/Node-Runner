@@ -37,6 +37,17 @@ public sealed class ImportPresentationTests
             new ImportPartRow(PartSettingsKind.Piston, walker.Pistons.Count),
         ]);
         preview.CanAdd.ShouldBeTrue();
+        preview.UpdatedNote.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ABuildFromAnOlderVersion_WarnsItMayDiffer()
+    {
+        var build = new CreationDef(Guid.NewGuid(), "Walker", CreationExamples.Walker.Creature);
+
+        var preview = ImportPresentation.For(new ShareCodeRead(build, null, UpdatedFrom: 6), []);
+
+        preview.UpdatedNote.ShouldBe(UiText.Plain("Shared from an older version, import may differ from original."));
     }
 
     [Fact]

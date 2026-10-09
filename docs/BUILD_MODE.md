@@ -220,6 +220,9 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   or moving a joint keeps its ring inside; a group move stops as a whole at
   the edge, and a Joint tap outside adds nothing. A grid of `BuildGridStep`
   cells (50 units, half a metre) covers exactly the area.
+  Every joint Build places or moves lands on whole units, 1 cm
+  (`CreatureBuilder.OnWholeUnits`, #1094), so a save and a share code hold
+  short numbers.
 - **View:** `CanvasView` holds zoom and pan and maps view units to canvas
   units; it never touches saved positions and is not saved. Build opens
   with the creation centred and `FitMargin` (20%) of air on every side,

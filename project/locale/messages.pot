@@ -833,6 +833,10 @@ msgstr ""
 msgid "Shared creations come untrained."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
+msgid "Shared from an older version, import may differ from original."
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Simulate"
 msgstr ""

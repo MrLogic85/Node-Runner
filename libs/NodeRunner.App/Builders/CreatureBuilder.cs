@@ -91,21 +91,31 @@ public sealed class CreatureBuilder
 
     public int NextPartId => _nextPartId;
 
-    /// <summary>Adds a node and returns its id.</summary>
+    /// <summary>Adds a node at <paramref name="position"/> on <see cref="OnWholeUnits"/> and returns its id.</summary>
     public int AddNode(Vector2D position)
     {
         var id = AllocatePartId();
-        _nodes.Add(new NodeDef(id, position));
+        _nodes.Add(new NodeDef(id, OnWholeUnits(position)));
         return id;
     }
 
-    /// <summary>Moves an existing node to a new position, keeping its name.</summary>
+    /// <summary>Moves an existing node to <paramref name="position"/> on <see cref="OnWholeUnits"/>, keeping its name.</summary>
     public void MoveNode(int nodeId, Vector2D position)
     {
         var nodeIndex = NodeIndexOf(nodeId);
         var node = _nodes[nodeIndex];
-        _nodes[nodeIndex] = new NodeDef(node.Id, position, node.Name);
+        _nodes[nodeIndex] = new NodeDef(node.Id, OnWholeUnits(position), node.Name);
     }
+
+    /// <summary>
+    /// <paramref name="position"/> rounded to whole world units, 1 cm (#1094). Every joint Build places
+    /// or moves sits on one, so its save and share code hold a short number rather than 17 digits.
+    /// A half rounds away from 0, so a build mirrored about 0 stays mirrored.
+    /// </summary>
+    public static Vector2D OnWholeUnits(Vector2D position) => new(OnWholeUnit(position.X), OnWholeUnit(position.Y));
+
+    // Adding 0 turns −0 into 0, which reads the same and is a character shorter.
+    private static double OnWholeUnit(double coordinate) => Math.Round(coordinate, MidpointRounding.AwayFromZero) + 0.0;
 
     /// <summary>
     /// Removes a node, cascading to every beam, sensor, joint part, Piston and Spring that referenced it.
@@ -289,9 +299,20 @@ public sealed class CreatureBuilder
     /// </summary>
     public bool IsWithinBuildLimits() =>
         _nodes.All(node => BuildViewModel.BuildArea.Contains(node.Position))
-        && _pistons.Select(piston => piston.Id).Concat(_servos.Select(servo => servo.Id)).Concat(_springs.Select(spring => spring.Id)).Concat(_wheels.Select(wheel => wheel.Id)).Concat(_sensors.Select(sensor => sensor.Id))
-            .All(partId => ParametersOf(partId).All(parameter =>
-                PartParameters.Of(parameter).Slider is not { } slider || slider.Range.Allows(slider.Shown(ParameterValue(partId, parameter)))));
+        && PartIdsWithSettings.All(partId => ParametersOf(partId).All(parameter => IsOnItsSlider(parameter, ParameterValue(partId, parameter))));
+
+    /// <summary>Every part with settings (<see cref="ParametersOf"/>).</summary>
+    public IEnumerable<int> PartIdsWithSettings =>
+        _sensors.Select(sensor => sensor.Id)
+            .Concat(_servos.Select(servo => servo.Id))
+            .Concat(_pistons.Select(piston => piston.Id))
+            .Concat(_springs.Select(spring => spring.Id))
+            .Concat(_wheels.Select(wheel => wheel.Id))
+            .Where(partId => ParametersOf(partId).Count > 0);
+
+    /// <summary>Whether <paramref name="value"/>, in world units, is one <paramref name="parameter"/>'s slider can set; a setting without one can be any.</summary>
+    public static bool IsOnItsSlider(PartParameterId parameter, double value) =>
+        PartParameters.Of(parameter).Slider is not { } slider || slider.Range.Allows(slider.Shown(value));
 
     /// <summary>
     /// Whether <paramref name="parameter"/> does anything on part <paramref name="partId"/> as it is

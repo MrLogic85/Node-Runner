@@ -24,7 +24,7 @@ public sealed class CreationShareCodeTests
         build.Training.ShouldBeNull();
         build.TrainSettings.ShouldBeNull();
         build.Name.ShouldBe(trained.Name);
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(trained.Creature));
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(trained).Creature));
     }
 
     [Fact]
@@ -50,8 +50,142 @@ public sealed class CreationShareCodeTests
 
         var build = CreationShareCode.Read(CreationShareCode.Create(rolling)).Build.ShouldNotBeNull();
 
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(rolling.Creature));
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(rolling).Creature));
         build.Creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(70);
+    }
+
+    [Fact]
+    public void Code_OfTwoHandPlacedJointsAndASpring_IsAtMost100Characters()
+    {
+        var builder = new CreatureBuilder();
+        var left = builder.AddNode(new Vector2D(-87.31275, 12.8812));
+        var right = builder.AddNode(new Vector2D(64.0391, -23.5517));
+        builder.AddBeam(left, right);
+        builder.AddSpring(left, right);
+
+        CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Untitled Creation", builder.Build()))
+            .Length.ShouldBeLessThanOrEqualTo(100);
+    }
+
+    [Fact]
+    public void Code_HoldsJointsOnWholeUnits_AndSettingsTo3Decimals_WhereTheSliderAllowsThem()
+    {
+        var builder = new CreatureBuilder();
+        var left = builder.AddNode(new Vector2D(0, 0));
+        var right = builder.AddNode(new Vector2D(100, 0));
+        var piston = builder.AddPiston(left, right);
+        builder.SetParameter(piston, PartParameterId.Stroke, 6.0 / 7);
+        var servo = builder.AddServo(left);
+        builder.SetParameter(servo, PartParameterId.Range, 2.0071286397934789);
+        var built = builder.Build();
+        var creature = new CreatureDef(
+            [new NodeDef(left, new Vector2D(-0.4, 12.5)), new NodeDef(right, new Vector2D(99.6, -12.5))],
+            built.Beams,
+            built.Sensors,
+            built.Servos,
+            built.Pistons,
+            built.Springs,
+            built.Wheels,
+            built.NextPartId);
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Walker", creature)))
+            .Build.ShouldNotBeNull().Creature;
+
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 13), new Vector2D(100, -13)]);
+        build.Pistons.ShouldHaveSingleItem().Stroke.ShouldBe(0.857);
+        build.Servos.ShouldHaveSingleItem().Range.ShouldBe(2.007);
+    }
+
+    [Fact]
+    public void Code_KeepsASettingExact_WhereRoundingWouldTakeItOffItsSlider()
+    {
+        var builder = new CreatureBuilder();
+        var joint = builder.AddNode(new Vector2D(0, 0));
+        builder.AddBeam(joint, builder.AddNode(new Vector2D(100, 0)));
+        builder.AddBeam(joint, builder.AddNode(new Vector2D(0, 100)));
+        var servo = builder.AddServo(joint);
+        var smallest = Math.PI / 9;
+        builder.SetParameter(servo, PartParameterId.Range, smallest);
+        CreatureBuilder.IsOnItsSlider(PartParameterId.Range, Math.Round(smallest, 3)).ShouldBeFalse();
+
+        var read = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Arm", builder.Build())));
+
+        read.Build.ShouldNotBeNull().Creature.Servos.ShouldHaveSingleItem().Range.ShouldBe(smallest);
+    }
+
+    [Fact]
+    public void Read_ACodeOfManyEmptyParts_ThatWouldFillOutBeyondTheCap_IsRefusedAsDamaged()
+    {
+        var parts = string.Join(',', Enumerable.Repeat("{}", CreationShareCode.MaxJsonBytes / 3));
+        var code = Pack("{\"name\":\"x\",\"creature\":{\"nodes\":[" + parts + "]}}");
+
+        code.Length.ShouldBeLessThan(CreationShareCode.MaxLength);
+        CreationShareCode.Read(code).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
+    }
+
+    [Fact]
+    public void Code_LeavesOutADefaultThatIsNotExact_AndReadsItBackExact()
+    {
+        var builder = new CreatureBuilder();
+        var joint = builder.AddNode(new Vector2D(0, 0));
+        builder.AddBeam(joint, builder.AddNode(new Vector2D(100, 0)));
+        builder.AddBeam(joint, builder.AddNode(new Vector2D(0, 100)));
+        builder.AddServo(joint);
+
+        var servo = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Arm", builder.Build())))
+            .Build.ShouldNotBeNull().Creature.Servos.ShouldHaveSingleItem();
+
+        servo.Range.ShouldBe(Math.PI);
+        servo.MaxSpeed.ShouldBe(2 * Math.PI);
+    }
+
+    [Fact]
+    // Numbered in the same order, the brain's ports keep theirs (BrainPorts).
+    public void Code_OfPartsWithGapsInTheirIds_ReadsAsTheSameBuild_NumberedInTheSameOrder()
+    {
+        var builder = new CreatureBuilder();
+        var nodes = Enumerable.Range(0, 5).Select(index => builder.AddNode(new Vector2D(index * 60, index % 2 * 40))).ToArray();
+        var beams = Enumerable.Range(1, 4).Select(index => builder.AddBeam(nodes[index - 1], nodes[index])).ToArray();
+        builder.AddSensor(beams[0], SensorKind.Camera, out var camera, out _).ShouldBeTrue();
+        builder.SetParameter(camera, PartParameterId.Aim, -0.5);
+        builder.AddPiston(nodes[0], nodes[2]);
+        builder.AddSensor(beams[2], SensorKind.Accelerometer, out _, out _).ShouldBeTrue();
+        builder.AddServo(nodes[1]);
+        builder.AddSpring(nodes[2], nodes[4]);
+        builder.AddWheel(nodes[4]);
+        builder.RemoveNode(builder.AddNode(new Vector2D(300, 300)));
+        builder.RemoveBeam(beams[3]);
+        builder.AddBeam(nodes[3], nodes[4]);
+        var gappy = builder.Build();
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Gappy", gappy)))
+            .Build.ShouldNotBeNull().Creature;
+
+        var renumbered = AllIds(gappy).Order().Select((id, index) => (id, index)).ToDictionary(pair => pair.id, pair => pair.index + 1);
+        SaveJson.Serialize(build).ShouldBe(SaveJson.Serialize(Renumbered(gappy, renumbered)));
+    }
+
+    // Whole-number settings that are counts, not part ids.
+    private static readonly string[] _countFields = ["rays"];
+
+    [Fact]
+    public void PartIdFields_AreEveryPartsIdAndReference()
+    {
+        var partTypes = typeof(CreatureDef).GetProperties()
+            .Where(property => property.PropertyType.IsGenericType && property.PropertyType.GetGenericTypeDefinition() == typeof(IReadOnlyList<>))
+            .Select(property => property.PropertyType.GetGenericArguments()[0]);
+        var idFields = partTypes.SelectMany(type => type.GetProperties())
+            .Where(property => property.PropertyType == typeof(int) || property.PropertyType == typeof(int?))
+            .Select(property => char.ToLowerInvariant(property.Name[0]) + property.Name[1..])
+            .Except(_countFields);
+
+        idFields.ToHashSet().ShouldBe(CreationShareCode.PartIdFields, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void Read_ACodeInTheCurrentVersion_WasNotUpdated()
+    {
+        CreationShareCode.Read(CreationShareCode.Create(LoadFixture013("walker.creation.json"))).UpdatedFrom.ShouldBeNull();
     }
 
     [Fact]
@@ -286,27 +420,10 @@ public sealed class CreationShareCodeTests
 
         var build = CreationShareCode.Read(CreationShareCode.Create(creation)).Build.ShouldNotBeNull();
 
-        build.Creature.Sensors.ShouldHaveSingleItem().ShouldBe(creation.Creature.Sensors[0]);
+        build.Creature.Sensors.ShouldHaveSingleItem().ShouldBe(CreationShareCode.Rounded(creation).Creature.Sensors[0]);
+        build.Creature.Sensors[0].Spread!.Value.ShouldBe(Math.PI / 6, tolerance: 0.001);
         build.Creature.Sensors[0].Rays.ShouldBe(5);
         build.Creature.Sensors[0].Range.ShouldBe(350);
-    }
-
-    [Fact]
-    public void Read_AVersion5CodeWithACamera_GivesItTodaysFan()
-    {
-        var file = CameraWalkerFile();
-        file[VersionedSaveFile<CreationDef>.VersionField] = 5;
-        foreach (var field in new[] { "rays", "spread", "range" })
-        {
-            file["creature"]!["sensors"]![0]!.AsObject().Remove(field);
-        }
-
-        var build = CreationShareCode.Read(CreationShareCode.Pack(5, Encoding.UTF8.GetBytes(file.ToJsonString()))).Build.ShouldNotBeNull();
-
-        var camera = build.Creature.Sensors.ShouldHaveSingleItem();
-        camera.Rays.ShouldBe(3);
-        camera.Spread.ShouldBe(Math.PI / 2);
-        camera.Range.ShouldBe(220);
     }
 
     // The walker with its Accelerometer swapped for a default Camera.
@@ -320,6 +437,34 @@ public sealed class CreationShareCodeTests
         sensor["spread"] = Math.PI / 2;
         sensor["range"] = 220.0;
         return file;
+    }
+
+    private static IEnumerable<int> AllIds(CreatureDef creature) =>
+        creature.Nodes.Select(part => part.Id)
+            .Concat(creature.Beams.Select(part => part.Id))
+            .Concat(creature.Sensors.Select(part => part.Id))
+            .Concat(creature.Servos.Select(part => part.Id))
+            .Concat(creature.Pistons.Select(part => part.Id))
+            .Concat(creature.Springs.Select(part => part.Id))
+            .Concat(creature.Wheels.Select(part => part.Id));
+
+    // creature with every part id, and every reference to one, swapped through ids.
+    private static CreatureDef Renumbered(CreatureDef creature, Dictionary<int, int> ids)
+    {
+        var json = JsonNode.Parse(SaveJson.Serialize(creature))!.AsObject();
+        foreach (var part in json.Select(field => field.Value).OfType<JsonArray>().SelectMany(list => list).OfType<JsonObject>())
+        {
+            foreach (var (field, value) in part.ToArray())
+            {
+                if (CreationShareCode.PartIdFields.Contains(field) && value is not null)
+                {
+                    part[field] = ids[value.GetValue<int>()];
+                }
+            }
+        }
+
+        json["nextPartId"] = ids.Count + 1;
+        return SaveJson.Deserialize<CreatureDef>(json.ToJsonString(), "renumbered");
     }
 
     private static JsonObject WalkerFile() =>

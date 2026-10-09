@@ -73,6 +73,9 @@ public partial class ImportScreen : Control
         ShowOptional(GetNode<UiLabel>("%NoteTitle"), UiTextTranslation.Source(_presentation.NoteTitle));
         ShowOptional(GetNode<UiLabel>("%NoteText"), UiTextTranslation.Source(_presentation.NoteText));
         GetNode<Control>("%InfoScroll").Visible = preview;
+        var updated = UiTextTranslation.Source(_presentation.UpdatedNote);
+        GetNode<Control>("%Updated").Visible = updated is not null;
+        GetNode<UiLabel>("%UpdatedText").TextSource = updated;
         NameField.TextValue = _presentation.Name ?? string.Empty;
         ApplyName();
         GetNode<UiButton>("%Paste").Kind = _presentation.PasteIsPrimary ? UiButtonKind.Primary : UiButtonKind.Secondary;
