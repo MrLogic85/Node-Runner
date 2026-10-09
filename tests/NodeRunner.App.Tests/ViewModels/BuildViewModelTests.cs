@@ -264,6 +264,38 @@ public sealed class BuildViewModelTests
 
     [Theory]
     [InlineData(BuildTool.Parts)]
+    [InlineData(BuildTool.Select)]
+    [InlineData(BuildTool.Beam)]
+    public void PickTool_ClearsTheSelection_EvenForTheActiveTool(BuildTool tool)
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoCameras(), locked: false);
+        build.PickTool(BuildTool.Select);
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+
+        build.PickTool(tool);
+
+        build.SelectedPartCount.ShouldBe(0);
+        build.ActiveTool.ShouldBe(tool);
+    }
+
+    [Fact]
+    public void PickTool_ClearingASelection_KeepsThePickedLink()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoCameras(), locked: false);
+        build.PickTool(BuildTool.Beam);
+        build.PickLink(BuildLink.Spring);
+        build.SelectOnly(CreatureElementKind.Beam, 101);
+
+        build.PickTool(BuildTool.Beam);
+
+        build.SelectedPartCount.ShouldBe(0);
+        build.PickedLink.ShouldBe(BuildLink.Spring);
+    }
+
+    [Theory]
+    [InlineData(BuildTool.Parts)]
     [InlineData(BuildTool.Joint)]
     [InlineData(BuildTool.Select)]
     public void PickedLink_StaysAcrossToolSwitches(BuildTool other)

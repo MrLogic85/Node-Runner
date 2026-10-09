@@ -241,7 +241,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
 With nothing selected, the side panel shows the active tool's panel: Parts
 shows the Parts tray (#374), Links the link list (#705), and Joint and
 Select short help (#706). One selected part shows its Part settings and
-several the selection panel instead.
+several the selection panel instead. Picking a tool on the rail, even the
+active one, clears the selection so its panel shows (#1096).
 
 - Three tabs, Moving parts, Sensors and Blocks, group parts by what they
   do, not where they go: Moving parts holds the motors, Brake and Wheel,
