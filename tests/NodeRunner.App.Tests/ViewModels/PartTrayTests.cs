@@ -111,14 +111,14 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().SelectMany(group => group.Rows).Select(row => (row.Part, row.Version)).ShouldBe([
             (BuildPart.Servo, null),
-            (BuildPart.Stepper, "0.14.0"),
-            (BuildPart.VelocityMotor, "0.14.0"),
-            (BuildPart.Brake, "0.14.0"),
-            (BuildPart.Wheel, "0.14.0"),
+            (BuildPart.Stepper, "0.14.3"),
+            (BuildPart.VelocityMotor, "0.14.2"),
+            (BuildPart.Brake, "0.14.2"),
+            (BuildPart.Wheel, "0.14.1"),
             (BuildPart.Accelerometer, null),
             (BuildPart.Camera, null),
-            (BuildPart.TouchSensor, "0.14.0"),
-            (BuildPart.Pulse, "0.14.0"),
+            (BuildPart.TouchSensor, "0.14.1"),
+            (BuildPart.Pulse, "0.14.4"),
             (BuildPart.Battery, "0.18.0"),
             (BuildPart.Generator, "0.18.0"),
             (BuildPart.FuelTank, "0.18.0"),
@@ -134,7 +134,7 @@ public sealed class PartTrayTests
     [Fact]
     public void ATapOnAComingLaterRow_NamesThePartAndItsVersion()
     {
-        PartTray.ComingLaterReason(BuildPart.Stepper).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Stepper"), "0.14.0"));
+        PartTray.ComingLaterReason(BuildPart.Stepper).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Stepper"), "0.14.3"));
         PartTray.ComingLaterReason(BuildPart.Battery).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Battery"), "0.18.0"));
         BuildLinkList.ComingLaterReason(BuildLink.Wing).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Wing"), "0.18.0"));
         Should.Throw<ArgumentOutOfRangeException>(() => PartTray.ComingLaterReason(BuildPart.Servo));
