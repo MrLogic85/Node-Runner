@@ -13,24 +13,31 @@ the notes PR.
   previous release from `main`, minus fixes a fix release has already
   shipped (for a fix release, the fixes on `release/vX.Y`). Check what
   actually changed for the player, not only the titles.
-- **Audience:** players, in English. Say what they can now do or will
-  notice, not how it was built.
-- **Content:** what the version adds and what it fixes.
+- **Audience:** players, in English. Say what they can now do, not how it
+  was built.
+- **Focus:** only what the version brings that was not there before, told
+  so a player wants to try it: the few biggest new things, not every change
+  and not a guide. Renames, polish and small improvements to things that
+  already existed stay out.
+- **Fixes:** usually left out. Name a fix only when players clearly felt the
+  bug, such as a crash or lost creations, in one plain sentence under
+  `## Fixed`.
 - **Leave out:** issue and PR numbers, PR lists, code names, class or file
-  names, internal refactors, tests, CI and tooling. A change a player cannot
-  see does not belong here.
-- **Focus:** what the version brings that was not there before, told so a
-  player wants to try it. Not a complete guide, and not a list of every
-  change.
-- **Shape:** a one-line summary, then a short `### ` section of one to three
-  plain sentences for each of the few biggest new things, and a `## Fixed`
-  paragraph if anything was fixed. No bullet lists. No top-level title:
+  names, internal refactors, tests, CI and tooling.
+- **Shape:** a one-line summary, then one `### ` section per new thing, each
+  one to three short, plain sentences. No bullet lists. No top-level title:
   GitHub already shows "Node Runner X.Y.Z". A release that players install
   over an older one keeps an `## Install` section and may open with a short
   callout on what carries over.
-- **Images:** a screenshot for the biggest sections, taken on the emulator
-  and uploaded as a GitHub user attachment, so the link is absolute and
-  works on the release page. Alt text says what the picture shows.
+- **Images:** a landscape screenshot for most sections, showing the new thing
+  in use. Use one example creation that shows off the new parts across the
+  images; the owner may build it. Take them on the emulator, or on the
+  owner's phone when he asks, crop the black edge on the left, and upload
+  them as GitHub user attachments, so the links are absolute and work on the
+  release page. Alt text says what the picture shows.
+- **Check:** every sentence against the code and against the previous notes,
+  so nothing old is sold as new. The design lead agent can draft livelier
+  wording.
 
 ```markdown
 Your creatures can now be trained, saved and picked up again later.
@@ -41,8 +48,4 @@ Save a creature together with what it has learned, and keep training it
 another day.
 
 ![The Creations list with a trained creature's card](https://github.com/user-attachments/assets/...)
-
-## Fixed
-
-The camera no longer shakes when a creature vibrates.
 ```
