@@ -130,7 +130,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   |---|---|---|---|
   | **Rays** | `Rays` | 1, 3 or 5 | 3 |
   | **Spread** | `Spread` | 15°–90° | 90° |
-  | **Range** | `Range` | 1.0–4.0 m (100–400 world units) | 2.2 m (220) |
+  | **Range** | `Range` | 1.0–10.0 m (100–1000 world units) | 2.2 m (220) |
 
   - **Rays** are odd so one ray, the **centre**, always points along the
     aim. Changing the count adds or removes ports, so a locked creation
@@ -140,7 +140,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
     rays at 90° are 45° apart. With one ray it has no effect.
   - **Range** is how far each ray reaches from the beam's midpoint. A Worm
     beam is 0.7 m, so the range runs from a little over one beam to about
-    six. The sliders' steps are in `docs/BUILD_MODE.md` → "Parameters (#704)".
+    fourteen (#1097). The sliders' steps are in `docs/BUILD_MODE.md` →
+    "Parameters (#704)".
   - Build and import keep these within the sliders
     (`CreatureBuilder.IsWithinBuildLimits`); `SensorDef` itself accepts any
     odd count up to 5, a spread up to 180° and any positive range.

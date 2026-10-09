@@ -188,9 +188,9 @@ public static class PartParameters
         PartParameterId.Spread, MultiEditable: true, new(UiText.Plain("Spread"), UiText.Plain("How wide its rays fan out"), new(15, 90, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians), Advanced: false,
         NoEffectReason: UiText.Plain("One ray has no spread."));
 
-    // A Worm's beam is 0.7 m and the build area 12 m wide; the default 2.2 m is on a step.
+    // A Worm's beam is 0.7 m and the build area 12 m wide; up to 10 m sees far ahead (#1097). The default 2.2 m is on a step.
     public static PartParameter CameraRange { get; } = new(
-        PartParameterId.CameraRange, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can see"), new(1, 4, 0.1), 1, "{0} m", "{0}–{1} m", Metres.FromWorldUnits, ToWorld), Advanced: false);
+        PartParameterId.CameraRange, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can see"), new(1, 10, 0.1), 1, "{0} m", "{0}–{1} m", Metres.FromWorldUnits, ToWorld), Advanced: false);
 
     public static PartParameter Of(PartParameterId id) => id switch
     {
