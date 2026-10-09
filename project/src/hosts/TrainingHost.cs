@@ -522,7 +522,7 @@ public partial class TrainingHost : Node, IRoutedScene
         {
             _followed?.SetSelectedElement(_selection.SelectedElement);
             _selectedPartName = _selection.SelectedElement is { } selected && _followed?.Definition is { } definition
-                ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Servos, definition.Pistons, definition.Springs, selected.Id))
+                ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Servos, definition.Pistons, definition.Springs, definition.Wheels, selected.Id))
                 : null;
             BestMarker.Faded = _selectedPartName is not null;
             StartSign.Faded = BestMarker.Faded;

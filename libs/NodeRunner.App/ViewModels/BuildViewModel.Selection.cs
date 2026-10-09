@@ -20,6 +20,7 @@ public sealed partial class BuildViewModel
     private readonly HashSet<int> _selectedServoIds = [];
     private readonly HashSet<int> _selectedPistonIds = [];
     private readonly HashSet<int> _selectedSpringIds = [];
+    private readonly HashSet<int> _selectedWheelIds = [];
 
     /// <summary>How many joints the selection moves: <see cref="SelectedNodeIds"/>.</summary>
     public int SelectedNodeCount => SelectedNodeIds.Count;
@@ -34,7 +35,9 @@ public sealed partial class BuildViewModel
 
     public int SelectedSpringCount => _selectedSpringIds.Count;
 
-    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount;
+    public int SelectedWheelCount => _selectedWheelIds.Count;
+
+    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount;
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
@@ -48,6 +51,8 @@ public sealed partial class BuildViewModel
 
     public int? SingleSelectedSpringId => Single(_selectedSpringIds);
 
+    public int? SingleSelectedWheelId => Single(_selectedWheelIds);
+
     /// <summary>A copy of everything selected (#704).</summary>
     public PartSet Selection => new(
         _selectedNodeIds.ToHashSet(),
@@ -55,15 +60,16 @@ public sealed partial class BuildViewModel
         _selectedSensorIds.ToHashSet(),
         _selectedServoIds.ToHashSet(),
         _selectedPistonIds.ToHashSet(),
-        _selectedSpringIds.ToHashSet());
+        _selectedSpringIds.ToHashSet(),
+        _selectedWheelIds.ToHashSet());
 
     /// <summary>
-    /// The joints the selection moves: the selected joints and the joints under selected Servos,
-    /// since to the player a Servo is its joint (#973).
+    /// The joints the selection moves: the selected joints and the joints under selected joint
+    /// parts, Servos and Wheels, since to the player a joint part is its joint (#973).
     /// </summary>
-    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0
+    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0
         ? _selectedNodeIds
-        : _selectedNodeIds.Union(SelectedServoJoints()).ToHashSet();
+        : _selectedNodeIds.Union(SelectedJointPartJoints()).ToHashSet();
 
     /// <summary>Adds the part to the selection, or removes it if it is already selected (#704).</summary>
     public void ToggleSelected(CreatureElementSelection element)
@@ -84,7 +90,7 @@ public sealed partial class BuildViewModel
     }
 
     private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds);
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds);
 
     public void ClearSelection()
     {
@@ -125,6 +131,7 @@ public sealed partial class BuildViewModel
         CreatureElementKind.Servo => _selectedServoIds,
         CreatureElementKind.Piston => _selectedPistonIds,
         CreatureElementKind.Spring => _selectedSpringIds,
+        CreatureElementKind.Wheel => _selectedWheelIds,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -136,12 +143,17 @@ public sealed partial class BuildViewModel
         _selectedServoIds.Clear();
         _selectedPistonIds.Clear();
         _selectedSpringIds.Clear();
+        _selectedWheelIds.Clear();
     }
 
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
 
     private List<int> SelectedServoJoints() =>
         _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId).ToList();
+
+    // The joints under the selected joint parts, Servos and Wheels.
+    private List<int> SelectedJointPartJoints() =>
+        [.. SelectedServoJoints(), .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId)];
 
     // Drops the ids the body no longer has. Changing a Servo's links gives it a new id (#911, #849),
     // so the Servo now on each of servoJoints, the joints of the Servos selected before, stays selected.
@@ -155,14 +167,22 @@ public sealed partial class BuildViewModel
         _selectedServoIds.UnionWith(_builder.Servos.Where(servo => servoJoints.Contains(servo.NodeId)).Select(servo => servo.Id));
     }
 
-    // A Servo stands in for its joint (#973), also when Undo or Redo brings one back under a kept joint selection.
-    private void SelectServosInsteadOfTheirJoints()
+    // A joint part stands in for its joint (#973), also when Undo or Redo brings one back under a kept joint selection.
+    private void SelectJointPartsInsteadOfTheirJoints()
     {
         foreach (var servo in _builder.Servos)
         {
             if (_selectedNodeIds.Remove(servo.NodeId))
             {
                 _selectedServoIds.Add(servo.Id);
+            }
+        }
+
+        foreach (var wheel in _builder.Wheels)
+        {
+            if (_selectedNodeIds.Remove(wheel.NodeId))
+            {
+                _selectedWheelIds.Add(wheel.Id);
             }
         }
     }
@@ -308,5 +328,7 @@ public sealed partial class BuildViewModel
         OnPropertyChanged(nameof(SingleSelectedPistonId));
         OnPropertyChanged(nameof(SelectedSpringCount));
         OnPropertyChanged(nameof(SingleSelectedSpringId));
+        OnPropertyChanged(nameof(SelectedWheelCount));
+        OnPropertyChanged(nameof(SingleSelectedWheelId));
     }
 }

@@ -6,7 +6,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>Servo-specific Build canvas marks: selected link bands and tray placing feedback.</summary>
+/// <summary>Build canvas marks for joint parts: a selected Servo's link bands, and the tray placing feedback of a Servo or Wheel (#129).</summary>
 public static class BuildServoDrawing
 {
     private const float _servoBeamBandHalfWidth = 9;
@@ -38,27 +38,33 @@ public static class BuildServoDrawing
         canvas.DrawSetTransformMatrix(viewTransform);
     }
 
-    /// <summary>While a Servo is dragged or picked (#1016), a joint that takes it shows the <c>halo</c> ring and one that holds a part a dashed <c>danger</c> ring.</summary>
+    /// <summary>
+    /// While a joint part is dragged or picked (#1016), a joint that takes it shows the <c>halo</c> ring
+    /// round the part as placed (<see cref="BuildGestures.PlacingRingRadius"/>), and one that holds a
+    /// part a dashed <c>danger</c> ring round its own edge.
+    /// </summary>
     public static void DrawPlacingFeedback(CanvasItem canvas, BuildViewModel viewModel, BuildPart? placing, VisualTheme theme, Transform2D viewTransform)
     {
-        if (placing != BuildPart.Servo)
+        if (placing is not { } part || !PartTray.IsJointPart(part))
         {
             return;
         }
+
+        var partRadius = BuildGestures.PlacingRingRadius(part);
 
         using var pen = UiPixelPen.Begin(canvas, viewTransform);
         foreach (var node in viewModel.Nodes)
         {
             var target = new CreatureElementSelection(CreatureElementKind.Node, node.Id);
-            var canPlace = viewModel.CanPlacePart(BuildPart.Servo, target, out _);
-            var occupied = viewModel.ServoAtNode(node.Id) is not null;
+            var canPlace = viewModel.CanPlacePart(part, target, out _);
+            var occupied = viewModel.JointPartAt(node.Id) is not null;
             if (!canPlace && !occupied)
             {
                 continue;
             }
 
             var center = ToGodot(node.Position);
-            var radius = (float)SelectionMarks.JointHalo(canPlace ? ServoDef.JointRadius : viewModel.NodeRadius(node.Id));
+            var radius = (float)SelectionMarks.JointHalo(canPlace ? partRadius : viewModel.NodeRadius(node.Id));
             if (canPlace)
             {
                 pen.Ring(center, radius, theme.SelectionGlow, theme.SelectionRingWidth);

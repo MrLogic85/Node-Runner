@@ -280,6 +280,40 @@
             "additionalProperties": false
           }
         },
+        "wheels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nodeId": {
+                "type": "integer"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              },
+              "radius": {
+                "type": "number",
+                "default": 40
+              },
+              "grip": {
+                "type": "number",
+                "default": 0.8
+              }
+            },
+            "required": [
+              "id",
+              "nodeId"
+            ],
+            "additionalProperties": false
+          }
+        },
         "nextPartId": {
           "type": "integer"
         }
@@ -291,6 +325,7 @@
         "servos",
         "pistons",
         "springs",
+        "wheels",
         "nextPartId"
       ],
       "additionalProperties": false

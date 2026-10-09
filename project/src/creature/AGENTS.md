@@ -1,7 +1,7 @@
 # AGENTS.md — `src/creature/`
 
 The Godot side of a creature: bodies, joints, sensors, Servos, Pistons,
-Springs and the brain wiring. `docs/CREATURE_MODEL.md` owns the model; this
+Springs, Wheels and the brain wiring. `docs/CREATURE_MODEL.md` owns the model; this
 file owns how Godot realises it.
 
 ## Rules
@@ -49,11 +49,15 @@ file owns how Godot realises it.
     `ArenaShadows` viewport chosen by `ArenaVisibility` layers, because a
     `CanvasGroup` lets the parts' own draw layers escape. The look is in
     `docs/WORLD_VISUALS.md` → Drawing as a shadow.
+11. **A Wheel is its joint's body, nothing new.** Unlock that body's
+    rotation and give it the Wheel's weight, inertia and material; add no
+    body or joint of its own (`Creature.Wheels.cs` says how).
 
 ## What lives here
 
-- `Creature.cs`, `Creature.Links.cs` — builds bodies, pins, sensors and
-  links (each with its end-stop cylinder) and wires the brain
+- `Creature.cs`, `Creature.Links.cs`, `Creature.Wheels.cs` — builds bodies,
+  pins, sensors, links (each with its end-stop cylinder) and Wheels, and
+  wires the brain
 - `IBeamSensor.cs` — what `Creature` needs from a sensor: value names,
   `Read`, `Reset`
 - `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is

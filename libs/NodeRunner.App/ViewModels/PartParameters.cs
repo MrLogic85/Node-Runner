@@ -117,7 +117,8 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 /// Every part setting (#704). A Piston's Max strength is in N, its Stroke % of its shortest gap between its joints' edges (#835),
 /// its Start position % of its travel (#870), its Max speed in m/s (#451) and its Rise time in s
 /// (#801); a Spring's Stiffness is in N/m, its Damping in N·s/m (#453, #801), and its Stroke and
-/// Coil length in % like a Piston's Stroke and Start position (#835); a Camera's aim is turned on the canvas (#594).
+/// Coil length in % like a Piston's Stroke and Start position (#835); a Wheel's Radius is in m and its
+/// Grip in % (#129); a Camera's aim is turned on the canvas (#594).
 /// </summary>
 public static class PartParameters
 {
@@ -161,6 +162,12 @@ public static class PartParameters
     public static PartParameter CoilLength { get; } = new(
         PartParameterId.CoilLength, MultiEditable: true, new(UiText.Plain("Coil length"), UiText.Plain("The length the coil wants to be"), new(SpringDef.MinCoilLength * 100, SpringDef.MaxCoilLength * 100, 1), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: true);
 
+    public static PartParameter WheelRadius { get; } = new(
+        PartParameterId.WheelRadius, MultiEditable: true, new(UiText.Plain("Radius"), UiText.Plain("Bigger wheels roll over bumps but weigh more"), new(Metres.FromWorldUnits(WheelDef.MinRadius), Metres.FromWorldUnits(WheelDef.MaxRadius), 0.1), 1, "{0} m", "{0}–{1} m", Metres.FromWorldUnits, ToWorld), Advanced: false);
+
+    public static PartParameter Grip { get; } = new(
+        PartParameterId.Grip, MultiEditable: true, new(UiText.Plain("Grip"), UiText.Plain("How well the tyre holds the ground. Low grip slides"), new(0, 100, 10), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);
+
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null, Advanced: false);
 
     public static PartParameter Of(PartParameterId id) => id switch
@@ -178,6 +185,8 @@ public static class PartParameters
         PartParameterId.Stiffness => Stiffness,
         PartParameterId.Damping => Damping,
         PartParameterId.CoilLength => CoilLength,
+        PartParameterId.WheelRadius => WheelRadius,
+        PartParameterId.Grip => Grip,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 

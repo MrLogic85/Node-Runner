@@ -42,6 +42,7 @@ public sealed class CreationVersioningTests : IDisposable
         written.Remove(_versionField);
         var expected = JsonNode.Parse(original)!.AsObject();
         expected["creature"]!.AsObject()["servos"] = new JsonArray();
+        expected["creature"]!.AsObject()["wheels"] = new JsonArray();
         foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
         {
             piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
@@ -180,6 +181,48 @@ public sealed class CreationVersioningTests : IDisposable
     }
 
     [Fact]
+    public void AVersion4Save_LoadsWithNoWheels_AndAVersion5SaveMustListThem()
+    {
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        var creation = LoadFixture013("walker.creation.json");
+        repository.Save(creation);
+        var path = CreationPath(creation.Id);
+        var file = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        file["creature"]!.AsObject().Remove("wheels");
+        file[_versionField] = 4;
+        File.WriteAllText(path, file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).Get(creation.Id).ShouldNotBeNull().Creature.Wheels.ShouldBeEmpty();
+
+        file[_versionField] = 5;
+        File.WriteAllText(path, file.ToJsonString());
+        new FileCreationRepository(new TestStorageLocation(_directory)).Get(creation.Id).ShouldBeNull();
+    }
+
+    [Fact]
+    public void AWheel_RoundTripsWithItsRadiusAndGrip_ButNotItsWeight()
+    {
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))],
+            [new BeamDef(3, 1, 2)],
+            [],
+            [],
+            [],
+            [],
+            [new WheelDef(4, 2, "Front", radius: 70, grip: 0.3)],
+            nextPartId: 5);
+        var creation = new CreationDef(Guid.NewGuid(), "Roller", creature);
+
+        repository.Save(creation);
+
+        var wheel = JsonNode.Parse(File.ReadAllText(CreationPath(creation.Id)))!["creature"]!["wheels"]!.AsArray().ShouldHaveSingleItem()!.AsObject();
+        wheel.Select(field => field.Key).ShouldBe(["id", "nodeId", "name", "radius", "grip"]);
+        repository.Get(creation.Id).ShouldBe(creation, _creationComparer);
+        repository.Get(creation.Id)!.Creature.Wheels.ShouldBe(creature.Wheels);
+    }
+
+    [Fact]
     public void Save_WritesTheVersionFirst()
     {
         var repository = new FileCreationRepository(new TestStorageLocation(_directory));
@@ -213,7 +256,7 @@ public sealed class CreationVersioningTests : IDisposable
         var format = new VersionedSaveFile<CreationDef>([file =>
         {
             RenameField("title", "name")(file);
-            AddServosArray(file);
+            AddServosAndWheels(file);
         }]);
         var file = JsonNode.Parse(Fixture013("walker.creation.json"))!.AsObject();
         file["title"] = file["name"]!.DeepClone();
@@ -274,7 +317,7 @@ public sealed class CreationVersioningTests : IDisposable
         var format = new VersionedSaveFile<CreationDef>([file =>
         {
             File.WriteAllText(path, saved);
-            AddServosArray(file);
+            AddServosAndWheels(file);
         }]);
         WriteCreation(Fixture013("walker.creation.json"));
 
@@ -290,7 +333,7 @@ public sealed class CreationVersioningTests : IDisposable
         var format = new VersionedSaveFile<CreationDef>([file =>
         {
             File.Delete(path);
-            AddServosArray(file);
+            AddServosAndWheels(file);
         }]);
         WriteCreation(Fixture013("walker.creation.json"));
 
@@ -304,8 +347,12 @@ public sealed class CreationVersioningTests : IDisposable
         file[to] = value;
     };
 
-    private static void AddServosArray(JsonObject file) =>
+    // The two arrays a 0.13.0 file lacks that loading now requires.
+    private static void AddServosAndWheels(JsonObject file)
+    {
         file["creature"]!.AsObject()["servos"] = new JsonArray();
+        file["creature"]!.AsObject()["wheels"] = new JsonArray();
+    }
 
     private static CreationDef LoadFixture013(string name) =>
         FileCreationRepository.Format.Deserialize(Fixture013(name), name).Value;

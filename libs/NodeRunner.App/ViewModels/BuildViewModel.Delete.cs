@@ -13,7 +13,8 @@ public sealed partial class BuildViewModel
     /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
     /// refuses a delete that would change its model: one that takes a part with brain ports, also by
     /// cascade (a joint's Piston or Servo, a beam's sensor), or clears a Servo's Fixed or Target link,
-    /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>).
+    /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel
+    /// has no ports, so it can go.
     /// </summary>
     public UiText? DeleteLockedReason => DeleteRefusalNotes().Count > 0 ? LockedReason : null;
 
@@ -36,14 +37,14 @@ public sealed partial class BuildViewModel
             return;
         }
 
-        // A Servo's joint goes too when the delete takes its links and leaves none (#973): to the
-        // player the Servo is that joint, so clearing an area must not leave a bare joint behind.
-        var servoJoints = SelectedServoJoints().ToDictionary(joint => joint, joint => _builder.LinksAt(joint).Count);
+        // A joint part's joint goes too when the delete takes its links and leaves none (#973): to the
+        // player the part is that joint, so clearing an area must not leave a bare joint behind.
+        var partJoints = SelectedJointPartJoints().ToDictionary(joint => joint, joint => _builder.LinksAt(joint).Count);
         _history.Change(() =>
         {
             RemoveParts(_builder, Selection);
 
-            foreach (var (joint, linksBefore) in servoJoints)
+            foreach (var (joint, linksBefore) in partJoints)
             {
                 if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0)
                 {
@@ -130,6 +131,11 @@ public sealed partial class BuildViewModel
         foreach (var springId in parts.Springs)
         {
             builder.RemoveSpring(springId);
+        }
+
+        foreach (var wheelId in parts.Wheels)
+        {
+            builder.RemoveWheel(wheelId);
         }
 
         foreach (var beamId in parts.Beams)

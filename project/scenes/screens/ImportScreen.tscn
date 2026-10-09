@@ -355,6 +355,32 @@ vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
 
+[node name="Wheel" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Wheel"]
+layout_mode = 2
+size_flags_vertical = 4
+script = ExtResource("7_icon")
+IconId = 53
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Wheel"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Wheels"
+text_overrun_behavior = 3
+script = ExtResource("4_label")
+TextStyle = 4
+
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Wheel"]
+layout_mode = 2
+horizontal_alignment = 2
+vertical_alignment = 1
+script = ExtResource("4_label")
+TextStyle = 16
+
 [node name="Untrained" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn"]
 layout_mode = 2
 text = "Shared creations come untrained."

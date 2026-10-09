@@ -31,7 +31,7 @@ list; move one only with a new issue.
 ## What lives here
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
-  `ServoDef`, `PistonDef`, `SpringDef`, `LinkRef` — anatomy
+  `ServoDef`, `PistonDef`, `SpringDef`, `WheelDef`, `LinkRef` — anatomy
 - `CreatureElementKind`, `CreatureElementSelection` — what is selected
 - `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout` — brain ports
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,

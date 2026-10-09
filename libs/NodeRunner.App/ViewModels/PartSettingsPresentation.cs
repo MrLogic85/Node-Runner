@@ -12,6 +12,7 @@ public enum PartSettingsKind
     Servo,
     Piston,
     Spring,
+    Wheel,
 }
 
 /// <summary>
@@ -22,7 +23,9 @@ public enum PartSettingsKind
 /// <see cref="ConnectionsLabel"/> and <see cref="ConnectionsValue"/> are null. <see cref="Name"/> is
 /// the player's own name as written, or <see cref="DefaultName"/>. The panel's title is
 /// <see cref="Title"/>, what kind of part it is, so a renamed part still says what it is.
-/// <see cref="PanelId"/> says which part the panel shows across edits.
+/// <see cref="PanelId"/> says which part the panel shows across edits. <see cref="Readouts"/> are
+/// read-only values the part's settings derive, shown after its basic settings, like a Wheel's
+/// Weight (#129).
 /// </summary>
 public sealed record PartSettingsPresentation(
     int Id,
@@ -35,7 +38,8 @@ public sealed record PartSettingsPresentation(
     bool CanDelete,
     IReadOnlyList<ParameterSlider> Settings,
     IReadOnlyList<PartPickerPresentation>? Pickers = null,
-    int? JointId = null)
+    int? JointId = null,
+    IReadOnlyList<PartReadout>? Readouts = null)
 {
     /// <summary>
     /// The part the panel shows, kept across edits: <see cref="Id"/>, or a Servo's <see cref="JointId"/>,
@@ -59,9 +63,13 @@ public sealed record PartSettingsPresentation(
         PartSettingsKind.Servo => UiText.Plain("Servo"),
         PartSettingsKind.Piston => UiText.Plain("Piston"),
         PartSettingsKind.Spring => UiText.Plain("Spring"),
+        PartSettingsKind.Wheel => UiText.Plain("Wheel"),
         _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Unknown part kind."),
     };
 }
+
+/// <summary>A read-only row in the Part settings panel: a label and the value it reads, like "Weight" and "1.2 kg".</summary>
+public sealed record PartReadout(UiText Label, UiText Value);
 
 /// <summary>
 /// A Servo link picker: the links it offers, which one is chosen, and the <see cref="Placeholder"/>

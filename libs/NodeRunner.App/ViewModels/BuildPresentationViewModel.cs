@@ -1,6 +1,7 @@
 using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 
 namespace NodeRunner.App.ViewModels;
 
@@ -99,6 +100,22 @@ public sealed class BuildPresentationViewModel
                     PartInfo.Piston,
                     canDelete,
                     PanelSliders());
+            }
+
+            if (_build.SingleSelectedWheelId is { } wheelId)
+            {
+                var wheel = _build.Wheels[_build.WheelIndexOf(wheelId)];
+                return new PartSettingsPresentation(
+                    wheelId,
+                    PartSettingsKind.Wheel,
+                    _build.PartDisplayName(wheelId),
+                    _build.DefaultPartName(wheelId),
+                    null,
+                    null,
+                    PartInfo.Wheel,
+                    canDelete,
+                    PanelSliders(),
+                    Readouts: [new PartReadout(UiText.Plain("Weight"), UiText.Format("{0} kg", new FixedNumber(Wheel.Mass(wheel), 1)))]);
             }
 
             if (_build.SingleSelectedSpringId is { } springId)

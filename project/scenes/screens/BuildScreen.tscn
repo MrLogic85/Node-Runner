@@ -421,6 +421,12 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 4
 
+[node name="PartReadouts" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
 [node name="PartPickers" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartRows"]
 unique_name_in_owner = true
 visible = false

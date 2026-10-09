@@ -178,14 +178,15 @@ public sealed class BuildGestures
     /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): a
     /// joint's ring, then a sensor picture (its beam), then a Piston or Spring off any joint's reach
     /// (#1033), then a beam within reach, then a joint within reach, so a drop near a joint on a
-    /// short beam still reaches the beam. Null over empty canvas. A Servo being placed
+    /// short beam still reaches the beam. Null over empty canvas. A joint part being placed
     /// (<paramref name="placing"/>) is marked by a ring round each joint, so it lands on a joint
-    /// anywhere inside that ring first (#1055); <paramref name="placing"/> is null for a moved sensor.
+    /// anywhere inside that ring first (#1055): a Servo's at its housing, a Wheel's at a new Wheel's
+    /// size (#129). <paramref name="placing"/> is null for a moved sensor.
     /// </summary>
     public CreatureElementSelection? DropTargetAt(Vector2D viewPosition, BuildPart? placing)
     {
         var position = View.ToCanvas(viewPosition);
-        if (placing == BuildPart.Servo && JointInServoRing(position) is { } ringed)
+        if (placing is { } part && PartTray.IsJointPart(part) && JointInPlacingRing(position, PlacingRingRadius(part)) is { } ringed)
         {
             return new CreatureElementSelection(CreatureElementKind.Node, ringed);
         }
@@ -219,10 +220,21 @@ public sealed class BuildGestures
             : null;
     }
 
-    /// <summary>The joint nearest <paramref name="position"/> within the ring a Servo being placed draws round every joint, or null.</summary>
-    private int? JointInServoRing(Vector2D position)
+    /// <summary>
+    /// The radius of the joint part <paramref name="placing"/> as placed, round which the canvas
+    /// marks each joint while it is placed (#1055); see <see cref="PartTray.IsJointPart"/>.
+    /// </summary>
+    public static double PlacingRingRadius(BuildPart placing) => placing switch
     {
-        var ring = SelectionMarks.JointHalo(ServoDef.JointRadius);
+        BuildPart.Servo => ServoDef.JointRadius,
+        BuildPart.Wheel => WheelDef.DefaultRadius,
+        _ => throw new ArgumentOutOfRangeException(nameof(placing), placing, "Only a joint part has a placing ring."),
+    };
+
+    /// <summary>The joint nearest <paramref name="position"/> within the ring a joint part of <paramref name="radius"/> being placed draws round every joint, or null.</summary>
+    private int? JointInPlacingRing(Vector2D position, double radius)
+    {
+        var ring = SelectionMarks.JointHalo(radius);
         return _build.Nodes
             .Select(node => (node.Id, Distance: Distance(node.Position, position)))
             .Where(entry => entry.Distance <= ring)
@@ -369,7 +381,7 @@ public sealed class BuildGestures
             return;
         }
 
-        // A selected Servo's joint still starts a link, so a dropped Servo can get its links (#973).
+        // A selected joint part's joint still starts a link, so a dropped Servo can get its links (#973).
         if (_pressedNode is { } start && LinkDrawnFrom(start) is { } drawn)
         {
             _drawnLink = drawn;
@@ -412,10 +424,8 @@ public sealed class BuildGestures
             {
                 if (_press == SharedPress.Move && !_pressedNodeWasSelected && _pressedNode is { } joint)
                 {
-                    // A dragged Servo is selected, not the joint under it (#973).
-                    _build.ReplaceSelection(_build.ServoAtNode(joint) is { } servo
-                        ? PartSet.None with { Servos = new HashSet<int> { servo } }
-                        : PartSet.None with { Nodes = new HashSet<int> { joint } });
+                    // A dragged joint part is selected, not the joint under it (#973).
+                    _build.ReplaceSelection(PartSet.Of(_build.JointPartAt(joint) ?? new(CreatureElementKind.Node, joint)));
                 }
 
                 // The group turns and scales about the frame's centre, where the Move handle is.
@@ -618,7 +628,7 @@ public sealed class BuildGestures
     }
 
     private CreatureElementSelection? PressedElement() =>
-        _pressedNode is { } node ? (_build.ServoAtNode(node) is { } servo ? new(CreatureElementKind.Servo, servo) : new(CreatureElementKind.Node, node))
+        _pressedNode is { } node ? _build.JointPartAt(node) ?? new(CreatureElementKind.Node, node)
         : _pressedSensor is { } sensor ? new(CreatureElementKind.Sensor, sensor)
         : _pressedLink is { } link ? link
         : _pressedBeam is { } beam ? new(CreatureElementKind.Beam, beam)
@@ -792,7 +802,7 @@ public sealed class BuildGestures
     /// <summary>
     /// The parts whose centres lie in the box from <paramref name="start"/> to <paramref name="end"/>
     /// (#704): a joint's centre, a beam's or link's midpoint, and a sensor's, which is its beam's
-    /// midpoint. A Servo comes in place of its joint (#973). Null while the box is too small to count.
+    /// midpoint. A joint part, a Servo or a Wheel, comes in place of its joint (#973). Null while the box is too small to count.
     /// </summary>
     private PartSet? PartsInBox(Vector2D start, Vector2D end)
     {
@@ -807,12 +817,13 @@ public sealed class BuildGestures
         bool MidInside(int nodeA, int nodeB) => Inside(Midpoint(NodeById(nodeA).Position, NodeById(nodeB).Position));
         var beams = _build.Beams.Where(beam => MidInside(beam.NodeA, beam.NodeB)).Select(beam => beam.Id).ToHashSet();
         return new PartSet(
-            _build.Nodes.Where(node => Inside(node.Position) && _build.ServoAtNode(node.Id) is null).Select(node => node.Id).ToHashSet(),
+            _build.Nodes.Where(node => Inside(node.Position) && _build.JointPartAt(node.Id) is null).Select(node => node.Id).ToHashSet(),
             beams,
             _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id).ToHashSet(),
             _build.Servos.Where(servo => Inside(NodeById(servo.NodeId).Position)).Select(servo => servo.Id).ToHashSet(),
             _build.Pistons.Where(piston => MidInside(piston.NodeA, piston.NodeB)).Select(piston => piston.Id).ToHashSet(),
-            _build.Springs.Where(spring => MidInside(spring.NodeA, spring.NodeB)).Select(spring => spring.Id).ToHashSet());
+            _build.Springs.Where(spring => MidInside(spring.NodeA, spring.NodeB)).Select(spring => spring.Id).ToHashSet(),
+            _build.Wheels.Where(wheel => Inside(NodeById(wheel.NodeId).Position)).Select(wheel => wheel.Id).ToHashSet());
     }
 
     private double HitDistance(double viewDistance) => viewDistance / View.Zoom;

@@ -8,7 +8,7 @@ namespace NodeRunner.App.Builders;
 
 /// <summary>
 /// Mutable, in-progress creature anatomy driven by Build-mode UI
-/// (0.3.0). Add/move/remove nodes, beams, sensors, Pistons and Springs here; <see cref="Build"/>
+/// (0.3.0). Add/move/remove nodes, beams, sensors, joint parts, Pistons and Springs here; <see cref="Build"/>
 /// returns the drawing as an immutable <see cref="CreatureDef"/> for saving, and
 /// <see cref="TryBuild"/> returns it only once it can be simulated. See
 /// docs/CREATURE_MODEL.md for the vocabulary and docs/BUILD_MODE.md for
@@ -28,6 +28,12 @@ public sealed class CreatureBuilder
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
     public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");
+
+    /// <summary>Why a Wheel cannot be added to a node that already has one (#129).</summary>
+    public static UiText OneWheelPerJointReason { get; } = UiText.Plain("One wheel per joint");
+
+    /// <summary>Why a Wheel dropped on anything but a joint is refused (#129).</summary>
+    public static UiText WheelsGoOnAJointReason { get; } = UiText.Plain("Wheels go on a joint");
 
     public static UiText ServoNeedsTwoLinksReason { get; } = UiText.Plain("A Servo needs two links at its joint");
 
@@ -49,6 +55,7 @@ public sealed class CreatureBuilder
     private readonly List<ServoDef> _servos = [];
     private readonly List<PistonDef> _pistons = [];
     private readonly List<SpringDef> _springs = [];
+    private readonly List<WheelDef> _wheels = [];
     private int _nextPartId = 1;
 
     public CreatureBuilder()
@@ -64,6 +71,7 @@ public sealed class CreatureBuilder
         _servos.AddRange(creature.Servos);
         _pistons.AddRange(creature.Pistons);
         _springs.AddRange(creature.Springs);
+        _wheels.AddRange(creature.Wheels);
         _nextPartId = creature.NextPartId;
     }
 
@@ -78,6 +86,8 @@ public sealed class CreatureBuilder
     public IReadOnlyList<PistonDef> Pistons => _pistons;
 
     public IReadOnlyList<SpringDef> Springs => _springs;
+
+    public IReadOnlyList<WheelDef> Wheels => _wheels;
 
     public int NextPartId => _nextPartId;
 
@@ -98,7 +108,7 @@ public sealed class CreatureBuilder
     }
 
     /// <summary>
-    /// Removes a node, cascading to every beam, sensor, Piston and Spring that referenced it.
+    /// Removes a node, cascading to every beam, sensor, joint part, Piston and Spring that referenced it.
     /// </summary>
     public void RemoveNode(int nodeId)
     {
@@ -110,6 +120,7 @@ public sealed class CreatureBuilder
         _beams.RemoveAll(beam => removedBeamIds.Contains(beam.Id));
         _sensors.RemoveAll(sensor => removedBeamIds.Contains(sensor.BeamId));
         _servos.RemoveAll(servo => servo.NodeId == nodeId);
+        _wheels.RemoveAll(wheel => wheel.NodeId == nodeId);
         _pistons.RemoveAll(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
         _springs.RemoveAll(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
         _nodes.RemoveAt(nodeIndex);
@@ -267,6 +278,7 @@ public sealed class CreatureBuilder
         _pistons.Any(piston => piston.Id == partId) ? _pistonParameters
         : _servos.Any(servo => servo.Id == partId) ? _servoParameters
         : _springs.Any(spring => spring.Id == partId) ? _springParameters
+        : _wheels.Any(wheel => wheel.Id == partId) ? _wheelParameters
         : _sensors.Any(sensor => sensor.Id == partId && sensor.Kind == SensorKind.Camera) ? _cameraParameters
         : [];
 
@@ -277,7 +289,7 @@ public sealed class CreatureBuilder
     /// </summary>
     public bool IsWithinBuildLimits() =>
         _nodes.All(node => BuildViewModel.BuildArea.Contains(node.Position))
-        && _pistons.Select(piston => piston.Id).Concat(_servos.Select(servo => servo.Id)).Concat(_springs.Select(spring => spring.Id))
+        && _pistons.Select(piston => piston.Id).Concat(_servos.Select(servo => servo.Id)).Concat(_springs.Select(spring => spring.Id)).Concat(_wheels.Select(wheel => wheel.Id))
             .All(partId => ParametersOf(partId).All(parameter =>
                 PartParameters.Of(parameter).Slider is not { } slider || slider.Range.Allows(slider.Shown(ParameterValue(partId, parameter)))));
 
@@ -293,6 +305,17 @@ public sealed class CreatureBuilder
                 PartParameterId.Damping => spring.Damping,
                 PartParameterId.Stroke => spring.Stroke,
                 PartParameterId.CoilLength => spring.CoilLength,
+                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+            };
+        }
+
+        if (_wheels.Any(wheel => wheel.Id == partId))
+        {
+            var wheel = _wheels[WheelIndexOf(partId)];
+            return parameter switch
+            {
+                PartParameterId.WheelRadius => wheel.Radius,
+                PartParameterId.Grip => wheel.Grip,
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
             };
         }
@@ -348,6 +371,19 @@ public sealed class CreatureBuilder
             return;
         }
 
+        if (_wheels.Any(wheel => wheel.Id == partId))
+        {
+            var wheelIndex = WheelIndexOf(partId);
+            var wheel = _wheels[wheelIndex];
+            _wheels[wheelIndex] = parameter switch
+            {
+                PartParameterId.WheelRadius => wheel.WithSettings(value, wheel.Grip),
+                PartParameterId.Grip => wheel.WithSettings(wheel.Radius, value),
+                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+            };
+            return;
+        }
+
         if (_servos.Any(servo => servo.Id == partId))
         {
             var servoIndex = ServoIndexOf(partId);
@@ -383,6 +419,8 @@ public sealed class CreatureBuilder
 
     private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength];
 
+    private static readonly PartParameterId[] _wheelParameters = [PartParameterId.WheelRadius, PartParameterId.Grip];
+
     private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim];
 
     private SensorDef Camera(int sensorId) => _sensors[SensorIndexOf(sensorId)] is { Kind: SensorKind.Camera } camera
@@ -404,6 +442,9 @@ public sealed class CreatureBuilder
 
     /// <summary>Removes a Servo by id.</summary>
     public void RemoveServo(int servoId) => _servos.RemoveAt(ServoIndexOf(servoId));
+
+    /// <summary>Removes a Wheel by id.</summary>
+    public void RemoveWheel(int wheelId) => _wheels.RemoveAt(WheelIndexOf(wheelId));
 
     /// <summary>Removes a Spring by id, leaving any Servo that used it incomplete until the player picks another link.</summary>
     public void RemoveSpring(int springId)
@@ -452,7 +493,7 @@ public sealed class CreatureBuilder
             return false;
         }
 
-        if (_servos.Any(servo => servo.NodeId == nodeId))
+        if (CreatureDef.HasJointPart(nodeId, _servos, _wheels))
         {
             reason = OnePartPerJointReason;
             return false;
@@ -460,6 +501,47 @@ public sealed class CreatureBuilder
 
         reason = null;
         return true;
+    }
+
+    /// <summary>
+    /// Whether a Wheel can sit on this node (#129); if not, <paramref name="reason"/> says why. Until
+    /// a joint holds several parts (#1044), a joint with a Wheel or a Servo takes no other.
+    /// </summary>
+    public bool CanAddWheel(int nodeId, [NotNullWhen(false)] out UiText? reason)
+    {
+        if (!HasNode(nodeId))
+        {
+            reason = WheelsGoOnAJointReason;
+            return false;
+        }
+
+        if (_wheels.Any(wheel => wheel.NodeId == nodeId))
+        {
+            reason = OneWheelPerJointReason;
+            return false;
+        }
+
+        if (CreatureDef.HasJointPart(nodeId, _servos, _wheels))
+        {
+            reason = OnePartPerJointReason;
+            return false;
+        }
+
+        reason = null;
+        return true;
+    }
+
+    /// <summary>Adds a Wheel with the default settings and returns its id; see <see cref="CanAddWheel"/>.</summary>
+    public int AddWheel(int nodeId)
+    {
+        if (!CanAddWheel(nodeId, out var reason))
+        {
+            throw new ArgumentException(reason.Message);
+        }
+
+        var id = AllocatePartId();
+        _wheels.Add(new WheelDef(id, nodeId));
+        return id;
     }
 
     public bool ServoNeedsTwoLinks(int nodeId) => HasNode(nodeId) && !ServoDef.HasTwoLinks(LinksAt(nodeId));
@@ -502,7 +584,7 @@ public sealed class CreatureBuilder
     public double NodeRadius(int nodeId)
     {
         ValidateNodeId(nodeId);
-        return NodeDef.RadiusWithServo(_servos.Any(servo => servo.NodeId == nodeId));
+        return CreatureDef.JointRadius(nodeId, _servos, _wheels);
     }
 
     /// <summary>
@@ -686,11 +768,18 @@ public sealed class CreatureBuilder
             return;
         }
 
+        var wheelIndex = _wheels.FindIndex(wheel => wheel.Id == partId);
+        if (wheelIndex >= 0)
+        {
+            _wheels[wheelIndex] = _wheels[wheelIndex].WithName(name);
+            return;
+        }
+
         throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
     }
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _nextPartId);
+    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _wheels, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<UiText> errors)
@@ -762,6 +851,17 @@ public sealed class CreatureBuilder
         if (index < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(springId), "Spring id must point to an existing spring.");
+        }
+
+        return index;
+    }
+
+    public int WheelIndexOf(int wheelId)
+    {
+        var index = _wheels.FindIndex(wheel => wheel.Id == wheelId);
+        if (index < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(wheelId), "Wheel id must point to an existing wheel.");
         }
 
         return index;

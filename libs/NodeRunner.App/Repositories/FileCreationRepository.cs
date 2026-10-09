@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -171,6 +171,17 @@ public sealed class FileCreationRepository : ICreationRepository
             spring["stroke"] = 1.0;
             spring["coilLength"] = 0.55;
         }
+    }
+
+    // Before #129 a creature had no Wheels.
+    private static void AddWheelsArray(JsonObject file)
+    {
+        if (file["creature"] is not JsonObject creature)
+        {
+            throw new InvalidDataException("creation.json is missing its creature object.");
+        }
+
+        creature["wheels"] ??= new JsonArray();
     }
 
     private static string? TextOf(JsonNode? node) =>

@@ -49,7 +49,8 @@ public sealed class ImportPresentationTests
             [new ServoDef(11, 2, 5, 7)],
             [new PistonDef(7, 2, 4)],
             [new SpringDef(8, 1, 3)],
-            nextPartId: 12);
+            [new WheelDef(12, 4)],
+            nextPartId: 13);
 
         var preview = ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "All", creature), null), []);
 
@@ -61,6 +62,7 @@ public sealed class ImportPresentationTests
             (PartSettingsKind.Servo, 1),
             (PartSettingsKind.Piston, 1),
             (PartSettingsKind.Spring, 1),
+            (PartSettingsKind.Wheel, 1),
         ]);
     }
 

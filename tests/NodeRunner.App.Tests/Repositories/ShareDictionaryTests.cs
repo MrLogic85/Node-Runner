@@ -74,6 +74,7 @@ public sealed class ShareDictionaryTests
         builder.AddSpring(front, backFoot);
         builder.AddServo(back);
         builder.AddServo(front);
+        builder.AddWheel(frontFoot);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 

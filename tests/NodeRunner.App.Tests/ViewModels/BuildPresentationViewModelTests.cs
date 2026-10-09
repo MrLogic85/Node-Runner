@@ -108,8 +108,9 @@ public sealed class BuildPresentationViewModelTests
         var tray = new BuildPresentationViewModel(build).Tray;
         var groups = tray.Groups;
 
-        groups.SelectMany(group => group.Rows).ShouldAllBe(row => !row.IsAvailable);
-        tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts."));
+        groups.SelectMany(group => group.Rows).Where(row => row.Part != BuildPart.Wheel).ShouldAllBe(row => !row.IsAvailable);
+        groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Wheel).State.ShouldBe(PartTrayRowState.Available);
+        tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts the brain uses."));
         tray.PickedInfo.ShouldBeNull();
         var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
         servo.State.ShouldBe(PartTrayRowState.CreationLocked);
@@ -565,7 +566,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(PistonCreature());
-        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>()));
+        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>()));
 
         var selection = new BuildPresentationViewModel(build).Selection!;
 

@@ -16,4 +16,6 @@ public enum PartParameterId
     Stiffness,
     Damping,
     CoilLength,
+    WheelRadius,
+    Grip,
 }

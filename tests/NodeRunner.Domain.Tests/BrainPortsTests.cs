@@ -132,6 +132,20 @@ public sealed class BrainPortsTests
     }
 
     [Fact]
+    public void Of_GivesAWheelNoPorts()
+    {
+        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))];
+        BeamDef[] beams = [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)];
+        var without = new CreatureDef(nodes, beams, [new SensorDef(6, 4, SensorKind.Accelerometer)], [new ServoDef(7, 1, 4, 5)], [], [], [], nextPartId: 9);
+        var with = new CreatureDef(nodes, beams, [new SensorDef(6, 4, SensorKind.Accelerometer)], [new ServoDef(7, 1, 4, 5)], [], [], [new WheelDef(8, 2)], nextPartId: 9);
+
+        var layout = BrainPorts.Of(with);
+
+        layout.Inputs.ShouldBe(BrainPorts.Of(without).Inputs);
+        layout.Outputs.ShouldBe(BrainPorts.Of(without).Outputs);
+    }
+
+    [Fact]
     public void SensorPorts_UseTheSavedChannelKeys()
     {
         BrainPorts.AccelerometerChannels.ShouldBe(["along", "across"]);

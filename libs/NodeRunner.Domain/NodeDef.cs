@@ -8,12 +8,11 @@ namespace NodeRunner.Domain;
 public sealed record NodeDef
 {
     /// <summary>
-    /// A plain joint's radius (#626): it is drawn and collides at this size. Its look is in
+    /// A plain joint's radius (#626): it is drawn and collides at this size, unless a joint part
+    /// makes it bigger (<see cref="CreatureDef.JointRadius"/>). Its look is in
     /// docs/WORLD_VISUALS.md → "Joint".
     /// </summary>
     public const double PlainJointRadius = 15;
-
-    public static double RadiusWithServo(bool hasServo) => hasServo ? ServoDef.JointRadius : PlainJointRadius;
 
     public NodeDef(int id, Vector2D position, string? name = null)
     {

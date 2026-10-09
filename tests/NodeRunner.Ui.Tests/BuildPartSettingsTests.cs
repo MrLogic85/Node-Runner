@@ -16,7 +16,7 @@ public sealed class BuildPartSettingsTests
     public void PartSettings_IsRowsThenDelete_WithNoCloseButton()
     {
         Children("/PartSettings").ShouldBe(["PartRows", "PartActions"]);
-        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PartParameters", "PartPickers", "PartConnections", "PartAdvancedGap", "PartAdvanced", "PartNote"]);
+        Children("/PartSettings/PartRows").ShouldBe(["PartName", "PartParameters", "PartReadouts", "PartPickers", "PartConnections", "PartAdvancedGap", "PartAdvanced", "PartNote"]);
         Children("/PartSettings/PartRows/PartAdvanced").ShouldBe(["PartAdvancedParameters"]);
         Children("/PartSettings/PartActions").ShouldBe(["PartDelete"]);
         _build.ShouldNotContain(node => node.Name == "PartClose");
@@ -33,6 +33,17 @@ public sealed class BuildPartSettingsTests
         Children("/PartSettings/PartRows/PartParameters").ShouldBeEmpty();
         Children("/Selection/SelectionSettings/SelectionParameters").ShouldBeEmpty();
         _build.ShouldNotContain(node => node.Script == "res://src/ui/lib/UiSlider.cs");
+    }
+
+    [Fact]
+    public void Readouts_AreMadeFromThePresentation_AfterTheBasicSettings()
+    {
+        var readouts = _build.Single(node => node.Name == "PartReadouts");
+
+        readouts.IsUnique.ShouldBeTrue();
+        readouts.Node.Body.ShouldContain("visible = false");
+        Children("/PartSettings/PartRows/PartReadouts").ShouldBeEmpty();
+        _build.ShouldNotContain(node => node.Script == "res://src/ui/lib/UiValueRow.cs");
     }
 
     [Fact]
