@@ -19,17 +19,30 @@ the notes PR.
 - **Leave out:** issue and PR numbers, PR lists, code names, class or file
   names, internal refactors, tests, CI and tooling. A change a player cannot
   see does not belong here.
-- **Shape:** a one-line summary, then `## What's new` and `## Fixed` as they
-  apply. Short, plain sentences, one bullet per change; group small related
-  changes into one bullet. No top-level title: GitHub already shows
-  "Node Runner X.Y.Z".
+- **Focus:** what the version brings that was not there before, told so a
+  player wants to try it. Not a complete guide, and not a list of every
+  change.
+- **Shape:** a one-line summary, then a short `### ` section of one to three
+  plain sentences for each of the few biggest new things, and a `## Fixed`
+  paragraph if anything was fixed. No bullet lists. No top-level title:
+  GitHub already shows "Node Runner X.Y.Z". A release that players install
+  over an older one keeps an `## Install` section and may open with a short
+  callout on what carries over.
+- **Images:** a screenshot for the biggest sections, taken on the emulator
+  and uploaded as a GitHub user attachment, so the link is absolute and
+  works on the release page. Alt text says what the picture shows.
 
 ```markdown
 Your creatures can now be trained, saved and picked up again later.
 
-## What's new
-- Save a creature together with what it has learned, and keep training it later.
+### Pick up where you left off
+
+Save a creature together with what it has learned, and keep training it
+another day.
+
+![The Creations list with a trained creature's card](https://github.com/user-attachments/assets/...)
 
 ## Fixed
-- The camera no longer shakes when a creature vibrates.
+
+The camera no longer shakes when a creature vibrates.
 ```
