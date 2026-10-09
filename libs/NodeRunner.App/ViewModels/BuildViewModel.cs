@@ -220,6 +220,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
 
         PruneSelection(selectedServoJoints);
+        if (reselect is null)
+        {
+            SelectServosInsteadOfTheirJoints();
+        }
+
         PlacementNote = null;
         NotifySelectionChanged();
         RaiseAnatomyChanged();

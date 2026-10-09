@@ -97,7 +97,10 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     removes it, even under a handle (`BuildViewModel.ToggleSelected`). A
     tap on empty canvas clears the selection; a tap on a handle over empty
     canvas does nothing.
-  - A Servo stands in for its joint (#973): selecting it never also
+  - **Parts stand in for their joint** (#973, #1044): while any part sits
+    on a joint (today a Servo), the joint itself is never selected, so it
+    gets no selection mark and no panel; only a bare joint does. Links
+    still start and end on it. Selecting a part never also
     selects the joint under it, but the selection moves that joint, and
     it counts as a joint for the group.
   - Two or more selected joints are a *group*, with a frame and three
@@ -374,8 +377,8 @@ Several selected parts show the selection panel instead (#558, #704), titled
   with their settings but not their names, and selects the copy; Undo
   removes it. A part copies only with what it sits on: a beam, Spring or
   Piston with both its joints and a sensor with its beam. A Servo is its
-  joint to the player, so it brings that joint along (#1000); a selected
-  joint's Servo is not copied unless it is selected too. A copied Servo uses the copies of its Fixed
+  joint to the player, so it brings that joint along (#1000); a Servo is
+  copied only when it is selected itself. A copied Servo uses the copies of its Fixed
   and Target links and leaves a role empty whose link was not copied, so
   it shows its error note. On a locked creation a sensor, Piston or Servo
   would change the model, so it blocks Copy too, with the note "Locked:

@@ -381,6 +381,20 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
+    public void Redo_OfServoPlacement_UnderASelectedJoint_SelectsTheServoInstead()
+    {
+        var build = PistonAndSpring();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.Undo();
+        build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { _middleJoint.Id } });
+
+        build.Redo();
+
+        build.Selection.Nodes.ShouldBeEmpty();
+        build.SingleSelectedServoId.ShouldBe(servoId);
+    }
+
+    [Fact]
     public void Undo_OfServoLinkChange_WithServoNotSelected_SelectsNothing()
     {
         var build = PistonAndSpring();
