@@ -43,7 +43,7 @@ public sealed class VisualTheme
         DangerFill = UiThemes.Color(theme, UiTokens.Color.Danger) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
         JointRingWidth = UiSize.Stroke.Signal,
         JointInnerRingWidth = UiSize.Stroke.Hair,
-        SpringCoil = UiThemes.Color(theme, UiTokens.Color.Muted),
+        SpringCoil = UiThemes.Color(theme, UiTokens.Color.Detail),
         MotorAccent = UiThemes.Color(theme, UiTokens.Color.Accent),
         ServoPanelFill = UiThemes.Color(theme, UiTokens.Color.Panel),
         ServoFixed = UiThemes.Color(theme, UiTokens.Color.Detail),

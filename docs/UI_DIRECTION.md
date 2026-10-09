@@ -58,8 +58,11 @@ every theme shares (`project/src/ui/lib/AGENTS.md` → "Theme and tokens").
 Every reference token has a named Godot mapping or a reason here, so a later
 token import does not bring back a dead one.
 
-- **`detail`** marks a passive detail of a part: the Servo's Fixed-link band
-  and picker icon.
+- **`detail`** marks passive parts and passive details, which the brain
+  neither drives nor reads: the Spring's coil (#1059), the Servo's
+  Fixed-link band and picker icon. Structure (beams, joints, rods, seats,
+  bodies) stays `line-strong` and `panel`. `accent` marks what the brain
+  drives or reads.
 - **`*-glow` colours** are not imported. CSS needs them only because it
   cannot derive an alpha variant; `UiGlow` derives glow from the base colour,
   and Paper turns glow off with `effects_enabled`.

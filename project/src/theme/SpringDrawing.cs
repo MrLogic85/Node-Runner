@@ -6,15 +6,10 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// Draws a Spring between two joints (#453) as a coilover (#807), shared by Build's canvas, the
-/// creature in Training and the thumbnails: a <c>line-strong</c> rod from ring to ring, a seat
-/// plate just outside each joint's edge, a <c>panel</c> damper body from joint A's edge, and a helix wound round it,
-/// its front strokes in <c>muted</c> over the body and its back strokes as <c>line-strong</c>
-/// strokes under it, all of the same wire with round ends, each side in one call (#835). Like a Piston's cylinder, the body is as long as the Spring's travel, which is on the gap between the joints' edges (#835).
-/// The coil's wire is thicker the stiffer the Spring, and its turns are wound for its rest length,
-/// so a coil length that presses it harder against a stop packs in more of them. No
-/// <c>accent</c>, as the Spring has no brain ports; all of it turns <c>danger</c> while too short.
-/// Selected, it gets the Piston's two <c>halo</c> lines outside its seats. Drawn through
-/// <see cref="UiPixelPen"/>, so it stays crisp at any zoom.
+/// creature in Training and the thumbnails; <c>docs/WORLD_VISUALS.md</c> → "Spring" owns its look.
+/// Each side of the helix is one call of the same wire (#835). The body, like a Piston's cylinder,
+/// is as long as the Spring's travel, on the gap between the joints' edges (#835).
+/// Drawn through <see cref="UiPixelPen"/>, so it stays crisp at any zoom.
 /// </summary>
 public static class SpringDrawing
 {
