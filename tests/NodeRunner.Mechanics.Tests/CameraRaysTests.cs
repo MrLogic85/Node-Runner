@@ -4,20 +4,21 @@ namespace NodeRunner.Mechanics.Tests;
 
 public sealed class CameraRaysTests
 {
+    private const double _range = SensorDef.DefaultRange;
+
     [Fact]
-    public void DefaultAim_OnLevelBeam_LooksForwardUpForwardAndForwardDownFromLeftToRight()
+    public void DefaultCamera_OnLevelBeam_LooksForwardUpForwardAndForwardDownFromLeftToRight()
     {
         var aim = SensorDef.DefaultAim(new Vector2D(0, 0), new Vector2D(10, 0));
-        var left = CameraRays.LocalRayTarget(0, aim);
-        var centre = CameraRays.LocalRayTarget(1, aim);
-        var right = CameraRays.LocalRayTarget(2, aim);
+        var targets = CameraRays.LocalRayTargets(new SensorDef(1, 2, SensorKind.Camera), aim);
 
-        left.X.ShouldBe(CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
-        left.Y.ShouldBe(-CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
-        centre.X.ShouldBe(CameraRays.RayLength, 1e-9);
-        centre.Y.ShouldBe(0, 1e-9);
-        right.X.ShouldBe(CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
-        right.Y.ShouldBe(CameraRays.RayLength * Math.Sqrt(0.5), 1e-9);
+        targets.Length.ShouldBe(3);
+        targets[0].X.ShouldBe(220 * Math.Sqrt(0.5), 1e-9);
+        targets[0].Y.ShouldBe(-220 * Math.Sqrt(0.5), 1e-9);
+        targets[1].X.ShouldBe(220, 1e-9);
+        targets[1].Y.ShouldBe(0, 1e-9);
+        targets[2].X.ShouldBe(220 * Math.Sqrt(0.5), 1e-9);
+        targets[2].Y.ShouldBe(220 * Math.Sqrt(0.5), 1e-9);
     }
 
     [Theory]
@@ -25,33 +26,77 @@ public sealed class CameraRaysTests
     [InlineData(-5, -9)]
     [InlineData(-10, 0)]
     [InlineData(0, 10)]
-    public void DefaultAim_OnTurnedBeam_LooksForwardUpForwardAndForwardDownInTheWorld(double dx, double dy)
+    public void DefaultCamera_OnTurnedBeam_LooksForwardUpForwardAndForwardDownInTheWorld(double dx, double dy)
     {
         var nodeA = new Vector2D(3, 4);
         var nodeB = new Vector2D(3 + dx, 4 + dy);
         var aim = SensorDef.DefaultAim(nodeA, nodeB);
         Vector2D[] world = [new(Math.Sqrt(0.5), -Math.Sqrt(0.5)), new(1, 0), new(Math.Sqrt(0.5), Math.Sqrt(0.5))];
 
-        for (var ray = 0; ray < CameraRays.RayCount; ray++)
+        var targets = CameraRays.LocalRayTargets(new SensorDef(1, 2, SensorKind.Camera), aim);
+        for (var ray = 0; ray < targets.Length; ray++)
         {
-            var target = ToWorld(CameraRays.LocalRayTarget(ray, aim), CameraRays.BeamAngle(nodeA, nodeB));
+            var target = ToWorld(targets[ray], CameraRays.BeamAngle(nodeA, nodeB));
 
-            target.X.ShouldBe(world[ray].X * CameraRays.RayLength, 1e-9);
-            target.Y.ShouldBe(world[ray].Y * CameraRays.RayLength, 1e-9);
+            target.X.ShouldBe(world[ray].X * _range, 1e-9);
+            target.Y.ShouldBe(world[ray].Y * _range, 1e-9);
+        }
+    }
+
+    [Theory]
+    [InlineData(1, new[] { 0.0 })]
+    [InlineData(3, new[] { -45.0, 0, 45 })]
+    [InlineData(5, new[] { -45.0, -22.5, 0, 22.5, 45 })]
+    public void RayAngle_SpacesTheRaysEvenly_TheOuterOnesASpreadApart(int rays, double[] degrees)
+    {
+        for (var ray = 0; ray < rays; ray++)
+        {
+            CameraRays.RayAngle(ray, rays, Math.PI / 2).ShouldBe(degrees[ray] * Math.PI / 180, 1e-12);
+        }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public void LocalRayTarget_FansTheRaysAroundTheAim_ToTheRange(int rays)
+    {
+        const double aim = 1.2;
+        const double spread = 0.6;
+        const double range = 150;
+
+        for (var ray = 0; ray < rays; ray++)
+        {
+            var target = CameraRays.LocalRayTarget(ray, aim, rays, spread, range);
+            Math.Atan2(target.Y, target.X).ShouldBe(aim + CameraRays.RayAngle(ray, rays, spread), 1e-9);
+            Math.Sqrt((target.X * target.X) + (target.Y * target.Y)).ShouldBe(range, 1e-9);
+        }
+
+        var outer = Math.Atan2(CameraRays.LocalRayTarget(rays - 1, aim, rays, spread, range).Y, CameraRays.LocalRayTarget(rays - 1, aim, rays, spread, range).X)
+            - Math.Atan2(CameraRays.LocalRayTarget(0, aim, rays, spread, range).Y, CameraRays.LocalRayTarget(0, aim, rays, spread, range).X);
+        outer.ShouldBe(rays == 1 ? 0 : spread, 1e-9);
+        var centre = CameraRays.LocalRayTarget(rays / 2, aim, rays, spread, range);
+        Math.Atan2(centre.Y, centre.X).ShouldBe(aim, 1e-9);
+    }
+
+    [Fact]
+    public void LocalRayTargets_UsesTheCamerasOwnSettings()
+    {
+        var camera = new SensorDef(1, 2, SensorKind.Camera, rays: 5, spread: Math.PI / 3, range: 300);
+
+        var targets = CameraRays.LocalRayTargets(camera, 0.4);
+
+        targets.Length.ShouldBe(5);
+        for (var ray = 0; ray < 5; ray++)
+        {
+            targets[ray].ShouldBe(CameraRays.LocalRayTarget(ray, 0.4, 5, Math.PI / 3, 300));
         }
     }
 
     [Fact]
-    public void LocalRayTarget_FansTheRaysASpreadApartAroundTheAim()
+    public void LocalRayTargets_OfAnAccelerometer_Throws()
     {
-        const double aim = 1.2;
-
-        for (var ray = 0; ray < CameraRays.RayCount; ray++)
-        {
-            var target = CameraRays.LocalRayTarget(ray, aim);
-            Math.Atan2(target.Y, target.X).ShouldBe(aim + ((ray - 1) * CameraRays.Spread), 1e-9);
-            Math.Sqrt((target.X * target.X) + (target.Y * target.Y)).ShouldBe(CameraRays.RayLength, 1e-9);
-        }
+        Should.Throw<ArgumentException>(() => CameraRays.LocalRayTargets(new SensorDef(1, 2, SensorKind.Accelerometer), 0));
     }
 
     [Fact]
@@ -92,26 +137,43 @@ public sealed class CameraRaysTests
     [InlineData(double.PositiveInfinity)]
     public void LocalRayTarget_WithNonFiniteAim_Throws(double aim)
     {
-        Should.Throw<ArgumentOutOfRangeException>(() => CameraRays.LocalRayTarget(1, aim));
-    }
-
-    [Fact]
-    public void LocalRayTarget_WithUnknownRay_Throws()
-    {
-        Should.Throw<ArgumentOutOfRangeException>(() => CameraRays.LocalRayTarget(3, 0));
+        Should.Throw<ArgumentOutOfRangeException>(() => CameraRays.LocalRayTarget(1, aim, 3, Math.PI / 2, _range));
     }
 
     [Theory]
-    [InlineData(null, 0)]
-    [InlineData(0.0, 1)]
-    [InlineData(55.0, 0.75)]
-    [InlineData(110.0, 0.5)]
-    [InlineData(220.0, 0)]
-    [InlineData(500.0, 0)]
-    [InlineData(-5.0, 1)]
-    public void Reading_IsNearness_ZeroWithNothingSeenAndOneAtContact(double? hitDistance, double expected)
+    [InlineData(0.0)]
+    [InlineData(-1.0)]
+    [InlineData(double.PositiveInfinity)]
+    public void LocalRayTarget_WithoutAPositiveRange_Throws(double range)
     {
-        CameraRays.Reading(hitDistance).ShouldBe(expected, 1e-12);
+        Should.Throw<ArgumentOutOfRangeException>(() => CameraRays.LocalRayTarget(1, 0, 3, Math.PI / 2, range));
+    }
+
+    [Theory]
+    [InlineData(3, 3)]
+    [InlineData(-1, 3)]
+    [InlineData(1, 1)]
+    [InlineData(0, 2)]
+    [InlineData(0, 7)]
+    public void RayAngle_WithUnknownRayOrCount_Throws(int ray, int rays)
+    {
+        Should.Throw<ArgumentOutOfRangeException>(() => CameraRays.RayAngle(ray, rays, Math.PI / 2));
+    }
+
+    [Theory]
+    [InlineData(null, 220, 0)]
+    [InlineData(0.0, 220, 1)]
+    [InlineData(55.0, 220, 0.75)]
+    [InlineData(110.0, 220, 0.5)]
+    [InlineData(220.0, 220, 0)]
+    [InlineData(500.0, 220, 0)]
+    [InlineData(-5.0, 220, 1)]
+    [InlineData(50.0, 100, 0.5)]
+    [InlineData(100.0, 400, 0.75)]
+    [InlineData(150.0, 100, 0)]
+    public void Reading_IsNearnessWithinTheRange_ZeroWithNothingSeenAndOneAtContact(double? hitDistance, double range, double expected)
+    {
+        CameraRays.Reading(hitDistance, range).ShouldBe(expected, 1e-12);
     }
 
     [Theory]
@@ -121,26 +183,47 @@ public sealed class CameraRaysTests
     [InlineData(55.0, 110.0, null, new[] { 0.75, 0.5, 0, 1 })]
     public void Read_WritesEachRaysNearness_ThenWhetherAnyRayHits(double? left, double? centre, double? right, double[] expected)
     {
-        var values = new double[CameraRays.RayCount + 2];
+        var values = new double[5];
         values[^1] = -7;
 
-        CameraRays.Read([left, centre, right], values.AsSpan(0, CameraRays.RayCount + 1));
+        CameraRays.Read([left, centre, right], _range, values.AsSpan(0, 4));
 
         values[..^1].ShouldBe(expected);
         values[^1].ShouldBe(-7);
     }
 
     [Fact]
-    public void Read_WithTheWrongRayCount_Throws()
+    public void Read_WithOneOrFiveRays_WritesARayEach_ThenHit()
     {
-        Should.Throw<ArgumentException>(() => CameraRays.Read([null, null], new double[CameraRays.RayCount + 1]));
+        var one = new double[2];
+        CameraRays.Read([50.0], 100, one);
+        one.ShouldBe([0.5, 1]);
+
+        var five = new double[6];
+        CameraRays.Read([null, 25.0, null, null, 100.0], 100, five);
+        five.ShouldBe([0, 0.75, 0, 0, 0, 1]);
     }
 
     [Fact]
-    public void RayCount_MatchesTheCameraChannels_WithHitLast()
+    public void Read_WithTheWrongCounts_Throws()
     {
-        BrainPorts.CameraChannels.Count.ShouldBe(CameraRays.RayCount + 1);
-        BrainPorts.CameraChannels[^1].ShouldBe("hit");
+        Should.Throw<ArgumentException>(() => CameraRays.Read([null, null], _range, new double[3]));
+        Should.Throw<ArgumentException>(() => CameraRays.Read([null, null, null], _range, new double[3]));
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public void Read_FillsTheCameraChannels_WithHitLast(int rays)
+    {
+        var channels = BrainPorts.CameraChannels(rays);
+        var values = new double[channels.Count];
+
+        CameraRays.Read(new double?[rays], _range, values);
+
+        channels.Count.ShouldBe(rays + 1);
+        channels[^1].ShouldBe(BrainPorts.CameraHitChannel);
     }
 
     private static Vector2D ToWorld(Vector2D local, double beamAngle)

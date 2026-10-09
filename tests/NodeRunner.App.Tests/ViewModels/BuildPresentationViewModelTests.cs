@@ -244,7 +244,7 @@ public sealed class BuildPresentationViewModelTests
 
     [Theory]
     [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accel", "Measures its beam's acceleration.")]
-    [InlineData(SensorKind.Camera, PartSettingsKind.Camera, "Camera", "Three rays see how near the ground is. Drag the round handle to aim it.")]
+    [InlineData(SensorKind.Camera, PartSettingsKind.Camera, "Camera", "Its rays see how near the ground is. Drag the round handle to aim it.")]
     public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartSettingsKind partKind, string name, string note)
     {
         var build = new BuildViewModel();
@@ -267,7 +267,81 @@ public sealed class BuildPresentationViewModelTests
             UiText.Plain(note),
             CanDelete: true,
             part.Settings));
-        part.Settings.ShouldBeEmpty();
+        part.Settings.Select(setting => setting.Id).ShouldBe(kind == SensorKind.Camera
+            ? [PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]
+            : []);
+    }
+
+    [Fact]
+    public void SelectedCamera_ShowsItsRaysSpreadAndRange()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
+            [new BeamDef(101, 1, 2)],
+            [new SensorDef(7, 101, SensorKind.Camera)]));
+        build.SelectOnly(CreatureElementKind.Sensor, 7);
+
+        var settings = new BuildPresentationViewModel(build).SinglePart!.Settings;
+
+        settings.Select(setting => setting.Label).ShouldBe([UiText.Plain("Rays"), UiText.Plain("Spread"), UiText.Plain("Range")]);
+        settings.Select(setting => setting.Readout).ShouldBe([
+            UiText.Format("{0}", new FixedNumber(3, 0)),
+            UiText.Format("{0}°", new FixedNumber(90, 0)),
+            UiText.Format("{0} m", new FixedNumber(2.2, 1))]);
+        settings.ShouldAllBe(setting => !setting.Disabled && !setting.Advanced);
+    }
+
+    [Fact]
+    public void SelectedCamera_WithOneRay_ShowsItsSpreadDisabled()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
+            [new BeamDef(101, 1, 2)],
+            [new SensorDef(7, 101, SensorKind.Camera, rays: 1)]));
+        build.SelectOnly(CreatureElementKind.Sensor, 7);
+
+        var settings = new BuildPresentationViewModel(build).SinglePart!.Settings;
+
+        settings.Select(setting => (setting.Locked, setting.NoEffect)).ShouldBe([(false, false), (false, true), (false, false)]);
+        PartParameters.Of(settings[1].Id).NoEffectReason.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void SelectedCamera_WhenLocked_ShowsItsRaysDisabled_AndItsSpreadAndRangeEnabled()
+    {
+        var build = new BuildViewModel();
+        build.Load(
+            new CreatureDef(
+                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
+                [new BeamDef(101, 1, 2)],
+                [new SensorDef(7, 101, SensorKind.Camera)]),
+            locked: true);
+        build.SelectOnly(CreatureElementKind.Sensor, 7);
+
+        var settings = new BuildPresentationViewModel(build).SinglePart!.Settings;
+
+        settings.Select(setting => setting.Id).ShouldBe([PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
+        settings.Select(setting => (setting.Locked, setting.NoEffect)).ShouldBe([(true, false), (false, false), (false, false)]);
+    }
+
+    [Fact]
+    public void SelectedCameras_ShareTheirRaysSpreadAndRange()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new SensorDef(201, 101, SensorKind.Camera, rays: 1), new SensorDef(202, 102, SensorKind.Camera, rays: 5)]));
+        build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 201, 202 } });
+
+        var settings = new BuildPresentationViewModel(build).Selection!.Settings;
+
+        settings.Select(setting => setting.Id).ShouldBe([PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
+        settings[0].Readout.ShouldBe(UiText.Format("{0}–{1}", new FixedNumber(1, 0), new FixedNumber(5, 0)));
+        settings[0].ValuesDiffer.ShouldBeTrue();
+        settings.ShouldAllBe(setting => !setting.Disabled);
     }
 
     [Fact]
@@ -282,7 +356,7 @@ public sealed class BuildPresentationViewModelTests
             locked: true);
         build.SelectOnly(CreatureElementKind.Sensor, 7);
 
-        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe(UiText.Plain("Three rays see how near the ground is. Drag the round handle to aim it."));
+        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe(UiText.Plain("Its rays see how near the ground is. Drag the round handle to aim it."));
     }
 
     [Fact]

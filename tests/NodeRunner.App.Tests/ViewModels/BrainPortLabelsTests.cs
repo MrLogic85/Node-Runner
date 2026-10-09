@@ -69,6 +69,22 @@ public sealed class BrainPortLabelsTests
         labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0angle", servo), UiText.Format("{0}:\u00A0strength", servo)]);
     }
 
+    [Theory]
+    [InlineData(1, new[] { "centre", "hit" })]
+    [InlineData(3, new[] { "left", "centre", "right", "hit" })]
+    [InlineData(5, new[] { "far left", "left", "centre", "right", "far right", "hit" })]
+    public void For_ACamera_NamesItsRaysFromLeftToRight_ThenHit(int rays, string[] readings)
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
+            [new BeamDef(3, 1, 2)],
+            [new SensorDef(4, 3, SensorKind.Camera, "Eye", rays: rays)],
+            []);
+
+        var eye = UiText.AsWritten("Eye");
+        BrainPortLabels.For(creature).Inputs.ShouldBe(readings.Select(reading => UiText.Format($"{{0}}:\u00A0{reading}", eye)));
+    }
+
     [Fact]
     public void For_EverySensorKind_LabelsEachOfItsChannels()
     {

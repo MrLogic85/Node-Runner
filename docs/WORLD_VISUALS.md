@@ -129,8 +129,9 @@ drawn over it.
   ticks, as wide as a Piston's cylinder or a Spring's seats,
   joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
   Every mark sits at its true length.
-- **Camera aim:** a Camera selected alone shows its rays and an Aim handle
-  out along its centre ray.
+- **Camera rays and aim:** while every selected part is a Camera, each
+  shows its own rays, with their count, spread and range (#578); one
+  selected alone also shows an Aim handle out along its centre ray.
 - **Group frame:** a dashed frame with Move, Rotate and Scale handles; after
   a Rotate it stays turned with the group. A box select is dashed, filled
   `halo` at `alpha_soft`, and shows what it would catch as selected.

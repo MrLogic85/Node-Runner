@@ -202,6 +202,33 @@ public sealed class CreationUpdateCoordinatorTests
     }
 
     [Fact]
+    public void ApplyEdit_FiveRaysForThree_KeepsTheWeightsOfTheRaysBothHave()
+    {
+        // #578: rays keep their keys, so port matching (#516) keeps left1, centre and right1.
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = Trained(CameraCreature(rays: 3));
+        repository.Save(creation);
+        var oldPorts = BrainPorts.Of(creation.Creature);
+        var oldGenome = DirectBrain.Compile(creation.Training!.Brain, oldPorts);
+        var rebuilt = CameraCreature(rays: 5);
+        var newPorts = BrainPorts.Of(rebuilt);
+
+        var genome = DirectBrain.Compile(coordinator.ApplyEdit(creation.Id, rebuilt)!.Training!.Brain, newPorts);
+
+        newPorts.Inputs.Count.ShouldBe(oldPorts.Inputs.Count + 2);
+        foreach (var channel in new[] { "left1", "centre", "right1", "hit" })
+        {
+            var oldInput = oldPorts.Inputs.ToList().FindIndex(port => port.Channel == channel);
+            var newInput = newPorts.Inputs.ToList().FindIndex(port => port.Channel == channel);
+            for (var o = 0; o < oldPorts.Outputs.Count; o++)
+            {
+                genome[(o * newPorts.Inputs.Count) + newInput].ShouldBe(oldGenome[(o * oldPorts.Inputs.Count) + oldInput], channel);
+            }
+        }
+    }
+
+    [Fact]
     public void ApplyEdit_Rebuild_SurvivesARestart()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
@@ -381,6 +408,14 @@ public sealed class CreationUpdateCoordinatorTests
         [new BeamDef(4, 1, 3)],
         [],
         withSecondPiston ? [new PistonDef(10, 1, 2), new PistonDef(11, 2, 3)] : [new PistonDef(10, 1, 2)],
+        nextPartId: 12);
+
+    // Piston 10 and a Camera with the given rays on beam 4.
+    private static CreatureDef CameraCreature(int rays) => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0))],
+        [new BeamDef(4, 1, 3)],
+        [new SensorDef(5, 4, SensorKind.Camera, rays: rays)],
+        [new PistonDef(10, 1, 2)],
         nextPartId: 12);
 
     private static CreatureDef MovedCreature() => new(

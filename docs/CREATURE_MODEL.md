@@ -114,29 +114,51 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 
 #### Camera
 
-- **Beginner:** Three rays that tell the brain how near the ground is. A
-  new camera looks level: ahead-and-up, straight ahead and ahead-and-down;
-  you can turn it in Build. The nearer the ground a ray sees, the stronger
-  its reading.
+- **Beginner:** Rays that tell the brain how near the ground is. A new
+  camera has three, looking level: ahead-and-up, straight ahead and
+  ahead-and-down; you can turn it and change its rays, spread and range in
+  Build. The nearer the ground a ray sees, the stronger its reading.
 - **Aim (#594):** `SensorDef.Aim`, the angle of the centre ray from the
-  beam's direction (first node to second). The three rays fan
-  `CameraRays.Spread` (45°) apart around it and turn with the beam. A new
-  or unaimed camera gets `SensorDef.DefaultAim`: level, forward in the world
-  as built (#622). Aim is its one setting.
-- **Rays:** three rays from the beam's midpoint, `CameraRays.RayLength`
-  (220) long, that see the ground only (`CameraRays`).
+  beam's direction (first node to second). The rays turn with the beam. A
+  new or unaimed camera gets `SensorDef.DefaultAim`: level, forward in the
+  world as built (#622). It is set with a canvas handle, not the panel.
+- **Settings (#578):** three panel sliders, each saved on the `SensorDef`.
+  A Camera saved without them gets the defaults, which are the fan every
+  camera had before, so old creatures see exactly as before.
+
+  | Setting | Field | Values | Default |
+  |---|---|---|---|
+  | **Rays** | `Rays` | 1, 3 or 5 | 3 |
+  | **Spread** | `Spread` | 15°–90° | 90° |
+  | **Range** | `Range` | 1.0–4.0 m (100–400 world units) | 2.2 m (220) |
+
+  - **Rays** are odd so one ray, the **centre**, always points along the
+    aim. Changing the count adds or removes ports, so a locked creation
+    cannot change it (`docs/BUILD_MODE.md` → "Locked Build").
+  - **Spread** is the angle between the outer rays; the rays sit evenly
+    spaced and symmetric around the aim (`CameraRays.RayAngle`), so three
+    rays at 90° are 45° apart. With one ray it has no effect.
+  - **Range** is how far each ray reaches from the beam's midpoint. A Worm
+    beam is 0.7 m, so the range runs from a little over one beam to about
+    six. The sliders' steps are in `docs/BUILD_MODE.md` → "Parameters (#704)".
+  - Build and import keep these within the sliders
+    (`CreatureBuilder.IsWithinBuildLimits`); `SensorDef` itself accepts any
+    odd count up to 5, a spread up to 180° and any positive range.
+- **Rays:** from the beam's midpoint, as long as the camera's range; they
+  see the ground only (`CameraRays`).
 - **Ray names** are symmetric around the centre ray, seen from the camera
-  looking along its rays: **left**, **centre**, **right** (keys `left1`,
-  `centre`, `right1`; five rays add **far left** / **far right**, `left2` /
-  `right2`). Every ray count the camera will offer (1, 3 or 5, #578) has a
-  centre ray, so the inner rays' keys survive a rebuild with another count.
-- **Reading:** four inputs (`CameraRays.Read`). First each ray's
-  **nearness**, left to right: 0 when nothing is in range and rising
-  linearly to 1 at contact (`CameraRays.Reading`); a hit at half range
-  reads 0.5. Nothing seen adds nothing to the brain's weighted sum
-  (`docs/ML_CONCEPTS.md`). Last, **hit**: 1 when any ray sees the ground,
-  else 0, so far ground, whose nearness is almost 0, differs from none
-  (#1032). It comes after every ray, whatever the ray count.
+  looking along its rays: **far left**, **left**, **centre**, **right**,
+  **far right** (keys `left2`, `left1`, `centre`, `right1`, `right2`). One
+  ray is just `centre`, three add `left1` / `right1`, five add `left2` /
+  `right2`. The inner rays' keys survive a change of count, so they keep
+  their weights (#516).
+- **Reading:** one input per ray, then hit (`CameraRays.Read`). First each
+  ray's **nearness**, left to right: 0 at or beyond the camera's own range
+  and rising linearly to 1 at contact (`CameraRays.Reading`); a hit at half
+  its range reads 0.5. Nothing seen adds nothing to the brain's weighted
+  sum (`docs/ML_CONCEPTS.md`). Last, **hit**: 1 when any ray sees the
+  ground, else 0, so far ground, whose nearness is almost 0, differs from
+  none (#1032). It comes after every ray, whatever the ray count.
 
 ### Rigid triangles
 
@@ -268,7 +290,10 @@ fold.
   (`BrainPortLabels`); an output's label is the quantity it sets, so the
   Piston's position output reads **length** like its input (#869).
   - **Accelerometer:** inputs `along`, `across`.
-  - **Camera:** inputs `left1`, `centre`, `right1`, `hit` (#1032).
+  - **Camera:** one input per ray from left to right, then `hit` (#1032,
+    #578): `centre`, `hit` for one ray; `left1`, `centre`, `right1`, `hit`
+    for three; `left2`, `left1`, `centre`, `right1`, `right2`, `hit` for
+    five.
   - **Piston (#451):** inputs `length` (0 at its shortest, 1 at its longest,
     its Start position as drawn, #870) and `speed` (`tanh(v / maxSpeed)`,
     extending positive); outputs `position` and `strength`.
@@ -298,8 +323,9 @@ fold.
     match by part id, channel and direction: a kept port keeps its weights
     and bias, a new port starts almost passive, and a removed part's
     neurons and connections are dropped. Moving nodes or changing settings
-    keeps every port; a Servo whose links change gets a new id, so its
-    weights reset.
+    keeps every port, except a Camera's Rays, which add or remove its outer
+    rays' ports while the rays it keeps keep their weights (#578); a Servo
+    whose links change gets a new id, so its weights reset.
   - **Build refits the brain it opened with (#689):** every save in one
     Build visit refits the brain as it was when Build opened, not the last
     saved one, so a part an Undo brings back gets its neurons, ids and

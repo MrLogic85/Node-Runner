@@ -8,8 +8,11 @@ namespace NodeRunner.App.ViewModels;
 /// on several selected parts; the panel shows those with a <see cref="Slider"/>, and the canvas
 /// sets the rest, like a Camera's aim. <see cref="Advanced"/> settings sit in the panel's
 /// Advanced section (#903); the flag belongs to the setting, so it is the same on every part.
+/// A setting that <see cref="ChangesPorts"/> adds or removes brain ports, so a locked creation
+/// keeps it (#578, #896). <see cref="NoEffectReason"/> says why a setting that can do nothing
+/// as set now, like a one-ray Camera's Spread, shows disabled (#578).
 /// </summary>
-public sealed record PartParameter(PartParameterId Id, bool MultiEditable, ParameterScale? Slider, bool Advanced)
+public sealed record PartParameter(PartParameterId Id, bool MultiEditable, ParameterScale? Slider, bool Advanced, bool ChangesPorts = false, UiText? NoEffectReason = null)
 {
     public bool InPanel => Slider is not null;
 }
@@ -104,10 +107,15 @@ public sealed record SettingRange(double Min, double Max, double Step)
 /// <summary>
 /// A panel slider over the selected parts' values of one setting (#704). <see cref="Low"/> and
 /// <see cref="High"/> are the lowest and highest shown values at 0…1; they differ when the parts'
-/// values do. <see cref="Step"/> is one whole step at 0…1 (#711).
+/// values do. <see cref="Step"/> is one whole step at 0…1 (#711). A <see cref="Disabled"/> slider
+/// is shown but can't be moved: a setting a locked creation keeps (<see cref="Locked"/>), whose tap
+/// says why like the tray's locked rows (#896), or one that does nothing on these parts
+/// (<see cref="NoEffect"/>), like a one-ray Camera's spread (#578).
 /// </summary>
-public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Readout, double Low, double High, double Step)
+public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Readout, double Low, double High, double Step, bool Locked = false, bool NoEffect = false)
 {
+    public bool Disabled => Locked || NoEffect;
+
     public bool ValuesDiffer => Low != High;
 
     public bool Advanced => PartParameters.Of(Id).Advanced;
@@ -118,7 +126,8 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 /// its Start position % of its travel (#870), its Max speed in m/s (#451) and its Rise time in s
 /// (#801); a Spring's Stiffness is in N/m, its Damping in N·s/m (#453, #801), and its Stroke and
 /// Coil length in % like a Piston's Stroke and Start position (#835); a Wheel's Radius is in m and its
-/// Grip in % (#129); a Camera's aim is turned on the canvas (#594).
+/// Grip in % (#129); a Camera's aim is turned on the canvas (#594), and its Rays snap to 1, 3 or 5,
+/// its Spread is in degrees and its Range in m (#578).
 /// </summary>
 public static class PartParameters
 {
@@ -170,6 +179,19 @@ public static class PartParameters
 
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null, Advanced: false);
 
+    // Odd counts, so the centre ray is the aim; more rays add brain ports.
+    public static PartParameter Rays { get; } = new(
+        PartParameterId.Rays, MultiEditable: true, new(UiText.Plain("Rays"), UiText.Plain("How many rays it looks along"), SettingRange.Of(1, 3, 5), 0, "{0}", "{0}–{1}", value => value, value => value), Advanced: false, ChangesPorts: true);
+
+    // The angle between the outer rays.
+    public static PartParameter Spread { get; } = new(
+        PartParameterId.Spread, MultiEditable: true, new(UiText.Plain("Spread"), UiText.Plain("How wide its rays fan out"), new(15, 90, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians), Advanced: false,
+        NoEffectReason: UiText.Plain("One ray has no spread."));
+
+    // A Worm's beam is 0.7 m and the build area 12 m wide; the default 2.2 m is on a step.
+    public static PartParameter CameraRange { get; } = new(
+        PartParameterId.CameraRange, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can see"), new(1, 4, 0.1), 1, "{0} m", "{0}–{1} m", Metres.FromWorldUnits, ToWorld), Advanced: false);
+
     public static PartParameter Of(PartParameterId id) => id switch
     {
         PartParameterId.Strength => Strength,
@@ -187,6 +209,9 @@ public static class PartParameters
         PartParameterId.CoilLength => CoilLength,
         PartParameterId.WheelRadius => WheelRadius,
         PartParameterId.Grip => Grip,
+        PartParameterId.Rays => Rays,
+        PartParameterId.Spread => Spread,
+        PartParameterId.CameraRange => CameraRange,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 

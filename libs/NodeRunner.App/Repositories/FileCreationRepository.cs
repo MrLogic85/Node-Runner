@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -182,6 +182,32 @@ public sealed class FileCreationRepository : ICreationRepository
         }
 
         creature["wheels"] ??= new JsonArray();
+    }
+
+    // Before #578 every Camera had today's fan: three rays, the outer ones a right angle apart,
+    // reaching 220. Writing it into the file keeps what an old save meant if the defaults change.
+    private static void CameraSettings(JsonObject file)
+    {
+        // A file without sensors fails the strict load, which names the missing field.
+        if (file["creature"]?["sensors"] is not JsonArray sensors)
+        {
+            return;
+        }
+
+        foreach (var node in sensors)
+        {
+            if (node is not JsonObject sensor)
+            {
+                throw new InvalidDataException("creation.json has a sensor that is not an object.");
+            }
+
+            if (TextOf(sensor["kind"]) == "camera")
+            {
+                sensor["rays"] = 3;
+                sensor["spread"] = Math.PI / 2;
+                sensor["range"] = 220.0;
+            }
+        }
     }
 
     private static string? TextOf(JsonNode? node) =>

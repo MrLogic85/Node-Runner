@@ -613,11 +613,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The settings the selection can change now (#704): one part's own, or those every selected part
-    /// has and can share. Like a Camera's aim (#638), they tune the body without changing the brain's
-    /// ports, so a locked Creation can change them too.
+    /// The settings the panel shows for the selection (#704): one part's own, or those every
+    /// selected part has and can share.
     /// </summary>
-    public IReadOnlyList<PartParameterId> EditableParameters
+    public IReadOnlyList<PartParameterId> ShownParameters
     {
         get
         {
@@ -634,12 +633,31 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// The <see cref="ShownParameters"/> the selection can change now. Like a Camera's aim (#638),
+    /// most tune the body without changing the brain's ports, so a locked Creation can change them
+    /// too; one that <see cref="PartParameter.ChangesPorts"/>, a Camera's Rays, it keeps (#578, #896).
+    /// </summary>
+    public IReadOnlyList<PartParameterId> EditableParameters =>
+        [.. ShownParameters.Where(id => !_locked || !PartParameters.Of(id).ChangesPorts)];
+
     public bool CanEdit(PartParameterId parameter) => EditableParameters.Contains(parameter);
 
-    /// <summary>Each selected part's <paramref name="parameter"/>, in world units.</summary>
+    /// <summary>
+    /// Whether <paramref name="parameter"/> does anything on any selected part as set now: a one-ray
+    /// Camera's Spread does nothing, so its slider shows disabled (#578).
+    /// </summary>
+    public bool HasEffect(PartParameterId parameter) =>
+        SelectedPartIds().Any(part => _builder.ParameterHasEffect(part, parameter));
+
+    /// <summary>Each selected part's <paramref name="parameter"/>, in world units, for a shown setting.</summary>
     public IReadOnlyList<double> SelectedValuesOf(PartParameterId parameter)
     {
-        RequireEditable(parameter);
+        if (!ShownParameters.Contains(parameter))
+        {
+            throw new InvalidOperationException($"The selection does not show {parameter}.");
+        }
+
         return [.. SelectedPartIds().Select(part => _builder.ParameterValue(part, parameter))];
     }
 

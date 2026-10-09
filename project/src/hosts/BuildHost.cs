@@ -138,9 +138,10 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.PartNameChanged += Build.RenamePart;
         _buildScreen.DeleteSelectionRequested += DeleteSelection;
         _buildScreen.CopySelectionRequested += Build.CopySelectedParts;
-        _buildScreen.CreationLockedPressed += () => NotifyLocked("build.locked", UiTextTranslation.Source(BuildViewModel.LockedReason)!);
-        _buildScreen.ComingLaterPartPressed += part => NotifyLocked($"build.part.{(BuildPart)part}", UiTextTranslation.Source(PartTray.ComingLaterReason((BuildPart)part))!);
-        _buildScreen.ComingLaterLinkPressed += link => NotifyLocked($"build.link.{(BuildLink)link}", UiTextTranslation.Source(BuildLinkList.ComingLaterReason((BuildLink)link))!);
+        _buildScreen.CreationLockedPressed += () => NotifyUnavailable("build.locked", UiTextTranslation.Source(BuildViewModel.LockedReason)!);
+        _buildScreen.NoEffectSettingPressed += setting => NotifyUnavailable($"build.setting.{(PartParameterId)setting}", UiTextTranslation.Source(PartParameters.Of((PartParameterId)setting).NoEffectReason)!, icon: null);
+        _buildScreen.ComingLaterPartPressed += part => NotifyUnavailable($"build.part.{(BuildPart)part}", UiTextTranslation.Source(PartTray.ComingLaterReason((BuildPart)part))!);
+        _buildScreen.ComingLaterLinkPressed += link => NotifyUnavailable($"build.link.{(BuildLink)link}", UiTextTranslation.Source(BuildLinkList.ComingLaterReason((BuildLink)link))!);
     }
 
     // A locked Creation keeps Delete in view; when deleting would change the model, it says why (#896)
@@ -149,15 +150,15 @@ public partial class BuildHost : Node, IRoutedScene
     {
         if (UiTextTranslation.Source(Build.DeleteLockedReason) is { } reason)
         {
-            NotifyLocked("build.delete", reason);
+            NotifyUnavailable("build.delete", reason);
         }
 
         Build.DeleteSelectedParts();
     }
 
     // A tap answer: tapping again does not queue it twice, and the next tap's answer replaces it (#1004).
-    private void NotifyLocked(string id, Func<string> reason) =>
-        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, "Build", string.Empty, Icon: new(UiIconId.Lock))
+    private void NotifyUnavailable(string id, Func<string> reason, UiIconId? icon = UiIconId.Lock) =>
+        UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, "Build", string.Empty, Icon: icon is { } shown ? new(shown) : null)
         {
             MessageSource = reason,
             Id = id,

@@ -425,23 +425,29 @@ public partial class BuildCanvas : Node2D
         DrawSelectionFrame(canvas);
     }
 
-    /// <summary>The Camera's rays while its aim can be set, over the joints so the creature never hides them (#623).</summary>
+    /// <summary>
+    /// Each selected Camera's own rays while the panel shows its settings (#623, #578), over the
+    /// joints so the creature never hides them.
+    /// </summary>
     private void DrawSelectedCameraRays(CanvasItem canvas)
     {
-        if (_viewModel!.AimableCameraId is not { } id
-            || _viewModel.Sensors.Single(sensor => sensor.Id == id) is not { Kind: SensorKind.Camera } camera)
+        if (!_viewModel!.ShownParameters.Contains(PartParameterId.Rays))
         {
             return;
         }
 
-        var beam = _viewModel.Beams[_viewModel.BeamIndexOf(camera.BeamId)];
-        var nodeA = NodeById(beam.NodeA).Position;
-        var nodeB = NodeById(beam.NodeB).Position;
-        var middle = (ToGodot(nodeA) + ToGodot(nodeB)) / 2;
-        var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
-        var aim = camera.Aim ?? SensorDef.DefaultAim(nodeA, nodeB);
-        SensorDrawing.DrawRays(canvas, ViewTransform(), Theme, middle, Enumerable.Range(0, CameraRays.RayCount)
-            .Select(ray => middle + ToGodot(CameraRays.LocalRayTarget(ray, aim)).Rotated(beamRotation)));
+        var selected = _viewModel.Selection.Sensors;
+        foreach (var camera in _viewModel.Sensors.Where(sensor => sensor.Kind == SensorKind.Camera && selected.Contains(sensor.Id)))
+        {
+            var beam = _viewModel.Beams[_viewModel.BeamIndexOf(camera.BeamId)];
+            var nodeA = NodeById(beam.NodeA).Position;
+            var nodeB = NodeById(beam.NodeB).Position;
+            var middle = (ToGodot(nodeA) + ToGodot(nodeB)) / 2;
+            var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
+            var aim = camera.Aim ?? SensorDef.DefaultAim(nodeA, nodeB);
+            SensorDrawing.DrawRays(canvas, ViewTransform(), Theme, middle, CameraRays.LocalRayTargets(camera, aim)
+                .Select(target => middle + ToGodot(target).Rotated(beamRotation)));
+        }
     }
 
     /// <summary>

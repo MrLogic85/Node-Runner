@@ -143,8 +143,8 @@ public sealed class BuildViewModelTests
     [InlineData(new[] { 301, 302 }, "Strength,Stroke,StartPosition,MaxSpeed,RiseTime")]
     [InlineData(new[] { 301, 1 }, "")]
     [InlineData(new[] { 301, 101 }, "")]
-    [InlineData(new[] { 201 }, "Aim")]
-    [InlineData(new[] { 201, 202 }, "")]
+    [InlineData(new[] { 201 }, "Aim,Rays,Spread,CameraRange")]
+    [InlineData(new[] { 201, 202 }, "Rays,Spread,CameraRange")]
     [InlineData(new[] { 201, 301 }, "")]
     [InlineData(new[] { 401 }, "Stiffness,Damping,Stroke,CoilLength")]
     [InlineData(new[] { 401, 402 }, "Stiffness,Damping,Stroke,CoilLength")]
@@ -181,6 +181,86 @@ public sealed class BuildViewModelTests
 
         Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Strength, 20000));
     }
+
+    [Fact]
+    public void CameraSettings_SetOnEverySelectedCamera()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoCameras(), locked: false);
+        build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 201, 202 } });
+
+        build.SetParameter(PartParameterId.Rays, 5);
+        build.SetParameter(PartParameterId.Spread, Math.PI / 3);
+        build.SetParameter(PartParameterId.CameraRange, 300);
+
+        build.Sensors.ShouldAllBe(sensor => sensor.Rays == 5 && sensor.Spread == Math.PI / 3 && sensor.Range == 300);
+        build.SelectedValuesOf(PartParameterId.Rays).ShouldBe([5.0, 5.0]);
+    }
+
+    [Fact]
+    public void LockedCreation_KeepsItsCamerasRays_ButChangesTheirSpreadAndRange()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoCameras(), locked: true);
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+
+        build.ShownParameters.ShouldBe([PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
+        build.EditableParameters.ShouldBe([PartParameterId.Aim, PartParameterId.Spread, PartParameterId.CameraRange]);
+        build.CanEdit(PartParameterId.Rays).ShouldBeFalse();
+        build.SelectedValuesOf(PartParameterId.Rays).ShouldBe([3.0]);
+        Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Rays, 5));
+
+        build.SetParameter(PartParameterId.Spread, Math.PI / 4);
+        build.SetParameter(PartParameterId.CameraRange, 150);
+
+        build.Sensors[0].ShouldBe(new SensorDef(201, 101, SensorKind.Camera, aim: build.Sensors[0].Aim, rays: 3, spread: Math.PI / 4, range: 150));
+    }
+
+    [Fact]
+    public void UnlockedCreation_ChangesItsCamerasRays()
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoCameras(), locked: true);
+        build.Unlock();
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+
+        build.SetParameter(PartParameterId.Rays, 5);
+
+        build.Sensors[0].Rays.ShouldBe(5);
+    }
+
+    [Theory]
+    [InlineData(1, false)]
+    [InlineData(3, true)]
+    [InlineData(5, true)]
+    public void Spread_HasEffect_OnlyWithMoreThanOneRay(int rays, bool effect)
+    {
+        var build = new BuildViewModel();
+        build.Load(TwoCameras(rays), locked: false);
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+
+        build.HasEffect(PartParameterId.Spread).ShouldBe(effect);
+        build.HasEffect(PartParameterId.CameraRange).ShouldBeTrue();
+        build.HasEffect(PartParameterId.Rays).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Spread_HasEffect_WhenAnySelectedCameraHasMoreThanOneRay()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            [new SensorDef(201, 101, SensorKind.Camera, rays: 1), new SensorDef(202, 102, SensorKind.Camera, rays: 3)]));
+        build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 201, 202 } });
+
+        build.HasEffect(PartParameterId.Spread).ShouldBeTrue();
+    }
+
+    private static CreatureDef TwoCameras(int rays = 3) => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
+        [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+        [new SensorDef(201, 101, SensorKind.Camera, rays: rays), new SensorDef(202, 102, SensorKind.Camera, rays: rays)]);
 
     [Theory]
     [InlineData(BuildTool.Parts)]

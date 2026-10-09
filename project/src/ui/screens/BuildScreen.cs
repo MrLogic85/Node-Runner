@@ -69,6 +69,10 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void CreationLockedPressedEventHandler();
 
+    /// <summary>A setting's disabled slider was tapped where the setting does nothing as set now (#578).</summary>
+    [Signal]
+    public delegate void NoEffectSettingPressedEventHandler(int setting);
+
     /// <summary>A Coming later tray row was tapped (#992).</summary>
     [Signal]
     public delegate void ComingLaterPartPressedEventHandler(int part);
@@ -279,7 +283,9 @@ public partial class BuildScreen : Control
 
     /// <summary>
     /// One slider per setting in <paramref name="settings"/>, in order (#704). A setting's slider is
-    /// made the first time it shows; differing values have Marker ends and no thumb.
+    /// made the first time it shows; differing values have Marker ends and no thumb, and a disabled
+    /// setting's slider is dashed and ignores touches (#578); a tap on it says why: the creation
+    /// is locked, like a locked tray row (#896), or the setting does nothing as set now (#578).
     /// </summary>
     private void ApplySliders(Container container, IReadOnlyList<ParameterSlider> settings)
     {
@@ -299,8 +305,17 @@ public partial class BuildScreen : Control
             slider.Value = setting.ValuesDiffer
                 ? new UiSliderValue(UiSliderEnd.Marker(setting.Low), UiSliderEnd.Marker(setting.High))
                 : UiSliderValue.Thumb(setting.High);
+            if (slider.Disabled != setting.Disabled)
+            {
+                slider.Disabled = setting.Disabled;
+            }
+
+            _shownSettings[setting.Id] = setting;
         }
     }
+
+    // Each panel slider's setting as last shown, so a tap on a disabled one says why.
+    private readonly Dictionary<PartParameterId, ParameterSlider> _shownSettings = [];
 
     private UiSlider AddParameterSlider(Container container, PartParameterId id)
     {
@@ -309,6 +324,17 @@ public partial class BuildScreen : Control
         slider.ThumbChangeCommitted += (_, _) => EmitSignal(SignalName.ParameterChangeFinished);
         slider.TouchStarted += () => ShowSettingHint(slider, id);
         slider.TouchEnded += () => LetGoOfSettingHint(slider);
+        slider.DisabledPressed += () =>
+        {
+            if (_shownSettings[id].Locked)
+            {
+                EmitSignal(SignalName.CreationLockedPressed);
+            }
+            else if (_shownSettings[id].NoEffect)
+            {
+                EmitSignal(SignalName.NoEffectSettingPressed, (int)id);
+            }
+        };
 
         // Differing values have no thumb: a touch sets one value for all of them.
         slider.TrackPressed += position =>

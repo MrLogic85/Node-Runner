@@ -28,7 +28,8 @@ boundary. `reference design/components/Build/README.md`,
   (#638, #896). Joints, beams, Springs and Wheels have no brain ports, so
   they can be added, copied and deleted; joints move, sensors move to another beam (#806),
   cameras aim, the selection handles all work (scaling changes only beam
-  lengths), parameters change and parts can be renamed. A part with ports (a sensor, Piston or Servo) can be neither
+  lengths), parameters change, except a Camera's Rays (#578), and parts can
+  be renamed. A part with ports (a sensor, Piston or Servo) can be neither
   added nor deleted: every tray row except the Wheel's is locked, and so is
   the Piston row; the tray's help line says "Unlock to add parts the brain
   uses.", and tapping a row so locked shows "The creation is locked to avoid changes to the model, unlock to enable."
@@ -193,8 +194,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   Wheel. Tapping or dragging its joint selects the Wheel, as a Servo's.
   Until 0.14.0 ships, its tray row on main says "Wheel comes in version
   0.14.1" (`PartTray.UnreleasedPartsUnlocked`; the App tests unlock it; #1087).
-- **Camera aim (#594, #622):** a Camera selected alone shows its rays and an
-  Aim handle out along its centre ray, in any tool; the handle may cover a
+- **Camera aim (#594, #622):** a Camera selected alone shows an Aim handle
+  out along its centre ray, in any tool; the handle may cover a
   joint, which then cannot be tapped there (#639). Dragging the handle
   turns the camera to look at the finger (`CameraRays.AimAlong`); the aim
   is saved relative to the beam. The handle is hit before anything under
@@ -337,7 +338,12 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
 - **Wheel:** Radius (0.4–1.0 m, step 0.1) and Grip (0–100%, step 10),
   then a read-only Weight ("1.2 kg", `PartSettingsPresentation.Readouts`)
   that follows Radius. Its note: "Rolls freely on the ground."
-- **Camera:** Aim, set on the canvas, one Camera at a time.
+- **Camera:** Aim, set on the canvas, one Camera at a time; Rays (1, 3 or
+  5, three evenly spaced stops, #578), Spread (15°–90°, step 5) and Range
+  (1.0–4.0 m, step 0.1) in the panel. Spread shows disabled while every
+  selected Camera has one ray, since one ray has no spread
+  (`BuildViewModel.HasEffect`); a tap on it says so
+  (`PartParameter.NoEffectReason`).
 
 A finger on a slider shows what that setting does in a box at the canvas's
 top right (`ParameterScale.Help`, one short line each, #867). It stays while
@@ -346,14 +352,18 @@ another slider swaps it, and it hides at once when the panel shows something
 else or collapses. Turning it off belongs to Settings (#381).
 
 The selection can change one part's own parameters, or those every selected
-part has and can share (`BuildViewModel.EditableParameters`); a Piston and
+part has and can share (`BuildViewModel.ShownParameters`); a Piston and
 a Spring selected together share Stroke, but a Piston and a Servo share no
 Start position: one is along a stroke, the other a rotation (#867). A slider sets its value on every
 selected part (`SetParameter`). The canvas shows what a parameter changes
 only while it can be changed: a Piston's stroke ticks while Stroke or Start
 position can, a Spring's ticks and rest-length ring while Stroke or Coil
-length can, a Camera's rays and Aim handle while Aim can. Parameters change
-no brain port, so a locked creation keeps them.
+length can, a selected Camera's own rays while every selected part is a
+Camera, and its Aim handle while Aim can. Parameters change no brain port,
+so a locked creation can change them, except a Camera's Rays, which add or
+remove ports (`PartParameter.ChangesPorts`): on a locked creation its
+slider shows disabled (`BuildViewModel.EditableParameters`), and a tap on
+it shows the locked notification, like a locked tray row.
 
 ## Names
 
