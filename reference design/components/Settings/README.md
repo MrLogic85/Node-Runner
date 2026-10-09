@@ -1,4 +1,4 @@
-**Settings** holds the three things a player may want to change for their own phone. It opens from the **overflow menu on Creations** (Settings, then Examples), with a cog icon, so the top bars keep their two-icons-plus-overflow shape and nothing on Build or Training carries a gear. Back returns to Creations. The bar has no overflow: there is nothing to reset, since each setting is one tap from any other value.
+**Settings** holds the three things a player may want to change for their own phone. It opens from the **overflow menu on Creations** (Settings, Examples, Import creation), with a cog icon, so the top bars keep their two-icons-plus-overflow shape and nothing on Build or Training carries a gear. Back returns to Creations. The bar has no overflow: there is nothing to reset, since each setting is one tap from any other value.
 
 **Layout.** One centred column (`slot-form`, `w-form` wide, never wider than the screen) with three rows in this order: **UI size**, **Sounds**, **Theme**. Each row is named by the same small label a slider has, and nothing else explains it: the controls say what they do.
 

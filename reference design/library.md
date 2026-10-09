@@ -42,12 +42,6 @@ scale) are this, placed on the canvas around a selection. sv_handle draws the id
 the canvas's own SVG (the canvas is one drawing at absolute coordinates, not flowed HTML) -- keep the two in
 step if this one's geometry changes.
 
-## `c_hold(text, pct=40, w=None, kind='tertiary', icon=None)`
-
-Hold-to-activate: an isolated fill span in that kind's selected colour, 50% opacity, sweeps under the content — same
-technique c_btn's box-shadow uses for the selected glow, just on a plain background instead. Works for row (text and/or
-icon), icon-only and stack layouts, put `icon`/`stack` in kind exactly as c_btn does, e.g. c_hold('', 45, kind='primary icon', icon='play').
-
 ## `c_prog(pct, w='100%', h=6)`
 
 A bare progress bar: c_slider's own track and fill (thumbs=None), no label/value row around it. w
@@ -169,8 +163,7 @@ handle=False: a plain muted 16 icon in its place (a part glyph with glyph=True),
 ## `c_card_actions(buttons)`
 
 Card action bar: the row of actions along the bottom of a flush card (a creation, a checkpoint), always visible,
-never a hidden menu. It is a layout style, not a button of its own: buttons are ordinary stacked buttons (c_btn, or
-c_hold for hold-to-activate) and keep all their behaviour -- the bar only restyles them. Each one stretches to its
+never a hidden menu. It is a layout style, not a button of its own: buttons are ordinary stacked buttons (c_btn) and keep all their behaviour -- the bar only restyles them. Each one stretches to its
 share of the width and touch high (that whole cell is what you tap), loses its frame and background, and gets a
 hairline between it and the next; the bar draws a hairline above. A destructive action is the tertiary kind, so it
 is in the danger colour. buttons: e.g. [c_btn('Copy', 'flat stack', 'copy'), c_btn('Delete', 'tertiary stack', 'trash')].
@@ -205,3 +198,12 @@ Expand section: a full-width control-sm header, its title in overline muted and 
 (right when closed, down when open), no frame, only the press tint. Open, its rows follow with the panel's own gap.
 It starts closed every time Build opens and keeps its state while the selection changes. Build's part settings put
 the less used sliders in one called Advanced.
+
+## `c_field_line(text, bad=True)`
+
+The one line of words under a text field: why it is refused (danger), or a plain fact about it (muted).
+
+## `c_fact_row(icon, name, count, locked=False)`
+
+A fact, not a button: an icon (a UI icon or a part glyph, icon size, ink), the name in body and the count in
+readout-sm, no frame. Locked: a muted lock before the count, for a part the player has not unlocked.

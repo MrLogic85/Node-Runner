@@ -1,6 +1,6 @@
 A creation that **has trained at least one generation**. It is the Build scene in its **locked** state, not a second scene (see Build), and the lock only guards what would change the model: the model is trained for these parts. It is accident prevention, not a wall.
 
-**Top bar.** Back, the name (still editable), the **padlock** (a selected secondary icon button), Undo, Redo and the overflow (Stats, coming soon; Power budget, coming soon; Copy creation; **Reset training**; Delete creation).
+**Top bar.** Back, the name (still editable), the **padlock** (a selected secondary icon button), Undo, Redo and the overflow (Stats, coming soon; Power budget, coming soon; Copy creation; Share build; **Reset training**; Delete creation).
 
 **What stays editable.** It opens in Joint like any other creation. Moving joints, the selection frame with all three handles (scaling only changes beam lengths), renaming, every part's sliders (they change no brain port), and adding or deleting **beams, joints and springs**, which have no brain ports. Copy N stays, unless the selection holds a sensor, Piston or Servo ("Locked: would change the model"). Undo and Redo work.
 

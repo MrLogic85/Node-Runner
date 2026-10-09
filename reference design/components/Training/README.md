@@ -13,6 +13,6 @@ Named **Training** in the app; the same screen runs a saved brain in **Simulate*
 
 **Status.** Beside the arena a side panel titled **Status** holds the signal flow: 1 Senses, 2 Brain, 3 Outputs, 4 Distance (see SignalFlow). Only the Brain stage looks like a button (raised, with glow) and opens the brain; the others are plain frames. The panel collapses to its tab, and the arena widens.
 
-**Top bar.** Back (to Build), the creation's name over its status ("Training · Flat ground", or "Simulating · Flat ground"), and **Brain** and **Stats** as secondary icon buttons; Stats is unavailable until it is built and a tap says it comes later. No overflow.
+**Top bar.** Back (to Build), the creation's name over its status ("Training · Flat ground", or "Simulating · Flat ground"), and **Brain** (the Brain mark) and **Stats** as secondary icon buttons; Stats is unavailable until it is built and a tap says it comes later. No overflow.
 
 **Simulate** plays the latest brain on its own in one run that never ends, and saves nothing: no generation caption, no strip and no shadows; the best marker stays at the saved best.
