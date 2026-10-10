@@ -192,8 +192,6 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   with a Servo, as a Servo on a Wheel's joint, with "One part per joint"
   (until #1044). A placement is one Undo step; a drop also selects the
   Wheel. Tapping or dragging its joint selects the Wheel, as a Servo's.
-  Until 0.14.0 ships, its tray row on main says "Wheel comes in version
-  0.14.1" (`PartTray.UnreleasedPartsUnlocked`; the App tests unlock it; #1087).
 - **Camera aim (#594, #622):** a Camera selected alone shows an Aim handle
   out along its centre ray, in any tool; the handle may cover a
   joint, which then cannot be tapped there (#639). Dragging the handle

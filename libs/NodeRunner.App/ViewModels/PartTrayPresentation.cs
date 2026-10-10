@@ -142,12 +142,6 @@ public static class PartTray
     /// <summary>Whether a tray part goes on a joint (a Servo or a Wheel, #129) rather than on a beam.</summary>
     public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Wheel;
 
-    /// <summary>
-    /// The Wheel stays Coming later on main until 0.14.0 ships (#129, #1087); the App test assembly sets this
-    /// once at load so its tests can place Wheels. Remove it, and the gated row, when the Wheel unlocks.
-    /// </summary>
-    internal static bool UnreleasedPartsUnlocked { get; set; }
-
     private static PartTrayGroup[] Catalog() =>
     [
         new(UiText.Plain("Moving parts"),
@@ -156,7 +150,7 @@ public static class PartTray
             Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.3"),
             Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor"), "0.14.2"),
             Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.2"),
-            UnreleasedPartsUnlocked ? Available(BuildPart.Wheel, UiText.Plain("Wheel")) : Locked(BuildPart.Wheel, UiText.Plain("Wheel"), "0.14.1"),
+            Available(BuildPart.Wheel, UiText.Plain("Wheel")),
         ]),
         new(UiText.Plain("Sensors"),
         [
