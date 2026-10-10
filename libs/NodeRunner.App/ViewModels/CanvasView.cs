@@ -22,6 +22,9 @@ public sealed class CanvasView
     /// <summary>The share of the visible area left empty on each side when fitting.</summary>
     public const double FitMargin = 0.2;
 
+    /// <summary>The share of the visible area <see cref="ZoomOutToShow"/> keeps clear on each side.</summary>
+    public const double ShowMargin = 0.05;
+
     private readonly Func<CanvasRect?> _contentBounds;
     private CanvasRect? _visibleArea;
     private double _uiScale = 1;
@@ -155,7 +158,48 @@ public sealed class CanvasView
         Apply(zoom, new Vector2D(target.X - (center.X * zoom), target.Y - (center.Y * zoom)));
     }
 
+    /// <summary>
+    /// Brings <paramref name="target"/> (canvas units) into <see cref="VisibleArea"/> with
+    /// <see cref="ShowMargin"/> on every side, moving the view as little as it can: nothing when it
+    /// is already shown, else zooming out about the middle of the view (never in) and then panning
+    /// just far enough. As far as <see cref="Bounds"/> and <see cref="MinZoom"/> allow (#1092).
+    /// </summary>
+    public void ZoomOutToShow(CanvasRect target)
+    {
+        if (VisibleArea is not { } visible)
+        {
+            return;
+        }
+
+        var room = new CanvasRect(
+            new Vector2D(visible.Min.X + (visible.Width * ShowMargin), visible.Min.Y + (visible.Height * ShowMargin)),
+            new Vector2D(visible.Max.X - (visible.Width * ShowMargin), visible.Max.Y - (visible.Height * ShowMargin)));
+        if (room.Contains(ToView(target.Min)) && room.Contains(ToView(target.Max)))
+        {
+            return;
+        }
+
+        var zoom = ClampZoom(Math.Min(
+            Zoom,
+            Math.Min(
+                target.Width > 0 ? room.Width / target.Width : double.PositiveInfinity,
+                target.Height > 0 ? room.Height / target.Height : double.PositiveInfinity)));
+        var middle = ToCanvas(visible.Center);
+        Apply(zoom, new Vector2D(
+            PanToShow(visible.Center.X - (middle.X * zoom), target.Min.X * zoom, target.Max.X * zoom, room.Min.X, room.Max.X),
+            PanToShow(visible.Center.Y - (middle.Y * zoom), target.Min.Y * zoom, target.Max.Y * zoom, room.Min.Y, room.Max.Y)));
+    }
+
     private double ClampZoom(double zoom) => Math.Clamp(zoom, MinZoom, ZoomLimit);
+
+    // The offset nearest to offset that puts targetMin..targetMax (scaled canvas units) inside
+    // roomMin..roomMax, or centres it there when it is wider.
+    private static double PanToShow(double offset, double targetMin, double targetMax, double roomMin, double roomMax)
+    {
+        var least = roomMin - targetMin;
+        var most = roomMax - targetMax;
+        return least <= most ? Math.Clamp(offset, least, most) : (least + most) / 2;
+    }
 
     private void Apply(double zoom, Vector2D offset)
     {

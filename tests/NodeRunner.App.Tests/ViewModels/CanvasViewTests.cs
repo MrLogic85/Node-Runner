@@ -235,6 +235,56 @@ public class CanvasViewTests
         (area.Height % BuildViewModel.BuildGridStep).ShouldBe(0);
     }
 
+    [Fact]
+    public void ZoomOutToShow_LeavesTheViewAloneWhenTheTargetIsShown()
+    {
+        var view = Centred();
+        var (zoom, offset) = (view.Zoom, view.Offset);
+
+        view.ZoomOutToShow(new CanvasRect(new Vector2D(-100, -50), new Vector2D(100, 50)));
+
+        view.Zoom.ShouldBe(zoom);
+        view.Offset.ShouldBe(offset);
+    }
+
+    [Fact]
+    public void ZoomOutToShow_ZoomsOutJustEnoughToShowAWideTargetInsideTheMargin()
+    {
+        var view = Centred();
+        var target = new CanvasRect(new Vector2D(0, 0), new Vector2D(1800, 100));
+
+        view.ZoomOutToShow(target);
+
+        view.Zoom.ShouldBe(_screen.Width * (1 - (2 * CanvasView.ShowMargin)) / target.Width, 1e-9);
+        ShowsInsideTheMargin(view, target);
+    }
+
+    [Theory]
+    // At 2×, with the canvas origin at the middle of the 1000-wide screen and a 50-unit margin.
+    [InlineData(600, 650, -350)] // Off screen: its right edge comes to the margin.
+    [InlineData(-100, 300, 350)] // Partly shown: it moves only as far as its hidden end needs.
+    public void ZoomOutToShow_PansATargetThatFitsJustToTheMargin_NeverZoomingIn(double left, double right, double offsetX)
+    {
+        var view = Centred();
+        view.ZoomAbout(_middle, 2);
+        var target = new CanvasRect(new Vector2D(left, 0), new Vector2D(right, 20));
+
+        view.ZoomOutToShow(target);
+
+        view.Zoom.ShouldBe(2);
+        view.Offset.ShouldBe(new Vector2D(offsetX, 250));
+    }
+
+    private static void ShowsInsideTheMargin(CanvasView view, CanvasRect target)
+    {
+        var margin = new Vector2D(_screen.Width * CanvasView.ShowMargin, _screen.Height * CanvasView.ShowMargin);
+        foreach (var corner in new[] { view.ToView(target.Min), view.ToView(target.Max) })
+        {
+            corner.X.ShouldBeInRange(margin.X - 1e-9, _screen.Width - margin.X + 1e-9);
+            corner.Y.ShouldBeInRange(margin.Y - 1e-9, _screen.Height - margin.Y + 1e-9);
+        }
+    }
+
     private static CanvasView Centred()
     {
         var view = new CanvasView(_area) { VisibleArea = _screen };

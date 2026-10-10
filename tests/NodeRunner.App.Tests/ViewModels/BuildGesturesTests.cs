@@ -1854,6 +1854,50 @@ public class BuildGesturesTests
         build.Sensors[0].Aim.ShouldBe(aim);
     }
 
+    [Fact]
+    public void ShowSelectedCameraRays_ZoomsOutUntilTheCameraAndEveryRayEndAreInsideTheMargin()
+    {
+        var (build, camera, _) = BuildViewModelTests.DownwardBeamWithCameraAndAccelerometer();
+        var gestures = FittedTo800By400(build);
+        build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
+        build.SetParameter(PartParameterId.CameraRange, 300);
+        var zoom = gestures.View.Zoom;
+
+        gestures.ShowSelectedCameraRays();
+
+        gestures.View.Zoom.ShouldBeLessThan(zoom);
+        var (origin, ends) = build.ShownCameraRays().ShouldHaveSingleItem();
+        foreach (var point in ends.Append(origin).Select(gestures.View.ToView))
+        {
+            point.X.ShouldBeInRange(800 * CanvasView.ShowMargin, 800 * (1 - CanvasView.ShowMargin));
+            point.Y.ShouldBeInRange(400 * CanvasView.ShowMargin, 400 * (1 - CanvasView.ShowMargin));
+        }
+    }
+
+    [Fact]
+    public void ShowSelectedCameraRays_LeavesTheViewAloneWhileTheCamerasRaysAreHidden()
+    {
+        var (build, camera, accelerometer) = BuildViewModelTests.DownwardBeamWithCameraAndAccelerometer();
+        var gestures = FittedTo800By400(build);
+        build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
+        build.SetParameter(PartParameterId.CameraRange, 300);
+        build.ToggleSelected(new(CreatureElementKind.Sensor, accelerometer));
+        var (zoom, offset) = (gestures.View.Zoom, gestures.View.Offset);
+
+        gestures.ShowSelectedCameraRays();
+
+        gestures.View.Zoom.ShouldBe(zoom);
+        gestures.View.Offset.ShouldBe(offset);
+    }
+
+    private static BuildGestures FittedTo800By400(BuildViewModel build)
+    {
+        var gestures = new BuildGestures(build);
+        gestures.View.VisibleArea = new CanvasRect(new Vector2D(0, 0), new Vector2D(800, 400));
+        gestures.View.Fit();
+        return gestures;
+    }
+
     private static (BuildViewModel Build, BuildGestures Gestures) BeamWithSensor(double length, SensorKind kind = SensorKind.Accelerometer)
     {
         var builder = new CreatureBuilder();

@@ -361,7 +361,11 @@ selected part (`SetParameter`). The canvas shows what a parameter changes
 only while it can be changed: a Piston's stroke ticks while Stroke or Start
 position can, a Spring's ticks and rest-length ring while Stroke or Coil
 length can, a selected Camera's own rays while every selected part is a
-Camera, and its Aim handle while Aim can. Parameters change no brain port,
+Camera, and its Aim handle while Aim can. When a slider changes, the view
+zooms out and pans just enough to show those rays, if they no longer fit
+(`BuildGestures.ShowSelectedCameraRays`, #1092). It never zooms in, and it
+never goes past `BuildViewBounds`, so a long ray can still reach past the
+edge. Parameters change no brain port,
 so a locked creation can change them, except a Camera's Rays, which add or
 remove ports (`PartParameter.ChangesPorts`): on a locked creation its
 slider shows disabled (`BuildViewModel.EditableParameters`), and a tap on

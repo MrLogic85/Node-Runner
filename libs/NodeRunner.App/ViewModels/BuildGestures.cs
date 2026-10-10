@@ -94,6 +94,22 @@ public sealed class BuildGestures
 
     public CanvasView View { get; }
 
+    /// <summary>
+    /// Zooms out just enough to show every selected Camera's rays while the panel shows their
+    /// settings, so changing Range or Spread visibly changes them (#1092). Nothing changes when
+    /// they are already in view.
+    /// </summary>
+    public void ShowSelectedCameraRays()
+    {
+        var points = _build.ShownCameraRays().SelectMany(rays => rays.Ends.Append(rays.Origin)).ToList();
+        if (points.Count > 0)
+        {
+            View.ZoomOutToShow(new CanvasRect(
+                new Vector2D(points.Min(point => point.X), points.Min(point => point.Y)),
+                new Vector2D(points.Max(point => point.X), points.Max(point => point.Y))));
+        }
+    }
+
     /// <summary>Raised when the gesture's own visuals change (beam preview, selection box), so the canvas can redraw.</summary>
     public event EventHandler? Changed;
 

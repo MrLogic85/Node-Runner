@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 
 namespace NodeRunner.App.ViewModels;
 
@@ -652,6 +653,32 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         [.. ShownParameters.Where(id => !_locked || !PartParameters.Of(id).ChangesPorts)];
 
     public bool CanEdit(PartParameterId parameter) => EditableParameters.Contains(parameter);
+
+    /// <summary>
+    /// Each selected Camera's rays while the panel shows their settings (#623, #578), in canvas
+    /// units: where they leave its beam and where each ends. The canvas draws them and the view
+    /// keeps them in sight (#1092).
+    /// </summary>
+    public IReadOnlyList<(Vector2D Origin, IReadOnlyList<Vector2D> Ends)> ShownCameraRays()
+    {
+        if (!ShownParameters.Contains(PartParameterId.Rays))
+        {
+            return [];
+        }
+
+        var selected = Selection.Sensors;
+        return [.. Sensors.Where(sensor => sensor.Kind == SensorKind.Camera && selected.Contains(sensor.Id)).Select(camera =>
+        {
+            var beam = Beams[BeamIndexOf(camera.BeamId)];
+            var nodeA = Nodes[NodeIndexOf(beam.NodeA)].Position;
+            var nodeB = Nodes[NodeIndexOf(beam.NodeB)].Position;
+            var origin = new Vector2D((nodeA.X + nodeB.X) / 2, (nodeA.Y + nodeB.Y) / 2);
+            var (sin, cos) = Math.SinCos(CameraRays.BeamAngle(nodeA, nodeB));
+            IReadOnlyList<Vector2D> ends = [.. CameraRays.LocalRayTargets(camera, camera.Aim ?? SensorDef.DefaultAim(nodeA, nodeB))
+                .Select(target => new Vector2D(origin.X + (target.X * cos) - (target.Y * sin), origin.Y + (target.X * sin) + (target.Y * cos)))];
+            return (origin, ends);
+        })];
+    }
 
     /// <summary>
     /// Whether <paramref name="parameter"/> does anything on any selected part as set now: a one-ray

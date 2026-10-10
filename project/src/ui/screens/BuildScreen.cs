@@ -320,7 +320,7 @@ public partial class BuildScreen : Control
     private UiSlider AddParameterSlider(Container container, PartParameterId id)
     {
         var slider = new UiSlider { Name = id.ToString(), SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        slider.ThumbChanged += (_, position) => EmitSignal(SignalName.ParameterChanged, (int)id, PartParameters.ValueAt(id, position));
+        slider.ThumbChanged += (_, position) => ChangeParameter(id, position);
         slider.ThumbChangeCommitted += (_, _) => EmitSignal(SignalName.ParameterChangeFinished);
         slider.TouchStarted += () => ShowSettingHint(slider, id);
         slider.TouchEnded += () => LetGoOfSettingHint(slider);
@@ -340,10 +340,16 @@ public partial class BuildScreen : Control
         slider.TrackPressed += position =>
         {
             slider.Value = UiSliderValue.Thumb(position);
-            EmitSignal(SignalName.ParameterChanged, (int)id, PartParameters.ValueAt(id, position));
+            ChangeParameter(id, position);
         };
         container.AddChild(slider);
         return slider;
+    }
+
+    private void ChangeParameter(PartParameterId id, double position)
+    {
+        EmitSignal(SignalName.ParameterChanged, (int)id, PartParameters.ValueAt(id, position));
+        GetNode<BuildCanvas>("%BuildCanvas").ShowCameraRays();
     }
 
     /// <summary>

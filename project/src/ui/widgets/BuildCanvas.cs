@@ -34,6 +34,7 @@ public partial class BuildCanvas : Node2D
     private BuildViewModel? _viewModel;
     private BuildGestures? _gestures;
     private bool _viewFitted;
+    private bool _showCameraRays;
     private Control? _slot;
     private readonly CreatureParts _creature = new();
     private readonly ViewLayer _underlay = ViewLayer.Underlay();
@@ -316,6 +317,16 @@ public partial class BuildCanvas : Node2D
         }
     }
 
+    /// <summary>
+    /// Zooms out on the next draw, once the setting has reached the creature, if a selected
+    /// Camera's rays no longer fit (#1092).
+    /// </summary>
+    public void ShowCameraRays()
+    {
+        _showCameraRays = true;
+        QueueRedraw();
+    }
+
     public override void _Draw()
     {
         _underlay.QueueRedraw();
@@ -328,6 +339,12 @@ public partial class BuildCanvas : Node2D
         }
 
         UpdateView();
+        if (_showCameraRays)
+        {
+            _showCameraRays = false;
+            _gestures.ShowSelectedCameraRays();
+        }
+
         LayoutSelectionHandles();
         LayoutCanvasNotes();
         ShowCreature();
@@ -431,22 +448,9 @@ public partial class BuildCanvas : Node2D
     /// </summary>
     private void DrawSelectedCameraRays(CanvasItem canvas)
     {
-        if (!_viewModel!.ShownParameters.Contains(PartParameterId.Rays))
+        foreach (var (origin, ends) in _viewModel!.ShownCameraRays())
         {
-            return;
-        }
-
-        var selected = _viewModel.Selection.Sensors;
-        foreach (var camera in _viewModel.Sensors.Where(sensor => sensor.Kind == SensorKind.Camera && selected.Contains(sensor.Id)))
-        {
-            var beam = _viewModel.Beams[_viewModel.BeamIndexOf(camera.BeamId)];
-            var nodeA = NodeById(beam.NodeA).Position;
-            var nodeB = NodeById(beam.NodeB).Position;
-            var middle = (ToGodot(nodeA) + ToGodot(nodeB)) / 2;
-            var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
-            var aim = camera.Aim ?? SensorDef.DefaultAim(nodeA, nodeB);
-            SensorDrawing.DrawRays(canvas, ViewTransform(), Theme, middle, CameraRays.LocalRayTargets(camera, aim)
-                .Select(target => middle + ToGodot(target).Rotated(beamRotation)));
+            SensorDrawing.DrawRays(canvas, ViewTransform(), Theme, ToGodot(origin), ends.Select(ToGodot));
         }
     }
 
