@@ -85,8 +85,9 @@ public sealed partial class BuildViewModel
     /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
     /// selects the originals again. Each copy keeps its settings but not its name; a copied Servo
     /// sits on the copy of its joint, uses the copies of its Fixed and Target links, and leaves a
-    /// role empty whose link was not copied. The copy is selected as the original was: a Servo
-    /// or Wheel stands in for its copied joint (#973). While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
+    /// role empty whose link was not copied. A copied joint part brings its joint along, but the
+    /// joint's other parts only when they are selected too (#1044). The copy is selected as the
+    /// original was: joint parts stand in for their copied joint (#973). While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
     /// <see cref="CanvasNotes"/>.
     /// </summary>
     public void CopySelectedParts()
@@ -113,8 +114,8 @@ public sealed partial class BuildViewModel
         var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
         var wheels = Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).ToList();
 
-        // A copied joint is as big as its original only when its joint part comes along.
-        var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.HasJointPart(node.Id, servos, wheels) ? NodeRadius(node.Id) : NodeDef.PlainJointRadius);
+        // A copied joint is as big as the joint parts that come along with it (#1044).
+        var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, servos, wheels));
         var offset = CopyOffset(nodes, copiedRadii);
         _history.Change(() =>
         {

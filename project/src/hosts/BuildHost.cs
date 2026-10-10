@@ -124,6 +124,7 @@ public partial class BuildHost : Node, IRoutedScene
         };
         _buildScreen.ParameterChangeFinished += () => Build.EndEdit(_buildScreen);
         _buildScreen.ServoLinkChanged += (servoId, fixedRole, linkId) => Build.SetServoLink(servoId, fixedRole, linkId);
+        _buildScreen.JointPartChosen += (kind, partId) => Build.ReplaceSelection(PartSet.Of(new CreatureElementSelection((CreatureElementKind)kind, partId)));
         _buildScreen.AdvancedSettingsToggled += open => Build.AdvancedSettingsOpen = open;
         _buildScreen.UndoRequested += Build.Undo;
         _buildScreen.RedoRequested += Build.Redo;

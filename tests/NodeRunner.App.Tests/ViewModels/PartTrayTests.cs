@@ -40,7 +40,7 @@ public sealed class PartTrayTests
     }
 
     [Theory]
-    [InlineData(BuildPart.Servo, "A motor that tries to hold a target angle.", "Tap a joint to place it. A joint holds one part.")]
+    [InlineData(BuildPart.Servo, "A motor that tries to hold a target angle.", "Tap a joint to place it. A joint holds one motor or brake.")]
     [InlineData(BuildPart.Wheel, "Rolls freely on the ground.", "Tap a joint to place it. A joint holds one wheel.")]
     [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
     public void Create_WithAPickedPart_SelectsItsRow_AndSaysUnderItWhatItDoesAndWhereItGoes(BuildPart part, string info, string placement)

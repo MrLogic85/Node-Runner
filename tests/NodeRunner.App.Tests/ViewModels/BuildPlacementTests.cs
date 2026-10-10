@@ -149,12 +149,14 @@ public sealed class BuildPlacementTests
         moving.MovingSensor.ShouldBe(sensor);
 
         build.PlacePart(BuildPart.Wheel, new CreatureElementSelection(CreatureElementKind.Node, 3)).ShouldNotBeNull();
+        // One per slot (#1044): a Servo goes beside the Wheel, and a Wheel beside the Servo.
         var servo = build.PlacingTargetsOf(BuildPart.Servo, null);
-        servo.Joints.ShouldBe([_firstJoint.Id]);
-        servo.RefusedJoints.ShouldBe([_middleJoint.Id, 3], ignoreOrder: true);
+        servo.Joints.ShouldBe([_firstJoint.Id, 3], ignoreOrder: true);
+        servo.RefusedJoints.ShouldBe([_middleJoint.Id]);
         servo.JointRing.ShouldBe(ServoDef.JointRadius);
         var wheel = build.PlacingTargetsOf(BuildPart.Wheel, null);
-        wheel.Joints.ShouldBe([_firstJoint.Id]);
+        wheel.Joints.ShouldBe([_firstJoint.Id, _middleJoint.Id], ignoreOrder: true);
+        wheel.RefusedJoints.ShouldBe([3]);
         wheel.JointRing.ShouldBe(WheelDef.DefaultRadius);
     }
 
@@ -727,7 +729,7 @@ public sealed class BuildPlacementTests
 
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldNotBeNull();
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldBeNull();
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One part per joint")));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One motor or brake per joint")));
     }
 
     [Fact]

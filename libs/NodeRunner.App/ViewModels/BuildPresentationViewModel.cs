@@ -85,7 +85,8 @@ public sealed class BuildPresentationViewModel
                     canDelete,
                     PanelSliders(),
                     ServoPickers(servo),
-                    servo.NodeId);
+                    servo.NodeId,
+                    OnThisJoint: OnThisJoint(servo.NodeId));
             }
 
             if (_build.SingleSelectedPistonId is { } pistonId)
@@ -115,7 +116,8 @@ public sealed class BuildPresentationViewModel
                     PartInfo.Wheel,
                     canDelete,
                     PanelSliders(),
-                    Readouts: [new PartReadout(UiText.Plain("Weight"), UiText.Format("{0} kg", new FixedNumber(Wheel.Mass(wheel), 1)))]);
+                    Readouts: [new PartReadout(UiText.Plain("Weight"), UiText.Format("{0} kg", new FixedNumber(Wheel.Mass(wheel), 1)))],
+                    OnThisJoint: OnThisJoint(wheel.NodeId));
             }
 
             if (_build.SingleSelectedSpringId is { } springId)
@@ -335,6 +337,20 @@ public sealed class BuildPresentationViewModel
     private BeamDef BeamById(int beamId) => _build.Beams[_build.BeamIndexOf(beamId)];
 
     private SensorDef SensorById(int sensorId) => _build.Sensors.First(sensor => sensor.Id == sensorId);
+
+    // The "On this joint" tabs, outside → in, for a joint with two or more parts (#1044).
+    private IReadOnlyList<JointPartTab>? OnThisJoint(int nodeId)
+    {
+        var parts = _build.JointPartsAt(nodeId);
+        return parts.Count < 2 ? null : [.. parts.Select(part => new JointPartTab(
+            part.Kind switch
+            {
+                CreatureElementKind.Wheel => PartSettingsKind.Wheel,
+                CreatureElementKind.Servo => PartSettingsKind.Servo,
+                _ => throw new InvalidOperationException($"{part.Kind} is not a joint part."),
+            },
+            part))];
+    }
 
     private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];
 

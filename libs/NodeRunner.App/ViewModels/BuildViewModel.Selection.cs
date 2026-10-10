@@ -89,6 +89,34 @@ public sealed partial class BuildViewModel
         SelectionChanged();
     }
 
+    /// <summary>
+    /// A tap on joint <paramref name="nodeId"/> (#1044): a bare joint is added or removed. A joint
+    /// with parts adds its first part, outside → in (<see cref="JointPartsAt"/>), when none of them is
+    /// selected, and otherwise removes every one of them.
+    /// </summary>
+    public void ToggleJointSelected(int nodeId)
+    {
+        var parts = JointPartsAt(nodeId);
+        if (parts.Count == 0)
+        {
+            ToggleSelected(new CreatureElementSelection(CreatureElementKind.Node, nodeId));
+            return;
+        }
+
+        var selected = parts.Where(part => SelectedSet(part.Kind).Contains(part.Id)).ToList();
+        if (selected.Count == 0)
+        {
+            SelectedSet(parts[0].Kind).Add(parts[0].Id);
+        }
+
+        foreach (var part in selected)
+        {
+            SelectedSet(part.Kind).Remove(part.Id);
+        }
+
+        SelectionChanged();
+    }
+
     private IEnumerable<int> SelectedPartIds() =>
         _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds);
 
@@ -152,7 +180,8 @@ public sealed partial class BuildViewModel
         _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId).ToList();
 
     // The joints under the selected joint parts, Servos and Wheels.
-    private List<int> SelectedJointPartJoints() =>
+    // Each joint once, though a stack's Servo and Wheel can both be selected (#1044).
+    private HashSet<int> SelectedJointPartJoints() =>
         [.. SelectedServoJoints(), .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId)];
 
     // Drops the ids the body no longer has. Changing a Servo's links gives it a new id (#911, #849),

@@ -405,6 +405,24 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="PartStack" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PartStackLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartStack"]
+layout_mode = 2
+text = "On this joint"
+script = ExtResource("12_label")
+TextStyle = 12
+TextColor = 8
+
+[node name="PartStackTabs" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings/PartStack"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("18_icon_tabs")
+
 [node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/PartSettings"]
 layout_mode = 2
 theme_override_constants/separation = 4

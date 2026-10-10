@@ -120,17 +120,19 @@ public sealed record CreatureDef
 
         var beamIds = beams.Select(beam => beam.Id).ToHashSet();
         var links = LinkRef.All(beams, pistons, springs).ToArray();
-        var jointsWithPart = new HashSet<int>();
+        // A joint holds one part per slot (#1044): one motor or brake (a Servo) and one Wheel.
+        var jointsWithMotor = new HashSet<int>();
         foreach (var servo in servos)
         {
-            ValidateJointPart(servo.NodeId, nodeIds, jointsWithPart);
+            ValidateJointPart(servo.NodeId, nodeIds, jointsWithMotor, "motor or brake");
             ValidateServoLink(servo.FixedLinkId, servo.NodeId, links);
             ValidateServoLink(servo.TargetLinkId, servo.NodeId, links);
         }
 
+        var jointsWithWheel = new HashSet<int>();
         foreach (var wheel in wheels)
         {
-            ValidateJointPart(wheel.NodeId, nodeIds, jointsWithPart);
+            ValidateJointPart(wheel.NodeId, nodeIds, jointsWithWheel, "Wheel");
         }
 
         var beamsWithSensor = new HashSet<int>();
@@ -277,12 +279,12 @@ public sealed record CreatureDef
         }
     }
 
-    private static void ValidateJointPart(int nodeId, HashSet<int> nodeIds, HashSet<int> jointsWithPart)
+    private static void ValidateJointPart(int nodeId, HashSet<int> nodeIds, HashSet<int> jointsInSlot, string slot)
     {
         ValidateNodeId(nodeId, nodeIds);
-        if (!jointsWithPart.Add(nodeId))
+        if (!jointsInSlot.Add(nodeId))
         {
-            throw new ArgumentException($"Node id {nodeId} already has a joint part; a joint holds at most one.");
+            throw new ArgumentException($"Node id {nodeId} already has a {slot}; a joint holds at most one.");
         }
     }
 

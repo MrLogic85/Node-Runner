@@ -23,8 +23,8 @@ public sealed class CreatureBuilder
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
-    /// <summary>Why a joint part cannot be added to a node that already has one.</summary>
-    public static UiText OnePartPerJointReason { get; } = UiText.Plain("One part per joint");
+    /// <summary>Why a motor or brake, a Servo for now, cannot be added to a joint that already has one (#1044).</summary>
+    public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One motor or brake per joint");
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
     public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");
@@ -542,9 +542,9 @@ public sealed class CreatureBuilder
             return false;
         }
 
-        if (CreatureDef.HasJointPart(nodeId, _servos, _wheels))
+        if (_servos.Any(servo => servo.NodeId == nodeId))
         {
-            reason = OnePartPerJointReason;
+            reason = OneMotorOrBrakePerJointReason;
             return false;
         }
 
@@ -553,8 +553,8 @@ public sealed class CreatureBuilder
     }
 
     /// <summary>
-    /// Whether a Wheel can sit on this node (#129); if not, <paramref name="reason"/> says why. Until
-    /// a joint holds several parts (#1044), a joint with a Wheel or a Servo takes no other.
+    /// Whether a Wheel can sit on this node (#129); if not, <paramref name="reason"/> says why. A
+    /// joint holds one Wheel next to its motor or brake (#1044).
     /// </summary>
     public bool CanAddWheel(int nodeId, [NotNullWhen(false)] out UiText? reason)
     {
@@ -567,12 +567,6 @@ public sealed class CreatureBuilder
         if (_wheels.Any(wheel => wheel.NodeId == nodeId))
         {
             reason = OneWheelPerJointReason;
-            return false;
-        }
-
-        if (CreatureDef.HasJointPart(nodeId, _servos, _wheels))
-        {
-            reason = OnePartPerJointReason;
             return false;
         }
 
