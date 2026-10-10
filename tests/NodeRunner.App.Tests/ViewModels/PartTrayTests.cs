@@ -128,7 +128,7 @@ public sealed class PartTrayTests
             (BuildPart.Stepper, "0.14.3"),
             (BuildPart.VelocityMotor, "0.14.2"),
             (BuildPart.Brake, "0.14.2"),
-            (BuildPart.Wheel, null), // Unlocked for these tests; Ui tests pin its 0.14.1 (#129, #1087).
+            (BuildPart.Wheel, null),
             (BuildPart.Accelerometer, null),
             (BuildPart.Camera, null),
             (BuildPart.TouchSensor, "0.14.1"),

@@ -66,15 +66,7 @@ public sealed class BuildPartsTrayTests
             .Where(row => BuildScreen.DraggablePart(row) is not null)
             .Select(row => row.Part);
 
-        // The Wheel stays Coming later on main until 0.14.0 ships (#129, #1087).
-        draggable.ShouldBe([BuildPart.Servo, BuildPart.Accelerometer, BuildPart.Camera]);
-    }
-
-    [Fact]
-    public void TheWheel_ComesIn0141()
-    {
-        PartTray.IsAvailable(BuildPart.Wheel).ShouldBeFalse();
-        PartTray.ComingLaterReason(BuildPart.Wheel).ShouldBe(PartTray.ComingIn(UiText.Plain("Wheel"), "0.14.1"));
+        draggable.ShouldBe([BuildPart.Servo, BuildPart.Wheel, BuildPart.Accelerometer, BuildPart.Camera]);
     }
 
     [Fact]
