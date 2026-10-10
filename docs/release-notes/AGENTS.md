@@ -31,10 +31,11 @@ the notes PR.
   callout on what carries over.
 - **Images:** a landscape screenshot for most sections, showing the new thing
   in use. Use one example creation that shows off the new parts across the
-  images; the owner may build it. Take them on the emulator, or on the
-  owner's phone when he asks, crop the black edge on the left, and upload
-  them as GitHub user attachments, so the links are absolute and work on the
-  release page. Alt text says what the picture shows.
+  images; the owner may build it. Take them on a phone or the emulator as
+  `docs/MANUAL_TESTING.md` → "Android checks" says, crop the black edge on
+  the left, and upload them as GitHub user attachments, so the links are
+  absolute and work on the release page. Alt text says what the picture
+  shows.
 - **Check:** every sentence against the code and against the previous notes,
   so nothing old is sold as new. The design lead agent can draft livelier
   wording.

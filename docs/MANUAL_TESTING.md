@@ -92,9 +92,11 @@ input, permissions, file paths, performance, battery, or anything likely to
 differ from desktop.
 
 Use a connected physical phone first, because touch feel, screen density,
-performance and rendering artifacts are easiest to judge there. Otherwise
-use a configured Android emulator/AVD. If neither is available, record the
-missing prerequisite.
+performance and rendering artifacts are easiest to judge there. The phones
+belong to the owner: ask first whether they are free to use. Otherwise use
+a configured Android emulator/AVD, and stop any emulator you started as
+soon as you are done, since emulators are heavy for the local processor.
+If neither is available, record the missing prerequisite.
 
 An agent-run Android check needs Android export configured
 (`docs/RELEASING.md` → "Android export"), a device or emulator that is

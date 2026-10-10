@@ -33,7 +33,10 @@ understanding of the project before starting to work.
    decision genuinely needs a human. Pick work from recent discussions with
    a human or from GitHub, and break big issues into milestones or
    sub-issues.
-5. **Record work and decisions on GitHub.** File new work, bugs and
+5. **Prefer physical devices for Android checks.** Ask first whether they
+   are free, and stop any emulator you start (`docs/MANUAL_TESTING.md` →
+   "Android checks").
+6. **Record work and decisions on GitHub.** File new work, bugs and
    decisions as issues per `docs/ISSUES.md` → "Creating an issue", and
    review broad, risky or ambiguous issues before implementing them
    (`docs/ISSUES.md` → "Reviewing an issue").
