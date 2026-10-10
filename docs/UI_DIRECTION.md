@@ -223,7 +223,8 @@ Menus have no row hairlines, unlike the reference (#696); spacing and the
 press tint separate rows. A menu has one density, Standard (48) or Compact
 (32), and clips its square highlights to its rounded surface. A divider is a
 `line` hairline. A `UiPicker` with nothing picked shows its prompt in
-`danger`.
+`danger`. A `UiPicker` has no width of its own: it fills its parent, its value
+ends in an ellipsis, and its list opens as wide as the field (#1127).
 
 ### Shell: toolbar, button bar, side panel
 
