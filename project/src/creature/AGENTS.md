@@ -15,6 +15,9 @@ file owns how Godot realises it.
    nodes, so beams are rigid by geometry, not springs. Only nodes collide (a
    circle each); beams and links have no collider. A link's weight sits on
    its nodes; a beam keeps half its own (`docs/CREATURE_MODEL.md` → Beam).
+   Bodies set no `LinearDamp` or `AngularDamp` of their own, so only the
+   project's physics defaults slow them (`docs/CREATURE_MODEL.md` → Air
+   drag, #1112); a Wheel's spin is the one exception (`Creature.Wheels.cs`).
 4. **End stops.** Each Piston and Spring has a hidden, collider-free
    cylinder body pinned to node A and a `GrooveJoint2D` to node B that holds
    its length between the stops (`Creature.CreateEndStops`, #701). Anything

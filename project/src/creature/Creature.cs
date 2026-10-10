@@ -425,8 +425,6 @@ public partial class Creature : Node2D
                 CenterOfMassMode = RigidBody2D.CenterOfMassModeEnum.Custom,
                 CenterOfMass = Vector2.Zero,
                 Inertia = _beamBodyMass * ((4 * halfLength * halfLength) + (_beamInertiaThickness * _beamInertiaThickness)) / 12,
-                LinearDamp = 0.55f,
-                AngularDamp = 0.55f,
                 CanSleep = false,
                 ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
@@ -499,7 +497,6 @@ public partial class Creature : Node2D
                 Position = position,
                 Mass = Math.Max(masses[i], _minNodeMass),
                 LockRotation = true,
-                LinearDamp = 0.55f,
                 CanSleep = false,
                 ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
