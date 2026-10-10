@@ -58,6 +58,8 @@ file owns how Godot realises it.
 - `Creature.cs`, `Creature.Links.cs`, `Creature.Wheels.cs` — builds bodies,
   pins, sensors, links (each with its end-stop cylinder) and Wheels, and
   wires the brain
+- `Creature.Selection.cs` — what a tap selects and each part's draw group,
+  with the selection raised (#1107)
 - `IBeamSensor.cs` — what `Creature` needs from a sensor: value names,
   `Read`, `Reset`
 - `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is

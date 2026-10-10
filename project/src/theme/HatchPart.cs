@@ -14,7 +14,7 @@ public partial class HatchPart : PartVisual
     private bool _filled;
 
     public HatchPart()
-        : base(CreatureLayers.Hatch, CreatureLayers.Hatch)
+        : base(CreatureLayers.Hatch)
     {
     }
 

@@ -88,7 +88,7 @@ public sealed class BuildWheelTests
         var gestures = new BuildGestures(TwoBeams());
         var ring = SelectionMarks.JointHalo(WheelDef.DefaultRadius);
 
-        BuildGestures.PlacingRingRadius(BuildPart.Wheel).ShouldBe(WheelDef.DefaultRadius);
+        PartTray.PlacingRingRadius(BuildPart.Wheel).ShouldBe(WheelDef.DefaultRadius);
         gestures.DropTargetAt(new Vector2D(35, 0), BuildPart.Wheel).ShouldBe(_firstJoint);
         gestures.DropTargetAt(new Vector2D(35, 0), BuildPart.Accelerometer).ShouldBe(_firstBeam);
         gestures.DropTargetAt(new Vector2D(0, ring), BuildPart.Wheel).ShouldBe(_firstJoint);
@@ -105,6 +105,25 @@ public sealed class BuildWheelTests
 
         build.Wheels.Single().NodeId.ShouldBe(2);
         build.Wheels.Single().Id.ShouldBe(build.SingleSelectedWheelId!.Value);
+    }
+
+    // #1107: a beam lower on screen than a Wheel's joint draws over the Wheel, so a touch hits the
+    // beam there, as drawn, and the Wheel only where it shows.
+    [Fact]
+    public void ABeamDrawnOverAWheel_IsHitOverIt()
+    {
+        var (build, gestures, wheel) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
+        var crossing = build.ConnectLink(BuildLink.Beam, build.PlaceNode(new Vector2D(60, -50)), build.PlaceNode(new Vector2D(60, 50)))!.Value;
+        var onTheBeam = new Vector2D(60, 0);
+        build.ClearSelection();
+
+        gestures.DropTargetAt(onTheBeam, BuildPart.Camera).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, crossing));
+        Tap(gestures, onTheBeam);
+        build.Selection.Beams.ShouldBe([crossing]);
+
+        build.ClearSelection();
+        Tap(gestures, new Vector2D(100, 60));
+        build.SingleSelectedWheelId.ShouldBe(wheel);
     }
 
     [Fact]

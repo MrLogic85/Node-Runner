@@ -39,7 +39,7 @@ public partial class WheelPart : PartVisual
     private bool _loose;
 
     public WheelPart()
-        : base(CreatureLayers.Joints, CreatureLayers.SelectedJoints)
+        : base(DrawSlot.Under)
     {
     }
 

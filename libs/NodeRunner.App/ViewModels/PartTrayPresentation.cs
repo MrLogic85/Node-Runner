@@ -142,6 +142,17 @@ public static class PartTray
     /// <summary>Whether a tray part goes on a joint (a Servo or a Wheel, #129) rather than on a beam.</summary>
     public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Wheel;
 
+    /// <summary>
+    /// The radius of the joint part <paramref name="placing"/> as placed, round which the canvas
+    /// marks each joint while it is placed (#1055); see <see cref="IsJointPart"/>.
+    /// </summary>
+    public static double PlacingRingRadius(BuildPart placing) => placing switch
+    {
+        BuildPart.Servo => ServoDef.JointRadius,
+        BuildPart.Wheel => WheelDef.DefaultRadius,
+        _ => throw new ArgumentOutOfRangeException(nameof(placing), placing, "Only a joint part has a placing ring."),
+    };
+
     private static PartTrayGroup[] Catalog() =>
     [
         new(UiText.Plain("Moving parts"),

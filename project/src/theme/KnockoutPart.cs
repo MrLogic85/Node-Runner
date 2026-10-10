@@ -15,7 +15,7 @@ public partial class KnockoutPart : PartVisual
     private float _radius;
 
     public KnockoutPart()
-        : base(CreatureLayers.Knockout, CreatureLayers.Knockout)
+        : base(CreatureLayers.Knockout)
     {
     }
 

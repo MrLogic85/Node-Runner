@@ -373,6 +373,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Rail says Beam and Move; Links tab | Links and Parts tools (#705, #706, #913) | BM → Interactions |
 | Part counts ("1 left") | Unlimited (#374, #525) | BM → Parts tray |
 | Core part | Sensors on beams (#127) | WV → Sensors |
+| Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top (#1107) | WV → Draw layers, BM → Interactions |
 | "Sensors go on a beam" | Each sensor names itself: "Cameras go on a beam" (#1053) | BM → Sensors |
 | Brain setup screen; hidden neurons | Removed; the direct brain (#536) | Screens → BrainFocus |
 | Speed control | None (#787) | TL → No speed-up |

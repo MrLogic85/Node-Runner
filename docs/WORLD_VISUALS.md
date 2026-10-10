@@ -82,8 +82,9 @@ strokes under it, all with round ends.
 A tyre on a hub, standing in for its joint (#129); the same geometry in
 every theme, with no tint:
 
-- an opaque `background` face of the Wheel's Radius, so beams stop at the
-  tyre;
+- an opaque `background` face of the Wheel's Radius, so parts drawn before
+  it (Draw layers) do not show through; its own links, drawn over it, end
+  on the tyre ring (#1086 takes them to the hub);
 - the tyre, a `detail` `stroke-signal` ring whose outer edge is the Radius,
   and a `detail` `stroke-hair` inner line 6 units in;
 - the rotation cue: three `detail` tubes in the tyre band, a third of a turn
@@ -138,18 +139,35 @@ drawn over it.
 
 ## Draw layers
 
-From the bottom up (#767): Training's knock-out outline, the rigid hatch,
-underlays (Build's placing and link-start marks), beams, links, a selected beam or link,
-sensors, a selected sensor, joints (with Servos and Wheels), a selected joint, then overlays (camera
-rays, link travel marks, the link drag and sensor move lines, the selection
-frame). Joint rings cover link ends and sensors; rays and travel marks stay
-readable over joints.
+A creature draws on two surfaces, the unselected parts and over them the
+selected ones, which draw alike (#1107). Each surface draws from the bottom
+up: its parts, then the joints joined to no link; the selected surface
+starts with a selected Servo's bands (Selection marks). On top
+of both go the overlays (camera rays, link travel marks, the link drag and
+sensor move lines, the picked link's start rings, the beam a link drag
+replaces, the selection frame). Training's knock-out outline and the rigid
+hatch sit under both surfaces.
 
-A part draws its marks with itself, and a selected part rises whole to the
-selected layer of its kind, so a mark never weaves through nearby parts and
-a selected beam covers a link crossing it (#766). It never rises over kinds
-drawn above it. In Training the best marker and start sign are behind the
-ground, the shadows above it, and the followed creature above every shadow.
+Parts draw in groups, one per link, so the drawing is the same in Build and
+Training and never changes while the creature moves (`DrawGroups`). The link
+whose lower end sits highest on screen draws first, so what is lower is
+nearer; ties keep link id order. Within a group: a Wheel (with its joint's
+first link), the link, its sensor, then a joint's ring or Servo (with its
+joint's last link). So a link covers a Wheel and a ring covers its link's
+end. Wheels, Servos and joints are filled, so nothing shows through them.
+
+The selected surface takes a selected joint, Servo or Wheel with its links
+and their ends, a selected link with its ends, every link whose ends both
+rose, so a raised Wheel or Servo never hides it, and a selected sensor or
+the sensor on a raised link. A link with one raised end stays behind, so
+it can look cut at the rim of a Wheel that rose as another link's end. While a part is placed or a sensor moved, the
+beams or joints that take it rise alone, with their `halo`, over a Servo
+they end on or cross too. Each placing mark is drawn with its beam or joint,
+under the rod or around the ring, so a refused mark stays in its part's
+place (Build canvas → Placing a part). A touch hits what is drawn on top
+(`docs/BUILD_MODE.md` → Interactions). In Training the best marker and start
+sign are behind the ground, the shadows above it, and the followed creature
+above every shadow.
 
 ## Build canvas
 
@@ -160,11 +178,11 @@ ground, the shadows above it, and the followed creature above every shadow.
   it will attach, dashed `danger` with a crossed `danger` ring where the
   joint would refuse. It is drawn over the creature and is all the feedback:
   a finger often covers the target. A Piston or Spring that will replace a
-  beam (#849) outlines it with two dashed `line-strong` lines under the
+  beam (#849) outlines it with two dashed `line-strong` lines over the
   creature.
 - **Picked link (#1057):** while a link is picked, each joint a drag draws
   it from has a dashed `halo` ring at `JointHalo` (12 dashes, the selection
-  ring's width), under the creature. It is dashed, as the drag line is
+  ring's width), over the creature. It is dashed, as the drag line is
   before it will attach, so it never reads as the solid selection ring.
   Selected joints are left unmarked, and so is a selected Servo's joint,
   which still draws a link but has its own outline there. No ring is
@@ -175,9 +193,10 @@ ground, the shadows above it, and the followed creature above every shadow.
   taken beams dashed `danger`, and its picture where it would land. A
   dragged Servo or Wheel rings free joints `halo` and joints holding a part
   dashed `danger`, each ring at the size the part will have there
-  (`BuildGestures.PlacingRingRadius`); a dragged Wheel also shows itself on
+  (`PartTray.PlacingRingRadius`); a dragged Wheel also shows itself on
   a free joint it would land on. A picked part (#1016) marks the same free and taken targets
-  from the moment it is picked, so a tap can find them. A Servo's or Wheel's
+  from the moment it is picked, so a tap can find them. The targets that
+  take it rise over the other parts (Draw layers). A Servo's or Wheel's
   ring is also where a tap or drop lands (`docs/BUILD_MODE.md` → Parts tray).
 - **Moving a sensor (#806):** no tile follows the finger. The sensor stays
   on its beam drawn as selected, beams are outlined as for a tray drag

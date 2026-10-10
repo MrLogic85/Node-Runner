@@ -7,11 +7,13 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// A beam (#767) from <see cref="A"/> to <see cref="B"/>: a flat rod hidden under the joint rings it
 /// stops on (#626), or centre to centre when the rings meet, and, while selected, a <c>halo</c>
-/// line along each side. The rod is drawn in window pixels (<see cref="UiPixelPen"/>) like the
-/// joints, so its edges stay smooth at any zoom.
+/// line along each side. Under the rod it draws its <see cref="Placing"/> mark. The rod is drawn in
+/// window pixels (<see cref="UiPixelPen"/>) like the joints, so its edges stay smooth at any zoom.
 /// </summary>
 public partial class BeamPart : PartVisual
 {
+    private const float _placingWidth = 2.2f;
+
     private Vector2 _a;
     private Vector2 _b;
     private float _radiusA;
@@ -19,9 +21,10 @@ public partial class BeamPart : PartVisual
     private bool _danger;
     private bool _haloA;
     private bool _haloB;
+    private PlacingMark _placing;
 
     public BeamPart()
-        : base(CreatureLayers.Beams, CreatureLayers.SelectedLinks)
+        : base(DrawSlot.Link)
     {
     }
 
@@ -72,11 +75,27 @@ public partial class BeamPart : PartVisual
         set => Change(ref _haloB, value);
     }
 
+    /// <summary>Whether it would take or refuse the sensor being placed or moved: a wide line under the rod.</summary>
+    public PlacingMark Placing
+    {
+        get => _placing;
+        set => Change(ref _placing, value);
+    }
+
     public override void _Draw()
     {
         var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, A, RadiusA, B, RadiusB) ?? (A, B);
         using (var pen = UiPixelPen.Begin(this))
         {
+            if (Placing == PlacingMark.Takes && start != end)
+            {
+                pen.Line(start, end, Theme.SelectionGlow, Theme.BeamWidth * _placingWidth);
+            }
+            else if (Placing == PlacingMark.Refuses && start != end)
+            {
+                pen.DashedLine(start, end, Theme.Danger, Theme.BeamWidth * _placingWidth, dash: Theme.BeamWidth * 2);
+            }
+
             pen.Line(start, end, Danger ? Theme.Danger : Theme.Beam, Theme.BeamWidth);
         }
 

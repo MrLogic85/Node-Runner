@@ -733,22 +733,45 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>The sensor whose picture (<see cref="SensorPicture"/>) is under <paramref name="position"/>, if any.</summary>
-    public bool TryFindSensorAt(Vector2D position, out int sensorId)
+    /// <summary>
+    /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees
+    /// (<see cref="DrawGroups.PartAt"/>), with the selection and the <paramref name="targets"/> on
+    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A Servo or Wheel
+    /// is hit as its joint; null off every part.
+    /// </summary>
+    public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
     {
-        foreach (var sensor in _builder.Sensors)
+        var groups = DrawGroups();
+        var hit = groups.PartAt(position, nodeId => NodeById(nodeId).Position, _builder.Servos, _builder.Wheels, _builder.Sensors, RaisedIn(groups, Selection, targets));
+        return hit?.Kind switch
         {
-            var beam = _builder.Beams[_builder.BeamIndexOf(sensor.BeamId)];
-            if (SensorPicture.Contains(sensor.Kind, position, NodeById(beam.NodeA).Position, NodeById(beam.NodeB).Position))
-            {
-                sensorId = sensor.Id;
-                return true;
-            }
+            CreatureElementKind.Servo => new CreatureElementSelection(CreatureElementKind.Node, _builder.Servos[_builder.ServoIndexOf(hit.Id)].NodeId),
+            CreatureElementKind.Wheel => new CreatureElementSelection(CreatureElementKind.Node, _builder.Wheels[_builder.WheelIndexOf(hit.Id)].NodeId),
+            _ => hit,
+        };
+    }
+
+    /// <summary>
+    /// What the canvas draws on the selected surface (#1107), which a touch hits there too
+    /// (<see cref="DrawnPartAt"/>): what belongs with <paramref name="selected"/>, a Servo or Wheel
+    /// as its joint, and the <paramref name="targets"/> alone, with the moved sensor.
+    /// </summary>
+    public RaisedParts RaisedParts(PartSet selected, PlacingTargets targets) => RaisedIn(DrawGroups(), selected, targets);
+
+    private RaisedParts RaisedIn(DrawGroups groups, PartSet selected, PlacingTargets targets)
+    {
+        ArgumentNullException.ThrowIfNull(selected);
+        ArgumentNullException.ThrowIfNull(targets);
+        var parts = selected.Parts;
+        if (targets.MovingSensor is { } moving)
+        {
+            parts = parts.Append(new CreatureElementSelection(CreatureElementKind.Sensor, moving));
         }
 
-        sensorId = -1;
-        return false;
+        return groups.Raised(parts, _builder.Servos, _builder.Wheels, targets.Beams, targets.Joints);
     }
+
+    private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
     public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, partId);

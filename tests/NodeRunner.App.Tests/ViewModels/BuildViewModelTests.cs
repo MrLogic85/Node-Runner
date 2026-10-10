@@ -968,16 +968,14 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
-    public void TryFindSensorAt_HitsOnlyThePicture()
+    public void DrawnPartAt_HitsASensorOnlyOnItsPicture()
     {
         var viewModel = new BuildViewModel();
         viewModel.Load(SensorCreature());
 
-        viewModel.TryFindSensorAt(new Vector2D(50, 0), out var accelerometer).ShouldBeTrue();
-        accelerometer.ShouldBe(4);
-        viewModel.TryFindSensorAt(new Vector2D(100, 50), out var camera).ShouldBeTrue();
-        camera.ShouldBe(5);
-        viewModel.TryFindSensorAt(new Vector2D(50, SensorPicture.AccelerometerSize), out _).ShouldBeFalse();
+        viewModel.DrawnPartAt(new Vector2D(50, 0), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 4));
+        viewModel.DrawnPartAt(new Vector2D(100, 50), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 5));
+        viewModel.DrawnPartAt(new Vector2D(50, SensorPicture.AccelerometerSize), PlacingTargets.None).ShouldBeNull();
     }
 
     private static CreatureDef SensorCreature() => new(

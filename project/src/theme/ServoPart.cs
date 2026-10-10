@@ -28,7 +28,7 @@ public partial class ServoPart : PartVisual
     private bool _simplified;
 
     public ServoPart()
-        : base(CreatureLayers.Joints, CreatureLayers.SelectedJoints)
+        : base(DrawSlot.Over)
     {
     }
 
@@ -117,6 +117,7 @@ public partial class ServoPart : PartVisual
             DrawHousing(pen, filled: true);
         }
 
+        pen.Disc(Vector2.Zero, Radius, Theme.ArenaBackground);
         pen.Disc(Vector2.Zero, Radius, missing ? Theme.DangerFill : Selected ? Theme.SelectionFill : Theme.JointFill);
         pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), ring, Theme.JointRingWidth, _ringSegments);
         if (!missing)

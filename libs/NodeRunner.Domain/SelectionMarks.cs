@@ -11,6 +11,12 @@ public static class SelectionMarks
     /// <summary>How far a selection mark's centre line sits outside its part's edge.</summary>
     public const double Gap = 3;
 
+    /// <summary>
+    /// How far from its axis a link's drawn body reaches, out to a Spring's coil, the widest (#1107).
+    /// A touch this close is on the link, so it ranks by draw order against the parts it overlaps.
+    /// </summary>
+    public const double LinkBody = 8;
+
     /// <summary>The radius of a selected joint's halo ring: its own radius plus <see cref="Gap"/>.</summary>
     public static double JointHalo(double jointRadius) => jointRadius + Gap;
 

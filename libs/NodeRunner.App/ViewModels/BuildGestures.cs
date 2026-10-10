@@ -227,10 +227,10 @@ public sealed class BuildGestures
         SelectionBox is { } box ? PartsInBox(box.Start, box.End) ?? PartSet.None : PartSet.None;
 
     /// <summary>
-    /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): a
-    /// joint's ring, then a sensor picture (its beam), then a Piston or Spring off any joint's reach
-    /// (#1033), then a beam within reach, then a joint within reach, so a drop near a joint on a
-    /// short beam still reaches the beam. Null over empty canvas. A joint part being placed
+    /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): the part
+    /// drawn on top there (#1107, <see cref="BuildViewModel.DrawnPartAt"/>), a sensor picture as its
+    /// beam; off every part, which covers every joint's reach, a Piston or Spring within reach
+    /// (#1033), then a beam within reach. Null over empty canvas. A joint part being placed
     /// (<paramref name="placing"/>) is marked by a ring round each joint, so it lands on a joint
     /// anywhere inside that ring first (#1055): a Servo's at its housing, a Wheel's at a new Wheel's
     /// size (#129). <paramref name="placing"/> is null for a moved sensor.
@@ -238,50 +238,34 @@ public sealed class BuildGestures
     public CreatureElementSelection? DropTargetAt(Vector2D viewPosition, BuildPart? placing)
     {
         var position = View.ToCanvas(viewPosition);
-        if (placing is { } part && PartTray.IsJointPart(part) && JointInPlacingRing(position, PlacingRingRadius(part)) is { } ringed)
+        if (placing is { } part && PartTray.IsJointPart(part) && JointInPlacingRing(position, PartTray.PlacingRingRadius(part)) is { } ringed)
         {
             return new CreatureElementSelection(CreatureElementKind.Node, ringed);
         }
 
-        if (_build.TryFindNodeNear(position, 0, out var nodeId))
+        if (_build.DrawnPartAt(position, TargetsOf(placing)) is { } drawn)
         {
-            return new CreatureElementSelection(CreatureElementKind.Node, nodeId);
+            return drawn.Kind == CreatureElementKind.Sensor
+                ? new CreatureElementSelection(CreatureElementKind.Beam, _build.Sensors.Single(sensor => sensor.Id == drawn.Id).BeamId)
+                : drawn;
         }
 
-        if (_build.TryFindSensorAt(position, out var sensorId))
-        {
-            var sensor = _build.Sensors.Single(entry => entry.Id == sensorId);
-            return new CreatureElementSelection(CreatureElementKind.Beam, sensor.BeamId);
-        }
-
-        // A Piston or Spring takes no tray part, but a drop on it still says why. It draws over the
-        // beams it crosses, so it wins there; near a joint, the beam and the joint keep their reach.
-        if (!_build.TryFindNodeNear(position, SelectionMarks.Gap, out _)
-            && _build.TryFindLinkNear(position, HitDistance(BeamHitDistance), out var link))
+        // Off every part, a Piston or Spring draws over the beams it crosses, so it wins there.
+        if (_build.TryFindLinkNear(position, HitDistance(BeamHitDistance), out var link))
         {
             return link;
         }
 
-        if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
-        {
-            return new CreatureElementSelection(CreatureElementKind.Beam, beamId);
-        }
-
-        return _build.TryFindNodeNear(position, SelectionMarks.Gap, out nodeId)
-            ? new CreatureElementSelection(CreatureElementKind.Node, nodeId)
+        return _build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId)
+            ? new CreatureElementSelection(CreatureElementKind.Beam, beamId)
             : null;
     }
 
     /// <summary>
-    /// The radius of the joint part <paramref name="placing"/> as placed, round which the canvas
-    /// marks each joint while it is placed (#1055); see <see cref="PartTray.IsJointPart"/>.
+    /// What rises with the part being placed (<paramref name="placing"/>) or else the sensor a drag
+    /// moves (#1107), for the canvas to draw and a touch to hit on the selected surface.
     /// </summary>
-    public static double PlacingRingRadius(BuildPart placing) => placing switch
-    {
-        BuildPart.Servo => ServoDef.JointRadius,
-        BuildPart.Wheel => WheelDef.DefaultRadius,
-        _ => throw new ArgumentOutOfRangeException(nameof(placing), placing, "Only a joint part has a placing ring."),
-    };
+    public PlacingTargets TargetsOf(BuildPart? placing) => _build.PlacingTargetsOf(placing, placing is null ? MovingSensorId : null);
 
     /// <summary>The joint nearest <paramref name="position"/> within the ring a joint part of <paramref name="radius"/> being placed draws round every joint, or null.</summary>
     private int? JointInPlacingRing(Vector2D position, double radius)
@@ -402,28 +386,32 @@ public sealed class BuildGestures
             return;
         }
 
-        // Joints, then sensors, then links, then beams; a joint's wider touch reach only counts off
-        // its ring, so it never covers a sensor picture next to it. A Piston or Spring draws over the
-        // beams it crosses, so it is hit first.
-        if (_build.TryFindNodeNear(position, 0, out var nodeId))
+        // The part drawn on top (#1107), which covers every joint's reach; off every part, a link's reach, then a beam's.
+        switch (_build.DrawnPartAt(position, TargetsOf(_build.PickedPart)))
         {
-            _pressedNode = nodeId;
-        }
-        else if (_build.TryFindSensorAt(position, out var sensorId))
-        {
-            _pressedSensor = sensorId;
-        }
-        else if (_build.TryFindNodeNear(position, SelectionMarks.Gap, out nodeId))
-        {
-            _pressedNode = nodeId;
-        }
-        else if (_build.TryFindLinkNear(position, HitDistance(BeamHitDistance), out var link))
-        {
-            _pressedLink = link;
-        }
-        else if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
-        {
-            _pressedBeam = beamId;
+            case { Kind: CreatureElementKind.Node } joint:
+                _pressedNode = joint.Id;
+                break;
+            case { Kind: CreatureElementKind.Sensor } sensor:
+                _pressedSensor = sensor.Id;
+                break;
+            case { Kind: CreatureElementKind.Beam } beam:
+                _pressedBeam = beam.Id;
+                break;
+            case { } link:
+                _pressedLink = link;
+                break;
+            default:
+                if (_build.TryFindLinkNear(position, HitDistance(BeamHitDistance), out var nearLink))
+                {
+                    _pressedLink = nearLink;
+                }
+                else if (_build.TryFindBeamNear(position, HitDistance(BeamHitDistance), out var beamId))
+                {
+                    _pressedBeam = beamId;
+                }
+
+                break;
         }
 
         _selectionBefore = _build.Selection;

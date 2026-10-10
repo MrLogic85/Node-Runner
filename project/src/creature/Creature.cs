@@ -56,6 +56,8 @@ public partial class Creature : Node2D
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
     private SpringVisual[] _springVisuals = [];
+    private DrawGroups? _drawGroups;
+    private RaisedParts _raised = RaisedParts.None;
     private RigidBody2D[] _pistonCylinders = [];
     private RigidBody2D[] _springCylinders = [];
     private SpringLink[] _springs = [];
@@ -179,6 +181,7 @@ public partial class Creature : Node2D
         CreateServos(definition);
         CreatePistons(definition);
         CreateSprings(definition);
+        _drawGroups = DrawGroups.Of(definition.Nodes, LinkRef.All(definition.Beams, definition.Pistons, definition.Springs));
         ConfigureBrainBuffers(definition);
         ShowInEitherArenaView(this);
         ApplyShadow();
@@ -319,129 +322,6 @@ public partial class Creature : Node2D
 
             return sum / _beamBodies.Length;
         }
-    }
-
-    public bool TrySelectPart(Vector2 globalPosition, out CreatureElementSelection? selection)
-    {
-        var tolerance = GetHitTolerance();
-        for (var nodeIndex = 0; nodeIndex < _nodeVisuals.Length; nodeIndex++)
-        {
-            var radius = Math.Max(tolerance, ToGodotFloat(Definition!.NodeRadius(Definition.Nodes[nodeIndex].Id), nameof(ServoDef.JointRadius)));
-            if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
-            {
-                var nodeId = Definition!.Nodes[nodeIndex].Id;
-                selection = Definition.Servos.FirstOrDefault(servo => servo.NodeId == nodeId) is { } servo
-                    ? new CreatureElementSelection(CreatureElementKind.Servo, servo.Id)
-                    : Definition.Wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId) is { } wheel
-                        ? new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)
-                        : new CreatureElementSelection(CreatureElementKind.Node, nodeId);
-                return true;
-            }
-        }
-
-        for (var sensorIndex = 0; sensorIndex < _sensorVisuals.Length; sensorIndex++)
-        {
-            var beamIndex = Definition!.BeamIndexOf(Definition.Sensors[sensorIndex].BeamId);
-            var local = _beamBodies[beamIndex].ToLocal(globalPosition);
-            var halfLength = _beamHalfLengths[beamIndex];
-            if (SensorPicture.Contains(Definition.Sensors[sensorIndex].Kind, new Vector2D(local.X, local.Y), new Vector2D(-halfLength, 0), new Vector2D(halfLength, 0))
-                || local.LengthSquared() <= tolerance * tolerance)
-            {
-                selection = new CreatureElementSelection(CreatureElementKind.Sensor, Definition.Sensors[sensorIndex].Id);
-                return true;
-            }
-        }
-
-        for (var pistonIndex = 0; pistonIndex < _pistons.Length; pistonIndex++)
-        {
-            var piston = _pistons[pistonIndex];
-            if (DistanceSquaredToSegment(globalPosition, piston.NodeA.GlobalPosition, piston.NodeB.GlobalPosition) <= tolerance * tolerance)
-            {
-                selection = new CreatureElementSelection(CreatureElementKind.Piston, piston.Definition.Id);
-                return true;
-            }
-        }
-
-        for (var springIndex = 0; springIndex < _springVisuals.Length; springIndex++)
-        {
-            var spring = _springVisuals[springIndex];
-            if (DistanceSquaredToSegment(globalPosition, spring.NodeA.GlobalPosition, spring.NodeB.GlobalPosition) <= tolerance * tolerance)
-            {
-                selection = new CreatureElementSelection(CreatureElementKind.Spring, Definition!.Springs[springIndex].Id);
-                return true;
-            }
-        }
-
-        for (var beamIndex = 0; beamIndex < _beamBodies.Length; beamIndex++)
-        {
-            var body = _beamBodies[beamIndex];
-            var halfLength = _beamHalfLengths[beamIndex];
-            var start = body.ToGlobal(new Vector2(-halfLength, 0));
-            var end = body.ToGlobal(new Vector2(halfLength, 0));
-            if (DistanceSquaredToSegment(globalPosition, start, end) <= tolerance * tolerance)
-            {
-                selection = new CreatureElementSelection(CreatureElementKind.Beam, Definition!.Beams[beamIndex].Id);
-                return true;
-            }
-        }
-
-        selection = null;
-        return false;
-    }
-
-    /// <summary>
-    /// Where a part's name points to, in global coordinates (#388): a joint's centre, a beam's or
-    /// link's middle, or a sensor's picture.
-    /// </summary>
-    public Vector2 PartAnchor(CreatureElementSelection selection)
-    {
-        ArgumentNullException.ThrowIfNull(selection);
-        return selection.Kind switch
-        {
-            CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Beam => _beamBodies[Definition!.BeamIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].GlobalPosition,
-            CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Piston => Middle(_pistons[Definition!.PistonIndexOf(selection.Id)].NodeA, _pistons[Definition.PistonIndexOf(selection.Id)].NodeB),
-            CreatureElementKind.Spring => Middle(_springVisuals[Definition!.SpringIndexOf(selection.Id)].NodeA, _springVisuals[Definition.SpringIndexOf(selection.Id)].NodeB),
-            CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(selection.Id)].GlobalPosition,
-            _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
-        };
-
-        static Vector2 Middle(Node2D a, Node2D b) => (a.GlobalPosition + b.GlobalPosition) / 2;
-    }
-
-    public void SetSelectedElement(CreatureElementSelection? selection)
-    {
-        _selection = selection;
-        ApplySelection();
-    }
-
-    // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
-    private void ApplySelection()
-    {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_pistonVisuals).Concat(_springVisuals).Concat(_wheelVisuals))
-        {
-            visual.Selected = false;
-        }
-
-        if (_selection is null || _isShadow)
-        {
-            return;
-        }
-
-        PartVisual selected = _selection.Kind switch
-        {
-            CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(_selection.Id)],
-            CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(_selection.Id)],
-            CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == _selection.Id)],
-            CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(_selection.Id)],
-            CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(_selection.Id)],
-            CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(_selection.Id)],
-            CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(_selection.Id)],
-            _ => throw new ArgumentOutOfRangeException(nameof(_selection), _selection.Kind, "Not a part of a creature."),
-        };
-        selected.Selected = true;
     }
 
     private Rect2 NodeBox(int index)

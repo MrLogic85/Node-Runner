@@ -86,12 +86,16 @@ Joint, the default tool, locked or not (#896). `BuildGestures`
 turns pointer presses, drags and releases into edits for the active tool
 and into zoom and pan; `BuildCanvas` only forwards input and draws.
 
-- A pointer that travels at most `TapSlop` view units is a tap. A tap hits a
-  joint first, then a sensor, then a link (the nearest, a Spring on a tie),
-  then a beam, in Build and Training alike. A joint's touch area (its ring
-  plus the selection gap, #710) and a sensor's picture are in canvas units,
-  so they grow and shrink with the drawing; beams, links and handles have
-  finger-sized hit areas on screen at any zoom.
+- A pointer that travels at most `TapSlop` view units is a tap. A tap or
+  drop hits the part drawn on top there (#1107, `docs/WORLD_VISUALS.md` →
+  Draw layers), in Build and Training alike: a joint's ring, Servo or
+  Wheel, each with the selection gap (#710); a sensor's picture; or a link
+  within `SelectionMarks.LinkBody` of its line, outside its own ends' touch
+  areas. Raised targets of a placed part count as drawn over the rest. Off
+  every part, Build falls back to finger-sized reach: a link (the nearest,
+  a Spring on a tie), then a beam. Joints and sensors
+  are in canvas units, so they grow and shrink with the drawing; beams,
+  links and handles reach finger-sized areas on screen at any zoom.
 - **Every tool (#746, #803)** shares one selection model; the tools differ
   only in their main action, below.
   - A tap on any joint, beam, sensor or link adds it to the selection or
@@ -263,11 +267,10 @@ active one, clears the selection so its panel shows (#1096).
   names the part and the version that brings it, as "Battery comes in version 0.18.0", in a
   notification (#992); `PartTray.ComingLaterReason` and
   `BuildLinkList.ComingLaterReason` own it.
-- An available row is dragged out (#376). The drop lands on what the part
-  is over (a joint's ring, a sensor picture's beam, a Piston or Spring
-  outside any joint's reach, a beam within reach, then a joint within
-  reach; `BuildGestures.DropTargetAt`). A Servo or Wheel lands first on the
-  joint whose placing ring (`BuildGestures.PlacingRingRadius`; a Wheel's is
+- An available row is dragged out (#376). The drop lands where a tap would
+  hit (Interactions; `BuildGestures.DropTargetAt`), except that a sensor's
+  picture stands for its beam. A Servo or Wheel lands first on the
+  joint whose placing ring (`PartTray.PlacingRingRadius`; a Wheel's is
   its 0.4 m size) it is inside, ahead of the beams the ring crosses
   (#1055). `BuildViewModel.PlacePart` places it with
   a fresh id and selects it, or refuses it with a canvas note at that part

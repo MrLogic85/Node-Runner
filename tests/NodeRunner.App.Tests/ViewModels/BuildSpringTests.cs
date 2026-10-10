@@ -34,16 +34,17 @@ public sealed class BuildSpringTests
     }
 
     [Fact]
-    public void TapOnASpring_SelectsIt_BeforeTheBeamUnderIt()
+    public void TapOnASpring_SelectsIt_WhereItIsDrawnOverABeam()
     {
+        // The Spring reaches lower than the beam, so it draws over it there (#1107).
         var (build, gestures) = ThreeLooseJoints();
-        var below = build.PlaceNode(new Vector2D(50, -60));
-        var above = build.PlaceNode(new Vector2D(50, 60));
-        build.ConnectLink(BuildLink.Beam, below, above).ShouldNotBeNull();
-        var link = build.ConnectLink(BuildLink.Spring, 1, 2)!.Value;
+        var left = build.PlaceNode(new Vector2D(-60, 50));
+        var right = build.PlaceNode(new Vector2D(60, 50));
+        build.ConnectLink(BuildLink.Beam, left, right).ShouldNotBeNull();
+        var link = build.ConnectLink(BuildLink.Spring, 1, 3)!.Value;
         build.ActiveTool = BuildTool.Parts;
 
-        Tap(gestures, new Vector2D(50, 0));
+        Tap(gestures, new Vector2D(0, 50));
 
         build.SingleSelectedSpringId.ShouldBe(link);
         build.SelectedPartCount.ShouldBe(1);

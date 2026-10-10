@@ -19,7 +19,7 @@ namespace NodeRunner.Ui.Widgets;
 /// It lives in the world of a <see cref="UiWorldView"/> (#769), so its creature is drawn with the
 /// same part visuals and layers as Training's (<see cref="CreatureParts"/>) without any of them
 /// drawing over the handles and notes in the slot. Its own marks go under the creature (grid,
-/// Select box, beam preview) or on a <see cref="ViewLayer"/> under the links or over the creature.
+/// Select box, beam preview) or on a <see cref="ViewLayer"/> under the selected parts or over the creature.
 /// </summary>
 public partial class BuildCanvas : Node2D
 {
@@ -37,7 +37,7 @@ public partial class BuildCanvas : Node2D
     private bool _showCameraRays;
     private Control? _slot;
     private readonly CreatureParts _creature = new();
-    private readonly ViewLayer _underlay = ViewLayer.Underlay();
+    private readonly ViewLayer _selectedUnderlay = ViewLayer.SelectedUnderlay();
     private readonly ViewLayer _overlay = ViewLayer.Overlay();
     private readonly BuildSensorMotion _sensorMotion = new();
     private double _gravity;
@@ -45,9 +45,9 @@ public partial class BuildCanvas : Node2D
     public BuildCanvas()
     {
         AddChild(_creature, @internal: InternalMode.Front);
-        AddChild(_underlay, @internal: InternalMode.Front);
+        AddChild(_selectedUnderlay, @internal: InternalMode.Front);
         AddChild(_overlay, @internal: InternalMode.Front);
-        _underlay.Draw += () => DrawUnderlay(_underlay);
+        _selectedUnderlay.Draw += () => DrawSelectedUnderlay(_selectedUnderlay);
         _overlay.Draw += () => DrawOverlay(_overlay);
     }
 
@@ -330,7 +330,7 @@ public partial class BuildCanvas : Node2D
 
     public override void _Draw()
     {
-        _underlay.QueueRedraw();
+        _selectedUnderlay.QueueRedraw();
         _overlay.QueueRedraw();
         if (_viewModel is null || _gestures is null)
         {
@@ -390,6 +390,8 @@ public partial class BuildCanvas : Node2D
             previewJointPart = (jointPart, jointHover.Id);
         }
 
+        // A touch hits what rises (#1107), so both come from the view-model.
+        var targets = _gestures.TargetsOf(PlacingPart);
         _creature.Transform = ViewTransform();
         _creature.Theme = Theme;
         _creature.Show(
@@ -400,39 +402,33 @@ public partial class BuildCanvas : Node2D
                 _sensorMotion.WeightOffset,
                 previewSensor,
                 previewJointPart,
-                ShowsTooShort: true));
+                ShowsTooShort: true,
+                targets,
+                _viewModel.RaisedParts(selected, targets)));
     }
 
-    /// <summary>What goes under the links: the placing feedback of a tray part dragged or picked or a sensor moved, the picked link's start rings, and the beam a link drag replaces.</summary>
-    private void DrawUnderlay(CanvasItem canvas)
+    /// <summary>What goes under the selected parts (#1107): the selected Servo's link bands.</summary>
+    private void DrawSelectedUnderlay(CanvasItem canvas)
     {
-        if (_viewModel is null || _gestures is null)
+        if (_viewModel is not null && _gestures is not null)
         {
-            return;
+            BuildServoDrawing.DrawSelectedBands(canvas, _viewModel, Theme, ViewTransform());
         }
-
-        BuildServoDrawing.DrawSelectedBands(canvas, _viewModel, Theme, ViewTransform());
-        DrawReplacedBeam(canvas);
-        foreach (var beam in _viewModel.Beams)
-        {
-            var nodeA = NodeById(beam.NodeA);
-            var nodeB = NodeById(beam.NodeB);
-            var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(nodeA.Position), (float)_viewModel.NodeRadius(nodeA.Id), ToGodot(nodeB.Position), (float)_viewModel.NodeRadius(nodeB.Id))
-                ?? (ToGodot(nodeA.Position), ToGodot(nodeB.Position));
-            DrawPlacingFeedback(canvas, beam, start, end);
-        }
-
-        BuildServoDrawing.DrawPlacingFeedback(canvas, _viewModel, PlacingPart, Theme, ViewTransform());
-        DrawLinkStarts(canvas);
     }
 
-    /// <summary>What goes over the whole creature: the aimed camera's rays, warnings, the beam drag's rings and the selection frame.</summary>
+    /// <summary>
+    /// What goes over the whole creature: the picked link's start rings, the beam a link drag replaces, the aimed
+    /// camera's rays, warnings, the beam drag's rings and the selection frame.
+    /// </summary>
     private void DrawOverlay(CanvasItem canvas)
     {
         if (_viewModel is null || _gestures is null)
         {
             return;
         }
+
+        DrawReplacedBeam(canvas);
+        DrawLinkStarts(canvas);
         DrawSelectedCameraRays(canvas);
         DrawSelectedTravels(canvas);
         DrawInvalidNodeMarkers(canvas);
@@ -495,42 +491,6 @@ public partial class BuildCanvas : Node2D
 
     private void DrawTravel(CanvasItem canvas, int nodeA, int nodeB, double shortest, double longest, float tickHalf, double? rest) =>
         PistonDrawing.DrawStroke(canvas, ViewTransform(), Theme, ToGodot(NodeById(nodeA).Position), ToGodot(NodeById(nodeB).Position), (float)shortest, (float)longest, tickHalf, (float?)rest);
-
-    /// <summary>
-    /// While a tray part is dragged (#376) or picked (#1016), or a sensor is moved (#806), a beam that would take it
-    /// shows the <c>halo</c>, and one that would refuse it a dashed <c>danger</c> stroke, both under the beam.
-    /// </summary>
-    private void DrawPlacingFeedback(CanvasItem canvas, BeamDef beam, Vector2 start, Vector2 end)
-    {
-        if (BeamTakesPlacing(beam.Id) is not { } takes || start == end)
-        {
-            return;
-        }
-
-        var width = Stroke(Theme.BeamWidth * 2.2f);
-        using var pen = ViewPen(canvas);
-        if (takes)
-        {
-            pen.Line(start, end, Theme.SelectionGlow, width);
-        }
-        else
-        {
-            pen.DashedLine(start, end, Theme.Danger, width, dash: Theme.BeamWidth * 2);
-        }
-    }
-
-    /// <summary>Whether the beam would take the sensor a drag moves or the <see cref="PlacingPart"/>; null while neither is placed.</summary>
-    private bool? BeamTakesPlacing(int beamId)
-    {
-        if (_gestures!.MovingSensorId is { } sensor)
-        {
-            return _viewModel!.BeamTakesMovingSensor(sensor, beamId);
-        }
-
-        return PlacingPart is { } part && !PartTray.IsJointPart(part)
-            ? _viewModel!.CanPlacePart(part, new CreatureElementSelection(CreatureElementKind.Beam, beamId), out _)
-            : null;
-    }
 
     /// <summary>
     /// The tray part being placed: one dragged from the tray, or one picked to tap into place, which
