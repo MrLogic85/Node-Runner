@@ -103,6 +103,8 @@ public sealed class UiTokensTests
             UiSize.Widget.SliderStepTickHeight, UiSize.Widget.SliderDisabledDashLength,
             UiSize.Widget.SliderSteppedHeight,
         }.ShouldBe(new[] { 18, 4, 16, 10, 4, 60 });
+        new[] { UiSize.Widget.MeterLength, UiSize.Widget.MeterTrackWidth, UiSize.Widget.MeterTickHeight }
+            .ShouldBe(new[] { 26, 4, 7 });
         UiLayout.CanvasWidth.ShouldBe(640);
         UiLayout.CanvasHeight.ShouldBe(360);
     }

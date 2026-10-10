@@ -1,4 +1,5 @@
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.ML;
 
 namespace NodeRunner.App.Tests.ViewModels;
@@ -14,17 +15,23 @@ public sealed class BrainFocusPresentationViewModelTests
 
     private static readonly BrainPortLabels _labels = new([_along, _kneeSpeed, _centre], [_rearKnee, _frontKnee]);
 
+    private static readonly BrainPortLayout _layout = new(
+        [BrainPort.Input(1, "along"), BrainPort.Input(2, "speed"), BrainPort.Input(3, "centre")],
+        [BrainPort.Output(4, "angle", PortSignal.Position), BrainPort.Output(2, "angle", PortSignal.Position)]);
+
     // Weights by output, then input: Rear knee <- (0.2, -1.5, 0.9); Front knee <- (1.0, 0.0, -0.1).
     private static NeuralNetwork Brain() =>
         NeuralNetwork.FromGenome([3, 2], [0.2, -1.5, 0.9, 1.0, 0.0, -0.1, 0.0, 0.0], Activation.Tanh);
 
     private static double[] Readings() => [0.5, -0.25, 1];
 
+    private static BrainPortValues Sample(NeuralNetwork brain) => BrainPortValues.Sample(_layout, brain, Readings());
+
     private static BrainFocusPresentationViewModel Live(params int[] disabledGenes)
     {
         var viewModel = new BrainFocusPresentationViewModel();
         viewModel.Configure(_labels, disabledGenes);
-        viewModel.Update(Brain(), Readings());
+        viewModel.Update(Sample(Brain()));
         return viewModel;
     }
 
@@ -146,7 +153,7 @@ public sealed class BrainFocusPresentationViewModelTests
         var viewModel = Live();
         viewModel.SelectNeuron(BrainFocusPresentationViewModel.InputLayer, 0);
 
-        viewModel.Update(Brain(), Readings());
+        viewModel.Update(Sample(Brain()));
 
         viewModel.Selected.ShouldBe((BrainFocusPresentationViewModel.InputLayer, 0));
         viewModel.SelectionText.ShouldBe(UiText.Format("{0} drives {1} and {2} most.", _along, _frontKnee, _rearKnee));
@@ -160,7 +167,7 @@ public sealed class BrainFocusPresentationViewModelTests
         var notifications = 0;
         viewModel.PropertyChanged += (_, _) => notifications++;
 
-        viewModel.Update(NeuralNetwork.FromGenome([2, 1], [1.0, 1.0, 0.0], Activation.Tanh), Readings());
+        viewModel.Update(Sample(NeuralNetwork.FromGenome([2, 1], [1.0, 1.0, 0.0], Activation.Tanh)));
 
         viewModel.HasNetwork.ShouldBeFalse();
         viewModel.Layers.ShouldBeEmpty();
@@ -171,12 +178,26 @@ public sealed class BrainFocusPresentationViewModelTests
     }
 
     [Fact]
+    public void Update_WithALiveSampleOfOtherPorts_ShowsWaitingState()
+    {
+        var viewModel = new BrainFocusPresentationViewModel();
+        viewModel.Configure(_labels, []);
+
+        viewModel.Update(BrainPortValues.Sample(new BrainPortLayout([BrainPort.Input(1, "along")], []), NeuralNetwork.FromGenome([1, 0], [], Activation.Tanh), [0.5]));
+
+        viewModel.HasNetwork.ShouldBeFalse();
+        viewModel.Layers.ShouldBeEmpty();
+        viewModel.Edges.ShouldBeEmpty();
+        viewModel.Summary.ShouldBe(UiText.Plain("Waiting for a live brain"));
+    }
+
+    [Fact]
     public void Update_WithNothingToDrive_LeavesOutTheLegendAndWarns()
     {
         var viewModel = new BrainFocusPresentationViewModel();
         viewModel.Configure(new BrainPortLabels([_along], []), []);
 
-        viewModel.Update(NeuralNetwork.FromGenome([1, 0], [], Activation.Tanh), [0.5]);
+        viewModel.Update(BrainPortValues.Sample(new BrainPortLayout([BrainPort.Input(1, "along")], []), NeuralNetwork.FromGenome([1, 0], [], Activation.Tanh), [0.5]));
 
         viewModel.HasNetwork.ShouldBeTrue();
         viewModel.Edges.ShouldBeEmpty();

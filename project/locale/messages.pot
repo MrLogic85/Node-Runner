@@ -567,6 +567,10 @@ msgstr ""
 msgid "New part unlocked"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartCalloutPresentation.cs
+msgid "No brain ports"
+msgstr ""
+
 #: project/scenes/screens/CreationsScreen.tscn
 msgid "No saved Creations yet."
 msgstr ""
@@ -1203,6 +1207,54 @@ msgstr ""
 
 #: project/src/hosts/BuildHost.cs
 msgid "Your latest edits could not be saved."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "across"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "along"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "angle"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "centre"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "far left"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "far right"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "hit"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "left"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "length"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "right"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "speed"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "strength"
 msgstr ""
 
 #: project/src/ui/lib/UiPicker.cs

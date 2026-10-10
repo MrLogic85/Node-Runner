@@ -22,6 +22,7 @@ public partial class ComponentGalleryScreen : GalleryScreen
         _scrollContent = GetNode<MarginContainer>("%ContentFrame");
         BindAuthoredControls(_scrollContent);
         GetNode<UiTextField>("%CreationNameFact").FactSource = () => "You already have one by this name.";
+        ShowCalloutLines();
         UiNativeScroll.AllowGesturesToBubble(_scrollContent);
         Callable.From(ResetScrollPosition).CallDeferred();
     }
@@ -32,6 +33,22 @@ public partial class ComponentGalleryScreen : GalleryScreen
         {
             UiNativeScroll.AllowGesturesToBubble(_scrollContent);
         }
+    }
+
+    // Lines are set in code only (#1064): a −1…1 and a 0…1 meter at each end and the middle, and a note.
+    private void ShowCalloutLines()
+    {
+        var ports = GetNode<UiCallout>("%Ports");
+        ports.IconId = UiIconId.PartServo;
+        ports.Lines =
+        [
+            UiCalloutLine.OfMeters(UiTokens.Color.Accent, [new("−1", -1, Centred: true), new("0", 0, Centred: true), new("+1", 1, Centred: true)]),
+            UiCalloutLine.OfMeters(UiTokens.Color.Output, [new("0", 0, Centred: false), new("½", 0.5, Centred: false), new("1", 1, Centred: false)]),
+        ];
+
+        var note = GetNode<UiCallout>("%Note");
+        note.IconId = UiIconId.PartWheel;
+        note.Lines = [UiCalloutLine.OfNote("No brain ports")];
     }
 
     private void ResetScrollPosition()

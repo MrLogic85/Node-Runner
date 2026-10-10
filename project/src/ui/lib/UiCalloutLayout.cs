@@ -11,9 +11,9 @@ namespace NodeRunner.Ui.Lib;
 /// of its part.</item>
 /// <item>Callouts that would overlap form a stack: one column of callouts, in the order they are
 /// listed (so list the most important first; it sits nearest its part), growing away from the
-/// first one's part. A callout with the same kind, icon and text as one already in the stack
-/// adds only its leader to that one. A stack that grows into another takes it in, until no two
-/// overlap.</item>
+/// first one's part. A callout with the same kind, icon and text as one already in the stack,
+/// and no lines under its caption, adds only its leader to that one. A stack that grows into
+/// another takes it in, until no two overlap.</item>
 /// </list>
 /// Leaders run from each spot to the centre of its callout and are drawn behind all callouts.
 /// </summary>
@@ -22,14 +22,18 @@ public static class UiCalloutLayout
     /// <summary>The gap between what is drawn at the spot and the callout, spanned by the leader.</summary>
     public const float LeaderLength = 28;
 
-    /// <summary>One callout: its spot, the clear direction from it, and how far the figure reaches that way.</summary>
+    /// <summary>
+    /// One callout: its spot, the clear direction from it, and how far the figure reaches that
+    /// way; <paramref name="Lines"/> are its live values under the caption, if any (#1064).
+    /// </summary>
     public readonly record struct Placement(
         Vector2 Anchor,
         Vector2 Direction,
         float Clearance,
         UiCallout.CalloutKind Kind,
         UiIconId IconId,
-        string Text);
+        string Text,
+        IReadOnlyList<UiCalloutLine>? Lines = null);
 
     /// <summary>
     /// Where a callout went and where its leader from the spot meets it; when it
@@ -105,7 +109,9 @@ public static class UiCalloutLayout
             var same = boxes.FindIndex(box =>
                 placements[box.Index].Kind == placement.Kind
                 && placements[box.Index].IconId == placement.IconId
-                && placements[box.Index].Text == placement.Text);
+                && placements[box.Index].Text == placement.Text
+                && placements[box.Index].Lines is null
+                && placement.Lines is null);
             if (same >= 0)
             {
                 assigned.Add((index, same));

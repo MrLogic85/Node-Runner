@@ -74,6 +74,11 @@ public static class UiSize
         public const int SliderDisabledDashLength = 4;
         public const int SliderSteppedHeight = 60;
 
+        /// <summary>A callout meter's bar (#1064): its length, track thickness, and the zero tick that stands past it.</summary>
+        public const int MeterLength = 26;
+        public const int MeterTrackWidth = SliderTrackWidth;
+        public const int MeterTickHeight = 7;
+
         /// <summary>A creature's beam in Build, Training and thumbnails (#593, #770).</summary>
         public const int CreatureBeamWidth = 6;
 

@@ -46,6 +46,20 @@ public sealed class UiCalloutLayoutTests
     }
 
     [Fact]
+    public void Arrange_NeverJoinsACalloutWithLinesUnderItsCaption()
+    {
+        IReadOnlyList<UiCalloutLine> lines = [UiCalloutLine.OfMeters(UiTokens.Color.Accent, [new UiCalloutMeter("speed", 0.5, Centred: true)])];
+        var withLines = Placement(new Vector2(0, 0), Vector2.Up) with { Lines = lines };
+
+        var arranged = UiCalloutLayout.Arrange(
+            [withLines, withLines with { Anchor = new Vector2(30, 0) }, Placement(new Vector2(0, 0), Vector2.Up)],
+            [_size, _size, _size],
+            _bounds);
+
+        arranged.ShouldAllBe(callout => !callout.Joined);
+    }
+
+    [Fact]
     public void Arrange_StacksACalloutWithOtherTextAwayFromThePart_FirstListedNearest()
     {
         var arranged = UiCalloutLayout.Arrange(

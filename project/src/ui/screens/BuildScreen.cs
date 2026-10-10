@@ -478,7 +478,7 @@ public partial class BuildScreen : Control
             selected == 1 ? part?.Title
             : selected > 1 ? presentation.Selection?.Title
             : toolPanel.Title);
-        sidePanel.IconId = selected > 1 ? UiIconId.Select : part is null ? UiIconId.None : PartSettingsIcon(part.Kind);
+        sidePanel.IconId = selected > 1 ? UiIconId.Select : part is null ? UiIconId.None : PartIcons.For(part.Kind);
 
         if (tray.Visible)
         {
@@ -855,20 +855,6 @@ public partial class BuildScreen : Control
             EmitSignal(SignalName.ServoLinkChanged, _shownServoPickerId, fixedRole, linkId);
         }
     }
-
-    /// <summary>The side panel glyph for the part whose settings are open.</summary>
-    public static UiIconId PartSettingsIcon(PartSettingsKind kind) => kind switch
-    {
-        PartSettingsKind.Node => UiIconId.Joint,
-        PartSettingsKind.Beam => UiIconId.Beam,
-        PartSettingsKind.Accelerometer => UiIconId.PartAccelerometer,
-        PartSettingsKind.Camera => UiIconId.PartCamera,
-        PartSettingsKind.Servo => UiIconId.PartServo,
-        PartSettingsKind.Piston => UiIconId.PartPiston,
-        PartSettingsKind.Spring => UiIconId.PartSpring,
-        PartSettingsKind.Wheel => UiIconId.PartWheel,
-        _ => UiIconId.None,
-    };
 
     private void ApplyReadiness(BuildPanelPresentation buildPanel)
     {

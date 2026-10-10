@@ -212,7 +212,7 @@ above every shadow.
   to the part's other side. Overlapping callouts stack in a column, most
   important nearest; leaders are behind all callouts and every note shows.
   In a stack, notes of the same kind and text join into one callout with a
-  leader to each part.
+  leader to each part; a callout with lines under its text never joins.
 
 ## Training arena
 
@@ -227,6 +227,16 @@ above every shadow.
 - **Part callout (#388):** the followed shadow's tapped part keeps its
   selection look, and its name shows in a `halo` callout above the whole
   creature, so it never covers the body.
+- **Port bars (#1064):** a part with brain ports adds its glyph before the
+  name and, under the name, a line of its senses in `accent`, then a line
+  of its outputs in `output`. Each port is a muted `Caption` label and a
+  bar, `Meter` sized (26 × 4, `line` track, round ends); at most three per
+  row, more wrap, with labels and bars in their own columns so wrapped bars
+  line up. A −1…1 port fills from the centre, past a 1-wide muted
+  tick at 0; a 0…1 port fills from the left. Values outside the range
+  clamp. A Piston's target length is drawn 0…1, as (v+1)/2 of its −1…1
+  output, so it looks like the measured length it is compared with. A Wheel shows its glyph and a muted "No brain ports"; a Joint,
+  Beam or Spring shows only its name.
 - **Slow-motion chip (#318):** a Warning chip, "Too many shadows!", top
   left, over the Best flag when that scrolls past.
 

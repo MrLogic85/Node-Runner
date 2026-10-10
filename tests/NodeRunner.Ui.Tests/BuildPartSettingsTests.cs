@@ -1,6 +1,3 @@
-using NodeRunner.App.ViewModels;
-using NodeRunner.Ui.Lib;
-using NodeRunner.Ui.Screens;
 
 namespace NodeRunner.Ui.Tests;
 
@@ -31,15 +28,6 @@ public sealed class BuildPartSettingsTests
         readouts.Node.Body.ShouldContain("visible = false");
         Children("/PartSettings/PartRows/PartReadouts").ShouldBeEmpty();
         _build.ShouldNotContain(node => node.Script == "res://src/ui/lib/UiValueRow.cs");
-    }
-
-    [Fact]
-    public void EveryPartKind_HasItsOwnPanelGlyph()
-    {
-        var icons = Enum.GetValues<PartSettingsKind>().Select(BuildScreen.PartSettingsIcon).ToList();
-
-        icons.ShouldNotContain(UiIconId.None);
-        icons.ShouldBeUnique();
     }
 
     private static string[] Children(string parent) =>

@@ -973,7 +973,7 @@ custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 8
-text = "a name on the canvas, built by c_call: kind shares chip's names (warn, danger, ok)"
+text = "a name on the canvas, built by c_call: kind shares chip's names (warn, danger, ok); lines of live meters or a note go under it (#1064)"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
 TextStyle = 9
@@ -1007,6 +1007,22 @@ mouse_filter = 2
 script = ExtResource("26_callout")
 Text = "Target · Front shin"
 Kind = 2
+
+[node name="Ports" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout/Kinds"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("26_callout")
+Text = "Knee"
+
+[node name="Note" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout/Kinds"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("26_callout")
+Text = "Wheel 1"
 
 [node name="Signpost" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
 layout_mode = 2

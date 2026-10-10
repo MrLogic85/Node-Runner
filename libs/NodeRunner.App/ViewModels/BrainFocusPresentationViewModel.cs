@@ -1,6 +1,4 @@
 using System.ComponentModel;
-using NodeRunner.ML;
-
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
@@ -54,25 +52,25 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
         Clear();
     }
 
-    /// <summary>Reads the live brain with this tick's inputs, in port order.</summary>
-    public void Update(NeuralNetwork? brain, IReadOnlyList<double> inputs)
+    /// <summary>
+    /// Shows one sample of the live brain (#1064), the same one the part callout reads; a sample
+    /// with no live brain, or one that does not fit the configured ports, shows none.
+    /// </summary>
+    public void Update(BrainPortValues values)
     {
-        ArgumentNullException.ThrowIfNull(inputs);
+        ArgumentNullException.ThrowIfNull(values);
 
         var inputCount = _labels.Inputs.Count;
         var outputCount = _labels.Outputs.Count;
-        if (brain is null
-            || brain.LayerSizes is not [var brainInputs, var brainOutputs]
-            || brainInputs != inputCount
-            || brainOutputs != outputCount
-            || inputs.Count != inputCount)
+        if (!values.IsLive || values.Inputs.Count != inputCount || values.Outputs.Count != outputCount)
         {
             Clear();
             return;
         }
 
-        _activations = brain.CaptureActivations([.. inputs]);
-        var weights = brain.Weights[0];
+        var (inputValues, outputValues, weights) = (values.Inputs, values.Outputs, values.Weights);
+
+        _activations = [[.. inputValues], [.. outputValues]];
         var connections = new List<(int, int, double)>();
         for (var output = 0; output < outputCount; output++)
         {
