@@ -50,8 +50,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   (15) and each part on it, a Servo's `ServoDef.JointRadius` (27) or a
   Wheel's Radius (`CreatureDef.NodeRadius`). Link ends, bounds, hit testing
   and the minimum link length all use it.
-- **One part per joint** (until #1044): a joint holds at most one Servo or
-  Wheel.
+- **One part per slot** (#1044): a joint holds at most one Wheel and one
+  motor or brake (a Servo), so a Servo can drive the links of a Wheel's
+  joint while the Wheel turns freely between them.
 - **Degree rules** (links touching a node, counting Beams, Pistons and
   Springs):
   - **0 links:** a loose point that cannot be simulated. It can be saved,
@@ -213,7 +214,7 @@ fold.
   forever.
 - **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
   at 0.4 m, added to its joint. Derived, never saved.
-- **Driving it later:** #1068, #1070, #1044.
+- **Driving it later:** #1068, #1070, #1118.
 
 ### Piston
 

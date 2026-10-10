@@ -101,7 +101,12 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   - A tap on any joint, beam, sensor or link adds it to the selection or
     removes it, even under a handle (`BuildViewModel.ToggleSelected`). A
     tap on empty canvas clears the selection; a tap on a handle over empty
-    canvas does nothing.
+    canvas does nothing. A tap on a joint with parts steps down its
+    stack, top → down as drawn (motor or brake, then Wheel): the first tap
+    adds the top part, each next tap swaps it for the one below, and a tap
+    on the last, or with more than one of them selected, removes the
+    joint's parts. The rest of the selection stays
+    (`BuildViewModel.ToggleJointSelected`, #1044).
   - **Parts stand in for their joint** (#973, #1044): while any part sits
     on a joint (today a Servo or Wheel), the joint itself is never selected, so it
     gets no selection mark and no panel; only a bare joint does. Links
@@ -113,10 +118,10 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     **Scale** at the bottom-right corner.
   - A drag is settled by where it starts, first match wins: a handle moves,
     turns or scales the selection; in Links, with a link picked, an
-    unselected joint or a selected Servo's or Wheel's draws it; a selected joint moves
-    the selection;
+    unselected joint or a selected part's joint draws it; a selected joint, or
+    a joint with a selected part, moves the selection;
     anywhere inside a group's frame moves the group; an unselected joint is
-    selected alone and moved; a sensor is moved to another beam (see
+    selected alone and moved, or, if it holds parts, its top part is; a sensor is moved to another beam (see
     Sensors).
     Any other drag draws a box in Select and pans in the other tools.
   - After a Rotate the frame stays turned with the group until the
@@ -164,7 +169,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   would catch as selected. It selects every part whose centre is in it (a
   joint's centre, a beam's or link's midpoint, a sensor's beam midpoint)
   and replaces the selection, so a box can catch only beams. A joint with
-  a Servo or Wheel comes in as that part (#973).
+  parts comes in as all its parts, each with its own mark (#973, #1044).
 - **Sensors (#127, #575):** placed from the tray on a beam, by drag or tap
   (see Parts tray), one per beam (#376). A joint, Piston or Spring refuses
   with the part's own reason, "Accelerometers go on a beam" or "Cameras go
@@ -181,8 +186,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     A good drop selects it.
 - **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
   drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
-  go on a joint"; a joint that already has one refuses with "One part per
-  joint". A good placement takes the two lowest-id links as Fixed and
+  go on a joint"; a joint that already has a motor or brake refuses with
+  "One motor or brake per joint", while a Wheel's joint takes it (#1044). A good placement takes the two lowest-id links as Fixed and
   Target and is one Undo step; a drop also selects the Servo. On a joint with fewer than two links the missing roles
   stay empty and the Servo's panel note says "A Servo needs two links at
   its joint" until another link is drawn there and picked: drop first,
@@ -192,10 +197,10 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   joint with it.
 - **Wheel (#129):** placed from Parts → Moving parts on any joint, by drag
   or tap, like a Servo. A beam, sensor or link refuses with "Wheels go on a
-  joint"; a joint with a Wheel refuses with "One wheel per joint", and one
-  with a Servo, as a Servo on a Wheel's joint, with "One part per joint"
-  (until #1044). A placement is one Undo step; a drop also selects the
-  Wheel. Tapping or dragging its joint selects the Wheel, as a Servo's.
+  joint"; a joint with a Wheel refuses with "One wheel per joint", while a
+  Servo's joint takes it (#1044). A placement is one Undo step; a drop also
+  selects the Wheel. Tapping or dragging its joint selects the Wheel, as a
+  Servo's; a joint with both follows the stack rule in Interactions.
 - **Camera aim (#594, #622):** a Camera selected alone shows an Aim handle
   out along its centre ray, in any tool; the handle may cover a
   joint, which then cannot be tapped there (#639). Dragging the handle
@@ -204,11 +209,13 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   it, a tap on it does nothing, and a second finger puts the aim back.
 - **Deleting:** there is no Delete tool; the Part settings and selection
   panels delete the selection. Deleting a joint removes every link on it,
-  its Servo or Wheel and those beams' sensors (`CreatureBuilder.RemoveNode`),
+  its Servo and Wheel and those beams' sensors (`CreatureBuilder.RemoveNode`),
   and deleting a beam removes its sensor. Deleting a Servo or Wheel leaves
-  its joint,
-  unless the same delete takes every link on that joint: then the joint
-  goes too, so a box that clears an area leaves no bare joint (#973). Deleting a link a Servo holds keeps
+  its joint, with its other part or bare,
+  unless the same delete takes every part and every link on that joint and
+  the joint had a link before: then the joint goes too, so a box that
+  clears an area leaves no bare joint (#973, #1044); a joint that had no
+  link stays. Deleting a link a Servo holds keeps
   the Servo with that role missing, which blocks training until a
   replacement is picked or the Servo is deleted.
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
@@ -281,7 +288,7 @@ active one, clears the selection so its panel shows (#1096).
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
   settings note) and where it goes ("Tap a joint to place it. A joint holds
-  one part.", a Wheel's "… holds one wheel."), per part, not per tab, as a tab can mix placements. Under
+  one motor or brake." for a Servo, "… holds one wheel." for a Wheel), per part, not per tab, as a tab can mix placements. Under
   the rows the help line says "Tap a part to pick it, or drag it onto the
   creature." A canvas tap then places the part where a drop there would
   land, with the same refusals, notes and Undo. The placed part is not
@@ -311,6 +318,15 @@ rows and copy. The panel scrolls back to the top when it shows another
 part, tool or selection count; a Servo whose links a picker, Undo or Redo
 changed is still the same part, so the panel keeps its place
 (`PartSettingsPresentation.PanelId`, #910).
+
+**On this joint (#1044).** When the selected part's joint holds two or more
+parts, a small "On this joint" label and a strip of glyph tabs sit between
+the title and Name (`PartSettingsPresentation.OnThisJoint`), one per part,
+top → down: motor or brake, then Wheel. The strip is the tray's tab
+strip (`UiIconTabs`), with the selected part's tab filled. A tab tap selects
+that part alone, which moves the canvas mark and scrolls the panel to the
+top. A joint with one part shows no strip; tabs work on a locked creation
+too.
 
 ### Parameters (#704)
 
@@ -416,7 +432,8 @@ Several selected parts show the selection panel instead (#558, #704), titled
   removes it. A part copies only with what it sits on: a beam, Spring or
   Piston with both its joints and a sensor with its beam. A Servo is its
   joint to the player, so it brings that joint along (#1000), as does a
-  Wheel; either is copied only when it is selected itself. A copied Servo uses the copies of its Fixed
+  Wheel; a joint's other part is copied only when it is selected itself, and
+  the copied joint is sized for the parts it carries (#1044). A copied Servo uses the copies of its Fixed
   and Target links and leaves a role empty whose link was not copied, so
   it shows its error note. On a locked creation a sensor, Piston or Servo
   would change the model, so it blocks Copy too, with the note "Locked:

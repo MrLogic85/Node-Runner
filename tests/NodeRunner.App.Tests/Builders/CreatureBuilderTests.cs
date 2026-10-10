@@ -611,24 +611,22 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void CanAddWheel_RefusesANonJoint_ASecondWheel_AndAJointWithAnotherPart()
+    public void JointParts_TakeOnePerSlot_AWheelAndAMotorOrBrake()
     {
         var builder = PairBuilder();
-        var withWheel = builder.Nodes[0].Id;
-        var withServo = builder.Nodes[1].Id;
-        builder.AddWheel(withWheel);
-        builder.AddServo(withServo);
+        var joint = builder.Nodes[0].Id;
+        builder.AddWheel(joint);
 
+        builder.CanAddServo(joint, out _).ShouldBeTrue();
+        builder.AddServo(joint);
         builder.CanAddWheel(builder.Beams[0].Id, out var notAJoint).ShouldBeFalse();
-        builder.CanAddWheel(withWheel, out var secondWheel).ShouldBeFalse();
-        builder.CanAddWheel(withServo, out var servoThere).ShouldBeFalse();
-        builder.CanAddServo(withWheel, out var wheelThere).ShouldBeFalse();
+        builder.CanAddWheel(joint, out var secondWheel).ShouldBeFalse();
+        builder.CanAddServo(joint, out var secondServo).ShouldBeFalse();
 
         notAJoint.ShouldBe(UiText.Plain("Wheels go on a joint"));
         secondWheel.ShouldBe(UiText.Plain("One wheel per joint"));
-        servoThere.ShouldBe(CreatureBuilder.OnePartPerJointReason);
-        wheelThere.ShouldBe(CreatureBuilder.OnePartPerJointReason);
-        Should.Throw<ArgumentException>(() => builder.AddWheel(withWheel));
+        secondServo.ShouldBe(UiText.Plain("One motor or brake per joint"));
+        Should.Throw<ArgumentException>(() => builder.AddWheel(joint));
     }
 
     [Fact]

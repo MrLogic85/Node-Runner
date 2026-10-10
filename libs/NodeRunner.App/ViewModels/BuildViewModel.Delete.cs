@@ -37,8 +37,9 @@ public sealed partial class BuildViewModel
             return;
         }
 
-        // A joint part's joint goes too when the delete takes its links and leaves none (#973): to the
-        // player the part is that joint, so clearing an area must not leave a bare joint behind.
+        // A joint part's joint goes too when the delete takes its links and its parts and leaves none
+        // (#973, #1044): to the player its parts are that joint, so clearing an area must not leave a
+        // bare joint behind. A joint that had no links stays.
         var partJoints = SelectedJointPartJoints().ToDictionary(joint => joint, joint => _builder.LinksAt(joint).Count);
         _history.Change(() =>
         {
@@ -46,7 +47,8 @@ public sealed partial class BuildViewModel
 
             foreach (var (joint, linksBefore) in partJoints)
             {
-                if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0)
+                if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0
+                    && !CreatureDef.HasJointPart(joint, _builder.Servos, _builder.Wheels))
                 {
                     _builder.RemoveNode(joint);
                 }

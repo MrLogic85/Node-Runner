@@ -25,7 +25,8 @@ public enum PartSettingsKind
 /// <see cref="Title"/>, what kind of part it is, so a renamed part still says what it is.
 /// <see cref="PanelId"/> says which part the panel shows across edits. <see cref="Readouts"/> are
 /// read-only values the part's settings derive, shown after its basic settings, like a Wheel's
-/// Weight (#129).
+/// Weight (#129). <see cref="OnThisJoint"/> are the "On this joint" tabs, top → down, when the
+/// part's joint holds two or more parts (#1044); null otherwise.
 /// </summary>
 public sealed record PartSettingsPresentation(
     int Id,
@@ -39,8 +40,12 @@ public sealed record PartSettingsPresentation(
     IReadOnlyList<ParameterSlider> Settings,
     IReadOnlyList<PartPickerPresentation>? Pickers = null,
     int? JointId = null,
-    IReadOnlyList<PartReadout>? Readouts = null)
+    IReadOnlyList<PartReadout>? Readouts = null,
+    IReadOnlyList<JointPartTab>? OnThisJoint = null)
 {
+    /// <summary>The index of this part's tab in <see cref="OnThisJoint"/>, or null without tabs.</summary>
+    public int? OnThisJointIndex => OnThisJoint?.Select((tab, index) => (tab, index)).First(entry => entry.tab.Part.Id == Id).index;
+
     /// <summary>
     /// The part the panel shows, kept across edits: <see cref="Id"/>, or a Servo's <see cref="JointId"/>,
     /// since a link change gives the Servo a new id (<c>docs/CREATURE_MODEL.md</c> → "Editing identity
@@ -67,6 +72,9 @@ public sealed record PartSettingsPresentation(
         _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Unknown part kind."),
     };
 }
+
+/// <summary>One "On this joint" tab (#1044): the part it selects and the kind whose glyph it shows.</summary>
+public sealed record JointPartTab(PartSettingsKind Kind, CreatureElementSelection Part);
 
 /// <summary>A read-only row in the Part settings panel: a label and the value it reads, like "Weight" and "1.2 kg".</summary>
 public sealed record PartReadout(UiText Label, UiText Value);

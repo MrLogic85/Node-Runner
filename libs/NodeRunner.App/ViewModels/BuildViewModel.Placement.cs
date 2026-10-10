@@ -13,7 +13,7 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
     /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet, and joint
-    /// parts, a Servo or a Wheel, on a joint that has none yet.
+    /// parts on a joint whose slot for them is free: one Wheel and one motor or brake (#1044).
     /// </summary>
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
@@ -139,7 +139,7 @@ public sealed partial class BuildViewModel
                 return PlacingTargets.None with
                 {
                     Joints = joints,
-                    RefusedJoints = Nodes.Where(node => !joints.Contains(node.Id) && JointPartAt(node.Id) is not null).Select(node => node.Id).ToHashSet(),
+                    RefusedJoints = Nodes.Where(node => !joints.Contains(node.Id) && JointPartsAt(node.Id).Count > 0).Select(node => node.Id).ToHashSet(),
                     JointRing = PartTray.PlacingRingRadius(placing),
                 };
             }

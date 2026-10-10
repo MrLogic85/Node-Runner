@@ -55,11 +55,14 @@ public sealed class WheelDefTests
         Should.Throw<ArgumentException>(() => new CreatureDef(_nodes, _beams, [], [], [], [], [new WheelDef(4, 2)], nextPartId: 7));
     }
 
-    // One part per joint until #1044: a Servo and a Wheel never share one.
+    // A joint holds one part per slot (#1044): a Servo and a Wheel share one, two Servos do not.
     [Fact]
-    public void CreatureDef_RefusesAWheelAndAServoOnOneJoint()
+    public void CreatureDef_TakesAServoAndAWheelOnOneJointButNotTwoServos()
     {
-        Should.Throw<ArgumentException>(() => new CreatureDef(_nodes, _beams, [], [new ServoDef(6, 1, 4, 5)], [], [], [new WheelDef(7, 1)], nextPartId: 8));
+        var stacked = new CreatureDef(_nodes, _beams, [], [new ServoDef(6, 1, 4, 5)], [], [], [new WheelDef(7, 1)], nextPartId: 8);
+
+        stacked.NodeRadius(1).ShouldBe(WheelDef.DefaultRadius);
+        Should.Throw<ArgumentException>(() => new CreatureDef(_nodes, _beams, [], [new ServoDef(6, 1, 4, 5), new ServoDef(7, 1, 5, 4)], [], [], [], nextPartId: 8));
     }
 
     [Theory]

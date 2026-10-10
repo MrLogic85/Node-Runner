@@ -110,6 +110,10 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void ServoLinkChangedEventHandler(int servoId, bool fixedRole, int linkId);
 
+    /// <summary>An "On this joint" tab was tapped (#1044): select that part instead.</summary>
+    [Signal]
+    public delegate void JointPartChosenEventHandler(int kind, int partId);
+
     /// <summary>The Advanced settings section was opened or closed (#903).</summary>
     [Signal]
     public delegate void AdvancedSettingsToggledEventHandler(bool open);
@@ -167,6 +171,7 @@ public partial class BuildScreen : Control
         var partTabs = GetNode<UiIconTabs>("%PartTabs");
         partTabs.SelectedIndex = PartTray.OpeningGroup();
         partTabs.TabSelected += OnPartTabSelected;
+        GetNode<UiIconTabs>("%PartStackTabs").TabSelected += OnPartStackTabSelected;
         GetNode<UiButton>("%PartDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         GetNode<UiButton>("%SelectionDelete").Activated += () => EmitSignal(SignalName.DeleteSelectionRequested);
         GetNode<UiButton>("%SelectionCopy").Activated += () => EmitSignal(SignalName.CopySelectionRequested);
@@ -735,9 +740,37 @@ public partial class BuildScreen : Control
             _presentation?.AdvancedSettingsOpen == true);
         ApplyPartReadouts(GetNode<Container>("%PartReadouts"), part.Readouts ?? []);
         ApplyPartPickers(part);
+        ApplyPartStack(part);
 
         GetNode<UiLabel>("%PartNote").ShowText(part.Note);
         GetNode<UiButton>("%PartDelete").Unavailable = !part.CanDelete;
+    }
+
+    /// <summary>The "On this joint" tabs (#1044), top → down, shown only when the part's joint holds two or more parts.</summary>
+    private void ApplyPartStack(PartSettingsPresentation part)
+    {
+        GetNode<Control>("%PartStack").Visible = part.OnThisJoint is not null;
+        if (part.OnThisJoint is not { } tabs)
+        {
+            return;
+        }
+
+        var strip = GetNode<UiIconTabs>("%PartStackTabs");
+        var icons = new Godot.Collections.Array<UiIconId>(tabs.Select(tab => PartSettingsIcon(tab.Kind)));
+        if (!strip.Icons.SequenceEqual(icons))
+        {
+            strip.Icons = icons;
+        }
+
+        strip.SelectedIndex = part.OnThisJointIndex ?? 0;
+    }
+
+    private void OnPartStackTabSelected(int index)
+    {
+        if (_presentation?.SinglePart?.OnThisJoint is { } tabs && index < tabs.Count)
+        {
+            EmitSignal(SignalName.JointPartChosen, (int)tabs[index].Part.Kind, tabs[index].Part.Id);
+        }
     }
 
     /// <summary>One read-only value row per readout, such as a Wheel's Weight (#129), after the basic settings.</summary>

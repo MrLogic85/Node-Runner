@@ -51,21 +51,6 @@ public sealed class BuildWheelTests
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One wheel per joint")));
     }
 
-    // One part per joint until #1044.
-    [Fact]
-    public void AWheelAndAServo_NeverShareAJoint()
-    {
-        var build = TwoBeams();
-        build.PlacePart(BuildPart.Wheel, _middleJoint);
-        build.PlacePart(BuildPart.Servo, _firstJoint);
-
-        build.CanPlacePart(BuildPart.Servo, _middleJoint, out var servoReason).ShouldBeFalse();
-        build.CanPlacePart(BuildPart.Wheel, _firstJoint, out var wheelReason).ShouldBeFalse();
-
-        servoReason.ShouldBe(CreatureBuilder.OnePartPerJointReason);
-        wheelReason.ShouldBe(CreatureBuilder.OnePartPerJointReason);
-    }
-
     [Fact]
     public void TapToPlace_PutsAWheelOnTheTappedJoint_AndKeepsTheTrayPick()
     {

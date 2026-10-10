@@ -464,8 +464,8 @@ public sealed class BuildGestures
             {
                 if (_press == SharedPress.Move && !_pressedNodeWasSelected && _pressedNode is { } joint)
                 {
-                    // A dragged joint part is selected, not the joint under it (#973).
-                    _build.ReplaceSelection(PartSet.Of(_build.JointPartAt(joint) ?? new(CreatureElementKind.Node, joint)));
+                    // A dragged joint's top part is selected, not the joint under it (#973, #1044).
+                    _build.ReplaceSelection(PartSet.Of(_build.JointPartsAt(joint).FirstOrDefault() ?? new(CreatureElementKind.Node, joint)));
                 }
 
                 // The group turns and scales about the frame's centre, where the Move handle is.
@@ -642,6 +642,10 @@ public sealed class BuildGestures
                 _build.ClearPickedPart();
             }
         }
+        else if (_pressedNode is { } joint)
+        {
+            _build.ToggleJointSelected(joint);
+        }
         else if (PressedElement() is { } element)
         {
             _build.ToggleSelected(element);
@@ -668,8 +672,7 @@ public sealed class BuildGestures
     }
 
     private CreatureElementSelection? PressedElement() =>
-        _pressedNode is { } node ? _build.JointPartAt(node) ?? new(CreatureElementKind.Node, node)
-        : _pressedSensor is { } sensor ? new(CreatureElementKind.Sensor, sensor)
+        _pressedSensor is { } sensor ? new(CreatureElementKind.Sensor, sensor)
         : _pressedLink is { } link ? link
         : _pressedBeam is { } beam ? new(CreatureElementKind.Beam, beam)
         : null;
@@ -842,7 +845,7 @@ public sealed class BuildGestures
     /// <summary>
     /// The parts whose centres lie in the box from <paramref name="start"/> to <paramref name="end"/>
     /// (#704): a joint's centre, a beam's or link's midpoint, and a sensor's, which is its beam's
-    /// midpoint. A joint part, a Servo or a Wheel, comes in place of its joint (#973). Null while the box is too small to count.
+    /// midpoint. A joint with parts comes in as all of them, never as the joint (#973, #1044). Null while the box is too small to count.
     /// </summary>
     private PartSet? PartsInBox(Vector2D start, Vector2D end)
     {
@@ -857,7 +860,7 @@ public sealed class BuildGestures
         bool MidInside(int nodeA, int nodeB) => Inside(Midpoint(NodeById(nodeA).Position, NodeById(nodeB).Position));
         var beams = _build.Beams.Where(beam => MidInside(beam.NodeA, beam.NodeB)).Select(beam => beam.Id).ToHashSet();
         return new PartSet(
-            _build.Nodes.Where(node => Inside(node.Position) && _build.JointPartAt(node.Id) is null).Select(node => node.Id).ToHashSet(),
+            _build.Nodes.Where(node => Inside(node.Position) && _build.JointPartsAt(node.Id).Count == 0).Select(node => node.Id).ToHashSet(),
             beams,
             _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id).ToHashSet(),
             _build.Servos.Where(servo => Inside(NodeById(servo.NodeId).Position)).Select(servo => servo.Id).ToHashSet(),

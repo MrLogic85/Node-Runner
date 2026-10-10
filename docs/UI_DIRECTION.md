@@ -256,7 +256,8 @@ The shell is filled `panel` over the frame card's `bg` (#347).
   then fades out over 0.2 s. The scene that uses it authors its children.
 - **Value rows:** label left, readout right, no padding.
 - **Tray tabs** (#330): glyph tabs sharing the strip's width, 4 px apart, 32
-  high, selected with `accent-soft`. **Tray rows** are `control-sm`
+  high, selected with `accent-soft`; also used for the "On this joint"
+  strip in Part settings (#1044). **Tray rows** are `control-sm`
   `UiPartRow`s with 20 px glyphs; a locked row shows only its lock and fades
   whole (#374, #964). A row is a native button: a tap that does not turn
   into a drag picks it (#805). The picked row has an `accent-soft` fill, an

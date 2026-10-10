@@ -89,6 +89,35 @@ public sealed partial class BuildViewModel
         SelectionChanged();
     }
 
+    /// <summary>
+    /// A tap on joint <paramref name="nodeId"/> (#1044): a bare joint is added or removed. A joint
+    /// with parts steps down its stack (<see cref="JointPartsAt"/>, top → down): with none of them
+    /// selected it adds the top one; otherwise it swaps the deepest selected one for the next, or,
+    /// past the last, removes them all.
+    /// </summary>
+    public void ToggleJointSelected(int nodeId)
+    {
+        var parts = JointPartsAt(nodeId);
+        if (parts.Count == 0)
+        {
+            ToggleSelected(new CreatureElementSelection(CreatureElementKind.Node, nodeId));
+            return;
+        }
+
+        var deepest = parts.ToList().FindLastIndex(part => SelectedSet(part.Kind).Contains(part.Id));
+        foreach (var part in parts)
+        {
+            SelectedSet(part.Kind).Remove(part.Id);
+        }
+
+        if (deepest + 1 < parts.Count)
+        {
+            SelectedSet(parts[deepest + 1].Kind).Add(parts[deepest + 1].Id);
+        }
+
+        SelectionChanged();
+    }
+
     private IEnumerable<int> SelectedPartIds() =>
         _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds);
 
@@ -152,7 +181,8 @@ public sealed partial class BuildViewModel
         _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId).ToList();
 
     // The joints under the selected joint parts, Servos and Wheels.
-    private List<int> SelectedJointPartJoints() =>
+    // Each joint once, though a stack's Servo and Wheel can both be selected (#1044).
+    private HashSet<int> SelectedJointPartJoints() =>
         [.. SelectedServoJoints(), .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId)];
 
     // Drops the ids the body no longer has. Changing a Servo's links gives it a new id (#911, #849),

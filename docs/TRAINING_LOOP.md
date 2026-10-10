@@ -242,7 +242,8 @@ the reference's "a training session has finished" (#369).
     on the arena selects a part of the followed shadow; a part takes a tap
     within 16 px of it on screen at least, so it stays easy to hit zoomed
     out; a tap on a joint with a part on it selects the part
-    (`docs/BUILD_MODE.md` → "Parts stand in for their joint"). The
+    (`docs/BUILD_MODE.md` → "Parts stand in for their joint"); on a joint
+    with two parts, the one drawn on top there (#1066). The
     selected part's Build name shows in a callout above the
     followed shadow and moves with it (#388).
   - **Resume (warm start, #538).** Opening Training continues from the

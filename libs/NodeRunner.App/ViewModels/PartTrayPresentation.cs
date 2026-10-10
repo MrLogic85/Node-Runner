@@ -115,7 +115,7 @@ public static class PartTray
         ? UiText.Plain("Tap a beam to place it. A beam holds one sensor.")
         : part == BuildPart.Wheel
             ? UiText.Plain("Tap a joint to place it. A joint holds one wheel.")
-            : UiText.Plain("Tap a joint to place it. A joint holds one part.");
+            : UiText.Plain("Tap a joint to place it. A joint holds one motor or brake.");
 
     /// <summary>
     /// The tab the tray opens on: the first with a part the player can place (#887), so a

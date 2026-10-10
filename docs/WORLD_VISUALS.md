@@ -123,7 +123,8 @@ drawn over it.
   to the selected joints' rings, so the group reads as one outline.
 - **Sensor:** its lines turn `halo`.
 - **Wheel:** the joint's ring, outside the tyre. The Wheel stands in for its
-  joint, which has no mark of its own.
+  joint, which has no mark of its own. With a Servo on the same joint, each
+  selected part shows its own mark (#1044).
 - **Servo:** a keyhole `halo` outline. Selected alone, a hatched `detail`
   band also marks its Fixed link and an `accent` band its Target link.
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
@@ -191,8 +192,8 @@ above every shadow.
 - **Placing a part:** the glyph rides on a 48 px raised tile with an
   `accent` line above the finger. A dragged sensor shows free beams `halo`,
   taken beams dashed `danger`, and its picture where it would land. A
-  dragged Servo or Wheel rings free joints `halo` and joints holding a part
-  dashed `danger`, each ring at the size the part will have there
+  dragged Servo or Wheel rings the joints that take it `halo` and the joints
+  that refuse it dashed `danger` (slot rules: `docs/BUILD_MODE.md`), each ring at the size the part will have there
   (`PartTray.PlacingRingRadius`); a dragged Wheel also shows itself on
   a free joint it would land on. A picked part (#1016) marks the same free and taken targets
   from the moment it is picked, so a tap can find them. The targets that
