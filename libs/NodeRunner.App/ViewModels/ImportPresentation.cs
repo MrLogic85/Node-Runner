@@ -89,7 +89,7 @@ public sealed record ImportPresentation(
         _ => (UiText.Plain("This code is damaged"), UiText.Plain("Part of it is missing or changed. Ask for the code again.")),
     };
 
-    // In the Parts tray's order, which the screen's authored rows follow.
+    // One row per kind of part the creature has; the screen's authored rows set the order.
     private static ImportPartRow[] PartsOf(CreatureDef creature) =>
     [
         .. new ImportPartRow[]

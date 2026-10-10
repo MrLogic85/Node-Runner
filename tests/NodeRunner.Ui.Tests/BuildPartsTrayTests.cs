@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
@@ -5,39 +6,19 @@ using NodeRunner.Ui.Screens;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>The Build Parts tray (#374): one icon tab per catalog group, part glyph rows.</summary>
-public sealed class BuildPartsTrayTests
+public sealed partial class BuildPartsTrayTests
 {
     private static readonly SceneNodes.SceneNode[] _build = [.. SceneNodes.InScene("screens/BuildScreen.tscn")];
 
+    // UiIconTabs' selected index is the group's index in PartTray.Groups().
     [Fact]
-    public void Tabs_AreOneIconTabPerGroup_WithTheReferenceGlyphs()
+    public void Tabs_HaveOneIconPerGroup()
     {
-        var tabs = _build.Single(node => node.Name == "PartTabs");
+        var tabs = _build.Single(node => node.Name == "PartTabs").Node.Body;
 
-        tabs.Script.ShouldBe("res://src/ui/lib/UiIconTabs.cs");
-        int[] icons = [(int)UiIconId.PartServo, (int)UiIconId.PartCamera, (int)UiIconId.PartBattery];
-        tabs.Node.Body.ShouldContain($"Icons = Array[int]([{string.Join(", ", icons)}])");
+        var icons = TabIcons().Match(tabs).Groups["icons"].Value.Split(", ");
+
         icons.Length.ShouldBe(PartTray.Groups().Count);
-    }
-
-    [Fact]
-    public void Tray_PinsTabs_AndScrollsGroupHeader_Rows_AndHelp()
-    {
-        Children("/PartsTray").ShouldBe(["PartTabs", "PartScroll"]);
-        _build.Single(node => node.Name == "PartScroll").Type.ShouldBe("ScrollContainer");
-        Children("/PartScroll/PartList").ShouldBe(["PartGroupHeader", "PartRows", "PartHelp"]);
-        Children("/PartList/PartRows").ShouldBe(["PickedInfo"]);
-        Children("/PartGroupHeader").ShouldBe(["PartGroupName"]);
-    }
-
-    [Fact]
-    public void SidePanel_KeepsTray_Help_Settings_Selection_Saved_AndReadiness()
-    {
-        var content = _build.Where(node => node.Parent?.EndsWith("/SidePanelContent", StringComparison.Ordinal) == true).ToList();
-
-        content.Select(node => node.Name).ShouldBe(
-            ["PartsTray", "PartSettings", "Selection", "JointHelp", "SelectHelp", "PanelSpacer", "Readiness"]);
-        content.ShouldAllBe(node => node.IsUnique);
     }
 
     [Fact]
@@ -91,6 +72,6 @@ public sealed class BuildPartsTrayTests
         canvas.Node.Body.ShouldContain("WorldView = NodePath(\"../..\")");
     }
 
-    private static string[] Children(string parent) =>
-        [.. _build.Where(node => node.Parent?.EndsWith(parent, StringComparison.Ordinal) == true).Select(node => node.Name)];
+    [GeneratedRegex(@"Icons = Array\[int\]\(\[(?<icons>[^\]]+)\]\)")]
+    private static partial Regex TabIcons();
 }

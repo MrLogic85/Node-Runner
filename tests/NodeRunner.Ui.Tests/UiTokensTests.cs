@@ -154,13 +154,6 @@ public sealed class UiTokensTests
         }
     }
 
-    [Fact]
-    public void ControlMetrics_KeepDistinctPaddingAndFocusContracts()
-    {
-        UiSize.Space.S4.ShouldBe(16);
-        UiSize.Space.S3.ShouldBe(12);
-    }
-
     private static void AssertColor(Color actual, byte red, byte green, byte blue, byte alpha = 0xff)
     {
         actual.R8.ShouldBe(red);

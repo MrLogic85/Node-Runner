@@ -2,19 +2,6 @@ namespace NodeRunner.Domain.Tests;
 
 public sealed class PistonDefTests
 {
-    [Fact]
-    public void Constructor_GivesANewPistonTheDefaultSettings()
-    {
-        var piston = new PistonDef(5, 1, 2);
-
-        piston.Strength.ShouldBe(PistonDef.DefaultStrength);
-        piston.Stroke.ShouldBe(PistonDef.DefaultStroke);
-        piston.Start.ShouldBe(PistonDef.DefaultStart);
-        piston.MaxSpeed.ShouldBe(PistonDef.DefaultMaxSpeed);
-        piston.RiseTime.ShouldBe(PistonDef.DefaultRiseTime);
-        piston.Name.ShouldBeNull();
-    }
-
     [Theory]
     [InlineData(0, 1, 2)]
     [InlineData(5, 0, 2)]

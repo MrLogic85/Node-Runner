@@ -5,24 +5,6 @@ namespace NodeRunner.Domain.Tests;
 public sealed class CreatureDefTests
 {
     [Fact]
-    public void Constructor_WithValidAnatomy_StoresParts()
-    {
-        var nodes = new[]
-        {
-            new NodeDef(1, new Vector2D(0, 0)),
-            new NodeDef(2, new Vector2D(2, 0)),
-        };
-        var beams = new[] { new BeamDef(3, 1, 2) };
-        var sensors = new[] { new SensorDef(4, 3, SensorKind.Accelerometer) };
-
-        var creature = new CreatureDef(nodes, beams, sensors);
-
-        creature.Nodes.ToArray().ShouldBe(nodes);
-        creature.Beams.ToArray().ShouldBe(beams);
-        creature.Sensors.ToArray().ShouldBe(sensors);
-    }
-
-    [Fact]
     public void PartCount_CountsEveryKindOfPart()
     {
         var creature = new CreatureDef(

@@ -6,9 +6,9 @@ namespace NodeRunner.Ui.Tests;
 public sealed class ImportScreenTests
 {
     [Fact]
-    public void PartRows_HaveOneRowPerKindOfPart_NamedAfterIt_InThePartsTrayOrder() =>
+    public void PartRows_HaveOneRowPerKindOfPart_NamedAfterIt() =>
         SceneNodes.InScene("screens/ImportScreen.tscn")
             .Where(node => node.Parent?.EndsWith("/PartRows", StringComparison.Ordinal) == true)
             .Select(node => node.Name)
-            .ShouldBe(Enum.GetNames<PartSettingsKind>());
+            .ShouldBe(Enum.GetNames<PartSettingsKind>(), ignoreOrder: true);
 }

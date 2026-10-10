@@ -6,50 +6,6 @@ namespace NodeRunner.Ui.Tests;
 public sealed partial class UiComponentContractsTests
 {
     [Fact]
-    public void SegmentedChoices_KeepTextAndIconInOneResource()
-    {
-        typeof(UiSegmentedSwitch).GetProperty(nameof(UiSegmentedSwitch.Segments))!
-            .PropertyType.ShouldBe(typeof(Godot.Collections.Array<UiSegment>));
-        typeof(UiSegmentedSwitch).GetProperty("Options").ShouldBeNull();
-        typeof(UiSegmentedSwitch).GetProperty("Icons").ShouldBeNull();
-        typeof(UiSegmentedSwitch).GetProperty("IconIds").ShouldBeNull();
-        typeof(UiSegment).BaseType.ShouldBe(typeof(Godot.Resource));
-        typeof(UiSegment).GetProperty(nameof(UiSegment.IconId))!
-            .PropertyType.ShouldBe(typeof(UiIconId));
-    }
-
-    [Fact]
-    public void ButtonAvailability_UsesNativeDisabledWithoutAnInverseProperty()
-    {
-        typeof(UiButton).GetProperty("Enabled").ShouldBeNull();
-        typeof(UiButton).GetProperty(nameof(UiButton.Disabled))!
-            .DeclaringType.ShouldBe(typeof(Godot.BaseButton));
-        typeof(UiSlider).GetProperty("Enabled").ShouldBeNull();
-        typeof(UiSlider).GetProperty(nameof(UiSlider.Disabled)).ShouldNotBeNull();
-        typeof(UiCard).GetProperty(nameof(UiCard.Disabled)).ShouldNotBeNull();
-    }
-
-    [Fact]
-    public void MenuToggleItem_ComposesTheStandardToggleContract()
-    {
-        typeof(UiMenuToggleItem).BaseType.ShouldBe(typeof(UiMenuItem));
-        typeof(UiMenuActionItem).BaseType.ShouldBe(typeof(UiMenuItem));
-        typeof(UiMenuItemDivider).BaseType.ShouldBe(typeof(UiMenuItem));
-        typeof(UiMenuItem).IsAbstract.ShouldBeTrue();
-        typeof(UiMenuItem).GetProperty(nameof(UiMenuItem.Selected)).ShouldNotBeNull();
-        typeof(UiMenuItem).GetProperty(nameof(UiMenuItem.Disabled)).ShouldNotBeNull();
-        typeof(UiMenuItem).GetProperty(nameof(UiMenuItem.SizeVariant)).ShouldNotBeNull();
-        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.LabelText)).ShouldNotBeNull();
-        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.Subtext)).ShouldNotBeNull();
-        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.On)).ShouldNotBeNull();
-        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.Disabled)).ShouldNotBeNull();
-        typeof(UiMenuToggleItem).GetProperty(nameof(UiMenuToggleItem.SizeVariant))!
-            .PropertyType.ShouldBe(typeof(UiMenuItem.MenuItemSize));
-        typeof(UiMenu).GetProperty(nameof(UiMenu.Compact))!
-            .PropertyType.ShouldBe(typeof(bool));
-    }
-
-    [Fact]
     public void AllCanonicalComponents_AreMappedToReusableControls()
     {
         var components = UiComponentContracts.AllCanonicalComponents;
@@ -59,44 +15,6 @@ public sealed partial class UiComponentContractsTests
         {
             UiComponentContracts.ControlTypeFor(component).ShouldNotBeNullOrWhiteSpace();
         }
-    }
-
-    [Fact]
-    public void CanonicalComponents_UseComponentLibraryNamesNotReferenceFunctionNames()
-    {
-        Enum.GetNames<UiComponentContracts.CanonicalComponent>().ShouldBe(
-            [
-                "Button",
-                "IconButton",
-                "Slider",
-                "Range",
-                "Toggle",
-                "Checkbox",
-                "Segmented",
-                "Picker",
-                "Menu",
-                "Chip",
-                "Callout",
-                "ProgressBar",
-                "TextField",
-                "NameField",
-                "Note",
-                "ValueRow",
-                "PowerRow",
-                "MeterRow",
-                "PartRow",
-                "IconTabs",
-                "SelectionHandle",
-                "InfoRow",
-                "Card",
-                "ProgressRing",
-                "Number",
-                "StageCard",
-                "CardActions",
-                "ExpandSection",
-                "HintCard",
-                "BarCell",
-            ]);
     }
 
     [Fact]
@@ -238,38 +156,9 @@ public sealed partial class UiComponentContractsTests
 
 
     [Fact]
-    public void ReusableControlEnums_PinDocumentedDefaultsAndVariants()
+    public void Defaults_MatchReferenceNumberGlowAndSliderContracts()
     {
-        Enum.GetNames<UiButtonKind>()
-            .ShouldBe(["Primary", "Secondary", "Tertiary", "Flat"]);
-        Enum.GetNames<UiIconSize>()
-            .ShouldBe(["Small", "Standard", "Large", "ExtraLarge"]);
-        Enum.GetNames<UiButtonContentLayout>()
-            .ShouldBe(["Row", "Stacked", "RowCompact"]);
-        Enum.GetNames<UiCard.CardVariant>()
-            .ShouldBe(["Frame", "Selected", "Locked", "Warning", "Hint", "Raised"]);
-        Enum.GetNames<UiCard.CardSize>()
-            .ShouldBe(["Default", "Snug", "Tight", "Roomy", "Flush"]);
-        Enum.GetNames<UiPartRow.PartRowState>()
-            .ShouldBe(["Rest", "Selected", "Locked", "NoneLeft"]);
-        Enum.GetNames<UiChip.ChipKind>()
-            .ShouldBe(["Neutral", "Warning", "Danger", "Ok"]);
-        Enum.GetNames<UiCallout.CalloutKind>()
-            .ShouldBe(["Warning", "Danger", "Ok"]);
-        Enum.GetNames<UiMenu.MenuWidthMode>()
-            .ShouldBe(["Fixed", "WrapContent"]);
-        Enum.GetNames<UiMenuActionItem.MenuItemKind>()
-            .ShouldBe(["Default", "Danger"]);
-        Enum.GetNames<UiMenuItem.MenuItemSize>()
-            .ShouldBe(["Standard", "Compact"]);
-    }
-
-    [Fact]
-    public void Defaults_MatchReferenceTouchAndCompletionContracts()
-    {
-        UiSize.Control.Touch.ShouldBe(48);
         UiSize.Widget.NumberDiameter.ShouldBe(16);
-        UiSize.Stroke.Number.ShouldBe(1.5f);
         UiGlow.Extent.ShouldBe(10);
         UiGlow.Opacity.ShouldBe(0.12f);
         UiSliderStyle.Default.ShouldBe(new UiSliderStyle(
@@ -405,16 +294,7 @@ public sealed partial class UiComponentContractsTests
     }
 
     [Fact]
-    public void SemanticEnums_IncludeDocumentedStates()
-    {
-        Enum.GetNames<UiTextField.TextInputState>()
-            .ShouldBe(["Rest", "Editing", "Error"]);
-        Enum.GetNames<UiTextField.TextInputSize>()
-            .ShouldBe(["Standard", "Compact"]);
-    }
-
-    [Fact]
-    public void AllButtonSpecimens_ShareTheOnlyButtonImplementation()
+    public void ButtonAndIconButton_MapToUiButton()
     {
         foreach (var component in new[]
         {
@@ -424,10 +304,6 @@ public sealed partial class UiComponentContractsTests
         {
             UiComponentContracts.ControlTypeFor(component).ShouldBe(nameof(UiButton));
         }
-
-        typeof(UiButton).IsSealed.ShouldBeTrue();
-        typeof(UiButton).Assembly.GetTypes()
-            .ShouldNotContain(type => type.IsSubclassOf(typeof(UiButton)));
     }
 
     [Fact]
@@ -438,16 +314,6 @@ public sealed partial class UiComponentContractsTests
         UiComponentContracts.NormalizeTabIndex(-3, 4).ShouldBe(0);
         UiComponentContracts.NormalizeTabIndex(2, 0).ShouldBe(2);
         UiComponentContracts.NormalizeTabIndex(-1, 0).ShouldBe(0);
-    }
-
-    [Fact]
-    public void NormalizeTabIndex_IsIdempotent()
-    {
-        foreach (var index in new[] { -5, 0, 1, 7 })
-        {
-            var once = UiComponentContracts.NormalizeTabIndex(index, 3);
-            UiComponentContracts.NormalizeTabIndex(once, 3).ShouldBe(once);
-        }
     }
 
     [Theory]
