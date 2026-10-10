@@ -30,6 +30,12 @@ Every part has a stable id (see "Editing identity rules"). Ids are machine
 identity only: not display, draw or brain-port order, and not names.
 Display names are optional, may repeat and are never keys.
 
+**Air drag** (#1112): air slows a moving creature by about a tenth of its
+speed each second, and slows its turning more, so a creature that builds up
+speed, on Wheels for example, keeps most of it. A Wheel's spin barely slows
+(see Wheel). Drag is added only where a real need shows up, with the reason
+recorded here.
+
 ```
 CreatureDef  ──build──▶  physical body  ──sensors──▶  model  ──outputs──▶  servos + pistons  ──force──▶  physical body
    (data)                    (physics)                (control)                                (physics)
@@ -203,6 +209,8 @@ fold.
 - **Settings:** **Radius** 0.4–1 m (the joint's radius, see Node) and
   **Grip** 0–100%, how well its tyre holds the ground: its friction, which
   the ground can only lower.
+- **Spin:** a free wheel coasts for a long time but does not spin
+  forever.
 - **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
   at 0.4 m, added to its joint. Derived, never saved.
 - **Driving it later:** #1068, #1070, #1044.
