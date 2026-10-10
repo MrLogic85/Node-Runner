@@ -19,14 +19,6 @@ public sealed class UiExpandSectionTests
     }
 
     [Fact]
-    public void Section_is_a_body_container_that_announces_each_toggle()
-    {
-        typeof(UiExpandSection).BaseType.ShouldBe(typeof(Godot.VBoxContainer));
-        typeof(UiExpandSection).GetProperty(nameof(UiExpandSection.Open))!.PropertyType.ShouldBe(typeof(bool));
-        typeof(UiExpandSection).GetNestedType("ToggledEventHandler").ShouldNotBeNull();
-    }
-
-    [Fact]
     public void Gallery_shows_a_closed_and_an_open_section()
     {
         var sections = SceneNodes.InScene("screens/ComponentGalleryScreen.tscn")

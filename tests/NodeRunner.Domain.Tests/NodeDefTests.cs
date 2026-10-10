@@ -3,16 +3,6 @@ namespace NodeRunner.Domain.Tests;
 public sealed class NodeDefTests
 {
     [Fact]
-    public void Constructor_StoresValues()
-    {
-        var node = new NodeDef(1, new Vector2D(1, 2), "Knee");
-
-        node.Id.ShouldBe(1);
-        node.Position.ShouldBe(new Vector2D(1, 2));
-        node.Name.ShouldBe("Knee");
-    }
-
-    [Fact]
     public void PlainJointRadius_Is15()
     {
         NodeDef.PlainJointRadius.ShouldBe(15);

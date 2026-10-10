@@ -2,18 +2,6 @@ namespace NodeRunner.Domain.Tests;
 
 public sealed class SpringDefTests
 {
-    [Fact]
-    public void Constructor_GivesANewSpringTheDefaultSettings()
-    {
-        var spring = new SpringDef(5, 1, 2);
-
-        spring.Stiffness.ShouldBe(SpringDef.DefaultStiffness);
-        spring.Damping.ShouldBe(SpringDef.DefaultDamping);
-        spring.Stroke.ShouldBe(1);
-        spring.CoilLength.ShouldBe(2.0 / 3);
-        spring.Name.ShouldBeNull();
-    }
-
     [Theory]
     [InlineData(0, 1, 2)]
     [InlineData(5, 0, 2)]

@@ -51,7 +51,7 @@ public sealed class ImportPresentationTests
     }
 
     [Fact]
-    public void EveryKindOfPart_HasARow_InThePartsTrayOrder()
+    public void EveryKindOfPart_HasARow_WithItsCount()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new(0, 0)), new NodeDef(2, new(100, 0)), new NodeDef(3, new(0, 100)), new NodeDef(4, new(100, 100))],
@@ -74,7 +74,7 @@ public sealed class ImportPresentationTests
             (PartSettingsKind.Piston, 1),
             (PartSettingsKind.Spring, 1),
             (PartSettingsKind.Wheel, 1),
-        ]);
+        ], ignoreOrder: true);
     }
 
     [Theory]

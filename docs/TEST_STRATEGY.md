@@ -66,6 +66,7 @@ Godot scene tree. Each concern's rule lives in the owning doc:
 | Text is translated once, by Godot | `UiTextTranslationTests`, `UiTranslationContextTests`, `TranslationTemplateTests` | `docs/LOCALIZATION.md`, `project/src/ui/AGENTS.md` |
 | Screens reuse the library | `UiComponentContractsTests`, `RewrittenSceneTests`, `UiSourceGuardTests` | `docs/UI_DIRECTION.md` → "Who owns what", `project/src/ui/AGENTS.md` |
 | Saved scenes survive export | `SceneEditableChildrenTests`, `SceneParentPathTests` | Export re-packs every scene, and a node added inside an instance that is not `[editable]`, under a stale parent path, or beside a same-named sibling vanishes only on device (#333, #407, #496) |
+| Saved enum numbers keep their meaning | `SceneSavedEnumsTests` | The test's summary |
 | Every route opens its scene | `SceneRouterTests` | `docs/ARCHITECTURE.md` → "Navigation" |
 
 Behaviour is tested apart from layout: rules and state live in App
