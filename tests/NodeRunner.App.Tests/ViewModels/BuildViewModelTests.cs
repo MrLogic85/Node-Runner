@@ -1311,4 +1311,43 @@ public sealed class BuildViewModelTests
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))],
         [new BeamDef(3, 1, 2)],
         [new SensorDef(4, 3, SensorKind.Camera)]);
+
+    [Fact]
+    public void ShownCameraRays_LeaveTheBeamMiddleAndTurnWithTheBeam()
+    {
+        var (build, camera, _) = DownwardBeamWithCameraAndAccelerometer();
+        build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
+        build.SetParameter(PartParameterId.Aim, Math.PI / 4);
+        build.SetParameter(PartParameterId.Spread, Math.PI / 2);
+        build.SetParameter(PartParameterId.CameraRange, 300);
+
+        var (origin, ends) = build.ShownCameraRays().ShouldHaveSingleItem();
+
+        origin.ShouldBe(new Vector2D(0, 50));
+        // Aimed 45° off the downward beam, the outer rays 45° either side of that: straight down,
+        // 45° towards −x (300 × cos 45° ≈ 212.1) and level towards −x.
+        ends.Select(end => (Math.Round(end.X, 1), Math.Round(end.Y, 1)))
+            .ShouldBe([(0, 350), (-212.1, 262.1), (-300, 50)], ignoreOrder: true);
+    }
+
+    [Fact]
+    public void ShownCameraRays_NoneWhileTheSelectionHidesTheCamerasSettings()
+    {
+        var (build, camera, accelerometer) = DownwardBeamWithCameraAndAccelerometer();
+        build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
+        build.ToggleSelected(new(CreatureElementKind.Sensor, accelerometer));
+
+        build.ShownCameraRays().ShouldBeEmpty();
+    }
+
+    internal static (BuildViewModel Build, int Camera, int Accelerometer) DownwardBeamWithCameraAndAccelerometer()
+    {
+        var builder = new CreatureBuilder();
+        builder.AddNode(new Vector2D(0, 0));
+        builder.AddNode(new Vector2D(0, 100));
+        builder.AddNode(new Vector2D(100, 100));
+        builder.AddSensor(builder.AddBeam(1, 2), SensorKind.Camera, out var camera, out _).ShouldBeTrue();
+        builder.AddSensor(builder.AddBeam(2, 3), SensorKind.Accelerometer, out var accelerometer, out _).ShouldBeTrue();
+        return (new BuildViewModel(builder), camera, accelerometer);
+    }
 }
