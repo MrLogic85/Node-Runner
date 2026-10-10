@@ -141,19 +141,44 @@ public sealed class BuildPistonTests
     }
 
     [Fact]
-    public void TapOnAPiston_SelectsIt_BeforeTheBeamUnderIt()
+    public void TapOnAPiston_SelectsIt_WhereItIsDrawnOverABeam()
     {
+        // The Piston reaches lower than the beam, so it draws over it there (#1107).
         var (build, gestures) = ThreeLooseJoints();
-        var below = build.PlaceNode(new Vector2D(50, -60));
-        var above = build.PlaceNode(new Vector2D(50, 60));
-        build.ConnectLink(BuildLink.Beam, below, above).ShouldNotBeNull();
-        var link = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
+        var left = build.PlaceNode(new Vector2D(-60, 50));
+        var right = build.PlaceNode(new Vector2D(60, 50));
+        build.ConnectLink(BuildLink.Beam, left, right).ShouldNotBeNull();
+        var link = build.ConnectLink(BuildLink.Piston, 1, 3)!.Value;
         build.ActiveTool = BuildTool.Parts;
 
-        Tap(gestures, new Vector2D(50, 0));
+        Tap(gestures, new Vector2D(0, 50));
 
         build.SingleSelectedPistonId.ShouldBe(link);
         build.SelectedBeamCount.ShouldBe(0);
+    }
+
+    // #1107: a selection rises to the selected surface, so a touch hits it where it now covers the Piston.
+    [Fact]
+    public void ASelectedBeamOrJoint_RaisesTheBeam_SoATouchHitsItOverAPiston()
+    {
+        var (build, _) = ThreeLooseJoints();
+        var left = build.PlaceNode(new Vector2D(-60, 50));
+        var right = build.PlaceNode(new Vector2D(60, 50));
+        var beam = new CreatureElementSelection(CreatureElementKind.Beam, build.ConnectLink(BuildLink.Beam, left, right)!.Value);
+        var piston = new CreatureElementSelection(CreatureElementKind.Piston, build.ConnectLink(BuildLink.Piston, 1, 3)!.Value);
+        var crossing = new Vector2D(0, 50);
+        build.DrawnPartAt(crossing, PlacingTargets.None).ShouldBe(piston);
+
+        build.ReplaceSelection(PartSet.Of(beam));
+        build.DrawnPartAt(crossing, PlacingTargets.None).ShouldBe(beam);
+
+        build.ReplaceSelection(PartSet.Of(new CreatureElementSelection(CreatureElementKind.Node, right)));
+        build.DrawnPartAt(crossing, PlacingTargets.None).ShouldBe(beam);
+
+        var servo = build.PlacePart(BuildPart.Servo, new CreatureElementSelection(CreatureElementKind.Node, left)).ShouldNotBeNull();
+        build.ReplaceSelection(PartSet.Of(new CreatureElementSelection(CreatureElementKind.Servo, servo)));
+        build.DrawnPartAt(crossing, PlacingTargets.None).ShouldBe(beam);
+        build.RaisedParts(build.Selection, PlacingTargets.None).Links.ShouldContain(beam.Id);
     }
 
     [Fact]

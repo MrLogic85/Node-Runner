@@ -18,7 +18,7 @@ public partial class SpringPart : PartVisual
     private bool _haloB;
 
     public SpringPart()
-        : base(CreatureLayers.Links, CreatureLayers.SelectedLinks)
+        : base(DrawSlot.Link)
     {
     }
 

@@ -14,7 +14,7 @@ public partial class SensorPart : PartVisual
     private Vector2 _cameraAim = Vector2.Down;
 
     public SensorPart()
-        : base(CreatureLayers.Sensors, CreatureLayers.SelectedSensors)
+        : base(DrawSlot.Sensor)
     {
     }
 

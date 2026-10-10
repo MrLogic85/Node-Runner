@@ -6,14 +6,12 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>Build canvas marks for joint parts: a selected Servo's link bands, and the tray placing feedback of a Servo or Wheel (#129).</summary>
+/// <summary>Build canvas marks for joint parts: a selected Servo's link bands.</summary>
 public static class BuildServoDrawing
 {
     private const float _servoBeamBandHalfWidth = 9;
     private const float _servoPistonBandHalfWidth = 11;
     private const float _servoSpringBandHalfWidth = 13;
-    private const int _refusedRingDashes = 8;
-    private const int _refusedDashSegments = 8;
 
     public static void DrawSelectedBands(CanvasItem canvas, BuildViewModel viewModel, VisualTheme theme, Transform2D viewTransform)
     {
@@ -36,44 +34,6 @@ public static class BuildServoDrawing
         }
 
         canvas.DrawSetTransformMatrix(viewTransform);
-    }
-
-    /// <summary>
-    /// While a joint part is dragged or picked (#1016), a joint that takes it shows the <c>halo</c> ring
-    /// round the part as placed (<see cref="BuildGestures.PlacingRingRadius"/>), and one that holds a
-    /// part a dashed <c>danger</c> ring round its own edge.
-    /// </summary>
-    public static void DrawPlacingFeedback(CanvasItem canvas, BuildViewModel viewModel, BuildPart? placing, VisualTheme theme, Transform2D viewTransform)
-    {
-        if (placing is not { } part || !PartTray.IsJointPart(part))
-        {
-            return;
-        }
-
-        var partRadius = BuildGestures.PlacingRingRadius(part);
-
-        using var pen = UiPixelPen.Begin(canvas, viewTransform);
-        foreach (var node in viewModel.Nodes)
-        {
-            var target = new CreatureElementSelection(CreatureElementKind.Node, node.Id);
-            var canPlace = viewModel.CanPlacePart(part, target, out _);
-            var occupied = viewModel.JointPartAt(node.Id) is not null;
-            if (!canPlace && !occupied)
-            {
-                continue;
-            }
-
-            var center = ToGodot(node.Position);
-            var radius = (float)SelectionMarks.JointHalo(canPlace ? partRadius : viewModel.NodeRadius(node.Id));
-            if (canPlace)
-            {
-                pen.Ring(center, radius, theme.SelectionGlow, theme.SelectionRingWidth);
-            }
-            else
-            {
-                pen.DashedRing(center, radius, _refusedRingDashes, _refusedDashSegments, theme.Danger, theme.SelectionRingWidth);
-            }
-        }
     }
 
     private static void DrawLinkBand(CanvasItem canvas, BuildViewModel viewModel, VisualTheme theme, Transform2D toPixels, float scale, int linkId, bool fixedMark)

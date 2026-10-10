@@ -2044,9 +2044,28 @@ public class BuildGesturesTests
     [Theory]
     [InlineData(BuildLink.Piston)]
     [InlineData(BuildLink.Spring)]
-    public void ASensorDroppedOnALinkOverAFreeBeam_StaysWithTheNoteOnTheLink(BuildLink kind)
+    public void ASensorDroppedWhereALinkCrossesAFreeBeam_GoesOnTheBeam_RaisedOverTheLink(BuildLink kind)
     {
-        // The link crosses free beam 7 at (100, 150), well outside its joints' reach (#1033).
+        // Free beam 7 rises over the link crossing it at (100, 150) while the sensor moves (#1107).
+        var (build, gestures) = SensorsOnThreeBeams();
+        var top = build.PlaceNode(new Vector2D(100, 100));
+        var bottom = build.PlaceNode(new Vector2D(100, 200));
+        build.ConnectLink(kind, top, bottom).ShouldNotBeNull();
+        gestures.Press(new Vector2D(100, 0));
+        gestures.Drag(new Vector2D(100, 150));
+
+        gestures.SensorDropTarget.ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 7));
+        gestures.Release(new Vector2D(100, 150));
+
+        build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(7);
+        build.PlacementNote.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(BuildLink.Piston)]
+    [InlineData(BuildLink.Spring)]
+    public void ASensorDroppedOnALink_StaysWithTheNoteOnTheLink(BuildLink kind)
+    {
         var (build, gestures) = SensorsOnThreeBeams();
         var top = build.PlaceNode(new Vector2D(100, 100));
         var bottom = build.PlaceNode(new Vector2D(100, 200));
@@ -2054,11 +2073,11 @@ public class BuildGesturesTests
         var changes = 0;
         build.AnatomyChanged += (_, _) => changes++;
         gestures.Press(new Vector2D(100, 0));
-        gestures.Drag(new Vector2D(100, 150));
+        gestures.Drag(new Vector2D(100, 130));
 
         gestures.SensorDropTarget.ShouldBe(link);
         gestures.MovedSensorPreview.ShouldBeNull();
-        gestures.Release(new Vector2D(100, 150));
+        gestures.Release(new Vector2D(100, 130));
 
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, link, BuildViewModel.GoesOnABeamReason(SensorKind.Accelerometer)));
@@ -2108,11 +2127,11 @@ public class BuildGesturesTests
         build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 6 } });
         gestures.Press(new Vector2D(100, 0));
         gestures.Drag(new Vector2D(100, 150));
-        build.BeamTakesMovingSensor(6, 7).ShouldBe(true);
+        build.PlacingTargetsOf(null, 6).Beams.ShouldContain(7);
 
         build.DeleteSelectedParts();
         gestures.MovedSensorPreview.ShouldBeNull();
-        build.BeamTakesMovingSensor(6, 7).ShouldBeNull();
+        build.PlacingTargetsOf(null, 6).ShouldBeSameAs(PlacingTargets.None);
         gestures.Release(new Vector2D(100, 150));
 
         build.Sensors.Select(sensor => sensor.Id).ShouldBe([9]);

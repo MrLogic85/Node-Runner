@@ -1,13 +1,15 @@
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NodeRunner.Domain;
 using NodeRunner.Theme;
 
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
 /// Guards #767: a drawn creature and Training's world order their drawing through the named
-/// layers in <see cref="CreatureLayers"/> and <see cref="ArenaLayers"/>, never ZIndex numbers.
+/// layers in <see cref="CreatureLayers"/> and <see cref="ArenaLayers"/>, never ZIndex numbers, and
+/// a part in a creature's draw groups (#1107) by its <see cref="DrawSlot"/>.
 /// A part's effective z is its creature root's layer plus its own, as every body sits at 0.
 /// </summary>
 public sealed class DrawLayersTests
@@ -23,20 +25,17 @@ public sealed class DrawLayersTests
         .ToArray();
 
     [Fact]
-    public void Creature_layers_stack_each_selected_part_over_its_kind()
+    public void Creature_layers_stack_the_selected_surface_over_the_unselected()
     {
         int[] order =
         [
             CreatureLayers.Knockout,
             CreatureLayers.Hatch,
-            CreatureLayers.Underlays,
-            CreatureLayers.Beams,
-            CreatureLayers.Links,
-            CreatureLayers.SelectedLinks,
-            CreatureLayers.Sensors,
-            CreatureLayers.SelectedSensors,
-            CreatureLayers.Joints,
-            CreatureLayers.SelectedJoints,
+            CreatureLayers.Parts,
+            CreatureLayers.LooseJoints,
+            CreatureLayers.SelectedUnderlays,
+            CreatureLayers.SelectedParts,
+            CreatureLayers.SelectedLooseJoints,
             CreatureLayers.Overlays,
         ];
 
@@ -45,6 +44,22 @@ public sealed class DrawLayersTests
         _creatureLayers.Order().ToArray().ShouldBe(order, "Every layer has its place in this order.");
         _creatureLayers.ShouldAllBe(layer => layer >= 0 && layer < CreatureLayers.Count);
     }
+
+    // #1107: a part's layer is its draw rank on its surface, the same rank Build's touches use.
+    [Fact]
+    public void A_parts_layer_follows_its_draw_rank_on_its_surface()
+    {
+        CreatureLayers.Of(DrawSlot.Under, 0, selected: false).ShouldBe(CreatureLayers.Parts);
+        CreatureLayers.Of(DrawSlot.Over, DrawGroups.MaxGroups - 1, selected: false).ShouldBe(CreatureLayers.LooseJoints - 1);
+        CreatureLayers.Of(DrawSlot.Over, group: null, selected: false).ShouldBe(CreatureLayers.LooseJoints);
+        CreatureLayers.Of(DrawSlot.Under, 0, selected: true).ShouldBe(CreatureLayers.SelectedParts);
+        CreatureLayers.Of(DrawSlot.Over, group: null, selected: true).ShouldBe(CreatureLayers.SelectedLooseJoints);
+        CreatureLayers.Of(DrawSlot.Link, 3, selected: true).ShouldBe(CreatureLayers.Of(DrawSlot.Link, 3, selected: false) + CreatureLayers.SelectedParts - CreatureLayers.Parts);
+    }
+
+    [Fact]
+    public void Every_drawn_layer_stays_within_godots_z_range() =>
+        ((long)(ArenaLayers.Followed + HighestCreatureLayer)).ShouldBeLessThanOrEqualTo(Godot.RenderingServer.CanvasItemZMax);
 
     [Fact]
     public void Arena_marks_and_ground_are_under_every_creature() =>
@@ -72,28 +87,29 @@ public sealed class DrawLayersTests
             .SelectMany(source => source.Find(LeavesItsLayersUnnamed))
             .ToList();
 
-        violations.ShouldBeEmpty("Every constructor of a PartVisual passes its two CreatureLayers to base(...).");
+        violations.ShouldBeEmpty("Every constructor of a PartVisual passes its DrawSlot, or its CreatureLayers layer, to base(...).");
     }
 
     [Theory]
     [InlineData("class Part : PartVisual { }")]
     [InlineData("class Part : PartVisual { Part() : base() { } }")]
-    [InlineData("class Part : PartVisual { Part() : base(-1, 3) { } }")]
-    [InlineData("class Part : PartVisual { Part() : base(ArenaLayers.Ground, ArenaLayers.Ground) { } }")]
-    [InlineData("class Part() : PartVisual(CreatureLayers.Beams, CreatureLayers.SelectedLinks) { }")]
+    [InlineData("class Part : PartVisual { Part() : base(-1) { } }")]
+    [InlineData("class Part : PartVisual { Part() : base(ArenaLayers.Ground) { } }")]
+    [InlineData("class Part() : PartVisual(CreatureLayers.Hatch) { }")]
+    [InlineData("class Part : PartVisual { Part() : base(DrawSlot.Link, DrawSlot.Over) { } }")]
     public void Part_without_named_layers_is_flagged(string member) =>
         CSharpSources.Snippet(member).Find(LeavesItsLayersUnnamed).ShouldHaveSingleItem();
 
-    [Fact]
-    public void Part_with_named_layers_passes() =>
-        CSharpSources.Snippet("class Part : PartVisual { Part() : base(CreatureLayers.Beams, CreatureLayers.SelectedLinks) { } }")
-            .Find(LeavesItsLayersUnnamed)
-            .ShouldBeEmpty();
+    [Theory]
+    [InlineData("class Part : PartVisual { Part() : base(CreatureLayers.Hatch) { } }")]
+    [InlineData("class Part : PartVisual { Part() : base(DrawSlot.Link) { } }")]
+    public void Part_with_named_layers_passes(string member) =>
+        CSharpSources.Snippet(member).Find(LeavesItsLayersUnnamed).ShouldBeEmpty();
 
     [Theory]
     [InlineData("void M(Node2D node) { node.ZIndex = -1; }")]
     [InlineData("void M(Node2D node, int z) { node.ZIndex = z; }")]
-    [InlineData("void M(Node2D node) { node.ZIndex = CreatureLayers.Joints + 1; }")]
+    [InlineData("void M(Node2D node) { node.ZIndex = CreatureLayers.Parts + 1; }")]
     [InlineData("void M(Node2D node) { node.ZIndex = ArenaLayers.BestMarker - ArenaLayers.Ground; }")]
     public void Unnamed_z_is_flagged(string member) =>
         CSharpSources.Snippet(member).Find(node => SetsUnnamedZIndex(node, "creature/Snippet.cs")).ShouldHaveSingleItem();
@@ -125,12 +141,10 @@ public sealed class DrawLayersTests
             && declaration.Members.OfType<ConstructorDeclarationSyntax>().ToList() is { Count: > 0 } constructors
             && constructors.All(NamesItsLayers));
 
+    // A part in a creature's draw groups names its DrawSlot (#1107); any other its CreatureLayers layer.
     private static bool NamesItsLayers(ConstructorDeclarationSyntax constructor) =>
-        constructor.Initializer is { ThisOrBaseKeyword.Text: "base", ArgumentList.Arguments: { Count: 2 } arguments }
-        && arguments.All(argument => argument.Expression is MemberAccessExpressionSyntax
-        {
-            Expression: IdentifierNameSyntax { Identifier.Text: nameof(CreatureLayers) },
-        });
+        constructor.Initializer is { ThisOrBaseKeyword.Text: "base", ArgumentList.Arguments: var arguments }
+        && arguments is [{ Expression: MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.Text: nameof(DrawSlot) or nameof(CreatureLayers) } } }];
 
     // Layers are chosen with ?:, but every choice is a named layer.
     private static bool IsNamedLayers(ExpressionSyntax expression) => expression switch

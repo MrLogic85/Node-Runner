@@ -130,6 +130,34 @@ public sealed class BuildPlacementTests
         free.ShouldBeNull();
     }
 
+    // #1107: the canvas marks these takes and refusals on the parts themselves.
+    [Fact]
+    public void PlacingTargetsOf_SplitsWhatTakesThePartFromWhatRefusesIt()
+    {
+        var build = TwoBeams();
+        var sensor = build.PlacePart(BuildPart.Accelerometer, _firstBeam)!.Value;
+        build.PlacePart(BuildPart.Servo, _middleJoint).ShouldNotBeNull();
+
+        var camera = build.PlacingTargetsOf(BuildPart.Camera, null);
+        camera.Beams.ShouldBe([_secondBeam.Id]);
+        camera.RefusedBeams.ShouldBe([_firstBeam.Id]);
+
+        build.PlacePart(BuildPart.Camera, _secondBeam).ShouldNotBeNull();
+        var moving = build.PlacingTargetsOf(null, sensor);
+        moving.Beams.ShouldBe([_firstBeam.Id]);
+        moving.RefusedBeams.ShouldBe([_secondBeam.Id]);
+        moving.MovingSensor.ShouldBe(sensor);
+
+        build.PlacePart(BuildPart.Wheel, new CreatureElementSelection(CreatureElementKind.Node, 3)).ShouldNotBeNull();
+        var servo = build.PlacingTargetsOf(BuildPart.Servo, null);
+        servo.Joints.ShouldBe([_firstJoint.Id]);
+        servo.RefusedJoints.ShouldBe([_middleJoint.Id, 3], ignoreOrder: true);
+        servo.JointRing.ShouldBe(ServoDef.JointRadius);
+        var wheel = build.PlacingTargetsOf(BuildPart.Wheel, null);
+        wheel.Joints.ShouldBe([_firstJoint.Id]);
+        wheel.JointRing.ShouldBe(WheelDef.DefaultRadius);
+    }
+
     [Fact]
     public void PlacementNote_ComesFirst_AndGoesWhenDismissed_OrOnTheNextDrop()
     {
@@ -157,14 +185,17 @@ public sealed class BuildPlacementTests
         build.CanvasNotes().ShouldBeEmpty();
     }
 
+    // #1107: the part drawn on top, which covers every joint's reach, then a beam's reach. A beam
+    // that would take the sensor rises alone over its joints, so it is hit there too.
     [Fact]
-    public void DropTargetAt_PrefersJointDiscs_ThenSensors_ThenBeams_ThenJointReach()
+    public void DropTargetAt_TakesThePartDrawnOnTop_ThenABeamWithinReach()
     {
         var build = TwoBeams();
         build.PlacePart(BuildPart.Accelerometer, _secondBeam);
         var gestures = new BuildGestures(build);
 
         gestures.DropTargetAt(new Vector2D(5, 0), BuildPart.Accelerometer).ShouldBe(_firstJoint);
+        gestures.DropTargetAt(new Vector2D(5, 9), BuildPart.Accelerometer).ShouldBe(_firstJoint);
         gestures.DropTargetAt(new Vector2D(150, 9), BuildPart.Accelerometer).ShouldBe(_secondBeam);
         gestures.DropTargetAt(new Vector2D(30, 10), BuildPart.Accelerometer).ShouldBe(_firstBeam);
         gestures.DropTargetAt(new Vector2D(300, 300), BuildPart.Accelerometer).ShouldBeNull();
@@ -183,8 +214,11 @@ public sealed class BuildPlacementTests
         var (build, link) = BeamCrossedBy(kind);
         var gestures = new BuildGestures(build);
 
-        gestures.DropTargetAt(new Vector2D(50, 0), BuildPart.Accelerometer).ShouldBe(link);
+        gestures.DropTargetAt(new Vector2D(50, 0), placing: null).ShouldBe(link);
         gestures.DropTargetAt(new Vector2D(50, 30), BuildPart.Accelerometer).ShouldBe(link);
+
+        // A beam that would take the sensor rises over the link it crosses (#1107).
+        gestures.DropTargetAt(new Vector2D(50, 0), BuildPart.Accelerometer).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 5));
         gestures.DropTargetAt(new Vector2D(20, 0), BuildPart.Accelerometer).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 5));
         gestures.DropTargetAt(new Vector2D(50, -33), BuildPart.Accelerometer).ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 3));
     }
@@ -225,7 +259,9 @@ public sealed class BuildPlacementTests
         build.ActiveTool = BuildTool.Parts;
         var gestures = new BuildGestures(build);
         var refused = new CanvasNote(CanvasNoteKind.Danger, link, UiText.Plain(reason));
-        var onLink = new Vector2D(50, 0);
+        // Off the beam it crosses, which a sensor's target halo or a selected joint raises over it
+        // (#1107), and off the Servo's target rings.
+        var onLink = new Vector2D(50, 15);
         build.PickPart(part);
         var tapChanges = CountChanges(build);
 

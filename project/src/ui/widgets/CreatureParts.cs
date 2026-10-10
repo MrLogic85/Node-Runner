@@ -61,6 +61,7 @@ public partial class CreatureParts : Node2D
         ShowSprings(shape, nodes, marks);
         ShowSensors(shape, nodes, marks);
         ShowHatch(shape, nodes);
+        ShowDrawGroups(shape, marks);
         PartVisual.RedrawOnNewPixelScale(this, ref _pixelScale);
     }
 
@@ -75,7 +76,10 @@ public partial class CreatureParts : Node2D
             part.Loose = marks.ShowsAsLoose(node.Id);
             var hasPart = CreatureDef.HasJointPart(node.Id, shape.Servos, shape.Wheels);
             part.Selected = marks.Selected.Nodes.Contains(node.Id) && !hasPart;
-            part.Visible = !hasPart && marks.PreviewJointPart?.NodeId != node.Id;
+            part.ShowsRing = !hasPart && marks.PreviewJointPart?.NodeId != node.Id;
+            var takes = marks.Placing.Joints.Contains(node.Id);
+            part.Placing = takes ? PlacingMark.Takes : marks.Placing.RefusedJoints.Contains(node.Id) ? PlacingMark.Refuses : PlacingMark.None;
+            part.PlacingRadius = (float)(takes ? marks.Placing.JointRing : NodeRadius(shape, node.Id));
         }
     }
 
@@ -221,6 +225,9 @@ public partial class CreatureParts : Node2D
             part.HaloA = selected.Nodes.Contains(beam.NodeA);
             part.HaloB = selected.Nodes.Contains(beam.NodeB);
             part.Selected = selected.Beams.Contains(beam.Id);
+            part.Placing = marks.Placing.Beams.Contains(beam.Id) ? PlacingMark.Takes
+                : marks.Placing.RefusedBeams.Contains(beam.Id) ? PlacingMark.Refuses
+                : PlacingMark.None;
         }
     }
 
@@ -306,6 +313,52 @@ public partial class CreatureParts : Node2D
         part.Kind = kind;
         part.WeightOffset = weightOffset ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
         part.CameraAim = Vector2.FromAngle((float)(aim ?? SensorDef.DefaultAim(nodeA, nodeB)) + beamRotation - pictureRotation);
+    }
+
+    /// <summary>
+    /// Puts each part in its draw group (#1107) and on the surface <see cref="CreatureMarks.Raised"/>
+    /// gives it, so it is drawn where Build's touches hit it.
+    /// </summary>
+    private void ShowDrawGroups(CreatureShape shape, CreatureMarks marks)
+    {
+        var groups = DrawGroups.Of(shape.Nodes, Links(shape));
+        var raised = marks.Raised;
+        foreach (var (id, part) in _joints)
+        {
+            part.Place(groups, id, raised.Joints.Contains(id));
+        }
+
+        var servoNodes = shape.Servos.ToDictionary(servo => servo.Id, servo => servo.NodeId);
+        foreach (var (id, part) in _servos)
+        {
+            var nodeId = id < 0 ? -id : servoNodes[id];
+            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
+        }
+
+        var wheelNodes = shape.Wheels.ToDictionary(wheel => wheel.Id, wheel => wheel.NodeId);
+        foreach (var (id, part) in _wheels)
+        {
+            var nodeId = id < 0 ? -id : wheelNodes[id];
+            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
+        }
+
+        foreach (var (id, part) in _beams.Select(entry => (entry.Key, (PartVisual)entry.Value))
+            .Concat(_pistons.Select(entry => (entry.Key, (PartVisual)entry.Value)))
+            .Concat(_springs.Select(entry => (entry.Key, (PartVisual)entry.Value))))
+        {
+            part.Place(groups, id, raised.Links.Contains(id));
+        }
+
+        var sensors = shape.Sensors.ToDictionary(sensor => sensor.Id);
+        foreach (var (id, part) in _sensors)
+        {
+            part.Place(groups, sensors[id].BeamId, raised.Sensor(sensors[id]));
+        }
+
+        if (marks.PreviewSensor is ({ } previewBeam, _, _))
+        {
+            _previewSensor.Place(groups, previewBeam.Id, raised: true);
+        }
     }
 
     /// <summary>The rigid hatch of the closed triangles among the beams that have length.</summary>

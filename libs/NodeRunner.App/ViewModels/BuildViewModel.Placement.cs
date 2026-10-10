@@ -126,11 +126,39 @@ public sealed partial class BuildViewModel
         TakesSensor(_builder.Sensors[_builder.SensorIndexOf(sensorId)].Kind, target, sensorId, out reason);
 
     /// <summary>
-    /// Whether the beam would take the sensor a drag moves (<see cref="CanMoveSensor"/>), for the
-    /// canvas to mark while it draws; null once the sensor is gone mid-drag, which moves nowhere.
+    /// The beams or joints that would take or refuse <paramref name="part"/> from the tray, or else
+    /// the beams that would take or refuse the sensor <paramref name="movingSensorId"/> a drag moves (#1107).
     /// </summary>
-    public bool? BeamTakesMovingSensor(int sensorId, int beamId) =>
-        SensorExists(sensorId) ? CanMoveSensor(sensorId, new CreatureElementSelection(CreatureElementKind.Beam, beamId), out _) : null;
+    public PlacingTargets PlacingTargetsOf(BuildPart? part, int? movingSensorId)
+    {
+        if (part is { } placing)
+        {
+            if (PartTray.IsJointPart(placing))
+            {
+                var joints = Nodes.Where(node => CanPlacePart(placing, new CreatureElementSelection(CreatureElementKind.Node, node.Id), out _)).Select(node => node.Id).ToHashSet();
+                return PlacingTargets.None with
+                {
+                    Joints = joints,
+                    RefusedJoints = Nodes.Where(node => !joints.Contains(node.Id) && JointPartAt(node.Id) is not null).Select(node => node.Id).ToHashSet(),
+                    JointRing = PartTray.PlacingRingRadius(placing),
+                };
+            }
+
+            var beams = Beams.Where(beam => CanPlacePart(placing, new CreatureElementSelection(CreatureElementKind.Beam, beam.Id), out _)).Select(beam => beam.Id).ToHashSet();
+            return PlacingTargets.None with { Beams = beams, RefusedBeams = Beams.Where(beam => !beams.Contains(beam.Id)).Select(beam => beam.Id).ToHashSet() };
+        }
+
+        if (movingSensorId is not { } sensor || !SensorExists(sensor))
+        {
+            return PlacingTargets.None;
+        }
+
+        var takes = Beams.Where(beam => CanMoveSensor(sensor, new CreatureElementSelection(CreatureElementKind.Beam, beam.Id), out _)).Select(beam => beam.Id).ToHashSet();
+        return new PlacingTargets(takes, new HashSet<int>(), sensor)
+        {
+            RefusedBeams = Beams.Where(beam => !takes.Contains(beam.Id)).Select(beam => beam.Id).ToHashSet(),
+        };
+    }
 
     /// <summary>
     /// The sensor as a drop on <paramref name="target"/> would leave it (#806), for its preview:

@@ -62,7 +62,7 @@ Godot scene tree. Each concern's rule lives in the owning doc:
 | Concern | Tests | Rule owner |
 |---|---|---|
 | Values come from their owner, so a root Theme swap restyles everything | `UiTokensTests`, `UiThemeExpanderTests`, `SceneDerivedStateTests`, `UiSourceGuardTests`, `AppIconTests` | `docs/UI_DIRECTION.md` → "Who owns what", `project/src/ui/lib/AGENTS.md`, `docs/RELEASING.md` → "App icon" |
-| Draw order and shared part visuals | `UiLayersTests`, `DrawLayersTests`, `SharedPartVisualsTests` | `project/src/ui/lib/AGENTS.md`, `project/src/theme/AGENTS.md` |
+| Draw order and shared part visuals | `UiLayersTests`, `DrawLayersTests`, `SharedPartVisualsTests`; the draw groups and the hit rule Build and Training share (`PartAt`) in Domain's `DrawGroupsTests` | `project/src/ui/lib/AGENTS.md`, `project/src/theme/AGENTS.md`, `docs/WORLD_VISUALS.md` → "Draw layers" |
 | Text is translated once, by Godot | `UiTextTranslationTests`, `UiTranslationContextTests`, `TranslationTemplateTests` | `docs/LOCALIZATION.md`, `project/src/ui/AGENTS.md` |
 | Screens reuse the library | `UiComponentContractsTests`, `RewrittenSceneTests`, `UiSourceGuardTests` | `docs/UI_DIRECTION.md` → "Who owns what", `project/src/ui/AGENTS.md` |
 | Saved scenes survive export | `SceneEditableChildrenTests`, `SceneParentPathTests` | Export re-packs every scene, and a node added inside an instance that is not `[editable]`, under a stale parent path, or beside a same-named sibling vanishes only on device (#333, #407, #496) |

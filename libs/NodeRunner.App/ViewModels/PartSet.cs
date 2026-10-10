@@ -9,6 +9,10 @@ public sealed record PartSet(IReadOnlySet<int> Nodes, IReadOnlySet<int> Beams, I
 
     public int Count => Nodes.Count + Beams.Count + Sensors.Count + Servos.Count + Pistons.Count + Springs.Count + Wheels.Count;
 
+    /// <summary>Every part in the set, kind by kind.</summary>
+    public IEnumerable<CreatureElementSelection> Parts =>
+        Enum.GetValues<CreatureElementKind>().SelectMany(kind => SetOf(kind).Select(id => new CreatureElementSelection(kind, id)));
+
     /// <summary>A set of just <paramref name="part"/>.</summary>
     public static PartSet Of(CreatureElementSelection part)
     {
