@@ -50,9 +50,8 @@ public partial class TrainingHost : Node, IRoutedScene
     private TrialController? _playback;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
-    // The selected part's Build name in the player's language, shown above the followed shadow (#388);
-    // null with nothing selected.
-    private Func<string>? _selectedPartName;
+    // The last brain sample, taken once per signal refresh and read by both BrainFocus and the part callout (#1064).
+    private BrainPortValues _portValues = BrainPortValues.Empty;
     private double _signalRefreshElapsed;
     // Training's slow-motion chip (#318); null in Simulate, which races one shadow.
     private SlowMotionWatch? _slowMotion;
@@ -135,9 +134,10 @@ public partial class TrainingHost : Node, IRoutedScene
     }
 
     // Redraws the creatures' parts once the camera has zoomed them to a new pixel scale, also
-    // while paused (a resize re-frames the camera). Moves the part name with the creature every frame. Refreshes the signal flow and brain focus
-    // from the creature's last physics tick at a fixed cadence: the numbers are for a person to
-    // read, so every rendered frame is wasted work.
+    // while paused (a resize re-frames the camera). Moves the part callout with the creature every
+    // frame. Refreshes the signal flow, brain focus and part callout from the creature's last
+    // physics tick at a fixed cadence: the numbers are for a person to read, so every rendered
+    // frame is wasted work.
     public override void _Process(double delta)
     {
         PartVisual.RedrawOnNewPixelScale(World, ref _partsPixelScale);
@@ -147,9 +147,9 @@ public partial class TrainingHost : Node, IRoutedScene
             return;
         }
 
-        if (_selectedPartName is not null && _selection.SelectedElement is { } selected)
+        if (_selection.SelectedElement is { } selected)
         {
-            _screen.ShowPartName(_selectedPartName(), _followed.PartAnchor(selected), _followed.Bounds);
+            _screen.MovePartCallout(_followed.PartAnchor(selected), _followed.Bounds);
         }
 
         _signalRefreshElapsed += delta;
@@ -161,8 +161,18 @@ public partial class TrainingHost : Node, IRoutedScene
         _signalRefreshElapsed = 0;
         _followed.ReadInputs(_brainInputs);
         _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.MotorCount, FollowedDistance);
-        _brainFocus.Update(_followed.Brain, _brainInputs);
+
+        // One sample of the brain's ports per refresh, read by both BrainFocus and the part callout (#1064).
+        _portValues = BrainPortValues.Sample(_followed.Ports, _followed.Brain, _brainInputs);
+        _brainFocus.Update(_portValues);
+        ShowPartCallout();
     }
+
+    // The selected part's callout from the last sample; none with nothing selected.
+    private void ShowPartCallout() =>
+        _screen.ShowPartCallout(_selection.SelectedElement is { } selected && _followed?.Definition is { } definition
+            ? PartCalloutPresentation.For(definition, selected, _portValues)
+            : null);
 
     // Counts the physics ticks run against real time; a pause stops physics on purpose, so it starts
     // the count over and leaves the chip as it is.
@@ -521,15 +531,9 @@ public partial class TrainingHost : Node, IRoutedScene
         if (eventArgs.PropertyName == nameof(SelectionViewModel.SelectedElement))
         {
             _followed?.SetSelectedElement(_selection.SelectedElement);
-            _selectedPartName = _selection.SelectedElement is { } selected && _followed?.Definition is { } definition
-                ? UiTextTranslation.Source(PartNames.Display(definition.Nodes, definition.Beams, definition.Sensors, definition.Servos, definition.Pistons, definition.Springs, definition.Wheels, selected.Id))
-                : null;
-            BestMarker.Faded = _selectedPartName is not null;
+            BestMarker.Faded = _selection.SelectedElement is not null && _followed?.Definition is not null;
             StartSign.Faded = BestMarker.Faded;
-            if (_selectedPartName is null)
-            {
-                _screen.ShowPartName(null, default, default);
-            }
+            ShowPartCallout();
         }
     }
 }

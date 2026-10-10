@@ -150,7 +150,9 @@ entry (#315). The entries that are not a component of their own (#306):
 - **`c_textfield`** in a bar fills the toolbar width rather than sizing to
   its text (#485).
 - **`c_call` in a figure** is `UiCalloutLayer` (#593); the look is in
-  `docs/WORLD_VISUALS.md` → "Build canvas".
+  `docs/WORLD_VISUALS.md` → "Build canvas". A callout may carry
+  `UiCalloutLine`s of `UiMeterBar`s under its text (#1064); their look is
+  in `docs/WORLD_VISUALS.md` → "Port bars".
 - **`c_fact_row`** is an authored row of a `UiIcon` and two `UiLabel`s,
   as on Import (#899).
 - **`c_field_line`** is `UiTextField`'s one line: its error, or else its

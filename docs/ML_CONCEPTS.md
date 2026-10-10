@@ -89,8 +89,10 @@ sensor off are #960.
 ## Live activation visualization
 
 - **What:** Which neuron fires at which moment, and how strongly.
-- **Where:** BrainFocus for the direct brain (#536); brain views with hidden
-  layers are #196, #197 and #548.
+- **Where:** BrainFocus for the direct brain (#536), and the selected
+  part's live sense and output values in Training's part callout (#1064,
+  `docs/WORLD_VISUALS.md` → "Port bars"); brain views with hidden layers
+  are #196, #197 and #548.
 - **How we show it:** Nodes glow. Edges pulse. You literally see the thought
   behind each step.
 
