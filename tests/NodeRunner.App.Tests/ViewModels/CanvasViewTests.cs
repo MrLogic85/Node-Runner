@@ -242,48 +242,102 @@ public class CanvasViewTests
         var (zoom, offset) = (view.Zoom, view.Offset);
 
         view.ZoomOutToShow(new CanvasRect(new Vector2D(-100, -50), new Vector2D(100, 50)));
+        view.Step(10);
 
+        view.IsEasing.ShouldBeFalse();
         view.Zoom.ShouldBe(zoom);
         view.Offset.ShouldBe(offset);
     }
 
     [Fact]
-    public void ZoomOutToShow_ZoomsOutJustEnoughToShowAWideTargetInsideTheMargin()
+    public void ZoomOutToShow_GrowsTheViewOnlyTowardTheSideTheTargetReachesPast()
+    {
+        // At 1×, centred, the screen shows x −500..500 and y −250..250.
+        var view = Centred();
+
+        view.ZoomOutToShow(new CanvasRect(new Vector2D(0, 0), new Vector2D(1500, 100)));
+        view.Step(10);
+
+        view.Zoom.ShouldBe(0.5, 1e-9);
+        view.ToCanvas(_screen.Min).X.ShouldBe(-500, 1e-6);
+        view.ToCanvas(_screen.Max).X.ShouldBe(1500, 1e-6);
+        // Nothing reached past the top or bottom, so they grow evenly about the middle.
+        view.ToCanvas(_middle).Y.ShouldBe(0, 1e-6);
+    }
+
+    [Fact]
+    public void ZoomOutToShow_GrowsEvenlyWhereTheTargetReachesPastBothSides()
     {
         var view = Centred();
-        var target = new CanvasRect(new Vector2D(0, 0), new Vector2D(1800, 100));
 
-        view.ZoomOutToShow(target);
+        view.ZoomOutToShow(new CanvasRect(new Vector2D(-1000, 0), new Vector2D(1000, 100)));
+        view.Step(10);
 
-        view.Zoom.ShouldBe(_screen.Width * (1 - (2 * CanvasView.ShowMargin)) / target.Width, 1e-9);
-        ShowsInsideTheMargin(view, target);
+        view.Zoom.ShouldBe(0.5, 1e-9);
+        view.ToCanvas(_middle).ShouldBe(new Vector2D(0, 0));
     }
 
-    [Theory]
-    // At 2×, with the canvas origin at the middle of the 1000-wide screen and a 50-unit margin.
-    [InlineData(600, 650, -350)] // Off screen: its right edge comes to the margin.
-    [InlineData(-100, 300, 350)] // Partly shown: it moves only as far as its hidden end needs.
-    public void ZoomOutToShow_PansATargetThatFitsJustToTheMargin_NeverZoomingIn(double left, double right, double offsetX)
+    [Fact]
+    public void ZoomOutToShow_EasesThereKeepingTheStillEdgeInPlaceOnTheWay()
     {
         var view = Centred();
-        view.ZoomAbout(_middle, 2);
-        var target = new CanvasRect(new Vector2D(left, 0), new Vector2D(right, 20));
 
-        view.ZoomOutToShow(target);
+        view.ZoomOutToShow(new CanvasRect(new Vector2D(0, 0), new Vector2D(1500, 100)));
+        view.Step(1.0 / 60);
 
-        view.Zoom.ShouldBe(2);
-        view.Offset.ShouldBe(new Vector2D(offsetX, 250));
+        view.IsEasing.ShouldBeTrue();
+        view.Zoom.ShouldBeInRange(0.5, 1);
+        view.Zoom.ShouldBe(Math.Pow(0.5, EaseShare(1.0 / 60)), 1e-9);
+        view.ToCanvas(_screen.Min).X.ShouldBe(-500, 1e-6);
     }
 
-    private static void ShowsInsideTheMargin(CanvasView view, CanvasRect target)
+    [Fact]
+    public void ZoomOutToShow_MayGoPastTheBoundsIntoTheExtraReach_AndEasesBackWhenItGoes()
     {
-        var margin = new Vector2D(_screen.Width * CanvasView.ShowMargin, _screen.Height * CanvasView.ShowMargin);
-        foreach (var corner in new[] { view.ToView(target.Min), view.ToView(target.Max) })
-        {
-            corner.X.ShouldBeInRange(margin.X - 1e-9, _screen.Width - margin.X + 1e-9);
-            corner.Y.ShouldBeInRange(margin.Y - 1e-9, _screen.Height - margin.Y + 1e-9);
-        }
+        CanvasRect? extra = new CanvasRect(new Vector2D(0, 0), new Vector2D(5000, 100));
+        var view = new CanvasView(_area, extraReach: () => extra) { VisibleArea = _screen };
+        view.Fit();
+
+        view.ZoomOutToShow(extra.Value);
+        view.Step(10);
+
+        view.ToCanvas(_screen.Max).X.ShouldBe(5000, 1e-6);
+        extra = null;
+        view.Step(10);
+
+        view.Zoom.ShouldBe(view.MinZoom);
+        view.ToCanvas(_screen.Max).X.ShouldBe(_area.Max.X, 1e-6);
+        view.IsEasing.ShouldBeFalse();
     }
+
+    [Fact]
+    public void ZoomOutToShow_StopsAMoveOnItsWayOnceTheTargetFits()
+    {
+        var view = Centred();
+        view.ZoomOutToShow(new CanvasRect(new Vector2D(0, 0), new Vector2D(1500, 100)));
+        view.Step(1.0 / 60);
+        var (zoom, offset) = (view.Zoom, view.Offset);
+
+        view.ZoomOutToShow(new CanvasRect(new Vector2D(0, 0), new Vector2D(400, 100)));
+        view.Step(10);
+
+        view.IsEasing.ShouldBeFalse();
+        view.Zoom.ShouldBe(zoom);
+        view.Offset.ShouldBe(offset);
+    }
+
+    [Fact]
+    public void ZoomAbout_StopsAnEasedMove()
+    {
+        var view = Centred();
+        view.ZoomOutToShow(new CanvasRect(new Vector2D(0, 0), new Vector2D(1500, 100)));
+
+        view.ZoomAbout(_middle, 1.1);
+
+        view.IsEasing.ShouldBeFalse();
+    }
+
+    private static double EaseShare(double deltaSeconds) => 1 - Math.Exp(-CanvasView.EaseRate * deltaSeconds);
 
     private static CanvasView Centred()
     {

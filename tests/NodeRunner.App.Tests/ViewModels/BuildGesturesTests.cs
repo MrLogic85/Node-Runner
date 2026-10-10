@@ -1855,22 +1855,25 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void ShowSelectedCameraRays_ZoomsOutUntilTheCameraAndEveryRayEndAreInsideTheMargin()
+    public void ShowSelectedCameraRays_EasesOutUntilTheCameraAndEveryRayEndAreACellInside_EvenPastTheBuildArea()
     {
         var (build, camera, _) = BuildViewModelTests.DownwardBeamWithCameraAndAccelerometer();
         var gestures = FittedTo800By400(build);
         build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
-        build.SetParameter(PartParameterId.CameraRange, 300);
+        build.SetParameter(PartParameterId.CameraRange, 1000);
         var zoom = gestures.View.Zoom;
 
         gestures.ShowSelectedCameraRays();
+        gestures.View.Step(10);
 
         gestures.View.Zoom.ShouldBeLessThan(zoom);
         var (origin, ends) = build.ShownCameraRays().ShouldHaveSingleItem();
+        ends.Max(end => end.Y).ShouldBeGreaterThan(BuildViewModel.BuildViewBounds.Max.Y);
+        var cell = BuildViewModel.BuildViewMargin * gestures.View.Zoom;
         foreach (var point in ends.Append(origin).Select(gestures.View.ToView))
         {
-            point.X.ShouldBeInRange(800 * CanvasView.ShowMargin, 800 * (1 - CanvasView.ShowMargin));
-            point.Y.ShouldBeInRange(400 * CanvasView.ShowMargin, 400 * (1 - CanvasView.ShowMargin));
+            point.X.ShouldBeInRange(cell - 1e-6, 800 - cell + 1e-6);
+            point.Y.ShouldBeInRange(cell - 1e-6, 400 - cell + 1e-6);
         }
     }
 
@@ -1885,9 +1888,57 @@ public class BuildGesturesTests
         var (zoom, offset) = (gestures.View.Zoom, gestures.View.Offset);
 
         gestures.ShowSelectedCameraRays();
+        gestures.View.Step(10);
 
         gestures.View.Zoom.ShouldBe(zoom);
         gestures.View.Offset.ShouldBe(offset);
+    }
+
+    [Fact]
+    public void ShowSelectedCameraRays_KeepsTheViewWhileTheRaysShrink_AndEasesBackInsideOnceTheyHide()
+    {
+        var (build, camera, _) = BuildViewModelTests.DownwardBeamWithCameraAndAccelerometer();
+        var gestures = FittedTo800By400(build);
+        build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
+        build.SetParameter(PartParameterId.CameraRange, 1000);
+        gestures.ShowSelectedCameraRays();
+        gestures.Step(10);
+        var (zoom, offset) = (gestures.View.Zoom, gestures.View.Offset);
+
+        build.SetParameter(PartParameterId.CameraRange, 300);
+        gestures.ShowSelectedCameraRays();
+        gestures.Step(10);
+
+        gestures.View.Zoom.ShouldBe(zoom);
+        gestures.View.Offset.ShouldBe(offset);
+        build.ClearSelection();
+        gestures.Step(10);
+
+        // All of BuildViewBounds (13 × 7 m) in an 800 × 400 view: its height fits, centred.
+        var bounds = BuildViewModel.BuildViewBounds;
+        gestures.View.Zoom.ShouldBe(400 / bounds.Height, 1e-9);
+        gestures.View.ToCanvas(new Vector2D(400, 200)).ShouldBe(bounds.Center);
+    }
+
+    [Fact]
+    public void Step_HoldsTheViewStillWhileAFingerIsOnTheCanvas()
+    {
+        var (build, camera, _) = BuildViewModelTests.DownwardBeamWithCameraAndAccelerometer();
+        var gestures = FittedTo800By400(build);
+        build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
+        build.SetParameter(PartParameterId.CameraRange, 1000);
+        gestures.ShowSelectedCameraRays();
+        var (zoom, offset) = (gestures.View.Zoom, gestures.View.Offset);
+
+        gestures.Press(new Vector2D(790, 10));
+        gestures.Step(10);
+
+        gestures.View.Zoom.ShouldBe(zoom);
+        gestures.View.Offset.ShouldBe(offset);
+        gestures.Cancel();
+        gestures.Release(new Vector2D(790, 10));
+        gestures.Step(10);
+        gestures.View.Zoom.ShouldBeLessThan(zoom);
     }
 
     private static BuildGestures FittedTo800By400(BuildViewModel build)

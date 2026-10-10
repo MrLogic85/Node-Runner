@@ -165,7 +165,8 @@ public sealed class ArenaFraming
         double.IsFinite(groundY) && viewWidth > 0 && viewHeight > 0
         && double.IsFinite(viewWidth) && double.IsFinite(viewHeight);
 
-    private static double Ease(double rate, double deltaSeconds) => 1 - Math.Exp(-rate * deltaSeconds);
+    /// <summary>The share of the way to its goal an eased value covers in <paramref name="deltaSeconds"/> at <paramref name="rate"/> per second.</summary>
+    internal static double Ease(double rate, double deltaSeconds) => 1 - Math.Exp(-rate * deltaSeconds);
 
     // Widening follows at once; narrowing waits until the creature has needed less room for the
     // whole delay, so a gait that stretches again within it never narrows the view at all.

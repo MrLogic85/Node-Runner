@@ -170,6 +170,7 @@ public partial class BuildCanvas : Node2D
         }
 
         TrackPartDrag();
+        _gestures?.Step(delta);
         if (delta <= 0 || _gravity <= 0)
         {
             return;

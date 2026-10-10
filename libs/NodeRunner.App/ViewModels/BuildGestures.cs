@@ -78,16 +78,20 @@ public sealed class BuildGestures
     // The link picked when a link drag started, so a pick changed mid-drag does not change it.
     private BuildLink _drawnLink;
 
+    // The largest shown Camera rays' area since the selection last changed (RaysReach).
+    private CanvasRect? _heldRaysArea;
+
     public BuildGestures(BuildViewModel build)
     {
         _build = build ?? throw new ArgumentNullException(nameof(build));
-        View = new CanvasView(BuildViewModel.BuildViewBounds, ContentBounds);
+        View = new CanvasView(BuildViewModel.BuildViewBounds, ContentBounds, RaysReach);
         _build.PropertyChanged += (_, args) =>
         {
             // A new selection gets an upright frame.
             if (args.PropertyName == nameof(BuildViewModel.SelectedNodeCount))
             {
                 _frameAngle = 0;
+                _heldRaysArea = null;
             }
         };
     }
@@ -95,19 +99,51 @@ public sealed class BuildGestures
     public CanvasView View { get; }
 
     /// <summary>
-    /// Zooms out just enough to show every selected Camera's rays while the panel shows their
-    /// settings, so changing Range or Spread visibly changes them (#1092). Nothing changes when
-    /// they are already in view.
+    /// Eases the view out until every selected Camera's shown rays fit, with a grid cell around
+    /// them, so changing Range or Spread visibly changes them (#1092). The view may reach past
+    /// the Build area to show them while they are shown; nothing moves when they already fit.
     /// </summary>
     public void ShowSelectedCameraRays()
     {
-        var points = _build.ShownCameraRays().SelectMany(rays => rays.Ends.Append(rays.Origin)).ToList();
-        if (points.Count > 0)
+        if (ShownRaysArea() is { } area)
         {
-            View.ZoomOutToShow(new CanvasRect(
-                new Vector2D(points.Min(point => point.X), points.Min(point => point.Y)),
-                new Vector2D(points.Max(point => point.X), points.Max(point => point.Y))));
+            View.ZoomOutToShow(area);
         }
+    }
+
+    /// <summary>
+    /// Moves the view <paramref name="deltaSeconds"/> along its eased move (<see cref="CanvasView.Step"/>),
+    /// but not while a finger is on the canvas, so the view never slides under a gesture.
+    /// </summary>
+    public void Step(double deltaSeconds)
+    {
+        if (_pointers.Count == 0)
+        {
+            View.Step(deltaSeconds);
+        }
+    }
+
+    // The view's extra reach: the shown rays' area, held at its largest while the same selection
+    // shows rays, so turning Range down does not pull the view back in; gone once they hide.
+    private CanvasRect? RaysReach()
+    {
+        _heldRaysArea = ShownRaysArea() is { } area ? _heldRaysArea?.Union(area) ?? area : null;
+        return _heldRaysArea;
+    }
+
+    // The shown Camera rays and a grid cell around them, or null when none show.
+    private CanvasRect? ShownRaysArea()
+    {
+        var points = _build.ShownCameraRays().SelectMany(rays => rays.Ends.Append(rays.Origin)).ToList();
+        if (points.Count == 0)
+        {
+            return null;
+        }
+
+        var margin = BuildViewModel.BuildViewMargin;
+        return new CanvasRect(
+            new Vector2D(points.Min(point => point.X) - margin, points.Min(point => point.Y) - margin),
+            new Vector2D(points.Max(point => point.X) + margin, points.Max(point => point.Y) + margin));
     }
 
     /// <summary>Raised when the gesture's own visuals change (beam preview, selection box), so the canvas can redraw.</summary>

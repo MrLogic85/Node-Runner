@@ -229,9 +229,13 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   a UI size root factor of 1; the zoom limits are divided by that factor
   (`CanvasView.UiScale`), so true size and the limits keep their size on
   screen and only how far Fit zooms out changes (#299). The view can show
-  `BuildViewBounds`, the area plus one cell on every side: zooming out
-  stops when all of it is in view (`MinZoom`), and panning stops at its
-  edge or centres it where it fits. Distances are in view or canvas units
+  `BuildViewBounds`, the area plus one cell on every side, and, while a
+  selected Camera's rays show, the largest those rays have been since the
+  selection changed, plus one cell (`CanvasView.Reach`):
+  zooming out stops when all of it is in view (`MinZoom`), and panning
+  stops at its edge or centres it where it fits. When the rays stop
+  showing, the view eases back inside `BuildViewBounds`, once no finger is
+  on the canvas. Distances are in view or canvas units
   (`docs/GLOSSARY.md` → Build canvas).
 - Changing tool mid-gesture, or Android cancelling the touch, cancels the
   gesture the same way. A refused edit changes nothing; where the player
@@ -361,11 +365,13 @@ selected part (`SetParameter`). The canvas shows what a parameter changes
 only while it can be changed: a Piston's stroke ticks while Stroke or Start
 position can, a Spring's ticks and rest-length ring while Stroke or Coil
 length can, a selected Camera's own rays while every selected part is a
-Camera, and its Aim handle while Aim can. When a slider changes, the view
-zooms out and pans just enough to show those rays, if they no longer fit
-(`BuildGestures.ShowSelectedCameraRays`, #1092). It never zooms in, and it
-never goes past `BuildViewBounds`, so a long ray can still reach past the
-edge. Parameters change no brain port,
+Camera, and its Aim handle while Aim can. When a slider changes and those rays
+no longer fit, the view eases out until they and one cell around them do,
+even past `BuildViewBounds` (`BuildGestures.ShowSelectedCameraRays`, #1092).
+It grows only toward the side the rays reach past, so the opposite edge
+stays put, eases at the Training camera's zoom-out rate, and never zooms
+in, not even when Range goes back down. A pinch or pan stops the move, and
+it waits while a finger is on the canvas. Parameters change no brain port,
 so a locked creation can change them, except a Camera's Rays, which add or
 remove ports (`PartParameter.ChangesPorts`): on a locked creation its
 slider shows disabled (`BuildViewModel.EditableParameters`), and a tap on
