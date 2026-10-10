@@ -464,7 +464,7 @@ public sealed class BuildGestures
             {
                 if (_press == SharedPress.Move && !_pressedNodeWasSelected && _pressedNode is { } joint)
                 {
-                    // A dragged joint's first part is selected, not the joint under it (#973, #1044).
+                    // A dragged joint's top part is selected, not the joint under it (#973, #1044).
                     _build.ReplaceSelection(PartSet.Of(_build.JointPartsAt(joint).FirstOrDefault() ?? new(CreatureElementKind.Node, joint)));
                 }
 

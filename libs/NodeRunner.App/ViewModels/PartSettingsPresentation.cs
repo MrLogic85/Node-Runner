@@ -25,7 +25,7 @@ public enum PartSettingsKind
 /// <see cref="Title"/>, what kind of part it is, so a renamed part still says what it is.
 /// <see cref="PanelId"/> says which part the panel shows across edits. <see cref="Readouts"/> are
 /// read-only values the part's settings derive, shown after its basic settings, like a Wheel's
-/// Weight (#129). <see cref="OnThisJoint"/> are the "On this joint" tabs, outside → in, when the
+/// Weight (#129). <see cref="OnThisJoint"/> are the "On this joint" tabs, top → down, when the
 /// part's joint holds two or more parts (#1044); null otherwise.
 /// </summary>
 public sealed record PartSettingsPresentation(

@@ -26,7 +26,7 @@ public sealed class BuildStackedPartsTests
         build.Wheels.Single().NodeId.ShouldBe(2);
         build.PlacementNote.ShouldBeNull();
         build.NodeRadius(2).ShouldBe(WheelDef.DefaultRadius);
-        build.JointPartsAt(2).Select(part => part.Kind).ShouldBe([CreatureElementKind.Wheel, CreatureElementKind.Servo]);
+        build.JointPartsAt(2).Select(part => part.Kind).ShouldBe([CreatureElementKind.Servo, CreatureElementKind.Wheel]);
     }
 
     [Fact]
@@ -43,9 +43,12 @@ public sealed class BuildStackedPartsTests
     }
 
     [Fact]
-    public void Tap_OnAStack_SelectsTheOutermostPart_AndASecondTapClearsIt()
+    public void Tap_OnAStack_StepsDownItFromTheTop_AndATapOnTheLastClearsIt()
     {
         var (build, gestures) = Stacked();
+
+        Tap(gestures, new Vector2D(100, 0));
+        build.Selection.Parts.ShouldBe([_servo]);
 
         Tap(gestures, new Vector2D(100, 0));
         build.Selection.Parts.ShouldBe([_wheel]);
@@ -55,10 +58,10 @@ public sealed class BuildStackedPartsTests
     }
 
     [Fact]
-    public void Tap_OnAStackWhoseInnerPartIsSelected_ClearsTheJointsParts()
+    public void Tap_OnAStackWithBothPartsSelected_ClearsTheJointsParts()
     {
         var (build, gestures) = Stacked();
-        build.ReplaceSelection(PartSet.Of(_servo));
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { _servoId }, Wheels = new HashSet<int> { _wheelId } });
 
         Tap(gestures, new Vector2D(100, 0));
 
@@ -66,14 +69,26 @@ public sealed class BuildStackedPartsTests
     }
 
     [Fact]
-    public void Drag_OfAnUnselectedStack_SelectsTheOutermostPart_AndMovesTheJoint()
+    public void Tap_OnAStack_KeepsTheRestOfTheSelection()
+    {
+        var (build, gestures) = Stacked();
+        var beam = new CreatureElementSelection(CreatureElementKind.Beam, 4);
+        build.ReplaceSelection(PartSet.Of(_servo) with { Beams = new HashSet<int> { beam.Id } });
+
+        Tap(gestures, new Vector2D(100, 0));
+
+        build.Selection.Parts.ShouldBe([beam, _wheel], ignoreOrder: true);
+    }
+
+    [Fact]
+    public void Drag_OfAnUnselectedStack_SelectsTheTopPart_AndMovesTheJoint()
     {
         var (build, gestures) = Stacked();
 
         Drag(gestures, new Vector2D(100, 0), new Vector2D(100, 40));
 
         build.Nodes.Single(node => node.Id == 2).Position.ShouldBe(new Vector2D(100, 40));
-        build.Selection.Parts.ShouldBe([_wheel]);
+        build.Selection.Parts.ShouldBe([_servo]);
     }
 
     [Fact]
@@ -190,14 +205,14 @@ public sealed class BuildStackedPartsTests
     }
 
     [Fact]
-    public void OnThisJoint_ListsTheStackOutsideIn_AndMarksTheSelectedPart()
+    public void OnThisJoint_ListsTheStackTopDown_AndMarksTheSelectedPart()
     {
         var (build, _) = Stacked();
-        build.ReplaceSelection(PartSet.Of(_servo));
+        build.ReplaceSelection(PartSet.Of(_wheel));
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.OnThisJoint!.ShouldBe([new JointPartTab(PartSettingsKind.Wheel, _wheel), new JointPartTab(PartSettingsKind.Servo, _servo)]);
+        part.OnThisJoint!.ShouldBe([new JointPartTab(PartSettingsKind.Servo, _servo), new JointPartTab(PartSettingsKind.Wheel, _wheel)]);
         part.OnThisJointIndex.ShouldBe(1);
     }
 
@@ -209,12 +224,12 @@ public sealed class BuildStackedPartsTests
         build.ReplaceSelection(PartSet.Of(_servo));
         var servoPanel = new BuildPresentationViewModel(build).SinglePart!;
 
-        build.ReplaceSelection(PartSet.Of(servoPanel.OnThisJoint![0].Part));
+        build.ReplaceSelection(PartSet.Of(servoPanel.OnThisJoint![1].Part));
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
         part.Kind.ShouldBe(PartSettingsKind.Wheel);
         part.OnThisJoint.ShouldBe(servoPanel.OnThisJoint);
-        part.OnThisJointIndex.ShouldBe(0);
+        part.OnThisJointIndex.ShouldBe(1);
         part.PanelId.ShouldNotBe(servoPanel.PanelId);
     }
 

@@ -101,9 +101,11 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   - A tap on any joint, beam, sensor or link adds it to the selection or
     removes it, even under a handle (`BuildViewModel.ToggleSelected`). A
     tap on empty canvas clears the selection; a tap on a handle over empty
-    canvas does nothing. A tap on a joint with parts adds its first part,
-    outside → in (Wheel, then motor or brake), when none of them is
-    selected, and removes them all when any is
+    canvas does nothing. A tap on a joint with parts steps down its
+    stack, top → down as drawn (motor or brake, then Wheel): the first tap
+    adds the top part, each next tap swaps it for the one below, and a tap
+    on the last, or with more than one of them selected, removes the
+    joint's parts. The rest of the selection stays
     (`BuildViewModel.ToggleJointSelected`, #1044).
   - **Parts stand in for their joint** (#973, #1044): while any part sits
     on a joint (today a Servo or Wheel), the joint itself is never selected, so it
@@ -119,7 +121,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     unselected joint or a selected part's joint draws it; a selected joint, or
     a joint with a selected part, moves the selection;
     anywhere inside a group's frame moves the group; an unselected joint is
-    selected alone and moved, or, if it holds parts, its first part is; a sensor is moved to another beam (see
+    selected alone and moved, or, if it holds parts, its top part is; a sensor is moved to another beam (see
     Sensors).
     Any other drag draws a box in Select and pans in the other tools.
   - After a Rotate the frame stays turned with the group until the
@@ -198,7 +200,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   joint"; a joint with a Wheel refuses with "One wheel per joint", while a
   Servo's joint takes it (#1044). A placement is one Undo step; a drop also
   selects the Wheel. Tapping or dragging its joint selects the Wheel, as a
-  Servo's; on a joint with both, the Wheel comes first.
+  Servo's; a joint with both follows the stack rule in Interactions.
 - **Camera aim (#594, #622):** a Camera selected alone shows an Aim handle
   out along its centre ray, in any tool; the handle may cover a
   joint, which then cannot be tapped there (#639). Dragging the handle
@@ -320,7 +322,7 @@ changed is still the same part, so the panel keeps its place
 **On this joint (#1044).** When the selected part's joint holds two or more
 parts, a small "On this joint" label and a strip of glyph tabs sit between
 the title and Name (`PartSettingsPresentation.OnThisJoint`), one per part,
-outside → in: Wheel, then motor or brake. The strip is the tray's tab
+top → down: motor or brake, then Wheel. The strip is the tray's tab
 strip (`UiIconTabs`), with the selected part's tab filled. A tab tap selects
 that part alone, which moves the canvas mark and scrolls the panel to the
 top. A joint with one part shows no strip; tabs work on a locked creation

@@ -746,7 +746,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%PartDelete").Unavailable = !part.CanDelete;
     }
 
-    /// <summary>The "On this joint" tabs (#1044), outside → in, shown only when the part's joint holds two or more parts.</summary>
+    /// <summary>The "On this joint" tabs (#1044), top → down, shown only when the part's joint holds two or more parts.</summary>
     private void ApplyPartStack(PartSettingsPresentation part)
     {
         GetNode<Control>("%PartStack").Visible = part.OnThisJoint is not null;

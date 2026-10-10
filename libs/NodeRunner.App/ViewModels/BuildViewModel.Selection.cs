@@ -91,8 +91,9 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// A tap on joint <paramref name="nodeId"/> (#1044): a bare joint is added or removed. A joint
-    /// with parts adds its first part, outside → in (<see cref="JointPartsAt"/>), when none of them is
-    /// selected, and otherwise removes every one of them.
+    /// with parts steps down its stack (<see cref="JointPartsAt"/>, top → down): with none of them
+    /// selected it adds the top one; otherwise it swaps the deepest selected one for the next, or,
+    /// past the last, removes them all.
     /// </summary>
     public void ToggleJointSelected(int nodeId)
     {
@@ -103,15 +104,15 @@ public sealed partial class BuildViewModel
             return;
         }
 
-        var selected = parts.Where(part => SelectedSet(part.Kind).Contains(part.Id)).ToList();
-        if (selected.Count == 0)
-        {
-            SelectedSet(parts[0].Kind).Add(parts[0].Id);
-        }
-
-        foreach (var part in selected)
+        var deepest = parts.ToList().FindLastIndex(part => SelectedSet(part.Kind).Contains(part.Id));
+        foreach (var part in parts)
         {
             SelectedSet(part.Kind).Remove(part.Id);
+        }
+
+        if (deepest + 1 < parts.Count)
+        {
+            SelectedSet(parts[deepest + 1].Kind).Add(parts[deepest + 1].Id);
         }
 
         SelectionChanged();

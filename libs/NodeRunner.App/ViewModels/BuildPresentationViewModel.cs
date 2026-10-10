@@ -338,7 +338,7 @@ public sealed class BuildPresentationViewModel
 
     private SensorDef SensorById(int sensorId) => _build.Sensors.First(sensor => sensor.Id == sensorId);
 
-    // The "On this joint" tabs, outside → in, for a joint with two or more parts (#1044).
+    // The "On this joint" tabs, top → down, for a joint with two or more parts (#1044).
     private IReadOnlyList<JointPartTab>? OnThisJoint(int nodeId)
     {
         var parts = _build.JointPartsAt(nodeId);
