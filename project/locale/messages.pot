@@ -1257,6 +1257,7 @@ msgstr ""
 msgid "strength"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/src/ui/lib/UiPicker.cs
 msgid "swaps"
 msgstr ""

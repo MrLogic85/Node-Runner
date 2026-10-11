@@ -131,17 +131,15 @@ public sealed class BuildPresentationViewModelTests
     {
         var picker = new PartPickerPresentation(
             UiText.Plain("Fixed link"),
-            [4],
-            [UiText.Format("Beam {0}", 1)],
+            [new PartPickerOption(4, UiText.Format("Beam {0}", 1), CreatureElementKind.Beam, ServoLinkRole.None)],
             SelectedIndex: null,
             IsLocked: false,
             Note: null,
-            [CreatureElementKind.Beam],
             UiText.Plain("Pick a Fixed link"));
 
         picker.LinkIdAt(0).ShouldBe(4);
         picker.LinkIdAt(-1).ShouldBeNull();
-        picker.LinkKindAt(0).ShouldBe(CreatureElementKind.Beam);
+        picker.LinkIdAt(1).ShouldBeNull();
     }
 
     [Fact]
