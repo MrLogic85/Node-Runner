@@ -117,7 +117,7 @@ public sealed class DrawGroups
     /// (<see cref="SelectionMarks.JointHalo"/>); a sensor's picture; or a link within its drawn body
     /// (<see cref="SelectionMarks.LinkBody"/>), outside its ends' hubs, since it is drawn hub to hub
     /// (#1086), under a ring, hub or Servo. A Wheel is hit only at its hub (#1086); its tyre and its
-    /// see-through middle never take a touch. Parts rank by <see cref="Rank"/>, the <paramref name="raised"/> ones on
+    /// see-through middle are left to a tap's last fallback, <see cref="WheelDiscAt"/>. Parts rank by <see cref="Rank"/>, the <paramref name="raised"/> ones on
     /// the selected surface. A Servo or Wheel is hit as itself; null off every part. Joint positions
     /// come from <c>nodeAt</c>, so a moving creature is hit where it is drawn now.
     /// </summary>
@@ -190,6 +190,25 @@ public sealed class DrawGroups
                 top = part;
             }
         }
+    }
+
+    /// <summary>
+    /// The Wheel whose disc, face and tyre out to its <see cref="WheelDef.Radius"/>, holds
+    /// <paramref name="position"/> (#1143): where discs overlap, the one whose hub is nearest, then the
+    /// lower id. A touch asks last, after every part <see cref="PartAt"/> and a finger's reach find,
+    /// so a disc covers nothing but other discs. Null outside every disc.
+    /// </summary>
+    public static WheelDef? WheelDiscAt(Vector2D position, Func<int, Vector2D> nodeAt, IEnumerable<WheelDef> wheels)
+    {
+        ArgumentNullException.ThrowIfNull(nodeAt);
+        ArgumentNullException.ThrowIfNull(wheels);
+        return wheels
+            .Select(wheel => (Wheel: wheel, DistanceSquared: DistanceSquared(nodeAt(wheel.NodeId), position)))
+            .Where(entry => entry.DistanceSquared <= entry.Wheel.Radius * entry.Wheel.Radius)
+            .OrderBy(entry => entry.DistanceSquared)
+            .ThenBy(entry => entry.Wheel.Id)
+            .Select(entry => entry.Wheel)
+            .FirstOrDefault();
     }
 
     private static double DistanceSquared(Vector2D a, Vector2D b)

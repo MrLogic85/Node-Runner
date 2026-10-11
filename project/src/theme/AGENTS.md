@@ -28,8 +28,8 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    raised. Never draw a part's mark on a separate layer. A Touch sensor's
    part is the cushion `JointPart` draws, so `JointPart` draws its mark
    too. Two exceptions:
-   - A Wheel's mark is drawn by its joint (`JointPart`), which draws the
-     hub it is chosen at, so it lies over the links and the cushion
+   - A Wheel's mark is drawn by its joint (`JointPart`), which draws its
+     hub, so it lies over the links and the cushion
      (`docs/WORLD_VISUALS.md` → "Selection marks").
    - A selected Servo's Fixed and Target link bands lie along other
      parts' links, so the Build canvas draws them on

@@ -212,6 +212,20 @@ public sealed class DrawGroupsTests
     }
 
     [Fact]
+    public void A_Wheels_disc_holds_a_point_out_to_its_radius_the_nearest_hub_winning_then_the_lower_id()
+    {
+        // #1143: Wheel 41 round (0, 0) and Wheel 40 round (100, 0), both 1 m, overlap between them.
+        Dictionary<int, Vector2D> hubs = new() { [1] = new(0, 0), [2] = new(100, 0) };
+        WheelDef[] wheels = [new(41, 1, radius: 100), new(40, 2, radius: 100)];
+
+        DrawGroups.WheelDiscAt(new Vector2D(0, -100), id => hubs[id], wheels)!.Id.ShouldBe(41);
+        DrawGroups.WheelDiscAt(new Vector2D(0, -101), id => hubs[id], wheels).ShouldBeNull();
+        DrawGroups.WheelDiscAt(new Vector2D(40, 60), id => hubs[id], wheels)!.Id.ShouldBe(41);
+        DrawGroups.WheelDiscAt(new Vector2D(60, 60), id => hubs[id], wheels)!.Id.ShouldBe(40);
+        DrawGroups.WheelDiscAt(new Vector2D(50, 60), id => hubs[id], wheels)!.Id.ShouldBe(40);
+    }
+
+    [Fact]
     public void A_sensor_is_hit_over_its_beam()
     {
         SensorDef[] sensors = [new(50, 20, SensorKind.Camera)];

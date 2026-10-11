@@ -258,7 +258,8 @@ the reference's "a training session has finished" (#369).
     so UI layout and scale never touch physics distances or gravity. A tap
     on the arena selects a part of the followed shadow; a part takes a tap
     within 16 px of it on screen at least, so it stays easy to hit zoomed
-    out; a tap on a joint with parts on it selects them all
+    out; off every part, a Wheel's disc stands for its joint, as in Build
+    (`docs/BUILD_MODE.md` → Interactions, #1143); a tap on a joint with parts on it selects them all
     (`docs/BUILD_MODE.md` → "Parts stand in for their joint", #1066). The
     selected parts' Build names show in one callout docked at the arena
     top (#388, #1137), with a live bar for each of their brain ports

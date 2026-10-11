@@ -123,16 +123,99 @@ public sealed class BuildWheelTests
     }
 
     [Fact]
-    public void Tap_AWheelsSeeThroughFaceOrTyre_SelectsNothing()
+    public void Tap_AWheelsSeeThroughFaceOrTyre_TogglesTheWheel()
     {
-        // #1086: a Wheel is touched only at its hub, so its face never hides what it covers.
-        var (build, gestures, _) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
+        // #1143: off every part and reach, a tap on a Wheel's disc stands for the Wheel.
+        var (build, gestures, wheel) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
+
+        Tap(gestures, new Vector2D(100, 50));
+        build.SingleSelectedWheelId.ShouldBe(wheel);
 
         Tap(gestures, new Vector2D(100, 50));
         build.SelectedPartCount.ShouldBe(0);
 
         Tap(gestures, new Vector2D(100, WheelDef.MaxRadius - 2));
+        build.SingleSelectedWheelId.ShouldBe(wheel);
+    }
+
+    [Fact]
+    public void Tap_JustOutsideAWheelsDisc_ClearsTheSelection()
+    {
+        var (build, gestures, wheel) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
+        build.ToggleSelected(new CreatureElementSelection(CreatureElementKind.Wheel, wheel));
+
+        Tap(gestures, new Vector2D(100, WheelDef.MaxRadius + 2));
+
         build.SelectedPartCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Tap_AJointOnAWheelsDisc_SelectsTheJoint_NotTheWheel()
+    {
+        // The joint at (0, 0) sits on the rim of the Wheel round (100, 0): every part wins over a disc (#1143).
+        var (build, gestures, _) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
+
+        Tap(gestures, new Vector2D(2, 2));
+
+        build.SingleSelectedNodeId.ShouldBe(1);
+        build.Selection.Wheels.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Tap_WhereTwoDiscsOverlap_SelectsTheWheelWithTheNearestHub_ThenTheLowerId()
+    {
+        // Wheel 6 on joint 2 (100, 0) and Wheel 7 on joint 1 (0, 0), both 1 m, overlap between them.
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))],
+            [new BeamDef(3, 1, 2)],
+            [],
+            [],
+            [],
+            [],
+            [new WheelDef(7, 1, radius: WheelDef.MaxRadius), new WheelDef(6, 2, radius: WheelDef.MaxRadius)],
+            nextPartId: 8));
+        build.ActiveTool = BuildTool.Select;
+        var gestures = new BuildGestures(build);
+
+        Tap(gestures, new Vector2D(40, 60));
+        build.SingleSelectedWheelId.ShouldBe(7);
+
+        build.ClearSelection();
+        Tap(gestures, new Vector2D(50, 60));
+        build.SingleSelectedWheelId.ShouldBe(6);
+    }
+
+    [Theory]
+    [InlineData(BuildTool.Joint)]
+    [InlineData(BuildTool.Beam)]
+    public void Tap_AWheelsDisc_WithNothingSelected_SelectsTheWheel_InJointAndLinksToo(BuildTool tool)
+    {
+        // #1143 (owner's choice): the disc wins over adding a joint and over clearing the picked link.
+        var (build, gestures, wheel) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
+        build.ActiveTool = tool;
+        var nodes = build.Nodes.Count;
+
+        Tap(gestures, new Vector2D(100, 50));
+
+        build.SingleSelectedWheelId.ShouldBe(wheel);
+        build.Nodes.Count.ShouldBe(nodes);
+    }
+
+    [Fact]
+    public void ADragOrDropOnAWheelsEmptyDisc_DoesNotTakeTheWheel()
+    {
+        // #1143: only a released tap falls back to the disc, so a drag draws a box as before,
+        // and a sensor dropped there finds no beam.
+        var (build, gestures, _) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
+
+        gestures.Press(new Vector2D(100, 50));
+        gestures.Drag(new Vector2D(100, 90));
+        gestures.Release(new Vector2D(100, 90));
+
+        build.Nodes.Single(node => node.Id == 2).Position.ShouldBe(new Vector2D(100, 0));
+        build.SelectedPartCount.ShouldBe(0);
+        gestures.DropTargetAt(new Vector2D(100, 50), BuildPart.Camera).ShouldBeNull();
     }
 
     [Fact]
