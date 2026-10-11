@@ -165,9 +165,9 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
 - **Touch sensor:** the joint's ring mark outside the cushion, at R + 8
   (#1045). The joint gets no mark of its own.
 - **Wheel:** the joint's ring, outside the tyre. The Wheel stands in for its
-  joint, which has no mark of its own. It is chosen at its hub, so its joint
-  draws the mark with the hub, over the links and a Touch sensor's
-  cushion. With a Servo on the same joint, each selected part shows its
+  joint, which has no mark of its own. Its joint draws the mark with the
+  hub, over the links and a Touch sensor's cushion, however it was chosen
+  (`docs/BUILD_MODE.md` → Interactions). With a Servo on the same joint, each selected part shows its
   own mark (#1044).
 - **Servo:** a keyhole `halo` outline. Selected alone, a hatched `detail`
   band also marks its Fixed link and an `accent` band its Target link. A

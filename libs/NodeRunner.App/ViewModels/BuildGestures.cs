@@ -621,7 +621,8 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// A tap in any tool (#803) adds or removes the part under it. A tap on empty canvas clears the
+    /// A tap in any tool (#803) adds or removes the part under it; off every part and reach, a
+    /// Wheel's disc stands for the Wheel (#1143). A tap on empty canvas clears the
     /// selection, or with nothing selected adds a joint in Joint or clears the picked link in
     /// Links (#1057); one on a handle does nothing. With a tray part to place, a tap places it where
     /// a drop there would (#805), and one on empty canvas puts it back (#1055).
@@ -650,6 +651,10 @@ public sealed class BuildGestures
         else if (_pressedHandle is not null)
         {
             return;
+        }
+        else if (_build.WheelDiscAt(_pressPosition) is { } wheel)
+        {
+            _build.ToggleSelected(wheel);
         }
         else if (_pressTool == BuildTool.Joint && _build.Selection.Count == 0)
         {

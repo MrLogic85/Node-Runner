@@ -9,7 +9,8 @@ public partial class Creature
 {
     /// <summary>
     /// The part a tap at <paramref name="globalPosition"/> selects: the one drawn on top there
-    /// (#1107), as in Build; off every part, the first within a finger's reach.
+    /// (#1107), as in Build; off every part, the first within a finger's reach; then a Wheel's
+    /// disc (#1143).
     /// </summary>
     public bool TrySelectPart(Vector2 globalPosition, out CreatureElementSelection? selection)
     {
@@ -79,9 +80,18 @@ public partial class Creature
             }
         }
 
+        // Off every part and reach, a Wheel's face or tyre stands for the Wheel (#1143).
+        if (DrawGroups.WheelDiscAt(ToDomain(globalPosition), nodeId => ToDomain(_nodeVisuals[Definition!.NodeIndexOf(nodeId)].GlobalPosition), Definition!.Wheels) is { } disc)
+        {
+            selection = new CreatureElementSelection(CreatureElementKind.Wheel, disc.Id);
+            return true;
+        }
+
         selection = null;
         return false;
     }
+
+    private static Vector2D ToDomain(Vector2 position) => new(position.X, position.Y);
 
     // The part drawn on top at the point (#1107), by the rule Build's touches follow too.
     private CreatureElementSelection? DrawnPartAt(Vector2 globalPosition)
@@ -98,8 +108,6 @@ public partial class Creature
             definition.Wheels,
             definition.Sensors,
             _raised);
-
-        static Vector2D ToDomain(Vector2 position) => new(position.X, position.Y);
     }
 
     /// <summary>
@@ -158,7 +166,7 @@ public partial class Creature
                 continue;
             }
 
-            // A Wheel is chosen at its hub, so its joint draws its mark, over the links (#1045).
+            // A Wheel's joint draws its mark with the hub, over the links (#1045).
             if (part.Kind == CreatureElementKind.Wheel)
             {
                 _nodeVisuals[Definition!.NodeIndexOf(Definition.Wheels[Definition.WheelIndexOf(part.Id)].NodeId)].WheelSelected = true;

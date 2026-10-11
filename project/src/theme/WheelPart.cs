@@ -9,8 +9,8 @@ namespace NodeRunner.Theme;
 /// edge is the collision radius, with a fine line <see cref="TyreWidth"/> inside it, and see-through
 /// within that, so it never hides what lies under it (#1086); and <see cref="CueCount"/> tubes in
 /// the tyre band that turn with the part, so a rolling wheel reads as rolling. Its links are drawn over it to the hub,
-/// which its joint draws over them (<see cref="DrawHub"/>, #1086). A Wheel is chosen at its hub,
-/// so its joint draws its selection mark too (<see cref="JointPart.WheelSelected"/>). Training hangs it on the
+/// which its joint draws over them (<see cref="DrawHub"/>, #1086). Its joint draws its selection
+/// mark too, with the hub over the links (<see cref="JointPart.WheelSelected"/>). Training hangs it on the
 /// wheel's body, so its own rotation is the wheel's; Build shows it at rotation 0.
 /// </summary>
 public partial class WheelPart : PartVisual

@@ -770,6 +770,15 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
+    /// The Wheel whose disc holds <paramref name="position"/> (#1143, <see cref="Domain.DrawGroups.WheelDiscAt"/>):
+    /// a tap's last fallback, after every part and reach, never a press's or a drop's. Null outside every disc.
+    /// </summary>
+    public CreatureElementSelection? WheelDiscAt(Vector2D position) =>
+        Domain.DrawGroups.WheelDiscAt(position, nodeId => NodeById(nodeId).Position, _builder.Wheels) is { } wheel
+            ? new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)
+            : null;
+
+    /// <summary>
     /// What the canvas draws on the selected surface (#1107), which a touch hits there too
     /// (<see cref="DrawnPartAt"/>): what belongs with <paramref name="selected"/>, a joint part
     /// as its joint, and the <paramref name="targets"/> alone, with the moved sensor.

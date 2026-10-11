@@ -91,11 +91,19 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   Draw layers), in Build and Training alike: a joint's ring, Servo or a
   Wheel's hub, each with the selection gap (#710); a sensor's picture; or a
   link within `SelectionMarks.LinkBody` of its line, outside its ends' hubs,
-  as it is drawn (#1086). A Wheel is touched only at its hub, never its
-  see-through face or tyre (#1086). Raised targets of a placed part count
+  as it is drawn (#1086). A press or drop touches a Wheel only at its hub,
+  never its see-through face or tyre (#1086). Raised targets of a placed part count
   as drawn over the rest. Off
   every part, Build falls back to finger-sized reach: a link (the nearest,
-  a Spring on a tie), then a beam. Joints and sensors
+  a Spring on a tie), then a beam. Only a released tap that reaches nothing
+  else, not even a handle, falls back to a Wheel's disc, face and tyre out
+  to its Radius, and adds or removes that Wheel (#1143); where discs overlap
+  the Wheel with the nearest hub wins, then the lower id
+  (`DrawGroups.WheelDiscAt`), even over a tyre drawn on top. So a disc
+  covers nothing but other discs, and a tap on one selects the Wheel
+  instead of adding a joint in Joint or clearing the picked link in Links
+  (owner's choice). The face never takes a press or drop, raised or not.
+  Training's part taps follow the same order. Joints and sensors
   are in canvas units, so they grow and shrink with the drawing; beams,
   links and handles reach finger-sized areas on screen at any zoom.
 - **Every tool (#746, #803)** shares one selection model; the tools differ
