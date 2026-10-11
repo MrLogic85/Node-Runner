@@ -213,8 +213,8 @@ public sealed record CreatureDef
     /// <summary>
     /// The drawn and collision radius of the joint <paramref name="nodeId"/> among these joint parts
     /// (#452, #626, #129): the largest of a plain joint's, a Servo's housing and a Wheel's
-    /// <see cref="WheelDef.Radius"/> on it. Every joint size, from links' ends to hit tests and
-    /// framing, comes from here.
+    /// <see cref="WheelDef.Radius"/> on it, for collision and framing. Links' ends use
+    /// <see cref="NodeDef.HubRadius"/>, and touch and sensors <see cref="CoveredRadius(int)"/> (#1086).
     /// </summary>
     public static double JointRadius(int nodeId, IEnumerable<ServoDef> servos, IEnumerable<WheelDef> wheels)
     {
@@ -238,6 +238,24 @@ public sealed record CreatureDef
             .. servos.Where(servo => servo.NodeId == nodeId).Select(servo => new CreatureElementSelection(CreatureElementKind.Servo, servo.Id)),
             .. wheels.Where(wheel => wheel.NodeId == nodeId).Select(wheel => new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)),
         ];
+    }
+
+    /// <summary>A node's covered radius: see the static <see cref="CoveredRadius(int, IEnumerable{ServoDef})"/>.</summary>
+    public double CoveredRadius(int nodeId)
+    {
+        NodeIndexOf(nodeId);
+        return CoveredRadius(nodeId, _servos);
+    }
+
+    /// <summary>
+    /// How far out from the joint <paramref name="nodeId"/> what is drawn over its links reaches
+    /// (#1086): a Servo on it, or else its hub, ring or Wheel's hub. A Wheel's face lies under its
+    /// links, so it covers nothing of them.
+    /// </summary>
+    public static double CoveredRadius(int nodeId, IEnumerable<ServoDef> servos)
+    {
+        ArgumentNullException.ThrowIfNull(servos);
+        return servos.Any(servo => servo.NodeId == nodeId) ? ServoDef.JointRadius : NodeDef.HubRadius;
     }
 
     /// <summary>Whether the joint <paramref name="nodeId"/> holds a joint part, a Servo or a Wheel (#129), among these.</summary>

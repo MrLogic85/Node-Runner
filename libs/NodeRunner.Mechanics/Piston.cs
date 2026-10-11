@@ -36,7 +36,7 @@ public static class Piston
     /// <summary>Where <paramref name="length"/> is in its travel: 0 at its shortest, 1 at its longest; not clamped.</summary>
     /// <param name="piston">The Piston and its settings.</param>
     /// <param name="builtLength">Its length as built, centre to centre.</param>
-    /// <param name="jointRadii">Its two joints' radii together: its travel is on the gap between their edges.</param>
+    /// <param name="jointRadii">The radii its two ends leave out together, its hubs' (<see cref="Travel.HubRadii"/>): its travel is on the gap between them.</param>
     /// <param name="length">Its length now, centre to centre.</param>
     public static double LengthInput(PistonDef piston, double builtLength, double jointRadii, double length)
     {
@@ -49,7 +49,7 @@ public static class Piston
     public static double SpeedInput(double speed, double maxSpeed) => Math.Tanh(speed / maxSpeed);
 
     /// <summary>
-    /// Its shortest length, centre to centre: the gap between its joints' edges (#835) sits
+    /// Its shortest length, centre to centre: the gap between its hubs (#835, #1086) sits
     /// <see cref="PistonDef.Start"/> of the way to its longest as drawn.
     /// </summary>
     public static double ShortestLength(PistonDef piston, double builtLength, double jointRadii)
@@ -100,7 +100,7 @@ public static class Piston
     /// </remarks>
     /// <param name="piston">The Piston and its settings.</param>
     /// <param name="builtLength">Its length as built, centre to centre.</param>
-    /// <param name="jointRadii">Its two joints' radii together: its travel is on the gap between their edges.</param>
+    /// <param name="jointRadii">The radii its two ends leave out together, its hubs' (<see cref="Travel.HubRadii"/>): its travel is on the gap between them.</param>
     /// <param name="length">Its length now.</param>
     /// <param name="speed">How fast its length grows, in world units per second.</param>
     /// <param name="position">The brain's position output, −1 fully in … +1 fully out (<see cref="TargetLength"/>).</param>

@@ -5,6 +5,26 @@ namespace NodeRunner.Domain.Tests;
 public sealed class CreatureDefTests
 {
     [Fact]
+    public void CoveredRadius_IsAServos_ElseTheHub_WhateverWheelSitsThere()
+    {
+        // #1086: a Wheel's face lies under its links, so only a Servo covers more than the hub.
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
+            [],
+            [new ServoDef(6, 2)],
+            [],
+            [],
+            [new WheelDef(7, 1, radius: WheelDef.MaxRadius), new WheelDef(8, 2)],
+            nextPartId: 9);
+
+        creature.CoveredRadius(1).ShouldBe(NodeDef.HubRadius);
+        creature.CoveredRadius(2).ShouldBe(ServoDef.JointRadius);
+        creature.CoveredRadius(3).ShouldBe(NodeDef.HubRadius);
+        Should.Throw<ArgumentException>(() => creature.CoveredRadius(99));
+    }
+
+    [Fact]
     public void PartCount_CountsEveryKindOfPart()
     {
         var creature = new CreatureDef(

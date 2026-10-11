@@ -5,20 +5,27 @@ using NodeRunner.Mechanics;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// One accelerometer on its beam: each physics tick it measures the beam's midpoint acceleration
-/// (the body origin), turns it into specific force (at rest 1 g up), steps the Mechanics <see cref="Accelerometer"/> proof mass and
+/// One accelerometer on its beam: each physics tick it measures the acceleration where its picture
+/// sits on the beam body (<see cref="SensorPicture.Centre"/>, #1086), turns it into specific force (at rest 1 g up), steps the Mechanics <see cref="Accelerometer"/> proof mass and
 /// writes its two readings. <see cref="CurrentProofMass"/> is what the brain reads.
 /// </summary>
 public sealed class AccelerometerSensor : IBeamSensor
 {
     private readonly RigidBody2D _beamBody;
+    private readonly Vector2 _at;
     private readonly int _upSign;
     private readonly double _gravity;
-    private Vector2 _previousMidpointVelocity;
+    private Vector2 _previousVelocity;
 
-    public AccelerometerSensor(RigidBody2D beamBody, int upSign, double gravity)
+    /// <summary>An accelerometer reading <paramref name="beamBody"/> at <paramref name="at"/>.</summary>
+    /// <param name="beamBody">The beam it sits on, turning about its origin.</param>
+    /// <param name="at">Where its picture sits on the beam body, in the body's space.</param>
+    /// <param name="upSign">Which side of the beam is its up, +1 or −1.</param>
+    /// <param name="gravity">The world's gravity, for the 1 g it feels at rest.</param>
+    public AccelerometerSensor(RigidBody2D beamBody, Vector2 at, int upSign, double gravity)
     {
         _beamBody = beamBody ?? throw new ArgumentNullException(nameof(beamBody));
+        _at = at;
         _upSign = upSign;
         _gravity = gravity > 0 && double.IsFinite(gravity)
             ? gravity
@@ -34,15 +41,16 @@ public sealed class AccelerometerSensor : IBeamSensor
 
     public void Reset()
     {
-        _previousMidpointVelocity = Vector2.Zero;
+        _previousVelocity = Vector2.Zero;
         CurrentProofMass = Accelerometer.Rest(RestSpecificForce());
     }
 
     public void Read(double[] values, int startIndex, double dt)
     {
-        var velocity = _beamBody.LinearVelocity;
-        var acceleration = (velocity - _previousMidpointVelocity) / (float)dt;
-        _previousMidpointVelocity = velocity;
+        var state = PhysicsServer2D.BodyGetDirectState(_beamBody.GetRid());
+        var velocity = state.GetVelocityAtLocalPosition(_beamBody.GlobalTransform.BasisXform(_at));
+        var acceleration = (velocity - _previousVelocity) / (float)dt;
+        _previousVelocity = velocity;
 
         var worldSpecificForce = Accelerometer.SpecificForce(new Vector2D(acceleration.X, acceleration.Y), _gravity);
         var sensorForce = Accelerometer.ToSensorFrame(worldSpecificForce, _beamBody.Rotation, _upSign);

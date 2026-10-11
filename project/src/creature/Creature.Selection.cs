@@ -22,7 +22,8 @@ public partial class Creature
         var tolerance = GetHitTolerance();
         for (var nodeIndex = 0; nodeIndex < _nodeVisuals.Length; nodeIndex++)
         {
-            var radius = Math.Max(tolerance, ToGodotFloat(Definition!.NodeRadius(Definition.Nodes[nodeIndex].Id), nameof(ServoDef.JointRadius)));
+            // A Wheel is touched only at its hub (#1086), as it is drawn over its links.
+            var radius = Math.Max(tolerance, ToGodotFloat(Definition!.CoveredRadius(Definition.Nodes[nodeIndex].Id), nameof(ServoDef.JointRadius)));
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
                 var nodeId = Definition!.Nodes[nodeIndex].Id;
@@ -37,11 +38,10 @@ public partial class Creature
 
         for (var sensorIndex = 0; sensorIndex < _sensorVisuals.Length; sensorIndex++)
         {
-            var beamIndex = Definition!.BeamIndexOf(Definition.Sensors[sensorIndex].BeamId);
-            var local = _beamBodies[beamIndex].ToLocal(globalPosition);
+            var local = _sensorVisuals[sensorIndex].ToLocal(globalPosition);
             if (local.LengthSquared() <= tolerance * tolerance)
             {
-                selection = new CreatureElementSelection(CreatureElementKind.Sensor, Definition.Sensors[sensorIndex].Id);
+                selection = new CreatureElementSelection(CreatureElementKind.Sensor, Definition!.Sensors[sensorIndex].Id);
                 return true;
             }
         }
@@ -183,7 +183,7 @@ public partial class Creature
         for (var i = 0; i < _wheelVisuals.Length; i++)
         {
             var id = definition.Wheels[i].NodeId;
-            _wheelVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
+            _wheelVisuals[i].Place(groups, id, _raised.Wheels.Contains(id));
         }
 
         for (var i = 0; i < _beamVisuals.Length; i++)

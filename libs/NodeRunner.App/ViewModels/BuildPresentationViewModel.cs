@@ -329,7 +329,7 @@ public sealed class BuildPresentationViewModel
         };
 
         bool IsTooShort(int nodeA, int nodeB) =>
-            CreatureReadiness.IsTooShort(NodeById(nodeA), NodeById(nodeB), _build.NodeRadius(nodeA), _build.NodeRadius(nodeB));
+            CreatureReadiness.IsTooShort(NodeById(nodeA), NodeById(nodeB));
     }
 
     private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];

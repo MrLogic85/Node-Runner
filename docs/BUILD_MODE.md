@@ -88,10 +88,12 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
 
 - A pointer that travels at most `TapSlop` view units is a tap. A tap or
   drop hits the part drawn on top there (#1107, `docs/WORLD_VISUALS.md` →
-  Draw layers), in Build and Training alike: a joint's ring, Servo or
-  Wheel, each with the selection gap (#710); a sensor's picture; or a link
-  within `SelectionMarks.LinkBody` of its line, outside its own ends' touch
-  areas. Raised targets of a placed part count as drawn over the rest. Off
+  Draw layers), in Build and Training alike: a joint's ring, Servo or a
+  Wheel's hub, each with the selection gap (#710); a sensor's picture; or a
+  link within `SelectionMarks.LinkBody` of its line, outside its ends' hubs,
+  as it is drawn (#1086). A Wheel is touched only at its hub, never its
+  see-through face or tyre (#1086). Raised targets of a placed part count
+  as drawn over the rest. Off
   every part, Build falls back to finger-sized reach: a link (the nearest,
   a Spring on a tie), then a beam. Joints and sensors
   are in canvas units, so they grow and shrink with the drawing; beams,

@@ -47,8 +47,8 @@ public partial class BuildCanvas
         var from = NodeById(start);
         var target = (_gestures.BeamTargetNodeId ?? refused) is { } id ? NodeById(id) : null;
         var to = target?.Position ?? end;
-        // Like a beam, it starts at the joint's ring, and ends at the target's ring or the finger.
-        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), (float)_viewModel.NodeRadius(from.Id), ToGodot(to), (float)(target is null ? 0 : _viewModel.NodeRadius(target.Id))) is not (var lineStart, var lineEnd))
+        // Like a beam, it starts at the joint's hub (#1086), and ends at the target's hub or the finger.
+        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), JointDrawing.HubRadius, ToGodot(to), target is null ? 0 : JointDrawing.HubRadius) is not (var lineStart, var lineEnd))
         {
             return;
         }
@@ -70,7 +70,7 @@ public partial class BuildCanvas
         var beam = _viewModel.Beams[_viewModel.BeamIndexOf(beamId)];
         var a = NodeById(beam.NodeA);
         var b = NodeById(beam.NodeB);
-        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(a.Position), (float)_viewModel.NodeRadius(a.Id), ToGodot(b.Position), (float)_viewModel.NodeRadius(b.Id)) is not (var start, var end))
+        if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(a.Position), JointDrawing.HubRadius, ToGodot(b.Position), JointDrawing.HubRadius) is not (var start, var end))
         {
             return;
         }

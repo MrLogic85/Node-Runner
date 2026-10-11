@@ -518,9 +518,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         void AddTooShortNote(CreatureElementKind kind, int id, int nodeA, int nodeB)
         {
-            var a = Nodes[NodeIndexOf(nodeA)];
-            var b = Nodes[NodeIndexOf(nodeB)];
-            if (CreatureReadiness.IsTooShort(a, b, NodeRadius(a.Id), NodeRadius(b.Id)))
+            if (CreatureReadiness.IsTooShort(Nodes[NodeIndexOf(nodeA)], Nodes[NodeIndexOf(nodeB)]))
             {
                 notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Too short")));
             }
@@ -672,12 +670,22 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             var beam = Beams[BeamIndexOf(camera.BeamId)];
             var nodeA = Nodes[NodeIndexOf(beam.NodeA)].Position;
             var nodeB = Nodes[NodeIndexOf(beam.NodeB)].Position;
-            var origin = new Vector2D((nodeA.X + nodeB.X) / 2, (nodeA.Y + nodeB.Y) / 2);
+            var origin = SensorCentre(camera.Id);
             var (sin, cos) = Math.SinCos(CameraRays.BeamAngle(nodeA, nodeB));
             IReadOnlyList<Vector2D> ends = [.. CameraRays.LocalRayTargets(camera, camera.Aim ?? SensorDef.DefaultAim(nodeA, nodeB))
                 .Select(target => new Vector2D(origin.X + (target.X * cos) - (target.Y * sin), origin.Y + (target.X * sin) + (target.Y * cos)))];
             return (origin, ends);
         })];
+    }
+
+    /// <summary>Where the sensor <paramref name="sensorId"/> sits on its beam and senses from (<see cref="SensorPicture.Centre"/>, #1086).</summary>
+    public Vector2D SensorCentre(int sensorId) => SensorCentreOn(Sensors.Single(sensor => sensor.Id == sensorId).BeamId);
+
+    /// <summary>Where a sensor sits on the beam <paramref name="beamId"/> (<see cref="SensorPicture.Centre"/>, #1086).</summary>
+    public Vector2D SensorCentreOn(int beamId)
+    {
+        var beam = Beams[BeamIndexOf(beamId)];
+        return SensorPicture.Centre(Nodes[NodeIndexOf(beam.NodeA)].Position, Nodes[NodeIndexOf(beam.NodeB)].Position, CreatureDef.CoveredRadius(beam.NodeA, Servos), CreatureDef.CoveredRadius(beam.NodeB, Servos));
     }
 
     /// <summary>

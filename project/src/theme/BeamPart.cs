@@ -5,8 +5,8 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A beam (#767) from <see cref="A"/> to <see cref="B"/>: a flat rod hidden under the joint rings it
-/// stops on (#626), or centre to centre when the rings meet, and, while selected, a <c>halo</c>
+/// A beam (#767) from <see cref="A"/> to <see cref="B"/>: a flat rod from hub to hub (#1086), its
+/// ends hidden under the joint rings (#626), or centre to centre when the hubs meet, and, while selected, a <c>halo</c>
 /// line along each side. Under the rod it draws its <see cref="Placing"/> mark. The rod is drawn in
 /// window pixels (<see cref="UiPixelPen"/>) like the joints, so its edges stay smooth at any zoom.
 /// </summary>
@@ -40,14 +40,14 @@ public partial class BeamPart : PartVisual
         set => Change(ref _b, value);
     }
 
-    /// <summary>The radius of the joint at <see cref="A"/>, where the drawn beam stops.</summary>
+    /// <summary>The drawn radius of the joint at <see cref="A"/>, whose halo the selection lines join (#710).</summary>
     public float RadiusA
     {
         get => _radiusA;
         set => Change(ref _radiusA, value);
     }
 
-    /// <summary>The radius of the joint at <see cref="B"/>, where the drawn beam stops.</summary>
+    /// <summary>The drawn radius of the joint at <see cref="B"/>.</summary>
     public float RadiusB
     {
         get => _radiusB;
@@ -84,7 +84,7 @@ public partial class BeamPart : PartVisual
 
     public override void _Draw()
     {
-        var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, A, RadiusA, B, RadiusB) ?? (A, B);
+        var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, A, JointDrawing.HubRadius, B, JointDrawing.HubRadius) ?? (A, B);
         using (var pen = UiPixelPen.Begin(this))
         {
             if (Placing == PlacingMark.Takes && start != end)

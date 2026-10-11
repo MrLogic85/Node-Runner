@@ -1,8 +1,8 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A sensor part on a beam, referenced by the beam's stable id. It measures its own beam at the
-/// midpoint; a beam holds one sensor. A Camera also has an <see cref="Aim"/>, and its
+/// A sensor part on a beam, referenced by the beam's stable id. It measures its own beam where its
+/// picture sits (<see cref="SensorPicture.Centre"/>); a beam holds one sensor. A Camera also has an <see cref="Aim"/>, and its
 /// <see cref="Rays"/>, <see cref="Spread"/> and <see cref="Range"/> (#578). See
 /// docs/CREATURE_MODEL.md.
 /// </summary>

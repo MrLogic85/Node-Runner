@@ -45,15 +45,6 @@ public sealed class SpringTests
     }
 
     [Fact]
-    public void AServosBiggerJoint_ShortensItsTravel()
-    {
-        var spring = new SpringDef(1, 2, 3);
-
-        Spring.TravelLength(spring, _built, NodeDef.PlainJointRadius + ServoDef.JointRadius)
-            .ShouldBeLessThan(Spring.TravelLength(spring, _built, 2 * NodeDef.PlainJointRadius));
-    }
-
-    [Fact]
     public void WithItsJointsTouching_ItHasNoTravel_AndRestsAsDrawn()
     {
         var spring = new SpringDef(1, 2, 3, coilLength: 1);
@@ -63,15 +54,15 @@ public sealed class SpringTests
         Spring.RestLength(spring, _built, 120).ShouldBe(_built);
     }
 
-    // So a body from joint A's edge as long as its travel never reaches past joint B's edge.
+    // So a body from joint A's hub as long as its travel never reaches past joint B's hub (#1086).
     [Theory]
     [InlineData(0.1, 0.5)]
     [InlineData(1, 0)]
     [InlineData(1, 1)]
-    public void AtItsShortest_TheGapBetweenItsJointsEdges_IsAtLeastItsTravel(double stroke, double coilLength)
+    public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastItsTravel(double stroke, double coilLength)
     {
         var spring = new SpringDef(1, 2, 3, stroke: stroke, coilLength: coilLength);
-        var radii = NodeDef.PlainJointRadius + ServoDef.JointRadius;
+        var radii = Travel.HubRadii;
 
         (Spring.ShortestLength(spring, _built, radii) - radii).ShouldBeGreaterThanOrEqualTo(Spring.TravelLength(spring, _built, radii));
     }

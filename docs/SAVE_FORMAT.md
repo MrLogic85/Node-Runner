@@ -160,6 +160,10 @@ Current `creation.json` migrations:
 | 4 | 5 | #129: add required `creature.wheels: []`. |
 | 5 | 6 | #578: each Camera gets `rays: 3`, `spread: π/2` and `range: 220`, the fan every Camera had, so it sees and reads as before. |
 
+#1086 needs no migration: its saved shape is unchanged, but a saved creature
+with a Wheel or Servo moves and senses a little differently, since links and
+sensors now measure from the hub (`docs/CREATURE_MODEL.md` → Node, Sensor).
+
 ### Changing a saved shape
 
 1. Change the record, this document and the schema as usual.

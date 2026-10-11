@@ -66,10 +66,12 @@ public sealed class DrawGroups
     /// <summary>
     /// What rises to the selected surface (#1107): the <paramref name="selected"/> joints, a Servo
     /// or Wheel as its joint, with their links; the selected links; the joints at the ends of all
-    /// those links, so a link never covers the ring at its end; every link whose ends both rose
-    /// with its sensor, so a raised Wheel or Servo never hides it; and the selected sensors. The
-    /// <paramref name="targetLinks"/> and <paramref name="targetJoints"/> a placed part can take
-    /// rise alone, without what they join.
+    /// those links, so a link never covers the ring, hub or Servo at its end; every link whose ends
+    /// both rose with its sensor, so a raised Servo never hides it; and the selected sensors. A
+    /// Wheel's face, under its links, rises only with a selected joint, so a raised link never makes
+    /// it cover the Wheel's other links (#1086). The <paramref name="targetLinks"/> and
+    /// <paramref name="targetJoints"/> a placed part can take rise alone, without what they join,
+    /// and a target joint's Wheel face stays down.
     /// </summary>
     public RaisedParts Raised(
         IEnumerable<CreatureElementSelection> selected,
@@ -94,6 +96,7 @@ public sealed class DrawGroups
             })
             .Where(nodeId => nodeId >= 0)
             .ToHashSet();
+        var wheelJoints = joints.ToHashSet();
         var links = _linkRefs.Values.Where(link => joints.Contains(link.NodeA) || joints.Contains(link.NodeB)).Select(link => link.Id).ToHashSet();
         links.UnionWith(parts.Where(part => part.Kind is CreatureElementKind.Beam or CreatureElementKind.Piston or CreatureElementKind.Spring && _linkRefs.ContainsKey(part.Id)).Select(part => part.Id));
         joints.UnionWith(links.SelectMany(id => new[] { _linkRefs[id].NodeA, _linkRefs[id].NodeB }));
@@ -101,15 +104,16 @@ public sealed class DrawGroups
         links.UnionWith(targetLinks ?? []);
         joints.UnionWith(targetJoints ?? []);
         var sensors = parts.Where(part => part.Kind == CreatureElementKind.Sensor).Select(part => part.Id).ToHashSet();
-        return new RaisedParts(links, joints, sensors);
+        return new RaisedParts(links, joints, sensors, wheelJoints);
     }
 
     /// <summary>
     /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees,
-    /// in Build and Training alike: a joint's ring or Servo, or a Wheel's face, each out to its
-    /// halo (<see cref="SelectionMarks.JointHalo"/>); a sensor's picture; or a link within its drawn
-    /// body (<see cref="SelectionMarks.LinkBody"/>), outside its own ends' halos, since it is drawn
-    /// rim to rim under them. Parts rank by <see cref="Rank"/>, the <paramref name="raised"/> ones on
+    /// in Build and Training alike: a joint's ring or Servo, or a Wheel's hub, each out to its halo
+    /// (<see cref="SelectionMarks.JointHalo"/>); a sensor's picture; or a link within its drawn body
+    /// (<see cref="SelectionMarks.LinkBody"/>), outside its ends' hubs, since it is drawn hub to hub
+    /// (#1086), under a ring, hub or Servo. A Wheel is hit only at its hub (#1086); its tyre and its
+    /// see-through middle never take a touch. Parts rank by <see cref="Rank"/>, the <paramref name="raised"/> ones on
     /// the selected surface. A Servo or Wheel is hit as itself; null off every part. Joint positions
     /// come from <c>nodeAt</c>, so a moving creature is hit where it is drawn now.
     /// </summary>
@@ -135,28 +139,27 @@ public sealed class DrawGroups
             var servo = servos.FirstOrDefault(servo => servo.NodeId == nodeId);
             var wheel = wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId);
             var lifted = raised.Joints.Contains(nodeId);
-            // A Servo or a joint's ring draws over the joint's links; a Wheel's face under them.
+            // A Servo, a joint's ring or a Wheel's hub draws over the joint's links. A Wheel is hit only
+            // at its hub, so its see-through tyre and middle never stand in the way of what lies under it.
             if (servo is not null && distance <= SelectionMarks.JointHalo(ServoDef.JointRadius))
             {
-                Consider(new CreatureElementSelection(CreatureElementKind.Servo, servo.Id), DrawSlot.Over, Joint(nodeId, DrawSlot.Over), lifted);
+                Consider(new CreatureElementSelection(CreatureElementKind.Servo, servo.Id), Rank(DrawSlot.Over, Joint(nodeId, DrawSlot.Over), lifted));
             }
-            else if (servo is null && wheel is null && distance <= SelectionMarks.JointHalo(NodeDef.PlainJointRadius))
+            else if (servo is null && distance <= SelectionMarks.JointHalo(NodeDef.HubRadius))
             {
-                Consider(new CreatureElementSelection(CreatureElementKind.Node, nodeId), DrawSlot.Over, Joint(nodeId, DrawSlot.Over), lifted);
-            }
-
-            if (wheel is not null && distance <= SelectionMarks.JointHalo(wheel.Radius))
-            {
-                Consider(new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id), DrawSlot.Under, Joint(nodeId, DrawSlot.Under), lifted);
+                var part = wheel is null
+                    ? new CreatureElementSelection(CreatureElementKind.Node, nodeId)
+                    : new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id);
+                Consider(part, Rank(DrawSlot.Over, Joint(nodeId, DrawSlot.Over), lifted));
             }
         }
 
         foreach (var sensor in sensors)
         {
             if (_linkRefs.TryGetValue(sensor.BeamId, out var beam)
-                && SensorPicture.Contains(sensor.Kind, position, nodeAt(beam.NodeA), nodeAt(beam.NodeB)))
+                && SensorPicture.Contains(sensor.Kind, position, nodeAt(beam.NodeA), nodeAt(beam.NodeB), CreatureDef.CoveredRadius(beam.NodeA, servos), CreatureDef.CoveredRadius(beam.NodeB, servos)))
             {
-                Consider(new CreatureElementSelection(CreatureElementKind.Sensor, sensor.Id), DrawSlot.Sensor, Link(beam.Id), raised.Sensor(sensor));
+                Consider(new CreatureElementSelection(CreatureElementKind.Sensor, sensor.Id), Rank(DrawSlot.Sensor, Link(beam.Id), raised.Sensor(sensor)));
             }
         }
 
@@ -165,23 +168,18 @@ public sealed class DrawGroups
             var nodeA = nodeAt(link.NodeA);
             var nodeB = nodeAt(link.NodeB);
             if (DistanceSquaredToSegment(position, nodeA, nodeB) <= SelectionMarks.LinkBody * SelectionMarks.LinkBody
-                && !InReach(link.NodeA, nodeA) && !InReach(link.NodeB, nodeB))
+                && !InHub(nodeA) && !InHub(nodeB))
             {
-                Consider(new CreatureElementSelection(link.Kind, link.Id), DrawSlot.Link, Link(link.Id), raised.Links.Contains(link.Id));
+                Consider(new CreatureElementSelection(link.Kind, link.Id), Rank(DrawSlot.Link, Link(link.Id), raised.Links.Contains(link.Id)));
             }
         }
 
         return top;
 
-        bool InReach(int nodeId, Vector2D at)
-        {
-            var reach = SelectionMarks.JointHalo(CreatureDef.JointRadius(nodeId, servos, wheels));
-            return DistanceSquared(at, position) <= reach * reach;
-        }
+        bool InHub(Vector2D joint) => DistanceSquared(joint, position) < NodeDef.HubRadius * NodeDef.HubRadius;
 
-        void Consider(CreatureElementSelection part, DrawSlot slot, int? group, bool lifted)
+        void Consider(CreatureElementSelection part, int rank)
         {
-            var rank = Rank(slot, group, lifted);
             if (rank > topRank)
             {
                 topRank = rank;

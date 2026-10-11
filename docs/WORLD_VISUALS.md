@@ -26,8 +26,13 @@ A bearing in a cell (#626): a `line-strong` `stroke-signal` ring whose
 outer edge is `NodeDef.PlainJointRadius`, a `stroke-hair` inner ring at 0.55
 of that radius, and an `alpha_soft` tint (`line-strong`, `halo` when
 selected, `danger` when loose) on an opaque `background` disc. A loose joint
-shows a `danger` ring and cross instead of the inner ring. Beams and Piston
-rods stop flat under the ring.
+shows a `danger` ring and cross instead of the inner ring.
+
+Every link (beam, Piston, Spring) runs from hub to hub (#1086): it stops flat
+`NodeDef.HubRadius` (a plain joint's radius) from each joint's centre,
+whatever sits on the joint. Its drawing ends under the middle of the ring
+or hub ring there, so it runs over a Wheel's face and under a ring, hub or
+Servo.
 
 ### Beam and rigid triangle
 
@@ -47,7 +52,9 @@ A housing, a range dial and a horn (#452, #577):
 - the joint's `accent` ring;
 - a `panel` housing box with an `accent` outline on the Fixed link, at most
   8 units past the ring, drawn over a Piston's cylinder as over any link
-  (#925), and left out when a sensor needs the room;
+  (#925), and shortened to a 3-unit stub when a sensor or a short link needs
+  the room, so the Fixed link always shows. On a beam near the minimum
+  length the ring and stub may cover a sensor picture's ends (#1086);
 - the range, a `panel` band with an `accent` outline inside the ring from
   end stop to end stop, turning with the Fixed link. At 360° the stops meet
   and an `accent` line across the band marks them (#922);
@@ -63,14 +70,16 @@ Thumbnails draw it as in Build, badge included.
 
 ### Piston
 
-A telescoping rod from joint A to joint B. The cylinder starts at the first
-joint's edge and is as long as the travel, so a shorter Stroke gives a
-shorter cylinder (#835). The cap sits at the second joint's edge.
+A telescoping rod from joint A to joint B. The cylinder starts at the edge
+of the Servo or hub on the first joint and is as long as the travel, so a
+shorter Stroke gives a shorter cylinder (#835). The cap sits at the edge of
+the Servo or hub on the second joint (#1086).
 
 ### Spring
 
-A coilover (#807): a thin `line-strong` rod, a seat plate outside each
-joint, and a `panel` damper body as long as the travel. A helix winds round
+A coilover (#807): a thin `line-strong` rod, a seat plate just outside the
+Servo or hub on each joint (#1086), and a `panel` damper body as long as the
+travel. A helix winds round
 the body, `detail` front strokes over it (#1059) and `line-strong` back
 strokes under it, all with round ends.
 
@@ -87,26 +96,30 @@ strokes under it, all with round ends.
 A tyre on a hub, standing in for its joint (#129); the same geometry in
 every theme, with no tint:
 
-- an opaque `background` face of the Wheel's Radius, so parts drawn before
-  it (Draw layers) do not show through; its own links, drawn over it, end
-  on the tyre ring (#1086 takes them to the hub);
+- a see-through face (#1086): only the tyre band, between the Radius and
+  the inner line, is an opaque `background`, so what lies inside the tyre
+  shows through, and its own links, drawn over it, run on to the hub;
 - the tyre, a `detail` `stroke-signal` ring whose outer edge is the Radius,
   and a `detail` `stroke-hair` inner line 6 units in;
 - the rotation cue: three `detail` tubes in the tyre band, a third of a turn
   apart, each a 26° arc 3.75 units inside the edge, `stroke-signal` with
   round ends. They turn with the wheel in Training and sit at rotation 0 in
   Build. Their number stays the same at every Radius;
-- the hub, while no motor sits on the joint: a `detail` `stroke-signal` ring
-  the size of a plain joint with a 2.6-unit axle dot.
+- the hub, while no motor sits on the joint: an opaque `background` disc
+  the size of a plain joint with a `detail` `stroke-signal` ring and a
+  2.6-unit axle dot. The joint draws it where its ring would go, over the
+  links (Draw layers), so links end under it like under a ring and only the
+  hub, not the whole face, is drawn over them (#1086).
 
 A loose Wheel is all `danger`. Thumbnails draw it in full, tubes
 included.
 
 ### Sensors
 
-A picture of itself at its beam's midpoint (#127, #576), never a circle,
+A picture of itself on its beam (#127, #576), never a circle,
 which would read as a joint: `panel` fill, 2-wide `accent` lines (`halo`
-when selected), upright on the beam's built-up side and turning with it.
+when selected), upright on the beam's built-up side and turning with it,
+where `docs/CREATURE_MODEL.md` → Sensor puts it (#1086).
 
 - **Accelerometer:** a 16 × 22 rounded frame with a zigzag spring to a round
   weight. The weight shows the proof mass the brain reads, with 1 g at half
@@ -124,7 +137,8 @@ drawn over it.
 
 - **Joint:** an unfilled 2-wide `halo` ring.
 - **Beam or link:** two 2-wide `halo` lines, one on each side, stopping at
-  the joint edges (outside a Spring's seats). In a selected group they run on
+  the joint's ring or Servo, or at the hub over a Wheel (outside a Spring's
+  seats). In a selected group they run on
   to the selected joints' rings, so the group reads as one outline.
 - **Sensor:** its lines turn `halo`.
 - **Wheel:** the joint's ring, outside the tyre. The Wheel stands in for its
@@ -158,15 +172,19 @@ Parts draw in groups, one per link, so the drawing is the same in Build and
 Training and never changes while the creature moves (`DrawGroups`). The link
 whose lower end sits highest on screen draws first, so what is lower is
 nearer; ties keep link id order. Within a group: a Wheel (with its joint's
-first link), the link, its sensor, then a joint's ring or Servo (with its
-joint's last link). So a link covers a Wheel and a ring covers its link's
-end. Wheels, Servos and joints are filled, so nothing shows through them.
+first link), the link, its sensor, then a joint's ring, Wheel hub or Servo
+(with its joint's last link). So a link covers a Wheel's face and a ring
+or hub covers its link's end. Servos, joints, hubs and tyre bands are
+filled, so nothing shows through them; a Wheel's face inside the tyre is
+see-through.
 
 The selected surface takes a selected joint, Servo or Wheel with its links
 and their ends, a selected link with its ends, every link whose ends both
-rose, so a raised Wheel or Servo never hides it, and a selected sensor or
-the sensor on a raised link. A link with one raised end stays behind, so
-it can look cut at the rim of a Wheel that rose as another link's end. While a part is placed or a sensor moved, the
+rose, so a raised Servo never hides it, and a selected sensor or the
+sensor on a raised link. A raised end lifts its ring, hub or Servo but not
+a Wheel's face, so the Wheel's other links still run over it to the hub
+(#1086). A link with one raised end stays behind, so it can look cut at the
+edge of a Servo that rose as another link's end. While a part is placed or a sensor moved, the
 beams or joints that take it rise alone, with their `halo`, over a Servo
 they end on or cross too. Each placing mark is drawn with its beam or joint,
 under the rod or around the ring, so a refused mark stays in its part's
@@ -275,7 +293,8 @@ rule 10):
 - **Joint:** its outer ring only.
 - **Servo:** its ring, housing outline, one range arc and one horn line,
   plus the 360° line.
-- **Wheel:** the plain circle at its Radius: no tubes, line or hub.
+- **Wheel:** the plain circle at its Radius: no tubes or line, and its
+  joint's outer ring at the hub, like any shadow joint.
 - **Beam:** its line.
 - **Rigid triangle:** a faint fill instead of the hatch.
 - **Links (Piston, Spring):** drawn as on the followed creature.

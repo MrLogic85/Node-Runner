@@ -122,7 +122,7 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 }
 
 /// <summary>
-/// Every part setting (#704). A Piston's Max strength is in N, its Stroke % of its shortest gap between its joints' edges (#835),
+/// Every part setting (#704). A Piston's Max strength is in N, its Stroke % of its shortest gap between its joints' hubs (#835),
 /// its Start position % of its travel (#870), its Max speed in m/s (#451) and its Rise time in s
 /// (#801); a Spring's Stiffness is in N/m, its Damping in N·s/m (#453, #801), and its Stroke and
 /// Coil length in % like a Piston's Stroke and Start position (#835); a Wheel's Radius is in m and its

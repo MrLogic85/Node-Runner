@@ -978,6 +978,42 @@ public sealed class BuildViewModelTests
         viewModel.DrawnPartAt(new Vector2D(50, SensorPicture.AccelerometerSize), PlacingTargets.None).ShouldBeNull();
     }
 
+    [Fact]
+    public void ASensor_SitsMidwayBetweenTheHubs_WhateverWheelIsOnAJoint()
+    {
+        // #1086: a Wheel's size does not move the sensor; it is see-through under its links.
+        var viewModel = new BuildViewModel();
+        viewModel.Load(SensorLink([], [new WheelDef(5, 1, radius: 60)]));
+
+        viewModel.SensorCentre(4).ShouldBe(new Vector2D(100, 0));
+        viewModel.SensorCentreOn(3).ShouldBe(new Vector2D(100, 0));
+    }
+
+    [Fact]
+    public void ASensor_SitsMidwayBetweenAServosEdgeAndTheOtherHub()
+    {
+        // #1086: a Servo (27) on joint 1 and a hub (15) on joint 2, 200 apart: edges at 27 and 185.
+        var viewModel = new BuildViewModel();
+        viewModel.Load(SensorLink([new ServoDef(5, 1)], []));
+        var centre = (27 + 185) / 2.0;
+
+        viewModel.SensorCentre(4).ShouldBe(new Vector2D(centre, 0));
+        viewModel.SensorCentreOn(3).ShouldBe(new Vector2D(centre, 0));
+        // The 24-wide picture covers 94–118 shifted, 88–112 unshifted: only the shift explains these.
+        viewModel.DrawnPartAt(new Vector2D(115, 0), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 4));
+        viewModel.DrawnPartAt(new Vector2D(91, 0), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 3));
+    }
+
+    private static CreatureDef SensorLink(IReadOnlyList<ServoDef> servos, IReadOnlyList<WheelDef> wheels) => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))],
+        [new BeamDef(3, 1, 2)],
+        [new SensorDef(4, 3, SensorKind.Accelerometer)],
+        servos,
+        [],
+        [],
+        wheels,
+        nextPartId: 6);
+
     private static CreatureDef SensorCreature() => new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(6, new Vector2D(100, 100))],
         [new BeamDef(3, 1, 2), new BeamDef(7, 2, 6)],
@@ -1326,6 +1362,28 @@ public sealed class BuildViewModelTests
         // 45° towards −x (300 × cos 45° ≈ 212.1) and level towards −x.
         ends.Select(end => (Math.Round(end.X, 1), Math.Round(end.Y, 1)))
             .ShouldBe([(0, 350), (-212.1, 262.1), (-300, 50)], ignoreOrder: true);
+    }
+
+    [Fact]
+    public void ShownCameraRays_LeaveTheSensorsCentre_ShiftedByAServoOnItsBeam()
+    {
+        // #1086: a Servo (27) on joint 1 and a hub (15) on joint 2, 200 apart: centre at 106.
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))],
+            [new BeamDef(3, 1, 2)],
+            [new SensorDef(4, 3, SensorKind.Camera)],
+            [new ServoDef(5, 1)],
+            [],
+            [],
+            [],
+            nextPartId: 6));
+        build.ToggleSelected(new(CreatureElementKind.Sensor, 4));
+
+        var (origin, _) = build.ShownCameraRays().ShouldHaveSingleItem();
+
+        origin.ShouldBe(new Vector2D(106, 0));
+        build.SensorCentre(4).ShouldBe(origin);
     }
 
     [Fact]

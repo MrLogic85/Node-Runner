@@ -37,8 +37,9 @@ file owns how Godot realises it.
    to the live inertia (`Servo.LinkInertia`, `Servo.StableEndStopGains`) to
    stay stable; the holding part is not capped, so a Servo holds a load up
    to its strength.
-7. **Accelerometer.** `AccelerometerSensor` differences its beam's midpoint
-   velocity each tick into specific force and steps the Mechanics
+7. **Accelerometer.** `AccelerometerSensor` differences the velocity where
+   its picture sits on its beam (Godot's `GetVelocityAtLocalPosition`, #1086) each
+   tick into specific force and steps the Mechanics
    `Accelerometer`, which substeps at most `Accelerometer.MaxSubstep`
    (1/60 s), so Build's longer frame steps stay stable.
 8. **Brain order is `BrainPorts.Of`.** The creature copies each part's value

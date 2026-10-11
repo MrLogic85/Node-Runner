@@ -78,6 +78,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   any mix of them as a `PartSet` (#704), in every tool (#803).
 - **Fixed / Target** — The two links a Servo uses: it holds Fixed and turns
   Target.
+- **Hub** — The `NodeDef.HubRadius` circle at every joint's centre where
+  links end and are measured from, whatever sits on the joint (#1086). See:
+  `docs/CREATURE_MODEL.md` → Node.
 - **Joint** — A point where links meet and can turn; in code a node
   (`NodeDef`). A plain joint is passive (#450); a Servo, a Wheel or both can sit
   on it. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for

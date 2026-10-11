@@ -464,8 +464,8 @@ public partial class BuildCanvas : Node2D
             var selected = _viewModel.Selection.Pistons;
             foreach (var piston in _viewModel.Pistons.Where(piston => selected.Contains(piston.Id)))
             {
-                var (built, radii) = (BuiltLength(piston.NodeA, piston.NodeB), JointRadii(piston.NodeA, piston.NodeB));
-                DrawTravel(canvas, piston.NodeA, piston.NodeB, Piston.ShortestLength(piston, built, radii), Piston.LongestLength(piston, built, radii), PistonDrawing.TickHalf(Theme), rest: null);
+                var built = BuiltLength(piston.NodeA, piston.NodeB);
+                DrawTravel(canvas, piston.NodeA, piston.NodeB, Piston.ShortestLength(piston, built, Travel.HubRadii), Piston.LongestLength(piston, built, Travel.HubRadii), PistonDrawing.TickHalf(Theme), rest: null);
             }
         }
 
@@ -474,13 +474,11 @@ public partial class BuildCanvas : Node2D
             var selected = _viewModel.Selection.Springs;
             foreach (var spring in _viewModel.Springs.Where(spring => selected.Contains(spring.Id)))
             {
-                var (built, radii) = (BuiltLength(spring.NodeA, spring.NodeB), JointRadii(spring.NodeA, spring.NodeB));
-                DrawTravel(canvas, spring.NodeA, spring.NodeB, Spring.ShortestLength(spring, built, radii), Spring.LongestLength(spring, built, radii), SpringDrawing.SeatHalf(Theme), Spring.RestLength(spring, built, radii));
+                var built = BuiltLength(spring.NodeA, spring.NodeB);
+                DrawTravel(canvas, spring.NodeA, spring.NodeB, Spring.ShortestLength(spring, built, Travel.HubRadii), Spring.LongestLength(spring, built, Travel.HubRadii), SpringDrawing.SeatHalf(Theme), Spring.RestLength(spring, built, Travel.HubRadii));
             }
         }
     }
-
-    private double JointRadii(int nodeA, int nodeB) => _viewModel!.NodeRadius(nodeA) + _viewModel.NodeRadius(nodeB);
 
     private double BuiltLength(int nodeA, int nodeB)
     {
@@ -514,8 +512,7 @@ public partial class BuildCanvas : Node2D
             var beam = _viewModel.Beams[_viewModel.BeamIndexOf(sensor.BeamId)];
             var nodeA = NodeById(beam.NodeA).Position;
             var nodeB = NodeById(beam.NodeB).Position;
-            var midpoint = new Vector2D((nodeA.X + nodeB.X) / 2, (nodeA.Y + nodeB.Y) / 2);
-            poses.Add(new SensorPose(sensor.Id, midpoint, Math.Atan2(nodeB.Y - nodeA.Y, nodeB.X - nodeA.X), Accelerometer.UpSign(nodeA, nodeB)));
+            poses.Add(new SensorPose(sensor.Id, _viewModel.SensorCentre(sensor.Id), Math.Atan2(nodeB.Y - nodeA.Y, nodeB.X - nodeA.X), Accelerometer.UpSign(nodeA, nodeB)));
         }
 
         return poses;

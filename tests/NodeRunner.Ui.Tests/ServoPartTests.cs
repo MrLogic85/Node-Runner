@@ -7,10 +7,10 @@ public sealed class ServoPartTests
 {
     [Theory]
     [InlineData(52, 24, 8)]
-    [InlineData(52, 44, 0)]
+    [InlineData(52, 44, 3)]
     [InlineData(20, 0, 8)]
-    [InlineData(9, 0, 0)]
-    public void HousingReachFor_LeavesRoomForSensors(float freeLength, float sensorLength, float expected)
+    [InlineData(9, 0, 3)]
+    public void HousingReachFor_LeavesRoomForSensors_ButAlwaysShows(float freeLength, float sensorLength, float expected)
     {
         ServoPart.HousingReachFor(freeLength, sensorLength).ShouldBe(expected);
     }
