@@ -241,12 +241,11 @@ the reference's "a training session has finished" (#369).
     so UI layout and scale never touch physics distances or gravity. A tap
     on the arena selects a part of the followed shadow; a part takes a tap
     within 16 px of it on screen at least, so it stays easy to hit zoomed
-    out; a tap on a joint with a part on it selects the part
-    (`docs/BUILD_MODE.md` → "Parts stand in for their joint"); on a joint
-    with two parts, the one drawn on top there (#1066). The
-    selected part's Build name shows in a callout above the
-    followed shadow and moves with it (#388), with a live bar for each of
-    its brain ports (#1064, `docs/WORLD_VISUALS.md` → Port bars). Each
+    out; a tap on a joint with parts on it selects them all
+    (`docs/BUILD_MODE.md` → "Parts stand in for their joint", #1066). The
+    selected parts' Build names show in one callout that moves with the
+    followed shadow (#388), with a live bar for each of their brain ports
+    (#1064, `docs/WORLD_VISUALS.md` → Part callout). Each
     BrainFocus refresh samples the followed brain once into one
     `BrainPortValues` keyed by `BrainPort`; BrainFocus and the callout
     both read it, so they always agree. Each port's range and short label

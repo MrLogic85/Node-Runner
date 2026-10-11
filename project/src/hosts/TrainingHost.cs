@@ -147,7 +147,8 @@ public partial class TrainingHost : Node, IRoutedScene
             return;
         }
 
-        if (_selection.SelectedElement is { } selected)
+        // A stacked joint's parts share their joint, so the first one's anchor serves them all.
+        if (_selection.SelectedParts is [var selected, ..])
         {
             _screen.MovePartCallout(_followed.PartAnchor(selected), _followed.Bounds);
         }
@@ -168,11 +169,11 @@ public partial class TrainingHost : Node, IRoutedScene
         ShowPartCallout();
     }
 
-    // The selected part's callout from the last sample; none with nothing selected.
+    // The selected parts' callout from the last sample; none with nothing selected.
     private void ShowPartCallout() =>
-        _screen.ShowPartCallout(_selection.SelectedElement is { } selected && _followed?.Definition is { } definition
-            ? PartCalloutPresentation.For(definition, selected, _portValues)
-            : null);
+        _screen.ShowPartCallout(_followed?.Definition is { } definition
+            ? [.. _selection.SelectedParts.Select(part => PartCalloutPresentation.For(definition, part, _portValues))]
+            : []);
 
     // Counts the physics ticks run against real time; a pause stops physics on purpose, so it starts
     // the count over and leaves the chip as it is.
@@ -451,9 +452,9 @@ public partial class TrainingHost : Node, IRoutedScene
             return;
         }
 
-        _followed?.SetSelectedElement(null);
+        _followed?.SetSelectedParts([]);
         _followed = followed;
-        _followed?.SetSelectedElement(_selection.SelectedElement);
+        _followed?.SetSelectedParts(_selection.SelectedParts);
         Camera.Retarget();
     }
 
@@ -513,12 +514,13 @@ public partial class TrainingHost : Node, IRoutedScene
         _screen.ShowPaused(tree.Paused);
     }
 
-    // A tap in the arena selects the part of the creature under it, or clears the selection.
+    // A tap in the arena selects the part of the creature under it, a stacked joint's all (#1066),
+    // or clears the selection.
     private void SelectPartAt(Vector2 worldPosition)
     {
-        if (_followed is not null && _followed.TrySelectPart(worldPosition, out var selection) && selection is not null)
+        if (_followed?.Definition is { } definition && _followed.TrySelectPart(worldPosition, out var selection) && selection is not null)
         {
-            _selection.Select(selection);
+            _selection.Select(definition, selection);
         }
         else
         {
@@ -528,10 +530,10 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private void OnSelectionPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName == nameof(SelectionViewModel.SelectedElement))
+        if (eventArgs.PropertyName == nameof(SelectionViewModel.SelectedParts))
         {
-            _followed?.SetSelectedElement(_selection.SelectedElement);
-            BestMarker.Faded = _selection.SelectedElement is not null && _followed?.Definition is not null;
+            _followed?.SetSelectedParts(_selection.SelectedParts);
+            BestMarker.Faded = _selection.SelectedParts.Count > 0 && _followed?.Definition is not null;
             StartSign.Faded = BestMarker.Faded;
             ShowPartCallout();
         }

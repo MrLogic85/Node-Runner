@@ -16,7 +16,11 @@ public partial class TrainingScreen : Control
     private TrainingHeaderPresentation? _header;
     private TrainingPresentationViewModel? _training;
     private SignalFlowPresentationViewModel? _signalFlow;
-    private (string Text, UiIconId Icon, IReadOnlyList<UiCalloutLine>? Lines)? _partCallout;
+    private IReadOnlyList<UiCalloutSection> _partCallout = [];
+
+    // The part callout's sections after its first, kept so every frame passes the same list and
+    // the callout refreshes only when a new sample arrives.
+    private UiCalloutSection[]? _partCalloutSections;
 
     [Signal]
     public delegate void BackRequestedEventHandler();
@@ -71,23 +75,27 @@ public partial class TrainingScreen : Control
     public void ShowSlowMotion(bool shown) => GetNode<Control>("%SlowMotionChip").Visible = shown;
 
     /// <summary>
-    /// What the selected part's callout shows (#388, #1064): its name and, for a part with brain
-    /// ports, its glyph and live values; null shows none. Call when the selection or the sampled
-    /// values change; <see cref="MovePartCallout"/> places it every frame.
+    /// What the selected parts' callout shows (#388, #1064): for each part, top → down, its name
+    /// and, for a part with brain ports, its glyph and live values; a stacked joint's parts each
+    /// get a section of one callout (#1066). An empty list shows none. Call when the selection or
+    /// the sampled values change; <see cref="MovePartCallout"/> places it every frame.
     /// </summary>
-    public void ShowPartCallout(PartCalloutPresentation? callout)
+    public void ShowPartCallout(IReadOnlyList<PartCalloutPresentation> callouts)
     {
-        if (callout is null)
+        ArgumentNullException.ThrowIfNull(callouts);
+        _partCallout =
+        [
+            .. callouts.Select(callout => CalloutSection(
+                callout,
+                UiTextTranslation.Now(callout.Name),
+                UiTextTranslation.Source(callout.Note),
+                port => UiTextTranslation.Now(port.Label))),
+        ];
+        _partCalloutSections = _partCallout.Count > 1 ? [.. _partCallout.Skip(1)] : null;
+        if (_partCallout.Count == 0)
         {
-            _partCallout = null;
             GetNode<UiCalloutLayer>("%PartCallouts").SetCallouts([]);
-            return;
         }
-
-        _partCallout = (
-            UiTextTranslation.Now(callout.Name),
-            callout.ShowsGlyph ? PartIcons.For(callout.Kind) : UiIconId.None,
-            CalloutLines(callout, UiTextTranslation.Source(callout.Note), port => UiTextTranslation.Now(port.Label)));
     }
 
     /// <summary>
@@ -96,7 +104,7 @@ public partial class TrainingScreen : Control
     /// </summary>
     public void MovePartCallout(Vector2 worldAnchor, Rect2 worldCreatureBounds)
     {
-        if (_partCallout is not { } callout)
+        if (_partCallout.Count == 0)
         {
             return;
         }
@@ -104,6 +112,7 @@ public partial class TrainingScreen : Control
         var arena = GetNode<UiWorldView>("%ArenaView");
         var anchor = arena.FromWorld(worldAnchor);
         var creatureTop = arena.FromWorld(worldCreatureBounds.Position).Y;
+        var first = _partCallout[0];
         GetNode<UiCalloutLayer>("%PartCallouts").SetCallouts(
         [
             new UiCalloutLayout.Placement(
@@ -111,24 +120,34 @@ public partial class TrainingScreen : Control
                 Vector2.Up,
                 Math.Max(0, anchor.Y - creatureTop) + UiSize.Space.S1,
                 UiCallout.CalloutKind.Warning,
-                callout.Icon,
-                callout.Text,
-                callout.Lines),
+                first.IconId,
+                first.Text,
+                first.Lines,
+                _partCalloutSections),
         ]);
     }
 
     /// <summary>
-    /// The lines under a part callout's name (#1064): its senses in <c>accent</c>, then its
-    /// outputs in <c>output</c>, each a centred bar for −1…1 or a filling bar for 0…1; or its
-    /// <paramref name="note"/>; null for a part that shows only its name. <paramref name="note"/> is
-    /// <c>callout.Note</c> and <paramref name="label"/> each port's label, both in the player's
+    /// One part's section of the part callout (#1064, #1066): its glyph if it shows one, its name,
+    /// then its senses in <c>accent</c> and its outputs in <c>output</c>, each a centred bar for
+    /// −1…1 or a filling bar for 0…1; or its <paramref name="note"/>; or no lines for a part that
+    /// shows only its name. <paramref name="name"/> is <c>callout.Name</c>, <paramref name="note"/>
+    /// <c>callout.Note</c> and <paramref name="label"/> each port's label, all in the player's
     /// language; they are passed in because only <see cref="UiTextTranslation"/> reads a UiText.
     /// </summary>
-    public static IReadOnlyList<UiCalloutLine>? CalloutLines(PartCalloutPresentation callout, Func<string>? note, Func<PartCalloutPort, string> label)
+    public static UiCalloutSection CalloutSection(PartCalloutPresentation callout, string name, Func<string>? note, Func<PartCalloutPort, string> label)
     {
         ArgumentNullException.ThrowIfNull(callout);
+        ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(label);
+        return new UiCalloutSection(
+            callout.ShowsGlyph ? PartIcons.For(callout.Kind) : UiIconId.None,
+            name,
+            CalloutLines(callout, note, label));
+    }
 
+    private static IReadOnlyList<UiCalloutLine>? CalloutLines(PartCalloutPresentation callout, Func<string>? note, Func<PartCalloutPort, string> label)
+    {
         if (note is not null)
         {
             return [UiCalloutLine.OfNote(note())];

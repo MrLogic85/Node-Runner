@@ -5,11 +5,11 @@ using NodeRunner.Ui.Screens;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>How a selected part's ports become the Training part callout's lines (#1064).</summary>
-public sealed class TrainingScreenCalloutLinesTests
+/// <summary>How a selected part becomes its section of the Training part callout (#1064, #1066).</summary>
+public sealed class TrainingScreenCalloutSectionTests
 {
     [Fact]
-    public void CalloutLines_ShowSensesInAccentThenOutputsInOutput()
+    public void CalloutSection_ShowsSensesInAccentThenOutputsInOutput()
     {
         var servo = new PartCalloutPresentation(
             PartSettingsKind.Servo,
@@ -36,7 +36,7 @@ public sealed class TrainingScreenCalloutLinesTests
     }
 
     [Fact]
-    public void CalloutLines_ForAPartWithOnlySenses_HaveNoOutputLine()
+    public void CalloutSection_ForAPartWithOnlySenses_HasNoOutputLine()
     {
         var camera = new PartCalloutPresentation(
             PartSettingsKind.Camera,
@@ -52,7 +52,7 @@ public sealed class TrainingScreenCalloutLinesTests
     }
 
     [Fact]
-    public void CalloutLines_ForAWheel_AreOneMutedNote()
+    public void CalloutSection_ForAWheel_IsOneMutedNote()
     {
         var wheel = new PartCalloutPresentation(PartSettingsKind.Wheel, UiText.AsWritten("Wheel"), ShowsGlyph: true, [], [], UiText.Plain("No brain ports"));
 
@@ -64,14 +64,29 @@ public sealed class TrainingScreenCalloutLinesTests
     }
 
     [Fact]
-    public void CalloutLines_ForANameOnlyPart_AreNone()
+    public void CalloutSection_ForANameOnlyPart_HasNoLines()
     {
         var beam = new PartCalloutPresentation(PartSettingsKind.Beam, UiText.AsWritten("Shin"), ShowsGlyph: false, [], [], null);
 
         Lines(beam).ShouldBeNull();
     }
 
+    [Fact]
+    public void CalloutSection_ShowsTheGlyphAndName_OrTheNameAlone()
+    {
+        var wheel = new PartCalloutPresentation(PartSettingsKind.Wheel, UiText.AsWritten("Rear"), ShowsGlyph: true, [], [], UiText.Plain("No brain ports"));
+        var beam = new PartCalloutPresentation(PartSettingsKind.Beam, UiText.AsWritten("Shin"), ShowsGlyph: false, [], [], null);
+
+        var wheelSection = Section(wheel, "Rear");
+        var beamSection = Section(beam, "Shin");
+
+        (wheelSection.IconId, wheelSection.Text).ShouldBe((UiIconId.PartWheel, "Rear"));
+        (beamSection.IconId, beamSection.Text).ShouldBe((UiIconId.None, "Shin"));
+    }
+
     // Translation needs Godot, so the tests show each text's English message.
-    private static IReadOnlyList<UiCalloutLine>? Lines(PartCalloutPresentation callout) =>
-        TrainingScreen.CalloutLines(callout, callout.Note is { } note ? () => note.Message : null, port => port.Label.Message);
+    private static UiCalloutSection Section(PartCalloutPresentation callout, string name) =>
+        TrainingScreen.CalloutSection(callout, name, callout.Note is { } note ? () => note.Message : null, port => port.Label.Message);
+
+    private static IReadOnlyList<UiCalloutLine>? Lines(PartCalloutPresentation callout) => Section(callout, "Part").Lines;
 }

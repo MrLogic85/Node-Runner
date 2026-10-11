@@ -4,36 +4,52 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
+/// <summary>The parts of the followed creature the player has tapped in Training's world view.</summary>
 public sealed class SelectionViewModel : INotifyPropertyChanged
 {
-    private CreatureElementSelection? _selectedElement;
+    private IReadOnlyList<CreatureElementSelection> _selectedParts = [];
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public CreatureElementSelection? SelectedElement
+    /// <summary>The selected parts, a stacked joint's top → down; empty with nothing selected.</summary>
+    public IReadOnlyList<CreatureElementSelection> SelectedParts
     {
-        get => _selectedElement;
+        get => _selectedParts;
         private set
         {
-            if (_selectedElement == value)
+            if (_selectedParts.SequenceEqual(value))
             {
                 return;
             }
 
-            _selectedElement = value;
+            _selectedParts = value;
             OnPropertyChanged();
         }
     }
 
-    public void Select(CreatureElementSelection selection)
+    /// <summary>
+    /// Selects the part <paramref name="tapped"/> on <paramref name="creature"/>. A tap on a joint
+    /// part, or on its joint, selects every part stacked on that joint, top → down
+    /// (<see cref="CreatureDef.JointParts"/>, #1066), as Build does (#973); any other part alone.
+    /// </summary>
+    public void Select(CreatureDef creature, CreatureElementSelection tapped)
     {
-        ArgumentNullException.ThrowIfNull(selection);
-        SelectedElement = selection;
+        ArgumentNullException.ThrowIfNull(creature);
+        ArgumentNullException.ThrowIfNull(tapped);
+        var nodeId = tapped.Kind switch
+        {
+            CreatureElementKind.Node => tapped.Id,
+            CreatureElementKind.Servo => creature.Servos.FirstOrDefault(servo => servo.Id == tapped.Id)?.NodeId,
+            CreatureElementKind.Wheel => creature.Wheels.FirstOrDefault(wheel => wheel.Id == tapped.Id)?.NodeId,
+            _ => null,
+        };
+        var stacked = nodeId is { } node ? CreatureDef.JointParts(node, creature.Servos, creature.Wheels) : [];
+        SelectedParts = stacked.Count > 0 ? stacked : [tapped];
     }
 
     public void Clear()
     {
-        SelectedElement = null;
+        SelectedParts = [];
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

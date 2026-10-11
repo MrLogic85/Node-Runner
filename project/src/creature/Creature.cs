@@ -64,7 +64,7 @@ public partial class Creature : Node2D
     private CameraRaysVisual? _cameraRaysVisual;
     private readonly List<KnockoutVisual> _knockoutVisuals = [];
     private bool _isShadow;
-    private CreatureElementSelection? _selection;
+    private IReadOnlyList<CreatureElementSelection> _selection = [];
     private IBeamSensor[] _sensors = [];
     private double[] _rawInputs = [];
     private int[] _inputPortOf = [];
@@ -153,7 +153,7 @@ public partial class Creature : Node2D
         }
 
         Definition = definition;
-        _selection = null;
+        _selection = [];
         Build(definition);
         ResetSensors();
         Brain = null;
