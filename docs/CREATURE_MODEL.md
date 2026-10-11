@@ -353,10 +353,11 @@ fold.
 - **Output conventions (#535, `PortSignals`):** the signal fixes the
   output's activation and how a new output starts.
   - **Velocity** (#454) and **position** use `tanh`: −1…1, where 0 means
-    stand still, a Servo's built pose, or the middle of a Piston's travel.
-  - A Piston's position output maps in a straight line (#870): −1 is its
-    shortest and +1 its longest length (`Piston.TargetLength`), so it holds
-    its drawn length at `2p − 1`.
+    stand still or a Servo's built pose.
+  - **Length** (#1129) uses `sigmoid`: 0…1, on the same scale as the
+    Piston's `length` input. A Piston's position output drives it and maps
+    in a straight line (#870): 0 is its shortest and 1 its longest length
+    (`Piston.TargetLength`), so it holds its drawn length at its Start.
   - A Servo's angle output maps piecewise, so 0 stays the built pose even
     when that is off-centre: −1…0 spans lower end…built and 0…1 spans
     built…upper end (`OutputSignals.PositionFromTarget`).
@@ -366,7 +367,8 @@ fold.
   - **New ports start almost passive:** when a part joins a trained brain,
     its incoming weights are 0 and a new strength output starts at bias −4,
     about 2% force. Sigmoid has no dead zone, so mutation can still raise
-    it. Position and velocity outputs start at 0.
+    it. Position, velocity and length outputs start at bias 0: a length
+    output then asks for the middle of its travel.
   - **A rebuild keeps the brain (#516):** saving a Build edit to a trained
     creature refits its brain to the new ports (`DirectBrain.Refit`). Ports
     match by part id, channel and direction: a kept port keeps its weights

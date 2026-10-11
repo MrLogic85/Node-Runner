@@ -4,8 +4,8 @@ namespace NodeRunner.ML.Brains;
 
 /// <summary>
 /// The first generation of a new Creation (#537, #810). Its base brain has no weights and holds the
-/// built pose at <see cref="FullStrengthBias"/>: each position output's bias asks for the part's
-/// drawn pose (#870), like a robot that starts stiff in its default pose
+/// built pose at <see cref="FullStrengthBias"/>: each length output's bias asks for the Piston's
+/// drawn length (#870, #1129), like a robot that starts stiff in its default pose
 /// and learns offsets from it. Generation 0 never changes it. The last shadow runs it unchanged, as a
 /// reference near 0; every other shadow is a wide random perturbation of it. Parts added to a
 /// trained brain later start almost passive instead (<see cref="DirectBrain"/>, #535). See
@@ -13,20 +13,26 @@ namespace NodeRunner.ML.Brains;
 /// </summary>
 public static class GenerationZero
 {
-    /// <summary>Standard deviation of the noise added to every weight.</summary>
+    /// <summary>Standard deviation of the noise added to every weight; twice it into a length output (#1129).</summary>
     public const double WeightSpread = 1.5;
 
-    /// <summary>Standard deviation of the noise added to every bias.</summary>
+    /// <summary>Standard deviation of the noise added to every bias; twice it on a length output (#1129).</summary>
     public const double BiasSpread = 0.5;
 
     /// <summary>The bias every strength output starts at: about 95% of its Strength.</summary>
     public const double FullStrengthBias = 3;
 
+    // A length output's sigmoid takes twice the input a tanh would for the same length, as
+    // (tanh(x) + 1) / 2 = sigmoid(2x) (#1129). Its bias limit and noise are scaled by it, so a
+    // Piston starts and explores as it did when its output was tanh.
+    private const double _lengthScale = 2;
+
     /// <summary>The brain a new Creation starts from, as a genome for <paramref name="ports"/>.</summary>
     /// <param name="ports">The creature's brain ports.</param>
     /// <param name="drawnPositions">
-    /// By part id, the position output that asks for the part's drawn pose, such as a Piston's
-    /// <c>Piston.DrawnPosition</c> in NodeRunner.Mechanics. A part not in it holds at 0.
+    /// By part id, the length output, 0…1, that asks for the part's drawn length: a Piston's
+    /// <c>Piston.DrawnPosition</c> in NodeRunner.Mechanics. A part not in it starts in the middle of
+    /// its travel.
     /// </param>
     public static double[] BaseGenome(BrainPortLayout ports, IReadOnlyDictionary<int, double>? drawnPositions = null)
     {
@@ -41,9 +47,9 @@ public static class GenerationZero
             {
                 genome[biasStart + o] = FullStrengthBias;
             }
-            else if (output.Signal == PortSignal.Position && drawnPositions?.TryGetValue(output.PartId, out var drawn) == true)
+            else if (output.Signal == PortSignal.Length && drawnPositions?.TryGetValue(output.PartId, out var drawn) == true)
             {
-                genome[biasStart + o] = PositionBias(drawn);
+                genome[biasStart + o] = LengthBias(drawn);
             }
         }
 
@@ -71,13 +77,16 @@ public static class GenerationZero
         return population;
     }
 
-    // The tanh bias that outputs drawn. An end of the range would need an endless bias, so it stops
-    // as close to the end as a strength output's bias comes to full strength.
-    private static double PositionBias(double drawn)
+    // The sigmoid bias that outputs drawn, its logit. An end of the travel would need an endless
+    // bias, so it stops at tanh(3) of the way from the middle to the end, about 0.25% short of it.
+    private static double LengthBias(double drawn)
     {
-        var limit = Math.Tanh(FullStrengthBias);
-        return Math.Atanh(Math.Clamp(drawn, -limit, limit));
+        var limit = _lengthScale * FullStrengthBias;
+        var share = Math.Clamp(drawn, Sigmoid(-limit), Sigmoid(limit));
+        return Math.Log(share / (1 - share));
     }
+
+    private static double Sigmoid(double x) => 1 / (1 + Math.Exp(-x));
 
     private static double[] Perturb(double[] baseGenome, BrainPortLayout ports, Random random)
     {
@@ -85,7 +94,9 @@ public static class GenerationZero
         var biasStart = ports.Inputs.Count * ports.Outputs.Count;
         for (var i = 0; i < genome.Length; i++)
         {
-            genome[i] += Gaussian.Next(random) * (i < biasStart ? WeightSpread : BiasSpread);
+            var output = ports.Outputs[i < biasStart ? i / ports.Inputs.Count : i - biasStart];
+            var scale = output.Signal == PortSignal.Length ? _lengthScale : 1;
+            genome[i] += Gaussian.Next(random) * scale * (i < biasStart ? WeightSpread : BiasSpread);
         }
 
         return genome;

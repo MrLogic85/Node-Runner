@@ -26,12 +26,29 @@ public sealed class GenerationZeroTests
     [Fact]
     public void BaseGenome_AsksEachPistonInTheDrawnPositionsForItsDrawnLength()
     {
-        var genome = GenerationZero.BaseGenome(_ports, new Dictionary<int, double> { [9] = -0.5, [10] = 1 });
+        var genome = GenerationZero.BaseGenome(_ports, new Dictionary<int, double> { [9] = 0.25, [10] = 1 });
 
-        Math.Tanh(genome[_biasStart]).ShouldBe(-0.5, tolerance: 1e-12);
-        genome[_biasStart + 2].ShouldBe(GenerationZero.FullStrengthBias, tolerance: 1e-12);
+        Sigmoid(genome[_biasStart]).ShouldBe(0.25, tolerance: 1e-12);
+        // An end needs an endless bias: it stops where tanh(3) stopped before #1129, 0.25% short.
+        Sigmoid(genome[_biasStart + 2]).ShouldBe((Math.Tanh(GenerationZero.FullStrengthBias) + 1) / 2, tolerance: 1e-12);
         genome[_biasStart + 1].ShouldBe(GenerationZero.FullStrengthBias);
         genome[..8].ShouldAllBe(weight => weight == 0);
+    }
+
+    // #1129: (tanh(x) + 1) / 2 = sigmoid(2x), so a length output's noise is twice a position
+    // output's, and its shadows ask for the same lengths as when it was tanh.
+    [Fact]
+    public void Population_SpreadsALengthOutputAsWidelyAsTheTanhItReplaced()
+    {
+        static BrainPortLayout Layout(PortSignal signal) => new([BrainPort.Input(5, "along")], [BrainPort.Output(9, BrainPorts.PistonPositionChannel, signal)]);
+
+        var lengths = GenerationZero.Population(Layout(PortSignal.Length), 8, new Random(11));
+        var positions = GenerationZero.Population(Layout(PortSignal.Position), 8, new Random(11));
+
+        for (var shadow = 0; shadow < 8; shadow++)
+        {
+            lengths[shadow].ShouldBe(positions[shadow].Select(gene => 2 * gene).ToArray(), tolerance: 1e-12);
+        }
     }
 
     [Fact]
@@ -96,7 +113,7 @@ public sealed class GenerationZeroTests
     [Fact]
     public void Population_WithoutStrengthOutputs_StillPerturbs()
     {
-        var ports = new BrainPortLayout([BrainPort.Input(5, "along")], [BrainPort.Output(9, BrainPorts.PistonPositionChannel, PortSignal.Position)]);
+        var ports = new BrainPortLayout([BrainPort.Input(5, "along")], [BrainPort.Output(9, BrainPorts.PistonPositionChannel, PortSignal.Length)]);
 
         var population = GenerationZero.Population(ports, 4, new Random(7));
 
@@ -125,4 +142,6 @@ public sealed class GenerationZeroTests
     {
         Should.Throw<ArgumentOutOfRangeException>(() => GenerationZero.Population(_ports, 0, new Random(8)));
     }
+
+    private static double Sigmoid(double x) => 1 / (1 + Math.Exp(-x));
 }

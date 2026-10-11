@@ -230,7 +230,8 @@ public sealed class CreationVersioningTests : IDisposable
     }
 
     // #870: a Piston's length input went from −1…1 around its built length to 0…1 over its travel,
-    // so a migrated brain must give every output the same value for the same pose.
+    // and #1129: its target length output from tanh −1…1 to sigmoid 0…1. A migrated brain must ask
+    // for the same lengths and strengths in the same pose, and still compile to resume training.
     [Fact]
     public void Fixture013_ItsTrainedBrainDrivesItsPistonsAsBefore()
     {
@@ -239,7 +240,11 @@ public sealed class CreationVersioningTests : IDisposable
         WriteCreation(original);
         var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
         var ports = BrainPorts.Of(creation.Creature);
-        var before = DirectBrain.Network(oldBrain, ports);
+        var oldPorts = ports with
+        {
+            Outputs = [.. ports.Outputs.Select(port => port.Signal == PortSignal.Length ? port with { Signal = PortSignal.Position } : port)],
+        };
+        var before = DirectBrain.Network(oldBrain, oldPorts);
         var after = DirectBrain.Network(creation.Training!.Brain, ports);
         var random = new Random(870);
 
@@ -250,8 +255,81 @@ public sealed class CreationVersioningTests : IDisposable
                 .Select((port, i) => port.Channel == BrainPorts.PistonLengthChannel ? (oldInputs[i] + 1) / 2 : oldInputs[i])
                 .ToArray();
 
-            after.Forward(newInputs).ShouldBe(before.Forward(oldInputs), tolerance: 1e-12);
+            var oldOutputs = before.Forward(oldInputs)
+                .Select((output, o) => ports.Outputs[o].Signal == PortSignal.Length ? (output + 1) / 2 : output)
+                .ToArray();
+
+            after.Forward(newInputs).ShouldBe(oldOutputs, tolerance: 1e-12);
         }
+
+        ports.Outputs.ShouldContain(port => port.Signal == PortSignal.Length);
+        Should.NotThrow(() => DirectBrain.Compile(creation.Training.Brain, ports));
+    }
+
+    // #1129: version 7 saved a Piston's target length as tanh; version 8 doubles its bias and every
+    // weight into it, enabled or not, under sigmoid. Its other neurons and connections are untouched.
+    [Fact]
+    public void AVersion7Save_TurnsItsPistonTargetLengthsSigmoid_WithTheirBiasAndWeightsDoubled()
+    {
+        var current = Version8TrainedWalker();
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 7;
+        var brain = file["training"]!["brain"]!;
+        brain["connections"]!.AsArray()[0]!["enabled"] = false;
+        current["training"]!["brain"]!["connections"]!.AsArray()[0]!["enabled"] = false;
+        var targets = new HashSet<int>();
+        foreach (var neuron in brain["neurons"]!.AsArray())
+        {
+            if (neuron!["channel"]!.GetValue<string>() == BrainPorts.PistonPositionChannel)
+            {
+                neuron["activation"] = "tanh";
+                neuron["bias"] = neuron["bias"]!.GetValue<double>() / 2;
+                targets.Add(neuron["id"]!.GetValue<int>());
+            }
+        }
+
+        foreach (var connection in brain["connections"]!.AsArray().Where(connection => targets.Contains(connection!["to"]!.GetValue<int>())))
+        {
+            connection!["weight"] = connection["weight"]!.GetValue<double>() / 2;
+        }
+
+        targets.Count.ShouldBe(2);
+        targets.ShouldContain(brain["connections"]![0]!["to"]!.GetValue<int>());
+        var path = WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        var written = JsonNode.Parse(File.ReadAllText(path))!;
+        JsonNode.DeepEquals(written["training"]!["brain"], current["training"]!["brain"]).ShouldBeTrue();
+        written[_versionField]!.GetValue<int>().ShouldBe(8);
+    }
+
+    [Theory]
+    [InlineData("training", "5")]
+    [InlineData("creature", "[1]")]
+    [InlineData("pistons", "[5]")]
+    public void AVersion7Save_ItCouldNotHaveSaved_IsSkipped(string field, string value)
+    {
+        var file = Version8TrainedWalker();
+        file[_versionField] = 7;
+        var parent = field == "pistons" ? file["creature"]!.AsObject() : file;
+        parent[field] = JsonNode.Parse(value);
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AVersion7Save_WithoutTraining_LoadsAsItWas()
+    {
+        var current = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 7;
+        var path = WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
     }
 
     [Theory]
@@ -456,6 +534,10 @@ public sealed class CreationVersioningTests : IDisposable
 
     private static CreationDef LoadFixture013(string name) =>
         FileCreationRepository.Format.Deserialize(Fixture013(name), name).Value;
+
+    // The trained 0.13.0 walker as version 8 writes it, with sigmoid Piston target lengths (#1129).
+    private static JsonObject Version8TrainedWalker() =>
+        JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("trained-walker.creation.json")))!.AsObject();
 
     // The 0.13.0 walker as version 6 wrote it, before Touch sensors (#1043).
     private static JsonObject Version6Walker()

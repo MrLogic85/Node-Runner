@@ -97,15 +97,16 @@ public sealed class PistonTests
         var piston = new PistonDef(1, 2, 3, stroke: 1, start: 0);
 
         Piston.TargetLength(piston, _built, _pointJoints, -1).ShouldBe(100, tolerance: 1e-9);
-        Piston.TargetLength(piston, _built, _pointJoints, 0).ShouldBe(150, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, _pointJoints, 0).ShouldBe(100, tolerance: 1e-9);
+        Piston.TargetLength(piston, _built, _pointJoints, 0.5).ShouldBe(150, tolerance: 1e-9);
         Piston.TargetLength(piston, _built, _pointJoints, 1).ShouldBe(200, tolerance: 1e-9);
         Piston.TargetLength(piston, _built, _pointJoints, 3).ShouldBe(200, tolerance: 1e-9);
     }
 
     [Theory]
-    [InlineData(0, -1)]
-    [InlineData(0.25, -0.5)]
-    [InlineData(0.5, 0)]
+    [InlineData(0, 0)]
+    [InlineData(0.25, 0.25)]
+    [InlineData(0.5, 0.5)]
     [InlineData(1, 1)]
     public void DrawnPosition_AsksForItsDrawnLength(double start, double position)
     {
@@ -125,18 +126,18 @@ public sealed class PistonTests
             [new PistonDef(4, 1, 2, start: 0), new PistonDef(5, 1, 3, start: 1)],
             nextPartId: 6);
 
-        Piston.DrawnPositions(creature).ShouldBe(new Dictionary<int, double> { [4] = -1, [5] = 1 });
+        Piston.DrawnPositions(creature).ShouldBe(new Dictionary<int, double> { [4] = 0, [5] = 1 });
     }
 
     [Fact]
     public void NextForce_AtItsTarget_AndStill_FromRest_IsZero() =>
-        Next(length: _built, speed: 0, position: 0, force: 0).ShouldBe(0);
+        Next(length: _built, speed: 0, position: 0.5, force: 0).ShouldBe(0);
 
     [Fact]
     public void NextForce_FromRest_BuildsTowardsItsTarget_AtItsTargetForceOverItsRiseTime()
     {
         var push = Next(length: _built, speed: 0, position: 1, force: 0);
-        var pull = Next(length: _built, speed: 0, position: -1, force: 0);
+        var pull = Next(length: _built, speed: 0, position: 0, force: 0);
 
         // A whole stroke away, at rest: tanh(3) of the rate, through a gate that is nearly open.
         var rate = _piston.Strength * _step / _piston.RiseTime;
@@ -187,7 +188,7 @@ public sealed class PistonTests
         var share = OutputSignals.StrengthFromOutput(0.2, _piston.Strength);
         Next(length: 150, speed: 0, position: 1, force: -_piston.Strength, strength: 0.2).ShouldBe(-share);
         Next(length: 150, speed: 0, position: 1, force: 0, strength: 0.2).ShouldBeLessThan(0);
-        Next(length: 50, speed: 0, position: -1, force: 0, strength: 0.2).ShouldBeGreaterThan(0);
+        Next(length: 50, speed: 0, position: 0, force: 0, strength: 0.2).ShouldBeGreaterThan(0);
     }
 
     // Light and heavy pairs at the slider ends where its force can brake in time. A light pair at
@@ -230,7 +231,7 @@ public sealed class PistonTests
     {
         // The force alone, against an idealised stop: the real end stops (#701) are a Godot joint
         // (Creature.CreateEndStops), measured in the sim, not here.
-        var forces = Run(pairMass: 2, strength: 1, load: 2 * _piston.Strength, steps: 300, out var length, out _, position: 0, loadSteps: 120, endStops: true);
+        var forces = Run(pairMass: 2, strength: 1, load: 2 * _piston.Strength, steps: 300, out var length, out _, position: 0.5, loadSteps: 120, endStops: true);
 
         StillPushesAtTheEnd(forces, _piston.Strength).ShouldBeFalse();
         length.ShouldBe(_built, tolerance: 0.5);

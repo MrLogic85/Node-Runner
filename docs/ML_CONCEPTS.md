@@ -23,8 +23,8 @@ sensor off are #960.
 - **What:** The nonlinearity between layers. Without it, a deep network
   collapses to a single linear map.
 - **Where:** `libs/NodeRunner.ML/Activation.cs` (`Tanh`, `ReLU`,
-  `Sigmoid`); each output uses its signal's activation, tanh for position,
-  sigmoid for strength (#535).
+  `Sigmoid`); each output uses its signal's activation, tanh for velocity
+  and position, sigmoid for length and strength (#535, #1129).
 - **How we show it:** Swapping the activation of a trained brain and
   watching its behaviour change (#960).
 

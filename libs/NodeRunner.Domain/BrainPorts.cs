@@ -45,7 +45,7 @@ public static class BrainPorts
     /// <summary>A Piston's speed input key.</summary>
     public const string PistonSpeedChannel = "speed";
 
-    /// <summary>A Piston's position output key: the length to reach.</summary>
+    /// <summary>A Piston's position output key: the length to reach, 0 at its shortest and 1 at its longest (#1129).</summary>
     public const string PistonPositionChannel = "position";
 
     /// <summary>A Piston's strength output key: the share of its Strength to use.</summary>
@@ -124,7 +124,7 @@ public static class BrainPorts
     /// <summary>A Piston's output ports, position then strength.</summary>
     public static IEnumerable<BrainPort> PistonOutputs(int pistonId) =>
     [
-        BrainPort.Output(pistonId, PistonPositionChannel, PortSignal.Position),
+        BrainPort.Output(pistonId, PistonPositionChannel, PortSignal.Length),
         BrainPort.Output(pistonId, PistonStrengthChannel, PortSignal.Strength),
     ];
 
