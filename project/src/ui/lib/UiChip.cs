@@ -23,6 +23,7 @@ public partial class UiChip : PanelContainer
     private UiIconId _iconId = UiIconId.None;
     private bool _glyphSizedIcon;
     private UiIconCaption? _content;
+    private Func<string>? _textSource;
 
     [Export]
     public string Text
@@ -31,6 +32,20 @@ public partial class UiChip : PanelContainer
         set
         {
             _text = value;
+            Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Already translated text in place of <see cref="Text"/>, as on <see cref="UiLabel.TextSource"/>:
+    /// asked again when the language changes. Null shows <see cref="Text"/>.
+    /// </summary>
+    public Func<string>? TextSource
+    {
+        get => _textSource;
+        set
+        {
+            _textSource = value;
             Refresh();
         }
     }
@@ -132,6 +147,7 @@ public partial class UiChip : PanelContainer
         _content.Row.CustomMinimumSize = new Vector2(0, UiSize.Control.ExtraSmall);
         UiTranslation.ShareContext(this, _content.Label);
         _content.Apply(Text, IconId, IconSizeFor(IconId, GlyphSizedIcon), content, UiThemeLookup.Color(this, content));
+        _content.Label.TextSource = _textSource;
         AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
             UiThemeLookup.Color(this, UiTokens.Color.PanelRaised),
             UiThemeLookup.Color(this, border),

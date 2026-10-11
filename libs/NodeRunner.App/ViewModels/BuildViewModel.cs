@@ -947,7 +947,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The creature for Start training, if it can train (<see cref="CreatureReadiness"/>). Build's
-    /// readiness line already shows why one cannot, so a refusal says nothing more.
+    /// readiness chip already shows why one cannot, so a refusal says nothing more.
     /// </summary>
     public bool TryGetTrainableCreature(out CreatureDef? creature)
     {
