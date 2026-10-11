@@ -19,6 +19,28 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
+    public void ShowsLooseMark_OnlyOnABareLooseJoint_NotUnderAServoOrWheel()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(300, 0)), new NodeDef(5, new Vector2D(400, 0))],
+            [new BeamDef(6, 4, 5)],
+            [],
+            [new ServoDef(7, 2)],
+            [],
+            [],
+            [new WheelDef(8, 3)],
+            nextPartId: 9));
+
+        build.ShowsLooseMark(1).ShouldBeTrue();
+        build.IsLoose(2).ShouldBeTrue();
+        build.ShowsLooseMark(2).ShouldBeFalse();
+        build.IsLoose(3).ShouldBeTrue();
+        build.ShowsLooseMark(3).ShouldBeFalse();
+        build.ShowsLooseMark(4).ShouldBeFalse();
+    }
+
+    [Fact]
     public void MoveNode_PastTheBuildArea_StopsAtTheEdge()
     {
         var viewModel = new BuildViewModel();

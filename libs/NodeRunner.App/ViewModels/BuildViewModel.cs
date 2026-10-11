@@ -575,6 +575,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         && !Pistons.Any(piston => piston.NodeA == nodeId || piston.NodeB == nodeId)
         && !Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
 
+    /// <summary>
+    /// Whether joint <paramref name="nodeId"/> draws the loose mark (ring and cross): a bare loose joint
+    /// only. A Servo or Wheel on a loose joint shows the error in its own <c>danger</c> look (#1140).
+    /// </summary>
+    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, _builder.Servos, _builder.Wheels);
+
     /// <summary>The pieces the links join the joints into (<see cref="CreatureReadiness.Pieces"/>); more than one cannot train.</summary>
     public IReadOnlyList<IReadOnlyList<int>> Pieces() => CreatureReadiness.Pieces(Nodes, LinkRef.All(Beams, Pistons, Springs));
 

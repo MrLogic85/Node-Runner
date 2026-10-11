@@ -25,8 +25,10 @@ UI around the world is in `docs/UI_DIRECTION.md`. Drawing code rules are in
 A bearing in a cell (#626): a `line-strong` `stroke-signal` ring whose
 outer edge is `NodeDef.PlainJointRadius`, a `stroke-hair` inner ring at 0.55
 of that radius, and an `alpha_soft` tint (`line-strong`, `halo` when
-selected, `danger` when loose) on an opaque `background` disc. A loose joint
-shows a `danger` ring and cross instead of the inner ring.
+selected, `danger` when loose) on an opaque `background` disc. A bare loose
+joint shows a `danger` ring and cross instead of the inner ring. A Servo or
+Wheel on a loose joint shows the error in its own `danger` look instead, with
+no ring or cross over it (#1140).
 
 Every link (beam, Piston, Spring) runs from hub to hub (#1086): it stops flat
 `NodeDef.HubRadius` (a plain joint's radius) from each joint's centre,
