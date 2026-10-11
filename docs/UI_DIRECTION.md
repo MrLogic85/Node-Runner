@@ -152,10 +152,10 @@ entry (#315). The entries that are not a component of their own (#306):
   its text (#485).
 - **`c_call` in a figure** is `UiCalloutLayer` (#593); the look is in
   `docs/WORLD_VISUALS.md` → "Build canvas". A callout may carry
-  `UiCalloutLine`s of `UiMeterBar`s under its text (#1064), and further
-  `UiCalloutSection`s below a hairline, each its own glyph, text and lines
-  (#1066); their look is in `docs/WORLD_VISUALS.md` → "Port bars" and
-  "Part callout".
+  `UiCalloutLine`s of `UiMeterBar`s under its text (#1064), each with an
+  optional heading (#1150), and further `UiCalloutSection`s below a
+  hairline, each its own glyph, text and lines (#1066); their look is in
+  `docs/WORLD_VISUALS.md` → "Port bars" and "Part callout".
 - **`c_fact_row`** is an authored row of a `UiIcon` and two `UiLabel`s,
   as on Import (#899).
 - **`c_field_line`** is `UiTextField`'s one line: its error, or else its

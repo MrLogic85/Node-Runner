@@ -8,18 +8,20 @@ public readonly record struct UiCalloutMeter(string Label, double Value, bool Ce
 
 /// <summary>
 /// A line under a callout's caption (#1064): meters filled in one colour, at most
-/// <see cref="MetersPerRow"/> to a row and the rest wrapping below, or one muted note.
+/// <see cref="MetersPerRow"/> to a row and the rest wrapping below, or one muted note. A meter
+/// line may start with a <see cref="Heading"/> naming its group (#1150).
 /// </summary>
 public sealed record UiCalloutLine
 {
     /// <summary>The most meters a row holds; more wrap to the next row of the same line.</summary>
     public const int MetersPerRow = 3;
 
-    private UiCalloutLine(UiTokens.Color color, IReadOnlyList<UiCalloutMeter> meters, string? note)
+    private UiCalloutLine(UiTokens.Color color, IReadOnlyList<UiCalloutMeter> meters, string? note, string? heading)
     {
         Color = color;
         Meters = meters;
         Note = note;
+        Heading = heading;
     }
 
     /// <summary>The meters' fill colour.</summary>
@@ -30,21 +32,27 @@ public sealed record UiCalloutLine
     /// <summary>A muted note shown instead of meters, already in the player's language; null for a meter line.</summary>
     public string? Note { get; }
 
-    public static UiCalloutLine OfMeters(UiTokens.Color color, IReadOnlyList<UiCalloutMeter> meters)
+    /// <summary>
+    /// A muted word before the meters' first row, in the column under the caption's glyph, already
+    /// in the player's language; null for none. It names the line, so colour is never the only cue.
+    /// </summary>
+    public string? Heading { get; }
+
+    public static UiCalloutLine OfMeters(UiTokens.Color color, IReadOnlyList<UiCalloutMeter> meters, string? heading = null)
     {
         ArgumentNullException.ThrowIfNull(meters);
-        return new UiCalloutLine(color, meters, null);
+        return new UiCalloutLine(color, meters, null, heading);
     }
 
     public static UiCalloutLine OfNote(string note)
     {
         ArgumentNullException.ThrowIfNull(note);
-        return new UiCalloutLine(UiTokens.Color.Muted, [], note);
+        return new UiCalloutLine(UiTokens.Color.Muted, [], note, null);
     }
 
     /// <summary>
-    /// Whether <paramref name="other"/> has the same lines and meter counts as
-    /// <paramref name="lines"/>, so a callout updates its labels and values in place.
+    /// Whether <paramref name="other"/> has the same line kinds and meter counts as <paramref name="lines"/>;
+    /// <see cref="UiCalloutGrid.SameGrid"/> decides whether a callout updates in place.
     /// </summary>
     public static bool SameShape(IReadOnlyList<UiCalloutLine>? lines, IReadOnlyList<UiCalloutLine>? other)
     {

@@ -1549,6 +1549,16 @@ msgid_plural "{1} forgets its {0} generations of training and keeps its body. Co
 msgstr[0] ""
 msgstr[1] ""
 
+#: libs/NodeRunner.App/ViewModels/PartCalloutPresentation.cs
+msgctxt "part callout"
+msgid "In"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartCalloutPresentation.cs
+msgctxt "part callout"
+msgid "Out"
+msgstr ""
+
 #: project/scenes/hosts/TrainingHost.tscn
 msgctxt "start line"
 msgid "Start"

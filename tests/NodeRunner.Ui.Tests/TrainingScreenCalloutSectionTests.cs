@@ -5,7 +5,7 @@ using NodeRunner.Ui.Screens;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>How a selected part becomes its section of the Training part callout (#1064, #1066).</summary>
+/// <summary>How a selected part becomes its section of the Training part callout (#1064, #1066, #1150).</summary>
 public sealed class TrainingScreenCalloutSectionTests
 {
     [Fact]
@@ -28,6 +28,7 @@ public sealed class TrainingScreenCalloutSectionTests
         var lines = Lines(servo)!;
 
         lines.Select(line => line.Color).ShouldBe([UiTokens.Color.Accent, UiTokens.Color.Output]);
+        lines.Select(line => line.Heading).ShouldBe(["In", "Out"]);
         lines.ShouldAllBe(line => line.Note == null);
         lines[0].Meters[0].ShouldBe(new UiCalloutMeter("angle", -0.5, Centred: true));
         lines[0].Meters[1].Label.ShouldBe("speed");
@@ -48,7 +49,9 @@ public sealed class TrainingScreenCalloutSectionTests
 
         var lines = Lines(camera)!;
 
-        lines.ShouldHaveSingleItem().Color.ShouldBe(UiTokens.Color.Accent);
+        var line = lines.ShouldHaveSingleItem();
+        line.Color.ShouldBe(UiTokens.Color.Accent);
+        line.Heading.ShouldBe("In");
     }
 
     [Fact]
@@ -59,6 +62,7 @@ public sealed class TrainingScreenCalloutSectionTests
         var line = Lines(wheel)!.ShouldHaveSingleItem();
 
         line.Note.ShouldBe("No brain ports");
+        line.Heading.ShouldBeNull();
         line.Color.ShouldBe(UiTokens.Color.Muted);
         line.Meters.ShouldBeEmpty();
     }
@@ -86,7 +90,12 @@ public sealed class TrainingScreenCalloutSectionTests
 
     // Translation needs Godot, so the tests show each text's English message.
     private static UiCalloutSection Section(PartCalloutPresentation callout, string name) =>
-        TrainingScreen.CalloutSection(callout, name, callout.Note is { } note ? () => note.Message : null, port => port.Label.Message);
+        TrainingScreen.CalloutSection(
+            callout,
+            name,
+            callout.Note is { } note ? () => note.Message : null,
+            port => port.Label.Message,
+            (PartCalloutPresentation.InputsHeading.Message, PartCalloutPresentation.OutputsHeading.Message));
 
     private static IReadOnlyList<UiCalloutLine>? Lines(PartCalloutPresentation callout) => Section(callout, "Part").Lines;
 }
