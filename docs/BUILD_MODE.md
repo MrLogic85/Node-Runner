@@ -355,7 +355,11 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   "Target link" pickers. A missing role's picker reads "Pick a
   Fixed link" or "Pick a Target link" in danger colour and lists only the
   real links; its Play-tap canvas note says the same, or "Pick two links"
-  when both are empty. If the joint has fewer than two links, its note and its
+  when both are empty. Both lists colour the current Fixed and Target links
+  as their canvas bands (`docs/UI_DIRECTION.md` → "Menus and pickers").
+  When both roles are set, each list marks the other role's link "swaps",
+  because picking it swaps the two; with one empty, picking the other
+  role's link just moves it, so nothing says "swaps" (#1130). If the joint has fewer than two links, its note and its
   Play-tap canvas note say "A Servo needs two links at its joint" instead,
   and the play-blocked reason asks to connect another link there, because
   no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →

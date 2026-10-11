@@ -368,7 +368,7 @@ public sealed class BuildPlacementTests
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
         var presentation = new BuildPresentationViewModel(build).SinglePart!;
 
-        presentation.Pickers![0].Options.ShouldBe([UiText.Format("Piston {0}", 1), UiText.Format("Spring {0}", 1)]);
+        presentation.Pickers![0].Options.Select(option => option.Name).ShouldBe([UiText.Format("Piston {0}", 1), UiText.Format("Spring {0}", 1)]);
 
         var newId = build.SetServoLink(servoId, fixedRole: true, linkId: 5);
 
@@ -487,9 +487,8 @@ public sealed class BuildPlacementTests
 
         var picker = new BuildPresentationViewModel(build).SinglePart!.Pickers![0];
 
-        picker.LinkIds.ShouldBe([3, 4]);
-        picker.LinkKinds.ShouldBe([CreatureElementKind.Piston, CreatureElementKind.Beam]);
-        picker.Options.ShouldBe([UiText.Format("Piston {0}", 1), UiText.Format("Beam {0}", 1)]);
+        picker.Options.Select(option => (option.LinkId, option.Kind, option.Name)).ShouldBe(
+            [(3, CreatureElementKind.Piston, UiText.Format("Piston {0}", 1)), (4, CreatureElementKind.Beam, UiText.Format("Beam {0}", 1))]);
     }
 
     [Fact]
@@ -634,9 +633,49 @@ public sealed class BuildPlacementTests
         picker.SelectedIndex.ShouldBeNull();
         picker.Placeholder.ShouldBe(UiText.Plain("Pick a Fixed link"));
         picker.Note.ShouldBeNull();
-        picker.LinkIds.ShouldBe([6, 7]);
-        picker.Options.ShouldBe([UiText.Format("Beam {0}", 1), UiText.Format("Beam {0}", 2)]);
-        picker.LinkKinds.ShouldBe([CreatureElementKind.Beam, CreatureElementKind.Beam]);
+        picker.Options.Select(option => (option.LinkId, option.Kind, option.Name)).ShouldBe(
+            [(6, CreatureElementKind.Beam, UiText.Format("Beam {0}", 1)), (7, CreatureElementKind.Beam, UiText.Format("Beam {0}", 2))]);
+    }
+
+    // Only the role links carry a role, and only the other role's link swaps (#1130).
+    [Fact]
+    public void ServoPickers_WithThreeLinks_GiveEachLinkItsRoleAndMarkTheSwap()
+    {
+        var build = ThreeBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.SetServoLink(servoId, fixedRole: true, linkId: 6);
+        var picked = build.Servos.Single().Id;
+        build.SetServoLink(picked, fixedRole: false, linkId: 7);
+        build.Servos.Select(servo => (servo.FixedLinkId, servo.TargetLinkId)).ShouldBe([(6, 7)]);
+
+        var pickers = new BuildPresentationViewModel(build).SinglePart!.Pickers!;
+
+        var swaps = UiText.Plain("swaps");
+        pickers[0].Options.Select(option => (option.LinkId, option.Role, option.Note)).ShouldBe(
+            [(5, ServoLinkRole.None, null), (6, ServoLinkRole.Fixed, null), (7, ServoLinkRole.Target, swaps)]);
+        pickers[1].Options.Select(option => (option.LinkId, option.Role, option.Note)).ShouldBe(
+            [(5, ServoLinkRole.None, null), (6, ServoLinkRole.Fixed, swaps), (7, ServoLinkRole.Target, null)]);
+    }
+
+    // With one role empty, picking the other role's link moves it rather than swapping (#1130).
+    [Fact]
+    public void ServoPickers_WithAMissingRole_MarkNoSwap()
+    {
+        var build = ThreeBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 5 } });
+        build.DeleteSelectedParts();
+        var servo = build.Servos.Single();
+        servo.FixedLinkId.ShouldBeNull();
+        servo.TargetLinkId.ShouldBe(6);
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servo.Id } });
+
+        var pickers = new BuildPresentationViewModel(build).SinglePart!.Pickers!;
+
+        pickers[0].Options.Select(option => (option.LinkId, option.Role, option.Note)).ShouldBe(
+            [(6, ServoLinkRole.Target, null), (7, ServoLinkRole.None, null)]);
+        pickers[1].Options.Select(option => (option.LinkId, option.Role, option.Note)).ShouldBe(
+            [(6, ServoLinkRole.Target, null), (7, ServoLinkRole.None, null)]);
     }
 
     // Picking a link gives the Servo a new id (#911); its Play-tap note stays until both roles are set (#1006).
@@ -849,6 +888,21 @@ public sealed class BuildPlacementTests
         build.PlaceNode(new Vector2D(200, 0));
         build.ConnectLink(BuildLink.Beam, 1, 2);
         build.ConnectLink(BuildLink.Beam, 2, 3);
+        return build;
+    }
+
+    /// <summary>Joints 1 (0,0), 2 (100,0), 3 (200,0) and 4 (100,100); beams 5, 6 and 7 join joint 2 to 1, 3 and 4.</summary>
+    private static BuildViewModel ThreeBeams()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(100, 100))],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 2, 4)],
+            [],
+            [],
+            [],
+            [],
+            nextPartId: 8));
         return build;
     }
 

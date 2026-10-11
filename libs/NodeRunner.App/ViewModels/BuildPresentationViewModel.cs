@@ -359,28 +359,41 @@ public sealed class BuildPresentationViewModel
         var links = _build.LinksAt(servo.NodeId)
             .OrderBy(link => link.Id)
             .ToArray();
-        var options = links.Select(link => _build.PartDisplayName(link.Id)).ToArray();
         var trainedNote = !_build.IsLocked && _build.TrainingGeneration is not null ? UiText.Plain("Changing these makes it learn again.") : null;
         var twoLinksNote = _build.ServoNeedsTwoLinks(servo.NodeId) ? CreatureBuilder.ServoNeedsTwoLinksReason : null;
+
+        // Picking the other role's link swaps the two only when both are set; with one empty, it just moves.
+        var bothSet = servo.FixedLinkId is not null && servo.TargetLinkId is not null;
         return
         [
-            Picker(UiText.Plain("Fixed link"), servo.FixedLinkId, UiText.Plain("Pick a Fixed link")),
-            Picker(UiText.Plain("Target link"), servo.TargetLinkId, UiText.Plain("Pick a Target link")),
+            Picker(UiText.Plain("Fixed link"), servo.FixedLinkId, UiText.Plain("Pick a Fixed link"), ServoLinkRole.Target),
+            Picker(UiText.Plain("Target link"), servo.TargetLinkId, UiText.Plain("Pick a Target link"), ServoLinkRole.Fixed),
         ];
 
-        PartPickerPresentation Picker(UiText label, int? selectedLinkId, UiText placeholder)
+        PartPickerPresentation Picker(UiText label, int? selectedLinkId, UiText placeholder, ServoLinkRole otherRole)
         {
             var selected = selectedLinkId is { } id ? Array.FindIndex(links, link => link.Id == id) : -1;
             var chosen = selected >= 0;
             return new PartPickerPresentation(
                 label,
-                links.Select(link => link.Id).ToArray(),
-                options,
+                [.. links.Select(Option)],
                 chosen ? selected : null,
                 _build.IsLocked,
                 _build.IsLocked ? null : chosen ? trainedNote : twoLinksNote,
-                links.Select(link => link.Kind).ToArray(),
                 chosen ? null : placeholder);
+
+            PartPickerOption Option(LinkRef link)
+            {
+                var role = link.Id == servo.FixedLinkId ? ServoLinkRole.Fixed
+                    : link.Id == servo.TargetLinkId ? ServoLinkRole.Target
+                    : ServoLinkRole.None;
+                return new PartPickerOption(
+                    link.Id,
+                    _build.PartDisplayName(link.Id),
+                    link.Kind,
+                    role,
+                    bothSet && role == otherRole ? UiText.Plain("swaps") : null);
+            }
         }
     }
 

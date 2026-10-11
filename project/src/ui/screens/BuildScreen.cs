@@ -816,13 +816,13 @@ public partial class BuildScreen : Control
             var presentation = pickers[index];
             var fixedRole = index == 0;
             var picker = fixedRole ? fixedPicker : targetPicker;
-            var iconTint = fixedRole ? UiTokens.Color.Detail : UiTokens.Color.Accent;
             picker.SetPresentation(
                 UiTextTranslation.Source(presentation.Label)(),
-                presentation.Options.Select((option, optionIndex) => new UiPickerOption(
-                    UiTextTranslation.Source(option)(),
-                    IconForLinkKind(presentation.LinkKindAt(optionIndex)),
-                    IconTint: iconTint)).ToArray(),
+                presentation.Options.Select(option => new UiPickerOption(
+                    UiTextTranslation.Source(option.Name)(),
+                    IconForLinkKind(option.Kind),
+                    Note: UiTextTranslation.Source(option.Note)?.Invoke(),
+                    IconTint: TintForRole(option.Role))).ToArray(),
                 presentation.SelectedIndex ?? -1,
                 disabled: false,
                 UiTextTranslation.Source(presentation.Note)?.Invoke() ?? string.Empty,
@@ -838,7 +838,15 @@ public partial class BuildScreen : Control
             }
         }
 
-        static UiIconId? IconForLinkKind(CreatureElementKind? kind) => kind switch
+        // A link with no role keeps its canvas structure colour; muted would read as disabled (#1130).
+        static UiTokens.Color TintForRole(ServoLinkRole role) => role switch
+        {
+            ServoLinkRole.Fixed => UiTokens.Color.Detail,
+            ServoLinkRole.Target => UiTokens.Color.Accent,
+            _ => UiTokens.Color.LineStrong,
+        };
+
+        static UiIconId? IconForLinkKind(CreatureElementKind kind) => kind switch
         {
             CreatureElementKind.Beam => UiIconId.PartBeam,
             CreatureElementKind.Piston => UiIconId.PartPiston,

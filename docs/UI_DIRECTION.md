@@ -227,6 +227,12 @@ press tint separate rows. A menu has one density, Standard (48) or Compact
 `line` hairline. A `UiPicker` with nothing picked shows its prompt in
 `danger`. A `UiPicker` has no width of its own: it fills its parent, its value
 ends in an ellipsis, and its list opens as wide as the field (#1127).
+Unlike the reference, which tints every option in the Servo's Fixed-link
+picker `detail` and every option in its Target-link picker `accent`, only
+the current Fixed link (`detail`) and Target link (`accent`) are tinted, in
+both lists, to match the canvas bands. A link with no role keeps its
+structure colour, `line-strong`; `muted` would make a link that can be
+picked look disabled (#1130).
 
 ### Shell: toolbar, button bar, side panel
 

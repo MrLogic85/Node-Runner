@@ -79,23 +79,32 @@ public sealed record JointPartTab(PartSettingsKind Kind, CreatureElementSelectio
 /// <summary>A read-only row in the Part settings panel: a label and the value it reads, like "Weight" and "1.2 kg".</summary>
 public sealed record PartReadout(UiText Label, UiText Value);
 
+/// <summary>The role a link has on its Servo today.</summary>
+public enum ServoLinkRole
+{
+    None,
+    Fixed,
+    Target,
+}
+
+/// <summary>
+/// One link a Servo picker offers: its <see cref="Role"/> on the Servo today, and the <see cref="Note"/>
+/// "swaps" when picking it swaps the Fixed and Target links (#1130).
+/// </summary>
+public sealed record PartPickerOption(int LinkId, UiText Name, CreatureElementKind Kind, ServoLinkRole Role, UiText? Note = null);
+
 /// <summary>
 /// A Servo link picker: the links it offers, which one is chosen, and the <see cref="Placeholder"/>
 /// shown instead when none is (a deleted held link), which is never one of the options.
 /// </summary>
 public sealed record PartPickerPresentation(
     UiText Label,
-    IReadOnlyList<int> LinkIds,
-    IReadOnlyList<UiText> Options,
+    IReadOnlyList<PartPickerOption> Options,
     int? SelectedIndex,
     bool IsLocked,
     UiText? Note,
-    IReadOnlyList<CreatureElementKind>? LinkKinds = null,
     UiText? Placeholder = null)
 {
     public int? LinkIdAt(int selectedIndex) =>
-        selectedIndex >= 0 && selectedIndex < LinkIds.Count ? LinkIds[selectedIndex] : null;
-
-    public CreatureElementKind? LinkKindAt(int selectedIndex) =>
-        selectedIndex >= 0 && LinkKinds is not null && selectedIndex < LinkKinds.Count ? LinkKinds[selectedIndex] : null;
+        selectedIndex >= 0 && selectedIndex < Options.Count ? Options[selectedIndex].LinkId : null;
 }
