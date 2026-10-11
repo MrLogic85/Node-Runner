@@ -229,6 +229,11 @@ press tint separate rows. A menu has one density, Standard (48) or Compact
 `line` hairline. A `UiPicker` with nothing picked shows its prompt in
 `danger`. A `UiPicker` has no width of its own: it fills its parent, its value
 ends in an ellipsis, and its list opens as wide as the field (#1127).
+Its list always opens below its row, never over its own heading (#1139).
+When the list runs past the screen, the player scrolls the side panel,
+also by dragging on the list, and the list follows its row; a drag never
+picks an option. Other following menus, such as the toolbar's overflow,
+open upward when there is no room below.
 Unlike the reference, which tints every option in the Servo's Fixed-link
 picker `detail` and every option in its Target-link picker `accent`, only
 the current Fixed link (`detail`) and Target link (`accent`) are tinted, in

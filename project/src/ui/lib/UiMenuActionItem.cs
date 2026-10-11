@@ -306,4 +306,17 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
     }
 
     private void Activate() => EmitSignal(SignalName.Activated);
+
+    // Godot's BaseButton drops a held press when it is disabled, so its release presses nothing.
+    public override void CancelPress()
+    {
+        if (_button is not { } button || button.Disabled)
+        {
+            return;
+        }
+
+        button.Disabled = true;
+        button.Disabled = false;
+        QueueRedraw();
+    }
 }

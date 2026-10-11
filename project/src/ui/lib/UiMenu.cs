@@ -19,13 +19,22 @@ public partial class UiMenu : Container, IUiClipping
         WrapContent,
     }
 
+    // As far as a press may move and still be a tap, like UiNotification's.
+    private const float _dragSlop = 8;
+
     private float _width;
     private MenuWidthMode _widthMode;
     private bool _compact;
     private Control? _followAnchor;
     private Vector2 _followPoint = new(0, 1);
     private Vector2 _followOffset;
+    private bool _followOpensUpward = true;
+    private ScrollContainer? _followScroll;
     private int _pressedIndex = -1;
+    private bool _pressing;
+    private bool _dragScrolling;
+    private Vector2 _pressPosition;
+    private float _scrollRemainder;
     private bool _swallowingTap;
     private bool _ownsBack;
     private bool _quitOnBack;
@@ -182,6 +191,12 @@ public partial class UiMenu : Container, IUiClipping
     // the touch itself from reaching what lies beneath, such as Build's canvas (#689).
     public override void _GuiInput(InputEvent inputEvent)
     {
+        if (inputEvent is InputEventMouseMotion motion && _pressing)
+        {
+            DragScroll(motion);
+            return;
+        }
+
         if (inputEvent is not InputEventMouseButton { ButtonIndex: MouseButton.Left } mouse)
         {
             return;
@@ -191,17 +206,69 @@ public partial class UiMenu : Container, IUiClipping
         if (mouse.Pressed)
         {
             _pressedIndex = index;
+            _pressing = true;
+            _dragScrolling = false;
+            _pressPosition = mouse.Position;
+            _scrollRemainder = 0;
         }
         else
         {
-            if (index >= 0 && index == _pressedIndex)
+            if (!_dragScrolling && index >= 0 && index == _pressedIndex)
             {
                 EmitSignal(SignalName.IndexClicked, index);
             }
             _pressedIndex = -1;
+            _pressing = false;
+            _dragScrolling = false;
         }
 
         AcceptEvent();
+    }
+
+    // The overlay keeps a drag on the menu from reaching the panel its anchor scrolls in, so the
+    // menu scrolls that panel itself (#1139). Past the tap slop it is a scroll, not a click, and
+    // the row's press is let go, as in a ScrollContainer.
+    private void DragScroll(InputEventMouseMotion motion)
+    {
+        if (_followScroll is not { } scroll || !IsInstanceValid(scroll))
+        {
+            return;
+        }
+
+        if (!_dragScrolling)
+        {
+            if (!IsScrollDrag(_pressPosition, motion.Position))
+            {
+                return;
+            }
+
+            _dragScrolling = true;
+            _pressedIndex = -1;
+            foreach (var item in GetChildren().OfType<UiMenuItem>())
+            {
+                item.CancelPress();
+            }
+        }
+
+        var screenDelta = GetGlobalTransformWithCanvas().BasisXform(motion.Relative);
+        var scrollDelta = scroll.GetGlobalTransformWithCanvas().AffineInverse().BasisXform(screenDelta).Y;
+        (var step, _scrollRemainder) = ScrollStep(_scrollRemainder, scrollDelta);
+        scroll.ScrollVertical -= step;
+        AcceptEvent();
+    }
+
+    /// <summary>Whether a press that moved from <paramref name="from"/> to <paramref name="to"/> is a scroll, not a tap.</summary>
+    public static bool IsScrollDrag(Vector2 from, Vector2 to) => from.DistanceTo(to) > _dragSlop;
+
+    /// <summary>
+    /// The whole pixels a drag of <paramref name="delta"/> scrolls, with the fraction carried in
+    /// <paramref name="remainder"/>, since a ScrollContainer only takes whole pixels.
+    /// </summary>
+    public static (int Step, float Remainder) ScrollStep(float remainder, float delta)
+    {
+        var total = remainder + delta;
+        var step = (int)total;
+        return (step, total - step);
     }
 
     public override Vector2 _GetMinimumSize()
@@ -307,11 +374,13 @@ public partial class UiMenu : Container, IUiClipping
 
     /// <summary>
     /// Keeps this menu attached to a normalized point on another control.
-    /// The anchor is sampled every frame so scrolling and container relayout are followed.
-    /// A menu that would not fit below the screen edge opens above its anchor when it fits there; otherwise it stays below.
+    /// The anchor is sampled every frame so scrolling and container relayout are followed, and a
+    /// drag on the menu scrolls the ScrollContainer the anchor sits in (#1139).
+    /// A menu that would not fit below the screen edge opens above its anchor when it fits there,
+    /// unless <paramref name="opensUpward"/> is false; otherwise it stays below.
     /// The menu must sit in a <see cref="UiLevelLayer"/>, which floats it over its screen (#768).
     /// </summary>
-    public void Follow(Control anchor, Vector2 normalizedPoint, Vector2 offset = default)
+    public void Follow(Control anchor, Vector2 normalizedPoint, Vector2 offset = default, bool opensUpward = true)
     {
         ArgumentNullException.ThrowIfNull(anchor);
         if (GetParent() is not UiLevelLayer)
@@ -321,6 +390,8 @@ public partial class UiMenu : Container, IUiClipping
         _followAnchor = anchor;
         _followPoint = normalizedPoint;
         _followOffset = offset;
+        _followOpensUpward = opensUpward;
+        _followScroll = ScrollContainerOf(anchor);
         UiClip.Apply(this, clip: true);
         SetProcess(true);
         UpdateFollowPosition();
@@ -329,7 +400,22 @@ public partial class UiMenu : Container, IUiClipping
     public void StopFollowing()
     {
         _followAnchor = null;
+        _followScroll = null;
         SetProcess(false);
+    }
+
+    /// <summary>The nearest ScrollContainer that <paramref name="node"/> scrolls in, if any.</summary>
+    public static ScrollContainer? ScrollContainerOf(Node node)
+    {
+        for (var parent = node.GetParent(); parent is not null; parent = parent.GetParent())
+        {
+            if (parent is ScrollContainer scroll)
+            {
+                return scroll;
+            }
+        }
+
+        return null;
     }
 
     public override void _Process(double delta) => UpdateFollowPosition();
@@ -347,20 +433,30 @@ public partial class UiMenu : Container, IUiClipping
             _followAnchor.Size.Y * _followPoint.Y);
         var position = anchorTransform * localPoint + _followOffset;
 
-        // A menu that would run past the bottom of the screen opens upward instead,
-        // as Godot's own OptionButton popup does.
-        var screenBottom = GetViewportRect().End.Y;
-        if (position.Y + Size.Y > screenBottom)
+        position.Y = FollowTop(
+            position.Y,
+            (anchorTransform * Vector2.Zero).Y,
+            _followOffset.Y,
+            Size.Y,
+            GetViewportRect().End.Y,
+            _followOpensUpward);
+        GlobalPosition = position;
+    }
+
+    /// <summary>
+    /// The top of a following menu <paramref name="height"/> tall whose place below its anchor is
+    /// <paramref name="below"/>. One that would run past the bottom of the screen opens upward
+    /// instead, as Godot's own OptionButton popup does, when it may and fits there.
+    /// </summary>
+    public static float FollowTop(float below, float anchorTop, float offset, float height, float screenBottom, bool opensUpward)
+    {
+        if (!opensUpward || below + height <= screenBottom)
         {
-            var anchorTop = (anchorTransform * new Vector2(0, 0)).Y;
-            var above = anchorTop - _followOffset.Y - Size.Y;
-            if (above >= 0)
-            {
-                position.Y = above;
-            }
+            return below;
         }
 
-        GlobalPosition = position;
+        var above = anchorTop - offset - height;
+        return above >= 0 ? above : below;
     }
 
     private Control[] VisibleChildren() =>
