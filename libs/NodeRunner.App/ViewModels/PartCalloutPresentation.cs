@@ -41,13 +41,13 @@ public sealed record PartCalloutPresentation(
         ArgumentNullException.ThrowIfNull(selection);
         ArgumentNullException.ThrowIfNull(values);
 
-        var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, selection.Id);
+        var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, selection.Id);
         var kind = KindOf(creature, selection);
         switch (kind)
         {
             case PartSettingsKind.Node or PartSettingsKind.Beam or PartSettingsKind.Spring:
                 return new PartCalloutPresentation(kind, name, ShowsGlyph: false, [], [], null);
-            case PartSettingsKind.Wheel:
+            case PartSettingsKind.Wheel or PartSettingsKind.Rubber:
                 return new PartCalloutPresentation(kind, name, ShowsGlyph: true, [], [], _noBrainPorts);
         }
 
@@ -71,6 +71,7 @@ public sealed record PartCalloutPresentation(
         CreatureElementKind.Spring => PartSettingsKind.Spring,
         CreatureElementKind.Wheel => PartSettingsKind.Wheel,
         CreatureElementKind.TouchSensor => PartSettingsKind.Touch,
+        CreatureElementKind.Rubber => PartSettingsKind.Rubber,
         _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Unknown part kind."),
     };
 }

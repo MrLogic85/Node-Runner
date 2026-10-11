@@ -25,6 +25,10 @@ public sealed class ShareDictionaryTests
     // It must read for good, so version 8's dictionary never changes.
     private const string _rollerInVersion8 = "NR8.gyfzoPycHCKTObiGxpY8DWDVN2b6M8biAxOUCgXmAXOkHG8MciMAlxLLLg";
 
+    // Two joints, a beam, a Touch sensor and a Wheel, coded in version 9 before #1142 added Rubbers.
+    // It must read for good, so version 9's dictionary never changes.
+    private const string _feelerInVersion9 = "NR9.q8bSBIEmfLdUUHwQlfDBFTW2BGsAq8UxU6QxFj8heckIpzeQSgpDkB8AJ7jUBQ";
+
     public static TheoryData<int> Versions() => new(Enumerable.Range(_firstVersion, FileCreationRepository.Format.CurrentVersion - _firstVersion + 1));
 
     [Fact]
@@ -79,6 +83,21 @@ public sealed class ShareDictionaryTests
         read.UpdatedFrom.ShouldBe(8);
     }
 
+    [Fact]
+    public void ACodeFromVersion9_StillReads_WithoutRubbers()
+    {
+        var read = CreationShareCode.Read(_feelerInVersion9);
+
+        var build = read.Build.ShouldNotBeNull();
+        build.Name.ShouldBe("Feeler");
+        var creature = build.Creature;
+        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
+        creature.TouchSensors.ShouldBe([new TouchSensorDef(4, 1)]);
+        creature.Wheels.ShouldBe([new WheelDef(5, 2)]);
+        creature.Rubbers.ShouldBeEmpty();
+        read.UpdatedFrom.ShouldBe(9);
+    }
+
     // A walker with every kind of part at its settings as Build adds it and named as a new creation
     // is (NewCreationWorkflow.UntitledName), so a code leaves out what it didn't change.
     private static CreationDef Template()
@@ -99,6 +118,7 @@ public sealed class ShareDictionaryTests
         builder.AddServo(front);
         builder.AddWheel(frontFoot);
         builder.AddTouchSensor(backFoot);
+        builder.AddRubber(backFoot);
         return new CreationDef(Guid.NewGuid(), "Untitled Creation", builder.Build());
     }
 
@@ -132,6 +152,8 @@ public sealed class ShareDictionaryTests
         builder.SetParameter(wheel, PartParameterId.WheelRadius, 60);
         builder.AddTouchSensor(backFoot);
         builder.AddTouchSensor(frontFoot);
+        builder.AddRubber(backFoot);
+        builder.AddRubber(frontFoot);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 

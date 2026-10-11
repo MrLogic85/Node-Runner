@@ -13,12 +13,12 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
     /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet, and joint
-    /// parts on a joint whose slot for them is free: one Wheel, one motor or brake and one Touch sensor (#1044).
+    /// parts on a joint whose slot for them is free: one Wheel, one motor or brake, one Touch sensor (#1044) and one Rubber (#1142).
     /// </summary>
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
         ArgumentNullException.ThrowIfNull(target);
-        // Every tray part but the Wheel has brain ports (#896, #129).
+        // Every tray part but the Wheel and the Rubber has brain ports (#896, #129, #1142).
         if (_locked && PartTray.HasBrainPorts(part))
         {
             reason = LockedReason;
@@ -62,6 +62,17 @@ public sealed partial class BuildViewModel
             }
 
             return _builder.CanAddTouchSensor(target.Id, out reason);
+        }
+
+        if (part == BuildPart.Rubber)
+        {
+            if (target.Kind != CreatureElementKind.Node)
+            {
+                reason = CreatureBuilder.RubberGoesOnAJointReason;
+                return false;
+            }
+
+            return _builder.CanAddRubber(target.Id, out reason);
         }
 
         return TakesSensor(PartTray.SensorKindOf(part)!.Value, target, movingSensorId: null, out reason);
@@ -111,6 +122,13 @@ public sealed partial class BuildViewModel
             var touchId = _history.Change(() => _builder.AddTouchSensor(target.Id));
             SelectPlaced(PartSet.None with { TouchSensors = new HashSet<int> { touchId } }, select);
             return touchId;
+        }
+
+        if (part == BuildPart.Rubber)
+        {
+            var rubberId = _history.Change(() => _builder.AddRubber(target.Id));
+            SelectPlaced(PartSet.None with { Rubbers = new HashSet<int> { rubberId } }, select);
+            return rubberId;
         }
 
         var sensorId = _history.Change(() =>

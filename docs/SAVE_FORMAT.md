@@ -79,6 +79,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `springs[]` | `{ id, nodeA, nodeB, name, stiffness, damping, stroke, coilLength }` | Springs between two node ids (#453). `stiffness` N/m, `damping` N·s/m (#801; saves from before it damp almost nothing), both the same number in world units; `stroke` (0, 1] and `coilLength` 0…1 (#835), missing reads as a new Spring's 1 and ⅔. |
 | `wheels[]` | `{ id, nodeId, name, radius }` | Wheels on a node id (#129). `radius` in world units, 40–100 (0.4–1 m). Its weight follows from `radius` and is not saved. |
 | `touchSensors[]` | `{ id, nodeId, name }` | Touch sensors on a node id (#1043), at most one per node. No settings. |
+| `rubbers[]` | `{ id, nodeId, name }` | Rubbers on a node id (#1142), at most one per node: the joint, or its Wheel's tyre, grips the ground. No settings. |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training` (meaning of latest and best: `docs/TRAINING_LOOP.md` → "Latest
@@ -163,6 +164,7 @@ Current `creation.json` migrations:
 | 6 | 7 | #1043: add required `creature.touchSensors: []`. |
 | 7 | 8 | #1129: a Piston's `position` output went from `tanh`, −1…1, to `sigmoid`, 0…1 like its `length` input. As (tanh(x) + 1) / 2 = sigmoid(2x), its `activation` becomes `sigmoid` and its `bias` and the `weight` of every connection into it, enabled or not, double: a trained brain drives its Pistons as before. |
 | 8 | 9 | #1144: each Wheel drops its `grip`; every tyre now grips like a bare joint, friction 1. |
+| 9 | 10 | #1142: add required `creature.rubbers: []`. |
 
 #1086 needs no migration: its saved shape is unchanged, but a saved creature
 with a Wheel or Servo moves and senses a little differently, since links and
@@ -198,7 +200,7 @@ owns it.
 - The code is `NR`, the format version and a dot, then its JSON
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
-  scratch. The Walker example's is about 50 characters, starting `NR9.`,
+  scratch. The Walker example's is about 50 characters, starting `NR10.`,
   and so is two joints and a Spring's (#1094).
 - Its JSON is `creation.json` on one line with `training` and
   `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,

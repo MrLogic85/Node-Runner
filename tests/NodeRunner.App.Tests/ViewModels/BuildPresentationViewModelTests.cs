@@ -108,8 +108,8 @@ public sealed class BuildPresentationViewModelTests
         var tray = new BuildPresentationViewModel(build).Tray;
         var groups = tray.Groups;
 
-        groups.SelectMany(group => group.Rows).Where(row => row.Part != BuildPart.Wheel).ShouldAllBe(row => !row.IsAvailable);
-        groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Wheel).State.ShouldBe(PartTrayRowState.Available);
+        groups.SelectMany(group => group.Rows).Where(row => row.Part is not (BuildPart.Wheel or BuildPart.Rubber)).ShouldAllBe(row => !row.IsAvailable);
+        groups.SelectMany(group => group.Rows).Where(row => row.Part is BuildPart.Wheel or BuildPart.Rubber).ShouldAllBe(row => row.State == PartTrayRowState.Available);
         tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts the brain uses."));
         tray.PickedInfo.ShouldBeNull();
         var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
@@ -639,7 +639,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(PistonCreature());
-        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
+        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
 
         var selection = new BuildPresentationViewModel(build).Selection!;
 

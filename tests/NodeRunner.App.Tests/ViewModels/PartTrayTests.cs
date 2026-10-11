@@ -16,7 +16,7 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().Select(group => group.Rows.Select(row => row.Name).ToArray()).ShouldBe(
         [
-            Plain("Servo", "Stepper", "Velocity motor", "Brake", "Wheel"),
+            Plain("Servo", "Stepper", "Velocity motor", "Brake", "Wheel", "Rubber"),
             Plain("Accelerometer", "Camera", "Touch sensor", "Pulse"),
             Plain("Battery", "Generator", "Fuel tank"),
         ]);
@@ -44,6 +44,7 @@ public sealed class PartTrayTests
     [InlineData(BuildPart.Wheel, "Rolls freely on the ground.", "Tap a joint to place it. A joint holds one wheel.")]
     [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
     [InlineData(BuildPart.TouchSensor, "Feels how near its joint is to the ground.", "Tap a joint to place it. A joint holds one sensor.")]
+    [InlineData(BuildPart.Rubber, "Makes its joint grip the ground.", "Tap a joint to place it. A joint holds one rubber.")]
     public void Create_WithAPickedPart_SelectsItsRow_AndSaysUnderItWhatItDoesAndWhereItGoes(BuildPart part, string info, string placement)
     {
         var tray = PartTray.Create(part);
@@ -75,16 +76,18 @@ public sealed class PartTrayTests
         tray.HelpText.ShouldBe(PartTray.CreationLockedHelp);
     }
 
-    // A Wheel has no brain ports, so a locked creation still takes one (#129).
-    [Fact]
-    public void Create_OnALockedCreation_KeepsTheWheelAvailable_AndPicksIt()
+    // A Wheel (#129) and a Rubber (#1142) have no brain ports, so a locked creation still takes one.
+    [Theory]
+    [InlineData(BuildPart.Wheel)]
+    [InlineData(BuildPart.Rubber)]
+    public void Create_OnALockedCreation_KeepsAPartWithoutBrainPortsAvailable_AndPicksIt(BuildPart part)
     {
-        var tray = PartTray.Create(BuildPart.Wheel, creationLocked: true);
+        var tray = PartTray.Create(part, creationLocked: true);
 
-        tray.Groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Wheel).State.ShouldBe(PartTrayRowState.Selected);
+        tray.Groups.SelectMany(group => group.Rows).Single(row => row.Part == part).State.ShouldBe(PartTrayRowState.Selected);
         tray.PickedInfo.ShouldNotBeNull();
         tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts the brain uses."));
-        PartTray.CanPick(BuildPart.Wheel, creationLocked: true).ShouldBeTrue();
+        PartTray.CanPick(part, creationLocked: true).ShouldBeTrue();
         PartTray.CanPick(BuildPart.Servo, creationLocked: true).ShouldBeFalse();
     }
 
@@ -117,7 +120,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.Servo and not BuildPart.Wheel).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.Servo and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable);
     }
 
@@ -130,6 +133,7 @@ public sealed class PartTrayTests
             (BuildPart.VelocityMotor, "0.14.2"),
             (BuildPart.Brake, "0.14.2"),
             (BuildPart.Wheel, null),
+            (BuildPart.Rubber, null),
             (BuildPart.Accelerometer, null),
             (BuildPart.Camera, null),
             (BuildPart.TouchSensor, null),

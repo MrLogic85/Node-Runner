@@ -26,8 +26,8 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 3. **Selection is drawn with its part.** A part draws its own marks in its
    `_Draw` and rises whole to the selected surface while selected or
    raised. Never draw a part's mark on a separate layer. A Touch sensor's
-   part is the cushion `JointPart` draws, so `JointPart` draws its mark
-   too. Two exceptions:
+   part is the cushion `JointPart` draws, and a Rubber's the skin, so
+   `JointPart` draws their marks too. Two exceptions:
    - A Wheel's mark is drawn by its joint (`JointPart`), which draws its
      hub, so it lies over the links and the cushion
      (`docs/WORLD_VISUALS.md` → "Selection marks").

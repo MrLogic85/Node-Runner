@@ -127,6 +127,7 @@ public partial class Creature
             CreatureElementKind.Spring => Middle(_springVisuals[Definition!.SpringIndexOf(selection.Id)].NodeA, _springVisuals[Definition.SpringIndexOf(selection.Id)].NodeB),
             CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.TouchSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
+            CreatureElementKind.Rubber => _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(selection.Id)].NodeId)].GlobalPosition,
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
         };
 
@@ -153,6 +154,7 @@ public partial class Creature
         {
             visual.TouchSelected = false;
             visual.WheelSelected = false;
+            visual.SkinSelected = false;
         }
 
         var selection = _isShadow ? [] : _selection;
@@ -163,6 +165,13 @@ public partial class Creature
             if (part.Kind == CreatureElementKind.TouchSensor)
             {
                 _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(part.Id)].NodeId)].TouchSelected = true;
+                continue;
+            }
+
+            // A Rubber's mark is its skin in halo (#1142), drawn by its joint.
+            if (part.Kind == CreatureElementKind.Rubber)
+            {
+                _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(part.Id)].NodeId)].SkinSelected = true;
                 continue;
             }
 
@@ -197,7 +206,7 @@ public partial class Creature
             return;
         }
 
-        _raised = groups.Raised(selection, definition.Servos, definition.Wheels, definition.TouchSensors);
+        _raised = groups.Raised(selection, definition.Servos, definition.Wheels, definition.TouchSensors, definition.Rubbers);
         for (var i = 0; i < _nodeVisuals.Length; i++)
         {
             var id = definition.Nodes[i].Id;

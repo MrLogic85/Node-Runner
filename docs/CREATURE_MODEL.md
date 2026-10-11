@@ -10,12 +10,12 @@ types, and no rules that differ by how a part happens to be simulated. How
 Godot realises each part is in `project/src/creature/AGENTS.md` and the code
 comments there.
 
-## Parts: Node, Beam, Sensor, Servo, Piston, Spring, Wheel, Touch sensor
+## Parts: Node, Beam, Sensor, Servo, Piston, Spring, Wheel, Rubber, Touch sensor
 
 A creature is built from two structural parts (Node, Beam), sensor parts
 that sit on beams (the Accelerometer and the Camera), joint parts (the
-Servo, a motor, the Wheel, which rolls, and the Touch sensor, which feels
-the ground) and links between two nodes
+Servo, a motor, the Wheel, which rolls, the Rubber, which grips, and the
+Touch sensor, which feels the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
 parts with brain ports move the body. "What senses" (sensors) and "what
@@ -25,7 +25,7 @@ thinks" (the brain) stay separate; this is the most important rule here:
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
 so it sits on a beam, or on a joint, a body of its own (Touch sensor); a
 part acting between two beams or on the ground around a joint sits on that
-joint (Servo, Wheel); one joining two nodes is a link (Piston, Spring). Each sensor is
+joint (Servo, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
 one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
@@ -51,7 +51,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   (#626, #129): the largest of the plain joint's `NodeDef.PlainJointRadius`
   (15) and each part on it, a Servo's `ServoDef.JointRadius` (27) or a
   Wheel's Radius (`CreatureDef.NodeRadius`). Collision and bounds use it.
-  A Touch sensor adds none. Taps, sensors and links do not use it (#1086):
+  A Rubber or a Touch sensor adds none. Taps, sensors and links do not use it (#1086):
   a joint is tapped at its hub or
   Servo, and a sensor sits by what covers its beam's ends
   (`CreatureDef.CoveredRadius`). Every link measures from
@@ -59,10 +59,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   sits on the joint: the minimum link length and a Piston's or Spring's
   travel.
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
-  motor or brake (a Servo) and one Touch sensor (#1043), so a Servo can
-  drive the links of a Wheel's joint while the Wheel turns freely between
-  them, or drive the Wheel itself (see Servo), and a Touch sensor may share
-  its joint with both.
+  motor or brake (a Servo), one Rubber (#1142) and one Touch sensor
+  (#1043), so a Servo can drive the links of a Wheel's joint while the
+  Wheel turns freely between them, or drive the Wheel itself (see Servo),
+  and a Rubber and a Touch sensor may share its joint with both.
 - **Degree rules** (links touching a node, counting Beams, Pistons and
   Springs):
   - **0 links:** a loose point that cannot be simulated. It can be saved,
@@ -234,7 +234,8 @@ fold.
   rules (see Node). The links keep their own rules: a Wheel changes no link
   and moves no node, and Wheels may overlap when built.
 - **Settings:** **Radius** 0.4–1 m (the joint's radius, see Node).
-- **Grip:** its tyre grips like a bare joint, friction 1 (#1144).
+- **Grip:** its tyre grips like a bare joint, friction 1 (#1144), or
+  twice that with a Rubber on its joint (see Rubber).
 - **Spin:** a free wheel coasts for a long time but does not spin
   forever.
 - **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
@@ -242,13 +243,30 @@ fold.
 - **Driving it:** a Servo on its joint may name it as Fixed or Target
   (#1118, see Servo). Later: #1068, #1070, which reuse the one-sided link.
 
+### Rubber
+
+- **Beginner:** A rubber skin on a joint. The joint, or its wheel's tyre,
+  grips the ground harder, so it slips less when it pushes or brakes. It
+  has no brain ports: it changes how the body meets the ground, not what
+  the brain does.
+- `RubberDef` (#1142). It sits on one joint, at most one per joint, and
+  may share it with the other joint parts (see Node → One part per slot).
+  A Wheel's tyre is its joint's, so a Rubber on a Wheel's joint is its tyre.
+- **Grip** (Mechanics: `Rubber.Friction`): friction 2 against the ground,
+  twice a bare joint's or a tyre's 1. No bounce, as for every joint.
+- **Size:** it adds no radius, weight or collider (see Node); its skin,
+  3 units (`RubberDef.Skin`) outside the joint, is only drawn and adds no
+  tap area. It has no settings.
+- How it is placed and drawn: `docs/BUILD_MODE.md` → Rubber and
+  `docs/WORLD_VISUALS.md` → Rubber.
+
 ### Touch sensor
 
 - **Beginner:** A sensor on a joint that tells the brain how close that
   joint is to touching the ground.
 - `TouchSensorDef` (#665, #1043). It sits on one joint, at most one per
-  joint, and may share it with a Wheel and a Servo. A Wheel's tyre is its
-  joint's, so a tyre on the ground counts.
+  joint, and may share it with the other joint parts (see Node → One part
+  per slot). A Wheel's tyre is its joint's, so a tyre on the ground counts.
 - **Reading:** its one input, `touch`, is how far the nearest ground
   reaches into its cushion (#1045, `Touch.Reading` in Mechanics): 0 at the
   cushion's outer edge, 5 units (`TouchSensorDef.Cushion`) outside the

@@ -23,7 +23,7 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
         var touchSensorIds = creature.TouchSensors.Select(touch => touch.Id).ToHashSet();
         UiText Label(BrainPort port)
         {
-            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, port.PartId);
+            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, port.PartId);
             return sensorKinds.TryGetValue(port.PartId, out var kind)
                 ? Reading(kind, port.Channel, name)
                 : servoIds.Contains(port.PartId) ? ServoChannel(port.Channel, name)

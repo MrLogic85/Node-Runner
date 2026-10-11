@@ -357,6 +357,32 @@
             "additionalProperties": false
           }
         },
+        "rubbers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nodeId": {
+                "type": "integer"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "id",
+              "nodeId"
+            ],
+            "additionalProperties": false
+          }
+        },
         "nextPartId": {
           "type": "integer"
         }
@@ -370,6 +396,7 @@
         "springs",
         "wheels",
         "touchSensors",
+        "rubbers",
         "nextPartId"
       ],
       "additionalProperties": false

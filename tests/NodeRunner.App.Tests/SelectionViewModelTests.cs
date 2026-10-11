@@ -12,8 +12,9 @@ public sealed class SelectionViewModelTests
     private const int _touchId = 13;
     private const int _loneTouchId = 14;
     private const int _loneTouchJoint = 4;
+    private const int _rubberId = 15;
 
-    // Joint 1 holds a Servo, a Wheel and a Touch sensor, joint 3 a Wheel alone, joint 4 a Touch sensor alone, and joint 2 nothing.
+    // Joint 1 holds a Servo, a Wheel, a Rubber and a Touch sensor, joint 3 a Wheel alone, joint 4 a Touch sensor alone, and joint 2 nothing.
     private static readonly CreatureDef _creature = new(
         [new NodeDef(_stackedJoint, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(4, new Vector2D(0, 2))],
         [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 1, 4)],
@@ -23,10 +24,11 @@ public sealed class SelectionViewModelTests
         [new SpringDef(8, 2, 4)],
         [new WheelDef(_wheelId, _stackedJoint), new WheelDef(_loneWheelId, 3)],
         [new TouchSensorDef(_touchId, _stackedJoint), new TouchSensorDef(_loneTouchId, _loneTouchJoint)],
-        nextPartId: 15);
+        [new RubberDef(_rubberId, _stackedJoint)],
+        nextPartId: 16);
 
     private static readonly CreatureElementSelection[] _stackTopDown =
-        [new(CreatureElementKind.Servo, _servoId), new(CreatureElementKind.Wheel, _wheelId), new(CreatureElementKind.TouchSensor, _touchId)];
+        [new(CreatureElementKind.Servo, _servoId), new(CreatureElementKind.Wheel, _wheelId), new(CreatureElementKind.Rubber, _rubberId), new(CreatureElementKind.TouchSensor, _touchId)];
 
     [Fact]
     public void Select_WithNewElement_SetsSelectionAndRaisesPropertyChanged()
@@ -44,6 +46,7 @@ public sealed class SelectionViewModelTests
     [Theory]
     [InlineData(CreatureElementKind.Servo, _servoId)]
     [InlineData(CreatureElementKind.Wheel, _wheelId)]
+    [InlineData(CreatureElementKind.Rubber, _rubberId)]
     [InlineData(CreatureElementKind.TouchSensor, _touchId)]
     [InlineData(CreatureElementKind.Node, _stackedJoint)]
     public void Select_OnAStackedJoint_SelectsEveryPartTopDown(CreatureElementKind kind, int id)

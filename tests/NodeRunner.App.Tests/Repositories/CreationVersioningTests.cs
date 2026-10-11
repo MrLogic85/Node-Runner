@@ -44,6 +44,7 @@ public sealed class CreationVersioningTests : IDisposable
         expected["creature"]!.AsObject()["servos"] = new JsonArray();
         expected["creature"]!.AsObject()["wheels"] = new JsonArray();
         expected["creature"]!.AsObject()["touchSensors"] = new JsonArray();
+        expected["creature"]!.AsObject()["rubbers"] = new JsonArray();
         foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
         {
             piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
@@ -366,6 +367,62 @@ public sealed class CreationVersioningTests : IDisposable
         new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
     }
 
+    // #1142: a creature saved before Rubbers has none.
+    [Fact]
+    public void AVersion9Save_GetsNoRubbers_AndIsWrittenBackInTheCurrentVersion()
+    {
+        var path = WriteCreation(Version9Walker().ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Rubbers.ShouldBeEmpty();
+
+        var written = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
+        written["creature"]!["rubbers"]!.AsArray().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AVersion9Save_WithoutACreature_IsSkipped()
+    {
+        var file = Version9Walker();
+        file.Remove("creature");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    // The strict load (docs/SAVE_FORMAT.md): a current file must hold every array its version has.
+    [Fact]
+    public void ASaveInTheCurrentVersion_WithoutRubbers_IsSkipped()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file["creature"]!.AsObject().Remove("rubbers");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ARubber_SurvivesASaveAndALoad()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var foot = walker.Creature.Nodes[0].Id;
+        var creature = new CreatureDef(
+            walker.Creature.Nodes,
+            walker.Creature.Beams,
+            walker.Creature.Sensors,
+            walker.Creature.Servos,
+            walker.Creature.Pistons,
+            walker.Creature.Springs,
+            walker.Creature.Wheels,
+            walker.Creature.TouchSensors,
+            [new RubberDef(walker.Creature.NextPartId, foot, "Sole")],
+            walker.Creature.NextPartId + 1);
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        repository.Save(walker.WithCreature(creature, training: null));
+
+        repository.Get(walker.Id)!.Creature.Rubbers.ShouldBe([new RubberDef(walker.Creature.NextPartId, foot, "Sole")]);
+    }
+
     [Theory]
     [InlineData("wheels", "[5]")]
     [InlineData("wheels", "[null]")]
@@ -580,6 +637,7 @@ public sealed class CreationVersioningTests : IDisposable
         file["creature"]!.AsObject()["servos"] = new JsonArray();
         file["creature"]!.AsObject()["wheels"] = new JsonArray();
         file["creature"]!.AsObject()["touchSensors"] = new JsonArray();
+        file["creature"]!.AsObject()["rubbers"] = new JsonArray();
     }
 
     private static CreationDef LoadFixture013(string name) =>
@@ -607,10 +665,19 @@ public sealed class CreationVersioningTests : IDisposable
         return JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(wheels, walker.Training)))!.AsObject();
     }
 
+    // The 0.13.0 walker as version 9 wrote it, before Rubbers (#1142).
+    private static JsonObject Version9Walker()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file[_versionField] = 9;
+        file["creature"]!.AsObject().Remove("rubbers");
+        return file;
+    }
+
     // The 0.13.0 walker as version 6 wrote it, before Touch sensors (#1043).
     private static JsonObject Version6Walker()
     {
-        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        var file = Version9Walker();
         file[_versionField] = 6;
         file["creature"]!.AsObject().Remove("touchSensors");
         return file;

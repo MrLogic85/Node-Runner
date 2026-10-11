@@ -135,7 +135,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// True for a locked Creation (#896): it refuses every edit that would change its model, adding or
     /// deleting a part with brain ports or clearing a Servo's link. Joints, beams, Springs and Wheels
-    /// have no ports, so they can still be added and deleted, unless a delete takes a joint's Touch sensor.
+    /// have no ports, so they can still be added and deleted, unless a delete takes a joint's Touch sensor. A Rubber has none either (#1142).
     /// </summary>
     public bool IsLocked => _locked;
 
@@ -210,7 +210,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
         var selectedServoJoints = reselect is null ? SelectedServoJoints() : [];
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, nextPartId));
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, nextPartId));
         if (reselect is not null)
         {
             ClearSelectionSets();
@@ -417,6 +417,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<TouchSensorDef> TouchSensors => _builder.TouchSensors;
 
+    public IReadOnlyList<RubberDef> Rubbers => _builder.Rubbers;
+
     public IReadOnlyList<PistonDef> Pistons => _builder.Pistons;
 
     public IReadOnlyList<SpringDef> Springs => _builder.Springs;
@@ -580,9 +582,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// Whether joint <paramref name="nodeId"/> draws the loose mark (ring and cross): a loose joint
     /// without a Servo or Wheel. Those show the error in their own <c>danger</c> look (#1140); a Touch
-    /// sensor's cushion has none, so it does not count.
+    /// sensor's cushion and a Rubber's skin (#1142) have none, so they do not count.
     /// </summary>
-    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, _builder.Servos, _builder.Wheels, touchSensors: []);
+    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, _builder.Servos, _builder.Wheels, touchSensors: [], rubbers: []);
 
     /// <summary>The pieces the links join the joints into (<see cref="CreatureReadiness.Pieces"/>); more than one cannot train.</summary>
     public IReadOnlyList<IReadOnlyList<int>> Pieces() => CreatureReadiness.Pieces(Nodes, LinkRef.All(Beams, Pistons, Springs));
@@ -613,6 +615,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         CreatureElementKind.Spring => _builder.Springs.Any(spring => spring.Id == element.Id),
         CreatureElementKind.Wheel => _builder.Wheels.Any(wheel => wheel.Id == element.Id),
         CreatureElementKind.TouchSensor => _builder.TouchSensors.Any(touch => touch.Id == element.Id),
+        CreatureElementKind.Rubber => _builder.Rubbers.Any(rubber => rubber.Id == element.Id),
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
@@ -755,7 +758,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees
     /// (<see cref="DrawGroups.PartAt"/>), with the selection and the <paramref name="targets"/> on
     /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A Servo or Wheel
-    /// is hit as its joint; a Touch sensor adds no tap area (#1045). Null off every part.
+    /// is hit as its joint; a Touch sensor (#1045) and a Rubber (#1142) add no tap area. Null off every part.
     /// </summary>
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
     {
@@ -795,16 +798,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             parts = parts.Append(new CreatureElementSelection(CreatureElementKind.Sensor, moving));
         }
 
-        return groups.Raised(parts, _builder.Servos, _builder.Wheels, _builder.TouchSensors, targets.Beams, targets.Joints);
+        return groups.Raised(parts, _builder.Servos, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, targets.Beams, targets.Joints);
     }
 
     private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, partId);
 
     /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Wheel 1", "Accel 1", "Camera 1" or "Touch 1".</summary>
-    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, partId);
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -823,7 +826,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             && !_builder.Pistons.Any(piston => piston.Id == partId)
             && !_builder.Springs.Any(spring => spring.Id == partId)
             && !_builder.Wheels.Any(wheel => wheel.Id == partId)
-            && !_builder.TouchSensors.Any(touch => touch.Id == partId))
+            && !_builder.TouchSensors.Any(touch => touch.Id == partId)
+            && !_builder.Rubbers.Any(rubber => rubber.Id == partId))
         {
             return;
         }
@@ -839,7 +843,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         RaiseAnatomyChanged();
     }
 
-    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, partId);
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, partId);
 
     /// <summary>
     /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,
@@ -975,6 +979,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int TouchSensorIndexOf(int touchSensorId) => _builder.TouchSensorIndexOf(touchSensorId);
 
+    public int RubberIndexOf(int rubberId) => _builder.RubberIndexOf(rubberId);
+
     public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
 
     public bool ServoNeedsTwoSides(int nodeId) => _builder.ServoNeedsTwoSides(nodeId);
@@ -988,7 +994,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint (#973): a tap, drag
     /// or box selects them, never the joint on its own.
     /// </summary>
-    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.Servos, _builder.Wheels, _builder.TouchSensors);
+    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.Servos, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers);
 
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
 

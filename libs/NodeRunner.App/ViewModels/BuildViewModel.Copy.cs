@@ -5,9 +5,9 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// The selection panel's Copy (#937, #990): several selected parts duplicated beside themselves,
 /// inside the same Creation. A part copies only with what it sits on: a link with both its joints
-/// and a sensor with its beam. A joint part, a Servo, a Wheel or a Touch sensor (#1045), is its joint
+/// and a sensor with its beam. A joint part, a Servo, a Wheel, a Touch sensor (#1045) or a Rubber (#1142), is its joint
 /// to the player (#973), so it brings that joint along (#1000). A locked Creation copies no part with
-/// brain ports, since a copy would change its model; a Wheel has none.
+/// brain ports, since a copy would change its model; a Wheel and a Rubber have none.
 /// </summary>
 public sealed partial class BuildViewModel
 {
@@ -115,6 +115,7 @@ public sealed partial class BuildViewModel
         var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
         var wheels = Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).ToList();
         var touchSensors = TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).ToList();
+        var rubbers = Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).ToList();
 
         // A copied joint is as big as the joint parts that come along with it (#1044).
         var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, servos, wheels));
@@ -175,6 +176,11 @@ public sealed partial class BuildViewModel
             foreach (var touch in touchSensors)
             {
                 _selectedTouchSensorIds.Add(_builder.AddTouchSensor(nodeCopies[touch.NodeId]));
+            }
+
+            foreach (var rubber in rubbers)
+            {
+                _selectedRubberIds.Add(_builder.AddRubber(nodeCopies[rubber.NodeId]));
             }
 
             int? CopyOf(int? linkId) => linkId is { } id && linkCopies.TryGetValue(id, out var copy) ? copy : null;
