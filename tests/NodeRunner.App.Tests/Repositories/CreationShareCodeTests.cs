@@ -55,6 +55,21 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
+    public void Code_RoundTripsATouchSensor()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var foot = walker.Creature.Nodes[0].Id;
+        builder.AddTouchSensor(foot);
+        var touching = walker.WithCreature(builder.Build(), training: null);
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(touching)).Build.ShouldNotBeNull();
+
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(touching).Creature));
+        build.Creature.TouchSensors.ShouldHaveSingleItem().NodeId.ShouldBe(build.Creature.Nodes[0].Id);
+    }
+
+    [Fact]
     public void Code_OfTwoHandPlacedJointsAndASpring_IsAtMost100Characters()
     {
         var builder = new CreatureBuilder();

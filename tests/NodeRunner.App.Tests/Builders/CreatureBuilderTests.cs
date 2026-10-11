@@ -688,6 +688,78 @@ public sealed class CreatureBuilderTests
         builder.Build().NextPartId.ShouldBe(3);
     }
 
+    [Fact]
+    public void AddTouchSensor_OnAJoint_AddsOne_ThatLeavesTheJointsSizeAndPartsAlone()
+    {
+        var builder = PairBuilder();
+        var joint = builder.Nodes[0].Id;
+        var freshId = builder.Build().NextPartId;
+
+        var touch = builder.AddTouchSensor(joint);
+
+        touch.ShouldBe(freshId);
+        builder.TouchSensors.ShouldBe([new TouchSensorDef(touch, joint)]);
+        builder.NodeRadius(joint).ShouldBe(NodeDef.PlainJointRadius);
+        builder.Build().TouchSensors.ShouldBe(builder.TouchSensors);
+    }
+
+    [Fact]
+    public void ATouchSensor_SharesItsJointWithAWheelAndAServo_ButNotWithAnotherTouchSensor()
+    {
+        var builder = PairBuilder();
+        var joint = builder.Nodes[0].Id;
+        builder.AddWheel(joint);
+        builder.AddServo(joint);
+
+        builder.CanAddTouchSensor(joint, out _).ShouldBeTrue();
+        builder.AddTouchSensor(joint);
+        builder.CanAddTouchSensor(joint, out var second).ShouldBeFalse();
+        builder.CanAddTouchSensor(builder.Beams[0].Id, out var notAJoint).ShouldBeFalse();
+
+        second.ShouldBe(UiText.Plain("One sensor per joint"));
+        notAJoint.ShouldBe(UiText.Plain("Touch sensors go on a joint"));
+        Should.Throw<ArgumentException>(() => builder.AddTouchSensor(joint));
+    }
+
+    [Fact]
+    public void RemoveNode_TakesItsTouchSensor_AndRemoveTouchSensor_LeavesTheJoint()
+    {
+        var builder = PairBuilder();
+        var first = builder.Nodes[0].Id;
+        var second = builder.Nodes[1].Id;
+        builder.AddTouchSensor(first);
+        var kept = builder.AddTouchSensor(second);
+
+        builder.RemoveNode(first);
+        builder.TouchSensors.Select(touch => touch.Id).ShouldBe([kept]);
+        builder.RemoveTouchSensor(kept);
+
+        builder.TouchSensors.ShouldBeEmpty();
+        builder.Nodes.Select(node => node.Id).ShouldBe([second]);
+    }
+
+    [Fact]
+    public void Rename_ATouchSensor_NamesIt()
+    {
+        var builder = PairBuilder();
+        var touch = builder.AddTouchSensor(builder.Nodes[0].Id);
+
+        builder.Rename(touch, "Toe");
+
+        builder.TouchSensors.Single().ShouldBe(new TouchSensorDef(touch, builder.Nodes[0].Id, "Toe"));
+    }
+
+    [Fact]
+    public void Constructor_FromACreatureWithATouchSensor_KeepsIt()
+    {
+        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], [], [], [], [], [], [new TouchSensorDef(2, 1)], nextPartId: 3);
+
+        var builder = new CreatureBuilder(creature);
+
+        builder.TouchSensors.ShouldBe(creature.TouchSensors);
+        builder.Build().TouchSensors.ShouldBe(creature.TouchSensors);
+    }
+
     private static CreatureBuilder PairBuilder()
     {
         var builder = new CreatureBuilder();

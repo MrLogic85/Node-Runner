@@ -12,6 +12,7 @@ internal static class PortedCreature
     public const int Piston = 11;
     public const int Spring = 12;
     public const int Wheel = 13;
+    public const int Touch = 14;
 
     public static CreatureDef Def { get; } = new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(4, new Vector2D(0, 2))],
@@ -21,7 +22,8 @@ internal static class PortedCreature
         [new PistonDef(Piston, 1, 3, "Ram")],
         [new SpringDef(Spring, 2, 4)],
         [new WheelDef(Wheel, 3)],
-        nextPartId: 14);
+        [new TouchSensorDef(Touch, 2)],
+        nextPartId: 15);
 
     public static BrainPortLayout Layout { get; } = BrainPorts.Of(Def);
 

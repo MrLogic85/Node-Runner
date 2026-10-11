@@ -22,6 +22,7 @@ public sealed class BrainPortDisplayTests
     [InlineData(PartSettingsKind.Servo, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
     [InlineData(PartSettingsKind.Servo, PortDirection.Output, "angle", PortRange.MinusOneToOne, "angle")]
     [InlineData(PartSettingsKind.Servo, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
+    [InlineData(PartSettingsKind.Touch, PortDirection.Input, "touch", PortRange.ZeroToOne, "touch")]
     public void EveryPort_HasItsRangeAndShortLabel(PartSettingsKind kind, PortDirection direction, string channel, PortRange range, string label)
     {
         var port = new BrainPort(1, channel, direction, direction == PortDirection.Input ? PortSignal.Reading : PortSignal.Position);
@@ -42,7 +43,7 @@ public sealed class BrainPortDisplayTests
             Should.NotThrow(() => BrainPortDisplay.ShortLabel(kind, port));
         }
 
-        layout.Inputs.Count.ShouldBe(12);
+        layout.Inputs.Count.ShouldBe(13);
         layout.Outputs.Count.ShouldBe(4);
     }
 
@@ -89,6 +90,7 @@ public sealed class BrainPortDisplayTests
         PortedCreature.Camera => PartSettingsKind.Camera,
         PortedCreature.Servo => PartSettingsKind.Servo,
         PortedCreature.Piston => PartSettingsKind.Piston,
+        PortedCreature.Touch => PartSettingsKind.Touch,
         _ => throw new ArgumentOutOfRangeException(nameof(partId)),
     };
 }

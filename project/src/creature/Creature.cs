@@ -66,6 +66,7 @@ public partial class Creature : Node2D
     private bool _isShadow;
     private IReadOnlyList<CreatureElementSelection> _selection = [];
     private IBeamSensor[] _sensors = [];
+    private TouchSensor[] _touchSensors = [];
     private double[] _rawInputs = [];
     private int[] _inputPortOf = [];
     private int[] _outputPortOf = [];
@@ -616,6 +617,9 @@ public partial class Creature : Node2D
         }
 
         CreateSensorVisuals(definition);
+        _touchSensors = definition.TouchSensors
+            .Select(touch => new TouchSensor(_nodeBodies[definition.NodeIndexOf(touch.NodeId)]))
+            .ToArray();
     }
 
     // Each sensor's picture rides its beam body (#576).
@@ -678,6 +682,7 @@ public partial class Creature : Node2D
         _inputPortOf = PortPositions(
             [
                 .. definition.Sensors.SelectMany(BrainPorts.SensorPorts),
+                .. definition.TouchSensors.Select(touch => BrainPorts.TouchInput(touch.Id)),
                 .. definition.Servos.SelectMany(servo => BrainPorts.ServoInputs(servo.Id)),
                 .. definition.Pistons.SelectMany(piston => BrainPorts.PistonInputs(piston.Id)),
             ],
@@ -720,7 +725,8 @@ public partial class Creature : Node2D
     }
 
     // Each sensor part writes its values (Accelerometer: along, across; Camera: one per ray from
-    // left to right, then hit), then each Piston its length and speed, into the raw buffer in sim order;
+    // left to right, then hit), then each Touch sensor its touch, each Servo its angle and speed,
+    // and each Piston its length and speed, into the raw buffer in sim order;
     // they are then copied into the brain's port order (BrainPorts).
     private void ReadSensors(double[] values, double delta)
     {
@@ -729,6 +735,11 @@ public partial class Creature : Node2D
         {
             sensor.Read(_rawInputs, index, delta);
             index += sensor.ValueCount;
+        }
+
+        foreach (var touch in _touchSensors)
+        {
+            _rawInputs[index++] = touch.Reading;
         }
 
         foreach (var servo in _servos)

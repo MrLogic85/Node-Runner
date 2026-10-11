@@ -43,6 +43,7 @@ public static class BrainPortDisplay
         (PartSettingsKind.Camera, PortDirection.Input, "right1") => (UiText.Plain("right"), PortRange.ZeroToOne, false),
         (PartSettingsKind.Camera, PortDirection.Input, "right2") => (UiText.Plain("far right"), PortRange.ZeroToOne, false),
         (PartSettingsKind.Camera, PortDirection.Input, BrainPorts.CameraHitChannel) => (UiText.Plain("hit"), PortRange.ZeroToOne, false),
+        (PartSettingsKind.Touch, PortDirection.Input, BrainPorts.TouchChannel) => (UiText.Plain("touch"), PortRange.ZeroToOne, false),
         (PartSettingsKind.Piston, PortDirection.Input, BrainPorts.PistonLengthChannel) => (UiText.Plain("length"), PortRange.ZeroToOne, false),
         (PartSettingsKind.Piston, PortDirection.Input, BrainPorts.PistonSpeedChannel) => (UiText.Plain("speed"), PortRange.MinusOneToOne, false),
         (PartSettingsKind.Piston, PortDirection.Output, BrainPorts.PistonPositionChannel) => (UiText.Plain("length"), PortRange.ZeroToOne, true),

@@ -100,8 +100,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Range** — How far a Servo may turn, 20°–360°.
 - **Rigid triangle** — Three beams closing a triangle, whose joints cannot
   turn; Build hatches it (`RigidTriangles`).
-- **Sensor (part)** — A part on a beam that feels that beam (`SensorDef`,
-  `SensorKind`); one per beam. Not the brain.
+- **Sensor (part)** — A part that feels: on a beam, an Accelerometer or
+  Camera (`SensorDef`, `SensorKind`), one per beam; on a joint, a Touch
+  sensor. Not the brain.
 - **Servo** — A powered joint part (#452) that holds one link as Fixed and
   turns another as Target.
 - **Spring** — A passive link (#453) that pulls back toward its rest length;
@@ -112,6 +113,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   maximum force, chosen in Build; the output is the brain's 0…1 choice of
   how much of it to use this tick.
 - **Stroke** — How far a Piston or Spring travels between its end stops.
+- **Touch sensor** — A sensor on a joint (#1043) that tells the brain
+  whether that joint touches the ground (`TouchSensorDef`); one per joint.
 - **Wheel** — A passive joint part (#129) that turns freely on its joint and
   rolls on the ground; no brain ports.
 

@@ -21,6 +21,7 @@ public sealed partial class BuildViewModel
     private readonly HashSet<int> _selectedPistonIds = [];
     private readonly HashSet<int> _selectedSpringIds = [];
     private readonly HashSet<int> _selectedWheelIds = [];
+    private readonly HashSet<int> _selectedTouchSensorIds = [];
 
     /// <summary>How many joints the selection moves: <see cref="SelectedNodeIds"/>.</summary>
     public int SelectedNodeCount => SelectedNodeIds.Count;
@@ -37,7 +38,9 @@ public sealed partial class BuildViewModel
 
     public int SelectedWheelCount => _selectedWheelIds.Count;
 
-    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount;
+    public int SelectedTouchSensorCount => _selectedTouchSensorIds.Count;
+
+    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount + SelectedTouchSensorCount;
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
@@ -61,7 +64,8 @@ public sealed partial class BuildViewModel
         _selectedServoIds.ToHashSet(),
         _selectedPistonIds.ToHashSet(),
         _selectedSpringIds.ToHashSet(),
-        _selectedWheelIds.ToHashSet());
+        _selectedWheelIds.ToHashSet(),
+        _selectedTouchSensorIds.ToHashSet());
 
     /// <summary>
     /// The joints the selection moves: the selected joints and the joints under selected joint
@@ -119,7 +123,7 @@ public sealed partial class BuildViewModel
     }
 
     private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds);
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds).Concat(_selectedTouchSensorIds);
 
     public void ClearSelection()
     {
@@ -161,6 +165,7 @@ public sealed partial class BuildViewModel
         CreatureElementKind.Piston => _selectedPistonIds,
         CreatureElementKind.Spring => _selectedSpringIds,
         CreatureElementKind.Wheel => _selectedWheelIds,
+        CreatureElementKind.TouchSensor => _selectedTouchSensorIds,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -173,6 +178,7 @@ public sealed partial class BuildViewModel
         _selectedPistonIds.Clear();
         _selectedSpringIds.Clear();
         _selectedWheelIds.Clear();
+        _selectedTouchSensorIds.Clear();
     }
 
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;

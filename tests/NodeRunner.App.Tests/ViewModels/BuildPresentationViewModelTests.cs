@@ -638,7 +638,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(PistonCreature());
-        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>()));
+        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
 
         var selection = new BuildPresentationViewModel(build).Selection!;
 

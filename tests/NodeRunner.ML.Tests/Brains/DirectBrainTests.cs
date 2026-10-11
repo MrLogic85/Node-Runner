@@ -159,6 +159,21 @@ public sealed class DirectBrainTests
         DirectBrain.Compile(refitted, rebuilt).ShouldBe([-0.25, 0.75, 0, 0, 0, 0, 0.1, 0, PortSignals.PassiveStrengthBias]);
     }
 
+    // #1043: a Touch sensor added to a trained creature brings one new input that changes nothing yet.
+    [Fact]
+    public void Refit_WithANewTouchInput_GivesItANewNeuronWithZeroWeights_AndKeepsTheRest()
+    {
+        var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+        var withTouch = new BrainPortLayout([.. _ports.Inputs, BrainPorts.TouchInput(9)], _ports.Outputs);
+
+        var refitted = DirectBrain.Refit(brain, withTouch);
+
+        refitted.Neurons.Select(neuron => (neuron.Id, neuron.PartId, neuron.Channel)).ShouldBe(
+            [(1, (int?)2, "angle:5"), (2, 2, "speed:5"), (3, 6, "along"), (5, 9, "touch"), (4, 2, "target:5")]);
+        refitted.Connections.Where(gene => gene.From != 5).ShouldBe(brain.Connections, ignoreOrder: true);
+        DirectBrain.Compile(refitted, withTouch).ShouldBe([0.5, -0.25, 0.75, 0, 0.1]);
+    }
+
     [Fact]
     public void Refit_WithIdsFrom_KeepsALaterBrainsIdsForNewPorts_AndNeverReusesAnId()
     {

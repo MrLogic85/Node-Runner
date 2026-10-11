@@ -78,6 +78,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `pistons[]` | `{ id, nodeA, nodeB, name, strength, stroke, start, maxSpeed, riseTime }` | Pistons between two node ids (#451). `strength` in world force units (100 per N), `stroke` (0, 1] (#870, #835), `start` 0–1, `maxSpeed` world units/s (100 per m/s), `riseTime` s (#801; missing reads as 0.2). |
 | `springs[]` | `{ id, nodeA, nodeB, name, stiffness, damping, stroke, coilLength }` | Springs between two node ids (#453). `stiffness` N/m, `damping` N·s/m (#801; saves from before it damp almost nothing), both the same number in world units; `stroke` (0, 1] and `coilLength` 0…1 (#835), missing reads as a new Spring's 1 and ⅔. |
 | `wheels[]` | `{ id, nodeId, name, radius, grip }` | Wheels on a node id (#129). `radius` in world units, 40–100 (0.4–1 m); `grip` 0–1, its friction. Its weight follows from `radius` and is not saved. |
+| `touchSensors[]` | `{ id, nodeId, name }` | Touch sensors on a node id (#1043), at most one per node. No settings. |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training` (meaning of latest and best: `docs/TRAINING_LOOP.md` → "Latest
@@ -159,6 +160,7 @@ Current `creation.json` migrations:
 | 3 | 4 | #835: each Spring gets `stroke: 1` and `coilLength: 0.55`: stops about a third of its gap either side of its drawn length (0.325 in, 0.35 out, #974), resting free near the middle as before. A Piston's travel now runs on the gap between its joints' edges, which shortens it a little, but its saved shape is unchanged, so Piston saves load without migration. |
 | 4 | 5 | #129: add required `creature.wheels: []`. |
 | 5 | 6 | #578: each Camera gets `rays: 3`, `spread: π/2` and `range: 220`, the fan every Camera had, so it sees and reads as before. |
+| 6 | 7 | #1043: add required `creature.touchSensors: []`. |
 
 #1086 needs no migration: its saved shape is unchanged, but a saved creature
 with a Wheel or Servo moves and senses a little differently, since links and
@@ -194,7 +196,7 @@ owns it.
 - The code is `NR`, the format version and a dot, then its JSON
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
-  scratch. The Walker example's is about 50 characters, starting `NR6.`;
+  scratch. The Walker example's is about 50 characters, starting `NR7.`;
   two joints and a Spring about 60 (#1094).
 - Its JSON is `creation.json` on one line with `training` and
   `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,

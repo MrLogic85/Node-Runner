@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -208,6 +208,17 @@ public sealed class FileCreationRepository : ICreationRepository
                 sensor["range"] = 220.0;
             }
         }
+    }
+
+    // Before #1043 a creature had no Touch sensors.
+    private static void AddTouchSensorsArray(JsonObject file)
+    {
+        if (file["creature"] is not JsonObject creature)
+        {
+            throw new InvalidDataException("creation.json is missing its creature object.");
+        }
+
+        creature["touchSensors"] ??= new JsonArray();
     }
 
     private static string? TextOf(JsonNode? node) =>

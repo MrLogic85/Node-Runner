@@ -35,6 +35,12 @@ public sealed class CreatureBuilder
     /// <summary>Why a Wheel dropped on anything but a joint is refused (#129).</summary>
     public static UiText WheelsGoOnAJointReason { get; } = UiText.Plain("Wheels go on a joint");
 
+    /// <summary>Why a Touch sensor cannot be added to a node that already has one (#1043).</summary>
+    public static UiText OneSensorPerJointReason { get; } = UiText.Plain("One sensor per joint");
+
+    /// <summary>Why a Touch sensor dropped on anything but a joint is refused (#1043).</summary>
+    public static UiText TouchSensorsGoOnAJointReason { get; } = UiText.Plain("Touch sensors go on a joint");
+
     public static UiText ServoNeedsTwoLinksReason { get; } = UiText.Plain("A Servo needs two links at its joint");
 
     /// <summary>Why another beam cannot join two nodes a beam already holds rigid (#877); a Piston or Spring replaces it instead (#849).</summary>
@@ -56,6 +62,7 @@ public sealed class CreatureBuilder
     private readonly List<PistonDef> _pistons = [];
     private readonly List<SpringDef> _springs = [];
     private readonly List<WheelDef> _wheels = [];
+    private readonly List<TouchSensorDef> _touchSensors = [];
     private int _nextPartId = 1;
 
     public CreatureBuilder()
@@ -72,6 +79,7 @@ public sealed class CreatureBuilder
         _pistons.AddRange(creature.Pistons);
         _springs.AddRange(creature.Springs);
         _wheels.AddRange(creature.Wheels);
+        _touchSensors.AddRange(creature.TouchSensors);
         _nextPartId = creature.NextPartId;
     }
 
@@ -88,6 +96,8 @@ public sealed class CreatureBuilder
     public IReadOnlyList<SpringDef> Springs => _springs;
 
     public IReadOnlyList<WheelDef> Wheels => _wheels;
+
+    public IReadOnlyList<TouchSensorDef> TouchSensors => _touchSensors;
 
     public int NextPartId => _nextPartId;
 
@@ -118,7 +128,7 @@ public sealed class CreatureBuilder
     private static double OnWholeUnit(double coordinate) => Math.Round(coordinate, MidpointRounding.AwayFromZero) + 0.0;
 
     /// <summary>
-    /// Removes a node, cascading to every beam, sensor, joint part, Piston and Spring that referenced it.
+    /// Removes a node, cascading to every beam, sensor, Touch sensor, joint part, Piston and Spring that referenced it.
     /// </summary>
     public void RemoveNode(int nodeId)
     {
@@ -131,6 +141,7 @@ public sealed class CreatureBuilder
         _sensors.RemoveAll(sensor => removedBeamIds.Contains(sensor.BeamId));
         _servos.RemoveAll(servo => servo.NodeId == nodeId);
         _wheels.RemoveAll(wheel => wheel.NodeId == nodeId);
+        _touchSensors.RemoveAll(touch => touch.NodeId == nodeId);
         _pistons.RemoveAll(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
         _springs.RemoveAll(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
         _nodes.RemoveAt(nodeIndex);
@@ -587,6 +598,44 @@ public sealed class CreatureBuilder
         return id;
     }
 
+    /// <summary>
+    /// Whether a Touch sensor can sit on this node (#1043); if not, <paramref name="reason"/> says
+    /// why. A joint holds one, next to its joint parts: it takes no joint-part slot.
+    /// </summary>
+    public bool CanAddTouchSensor(int nodeId, [NotNullWhen(false)] out UiText? reason)
+    {
+        if (!HasNode(nodeId))
+        {
+            reason = TouchSensorsGoOnAJointReason;
+            return false;
+        }
+
+        if (_touchSensors.Any(touch => touch.NodeId == nodeId))
+        {
+            reason = OneSensorPerJointReason;
+            return false;
+        }
+
+        reason = null;
+        return true;
+    }
+
+    /// <summary>Adds a Touch sensor and returns its id; see <see cref="CanAddTouchSensor"/>.</summary>
+    public int AddTouchSensor(int nodeId)
+    {
+        if (!CanAddTouchSensor(nodeId, out var reason))
+        {
+            throw new ArgumentException(reason.Message);
+        }
+
+        var id = AllocatePartId();
+        _touchSensors.Add(new TouchSensorDef(id, nodeId));
+        return id;
+    }
+
+    /// <summary>Removes a Touch sensor by id.</summary>
+    public void RemoveTouchSensor(int touchSensorId) => _touchSensors.RemoveAt(TouchSensorIndexOf(touchSensorId));
+
     public bool ServoNeedsTwoLinks(int nodeId) => HasNode(nodeId) && !ServoDef.HasTwoLinks(LinksAt(nodeId));
 
     /// <summary>
@@ -818,11 +867,18 @@ public sealed class CreatureBuilder
             return;
         }
 
+        var touchIndex = _touchSensors.FindIndex(touch => touch.Id == partId);
+        if (touchIndex >= 0)
+        {
+            _touchSensors[touchIndex] = _touchSensors[touchIndex].WithName(name);
+            return;
+        }
+
         throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
     }
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _wheels, _nextPartId);
+    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _wheels, _touchSensors, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<UiText> errors)
@@ -905,6 +961,17 @@ public sealed class CreatureBuilder
         if (index < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(wheelId), "Wheel id must point to an existing wheel.");
+        }
+
+        return index;
+    }
+
+    public int TouchSensorIndexOf(int touchSensorId)
+    {
+        var index = _touchSensors.FindIndex(touch => touch.Id == touchSensorId);
+        if (index < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(touchSensorId), "Touch sensor id must point to an existing touch sensor.");
         }
 
         return index;

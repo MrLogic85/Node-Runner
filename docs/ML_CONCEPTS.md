@@ -70,8 +70,8 @@ sensor off are #960.
 
 - **What:** What the network gets to *see*. Bad inputs cap performance;
   redundant inputs waste capacity.
-- **Where:** Sensor parts on beams (Accelerometer, Camera;
-  `docs/CREATURE_MODEL.md`) and Servo and Piston readings. There is no
+- **Where:** Sensor parts on beams (Accelerometer, Camera) and on joints
+  (Touch; `docs/CREATURE_MODEL.md`) and Servo and Piston readings. There is no
   speed or elevation input: the brain learns movement from what its parts
   feel. Pulse, a rhythm input, is #527.
 - **Why "nothing seen" reads 0 (#604):** a zero input adds nothing to the

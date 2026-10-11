@@ -35,6 +35,26 @@ public sealed class BrainPortLabelsTests
     }
 
     [Fact]
+    public void For_TouchSensors_NamesEachOneTouchInput_ByItsDefaultOrOwnName()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
+            [new BeamDef(3, 1, 2)],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [new TouchSensorDef(4, 1), new TouchSensorDef(5, 2, "Toe")],
+            nextPartId: 6);
+
+        var labels = BrainPortLabels.For(creature);
+
+        labels.Inputs.ShouldBe([UiText.Format("{0}:\u00A0touch", UiText.Format("Touch {0}", 1)), UiText.Format("{0}:\u00A0touch", UiText.AsWritten("Toe"))]);
+        labels.Outputs.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void For_AnUnnamedPiston_NamesItsTwoInputsAndTwoOutputsByItsDefaultName()
     {
         var creature = new CreatureDef(

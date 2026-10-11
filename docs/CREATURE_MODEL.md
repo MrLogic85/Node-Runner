@@ -10,10 +10,11 @@ types, and no rules that differ by how a part happens to be simulated. How
 Godot realises each part is in `project/src/creature/AGENTS.md` and the code
 comments there.
 
-## Parts: Node, Beam, Sensor, Servo, Piston, Spring, Wheel
+## Parts: Node, Beam, Sensor, Servo, Piston, Spring, Wheel, Touch sensor
 
 A creature is built from two structural parts (Node, Beam), sensor parts
-that sit on beams (the Accelerometer and the Camera), joint parts (the
+that sit on beams (the Accelerometer and the Camera) or on a joint (the
+Touch sensor), joint parts (the
 Servo, a motor, and the Wheel, which rolls) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
@@ -22,8 +23,9 @@ thinks" (the brain) stay separate; this is the most important rule here:
 **a sensor is not the brain.**
 
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
-so it sits on a beam; a part acting between two beams or on the ground
-around a joint sits on that joint (Servo, Wheel); one joining two nodes is a link (Piston, Spring). Each sensor is
+so it sits on a beam, or on a joint, a body of its own (Touch sensor); a
+part acting between two beams or on the ground around a joint sits on that
+joint (Servo, Wheel); one joining two nodes is a link (Piston, Spring). Each sensor is
 one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
@@ -49,7 +51,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   (#626, #129): the largest of the plain joint's `NodeDef.PlainJointRadius`
   (15) and each part on it, a Servo's `ServoDef.JointRadius` (27) or a
   Wheel's Radius (`CreatureDef.NodeRadius`). Collision and bounds use it.
-  Touch, sensors and links do not (#1086): a joint is touched at its hub or
+  A Touch sensor adds none. Taps, sensors and links do not use it (#1086):
+  a joint is tapped at its hub or
   Servo, and a sensor sits by what covers its beam's ends
   (`CreatureDef.CoveredRadius`). Every link measures from
   hub to hub, `NodeDef.HubRadius` (15) from each joint's centre, whatever
@@ -57,7 +60,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   travel.
 - **One part per slot** (#1044): a joint holds at most one Wheel and one
   motor or brake (a Servo), so a Servo can drive the links of a Wheel's
-  joint while the Wheel turns freely between them.
+  joint while the Wheel turns freely between them. A Touch sensor takes no
+  slot: it may share its joint with both (#1043).
 - **Degree rules** (links touching a node, counting Beams, Pistons and
   Springs):
   - **0 links:** a loose point that cannot be simulated. It can be saved,
@@ -228,6 +232,23 @@ fold.
   at 0.4 m, added to its joint. Derived, never saved.
 - **Driving it later:** #1068, #1070, #1118.
 
+### Touch sensor
+
+- **Beginner:** A sensor on a joint that tells the brain whether that joint
+  touches the ground.
+- `TouchSensorDef` (#665, #1043). It sits on one joint, at most one per
+  joint, and may share it with a Wheel and a Servo. A Wheel's tyre is its
+  joint's, so a tyre on the ground counts.
+- **Reading:** its one input, `touch`, is 1 while its joint touches the
+  ground and 0 otherwise, never nearness or pressure, so it is easy to read
+  while learning; no smoothing. Only the ground counts, never
+  the creature's own parts or other shadows. A freshly built or reset body
+  reads 0 until it lands.
+- **Size:** it adds no radius and does not change the joint's collider (see
+  Node). Its cushion (#1045) is drawn only and does not change what counts
+  as touching. It has no settings.
+- How it is placed and drawn is #1045.
+
 ### Piston
 
 - **Beginner:** A powered link between two nodes that pushes them apart or
@@ -327,6 +348,7 @@ fold.
   - **Servo (#452):** inputs `angle` (−1 lower end, 0 built, +1 upper end)
     and `speed` (`tanh(ω / maxSpeed)`, counter-clockwise positive); outputs
     `angle` and `strength`.
+  - **Touch sensor (#1043):** input `touch`, 1 on the ground and 0 off it.
   - Nodes, beams, plain joints, Springs and Wheels declare none.
 - **Output conventions (#535, `PortSignals`):** the signal fixes the
   output's activation and how a new output starts.
@@ -370,8 +392,8 @@ fold.
   counter (`CreatureDef.NextPartId`), saved with the creature. Creating a
   part takes `NextPartId` and advances it; it never goes down.
 - Removing a part retires its id forever, so a part removed and added again
-  is a new part. Removing a Node also removes the beams, links and joint
-  parts on it, and removing a Beam removes its sensor; the survivors keep
+  is a new part. Removing a Node also removes the beams, links, joint
+  parts and Touch sensor on it, and removing a Beam removes its sensor; the survivors keep
   their ids.
 - Saving, loading, moving, renaming, rebuilding a body and copying a whole
   Creation keep part ids and the counter.

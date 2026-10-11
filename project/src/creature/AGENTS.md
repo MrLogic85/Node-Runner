@@ -56,6 +56,9 @@ file owns how Godot realises it.
 11. **A Wheel is its joint's body, nothing new.** Unlock that body's
     rotation and give it the Wheel's weight, inertia and material; add no
     body or joint of its own (`Creature.Wheels.cs` says how).
+12. **A Touch sensor is its joint's contact monitor.** Use Godot's contact
+    monitor on the joint's own body, turned on only for joints with a Touch
+    sensor; add no area or body of its own (`TouchSensor.cs` says how, #1043).
 
 ## What lives here
 
@@ -64,8 +67,9 @@ file owns how Godot realises it.
   wires the brain
 - `Creature.Selection.cs` — what a tap selects and each part's draw group,
   with the selection raised (#1107)
-- `IBeamSensor.cs` — what `Creature` needs from a sensor: value names,
+- `IBeamSensor.cs` — what `Creature` needs from a beam sensor: value names,
   `Read`, `Reset`
+- `TouchSensor.cs` — a Touch sensor: its joint body's ground contact
 - `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is
   one `RayCast2D` child per ray, aimed and sized by `CameraRays`)
 - `ServoJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts

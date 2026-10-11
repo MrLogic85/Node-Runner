@@ -12,7 +12,7 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
     /// refuses a delete that would change its model: one that takes a part with brain ports, also by
-    /// cascade (a joint's Piston or Servo, a beam's sensor), or clears a Servo's Fixed or Target link,
+    /// cascade (a joint's Piston, Servo or Touch sensor, a beam's sensor), or clears a Servo's Fixed or Target link,
     /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel
     /// has no ports, so it can go.
     /// </summary>
@@ -48,7 +48,8 @@ public sealed partial class BuildViewModel
             foreach (var (joint, linksBefore) in partJoints)
             {
                 if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0
-                    && !CreatureDef.HasJointPart(joint, _builder.Servos, _builder.Wheels))
+                    && !CreatureDef.HasJointPart(joint, _builder.Servos, _builder.Wheels)
+                    && _builder.TouchSensors.All(touch => touch.NodeId != joint))
                 {
                     _builder.RemoveNode(joint);
                 }
@@ -105,6 +106,16 @@ public sealed partial class BuildViewModel
             }
         }
 
+        // A Touch sensor has no picture yet (#1045), so its note sits on its joint.
+        var keptTouchSensors = after.TouchSensors.Select(touch => touch.Id).ToHashSet();
+        foreach (var touch in before.TouchSensors)
+        {
+            if (!keptTouchSensors.Contains(touch.Id))
+            {
+                AddNote(CreatureElementKind.Node, touch.NodeId);
+            }
+        }
+
         return notes;
 
         static (int, int?, int?) ServoLinks(ServoDef servo) => (servo.Id, servo.FixedLinkId, servo.TargetLinkId);
@@ -138,6 +149,11 @@ public sealed partial class BuildViewModel
         foreach (var wheelId in parts.Wheels)
         {
             builder.RemoveWheel(wheelId);
+        }
+
+        foreach (var touchSensorId in parts.TouchSensors)
+        {
+            builder.RemoveTouchSensor(touchSensorId);
         }
 
         foreach (var beamId in parts.Beams)

@@ -43,6 +43,7 @@ public sealed class CreationVersioningTests : IDisposable
         var expected = JsonNode.Parse(original)!.AsObject();
         expected["creature"]!.AsObject()["servos"] = new JsonArray();
         expected["creature"]!.AsObject()["wheels"] = new JsonArray();
+        expected["creature"]!.AsObject()["touchSensors"] = new JsonArray();
         foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
         {
             piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
@@ -143,8 +144,7 @@ public sealed class CreationVersioningTests : IDisposable
     [Fact]
     public void AVersion6Save_WithACameraOffItsSettings_IsSkipped()
     {
-        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
-        file[_versionField]!.GetValue<int>().ShouldBe(6);
+        var file = Version6Walker();
         file["creature"]!["sensors"]![0]!["kind"] = "camera";
         file["creature"]!["sensors"]![0]!["rays"] = 3;
         WriteCreation(file.ToJsonString());
@@ -154,6 +154,40 @@ public sealed class CreationVersioningTests : IDisposable
         WriteCreation(file.ToJsonString());
 
         new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    // #1043: a creature saved before Touch sensors has none.
+    [Fact]
+    public void AVersion6Save_GetsNoTouchSensors_AndIsWrittenBackInTheCurrentVersion()
+    {
+        var path = WriteCreation(Version6Walker().ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.TouchSensors.ShouldBeEmpty();
+
+        var written = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
+        written["creature"]!["touchSensors"]!.AsArray().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ATouchSensor_SurvivesASaveAndALoad()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var foot = walker.Creature.Nodes[0].Id;
+        var creature = new CreatureDef(
+            walker.Creature.Nodes,
+            walker.Creature.Beams,
+            walker.Creature.Sensors,
+            walker.Creature.Servos,
+            walker.Creature.Pistons,
+            walker.Creature.Springs,
+            walker.Creature.Wheels,
+            [new TouchSensorDef(walker.Creature.NextPartId, foot, "Toe")],
+            walker.Creature.NextPartId + 1);
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        repository.Save(walker.WithCreature(creature, training: null));
+
+        repository.Get(walker.Id)!.Creature.TouchSensors.ShouldBe([new TouchSensorDef(walker.Creature.NextPartId, foot, "Toe")]);
     }
 
     [Fact]
@@ -321,7 +355,7 @@ public sealed class CreationVersioningTests : IDisposable
         var format = new VersionedSaveFile<CreationDef>([file =>
         {
             RenameField("title", "name")(file);
-            AddServosAndWheels(file);
+            AddMissingArrays(file);
         }]);
         var file = JsonNode.Parse(Fixture013("walker.creation.json"))!.AsObject();
         file["title"] = file["name"]!.DeepClone();
@@ -382,7 +416,7 @@ public sealed class CreationVersioningTests : IDisposable
         var format = new VersionedSaveFile<CreationDef>([file =>
         {
             File.WriteAllText(path, saved);
-            AddServosAndWheels(file);
+            AddMissingArrays(file);
         }]);
         WriteCreation(Fixture013("walker.creation.json"));
 
@@ -398,7 +432,7 @@ public sealed class CreationVersioningTests : IDisposable
         var format = new VersionedSaveFile<CreationDef>([file =>
         {
             File.Delete(path);
-            AddServosAndWheels(file);
+            AddMissingArrays(file);
         }]);
         WriteCreation(Fixture013("walker.creation.json"));
 
@@ -412,20 +446,30 @@ public sealed class CreationVersioningTests : IDisposable
         file[to] = value;
     };
 
-    // The two arrays a 0.13.0 file lacks that loading now requires.
-    private static void AddServosAndWheels(JsonObject file)
+    // The arrays a 0.13.0 file lacks that loading now requires.
+    private static void AddMissingArrays(JsonObject file)
     {
         file["creature"]!.AsObject()["servos"] = new JsonArray();
         file["creature"]!.AsObject()["wheels"] = new JsonArray();
+        file["creature"]!.AsObject()["touchSensors"] = new JsonArray();
     }
 
     private static CreationDef LoadFixture013(string name) =>
         FileCreationRepository.Format.Deserialize(Fixture013(name), name).Value;
 
-    // The Walker as version 5 wrote it: its sensors without Camera settings.
-    private static JsonObject Version5Walker()
+    // The 0.13.0 walker as version 6 wrote it, before Touch sensors (#1043).
+    private static JsonObject Version6Walker()
     {
         var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file[_versionField] = 6;
+        file["creature"]!.AsObject().Remove("touchSensors");
+        return file;
+    }
+
+    // The Walker as version 5 wrote it: also its sensors without Camera settings.
+    private static JsonObject Version5Walker()
+    {
+        var file = Version6Walker();
         file[_versionField] = 5;
         foreach (var sensor in file["creature"]!["sensors"]!.AsArray())
         {
