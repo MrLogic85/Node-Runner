@@ -756,7 +756,7 @@ public partial class BuildScreen : Control
         }
 
         var strip = GetNode<UiIconTabs>("%PartStackTabs");
-        var icons = new Godot.Collections.Array<UiIconId>(tabs.Select(tab => PartSettingsIcon(tab.Kind)));
+        var icons = new Godot.Collections.Array<UiIconId>(tabs.Select(tab => PartIcons.For(tab.Kind)));
         if (!strip.Icons.SequenceEqual(icons))
         {
             strip.Icons = icons;
