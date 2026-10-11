@@ -55,6 +55,23 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
+    public void Code_RoundTripsAServoTurningItsWheel()
+    {
+        var builder = new CreatureBuilder();
+        var hub = builder.AddNode(new Vector2D(0, 0));
+        builder.AddBeam(hub, builder.AddNode(new Vector2D(100, 0)));
+        var wheel = builder.AddWheel(hub);
+        builder.AddServo(hub);
+        var rolling = new CreationDef(Guid.NewGuid(), "Roller", builder.Build());
+        rolling.Creature.Servos.Single().TargetLinkId.ShouldBe(wheel);
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(rolling)).Build.ShouldNotBeNull();
+
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(rolling.Creature));
+        build.Creature.Servos.Single().TargetLinkId.ShouldBe(build.Creature.Wheels.Single().Id);
+    }
+
+    [Fact]
     public void Code_RoundTripsATouchSensor()
     {
         var walker = LoadFixture013("walker.creation.json");

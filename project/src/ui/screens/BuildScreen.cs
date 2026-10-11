@@ -851,6 +851,7 @@ public partial class BuildScreen : Control
             CreatureElementKind.Beam => UiIconId.PartBeam,
             CreatureElementKind.Piston => UiIconId.PartPiston,
             CreatureElementKind.Spring => UiIconId.PartSpring,
+            CreatureElementKind.Wheel => UiIconId.PartWheel,
             _ => null,
         };
     }

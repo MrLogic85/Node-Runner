@@ -14,9 +14,9 @@ public partial class Creature
         for (var i = 0; i < definition.Servos.Count; i++)
         {
             var servo = definition.Servos[i];
-            var fixedLink = ServoLinkSide(definition, servo.NodeId, servo.FixedLinkId!.Value);
-            var targetLink = ServoLinkSide(definition, servo.NodeId, servo.TargetLinkId!.Value);
-            _servos[i] = new ServoJoint(servo, fixedLink, targetLink);
+            var fixedSide = ServoSideFor(definition, servo.NodeId, servo.FixedLinkId!.Value);
+            var targetSide = ServoSideFor(definition, servo.NodeId, servo.TargetLinkId!.Value);
+            _servos[i] = new ServoJoint(servo, fixedSide, targetSide);
             var visual = new ServoVisual
             {
                 Name = $"Servo{i}Visual",
@@ -36,16 +36,22 @@ public partial class Creature
         }
     }
 
-    private ServoLinkSide ServoLinkSide(CreatureDef definition, int servoNodeId, int linkId)
+    private ServoSide ServoSideFor(CreatureDef definition, int servoNodeId, int linkId)
     {
         var joint = _nodeBodies[definition.NodeIndexOf(servoNodeId)];
+        if (definition.IsWheel(linkId))
+        {
+            return new ServoWheelSide(joint);
+        }
+
         var link = definition.Link(linkId);
         return new ServoLinkSide(joint, _nodeBodies[definition.NodeIndexOf(link.FarNodeFrom(servoNodeId))]);
     }
 
     private static float ServoHousingReach(CreatureDef definition, ServoDef servo)
     {
-        if (servo.FixedLinkId is not { } fixedLinkId)
+        // A Wheel side has no link for the housing to run along (#1118).
+        if (servo.FixedLinkId is not { } fixedLinkId || definition.IsWheel(fixedLinkId))
         {
             return 0;
         }

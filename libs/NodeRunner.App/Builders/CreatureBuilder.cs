@@ -41,7 +41,8 @@ public sealed class CreatureBuilder
     /// <summary>Why a Touch sensor dropped on anything but a joint is refused (#1043).</summary>
     public static UiText TouchSensorsGoOnAJointReason { get; } = UiText.Plain("Touch sensors go on a joint");
 
-    public static UiText ServoNeedsTwoLinksReason { get; } = UiText.Plain("A Servo needs two links at its joint");
+    /// <summary>Why a Servo cannot work yet: its joint has fewer than two sides, links or a Wheel (#1118).</summary>
+    public static UiText ServoNeedsTwoSidesReason { get; } = UiText.Plain("A Servo needs two links, or a link and a Wheel");
 
     /// <summary>Why another beam cannot join two nodes a beam already holds rigid (#877); a Piston or Spring replaces it instead (#849).</summary>
     public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these joints");
@@ -503,8 +504,12 @@ public sealed class CreatureBuilder
     /// <summary>Removes a Servo by id.</summary>
     public void RemoveServo(int servoId) => _servos.RemoveAt(ServoIndexOf(servoId));
 
-    /// <summary>Removes a Wheel by id.</summary>
-    public void RemoveWheel(int wheelId) => _wheels.RemoveAt(WheelIndexOf(wheelId));
+    /// <summary>Removes a Wheel by id, leaving any Servo that used it incomplete until the player picks another side (#1118).</summary>
+    public void RemoveWheel(int wheelId)
+    {
+        _wheels.RemoveAt(WheelIndexOf(wheelId));
+        ClearServoLink(wheelId);
+    }
 
     /// <summary>Removes a Spring by id, leaving any Servo that used it incomplete until the player picks another link.</summary>
     public void RemoveSpring(int springId)
@@ -636,16 +641,17 @@ public sealed class CreatureBuilder
     /// <summary>Removes a Touch sensor by id.</summary>
     public void RemoveTouchSensor(int touchSensorId) => _touchSensors.RemoveAt(TouchSensorIndexOf(touchSensorId));
 
-    public bool ServoNeedsTwoLinks(int nodeId) => HasNode(nodeId) && !ServoDef.HasTwoLinks(LinksAt(nodeId));
+    public bool ServoNeedsTwoSides(int nodeId) => HasNode(nodeId) && !ServoDef.HasTwoSides(LinksAt(nodeId), WheelAt(nodeId) is not null);
 
     /// <summary>
-    /// Adds a Servo with the first two links at the joint as Fixed and Target. A joint with fewer
-    /// links leaves the missing roles empty, so the Servo waits in its error state for a link.
+    /// Adds a Servo with the first two links at the joint as Fixed and Target. On a joint with a
+    /// Wheel and fewer than two links, the Wheel is its Target (#1118). A joint with fewer sides
+    /// leaves the missing roles empty, so the Servo waits in its error state for a link.
     /// </summary>
     public int AddServo(int nodeId)
     {
-        var links = HasNode(nodeId) ? LinksAt(nodeId).OrderBy(link => link.Id).ToArray() : [];
-        return AddServo(nodeId, links.Length > 0 ? links[0].Id : null, links.Length > 1 ? links[1].Id : null);
+        var (fixedSide, targetSide) = HasNode(nodeId) ? ServoDef.DefaultSides(LinksAt(nodeId), WheelAt(nodeId)) : (null, null);
+        return AddServo(nodeId, fixedSide, targetSide);
     }
 
     /// <summary>Adds a Servo with the given Fixed and Target links, each at the joint or empty, as a copied Servo has (#990).</summary>
@@ -658,13 +664,16 @@ public sealed class CreatureBuilder
 
         foreach (var linkId in new[] { fixedLinkId, targetLinkId }.OfType<int>())
         {
-            ValidateLinkTouchesNode(linkId, nodeId);
+            ValidateServoSide(linkId, nodeId);
         }
 
         var id = AllocatePartId();
         _servos.Add(new ServoDef(id, nodeId, fixedLinkId, targetLinkId));
         return id;
     }
+
+    /// <summary>The Wheel on joint <paramref name="nodeId"/>, if it has one.</summary>
+    public WheelDef? WheelAt(int nodeId) => _wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId);
 
     /// <summary>The beams, Pistons and Springs touching <paramref name="nodeId"/>, in their current list order.</summary>
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => [.. Links().Where(link => link.Touches(nodeId))];
@@ -680,14 +689,15 @@ public sealed class CreatureBuilder
     }
 
     /// <summary>
-    /// Changes the Servo's fixed or target link. Picking the other role swaps them; any real role
-    /// change gives the Servo a fresh part id so old sign-dependent weights are not reused.
+    /// Changes the Servo's fixed or target side, a link at its joint or its Wheel (#1118). Picking the
+    /// other role swaps them; any real role change gives the Servo a fresh part id so old
+    /// sign-dependent weights are not reused.
     /// </summary>
     public int SetServoLink(int servoId, bool fixedRole, int linkId)
     {
         var index = ServoIndexOf(servoId);
         var servo = _servos[index];
-        ValidateLinkTouchesNode(linkId, servo.NodeId);
+        ValidateServoSide(linkId, servo.NodeId);
         int? fixedLink = servo.FixedLinkId;
         int? targetLink = servo.TargetLinkId;
         if (fixedRole)
@@ -1002,11 +1012,11 @@ public sealed class CreatureBuilder
         }
     }
 
-    private void ValidateLinkTouchesNode(int linkId, int nodeId)
+    private void ValidateServoSide(int sideId, int nodeId)
     {
-        if (!Link(linkId).Touches(nodeId))
+        if (WheelAt(nodeId)?.Id != sideId && !Link(sideId).Touches(nodeId))
         {
-            throw new ArgumentException("A servo can only use links at its joint.");
+            throw new ArgumentException("A servo can only use links at its joint, or its Wheel.");
         }
     }
 

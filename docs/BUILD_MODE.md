@@ -189,10 +189,10 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
 - **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
   drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
   go on a joint"; a joint that already has a motor or brake refuses with
-  "One motor or brake per joint", while a Wheel's joint takes it (#1044). A good placement takes the two lowest-id links as Fixed and
-  Target and is one Undo step; a drop also selects the Servo. On a joint with fewer than two links the missing roles
-  stay empty and the Servo's panel note says "A Servo needs two links at
-  its joint" until another link is drawn there and picked: drop first,
+  "One motor or brake per joint", while a Wheel's joint takes it (#1044). A good placement picks its Fixed and Target as
+  `docs/CREATURE_MODEL.md` → "Servo" says and is one Undo step; a drop also selects the Servo. Without two sides the missing roles
+  stay empty and the Servo's panel note says "A Servo needs two links, or a
+  link and a Wheel" until another link or a Wheel is added there and picked: drop first,
   finish later. Its canvas note waits for a Play tap, like "Not connected"
   (#1006).
   Tapping or dragging that joint selects the Servo; dragging moves the
@@ -227,9 +227,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   unless the same delete takes every part and every link on that joint and
   the joint had a link before: then the joint goes too, so a box that
   clears an area leaves no bare joint (#973, #1044); a joint that had no
-  link stays. Deleting a link a Servo holds keeps
-  the Servo with that role missing, which blocks training until a
-  replacement is picked or the Servo is deleted.
+  link stays. Deleting a link or Wheel a Servo holds keeps
+  the Servo with that role missing (see `docs/CREATURE_MODEL.md` → "Servo").
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
   fingers and dragging both pans. The second finger cancels the first
   finger's gesture, putting back any joint it moved and any selection its
@@ -365,16 +364,17 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   a new Stroke keeps it).
 - **Servo:** Max strength (5–200 N·m), Range (20°–360°), Start position
   (0–100%), Max speed (30°/s–720°/s) and Rise time, plus "Fixed link" and
-  "Target link" pickers. A missing role's picker reads "Pick a
+  "Target link" pickers. They list the joint's links by id, then its
+  Wheel with a Wheel icon (#1118). A missing role's picker reads "Pick a
   Fixed link" or "Pick a Target link" in danger colour and lists only the
-  real links; its Play-tap canvas note says the same, or "Pick two links"
-  when both are empty. Both lists colour the current Fixed and Target links
+  real links and Wheel; its Play-tap canvas note says the same, or "Pick Fixed and
+  Target links" when both are empty, since one may be the Wheel. Both lists colour the current Fixed and Target links
   as their canvas bands (`docs/UI_DIRECTION.md` → "Menus and pickers").
   When both roles are set, each list marks the other role's link "swaps",
   because picking it swaps the two; with one empty, picking the other
-  role's link just moves it, so nothing says "swaps" (#1130). If the joint has fewer than two links, its note and its
-  Play-tap canvas note say "A Servo needs two links at its joint" instead,
-  and the play-blocked reason asks to connect another link there, because
+  role's link just moves it, so nothing says "swaps" (#1130). If the joint has neither two links nor a link and a Wheel, its note and its
+  Play-tap canvas note say "A Servo needs two links, or a link and a Wheel" instead,
+  and the play-blocked reason asks to connect another link or add a Wheel there, because
   no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
   "Editing identity rules".
 - **Wheel:** Radius (0.4–1.0 m, step 0.1) and Grip (0–100%, step 10),
@@ -451,7 +451,7 @@ Several selected parts show the selection panel instead (#558, #704), titled
   joint to the player, so it brings that joint along (#1000), as do a
   Wheel and a Touch sensor; a joint's other part is copied only when it is selected itself, and
   the copied joint is sized for the parts it carries (#1044). A copied Servo uses the copies of its Fixed
-  and Target links and leaves a role empty whose link was not copied, so
+  and Target links or Wheel and leaves a role empty whose link was not copied, so
   it shows its error note. On a locked creation a sensor, Touch sensor,
   Piston or Servo would change the model, so it blocks Copy too, with the note "Locked:
   would change the model". Copy is dimmed while the selection

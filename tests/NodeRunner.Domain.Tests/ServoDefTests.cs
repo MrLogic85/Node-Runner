@@ -47,4 +47,44 @@ public sealed class ServoDefTests
         creature.Servos.Single().TargetLinkId.ShouldBe(6);
         Should.Throw<ArgumentException>(() => new CreatureDef(nodes, [], [], [new ServoDef(8, 1, 5, 7)], pistons, springs, nextPartId: 9));
     }
+
+    [Fact]
+    public void CreatureDef_ServoSides_AcceptTheWheelOnItsJointOnly()
+    {
+        // The joint's Wheel is a one-sided link to its Servo (#1118); another joint's Wheel is not.
+        var nodes = new[] { new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)) };
+        var beams = new[] { new BeamDef(3, 1, 2) };
+        WheelDef[] wheels = [new(4, 1), new(5, 2)];
+
+        var creature = new CreatureDef(nodes, beams, [], [new ServoDef(6, 1, 3, 4)], [], [], wheels, nextPartId: 7);
+
+        creature.Servos.Single().TargetLinkId.ShouldBe(4);
+        creature.IsWheel(4).ShouldBeTrue();
+        creature.IsWheel(3).ShouldBeFalse();
+        creature.WheelAt(1).ShouldBe(wheels[0]);
+        new CreatureDef(nodes, beams, [], [new ServoDef(6, 1, 4, 3)], [], [], wheels, nextPartId: 7).Servos.Single().FixedLinkId.ShouldBe(4);
+        Should.Throw<ArgumentException>(() => new CreatureDef(nodes, beams, [], [new ServoDef(6, 1, 3, 5)], [], [], wheels, nextPartId: 7));
+    }
+
+    [Fact]
+    public void HasTwoSides_CountsTheWheelAsALink()
+    {
+        LinkRef[] one = [new(3, 1, 2, CreatureElementKind.Beam)];
+
+        ServoDef.HasTwoSides(one, hasWheel: true).ShouldBeTrue();
+        ServoDef.HasTwoSides(one, hasWheel: false).ShouldBeFalse();
+        ServoDef.HasTwoSides([], hasWheel: true).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DefaultSides_TakesTwoLinks_ElseMakesTheWheelTheTarget()
+    {
+        LinkRef[] links = [new(9, 1, 3, CreatureElementKind.Beam), new(4, 1, 2, CreatureElementKind.Spring), new(7, 1, 4, CreatureElementKind.Piston)];
+        var wheel = new WheelDef(5, 1);
+
+        ServoDef.DefaultSides(links, wheel).ShouldBe((4, 7));
+        ServoDef.DefaultSides(links[..1], wheel).ShouldBe((9, 5));
+        ServoDef.DefaultSides([], wheel).ShouldBe((null, 5));
+        ServoDef.DefaultSides(links[..1], null).ShouldBe((9, null));
+    }
 }

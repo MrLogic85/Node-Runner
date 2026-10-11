@@ -61,7 +61,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
   motor or brake (a Servo) and one Touch sensor (#1043), so a Servo can
   drive the links of a Wheel's joint while the Wheel turns freely between
-  them, and a Touch sensor may share its joint with both.
+  them, or drive the Wheel itself (see Servo), and a Touch sensor may share
+  its joint with both.
 - **Degree rules** (links touching a node, counting Beams, Pistons and
   Springs):
   - **0 links:** a loose point that cannot be simulated. It can be saved,
@@ -195,13 +196,22 @@ fold.
 ### Servo
 
 - **Beginner:** A motor on a joint. It holds one link as Fixed and turns
-  another as Target; any other links at that joint stay free.
+  another as Target; any other links at that joint stay free. It can turn
+  its joint's Wheel too, as if the Wheel were a link.
 - `ServoDef`; Mechanics: `Servo`. Fixed and Target may be Beams, Pistons or
-  Springs. A missing link id is allowed, so deleting a held link keeps the
-  Servo, and readiness blocks training until the player picks a
-  replacement or deletes the Servo.
+  Springs, or the Wheel on the Servo's joint (#1118): to a motor the Wheel
+  is a one-sided link, its angle that of a mark on its tyre, so the same
+  link ids name it and saves need no change. Everywhere else the Wheel
+  stays a joint part: it counts toward no link rule. A Servo
+  needs two sides, two links or a link and the Wheel
+  (`ServoDef.HasTwoSides`); a new one takes the two lowest-id links, or a
+  lone link as Fixed and the Wheel as Target (`ServoDef.DefaultSides`).
+  Within its Range it turns the Wheel back and forth; rolling on and on is
+  a Velocity motor's job (#1068). A missing link id is allowed, so deleting
+  a held link or Wheel keeps the Servo, and readiness blocks training
+  until the player picks a replacement or deletes the Servo.
 - **Angle:** the direction from its joint to the Target link's other joint
-  minus the direction to the Fixed link's other joint, relative to the
+  (or the Wheel's tyre mark) minus the direction to the Fixed one, relative to the
   built pose. Range and Start position set the lower and upper range ends;
   past either end it is pushed back, harder the further out.
 - **Torque:** it chases a wanted speed, ten times the angle still to go and
@@ -230,7 +240,8 @@ fold.
   forever.
 - **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
   at 0.4 m, added to its joint. Derived, never saved.
-- **Driving it later:** #1068, #1070, #1118.
+- **Driving it:** a Servo on its joint may name it as Fixed or Target
+  (#1118, see Servo). Later: #1068, #1070, which reuse the one-sided link.
 
 ### Touch sensor
 
@@ -402,7 +413,7 @@ fold.
   their ids.
 - Saving, loading, moving, renaming, rebuilding a body and copying a whole
   Creation keep part ids and the counter.
-- Changing a Servo's Fixed or Target link gives it a new id, because the
+- Changing a Servo's Fixed or Target link or Wheel gives it a new id, because the
   meaning and sign of its ports changed, so its old weights are not reused.
 - Parts refer to each other by id. Code that needs an array position uses
   `CreatureDef`'s id-to-index lookups at the boundary.

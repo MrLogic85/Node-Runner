@@ -27,14 +27,17 @@ file owns how Godot realises it.
    Each tick `SpringLink` sets its rest length to `Spring.StepRestLength`:
    Godot's spring would push a preload past a stop into the stop's joints,
    which gave way (#835). Behaviour: `docs/CREATURE_MODEL.md` → Spring.
-6. **Servos.** `ServoJoint` applies equal-and-opposite force couples
-   (`Servo.CoupleForTorque`) to the joint body and each link's far body,
-   plus a soft end-stop torque outside its range. No Godot angular joint:
-   Pistons and Springs slide on a groove, and force couples work for every
-   link kind without link-kind branches. The lever arm is clamped to
+6. **Servos.** Each side of a `ServoJoint` is a `ServoSide`: a link
+   (`ServoLinkSide`) gets equal-and-opposite force couples
+   (`Servo.CoupleForTorque`) on the joint body and the link's far body; the
+   joint's Wheel (`ServoWheelSide`, #1118) gets a plain body torque on the
+   Wheel body, with the signs of `Servo.WheelAngle`/`WheelBodyTorque` and
+   the Wheel's own inertia. A soft end-stop torque acts outside its range.
+   No Godot angular joint: Pistons and Springs slide on a groove, and force
+   couples work for every link kind without link-kind branches. The lever arm is clamped to
    `Servo.MinimumLeverArm` so a compressed Spring cannot make unbounded
    force. Motor and stop are integrated explicitly, so the gains are scaled
-   to the live inertia (`Servo.LinkInertia`, `Servo.StableEndStopGains`) to
+   to the live inertia (`Servo.LinkInertia` or the Wheel's, `Servo.StableEndStopGains`) to
    stay stable; the holding part is not capped, so a Servo holds a load up
    to its strength.
 7. **Accelerometer.** `AccelerometerSensor` differences the velocity where

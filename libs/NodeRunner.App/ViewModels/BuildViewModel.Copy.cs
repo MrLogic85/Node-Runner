@@ -85,8 +85,8 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
     /// selects the originals again. Each copy keeps its settings but not its name; a copied Servo
-    /// sits on the copy of its joint, uses the copies of its Fixed and Target links, and leaves a
-    /// role empty whose link was not copied. A copied joint part brings its joint along, but the
+    /// sits on the copy of its joint, uses the copies of its Fixed and Target links or Wheel, and
+    /// leaves a role empty whose side was not copied. A copied joint part brings its joint along, but the
     /// joint's other parts only when they are selected too (#1044). The copy is selected as the
     /// original was: joint parts stand in for their copied joint (#973). While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
     /// <see cref="CanvasNotes"/>.
@@ -159,15 +159,17 @@ public sealed partial class BuildViewModel
                 _selectedSensorIds.Add(CopySettings(sensor.Id, copy));
             }
 
+            // A Wheel before its Servo: to the Servo it is a one-sided link (#1118).
+            foreach (var wheel in wheels)
+            {
+                linkCopies[wheel.Id] = CopySettings(wheel.Id, _builder.AddWheel(nodeCopies[wheel.NodeId]));
+                _selectedWheelIds.Add(linkCopies[wheel.Id]);
+            }
+
             foreach (var servo in servos)
             {
                 var copy = _builder.AddServo(nodeCopies[servo.NodeId], CopyOf(servo.FixedLinkId), CopyOf(servo.TargetLinkId));
                 _selectedServoIds.Add(CopySettings(servo.Id, copy));
-            }
-
-            foreach (var wheel in wheels)
-            {
-                _selectedWheelIds.Add(CopySettings(wheel.Id, _builder.AddWheel(nodeCopies[wheel.NodeId])));
             }
 
             foreach (var touch in touchSensors)
