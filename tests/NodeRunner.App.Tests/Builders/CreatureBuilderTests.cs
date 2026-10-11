@@ -757,6 +757,79 @@ public sealed class CreatureBuilderTests
         builder.Build().TouchSensors.ShouldBe(creature.TouchSensors);
     }
 
+    [Fact]
+    public void AddRubber_OnAJoint_AddsOne_ThatLeavesTheJointsSizeAndPartsAlone()
+    {
+        var builder = PairBuilder();
+        var joint = builder.Nodes[0].Id;
+        var freshId = builder.Build().NextPartId;
+
+        var rubber = builder.AddRubber(joint);
+
+        rubber.ShouldBe(freshId);
+        builder.Rubbers.ShouldBe([new RubberDef(rubber, joint)]);
+        builder.NodeRadius(joint).ShouldBe(NodeDef.PlainJointRadius);
+        builder.Build().Rubbers.ShouldBe(builder.Rubbers);
+    }
+
+    [Fact]
+    public void ARubber_SharesItsJointWithEveryOtherJointPart_ButNotWithAnotherRubber()
+    {
+        var builder = PairBuilder();
+        var joint = builder.Nodes[0].Id;
+        builder.AddWheel(joint);
+        builder.AddServo(joint);
+        builder.AddTouchSensor(joint);
+
+        builder.CanAddRubber(joint, out _).ShouldBeTrue();
+        builder.AddRubber(joint);
+        builder.CanAddRubber(joint, out var second).ShouldBeFalse();
+        builder.CanAddRubber(builder.Beams[0].Id, out var notAJoint).ShouldBeFalse();
+
+        second.ShouldBe(UiText.Plain("One rubber per joint"));
+        notAJoint.ShouldBe(UiText.Plain("Rubber goes on a joint"));
+        Should.Throw<ArgumentException>(() => builder.AddRubber(joint));
+    }
+
+    [Fact]
+    public void RemoveNode_TakesItsRubber_AndRemoveRubber_LeavesTheJoint()
+    {
+        var builder = PairBuilder();
+        var first = builder.Nodes[0].Id;
+        var second = builder.Nodes[1].Id;
+        builder.AddRubber(first);
+        var kept = builder.AddRubber(second);
+
+        builder.RemoveNode(first);
+        builder.Rubbers.Select(rubber => rubber.Id).ShouldBe([kept]);
+        builder.RemoveRubber(kept);
+
+        builder.Rubbers.ShouldBeEmpty();
+        builder.Nodes.Select(node => node.Id).ShouldBe([second]);
+    }
+
+    [Fact]
+    public void Rename_ARubber_NamesIt()
+    {
+        var builder = PairBuilder();
+        var rubber = builder.AddRubber(builder.Nodes[0].Id);
+
+        builder.Rename(rubber, "Sole");
+
+        builder.Rubbers.Single().ShouldBe(new RubberDef(rubber, builder.Nodes[0].Id, "Sole"));
+    }
+
+    [Fact]
+    public void Constructor_FromACreatureWithARubber_KeepsIt()
+    {
+        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], [], [], [], [], [], [], [new RubberDef(2, 1)], nextPartId: 3);
+
+        var builder = new CreatureBuilder(creature);
+
+        builder.Rubbers.ShouldBe(creature.Rubbers);
+        builder.Build().Rubbers.ShouldBe(creature.Rubbers);
+    }
+
     private static CreatureBuilder PairBuilder()
     {
         var builder = new CreatureBuilder();

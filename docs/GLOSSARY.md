@@ -83,8 +83,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   links end and are measured from, whatever sits on the joint (#1086). See:
   `docs/CREATURE_MODEL.md` → Node.
 - **Joint** — A point where links meet and can turn; in code a node
-  (`NodeDef`). A plain joint is passive (#450); a Servo, a Wheel or both can sit
-  on it. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
+  (`NodeDef`). A plain joint is passive (#450); a Servo, a Wheel, a Rubber and a
+  Touch sensor can each sit on it, one of each. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
   their joint".
 - **Link** — A joint-to-joint connection a Servo may use as Fixed or Target:
   Beam, Piston or Spring. The Links tool lists them all, Beam included. Say
@@ -104,6 +104,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Sensor (part)** — A part that feels: on a beam, an Accelerometer or
   Camera (`SensorDef`, `SensorKind`), one per beam; on a joint, a Touch
   sensor. Not the brain.
+- **Rubber** — A passive joint part (#1142) that makes its joint, or its
+  Wheel's tyre, grip the ground harder (`RubberDef`); one per joint, no
+  brain ports.
 - **Servo** — A powered joint part (#452) that holds one link as Fixed and
   turns another as Target.
 - **Spring** — A passive link (#453) that pulls back toward its rest length;

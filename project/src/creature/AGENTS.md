@@ -64,12 +64,15 @@ file owns how Godot realises it.
     ground in any direction; a contact monitor only says on or off, and the
     reading is analog (`Touch.Reading`, #1045). Add no area or body of its
     own (`TouchSensor.cs` says how).
+13. **A Rubber is its joint body's material, nothing new.** Give that body
+    a Rough `PhysicsMaterial` at `Rubber.Friction`; add no body, shape or
+    collider (`Creature.Rubbers.cs` says how, #1142).
 
 ## What lives here
 
-- `Creature.cs`, `Creature.Links.cs`, `Creature.Wheels.cs` — builds bodies,
-  pins, sensors, links (each with its end-stop cylinder) and Wheels, and
-  wires the brain
+- `Creature.cs`, `Creature.Links.cs`, `Creature.Wheels.cs`,
+  `Creature.Rubbers.cs` — builds bodies, pins, sensors, links (each with its
+  end-stop cylinder), Wheels and Rubbers, and wires the brain
 - `Creature.Selection.cs` — what a tap selects and each part's draw group,
   with the selection raised (#1107)
 - `IBeamSensor.cs` — what `Creature` needs from a beam sensor: value names,

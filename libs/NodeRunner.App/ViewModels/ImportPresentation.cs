@@ -103,6 +103,7 @@ public sealed record ImportPresentation(
             new(PartSettingsKind.Piston, creature.Pistons.Count),
             new(PartSettingsKind.Spring, creature.Springs.Count),
             new(PartSettingsKind.Wheel, creature.Wheels.Count),
+            new(PartSettingsKind.Rubber, creature.Rubbers.Count),
         }.Where(row => row.Count > 0),
     ];
 }

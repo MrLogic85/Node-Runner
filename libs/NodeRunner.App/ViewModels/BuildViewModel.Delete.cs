@@ -14,7 +14,7 @@ public sealed partial class BuildViewModel
     /// refuses a delete that would change its model: one that takes a part with brain ports, also by
     /// cascade (a joint's Piston, Servo or Touch sensor, a beam's sensor), or clears a Servo's Fixed or Target link,
     /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel
-    /// has no ports, so it can go.
+    /// and a Rubber have no ports, so they can go.
     /// </summary>
     public UiText? DeleteLockedReason => DeleteRefusalNotes().Count > 0 ? LockedReason : null;
 
@@ -48,7 +48,7 @@ public sealed partial class BuildViewModel
             foreach (var (joint, linksBefore) in partJoints)
             {
                 if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0
-                    && !CreatureDef.HasJointPart(joint, _builder.Servos, _builder.Wheels, _builder.TouchSensors))
+                    && !CreatureDef.HasJointPart(joint, _builder.Servos, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers))
                 {
                     _builder.RemoveNode(joint);
                 }
@@ -153,6 +153,11 @@ public sealed partial class BuildViewModel
         foreach (var touchSensorId in parts.TouchSensors)
         {
             builder.RemoveTouchSensor(touchSensorId);
+        }
+
+        foreach (var rubberId in parts.Rubbers)
+        {
+            builder.RemoveRubber(rubberId);
         }
 
         foreach (var beamId in parts.Beams)

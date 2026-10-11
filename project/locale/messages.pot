@@ -518,6 +518,10 @@ msgstr ""
 msgid "Made in a newer version"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Makes its joint grip the ground."
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Map"
 msgstr ""
@@ -623,6 +627,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "One ray has no spread."
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "One rubber per joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -757,6 +765,23 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Rotate"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Rubber"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "Rubber goes on a joint"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Rubber {0}"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Rubbers"
 msgstr ""
 
 #: project/src/ui/screens/TrainingScreen.cs
@@ -947,6 +972,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Tap a joint to place it. A joint holds one motor or brake."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Tap a joint to place it. A joint holds one rubber."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs

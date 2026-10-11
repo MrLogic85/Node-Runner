@@ -6,7 +6,7 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// A joint (#767): a Touch sensor's cushion (<see cref="Cushion"/>, #1045) under everything else it
-/// draws, and its halo while that sensor is selected; its ring (<see cref="JointDrawing"/>) at its
+/// draws, and its halo while that sensor is selected; a Rubber's skin (<see cref="Skin"/>, #1142) over the cushion; its ring (<see cref="JointDrawing"/>) at its
 /// origin and, while selected, its halo; a Wheel's hub (<see cref="ShowsHub"/>) where a Wheel stands in for its ring, so the hub sits over
 /// the links that reach it (#1086); and over them its <see cref="Placing"/> mark, which it draws even
 /// where a Servo or Wheel stands in for its ring (<see cref="ShowsRing"/>).
@@ -16,6 +16,7 @@ public partial class JointPart : PartVisual
     private const int _refusedRingDashes = 8;
     private const int _refusedDashSegments = 8;
     private const int _cushionSegments = 64;
+    private const int _skinSegments = 64;
 
     private float _radius;
     private bool _simplified;
@@ -28,6 +29,8 @@ public partial class JointPart : PartVisual
     private float _touch;
     private bool _touchSelected;
     private bool _wheelSelected;
+    private bool _skin;
+    private bool _skinSelected;
 
     public JointPart()
         : base(DrawSlot.Over)
@@ -113,6 +116,27 @@ public partial class JointPart : PartVisual
         set => Change(ref _wheelSelected, value);
     }
 
+    /// <summary>
+    /// Whether it draws its Rubber's skin, a solid band from <see cref="Radius"/>, the joint's drawn edge,
+    /// out by <see cref="RubberDef.Skin"/>, over the inner part of a Touch sensor's cushion. A shadow
+    /// (<see cref="Simplified"/>) draws none.
+    /// </summary>
+    public bool Skin
+    {
+        get => _skin;
+        set => Change(ref _skin, value);
+    }
+
+    /// <summary>
+    /// Whether its Rubber is selected: the skin turns <c>halo</c>, with no ring of its own, which would
+    /// merge with a Touch sensor's mark.
+    /// </summary>
+    public bool SkinSelected
+    {
+        get => _skinSelected;
+        set => Change(ref _skinSelected, value);
+    }
+
     /// <summary>Whether it would take or refuse the joint part being placed: a ring at <see cref="PlacingRadius"/>'s halo.</summary>
     public PlacingMark Placing
     {
@@ -138,6 +162,12 @@ public partial class JointPart : PartVisual
             using var cushionPen = UiPixelPen.Begin(this);
             var color = Theme.TouchCushion.Lerp(Theme.TouchCushionTouching, Touch);
             cushionPen.Ring(Vector2.Zero, Radius + ((float)TouchSensorDef.Cushion / 2), color, (float)TouchSensorDef.Cushion, _cushionSegments);
+        }
+
+        if (Skin && !Simplified)
+        {
+            using var skinPen = UiPixelPen.Begin(this);
+            skinPen.Ring(Vector2.Zero, Radius + ((float)RubberDef.Skin / 2), SkinSelected ? Theme.SelectionGlow : Theme.RubberSkin, (float)RubberDef.Skin, _skinSegments);
         }
 
         if (ShowsRing)

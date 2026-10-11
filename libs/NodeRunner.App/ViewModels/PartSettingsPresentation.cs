@@ -14,6 +14,7 @@ public enum PartSettingsKind
     Spring,
     Wheel,
     Touch,
+    Rubber,
 }
 
 /// <summary>
@@ -71,6 +72,7 @@ public sealed record PartSettingsPresentation(
         PartSettingsKind.Spring => UiText.Plain("Spring"),
         PartSettingsKind.Wheel => UiText.Plain("Wheel"),
         PartSettingsKind.Touch => UiText.Plain("Touch sensor"),
+        PartSettingsKind.Rubber => UiText.Plain("Rubber"),
         _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Unknown part kind."),
     };
 }

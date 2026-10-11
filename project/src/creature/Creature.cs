@@ -527,6 +527,7 @@ public partial class Creature : Node2D
             var hasServo = definition.Servos.Any(servo => servo.NodeId == definition.Nodes[i].Id);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
+            var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);
 
             var visual = new NodeVisual
             {
@@ -536,14 +537,21 @@ public partial class Creature : Node2D
                 ShowsRing = !hasWheel && !hasServo,
                 ShowsHub = hasWheel && !hasServo,
                 Cushion = hasTouch,
+                Skin = hasRubber,
             };
 
-            // The knock-out runs past a cushion, so it breaks the ground edge round a touching foot (#1045).
-            body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, hasTouch ? radius + (float)TouchSensorDef.Cushion : radius));
+            // The knock-out runs past a cushion or skin, so it breaks the ground edge round a touching foot (#1045, #1142).
+            var knockout = hasTouch ? radius + (float)TouchSensorDef.Cushion : hasRubber ? radius + (float)RubberDef.Skin : radius;
+            body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, knockout));
             body.AddChild(visual);
             if (definition.Wheels.FirstOrDefault(wheel => wheel.NodeId == definition.Nodes[i].Id) is { } wheel)
             {
                 _wheelVisuals[definition.WheelIndexOf(wheel.Id)] = MakeWheel(body, wheel, radius);
+            }
+
+            if (hasRubber)
+            {
+                MakeRubber(body);
             }
 
             AddChild(body);

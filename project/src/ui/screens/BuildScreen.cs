@@ -708,6 +708,7 @@ public partial class BuildScreen : Control
         BuildPart.VelocityMotor => UiIconId.PartVelocity,
         BuildPart.Wheel => UiIconId.PartWheel,
         BuildPart.TouchSensor => UiIconId.PartTouch,
+        BuildPart.Rubber => UiIconId.PartRubber,
         BuildPart.Accelerometer => UiIconId.PartAccelerometer,
         BuildPart.Camera => UiIconId.PartCamera,
         BuildPart.Pulse => UiIconId.PartPulse,

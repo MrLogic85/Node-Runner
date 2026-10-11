@@ -51,10 +51,14 @@ public sealed class PartCalloutPresentationTests
         callout.Inputs.Concat(callout.Outputs).ShouldAllBe(port => port.Value != null);
     }
 
-    [Fact]
-    public void AWheel_SaysItHasNoBrainPorts()
+    [Theory]
+    [InlineData(CreatureElementKind.Wheel, PortedCreature.Wheel, PartSettingsKind.Wheel)]
+    [InlineData(CreatureElementKind.Rubber, PortedCreature.Rubber, PartSettingsKind.Rubber)]
+    public void AWheelOrRubber_SaysItHasNoBrainPorts(CreatureElementKind element, int id, PartSettingsKind kind)
     {
-        var callout = For(CreatureElementKind.Wheel, PortedCreature.Wheel, Live());
+        var callout = For(element, id, Live());
+
+        callout.Kind.ShouldBe(kind);
 
         callout.ShowsGlyph.ShouldBeTrue();
         callout.Note.ShouldBe(UiText.Plain("No brain ports"));

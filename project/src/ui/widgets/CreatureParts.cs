@@ -40,7 +40,7 @@ public partial class CreatureParts : Node2D
     public void Show(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors), CreatureMarks.None);
+        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors, creature.Rubbers), CreatureMarks.None);
     }
 
     /// <summary>
@@ -74,12 +74,15 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.Servos, shape.Wheels, shape.TouchSensors);
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.Servos, shape.Wheels, shape.TouchSensors, shape.Rubbers);
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && shape.Servos.All(servo => servo.NodeId != node.Id) && marks.PreviewNodeOf(BuildPart.Servo) != node.Id;
             part.ShowsHub = HasWheelAndNoServo(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
             part.Cushion = touch is not null || marks.PreviewNodeOf(BuildPart.TouchSensor) == node.Id;
             part.TouchSelected = touch is not null && marks.Selected.TouchSensors.Contains(touch.Id);
+            var rubber = shape.Rubbers.FirstOrDefault(rubber => rubber.NodeId == node.Id);
+            part.Skin = rubber is not null || marks.PreviewNodeOf(BuildPart.Rubber) == node.Id;
+            part.SkinSelected = rubber is not null && marks.Selected.Rubbers.Contains(rubber.Id);
             part.WheelSelected = shape.Wheels.Any(wheel => wheel.NodeId == node.Id && marks.Selected.Wheels.Contains(wheel.Id))
                 || marks.PreviewNodeOf(BuildPart.Wheel) == node.Id;
             var takes = marks.Placing.Joints.Contains(node.Id);

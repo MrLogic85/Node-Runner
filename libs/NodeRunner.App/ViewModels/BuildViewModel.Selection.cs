@@ -22,6 +22,7 @@ public sealed partial class BuildViewModel
     private readonly HashSet<int> _selectedSpringIds = [];
     private readonly HashSet<int> _selectedWheelIds = [];
     private readonly HashSet<int> _selectedTouchSensorIds = [];
+    private readonly HashSet<int> _selectedRubberIds = [];
 
     /// <summary>How many joints the selection moves: <see cref="SelectedNodeIds"/>.</summary>
     public int SelectedNodeCount => SelectedNodeIds.Count;
@@ -40,7 +41,9 @@ public sealed partial class BuildViewModel
 
     public int SelectedTouchSensorCount => _selectedTouchSensorIds.Count;
 
-    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount + SelectedTouchSensorCount;
+    public int SelectedRubberCount => _selectedRubberIds.Count;
+
+    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount + SelectedTouchSensorCount + SelectedRubberCount;
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
@@ -58,6 +61,8 @@ public sealed partial class BuildViewModel
 
     public int? SingleSelectedTouchSensorId => Single(_selectedTouchSensorIds);
 
+    public int? SingleSelectedRubberId => Single(_selectedRubberIds);
+
     /// <summary>A copy of everything selected (#704).</summary>
     public PartSet Selection => new(
         _selectedNodeIds.ToHashSet(),
@@ -67,13 +72,14 @@ public sealed partial class BuildViewModel
         _selectedPistonIds.ToHashSet(),
         _selectedSpringIds.ToHashSet(),
         _selectedWheelIds.ToHashSet(),
-        _selectedTouchSensorIds.ToHashSet());
+        _selectedTouchSensorIds.ToHashSet(),
+        _selectedRubberIds.ToHashSet());
 
     /// <summary>
     /// The joints the selection moves: the selected joints and the joints under selected joint
-    /// parts, Servos, Wheels and Touch sensors, since to the player a joint part is its joint (#973).
+    /// parts, Servos, Wheels, Touch sensors and Rubbers, since to the player a joint part is its joint (#973).
     /// </summary>
-    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0
+    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0 && _selectedRubberIds.Count == 0
         ? _selectedNodeIds
         : _selectedNodeIds.Union(SelectedJointPartJoints()).ToHashSet();
 
@@ -125,7 +131,7 @@ public sealed partial class BuildViewModel
     }
 
     private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds).Concat(_selectedTouchSensorIds);
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds).Concat(_selectedTouchSensorIds).Concat(_selectedRubberIds);
 
     public void ClearSelection()
     {
@@ -168,6 +174,7 @@ public sealed partial class BuildViewModel
         CreatureElementKind.Spring => _selectedSpringIds,
         CreatureElementKind.Wheel => _selectedWheelIds,
         CreatureElementKind.TouchSensor => _selectedTouchSensorIds,
+        CreatureElementKind.Rubber => _selectedRubberIds,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -181,6 +188,7 @@ public sealed partial class BuildViewModel
         _selectedSpringIds.Clear();
         _selectedWheelIds.Clear();
         _selectedTouchSensorIds.Clear();
+        _selectedRubberIds.Clear();
     }
 
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
@@ -188,12 +196,13 @@ public sealed partial class BuildViewModel
     private List<int> SelectedServoJoints() =>
         _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId).ToList();
 
-    // The joints under the selected joint parts, Servos, Wheels and Touch sensors.
+    // The joints under the selected joint parts, Servos, Wheels, Rubbers and Touch sensors.
     // Each joint once, though several parts of a stack can be selected (#1044).
     private HashSet<int> SelectedJointPartJoints() =>
     [
         .. SelectedServoJoints(),
         .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId),
+        .. _builder.Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).Select(rubber => rubber.NodeId),
         .. _builder.TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).Select(touch => touch.NodeId),
     ];
 
@@ -225,6 +234,14 @@ public sealed partial class BuildViewModel
             if (_selectedNodeIds.Remove(wheel.NodeId))
             {
                 _selectedWheelIds.Add(wheel.Id);
+            }
+        }
+
+        foreach (var rubber in _builder.Rubbers)
+        {
+            if (_selectedNodeIds.Remove(rubber.NodeId))
+            {
+                _selectedRubberIds.Add(rubber.Id);
             }
         }
 
@@ -382,5 +399,7 @@ public sealed partial class BuildViewModel
         OnPropertyChanged(nameof(SingleSelectedWheelId));
         OnPropertyChanged(nameof(SelectedTouchSensorCount));
         OnPropertyChanged(nameof(SingleSelectedTouchSensorId));
+        OnPropertyChanged(nameof(SelectedRubberCount));
+        OnPropertyChanged(nameof(SingleSelectedRubberId));
     }
 }

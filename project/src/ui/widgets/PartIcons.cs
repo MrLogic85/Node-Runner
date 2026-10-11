@@ -20,6 +20,7 @@ public static class PartIcons
         PartSettingsKind.Spring => UiIconId.PartSpring,
         PartSettingsKind.Wheel => UiIconId.PartWheel,
         PartSettingsKind.Touch => UiIconId.PartTouch,
+        PartSettingsKind.Rubber => UiIconId.PartRubber,
         _ => UiIconId.None,
     };
 }

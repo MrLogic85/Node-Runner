@@ -58,6 +58,7 @@ public sealed class VisualTheme
         SensorLine = UiThemes.Color(theme, UiTokens.Color.Accent),
         TouchCushion = UiThemes.Color(theme, UiTokens.Color.Accent) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
         TouchCushionTouching = UiThemes.Color(theme, UiTokens.Color.Accent),
+        RubberSkin = UiThemes.Color(theme, UiTokens.Color.Detail),
         AreaCorner = UiThemes.Color(theme, UiTokens.Color.Accent),
         BeamWidth = UiSize.Widget.CreatureBeamWidth,
         // The reference's 2-wide ring, not scaled up with our wider beams (owner, 2026-10-03).
@@ -168,6 +169,9 @@ public sealed class VisualTheme
 
     /// <summary>A Touch sensor's cushion at a reading of 1, its joint on the ground (#1045): solid <c>accent</c>.</summary>
     public Color TouchCushionTouching { get; private init; }
+
+    /// <summary>A Rubber's skin round its joint (#1142): <c>detail</c>, as it is passive.</summary>
+    public Color RubberSkin { get; private init; }
 
     /// <summary>The corner marks that show where the Build area ends.</summary>
     public Color AreaCorner { get; private init; }

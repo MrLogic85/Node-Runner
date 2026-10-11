@@ -28,8 +28,9 @@ of that radius, and an `alpha_soft` tint (`line-strong`, `halo` when
 selected, `danger` when loose) on an opaque `background` disc. A bare loose
 joint shows a `danger` ring and cross instead of the inner ring. A Servo or
 Wheel on a loose joint shows the error in its own `danger` look instead, with
-no ring or cross over it (#1140). A Touch sensor's cushion has no `danger`
-look, so a loose joint with only a Touch sensor keeps the ring and cross.
+no ring or cross over it (#1140). A Touch sensor's cushion and a Rubber's
+skin have no `danger` look, so a loose joint with only those keeps the ring
+and cross.
 
 Every link (beam, Piston, Spring) runs from hub to hub (#1086): it stops flat
 `NodeDef.HubRadius` (a plain joint's radius) from each joint's centre,
@@ -122,6 +123,16 @@ every theme, with no tint:
 A loose Wheel is all `danger`. Thumbnails draw it in full, tubes
 included.
 
+### Rubber
+
+A skin around its joint (#1142): a solid `detail` band 3 units wide
+(`RubberDef.Skin`) just outside the joint's largest drawn radius R, the
+tyre on a Wheel's joint, so a Wheel with a Rubber reads as a thicker tyre.
+It draws on its joint after a Touch sensor's cushion, so it covers the
+cushion's inner part, and under the ring, hub or Servo housing, which may
+cover part of it. The skin is only drawn (`docs/CREATURE_MODEL.md` →
+Rubber → Size). Thumbnails draw it; shadows do not.
+
 ### Touch sensor
 
 A cushion around its joint (#665, #1045): a ring 5 units wide (`TouchSensorDef.Cushion`)
@@ -164,6 +175,8 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
 - **Sensor:** its lines turn `halo`.
 - **Touch sensor:** the joint's ring mark outside the cushion, at R + 8
   (#1045). The joint gets no mark of its own.
+- **Rubber:** its skin turns `halo` (#1142), with no ring of its own, which
+  would fall where the skin already is. The joint gets no mark of its own.
 - **Wheel:** the joint's ring, outside the tyre. The Wheel stands in for its
   joint, which has no mark of its own. Its joint draws the mark with the
   hub, over the links and a Touch sensor's cushion, however it was chosen
@@ -202,8 +215,8 @@ Parts draw in groups, one per link, so the drawing is the same in Build and
 Training and never changes while the creature moves (`DrawGroups`). The link
 whose lower end sits highest on screen draws first, so what is lower is
 nearer; ties keep link id order. Within a group: a Wheel (with its joint's
-first link), the link, its sensor, then a joint's Touch cushion, ring, Wheel
-hub or Servo (with its joint's last link). So a link covers a Wheel's face and a ring
+first link), the link, its sensor, then a joint's Touch cushion, Rubber skin, ring,
+Wheel hub or Servo (with its joint's last link). So a link covers a Wheel's face and a ring
 or hub covers its link's end. Servos, joints, hubs and tyre bands are
 filled, so nothing shows through them; a Wheel's face inside the tyre is
 see-through.
@@ -247,10 +260,11 @@ above every shadow.
   taken beams dashed `danger`, and its picture where it would land. A
   dragged joint part rings the joints that take it `halo` and the joints
   that refuse it dashed `danger` (slot rules: `docs/BUILD_MODE.md`), each ring at the size the part will have there
-  (`PlacingTargets.JointRingOf`): a Servo's housing, a new Wheel, or a
-  Touch sensor's cushion round the joint's largest part. A dragged Wheel or
-  Touch sensor also shows itself on a free joint it would land on, a Touch
-  sensor as its cushion. A picked part (#1016) marks the same free and taken targets
+  (`PlacingTargets.JointRingOf`): a Servo's housing, a new Wheel, a
+  Rubber's skin, or a Touch sensor's cushion round the joint's largest
+  part. A dragged Wheel, Rubber or Touch sensor also shows itself on a free
+  joint it would land on, a Rubber as its skin and a Touch sensor as its
+  cushion. A picked part (#1016) marks the same free and taken targets
   from the moment it is picked, so a tap can find them. The targets that
   take it rise over the other parts (Draw layers). A joint part's ring is
   also where a tap or drop lands (`docs/BUILD_MODE.md` → Parts tray).
@@ -303,8 +317,8 @@ above every shadow.
   bars in their own columns so wrapped bars line up, and the word shows on
   a line's first row only. A −1…1 port fills from the centre, past a
   1-wide muted tick at 0; a 0…1 port fills from the left. Values outside
-  the range clamp. A Wheel shows its glyph and a muted "No brain ports"; a
-  Joint, Beam or Spring shows only its name.
+  the range clamp. A Wheel or Rubber shows its glyph and a muted "No brain
+  ports"; a Joint, Beam or Spring shows only its name.
 - **Slow-motion chip (#318):** a Warning chip, "Too many shadows!", top
   left, over the Best flag when that scrolls past.
 
@@ -326,7 +340,8 @@ and their overlaps readable.
 - The followed creature has a knock-out outline in the arena background,
   `stroke-signal` wider than each beam and joint, so it stands clear. On a
   Touch sensor's joint it runs past the cushion, to R + 7, so the cushion
-  cuts the ground line where it rests on it.
+  cuts the ground line where it rests on it; on a Rubber's joint without
+  one it runs past the skin the same way (#1142).
 - The leader is not marked: the lead changes too often (#387).
 
 How each part draws as a shadow (the rule is `project/src/creature/AGENTS.md`
@@ -340,5 +355,5 @@ rule 10):
 - **Beam:** its line.
 - **Rigid triangle:** a faint fill instead of the hatch.
 - **Links (Piston, Spring):** drawn as on the followed creature.
-- **Sensors, Touch cushions and Camera rays:** not drawn.
+- **Sensors, Touch cushions, Rubber skins and Camera rays:** not drawn.
 - **Knock-out outline:** only the followed creature has one.

@@ -399,26 +399,33 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
-    public void JointParts_ListsTheJointsServoThenWheelThenTouchSensorAndNoOtherJoints()
+    public void JointParts_ListsTheJointsServoThenWheelThenRubberThenTouchSensorAndNoOtherJoints()
     {
         ServoDef[] servos = [new ServoDef(6, 2, 4, 5), new ServoDef(7, 1, 4, 5)];
         WheelDef[] wheels = [new WheelDef(8, 1), new WheelDef(9, 3)];
         TouchSensorDef[] touchSensors = [new TouchSensorDef(10, 1), new TouchSensorDef(11, 5)];
+        RubberDef[] rubbers = [new RubberDef(12, 1), new RubberDef(13, 3)];
 
-        CreatureDef.JointParts(1, servos, wheels, touchSensors).ShouldBe([
+        CreatureDef.JointParts(1, servos, wheels, touchSensors, rubbers).ShouldBe([
             new CreatureElementSelection(CreatureElementKind.Servo, 7),
             new CreatureElementSelection(CreatureElementKind.Wheel, 8),
+            new CreatureElementSelection(CreatureElementKind.Rubber, 12),
             new CreatureElementSelection(CreatureElementKind.TouchSensor, 10),
         ]);
-        CreatureDef.JointParts(3, servos, wheels, touchSensors).ShouldBe([new CreatureElementSelection(CreatureElementKind.Wheel, 9)]);
-        CreatureDef.JointParts(5, servos, wheels, touchSensors).ShouldBe([new CreatureElementSelection(CreatureElementKind.TouchSensor, 11)]);
-        CreatureDef.JointParts(4, servos, wheels, touchSensors).ShouldBeEmpty();
+        CreatureDef.JointParts(3, servos, wheels, touchSensors, rubbers).ShouldBe([
+            new CreatureElementSelection(CreatureElementKind.Wheel, 9),
+            new CreatureElementSelection(CreatureElementKind.Rubber, 13),
+        ]);
+        CreatureDef.JointParts(5, servos, wheels, touchSensors, rubbers).ShouldBe([new CreatureElementSelection(CreatureElementKind.TouchSensor, 11)]);
+        CreatureDef.JointParts(4, servos, wheels, touchSensors, rubbers).ShouldBeEmpty();
     }
 
     [Fact]
-    public void HasJointPart_CountsATouchSensor()
+    public void HasJointPart_CountsATouchSensorAndARubber()
     {
-        CreatureDef.HasJointPart(1, [], [], [new TouchSensorDef(2, 1)]).ShouldBeTrue();
-        CreatureDef.HasJointPart(3, [], [], [new TouchSensorDef(2, 1)]).ShouldBeFalse();
+        CreatureDef.HasJointPart(1, [], [], [new TouchSensorDef(2, 1)], []).ShouldBeTrue();
+        CreatureDef.HasJointPart(3, [], [], [new TouchSensorDef(2, 1)], []).ShouldBeFalse();
+        CreatureDef.HasJointPart(1, [], [], [], [new RubberDef(2, 1)]).ShouldBeTrue();
+        CreatureDef.HasJointPart(3, [], [], [], [new RubberDef(2, 1)]).ShouldBeFalse();
     }
 }

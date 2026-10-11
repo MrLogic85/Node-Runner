@@ -4,7 +4,7 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The names parts show: a part's own name if it has one, else its default, "Joint 2", "Beam 1",
-/// "Piston 1", "Spring 1", "Wheel 1", "Accel 1", "Camera 1" or "Touch 1", a sensor numbered among its own kind. A default fits in <see cref="NameLimits.Part"/>
+/// "Piston 1", "Spring 1", "Wheel 1", "Rubber 1", "Accel 1", "Camera 1" or "Touch 1", a sensor numbered among its own kind. A default fits in <see cref="NameLimits.Part"/>
 /// (#868). Names are labels only (#220). A default name is translated; an own name is the
 /// player's and shows as written (#757).
 /// </summary>
@@ -17,12 +17,12 @@ public static class PartNames
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    public static UiText Display(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, int partId) =>
-        Own(nodes, beams, sensors, servos, pistons, springs, wheels, touchSensors, partId) is { } own
+    public static UiText Display(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, IReadOnlyList<RubberDef> rubbers, int partId) =>
+        Own(nodes, beams, sensors, servos, pistons, springs, wheels, touchSensors, rubbers, partId) is { } own
             ? UiText.AsWritten(own)
-            : Default(nodes, beams, sensors, servos, pistons, springs, wheels, touchSensors, partId);
+            : Default(nodes, beams, sensors, servos, pistons, springs, wheels, touchSensors, rubbers, partId);
 
-    public static UiText Default(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, int partId)
+    public static UiText Default(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, IReadOnlyList<RubberDef> rubbers, int partId)
     {
         ArgumentNullException.ThrowIfNull(nodes);
         ArgumentNullException.ThrowIfNull(beams);
@@ -32,6 +32,7 @@ public static class PartNames
         ArgumentNullException.ThrowIfNull(springs);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(touchSensors);
+        ArgumentNullException.ThrowIfNull(rubbers);
         if (sensors.FirstOrDefault(sensor => sensor.Id == partId) is { } sensor)
         {
             // Numbered among sensors of its kind, like "Accel 2".
@@ -68,6 +69,12 @@ public static class PartNames
             return UiText.Format("Touch {0}", touchIndex + 1);
         }
 
+        var rubberIndex = IndexOf(rubbers, rubber => rubber.Id == partId);
+        if (rubberIndex >= 0)
+        {
+            return UiText.Format("Rubber {0}", rubberIndex + 1);
+        }
+
         var beamIndex = IndexOf(beams, beam => beam.Id == partId);
         if (beamIndex >= 0)
         {
@@ -80,7 +87,7 @@ public static class PartNames
             : throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
     }
 
-    public static string? Own(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, int partId)
+    public static string? Own(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, IReadOnlyList<RubberDef> rubbers, int partId)
     {
         ArgumentNullException.ThrowIfNull(nodes);
         ArgumentNullException.ThrowIfNull(beams);
@@ -90,6 +97,7 @@ public static class PartNames
         ArgumentNullException.ThrowIfNull(springs);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(touchSensors);
+        ArgumentNullException.ThrowIfNull(rubbers);
         return nodes.FirstOrDefault(node => node.Id == partId)?.Name
             ?? beams.FirstOrDefault(beam => beam.Id == partId)?.Name
             ?? sensors.FirstOrDefault(sensor => sensor.Id == partId)?.Name
@@ -97,7 +105,8 @@ public static class PartNames
             ?? pistons.FirstOrDefault(piston => piston.Id == partId)?.Name
             ?? springs.FirstOrDefault(spring => spring.Id == partId)?.Name
             ?? wheels.FirstOrDefault(wheel => wheel.Id == partId)?.Name
-            ?? touchSensors.FirstOrDefault(touch => touch.Id == partId)?.Name;
+            ?? touchSensors.FirstOrDefault(touch => touch.Id == partId)?.Name
+            ?? rubbers.FirstOrDefault(rubber => rubber.Id == partId)?.Name;
     }
 
     private static int IndexOf<T>(IReadOnlyList<T> items, Func<T, bool> match)

@@ -86,6 +86,20 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
+    public void Code_RoundTripsARubber()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        builder.AddRubber(walker.Creature.Nodes[0].Id);
+        var gripping = walker.WithCreature(builder.Build(), training: null);
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(gripping)).Build.ShouldNotBeNull();
+
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(gripping).Creature));
+        build.Creature.Rubbers.ShouldHaveSingleItem().NodeId.ShouldBe(build.Creature.Nodes[0].Id);
+    }
+
+    [Fact]
     public void Code_OfTwoHandPlacedJointsAndASpring_IsAtMost100Characters()
     {
         var builder = new CreatureBuilder();
@@ -184,6 +198,7 @@ public sealed class CreationShareCodeTests
         builder.AddServo(nodes[1]);
         builder.AddSpring(nodes[2], nodes[4]);
         builder.AddWheel(nodes[4]);
+        builder.AddRubber(nodes[3]);
         builder.RemoveNode(builder.AddNode(new Vector2D(300, 300)));
         builder.RemoveBeam(beams[3]);
         builder.AddBeam(nodes[3], nodes[4]);
@@ -274,13 +289,16 @@ public sealed class CreationShareCodeTests
     [InlineData(6)]
     [InlineData(7)]
     [InlineData(8)]
+    [InlineData(9)]
     public void Read_AnOlderVersionsCode_WithAWheel_StillReads(int version)
     {
         var read = CreationShareCode.Read(CreationShareCode.Pack(version, Encoding.UTF8.GetBytes(SampleLine(version).ToJsonString())));
 
         read.Refusal.ShouldBeNull();
         read.UpdatedFrom.ShouldBe(version);
-        read.Build.ShouldNotBeNull().Creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(60);
+        var creature = read.Build.ShouldNotBeNull().Creature;
+        creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(60);
+        creature.Rubbers.ShouldBeEmpty();
     }
 
     [Fact]
@@ -526,7 +544,9 @@ public sealed class CreationShareCodeTests
             .Concat(creature.Servos.Select(part => part.Id))
             .Concat(creature.Pistons.Select(part => part.Id))
             .Concat(creature.Springs.Select(part => part.Id))
-            .Concat(creature.Wheels.Select(part => part.Id));
+            .Concat(creature.Wheels.Select(part => part.Id))
+            .Concat(creature.TouchSensors.Select(part => part.Id))
+            .Concat(creature.Rubbers.Select(part => part.Id));
 
     // creature with every part id, and every reference to one, swapped through ids.
     private static CreatureDef Renumbered(CreatureDef creature, Dictionary<int, int> ids)

@@ -136,6 +136,22 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(touch.NodeId));
             }
 
+            if (_build.SingleSelectedRubberId is { } rubberId)
+            {
+                var rubber = _build.Rubbers[_build.RubberIndexOf(rubberId)];
+                return new PartSettingsPresentation(
+                    rubberId,
+                    PartSettingsKind.Rubber,
+                    _build.PartDisplayName(rubberId),
+                    _build.DefaultPartName(rubberId),
+                    null,
+                    null,
+                    PartInfo.Rubber,
+                    canDelete,
+                    PanelSliders(),
+                    OnThisJoint: OnThisJoint(rubber.NodeId));
+            }
+
             if (_build.SingleSelectedSpringId is { } springId)
             {
                 return new PartSettingsPresentation(
@@ -363,6 +379,7 @@ public sealed class BuildPresentationViewModel
             {
                 CreatureElementKind.Wheel => PartSettingsKind.Wheel,
                 CreatureElementKind.Servo => PartSettingsKind.Servo,
+                CreatureElementKind.Rubber => PartSettingsKind.Rubber,
                 CreatureElementKind.TouchSensor => PartSettingsKind.Touch,
                 _ => throw new InvalidOperationException($"{part.Kind} is not a joint part."),
             },

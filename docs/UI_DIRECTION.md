@@ -393,7 +393,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Core part | Sensors on beams (#127) | WV → Sensors |
 | Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top (#1107) | WV → Draw layers, BM → Interactions |
 | "Sensors go on a beam" | Each sensor names itself: "Cameras go on a beam" (#1053) | BM → Sensors |
-| Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with a Servo and a Wheel; its own glyph (#665, #1044, #1045) | BM → Touch sensor, WV → Touch sensor |
+| Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with other joint parts; its own glyph (#665, #1044, #1045) | BM → Touch sensor, WV → Touch sensor |
 | "Senses" for the brain's inputs (stages, BrainFocus, accent) | "Inputs", the machine-learning word (#1155) | TL → The Training scene, Screens → BrainFocus, WV → Port bars |
 | Brain setup screen; hidden neurons | Removed; the direct brain (#536) | Screens → BrainFocus |
 | Speed control | None (#787) | TL → No speed-up |

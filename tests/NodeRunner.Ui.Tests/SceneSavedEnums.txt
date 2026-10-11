@@ -68,6 +68,7 @@ NodeRunner.Ui.Lib.UiIconId.PartGenerator=45
 NodeRunner.Ui.Lib.UiIconId.PartNode=47
 NodeRunner.Ui.Lib.UiIconId.PartPiston=48
 NodeRunner.Ui.Lib.UiIconId.PartPulse=67
+NodeRunner.Ui.Lib.UiIconId.PartRubber=72
 NodeRunner.Ui.Lib.UiIconId.PartServo=49
 NodeRunner.Ui.Lib.UiIconId.PartSpring=50
 NodeRunner.Ui.Lib.UiIconId.PartStepper=51

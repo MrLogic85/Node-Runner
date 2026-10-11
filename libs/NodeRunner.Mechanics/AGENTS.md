@@ -25,6 +25,7 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 - `Piston` — a Piston's travel, inputs, target length and force
 - `Spring` — a Spring's travel
 - `Wheel` — a Wheel's weight and thin-ring turning inertia
+- `Rubber` — a Rubber's friction against the ground
 - `Travel` — the shortest and longest length a Piston's or Spring's stroke
   gives
 - `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a
