@@ -53,8 +53,13 @@ A housing, a range dial and a horn (#452, #577):
   and an `accent` line across the band marks them (#922);
 - a two-armed horn along the Target link, at the Start position in Build.
 
-A Servo missing a link draws a `danger` ring, a `danger` tint and an
-upright "!" badge.
+A Servo missing a link keeps its shape on its usual fill, but draws all
+of it in `danger`, like a loose Wheel, with an upright "!" badge at the
+screen's upper right (#1111). It has no housing without a Fixed link, and
+only the horn's hub without a Target link. Its range band is placed as
+for a complete Servo; without a Target link, as if the Target pointed
+opposite the Fixed link, or to the screen's left when it has neither.
+Thumbnails draw it as in Build, badge included.
 
 ### Piston
 
