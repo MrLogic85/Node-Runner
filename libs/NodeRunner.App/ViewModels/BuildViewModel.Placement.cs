@@ -13,7 +13,7 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
     /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet, and joint
-    /// parts on a joint whose slot for them is free: one Wheel and one motor or brake (#1044).
+    /// parts on a joint whose slot for them is free: one Wheel, one motor or brake and one Touch sensor (#1044).
     /// </summary>
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
@@ -51,6 +51,17 @@ public sealed partial class BuildViewModel
             }
 
             return _builder.CanAddWheel(target.Id, out reason);
+        }
+
+        if (part == BuildPart.TouchSensor)
+        {
+            if (target.Kind != CreatureElementKind.Node)
+            {
+                reason = CreatureBuilder.TouchSensorsGoOnAJointReason;
+                return false;
+            }
+
+            return _builder.CanAddTouchSensor(target.Id, out reason);
         }
 
         return TakesSensor(PartTray.SensorKindOf(part)!.Value, target, movingSensorId: null, out reason);
@@ -93,6 +104,13 @@ public sealed partial class BuildViewModel
             var wheelId = _history.Change(() => _builder.AddWheel(target.Id));
             SelectPlaced(PartSet.None with { Wheels = new HashSet<int> { wheelId } }, select);
             return wheelId;
+        }
+
+        if (part == BuildPart.TouchSensor)
+        {
+            var touchId = _history.Change(() => _builder.AddTouchSensor(target.Id));
+            SelectPlaced(PartSet.None with { TouchSensors = new HashSet<int> { touchId } }, select);
+            return touchId;
         }
 
         var sensorId = _history.Change(() =>
@@ -140,7 +158,7 @@ public sealed partial class BuildViewModel
                 {
                     Joints = joints,
                     RefusedJoints = Nodes.Where(node => !joints.Contains(node.Id) && JointPartsAt(node.Id).Count > 0).Select(node => node.Id).ToHashSet(),
-                    JointRing = PartTray.PlacingRingRadius(placing),
+                    JointRings = Nodes.ToDictionary(node => node.Id, node => PartTray.PlacingRingRadius(placing, CreatureDef.JointRadius(node.Id, Servos, Wheels))),
                 };
             }
 

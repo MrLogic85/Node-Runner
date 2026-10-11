@@ -40,7 +40,7 @@ public partial class CreatureParts : Node2D
     public void Show(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels), CreatureMarks.None);
+        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors), CreatureMarks.None);
     }
 
     /// <summary>
@@ -72,17 +72,32 @@ public partial class CreatureParts : Node2D
         {
             var part = PartFor(_joints, node.Id);
             part.Position = ToGodot(node.Position);
-            part.Radius = (float)NodeRadius(shape, node.Id);
+            part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            var hasPart = CreatureDef.HasJointPart(node.Id, shape.Servos, shape.Wheels);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !hasPart;
-            part.ShowsRing = !hasPart && marks.PreviewJointPart?.NodeId != node.Id;
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.Servos, shape.Wheels, shape.TouchSensors);
+            part.ShowsRing = !HasWheel(shape, marks, node.Id) && shape.Servos.All(servo => servo.NodeId != node.Id) && marks.PreviewNodeOf(BuildPart.Servo) != node.Id;
             part.ShowsHub = HasWheelAndNoServo(shape, marks, node.Id);
+            var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
+            part.Cushion = touch is not null || marks.PreviewNodeOf(BuildPart.TouchSensor) == node.Id;
+            part.TouchSelected = touch is not null && marks.Selected.TouchSensors.Contains(touch.Id);
+            part.WheelSelected = shape.Wheels.Any(wheel => wheel.NodeId == node.Id && marks.Selected.Wheels.Contains(wheel.Id))
+                || marks.PreviewNodeOf(BuildPart.Wheel) == node.Id;
             var takes = marks.Placing.Joints.Contains(node.Id);
             part.Placing = takes ? PlacingMark.Takes : marks.Placing.RefusedJoints.Contains(node.Id) ? PlacingMark.Refuses : PlacingMark.None;
-            part.PlacingRadius = (float)(takes ? marks.Placing.JointRing : NodeRadius(shape, node.Id));
+            part.PlacingRadius = (float)(takes ? marks.Placing.JointRingOf(node.Id) : NodeRadius(shape, node.Id));
         }
     }
+
+    // A joint's radius as drawn, with a previewed Servo or Wheel, so a cushion sits round it.
+    private static double ShownRadius(CreatureShape shape, CreatureMarks marks, int nodeId) =>
+        Math.Max(
+            NodeRadius(shape, nodeId),
+            marks.PreviewNodeOf(BuildPart.Wheel) == nodeId ? WheelDef.DefaultRadius
+            : marks.PreviewNodeOf(BuildPart.Servo) == nodeId ? ServoDef.JointRadius
+            : 0);
+
+    private static bool HasWheel(CreatureShape shape, CreatureMarks marks, int nodeId) =>
+        shape.Wheels.Any(wheel => wheel.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.Wheel) == nodeId;
 
     // A Wheel's hub is drawn by its joint, over the links (#1086); a Servo, placed or previewed, covers it.
     private static bool HasWheelAndNoServo(CreatureShape shape, CreatureMarks marks, int nodeId) =>
@@ -97,21 +112,21 @@ public partial class CreatureParts : Node2D
         Prune(_wheels, ids);
         foreach (var wheel in shape.Wheels)
         {
-            ShowWheelPart(PartFor(_wheels, wheel.Id), nodes[wheel.NodeId], wheel.Radius, marks.ShowsAsLoose(wheel.NodeId), marks.Selected.Wheels.Contains(wheel.Id));
+            ShowWheelPart(PartFor(_wheels, wheel.Id), nodes[wheel.NodeId], wheel.Radius, marks.ShowsAsLoose(wheel.NodeId));
         }
 
         if (marks.PreviewNodeOf(BuildPart.Wheel) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
-            ShowWheelPart(PartFor(_wheels, -previewNode), node, WheelDef.DefaultRadius, loose: false, selected: true);
+            ShowWheelPart(PartFor(_wheels, -previewNode), node, WheelDef.DefaultRadius, loose: false);
         }
     }
 
-    private static void ShowWheelPart(WheelPart part, NodeDef joint, double radius, bool loose, bool selected)
+    // Its joint draws its selection mark (JointPart.WheelSelected), so the face is only raised, never selected.
+    private static void ShowWheelPart(WheelPart part, NodeDef joint, double radius, bool loose)
     {
         part.Position = ToGodot(joint.Position);
         part.Radius = (float)radius;
         part.Loose = loose;
-        part.Selected = selected;
         part.Simplified = false;
     }
 

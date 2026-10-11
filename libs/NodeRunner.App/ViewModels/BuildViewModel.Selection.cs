@@ -56,6 +56,8 @@ public sealed partial class BuildViewModel
 
     public int? SingleSelectedWheelId => Single(_selectedWheelIds);
 
+    public int? SingleSelectedTouchSensorId => Single(_selectedTouchSensorIds);
+
     /// <summary>A copy of everything selected (#704).</summary>
     public PartSet Selection => new(
         _selectedNodeIds.ToHashSet(),
@@ -69,9 +71,9 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// The joints the selection moves: the selected joints and the joints under selected joint
-    /// parts, Servos and Wheels, since to the player a joint part is its joint (#973).
+    /// parts, Servos, Wheels and Touch sensors, since to the player a joint part is its joint (#973).
     /// </summary>
-    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0
+    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0
         ? _selectedNodeIds
         : _selectedNodeIds.Union(SelectedJointPartJoints()).ToHashSet();
 
@@ -186,10 +188,14 @@ public sealed partial class BuildViewModel
     private List<int> SelectedServoJoints() =>
         _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId).ToList();
 
-    // The joints under the selected joint parts, Servos and Wheels.
-    // Each joint once, though a stack's Servo and Wheel can both be selected (#1044).
+    // The joints under the selected joint parts, Servos, Wheels and Touch sensors.
+    // Each joint once, though several parts of a stack can be selected (#1044).
     private HashSet<int> SelectedJointPartJoints() =>
-        [.. SelectedServoJoints(), .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId)];
+    [
+        .. SelectedServoJoints(),
+        .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId),
+        .. _builder.TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).Select(touch => touch.NodeId),
+    ];
 
     // Drops the ids the body no longer has. Changing a Servo's links gives it a new id (#911, #849),
     // so the Servo now on each of servoJoints, the joints of the Servos selected before, stays selected.
@@ -219,6 +225,14 @@ public sealed partial class BuildViewModel
             if (_selectedNodeIds.Remove(wheel.NodeId))
             {
                 _selectedWheelIds.Add(wheel.Id);
+            }
+        }
+
+        foreach (var touch in _builder.TouchSensors)
+        {
+            if (_selectedNodeIds.Remove(touch.NodeId))
+            {
+                _selectedTouchSensorIds.Add(touch.Id);
             }
         }
     }
@@ -366,5 +380,7 @@ public sealed partial class BuildViewModel
         OnPropertyChanged(nameof(SingleSelectedSpringId));
         OnPropertyChanged(nameof(SelectedWheelCount));
         OnPropertyChanged(nameof(SingleSelectedWheelId));
+        OnPropertyChanged(nameof(SelectedTouchSensorCount));
+        OnPropertyChanged(nameof(SingleSelectedTouchSensorId));
     }
 }

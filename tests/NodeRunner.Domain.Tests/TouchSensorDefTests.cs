@@ -35,7 +35,7 @@ public sealed class TouchSensorDefTests
         Should.Throw<ArgumentOutOfRangeException>(() => Creature(touchSensors: [new TouchSensorDef(7, 2)], nextPartId: 7));
     }
 
-    // It takes no joint-part slot (#1043): it shares its joint with a Servo and a Wheel.
+    // It has its own joint-part slot (#1045): it shares its joint with a Servo and a Wheel.
     [Fact]
     public void CreatureDef_TakesATouchSensorNextToAServoAndAWheel()
     {

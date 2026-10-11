@@ -379,14 +379,26 @@ public sealed class CreatureDefTests
     }
 
     [Fact]
-    public void JointParts_ListsTheJointsServoThenWheelAndNoOtherJoints()
+    public void JointParts_ListsTheJointsServoThenWheelThenTouchSensorAndNoOtherJoints()
     {
         ServoDef[] servos = [new ServoDef(6, 2, 4, 5), new ServoDef(7, 1, 4, 5)];
         WheelDef[] wheels = [new WheelDef(8, 1), new WheelDef(9, 3)];
+        TouchSensorDef[] touchSensors = [new TouchSensorDef(10, 1), new TouchSensorDef(11, 5)];
 
-        CreatureDef.JointParts(1, servos, wheels).ShouldBe(
-            [new CreatureElementSelection(CreatureElementKind.Servo, 7), new CreatureElementSelection(CreatureElementKind.Wheel, 8)]);
-        CreatureDef.JointParts(3, servos, wheels).ShouldBe([new CreatureElementSelection(CreatureElementKind.Wheel, 9)]);
-        CreatureDef.JointParts(4, servos, wheels).ShouldBeEmpty();
+        CreatureDef.JointParts(1, servos, wheels, touchSensors).ShouldBe([
+            new CreatureElementSelection(CreatureElementKind.Servo, 7),
+            new CreatureElementSelection(CreatureElementKind.Wheel, 8),
+            new CreatureElementSelection(CreatureElementKind.TouchSensor, 10),
+        ]);
+        CreatureDef.JointParts(3, servos, wheels, touchSensors).ShouldBe([new CreatureElementSelection(CreatureElementKind.Wheel, 9)]);
+        CreatureDef.JointParts(5, servos, wheels, touchSensors).ShouldBe([new CreatureElementSelection(CreatureElementKind.TouchSensor, 11)]);
+        CreatureDef.JointParts(4, servos, wheels, touchSensors).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void HasJointPart_CountsATouchSensor()
+    {
+        CreatureDef.HasJointPart(1, [], [], [new TouchSensorDef(2, 1)]).ShouldBeTrue();
+        CreatureDef.HasJointPart(3, [], [], [new TouchSensorDef(2, 1)]).ShouldBeFalse();
     }
 }

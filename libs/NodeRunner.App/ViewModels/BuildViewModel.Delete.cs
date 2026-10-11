@@ -48,8 +48,7 @@ public sealed partial class BuildViewModel
             foreach (var (joint, linksBefore) in partJoints)
             {
                 if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0
-                    && !CreatureDef.HasJointPart(joint, _builder.Servos, _builder.Wheels)
-                    && _builder.TouchSensors.All(touch => touch.NodeId != joint))
+                    && !CreatureDef.HasJointPart(joint, _builder.Servos, _builder.Wheels, _builder.TouchSensors))
                 {
                     _builder.RemoveNode(joint);
                 }

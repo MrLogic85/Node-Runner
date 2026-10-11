@@ -1,14 +1,20 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Touch sensor (#665): a sensor on one node that tells the brain whether that node touches the
-/// ground. It is the first sensor that does not sit on a beam, since a node is a body of its own
-/// (#127). It sits next to the node's joint parts and takes no joint-part slot, adds no radius and
-/// has no settings. Its one input is <see cref="BrainPorts.TouchChannel"/>. See
+/// A Touch sensor (#665): a sensor on one node that tells the brain how close that node is to
+/// touching the ground (<c>NodeRunner.Mechanics.Touch.Reading</c>). It is the first sensor that does not sit on a
+/// beam, since a node is a body of its own (#127). It takes its own joint-part slot beside a Servo
+/// and a Wheel, adds no radius and has no settings. Its one input is <see cref="BrainPorts.TouchChannel"/>. See
 /// docs/CREATURE_MODEL.md → "Touch sensor".
 /// </summary>
 public sealed record TouchSensorDef
 {
+    /// <summary>
+    /// How far its cushion reaches outside its joint's drawn edge, in world units (#1044, #1045):
+    /// how far it feels the ground. It adds no radius, no collider and no tap area.
+    /// </summary>
+    public const double Cushion = 5;
+
     public TouchSensorDef(int id, int nodeId, string? name = null)
     {
         if (id <= 0)

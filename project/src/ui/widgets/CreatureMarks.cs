@@ -9,7 +9,7 @@ namespace NodeRunner.Ui.Widgets;
 /// picks and too short links (<paramref name="ShowsTooShort"/>) in <c>danger</c>, each
 /// Accelerometer's weight where <paramref name="WeightOffset"/> swings it (null at rest), the sensor
 /// a tray drag would place or a sensor drag would move (<paramref name="PreviewSensor"/>, with a Camera's aim), or the joint a dragged
-/// joint part, a Servo or a Wheel (#129), would take (<paramref name="PreviewJointPart"/>), the beams and joints a placed part
+/// joint part (#129) would take (<paramref name="PreviewJointPart"/>), the beams and joints a placed part
 /// or moved sensor would take or refuse (<paramref name="Placing"/>), and what is drawn on the selected surface
 /// (<paramref name="Raised"/>, #1107), which Build's touches hit there too. A shown creature that is not edited
 /// has <see cref="None"/>.

@@ -25,10 +25,15 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    named layer within Godot's range.
 3. **Selection is drawn with its part.** A part draws its own marks in its
    `_Draw` and rises whole to the selected surface while selected or
-   raised. Never draw a part's mark on a separate layer. The one exception
-   is a selected Servo's Fixed and Target link bands: they lie along other
-   parts' links, so the Build canvas draws them on
-   `CreatureLayers.SelectedUnderlays`, under the selected surface.
+   raised. Never draw a part's mark on a separate layer. A Touch sensor's
+   part is the cushion `JointPart` draws, so `JointPart` draws its mark
+   too. Two exceptions:
+   - A Wheel's mark is drawn by its joint (`JointPart`), which draws the
+     hub it is chosen at, so it lies over the links and the cushion
+     (`docs/WORLD_VISUALS.md` → "Selection marks").
+   - A selected Servo's Fixed and Target link bands lie along other
+     parts' links, so the Build canvas draws them on
+     `CreatureLayers.SelectedUnderlays`, under the selected surface.
 4. **Strokes follow the pen rule** in `project/src/ui/lib/AGENTS.md` →
    Drawing (`UiStrokeGuardTests`). `docs/WORLD_VISUALS.md` owns how parts
    look.

@@ -62,12 +62,4 @@ public sealed class WheelPartTests
         WheelPart.AxleRadius.ShouldBe(2.6f);
         WheelPart.HubRadius.ShouldBeLessThan((float)WheelDef.MinRadius - WheelPart.TyreWidth);
     }
-
-    [Theory]
-    [InlineData(40)]
-    [InlineData(100)]
-    public void Selection_IsTheHaloRing_TheGapOutsideTheEdge(float radius)
-    {
-        (WheelPart.HaloRadius(radius) - radius).ShouldBe((float)SelectionMarks.Gap);
-    }
 }

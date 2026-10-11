@@ -36,7 +36,7 @@ public static class BrainPorts
             ? _cameraChannels[rays / 2]
             : throw new ArgumentOutOfRangeException(nameof(rays), $"A Camera has an odd ray count from 1 to {SensorDef.MaxRays}.");
 
-    /// <summary>A Touch sensor's input key (#1043): 1 while its node touches the ground, else 0.</summary>
+    /// <summary>A Touch sensor's input key (#1043): how far the ground reaches into its cushion, 0–1 (<c>NodeRunner.Mechanics.Touch.Reading</c>).</summary>
     public const string TouchChannel = "touch";
 
     /// <summary>A Piston's length input key: where it is in its travel, 0 at its shortest length and 1 at its longest.</summary>

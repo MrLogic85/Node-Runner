@@ -118,6 +118,7 @@ public partial class Creature
             CreatureElementKind.Piston => Middle(_pistons[Definition!.PistonIndexOf(selection.Id)].NodeA, _pistons[Definition.PistonIndexOf(selection.Id)].NodeB),
             CreatureElementKind.Spring => Middle(_springVisuals[Definition!.SpringIndexOf(selection.Id)].NodeA, _springVisuals[Definition.SpringIndexOf(selection.Id)].NodeB),
             CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(selection.Id)].GlobalPosition,
+            CreatureElementKind.TouchSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
         };
 
@@ -135,29 +136,50 @@ public partial class Creature
     // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
     private void ApplySelection()
     {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_pistonVisuals).Concat(_springVisuals).Concat(_wheelVisuals))
+        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
         {
             visual.Selected = false;
+        }
+
+        foreach (var visual in _nodeVisuals)
+        {
+            visual.TouchSelected = false;
+            visual.WheelSelected = false;
         }
 
         var selection = _isShadow ? [] : _selection;
         ApplyDrawGroups(selection);
         foreach (var part in selection)
         {
-            PartVisual selected = part.Kind switch
+            // A Touch sensor's mark is its joint's ring outside the cushion (#1045); the joint's own stays unselected.
+            if (part.Kind == CreatureElementKind.TouchSensor)
             {
-                CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(part.Id)],
-                CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(part.Id)],
-                CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == part.Id)],
-                CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(part.Id)],
-                CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
-                CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],
-                CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(part.Id)],
-                _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
-            };
-            selected.Selected = true;
+                _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(part.Id)].NodeId)].TouchSelected = true;
+                continue;
+            }
+
+            // A Wheel is chosen at its hub, so its joint draws its mark, over the links (#1045).
+            if (part.Kind == CreatureElementKind.Wheel)
+            {
+                _nodeVisuals[Definition!.NodeIndexOf(Definition.Wheels[Definition.WheelIndexOf(part.Id)].NodeId)].WheelSelected = true;
+                continue;
+            }
+
+            VisualOf(part).Selected = true;
         }
     }
+
+    private PartVisual VisualOf(CreatureElementSelection part) =>
+        part.Kind switch
+        {
+            CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(part.Id)],
+            CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(part.Id)],
+            CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == part.Id)],
+            CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(part.Id)],
+            CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
+            CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],
+            _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
+        };
 
     // Each part in its draw group (#1107), with what belongs with the selection raised as in Build's CreatureParts.
     private void ApplyDrawGroups(IReadOnlyList<CreatureElementSelection> selection)
@@ -167,7 +189,7 @@ public partial class Creature
             return;
         }
 
-        _raised = groups.Raised(selection, definition.Servos, definition.Wheels);
+        _raised = groups.Raised(selection, definition.Servos, definition.Wheels, definition.TouchSensors);
         for (var i = 0; i < _nodeVisuals.Length; i++)
         {
             var id = definition.Nodes[i].Id;

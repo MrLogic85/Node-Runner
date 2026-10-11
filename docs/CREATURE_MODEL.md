@@ -13,9 +13,9 @@ comments there.
 ## Parts: Node, Beam, Sensor, Servo, Piston, Spring, Wheel, Touch sensor
 
 A creature is built from two structural parts (Node, Beam), sensor parts
-that sit on beams (the Accelerometer and the Camera) or on a joint (the
-Touch sensor), joint parts (the
-Servo, a motor, and the Wheel, which rolls) and links between two nodes
+that sit on beams (the Accelerometer and the Camera), joint parts (the
+Servo, a motor, the Wheel, which rolls, and the Touch sensor, which feels
+the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
 parts with brain ports move the body. "What senses" (sensors) and "what
@@ -58,10 +58,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   hub to hub, `NodeDef.HubRadius` (15) from each joint's centre, whatever
   sits on the joint: the minimum link length and a Piston's or Spring's
   travel.
-- **One part per slot** (#1044): a joint holds at most one Wheel and one
-  motor or brake (a Servo), so a Servo can drive the links of a Wheel's
-  joint while the Wheel turns freely between them. A Touch sensor takes no
-  slot: it may share its joint with both (#1043).
+- **One part per slot** (#1044): a joint holds at most one Wheel, one
+  motor or brake (a Servo) and one Touch sensor (#1043), so a Servo can
+  drive the links of a Wheel's joint while the Wheel turns freely between
+  them, and a Touch sensor may share its joint with both.
 - **Degree rules** (links touching a node, counting Beams, Pistons and
   Springs):
   - **0 links:** a loose point that cannot be simulated. It can be saved,
@@ -234,20 +234,23 @@ fold.
 
 ### Touch sensor
 
-- **Beginner:** A sensor on a joint that tells the brain whether that joint
-  touches the ground.
+- **Beginner:** A sensor on a joint that tells the brain how close that
+  joint is to touching the ground.
 - `TouchSensorDef` (#665, #1043). It sits on one joint, at most one per
   joint, and may share it with a Wheel and a Servo. A Wheel's tyre is its
   joint's, so a tyre on the ground counts.
-- **Reading:** its one input, `touch`, is 1 while its joint touches the
-  ground and 0 otherwise, never nearness or pressure, so it is easy to read
-  while learning; no smoothing. Only the ground counts, never
-  the creature's own parts or other shadows. A freshly built or reset body
-  reads 0 until it lands.
+- **Reading:** its one input, `touch`, is how far the nearest ground
+  reaches into its cushion (#1045, `Touch.Reading` in Mechanics): 0 at the
+  cushion's outer edge, 5 units (`TouchSensorDef.Cushion`) outside the
+  joint, or farther, rising to 1 where the ground meets the joint. The
+  nearest ground in any direction counts, so a slope or step reads as flat
+  ground does. No smoothing: the cushion shows what the brain gets. Only the ground counts, never the creature's own parts or other
+  shadows. A freshly built or reset body reads 0 until it senses the ground.
 - **Size:** it adds no radius and does not change the joint's collider (see
-  Node). Its cushion (#1045) is drawn only and does not change what counts
-  as touching. It has no settings.
-- How it is placed and drawn is #1045.
+  Node); its cushion only sets how far it feels, and adds no tap area. It
+  has no settings.
+- How it is placed and drawn: `docs/BUILD_MODE.md` → Touch sensor and
+  `docs/WORLD_VISUALS.md` → Touch sensor.
 
 ### Piston
 
@@ -348,7 +351,7 @@ fold.
   - **Servo (#452):** inputs `angle` (−1 lower end, 0 built, +1 upper end)
     and `speed` (`tanh(ω / maxSpeed)`, counter-clockwise positive); outputs
     `angle` and `strength`.
-  - **Touch sensor (#1043):** input `touch`, 1 on the ground and 0 off it.
+  - **Touch sensor (#1043):** input `touch` (Touch sensor → Reading).
   - Nodes, beams, plain joints, Springs and Wheels declare none.
 - **Output conventions (#535, `PortSignals`):** the signal fixes the
   output's activation and how a new output starts.

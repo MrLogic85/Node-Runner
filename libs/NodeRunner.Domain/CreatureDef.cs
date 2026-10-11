@@ -4,9 +4,8 @@ using System.Text.Json.Serialization;
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A drawn creature: nodes, the beams between them, the sensors on them (beam sensors and Touch
-/// sensors on nodes), the joint parts on them (Servos and Wheels) and the Pistons and Springs that
-/// link them. Any drawing is a valid
+/// A drawn creature: nodes, the beams between them, the sensors on the beams, the joint parts on
+/// the nodes (Servos, Wheels and Touch sensors) and the Pistons and Springs that link them. Any drawing is a valid
 /// <see cref="CreatureDef"/>, so an unfinished one can be saved; only its part references must point
 /// at existing parts. Whether it can be simulated and trained is checked before training
 /// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>). A Camera placed without an aim gets
@@ -145,7 +144,7 @@ public sealed record CreatureDef
             ValidateJointPart(wheel.NodeId, nodeIds, jointsWithWheel, "Wheel");
         }
 
-        // A Touch sensor takes no joint-part slot: it sits next to a Servo and a Wheel (#1043).
+        // A Touch sensor has its own joint-part slot, one per joint, next to a Servo and a Wheel (#1045).
         var jointsWithTouch = new HashSet<int>();
         foreach (var touch in touchSensors)
         {
@@ -199,7 +198,7 @@ public sealed record CreatureDef
     /// <summary>The Wheels (#129): passive joint parts that roll on the ground.</summary>
     public IReadOnlyList<WheelDef> Wheels => _wheels;
 
-    /// <summary>The Touch sensors (#1043): one input each, whether its node touches the ground.</summary>
+    /// <summary>The Touch sensors (#1043): one input each, how near its node is to the ground.</summary>
     public IReadOnlyList<TouchSensorDef> TouchSensors => _touchSensors;
 
     /// <summary>
@@ -251,16 +250,18 @@ public sealed record CreatureDef
 
     /// <summary>
     /// The joint parts on joint <paramref name="nodeId"/> among these, top → down as drawn (#1044):
-    /// its Servo (the motor or brake), then its Wheel. Empty on a bare joint.
+    /// its Servo (the motor or brake), then its Wheel, then its Touch sensor (#1045). Empty on a bare joint.
     /// </summary>
-    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<ServoDef> servos, IEnumerable<WheelDef> wheels)
+    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<ServoDef> servos, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors)
     {
         ArgumentNullException.ThrowIfNull(servos);
         ArgumentNullException.ThrowIfNull(wheels);
+        ArgumentNullException.ThrowIfNull(touchSensors);
         return
         [
             .. servos.Where(servo => servo.NodeId == nodeId).Select(servo => new CreatureElementSelection(CreatureElementKind.Servo, servo.Id)),
             .. wheels.Where(wheel => wheel.NodeId == nodeId).Select(wheel => new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)),
+            .. touchSensors.Where(touch => touch.NodeId == nodeId).Select(touch => new CreatureElementSelection(CreatureElementKind.TouchSensor, touch.Id)),
         ];
     }
 
@@ -282,12 +283,13 @@ public sealed record CreatureDef
         return servos.Any(servo => servo.NodeId == nodeId) ? ServoDef.JointRadius : NodeDef.HubRadius;
     }
 
-    /// <summary>Whether the joint <paramref name="nodeId"/> holds a joint part, a Servo or a Wheel (#129), among these.</summary>
-    public static bool HasJointPart(int nodeId, IEnumerable<ServoDef> servos, IEnumerable<WheelDef> wheels)
+    /// <summary>Whether the joint <paramref name="nodeId"/> holds a joint part, a Servo, Wheel (#129) or Touch sensor (#1045), among these.</summary>
+    public static bool HasJointPart(int nodeId, IEnumerable<ServoDef> servos, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors)
     {
         ArgumentNullException.ThrowIfNull(servos);
         ArgumentNullException.ThrowIfNull(wheels);
-        return servos.Any(servo => servo.NodeId == nodeId) || wheels.Any(wheel => wheel.NodeId == nodeId);
+        ArgumentNullException.ThrowIfNull(touchSensors);
+        return servos.Any(servo => servo.NodeId == nodeId) || wheels.Any(wheel => wheel.NodeId == nodeId) || touchSensors.Any(touch => touch.NodeId == nodeId);
     }
 
     /// <summary>The beam, Piston or Spring with <paramref name="linkId"/>.</summary>

@@ -40,14 +40,14 @@ public sealed partial class BuildPartsTrayTests
     }
 
     [Fact]
-    public void OnlyAvailableSensorRows_CanBeDraggedOut()
+    public void OnlyAvailablePartRows_CanBeDraggedOut()
     {
         var draggable = PartTray.Groups()
             .SelectMany(group => group.Rows)
             .Where(row => BuildScreen.DraggablePart(row) is not null)
             .Select(row => row.Part);
 
-        draggable.ShouldBe([BuildPart.Servo, BuildPart.Wheel, BuildPart.Accelerometer, BuildPart.Camera]);
+        draggable.ShouldBe([BuildPart.Servo, BuildPart.Wheel, BuildPart.Accelerometer, BuildPart.Camera, BuildPart.TouchSensor]);
     }
 
     [Fact]
