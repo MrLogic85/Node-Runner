@@ -293,13 +293,18 @@ above every shadow.
   lines, split by a `line` hairline with `S1` above and below.
 - **Port bars (#1064):** a part with brain ports adds its glyph before the
   name and, under the name, a line of its inputs in `accent`, then a line
-  of its outputs in `output`. Each port is a muted `Caption` label and a
-  bar, `Meter` sized (26 × 4, `line` track, round ends); at most three per
-  row, more wrap, with labels and bars in their own columns so wrapped bars
-  line up. A −1…1 port fills from the centre, past a 1-wide muted
-  tick at 0; a 0…1 port fills from the left. Values outside the range
-  clamp. A Wheel shows its glyph and a muted "No brain ports"; a Joint,
-  Beam or Spring shows only its name.
+  of its outputs in `output`. Each line starts with a muted `Overline`
+  word, **IN** or **OUT** (short for Inputs and Outputs), so colour is
+  never the only cue (#1150). The callout has two columns: the glyph above
+  the words, as wide as the widest of them in any of its rows, then the
+  name above the bars, `S2` apart; stacked rows share the columns. Each
+  port is a muted `Caption` label and a bar, `Meter` sized (26 × 4, `line`
+  track, round ends); at most three per row, more wrap, with labels and
+  bars in their own columns so wrapped bars line up, and the word shows on
+  a line's first row only. A −1…1 port fills from the centre, past a
+  1-wide muted tick at 0; a 0…1 port fills from the left. Values outside
+  the range clamp. A Wheel shows its glyph and a muted "No brain ports"; a
+  Joint, Beam or Spring shows only its name.
 - **Slow-motion chip (#318):** a Warning chip, "Too many shadows!", top
   left, over the Best flag when that scrolls past.
 

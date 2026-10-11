@@ -95,7 +95,8 @@ public partial class TrainingScreen : Control
                 callout,
                 UiTextTranslation.Now(callout.Name),
                 UiTextTranslation.Source(callout.Note),
-                port => UiTextTranslation.Now(port.Label))),
+                port => UiTextTranslation.Now(port.Label),
+                (UiTextTranslation.Now(PartCalloutPresentation.InputsHeading), UiTextTranslation.Now(PartCalloutPresentation.OutputsHeading)))),
         ];
         _partCalloutSections = _partCallout.Count > 1 ? [.. _partCallout.Skip(1)] : null;
         if (_partCallout.Count == 0)
@@ -143,13 +144,21 @@ public partial class TrainingScreen : Control
 
     /// <summary>
     /// One part's section of the part callout (#1064, #1066): its glyph if it shows one, its name,
-    /// then its inputs in <c>accent</c> and its outputs in <c>output</c>, each a centred bar for
-    /// −1…1 or a filling bar for 0…1; or its <paramref name="note"/>; or no lines for a part that
-    /// shows only its name. <paramref name="name"/> is <c>callout.Name</c>, <paramref name="note"/>
-    /// <c>callout.Note</c> and <paramref name="label"/> each port's label, all in the player's
-    /// language; they are passed in because only <see cref="UiTextTranslation"/> reads a UiText.
+    /// then its inputs in <c>accent</c> and its outputs in <c>output</c>, each line headed by its
+    /// group's word (#1150) and each port a centred bar for −1…1 or a filling bar for 0…1; or its
+    /// <paramref name="note"/>; or no lines for a part that shows only its name.
+    /// <paramref name="name"/> is <c>callout.Name</c>, <paramref name="note"/> <c>callout.Note</c>,
+    /// <paramref name="label"/> each port's label and <paramref name="headings"/>
+    /// <see cref="PartCalloutPresentation.InputsHeading"/> and
+    /// <see cref="PartCalloutPresentation.OutputsHeading"/>, all in the player's language; they
+    /// are passed in because only <see cref="UiTextTranslation"/> reads a UiText.
     /// </summary>
-    public static UiCalloutSection CalloutSection(PartCalloutPresentation callout, string name, Func<string>? note, Func<PartCalloutPort, string> label)
+    public static UiCalloutSection CalloutSection(
+        PartCalloutPresentation callout,
+        string name,
+        Func<string>? note,
+        Func<PartCalloutPort, string> label,
+        (string Inputs, string Outputs) headings)
     {
         ArgumentNullException.ThrowIfNull(callout);
         ArgumentNullException.ThrowIfNull(name);
@@ -157,10 +166,14 @@ public partial class TrainingScreen : Control
         return new UiCalloutSection(
             callout.ShowsGlyph ? PartIcons.For(callout.Kind) : UiIconId.None,
             name,
-            CalloutLines(callout, note, label));
+            CalloutLines(callout, note, label, headings));
     }
 
-    private static IReadOnlyList<UiCalloutLine>? CalloutLines(PartCalloutPresentation callout, Func<string>? note, Func<PartCalloutPort, string> label)
+    private static IReadOnlyList<UiCalloutLine>? CalloutLines(
+        PartCalloutPresentation callout,
+        Func<string>? note,
+        Func<PartCalloutPort, string> label,
+        (string Inputs, string Outputs) headings)
     {
         if (note is not null)
         {
@@ -170,21 +183,22 @@ public partial class TrainingScreen : Control
         var lines = new List<UiCalloutLine>();
         if (callout.Inputs.Count > 0)
         {
-            lines.Add(Line(UiTokens.Color.Accent, callout.Inputs, label));
+            lines.Add(Line(UiTokens.Color.Accent, callout.Inputs, label, headings.Inputs));
         }
 
         if (callout.Outputs.Count > 0)
         {
-            lines.Add(Line(UiTokens.Color.Output, callout.Outputs, label));
+            lines.Add(Line(UiTokens.Color.Output, callout.Outputs, label, headings.Outputs));
         }
 
         return lines.Count == 0 ? null : lines;
     }
 
-    private static UiCalloutLine Line(UiTokens.Color color, IReadOnlyList<PartCalloutPort> ports, Func<PartCalloutPort, string> label) =>
+    private static UiCalloutLine Line(UiTokens.Color color, IReadOnlyList<PartCalloutPort> ports, Func<PartCalloutPort, string> label, string heading) =>
         UiCalloutLine.OfMeters(
             color,
-            ports.Select(port => new UiCalloutMeter(label(port), port.Value ?? double.NaN, port.Range == PortRange.MinusOneToOne)).ToArray());
+            ports.Select(port => new UiCalloutMeter(label(port), port.Value ?? double.NaN, port.Range == PortRange.MinusOneToOne)).ToArray(),
+            heading);
 
     /// <summary>Closes the brain sheet, as Android Back does first. False when it was closed.</summary>
     public bool CloseOverlay()

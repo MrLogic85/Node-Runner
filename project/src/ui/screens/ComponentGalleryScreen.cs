@@ -36,7 +36,8 @@ public partial class ComponentGalleryScreen : GalleryScreen
     }
 
     // Lines and sections are set in code only (#1064, #1066): a −1…1 and a 0…1 meter at each end
-    // and the middle, a note, and a stacked joint's Servo and Wheel in one callout.
+    // and the middle, a note, and a stacked joint's Servo and Wheel in one callout, its lines
+    // headed In and Out (#1150).
     private void ShowCalloutLines()
     {
         var ports = GetNode<UiCallout>("%Ports");
@@ -55,8 +56,8 @@ public partial class ComponentGalleryScreen : GalleryScreen
         stack.IconId = UiIconId.PartServo;
         stack.Lines =
         [
-            UiCalloutLine.OfMeters(UiTokens.Color.Accent, [new("angle", 0.5, Centred: true), new("speed", -1, Centred: true)]),
-            UiCalloutLine.OfMeters(UiTokens.Color.Output, [new("angle", 0, Centred: true), new("strength", 1, Centred: false)]),
+            UiCalloutLine.OfMeters(UiTokens.Color.Accent, [new("angle", 0.5, Centred: true), new("speed", -1, Centred: true)], "In"),
+            UiCalloutLine.OfMeters(UiTokens.Color.Output, [new("angle", 0, Centred: true), new("strength", 1, Centred: false)], "Out"),
         ];
         stack.Sections = [new UiCalloutSection(UiIconId.PartWheel, "Wheel 1", [UiCalloutLine.OfNote("No brain ports")])];
     }

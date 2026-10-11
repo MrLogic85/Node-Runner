@@ -23,6 +23,15 @@ public sealed record PartCalloutPresentation(
     private static readonly UiText _noBrainPorts = UiText.Plain("No brain ports");
 
     /// <summary>
+    /// The word before the inputs' line (#1150), short for Inputs: the values the part gives the
+    /// brain. It names the line, so its colour is never the only cue.
+    /// </summary>
+    public static UiText InputsHeading { get; } = UiText.Plain("In").InContext("part callout");
+
+    /// <summary>The word before the outputs' line (#1150), short for Outputs: the values the brain sets.</summary>
+    public static UiText OutputsHeading { get; } = UiText.Plain("Out").InContext("part callout");
+
+    /// <summary>
     /// The callout for <paramref name="selection"/> on <paramref name="creature"/>. Its ports and
     /// their values come from <paramref name="values"/>, sampled with the creature's layout.
     /// </summary>

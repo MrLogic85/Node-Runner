@@ -5,7 +5,9 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>
 /// Callout (<c>c_call</c>): a small note that points at a spot in a figure. Its position is data
 /// set by the caller; kind only colours the border. Code may add <see cref="Lines"/> of live
-/// values under the caption (#1064), and further <see cref="Sections"/> below it (#1066).
+/// values under the caption (#1064), and further <see cref="Sections"/> below it (#1066). The
+/// glyphs and line headings share a first column, as wide as the widest of them in any section,
+/// and the captions, meters and notes start past it (#1150); see <see cref="UiCalloutGrid"/>.
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -93,9 +95,10 @@ public partial class UiCallout : PanelContainer
     }
 
     /// <summary>
-    /// Lines under the caption (#1064), indented to the caption's text, or null for none. Set in
-    /// code and never saved. A list of the same shape updates the labels and values in place;
-    /// setting the same list again does nothing.
+    /// Lines under the caption (#1064), or null for none: each meter line's heading in the glyph's
+    /// column, its meters and notes under the caption's text. Set in code and never saved. A list
+    /// for the same grid (<see cref="UiCalloutGrid.SameGrid"/>) updates in place; setting the same
+    /// list again does nothing.
     /// </summary>
     public IReadOnlyList<UiCalloutLine>? Lines
     {
@@ -198,6 +201,14 @@ public partial class UiCallout : PanelContainer
             UiTranslation.ShareContext(this, _sectionBlocks[index].Label);
             _sectionBlocks[index].Apply(this, sections[index].Text, sections[index].IconId, sections[index].Lines ?? []);
         }
+
+        // Every section shares the first column, so stacked captions and lines line up.
+        var column = _sectionBlocks.Aggregate(_first.ColumnNeed, (widest, block) => Math.Max(widest, block.ColumnNeed));
+        _first.SetColumn(column);
+        foreach (var block in _sectionBlocks)
+        {
+            block.SetColumn(column);
+        }
     }
 
     // The first caption and its lines straight in the body; unowned, so never saved into a scene.
@@ -261,43 +272,47 @@ public partial class UiCallout : PanelContainer
         }
     }
 
-    // A caption and the lines under it, indented to its text (#1064).
+    // A caption and the lines under it (#1064), laid out by UiCalloutGrid (#1150).
     private sealed class Block
     {
-        private const string _linesName = "_UiLines";
+        private const string _rowsName = "_UiRows";
 
         private readonly UiIconCaption _caption;
-        private readonly MarginContainer _linesBox;
         private readonly VBoxContainer _rows;
         private readonly List<(UiLabel Label, UiMeterBar Bar)> _meters = [];
-        private readonly List<UiLabel> _notes = [];
+        private readonly List<(UiLabel Label, MarginContainer Box)> _notes = [];
+        private readonly List<UiLabel> _headings = [];
         private IReadOnlyList<UiCalloutLine>? _builtLines;
         private bool _linesBuilt;
+        private bool _builtWithColumn;
+        private float _iconPixels;
 
-        private Block(UiIconCaption caption, MarginContainer linesBox, VBoxContainer rows)
+        private Block(UiIconCaption caption, VBoxContainer rows)
         {
             _caption = caption;
-            _linesBox = linesBox;
             _rows = rows;
         }
 
         public static Block Ensure(VBoxContainer container)
         {
             var caption = UiIconCaption.Ensure(container);
-            var linesBox = container.GetNodeOrNull<MarginContainer>(_linesName);
-            if (linesBox is null)
+            var rows = container.GetNodeOrNull<VBoxContainer>(_rowsName);
+            if (rows is null)
             {
-                linesBox = new MarginContainer { Name = _linesName, MouseFilter = MouseFilterEnum.Ignore };
-                var rows = new VBoxContainer { Name = "Rows", MouseFilter = MouseFilterEnum.Ignore };
+                rows = new VBoxContainer { Name = _rowsName, MouseFilter = MouseFilterEnum.Ignore };
                 rows.AddThemeConstantOverride("separation", 0);
-                linesBox.AddChild(rows);
-                container.AddChild(linesBox);
+                container.AddChild(rows);
             }
 
-            return new Block(caption, linesBox, linesBox.GetNode<VBoxContainer>("Rows"));
+            return new Block(caption, rows);
         }
 
         public UiLabel Label => _caption.Label;
+
+        /// <summary>How wide this block wants the first column: its glyph or its widest heading; 0 without a column.</summary>
+        public float ColumnNeed => _builtWithColumn
+            ? _headings.Aggregate(_iconPixels, (widest, heading) => Math.Max(widest, heading.GetMinimumSize().X))
+            : 0;
 
         public void Apply(Control owner, string text, UiIconId iconId, IReadOnlyList<UiCalloutLine> lines)
         {
@@ -308,19 +323,27 @@ public partial class UiCallout : PanelContainer
                 UiTokens.Color.Ink,
                 UiThemeLookup.Color(owner, UiTokens.Color.Ink));
 
-            if (!_linesBuilt || !UiCalloutLine.SameShape(_builtLines, lines))
+            _iconPixels = iconId == UiIconId.None ? 0 : UiIcons.Pixels(UiChip.IconSizeFor(iconId, glyphSized: false));
+            var withColumn = UiCalloutGrid.HasColumn(iconId, lines);
+            if (!_linesBuilt || !UiCalloutGrid.SameGrid(_builtLines, _builtWithColumn, lines, withColumn))
             {
-                BuildLines(lines);
+                BuildLines(lines, withColumn);
             }
 
             var meter = 0;
             var note = 0;
+            var heading = 0;
             foreach (var line in lines)
             {
                 if (line.Note is { } noteText)
                 {
-                    _notes[note++].Text = noteText;
+                    _notes[note++].Label.Text = noteText;
                     continue;
+                }
+
+                if (withColumn)
+                {
+                    _headings[heading++].Text = line.Heading ?? string.Empty;
                 }
 
                 foreach (var value in line.Meters)
@@ -333,15 +356,42 @@ public partial class UiCallout : PanelContainer
                 }
             }
 
-            _linesBox.Visible = lines.Count > 0;
+            _rows.Visible = lines.Count > 0;
 
             // With lines below it the caption starts at the left, so the lines sit under its text.
             _caption.Row.Alignment = lines.Count > 0 ? BoxContainer.AlignmentMode.Begin : BoxContainer.AlignmentMode.Center;
-            var indent = iconId == UiIconId.None ? 0 : UiIcons.Pixels(UiChip.IconSizeFor(iconId, glyphSized: false)) + UiSize.Space.S2;
-            _linesBox.AddThemeConstantOverride("margin_left", indent);
         }
 
-        private void BuildLines(IReadOnlyList<UiCalloutLine> lines)
+        /// <summary>
+        /// Widens the first column to <paramref name="column"/>, so the caption, meters and notes
+        /// start <see cref="UiSize.Space.S2"/> past it; a block without a column keeps none.
+        /// </summary>
+        public void SetColumn(float column)
+        {
+            var width = _builtWithColumn ? column : 0;
+            if (width > 0)
+            {
+                // The glyph's cell spans the column, drawn at its left, so the caption's text starts
+                // where the meters do, with or without a glyph.
+                _caption.Icon.Visible = true;
+                _caption.Icon.StretchMode = TextureRect.StretchModeEnum.KeepAspect;
+                _caption.Icon.CustomMinimumSize = new Vector2(width, _iconPixels);
+            }
+
+            var lead = width > 0 ? width + UiSize.Space.S2 : 0;
+            foreach (var heading in _headings)
+            {
+                // The grid adds S1 after the column, so the cell takes the rest of the S2 gap.
+                heading.CustomMinimumSize = new Vector2(lead - UiSize.Space.S1, 0);
+            }
+
+            foreach (var (_, box) in _notes)
+            {
+                box.AddThemeConstantOverride("margin_left", (int)lead);
+            }
+        }
+
+        private void BuildLines(IReadOnlyList<UiCalloutLine> lines, bool withColumn)
         {
             foreach (var child in _rows.GetChildren())
             {
@@ -351,39 +401,54 @@ public partial class UiCallout : PanelContainer
 
             _meters.Clear();
             _notes.Clear();
+            _headings.Clear();
             foreach (var line in lines)
             {
                 if (line.Note is not null)
                 {
                     var note = SmallLabel();
-                    _notes.Add(note);
-                    _rows.AddChild(note);
+                    var box = new MarginContainer { MouseFilter = MouseFilterEnum.Ignore };
+                    box.AddChild(note);
+                    _notes.Add((note, box));
+                    _rows.AddChild(box);
                     continue;
                 }
 
                 // Labels and bars take their own columns, so wrapped rows keep their bars lined up.
-                var grid = new GridContainer { Columns = UiCalloutLine.MetersPerRow * 2, MouseFilter = MouseFilterEnum.Ignore };
+                var grid = new GridContainer { Columns = UiCalloutGrid.Columns(withColumn), MouseFilter = MouseFilterEnum.Ignore };
                 grid.AddThemeConstantOverride("h_separation", UiSize.Space.S1);
                 grid.AddThemeConstantOverride("v_separation", 0);
-                for (var index = 0; index < line.Meters.Count; index++)
+                UiLabel? label = null;
+                foreach (var cell in UiCalloutGrid.Cells(line, withColumn))
                 {
-                    var label = SmallLabel();
-                    var bar = new UiMeterBar();
-                    if (index % UiCalloutLine.MetersPerRow == 0)
+                    switch (cell)
                     {
-                        grid.AddChild(label);
+                        case UiCalloutGrid.Cell.Heading:
+                            var heading = HeadingLabel();
+                            _headings.Add(heading);
+                            grid.AddChild(heading);
+                            break;
+                        case UiCalloutGrid.Cell.Blank:
+                            grid.AddChild(new Control { MouseFilter = MouseFilterEnum.Ignore });
+                            break;
+                        case UiCalloutGrid.Cell.Label:
+                            label = SmallLabel();
+                            grid.AddChild(label);
+                            break;
+                        case UiCalloutGrid.Cell.SpacedLabel:
+                            // The gap before the next meter is S2, wider than the S1 between a label and its bar.
+                            label = SmallLabel();
+                            var gap = new MarginContainer { MouseFilter = MouseFilterEnum.Ignore };
+                            gap.AddThemeConstantOverride("margin_left", UiSize.Space.S2 - UiSize.Space.S1);
+                            gap.AddChild(label);
+                            grid.AddChild(gap);
+                            break;
+                        case UiCalloutGrid.Cell.Bar:
+                            var bar = new UiMeterBar();
+                            grid.AddChild(bar);
+                            _meters.Add((label!, bar));
+                            break;
                     }
-                    else
-                    {
-                        // The gap before the next meter is S2, wider than the S1 between a label and its bar.
-                        var gap = new MarginContainer { MouseFilter = MouseFilterEnum.Ignore };
-                        gap.AddThemeConstantOverride("margin_left", UiSize.Space.S2 - UiSize.Space.S1);
-                        gap.AddChild(label);
-                        grid.AddChild(gap);
-                    }
-
-                    grid.AddChild(bar);
-                    _meters.Add((label, bar));
                 }
 
                 _rows.AddChild(grid);
@@ -391,7 +456,18 @@ public partial class UiCallout : PanelContainer
 
             _builtLines = lines;
             _linesBuilt = true;
+            _builtWithColumn = withColumn;
         }
+
+        // A field label's style (#1150): it names the line's group beside its colour.
+        private static UiLabel HeadingLabel() => new()
+        {
+            TextStyle = UiTokens.Typography.Overline,
+            TextColor = UiTokens.Color.Muted,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore,
+            AutoTranslateMode = AutoTranslateModeEnum.Disabled,
+        };
 
         // Line text arrives in the player's language, so it is not translated again.
         private static UiLabel SmallLabel() => new()
