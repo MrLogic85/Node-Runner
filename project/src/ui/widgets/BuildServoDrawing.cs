@@ -35,6 +35,7 @@ public static class BuildServoDrawing
 
     // The Wheel, a one-sided link (#1118), gets its band as a ring under its tyre, showing past
     // both edges as a beam's band does past the beam; its see-through face shows the inner edge.
+    // The ring is not hatched: its colour alone tells Fixed from Target.
     private static void DrawLinkBand(UiPixelPen pen, BuildViewModel viewModel, VisualTheme theme, int linkId, bool fixedMark)
     {
         var fill = fixedMark ? theme.ServoFixedBand : theme.ServoTargetBand;
@@ -50,9 +51,7 @@ public static class BuildServoDrawing
                 tyreMiddle - _servoBeamBandHalfWidth,
                 tyreMiddle + _servoBeamBandHalfWidth,
                 fill,
-                edge,
-                hatch,
-                theme.RigidHatchSpacing);
+                edge);
             return;
         }
 

@@ -144,8 +144,8 @@ public static class SelectionDrawing
     }
 
     /// <summary>
-    /// <see cref="DrawLinkBand"/> bent round a circle: a filled ring band between two radii,
-    /// optionally hatched across. A selected Servo marks a Wheel side with it under the tyre (#1118).
+    /// <see cref="DrawLinkBand"/> bent round a circle, without hatching: a filled ring band between
+    /// two radii. A selected Servo marks a Wheel side with it under the tyre (#1118).
     /// </summary>
     public static void DrawRingBand(
         UiPixelPen pen,
@@ -153,30 +153,12 @@ public static class SelectionDrawing
         float innerRadius,
         float outerRadius,
         Color fill,
-        Color edge,
-        Color? hatch,
-        float hatchSpacing)
+        Color edge)
     {
         var middle = (innerRadius + outerRadius) / 2;
         pen.Ring(centre, middle, fill, outerRadius - innerRadius, _ringSegments);
         pen.Ring(centre, innerRadius, edge, UiSize.Stroke.Hair, _ringSegments);
         pen.Ring(centre, outerRadius, edge, UiSize.Stroke.Hair, _ringSegments);
-        if (hatch is not { } hatchColor)
-        {
-            return;
-        }
-
-        // Evenly spaced round the middle so the lines meet without a seam, each leaning 45° like a link's.
-        var count = Math.Max(1, (int)Math.Round(Mathf.Tau * middle / hatchSpacing));
-        var lean = (outerRadius - innerRadius) / middle;
-        var hatchLines = new Vector2[count][];
-        for (var i = 0; i < count; i++)
-        {
-            var angle = Mathf.Tau * i / count;
-            hatchLines[i] = [centre + (Vector2.FromAngle(angle) * innerRadius), centre + (Vector2.FromAngle(angle + lean) * outerRadius)];
-        }
-
-        pen.Strokes(hatchLines, hatchColor, _hatchWidth);
     }
 
     /// <summary>

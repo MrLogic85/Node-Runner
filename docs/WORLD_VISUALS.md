@@ -174,7 +174,8 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
   Wheel side's band is a ring under its tyre, as wide as a beam's band and
   centred on the tyre band, so it shows past both edges of the tyre like a
   link's band past the link, the inner edge through the see-through face
-  (#1118).
+  (#1118). The ring is never hatched (owner's choice); its `detail` or
+  `accent` colour alone tells Fixed from Target.
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
   ticks, as wide as a Piston's cylinder or a Spring's seats,
   joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
