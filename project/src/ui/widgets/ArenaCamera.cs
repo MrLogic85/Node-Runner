@@ -7,8 +7,9 @@ namespace NodeRunner.Ui.Widgets;
 /// The Training arena's camera (#668, #675): it frames the followed creature through
 /// <see cref="ArenaFraming"/>, which follows its centre sideways, zooms out to fit it and its
 /// speed, and keeps the ground at the same height on screen until the creature rises above the
-/// top margin. The framing does all the smoothing, so the camera's own is off: a gait's wobble
-/// never shakes the view and a change of target glides in and settles.
+/// top margin; while a part callout shows, it keeps a <see cref="Shelf"/> for it (#1137). The
+/// framing does all the smoothing, so the camera's own is off: a gait's wobble never shakes the
+/// view and a change of target glides in and settles.
 /// </summary>
 public partial class ArenaCamera : Camera2D
 {
@@ -18,6 +19,20 @@ public partial class ArenaCamera : Camera2D
 
     /// <summary>The Y of the ground's top, in world coordinates; it stays at the same height on screen.</summary>
     public double GroundY { get; set; }
+
+    /// <summary>
+    /// The share of the view's height to keep clear at the top for a part callout; 0 with none.
+    /// The camera opens and gives back the room smoothly, also while paused.
+    /// </summary>
+    public double Shelf
+    {
+        get => _framing.Shelf;
+        set
+        {
+            _framing.Shelf = value;
+            Apply();
+        }
+    }
 
     /// <summary>
     /// Frames the creature <paramref name="creature"/> describes, read every physics tick in world
@@ -78,13 +93,22 @@ public partial class ArenaCamera : Camera2D
     // juddered against it.
     public override void _PhysicsProcess(double delta)
     {
-        // The host runs while paused, but a paused scene keeps its framing: nothing moves to follow.
-        if (_creature is null || GetTree().Paused)
+        if (_creature is null)
         {
             return;
         }
 
-        _framing.Step(_creature(), GroundY, _framedView.X, _framedView.Y, delta);
+        // The host runs while paused, but a paused scene keeps its framing: nothing moves to follow,
+        // only the shelf for a callout read then opens or closes.
+        if (GetTree().Paused)
+        {
+            _framing.StepShelf(_creature(), _framedView.X, _framedView.Y, delta);
+        }
+        else
+        {
+            _framing.Step(_creature(), GroundY, _framedView.X, _framedView.Y, delta);
+        }
+
         Apply();
     }
 

@@ -27,6 +27,27 @@ public partial class UiCalloutLayer : Control
     public void SetCallouts(IReadOnlyList<UiCalloutLayout.Placement> placements)
     {
         ArgumentNullException.ThrowIfNull(placements);
+        var sizes = Fill(placements);
+        Place(placements, UiCalloutLayout.Arrange(placements, sizes, new Rect2(Vector2.Zero, Size)));
+    }
+
+    /// <summary>
+    /// Shows only <paramref name="placement"/>'s callout, docked by <see cref="UiCalloutLayout.Dock"/>
+    /// at the top of <paramref name="bounds"/> over <paramref name="centreX"/>, in this layer's
+    /// coordinates, and returns where it went. A docked callout has no direction or clearance, so
+    /// those of the placement go unused. Call every frame: only the leader follows the part.
+    /// </summary>
+    public Rect2 SetDockedCallout(UiCalloutLayout.Placement placement, float centreX, Rect2 bounds)
+    {
+        var sizes = Fill([placement]);
+        var docked = UiCalloutLayout.Dock(placement.Anchor, sizes[0], centreX, bounds);
+        Place([placement], [docked]);
+        return docked.Rect;
+    }
+
+    // Gives each placement a callout with its content and returns each one's size.
+    private Vector2[] Fill(IReadOnlyList<UiCalloutLayout.Placement> placements)
+    {
         while (_callouts.Count < placements.Count)
         {
             var callout = new UiCallout();
@@ -46,7 +67,11 @@ public partial class UiCalloutLayer : Control
             sizes[i] = callout.GetCombinedMinimumSize();
         }
 
-        var arranged = UiCalloutLayout.Arrange(placements, sizes, new Rect2(Vector2.Zero, Size));
+        return sizes;
+    }
+
+    private void Place(IReadOnlyList<UiCalloutLayout.Placement> placements, IReadOnlyList<UiCalloutLayout.Arranged> arranged)
+    {
         _leaders.Clear();
         for (var i = 0; i < _callouts.Count; i++)
         {

@@ -396,6 +396,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with a Servo and a Wheel; its own glyph (#665, #1044, #1045) | BM → Touch sensor, WV → Touch sensor |
 | Brain setup screen; hidden neurons | Removed; the direct brain (#536) | Screens → BrainFocus |
 | Speed control | None (#787) | TL → No speed-up |
+| Callout above the whole creature; ground always 80% down | Callout docked at the arena top; the camera keeps a shelf for it (#1137) | WV → Training arena, TL → Camera |
 | Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
 | UI size multiplies the canvas | Pixels per unit (#299, #738) | UI size |
 | Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim (#578) | BM → Parameters |

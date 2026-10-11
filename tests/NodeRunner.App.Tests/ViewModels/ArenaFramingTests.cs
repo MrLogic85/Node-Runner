@@ -329,6 +329,241 @@ public sealed class ArenaFramingTests
         (framing.CameraX, framing.CameraY, framing.Zoom).ShouldBe((x, y, zoom));
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(0.3)]
+    [InlineData(0.5)]
+    public void FitShelf_MovesNothingWhenTheShelfAlreadyFits(double shelf)
+    {
+        // 60 tall in a 240-tall view: its top sits 55% down, below any of these shelves.
+        var (ground, zoom) = ArenaFraming.FitShelf(Standing(0, 100, 60), 1, _viewHeight, shelf);
+
+        ground.ShouldBe(ArenaFraming.GroundFromTop);
+        zoom.ShouldBe(ArenaFraming.MaxZoom);
+    }
+
+    [Theory]
+    [InlineData(0.55, 0.85)]
+    [InlineData(0.65, 0.95)]
+    public void FitShelf_LowersTheGroundFirst(double shelf, double expectedGround)
+    {
+        var (ground, zoom) = ArenaFraming.FitShelf(Standing(0, 100, 60), 1, _viewHeight, shelf);
+
+        ground.ShouldBe(expectedGround, tolerance: 1e-9);
+        zoom.ShouldBe(ArenaFraming.MaxZoom);
+    }
+
+    [Fact]
+    public void FitShelf_ZoomsOutOnlyForWhatTheGroundCannotMake()
+    {
+        var (ground, zoom) = ArenaFraming.FitShelf(Standing(0, 100, 120), 1, _viewHeight, 0.5);
+
+        ground.ShouldBe(ArenaFraming.ShelfGroundFromTop);
+        // The creature's 120 units fill the 40% between the shelf's headroom and the lowest ground.
+        zoom.ShouldBe((ArenaFraming.ShelfGroundFromTop - 0.5 - ArenaFraming.Headroom) * _viewHeight / 120, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void FitShelf_KeepsTheCreatureAtTheFloor()
+    {
+        var (ground, zoom) = ArenaFraming.FitShelf(Standing(0, 100, 120), 1, _viewHeight, 0.75);
+
+        ground.ShouldBe(ArenaFraming.ShelfGroundFromTop);
+        (120 * zoom / _viewHeight).ShouldBe(ArenaFraming.CreatureFloor, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Step_OpensTheShelfAtTheZoomOutRate()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming();
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+        framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+
+        framing.Shelf = 0.5;
+        var grounds = new List<double>();
+        for (var frame = 0; frame < 120; frame++)
+        {
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+            grounds.Add(GroundFromTop(framing));
+        }
+
+        // A quarter second in, about 1 - e^-1 of the way at ZoomOutRate 4/s.
+        var lowered = (grounds[14] - ArenaFraming.GroundFromTop) / (ArenaFraming.ShelfGroundFromTop - ArenaFraming.GroundFromTop);
+        lowered.ShouldBeInRange(0.5, 0.75);
+        grounds.ShouldBeInOrder(SortDirection.Ascending);
+        GroundFromTop(framing).ShouldBe(ArenaFraming.ShelfGroundFromTop, tolerance: 0.001);
+        FromTop(framing, creature.Top).ShouldBe(0.5 + ArenaFraming.Headroom, tolerance: 0.001);
+        framing.Zoom.ShouldBeLessThan(1);
+        FromLeft(framing, 0).ShouldBe(ArenaFollow.FocusFromLeft, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Step_LeavesATooTallShelfCoveringTheCreatureAtTheFloor()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming { Shelf = 0.75 };
+
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+
+        GroundFromTop(framing).ShouldBe(ArenaFraming.ShelfGroundFromTop, tolerance: 1e-9);
+        (GroundFromTop(framing) - FromTop(framing, creature.Top)).ShouldBe(ArenaFraming.CreatureFloor, tolerance: 1e-9);
+        FromTop(framing, creature.Top).ShouldBeLessThan(0.75);
+    }
+
+    [Fact]
+    public void Step_HoldsTheShelfBeforeGivingItBack()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming { Shelf = 0.5 };
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+        framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+        var (y, zoom) = (framing.CameraY, framing.Zoom);
+        zoom.ShouldBeLessThan(1);
+
+        framing.Shelf = 0;
+        for (var frame = 0; frame < 84; frame++)
+        {
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        (framing.CameraY, framing.Zoom).ShouldBe((y, zoom));
+
+        // A second after the hold ends, about 1 - e^-0.5 given back at ZoomInRate 0.5/s.
+        for (var frame = 84; frame < 150; frame++)
+        {
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        var givenBack = (ArenaFraming.ShelfGroundFromTop - GroundFromTop(framing)) / (ArenaFraming.ShelfGroundFromTop - ArenaFraming.GroundFromTop);
+        givenBack.ShouldBeInRange(0.3, 0.5);
+        for (var frame = 0; frame < 600; frame++)
+        {
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        framing.Zoom.ShouldBe(1, tolerance: 0.01);
+        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 0.01);
+    }
+
+    [Fact]
+    public void Step_HoldsAShelfThatHasRestedSinceACut()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming { Shelf = 0.5 };
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+        for (var frame = 0; frame < 240; frame++)
+        {
+            framing.StepShelf(creature, _viewWidth, _viewHeight, _frame);
+        }
+
+        var (y, zoom) = (framing.CameraY, framing.Zoom);
+
+        framing.Shelf = 0;
+        for (var frame = 0; frame < 84; frame++)
+        {
+            framing.StepShelf(creature, _viewWidth, _viewHeight, _frame);
+        }
+
+        (framing.CameraY, framing.Zoom).ShouldBe((y, zoom));
+    }
+
+    [Fact]
+    public void Step_DoesNotPumpWhenTappingFromPartToPart()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming();
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+        framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+        var grounds = new List<double>();
+        var zooms = new List<double>();
+
+        foreach (var (shelf, frames) in new[] { (0.5, 18), (0.4, 18), (0.0, 60), (0.55, 30) })
+        {
+            framing.Shelf = shelf;
+            for (var frame = 0; frame < frames; frame++)
+            {
+                framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+                grounds.Add(GroundFromTop(framing));
+                zooms.Add(framing.Zoom);
+            }
+        }
+
+        grounds.ShouldBeInOrder(SortDirection.Ascending);
+        zooms.ShouldBeInOrder(SortDirection.Descending);
+        zooms[^1].ShouldBeLessThan(zooms[0]);
+    }
+
+    [Fact]
+    public void StepShelf_OpensTheShelfButFollowsNothingElse()
+    {
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        framing.StepShelf(Standing(0, 100, 60), _viewWidth, _viewHeight, _frame);
+        var x = framing.CameraX;
+        var moved = Standing(300, 100, 60);
+
+        framing.Shelf = 0.55;
+        for (var frame = 0; frame < 120; frame++)
+        {
+            framing.StepShelf(moved, _viewWidth, _viewHeight, _frame);
+        }
+
+        framing.CameraX.ShouldBe(x);
+        framing.GroundLineY.ShouldBe(_groundY);
+        GroundFromTop(framing).ShouldBe(0.85, tolerance: 0.001);
+    }
+
+    [Fact]
+    public void Shelf_SetBeforeTheFirstStepAfterACutIsPartOfTheCut()
+    {
+        // As on a resize: the camera cuts to the new view, and only then is the callout's share of it known.
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming();
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+
+        framing.Shelf = 0.5;
+
+        GroundFromTop(framing).ShouldBe(ArenaFraming.ShelfGroundFromTop, tolerance: 1e-9);
+        FromTop(framing, creature.Top).ShouldBe(0.5 + ArenaFraming.Headroom, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Shelf_SetAfterAStepEases()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming();
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+        framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+
+        framing.Shelf = 0.5;
+
+        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Shelf_SetAfterAPausedStepEases()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming();
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+        framing.StepShelf(creature, _viewWidth, _viewHeight, _frame);
+
+        framing.Shelf = 0.5;
+
+        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void StepShelf_DoesNothingBeforeTheFirstFrame()
+    {
+        var framing = new ArenaFraming { Shelf = 0.5 };
+
+        framing.StepShelf(Standing(0, 100, 60), _viewWidth, _viewHeight, _frame);
+
+        framing.HasFrame.ShouldBeFalse();
+    }
+
     private static FramedCreature Standing(double centreX, double width, double height, double bottom = _groundY) =>
         new(centreX, centreX - (width / 2), bottom - height, centreX + (width / 2), bottom);
 

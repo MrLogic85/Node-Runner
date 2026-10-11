@@ -271,9 +271,13 @@ above every shadow.
 - **Start sign (#848):** an `ink` arrow signpost reading "Start" at 0 m,
   half a metre tall in the world, so it zooms with the creatures (#882).
 - **Part callout (#388):** each selected part of the followed shadow keeps
-  its selection look, and its name shows in a `halo` callout above the
-  whole creature. A callout taller than the room above is clamped to the
-  arena top and may cover the body (#1137). Several selected parts share
+  its selection look, and its name shows in a `halo` callout. The callout
+  docks at the arena top, `S1` down, centred over the creature's eased
+  centre, where the camera keeps it, and pushed inside the arena and clear
+  of the slow-motion chip (#1137). Unlike Build's callouts (Callouts
+  above), it never moves with its part; only its leader follows the part,
+  and a taller callout grows downward. The camera keeps a shelf clear for
+  it (`docs/TRAINING_LOOP.md` → Camera). Several selected parts share
   one callout (#1066): a row each, in their stack order
   (`docs/BUILD_MODE.md` → Interactions), with its own glyph, name and
   lines, split by a `line` hairline with `S1` above and below.
