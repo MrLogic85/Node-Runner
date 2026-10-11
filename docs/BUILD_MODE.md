@@ -377,9 +377,9 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   and the play-blocked reason asks to connect another link or add a Wheel there, because
   no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
   "Editing identity rules".
-- **Wheel:** Radius (0.4–1.0 m, step 0.1) and Grip (0–100%, step 10),
-  then a read-only Weight ("1.2 kg", `PartSettingsPresentation.Readouts`)
-  that follows Radius. Its note: "Rolls freely on the ground."
+- **Wheel:** Radius (0.4–1.0 m, step 0.1), then a read-only Weight
+  ("1.2 kg", `PartSettingsPresentation.Readouts`) that follows Radius. Its
+  note: "Rolls freely on the ground."
 - **Camera:** Aim, set on the canvas, one Camera at a time; Rays (1, 3 or
   5, three evenly spaced stops, #578), Spread (15°–90°, step 5) and Range
   (1.0–10.0 m, step 0.1, #1097) in the panel. Spread shows disabled while every

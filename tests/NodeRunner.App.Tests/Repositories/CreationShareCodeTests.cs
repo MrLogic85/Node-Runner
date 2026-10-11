@@ -39,13 +39,12 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
-    public void Code_RoundTripsAWheel_WithItsRadiusAndGrip()
+    public void Code_RoundTripsAWheel_WithItsRadius()
     {
         var walker = LoadFixture013("walker.creation.json");
         var builder = new CreatureBuilder(walker.Creature);
         var wheel = builder.AddWheel(walker.Creature.Nodes[0].Id);
         builder.SetParameter(wheel, PartParameterId.WheelRadius, 70);
-        builder.SetParameter(wheel, PartParameterId.Grip, 0.3);
         var rolling = walker.WithCreature(builder.Build(), training: null);
 
         var build = CreationShareCode.Read(CreationShareCode.Create(rolling)).Build.ShouldNotBeNull();
@@ -250,6 +249,55 @@ public sealed class CreationShareCodeTests
         build.Creature.Pistons.ShouldAllBe(piston => piston.Start == 0.5);
     }
 
+    // #1144: a Wheel's grip, left out at the template's 0.8 or written out, goes like a saved file's.
+    [Theory]
+    [InlineData(null)]
+    [InlineData(0.0)]
+    [InlineData(0.8)]
+    [InlineData(1.0)]
+    public void Read_AVersion8CodeWithAWheelsGrip_DropsIt_AndKeepsTheWheel(double? grip)
+    {
+        var sample = SampleLine(8);
+        if (grip is { } value)
+        {
+            sample["creature"]!["wheels"]![0]!["grip"] = value;
+        }
+
+        var read = CreationShareCode.Read(CreationShareCode.Pack(8, Encoding.UTF8.GetBytes(sample.ToJsonString())));
+
+        read.UpdatedFrom.ShouldBe(8);
+        var build = read.Build.ShouldNotBeNull();
+        build.Creature.Wheels.ShouldBe([new WheelDef(15, 3, radius: 60)]);
+    }
+
+    [Theory]
+    [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(8)]
+    public void Read_AnOlderVersionsCode_WithAWheel_StillReads(int version)
+    {
+        var read = CreationShareCode.Read(CreationShareCode.Pack(version, Encoding.UTF8.GetBytes(SampleLine(version).ToJsonString())));
+
+        read.Refusal.ShouldBeNull();
+        read.UpdatedFrom.ShouldBe(version);
+        read.Build.ShouldNotBeNull().Creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(60);
+    }
+
+    [Fact]
+    public void TheCurrentDictionaryHasNoWheelGrip_AndACodeWithOneIsRefusedAsDamaged()
+    {
+        var template = JsonNode.Parse(Encoding.UTF8.GetString(CreationShareCode.Dictionary(FileCreationRepository.Format.CurrentVersion)!).Split('\n')[0])!;
+        template["creature"]!["wheels"]!.AsArray().ShouldAllBe(wheel => !wheel!.AsObject().ContainsKey("grip"));
+
+        var file = WalkerFile();
+        var creature = file["creature"]!;
+        var id = creature["nextPartId"]!.GetValue<int>();
+        creature["nextPartId"] = id + 1;
+        creature["wheels"] = new JsonArray(new JsonObject { ["id"] = id, ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(), ["name"] = null, ["radius"] = WheelDef.MinRadius, ["grip"] = 0.8 });
+
+        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
+    }
+
     [Fact]
     public void Read_ACodeFromANewerVersion_IsRefusedAsNewer_ThoughThisAppHasNoDictionaryForIt()
     {
@@ -418,7 +466,7 @@ public sealed class CreationShareCodeTests
         var creature = file["creature"]!;
         var id = creature["nextPartId"]!.GetValue<int>();
         creature["nextPartId"] = id + 1;
-        var wheel = new JsonObject { ["id"] = id, ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(), ["name"] = null, ["radius"] = WheelDef.MaxRadius, ["grip"] = 0.8 };
+        var wheel = new JsonObject { ["id"] = id, ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(), ["name"] = null, ["radius"] = WheelDef.MaxRadius };
         creature["wheels"] = new JsonArray(wheel);
         CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBeNull();
 
@@ -508,6 +556,10 @@ public sealed class CreationShareCodeTests
         var json = WalkerFile().ToJsonString();
         return json + new string(' ', bytes - Encoding.UTF8.GetByteCount(json));
     }
+
+    // The varied creation in version's share dictionary, as a code in that version holds it.
+    private static JsonObject SampleLine(int version) =>
+        JsonNode.Parse(Encoding.UTF8.GetString(CreationShareCode.Dictionary(version)!).Split('\n')[1])!.AsObject();
 
     private static string Pack(string json) => Pack(Encoding.UTF8.GetBytes(json));
 

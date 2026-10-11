@@ -182,7 +182,7 @@ public sealed class BuildWheelTests
     {
         var build = TwoBeams();
         var wheel = build.PlacePart(BuildPart.Wheel, _middleJoint)!.Value;
-        build.SetParameter(PartParameterId.Grip, 0.3);
+        build.SetParameter(PartParameterId.WheelRadius, 70);
 
         build.DeleteSelectedParts();
 
@@ -190,7 +190,7 @@ public sealed class BuildWheelTests
         build.Nodes.Select(node => node.Id).ShouldBe([1, 2, 3]);
         build.NodeRadius(2).ShouldBe(NodeDef.PlainJointRadius);
         build.Undo();
-        build.Wheels.ShouldBe([new WheelDef(wheel, 2, grip: 0.3)]);
+        build.Wheels.ShouldBe([new WheelDef(wheel, 2, radius: 70)]);
         build.Selection.Wheels.ShouldBe([wheel]);
         build.Redo();
         build.Wheels.ShouldBeEmpty();
@@ -228,7 +228,6 @@ public sealed class BuildWheelTests
         var build = TwoBeams();
         var wheel = build.PlacePart(BuildPart.Wheel, _middleJoint)!.Value;
         build.SetParameter(PartParameterId.WheelRadius, 70);
-        build.SetParameter(PartParameterId.Grip, 0.3);
         build.RenamePart(wheel, "Front", shownDefault: null);
         build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1 }, Beams = new HashSet<int> { 4 }, Wheels = new HashSet<int> { wheel } });
         build.CanCopySelection.ShouldBeTrue();
@@ -239,7 +238,6 @@ public sealed class BuildWheelTests
         build.Nodes.Count.ShouldBe(nodesBefore + 2);
         var copy = build.Wheels.Single(entry => entry.Id != wheel);
         copy.Radius.ShouldBe(70);
-        copy.Grip.ShouldBe(0.3);
         copy.Name.ShouldBeNull();
         copy.NodeId.ShouldNotBe(2);
         build.Selection.Wheels.ShouldBe([copy.Id]);
@@ -295,8 +293,7 @@ public sealed class BuildWheelTests
         var wheel = build.PlacePart(BuildPart.Wheel, _firstJoint).ShouldNotBeNull();
         build.CanEdit(PartParameterId.WheelRadius).ShouldBeTrue();
         build.SetParameter(PartParameterId.WheelRadius, 100);
-        build.SetParameter(PartParameterId.Grip, 0);
-        build.Wheels.Single().ShouldBe(new WheelDef(wheel, 1, radius: 100, grip: 0));
+        build.Wheels.Single().ShouldBe(new WheelDef(wheel, 1, radius: 100));
         build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 3 }, Beams = new HashSet<int> { 5 }, Wheels = new HashSet<int> { wheel } });
         build.CopyBlockers().ShouldContain(note => note.Target.Kind == CreatureElementKind.Beam);
         build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 2 }, Wheels = new HashSet<int> { wheel } });
@@ -312,7 +309,7 @@ public sealed class BuildWheelTests
     }
 
     [Fact]
-    public void SelectedWheel_ShowsItsRadiusGripAndWeight_AndItsNote()
+    public void SelectedWheel_ShowsItsRadiusAndWeight_AndItsNote()
     {
         var (build, _, wheel) = WheelOnTheMiddleJoint();
         build.SelectOnly(CreatureElementKind.Wheel, wheel);
@@ -329,7 +326,6 @@ public sealed class BuildWheelTests
         part.Settings.Select(slider => (slider.Id, slider.Label, slider.Readout)).ShouldBe(
         [
             (PartParameterId.WheelRadius, UiText.Plain("Radius"), UiText.Format("{0} m", new FixedNumber(0.4, 1))),
-            (PartParameterId.Grip, UiText.Plain("Grip"), UiText.Format("{0}%", new FixedNumber(80, 0))),
         ]);
         part.Readouts.ShouldBe([new PartReadout(UiText.Plain("Weight"), UiText.Format("{0} kg", new FixedNumber(1.2, 1)))]);
     }

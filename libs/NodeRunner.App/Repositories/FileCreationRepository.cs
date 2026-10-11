@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -280,6 +280,26 @@ public sealed class FileCreationRepository : ICreationRepository
             {
                 connection["weight"] = 2 * NumberOf(connection["weight"], "connection weight");
             }
+        }
+    }
+
+    // Before #1144 a Wheel had a Grip, its tyre's friction. Every tyre now grips like a bare joint.
+    private static void DropWheelGrip(JsonObject file)
+    {
+        // A file without a creature or wheels fails the strict load, which names the missing field.
+        if (file["creature"] is not JsonObject creature || creature["wheels"] is not JsonArray wheels)
+        {
+            return;
+        }
+
+        foreach (var node in wheels)
+        {
+            if (node is not JsonObject wheel)
+            {
+                throw new InvalidDataException("creation.json has a wheel that is not an object.");
+            }
+
+            wheel.Remove("grip");
         }
     }
 

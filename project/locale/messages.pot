@@ -398,10 +398,6 @@ msgstr ""
 msgid "Generator"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "Grip"
-msgstr ""
-
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Handles"
 msgstr ""
@@ -440,10 +436,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How quickly it stops bouncing"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "How well the tyre holds the ground. Low grip slides"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

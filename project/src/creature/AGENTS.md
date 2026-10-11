@@ -57,7 +57,7 @@ file owns how Godot realises it.
     `CanvasGroup` lets the parts' own draw layers escape. The look is in
     `docs/WORLD_VISUALS.md` → Drawing as a shadow.
 11. **A Wheel is its joint's body, nothing new.** Unlock that body's
-    rotation and give it the Wheel's weight, inertia and material; add no
+    rotation and give it the Wheel's weight and inertia; add no
     body or joint of its own (`Creature.Wheels.cs` says how).
 12. **A Touch sensor is a `ShapeCast2D` on its joint's body.** It casts the
     joint's cushion in place, masked like the body, to find the nearest

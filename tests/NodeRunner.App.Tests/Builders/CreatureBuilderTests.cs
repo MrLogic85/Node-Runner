@@ -630,19 +630,16 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void ParametersOf_AWheel_AreItsRadiusAndGrip_InWorldUnitsAndAShare()
+    public void ParametersOf_AWheel_IsItsRadius_InWorldUnits()
     {
         var builder = PairBuilder();
         var wheel = builder.AddWheel(builder.Nodes[0].Id);
 
-        builder.ParametersOf(wheel).ShouldBe([PartParameterId.WheelRadius, PartParameterId.Grip]);
+        builder.ParametersOf(wheel).ShouldBe([PartParameterId.WheelRadius]);
         builder.SetParameter(wheel, PartParameterId.WheelRadius, 100);
-        builder.SetParameter(wheel, PartParameterId.Grip, 0.3);
 
         builder.Wheels.Single().Radius.ShouldBe(100);
-        builder.Wheels.Single().Grip.ShouldBe(0.3);
         builder.ParameterValue(wheel, PartParameterId.WheelRadius).ShouldBe(100);
-        builder.ParameterValue(wheel, PartParameterId.Grip).ShouldBe(0.3);
         builder.NodeRadius(builder.Nodes[0].Id).ShouldBe(100);
         Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(wheel, PartParameterId.Stroke, 0.5));
     }
@@ -669,11 +666,11 @@ public sealed class CreatureBuilderTests
     {
         var builder = PairBuilder();
         var wheel = builder.AddWheel(builder.Nodes[0].Id);
-        builder.SetParameter(wheel, PartParameterId.Grip, 0.5);
+        builder.SetParameter(wheel, PartParameterId.WheelRadius, 50);
 
         builder.Rename(wheel, "Front");
 
-        builder.Wheels.Single().ShouldBe(new WheelDef(wheel, builder.Nodes[0].Id, "Front", grip: 0.5));
+        builder.Wheels.Single().ShouldBe(new WheelDef(wheel, builder.Nodes[0].Id, "Front", radius: 50));
     }
 
     [Fact]

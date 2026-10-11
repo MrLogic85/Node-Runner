@@ -233,9 +233,8 @@ fold.
   loose one, which is drawn `danger` and blocks training by the degree
   rules (see Node). The links keep their own rules: a Wheel changes no link
   and moves no node, and Wheels may overlap when built.
-- **Settings:** **Radius** 0.4–1 m (the joint's radius, see Node) and
-  **Grip** 0–100%, how well its tyre holds the ground: its friction, which
-  the ground can only lower.
+- **Settings:** **Radius** 0.4–1 m (the joint's radius, see Node).
+- **Grip:** its tyre grips like a bare joint, friction 1 (#1144).
 - **Spin:** a free wheel coasts for a long time but does not spin
   forever.
 - **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
