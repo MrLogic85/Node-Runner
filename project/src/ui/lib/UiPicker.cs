@@ -19,6 +19,7 @@ public readonly record struct UiPickerOption(
 public partial class UiPicker : PanelContainer
 {
     private const float _viewportMargin = 16;
+    private const float _listGap = UiSize.Space.S1;
 
     public enum PickerState
     {
@@ -39,6 +40,9 @@ public partial class UiPicker : PanelContainer
     private string _belowText = string.Empty;
     private string _missingText = string.Empty;
     private int _selectedIndex;
+    private UiMenu? _openList;
+    private Control? _openRow;
+    private Control? _listRoom;
     private UiPickerOption[] _options =
     [
         new("Left thigh", UiIconId.Beam),
@@ -237,14 +241,19 @@ public partial class UiPicker : PanelContainer
         var closedRow = CreateClosedRow();
         stack.AddChild(closedRow);
 
+        _openList = null;
+        _openRow = null;
         if (IsExpanded)
         {
             var menu = CreateOptionsMenu();
             var overlay = new UiLevelLayer();
             AddChild(overlay);
             overlay.AddChild(menu);
-            menu.Follow(closedRow, new Vector2(0, 1), new Vector2(0, UiSize.Space.S1));
+            // Always below its row, never over its own heading (#1139); the panel scrolls instead.
+            menu.Follow(closedRow, new Vector2(0, 1), new Vector2(0, _listGap), opensUpward: false);
             menu.CallDeferred(CanvasItem.MethodName.Show);
+            _openList = menu;
+            _openRow = closedRow;
         }
 
         if (!string.IsNullOrWhiteSpace(BelowText))
@@ -258,7 +267,43 @@ public partial class UiPicker : PanelContainer
             stack.AddChild(below);
         }
 
+        _listRoom = new Control { Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+        stack.AddChild(_listRoom);
+        SetProcess(_openList is not null && !Engine.IsEditorHint());
     }
+
+    public override void _Process(double delta) => ReserveRoomForList();
+
+    // The list always opens downward (#1139), so the panel must scroll far enough to bring its last
+    // option on screen: while it is open, the picker grows by however far the list runs past the
+    // end of the panel's content. Content-local, so scrolling does not change it.
+    private void ReserveRoomForList()
+    {
+        if (_openList is not { } list || !IsInstanceValid(list) || _openRow is not { } row
+            || _listRoom is not { } room
+            || UiMenu.ScrollContainerOf(this) is not { } scroll
+            || scroll.GetChildren().OfType<Control>().FirstOrDefault() is not { } content)
+        {
+            return;
+        }
+
+        var reserved = room.Visible ? room.CustomMinimumSize.Y + UiSize.Space.S1 : 0;
+        var toContent = content.GetGlobalTransformWithCanvas().AffineInverse();
+        // From the row, not the list: the list follows the row in its own _Process, after this one.
+        var rowBottom = (toContent * row.GetGlobalTransformWithCanvas() * new Vector2(0, row.Size.Y)).Y;
+        var listBottom = rowBottom + _listGap + list.Size.Y;
+        var needed = RoomForList(listBottom, content.GetCombinedMinimumSize().Y, reserved);
+        room.Visible = needed > 0;
+        room.CustomMinimumSize = new Vector2(0, needed);
+    }
+
+    /// <summary>
+    /// How much room the picker keeps under itself so an open list ending at
+    /// <paramref name="listBottom"/> fits in content <paramref name="contentHeight"/> tall, of which
+    /// <paramref name="reserved"/> is room it already keeps: none when the list ends inside the content.
+    /// </summary>
+    public static float RoomForList(float listBottom, float contentHeight, float reserved) =>
+        Mathf.Max(0, Mathf.Ceil(listBottom - (contentHeight - reserved)));
 
     private Button CreateClosedRow()
     {

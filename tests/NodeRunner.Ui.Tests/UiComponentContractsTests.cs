@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Godot;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
@@ -181,6 +182,44 @@ public sealed partial class UiComponentContractsTests
             .ShouldBe(220);
         UiMenu.ResolveWidth(UiMenu.MenuWidthMode.WrapContent, 220, UiLayout.MenuWidth)
             .ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(300, 400, 0, 0)]
+    [InlineData(450, 400, 0, 50)]
+    [InlineData(450, 458, 58, 50)]
+    [InlineData(380, 458, 58, 0)]
+    public void PickerListRoom_IsHowFarTheOpenListRunsPastTheContentWithoutIt(float listBottom, float contentHeight, float reserved, float room) =>
+        UiPicker.RoomForList(listBottom, contentHeight, reserved).ShouldBe(room);
+
+    [Theory]
+    [InlineData(500, false, 500)] // A picker stays below, even past the screen.
+    [InlineData(500, true, 150)]  // Another menu flips up when it fits above.
+    [InlineData(300, true, 300)]  // It stays below when it fits there.
+    public void FollowingMenu_FlipsUpOnlyWhenItMay(float below, bool opensUpward, float top) =>
+        UiMenu.FollowTop(below, anchorTop: 454, offset: 4, height: 300, screenBottom: 720, opensUpward).ShouldBe(top);
+
+    [Fact]
+    public void FollowingMenu_StaysBelowWhenItFitsNeitherWay() =>
+        UiMenu.FollowTop(500, anchorTop: 100, offset: 4, height: 300, screenBottom: 720, opensUpward: true).ShouldBe(500);
+
+    [Theory]
+    [InlineData(8, false)]
+    [InlineData(8.5f, true)]
+    public void MenuPress_IsAScrollOnlyPastTheTapSlop(float moved, bool scrolls) =>
+        UiMenu.IsScrollDrag(Vector2.Zero, new Vector2(0, moved)).ShouldBe(scrolls);
+
+    [Fact]
+    public void MenuDragScroll_CarriesTheFractionInBothDirections()
+    {
+        var (step, remainder) = UiMenu.ScrollStep(0, 0.6f);
+        step.ShouldBe(0);
+        (step, remainder) = UiMenu.ScrollStep(remainder, 0.6f);
+        step.ShouldBe(1);
+        remainder.ShouldBe(0.2f, 0.0001f);
+        (step, remainder) = UiMenu.ScrollStep(0, -2.5f);
+        step.ShouldBe(-2);
+        remainder.ShouldBe(-0.5f, 0.0001f);
     }
 
     [Fact]
