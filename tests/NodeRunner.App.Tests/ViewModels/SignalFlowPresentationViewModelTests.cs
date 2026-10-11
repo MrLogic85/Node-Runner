@@ -13,7 +13,7 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.Update(readings: 4, motors: 2, distance: 4225);
 
-        viewModel.SensesNote.ShouldBe(Readings(4));
+        viewModel.InputsNote.ShouldBe(Readings(4));
         viewModel.OutputsNote.ShouldBe(Motors(2));
         viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(42.3, 1)));
         changed.ShouldBe([null], "The counts changed, so every note is new.");
@@ -26,7 +26,7 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.Update(1, 1, 0);
 
-        viewModel.SensesNote.ShouldBe(Readings(1));
+        viewModel.InputsNote.ShouldBe(Readings(1));
         viewModel.OutputsNote.ShouldBe(Motors(1));
         viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(0, 1)));
     }
@@ -47,7 +47,7 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.Update(0, 0, double.NaN);
 
-        viewModel.SensesNote.ShouldBeNull();
+        viewModel.InputsNote.ShouldBeNull();
         viewModel.OutputsNote.ShouldBeNull();
         viewModel.DistanceNote.ShouldBeNull();
     }

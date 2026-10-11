@@ -83,14 +83,14 @@ sensor off are #960.
   the range edge: something just inside range reads about 0, the same as
   nothing, so the input never jumps, and half the bar means half the
   range.
-- **How we show it:** BrainFocus lists every sense by its part with its
+- **How we show it:** BrainFocus lists every input by its part with its
   live value.
 
 ## Live activation visualization
 
 - **What:** Which neuron fires at which moment, and how strongly.
 - **Where:** BrainFocus for the direct brain (#536), and the selected
-  parts' live sense and output values in Training's part callout (#1064,
+  parts' live input and output values in Training's part callout (#1064,
   `docs/WORLD_VISUALS.md` → "Part callout" and "Port bars"); brain views
   with hidden layers are #196, #197 and #548.
 - **How we show it:** Nodes glow. Edges pulse. You literally see the thought

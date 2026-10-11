@@ -658,7 +658,7 @@ TextColor = 7
 [node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/NeonCard/Stack/Swatches/Output/Text"]
 layout_mode = 2
 autowrap_mode = 3
-text = "Outputs: motors and the neurons that drive them, when a part is inspected. Senses use accent. Never alone: always with a tag or a position."
+text = "Outputs: motors and the neurons that drive them, when a part is inspected. Inputs use accent. Never alone: always with a tag or a position."
 script = ExtResource("shell_4_label")
 TextStyle = 9
 TextColor = 8
@@ -1144,7 +1144,7 @@ TextColor = 7
 [node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Colours/PaperCard/Stack/Swatches/Output/Text"]
 layout_mode = 2
 autowrap_mode = 3
-text = "Outputs: motors and the neurons that drive them, when a part is inspected. Senses use accent. Never alone: always with a tag or a position."
+text = "Outputs: motors and the neurons that drive them, when a part is inspected. Inputs use accent. Never alone: always with a tag or a position."
 script = ExtResource("shell_4_label")
 TextStyle = 9
 TextColor = 8
@@ -2968,7 +2968,7 @@ TextColor = 8
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-text = "Senses"
+text = "Inputs"
 script = ExtResource("shell_4_label")
 TextStyle = 3
 TextColor = 7

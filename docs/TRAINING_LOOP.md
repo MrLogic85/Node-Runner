@@ -284,7 +284,7 @@ the reference's "a training session has finished" (#369).
     lock (#370).
 - The top bar shows the creation's name, the status ("Training · Flat
   ground") and Brain and Stats buttons; unlock progress is not shown (#488).
-  Beside the arena a side panel titled "Status" shows the Senses → Brain →
+  Beside the arena a side panel titled "Status" shows the Inputs → Brain →
   Outputs → Distance stages (`SignalFlowPresentationViewModel`, #813);
   Outputs counts driven motors. The stages count readings and moving parts
   (#196). Collapsing the panel widens the arena, and the camera refits.
@@ -304,10 +304,10 @@ the reference's "a training session has finished" (#369).
     it. Pause restarts the measuring and leaves the chip as it is.
   - **Brain** (the button or the Brain stage) opens BrainFocus; Android
     Back closes it before leaving the scene. It shows the direct brain
-    (#536): senses named by port ("Accel: along"), outputs named by joint,
+    (#536): inputs named by port ("Accel: along"), outputs named by joint,
     the enabled connections and live activations, refreshed every ~0.15 s
     rather than every frame (#42). Nothing is selected at first; tapping an
-    output names the two senses that drive it most, tapping a sense names
+    output names the two inputs that drive it most, tapping an input names
     the outputs it drives most, and the other connections fade; tapping
     empty space clears the selection.
   - **Stats** shows a placeholder (#198).

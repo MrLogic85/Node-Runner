@@ -11,7 +11,7 @@ public partial class UiStageCard : UiCard
     public delegate void StageSelectedEventHandler();
 
     private string _numberText = "1";
-    private string _title = "Senses";
+    private string _title = "Inputs";
     private string _note = string.Empty;
     private Func<string>? _noteSource;
     private bool _selected;

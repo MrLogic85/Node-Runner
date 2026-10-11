@@ -9,7 +9,7 @@ namespace NodeRunner.Ui.Tests;
 public sealed class TrainingScreenCalloutSectionTests
 {
     [Fact]
-    public void CalloutSection_ShowsSensesInAccentThenOutputsInOutput()
+    public void CalloutSection_ShowsInputsInAccentThenOutputsInOutput()
     {
         var servo = new PartCalloutPresentation(
             PartSettingsKind.Servo,
@@ -36,7 +36,7 @@ public sealed class TrainingScreenCalloutSectionTests
     }
 
     [Fact]
-    public void CalloutSection_ForAPartWithOnlySenses_HasNoOutputLine()
+    public void CalloutSection_ForAPartWithOnlyInputs_HasNoOutputLine()
     {
         var camera = new PartCalloutPresentation(
             PartSettingsKind.Camera,

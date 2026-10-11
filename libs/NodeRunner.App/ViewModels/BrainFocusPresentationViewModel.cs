@@ -2,9 +2,9 @@ using System.ComponentModel;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// BrainFocus on the direct brain (#536): a Senses column and an Outputs column, the enabled
+/// BrainFocus on the direct brain (#536): an Inputs column and an Outputs column, the enabled
 /// connections between them and live activations. Nothing is selected at first; tapping an
-/// output names the senses that drive it most, and tapping a sense names the outputs it drives
+/// output names the inputs that drive it most, and tapping an input names the outputs it drives
 /// most. Its look is in docs/UI_DIRECTION.md → "BrainFocus"; hidden layers are #549.
 /// </summary>
 public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
@@ -14,7 +14,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
     private static readonly UiText _waitingSummary = UiText.Plain("Waiting for a live brain");
     private static readonly UiText _waitingSelection = UiText.Plain("Start training to see the live brain.");
-    private static readonly UiText _noSelection = UiText.Plain("Tap a sense or an output to see what drives what.");
+    private static readonly UiText _noSelection = UiText.Plain("Tap an input or an output to see what drives what.");
     private static readonly UiText _nothingToDrive = UiText.Plain("Warning, no powered parts added! There is nothing to train");
 
     private BrainPortLabels _labels = BrainPortLabels.Empty;
@@ -86,13 +86,13 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
         _connections = [.. connections];
         HasNetwork = true;
-        var senses = UiText.Counted("{0} sense", "{0} senses", inputCount);
+        var inputs = UiText.Counted("{0} input", "{0} inputs", inputCount);
         var outputs = UiText.Counted("{0} output", "{0} outputs", outputCount);
 
         // With nothing to drive there are no lines to read, so the legend is left out (#845).
         Summary = outputCount == 0
-            ? UiText.Format("{0} → {1}.", senses, outputs)
-            : UiText.Format("{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.", senses, outputs);
+            ? UiText.Format("{0} → {1}.", inputs, outputs)
+            : UiText.Format("{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.", inputs, outputs);
         Present();
     }
 
@@ -145,7 +145,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
 
         Layers =
         [
-            Column(UiText.Plain("Senses"), InputLayer, _labels.Inputs, named),
+            Column(UiText.Plain("Inputs"), InputLayer, _labels.Inputs, named),
             Column(UiText.Plain("Outputs"), OutputLayer, _labels.Outputs, named),
         ];
         Edges = _connections
@@ -183,7 +183,7 @@ public sealed class BrainFocusPresentationViewModel : INotifyPropertyChanged
         var name = _labels.Outputs[output];
         return drivers switch
         {
-            [] => UiText.Format("{0} is not driven by any sense yet.", name),
+            [] => UiText.Format("{0} is not driven by any input yet.", name),
             [var only] => UiText.Format("{0} is driven most by {1}.", name, _labels.Inputs[only]),
             [var first, var second, ..] => UiText.Format("{0} is driven most by {1} and {2}.", name, _labels.Inputs[first], _labels.Inputs[second]),
         };

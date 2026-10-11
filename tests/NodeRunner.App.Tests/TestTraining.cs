@@ -7,7 +7,7 @@ internal static class TestTraining
 {
     public static TrainingRunDef Run { get; } = new(1, 1, 0, MapIds.Flat);
 
-    /// <summary>A direct brain with one sense, one output and one connection.</summary>
+    /// <summary>A direct brain with one input, one output and one connection.</summary>
     public static BrainDef Brain { get; } = new(
         [
             new NeuronDef(1, NeuronKind.Input, 3, "along", 0, 0, NeuronActivation.Identity),

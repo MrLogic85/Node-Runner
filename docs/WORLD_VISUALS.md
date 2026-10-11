@@ -292,7 +292,7 @@ above every shadow.
   (`docs/BUILD_MODE.md` → Interactions), with its own glyph, name and
   lines, split by a `line` hairline with `S1` above and below.
 - **Port bars (#1064):** a part with brain ports adds its glyph before the
-  name and, under the name, a line of its senses in `accent`, then a line
+  name and, under the name, a line of its inputs in `accent`, then a line
   of its outputs in `output`. Each port is a muted `Caption` label and a
   bar, `Meter` sized (26 × 4, `line` track, round ends); at most three per
   row, more wrap, with labels and bars in their own columns so wrapped bars

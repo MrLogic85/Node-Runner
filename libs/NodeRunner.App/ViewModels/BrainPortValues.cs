@@ -9,7 +9,7 @@ namespace NodeRunner.App.ViewModels;
 public readonly record struct BrainPortValue(BrainPort Port, double? Value);
 
 /// <summary>
-/// One sample of the live brain's ports (#1064): what each sense read and each output set in one
+/// One sample of the live brain's ports (#1064): what each input read and each output set in one
 /// refresh, with the connection weights of that moment. The host samples once per refresh and
 /// every view of the brain (BrainFocus, the part callout) reads the same sample, so they always
 /// agree and none of them runs the brain again. Values are keyed by <see cref="BrainPort"/>, never
@@ -46,7 +46,7 @@ public sealed class BrainPortValues
     /// <summary>The ports sampled, in runtime order.</summary>
     public BrainPortLayout Layout { get; }
 
-    /// <summary>What each sense read, in <see cref="BrainPortLayout.Inputs"/> order; null with no live brain.</summary>
+    /// <summary>What each input read, in <see cref="BrainPortLayout.Inputs"/> order; null with no live brain.</summary>
     public ReadOnlyCollection<double>? Inputs { get; }
 
     /// <summary>What each output set, in <see cref="BrainPortLayout.Outputs"/> order; null with no live brain.</summary>
@@ -88,7 +88,7 @@ public sealed class BrainPortValues
     /// <summary>The value <paramref name="port"/> had, or null when it was not sampled live.</summary>
     public double? ValueOf(BrainPort port) => _byPort.TryGetValue(port, out var value) ? value : null;
 
-    /// <summary>One part's ports with their values: its senses, then its outputs, each in port order.</summary>
+    /// <summary>One part's ports with their values: its inputs, then its outputs, each in port order.</summary>
     public IReadOnlyList<BrainPortValue> Of(int partId) =>
         Layout.Inputs
             .Concat(Layout.Outputs)

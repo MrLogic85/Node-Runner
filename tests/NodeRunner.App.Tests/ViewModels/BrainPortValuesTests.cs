@@ -57,7 +57,7 @@ public sealed class BrainPortValuesTests
     }
 
     [Fact]
-    public void Of_GroupsAPartsPortsByItsId_SensesThenOutputs_InPortOrder()
+    public void Of_GroupsAPartsPortsByItsId_InputsThenOutputs_InPortOrder()
     {
         var values = BrainPortValues.Sample(PortedCreature.Layout, PortedCreature.Brain(), PortedCreature.Readings());
 

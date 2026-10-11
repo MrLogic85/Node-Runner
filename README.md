@@ -4,8 +4,8 @@
 
 **Node Runner** is a learn-by-playing Android app about neural networks. You
 draw a 2D creature from joints, beams, pistons and sensors, and the app
-gives it a small neural network: its senses are the inputs and its pistons
-the outputs. Then you watch a population of shadows race, generation by
+gives it a small neural network: its sensor readings are the inputs and its
+pistons the outputs. Then you watch a population of shadows race, generation by
 generation, until the brain figures out how to move.
 
 The goal isn't to build a state-of-the-art ML model. It's to make the *shape*
@@ -25,7 +25,7 @@ something you can watch, poke and understand.
 - **Train** it: shadows race on flat ground, each finished generation is
   saved, and the best one leads the next.
 - **Simulate** the trained brain without learning anything.
-- **Look inside the brain** with BrainFocus: which sense pushes which output,
+- **Look inside the brain** with BrainFocus: which input pushes which output,
   and how strongly.
 - **Change the body after training.** The brain keeps what it learned for the
   parts you keep; new parts start almost unused.
