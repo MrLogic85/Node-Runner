@@ -4,7 +4,7 @@ namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// The travel and rest length of a <see cref="SpringDef"/> (#835). Like a Piston's they are measured
-/// on the gap between its joints' edges, where the movement happens. It has a hard stop at each end
+/// on the gap between its hubs (#1086), where the movement happens. It has a hard stop at each end
 /// of a travel, and its <see cref="SpringDef.CoilLength"/> moves its rest length evenly from half its
 /// drawn gap short of its shortest stop to half its drawn gap past its longest. While the rest length
 /// is inside the travel it is the drawn length, and the stops sit round it as a Piston's of the same

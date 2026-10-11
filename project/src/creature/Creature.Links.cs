@@ -51,7 +51,7 @@ public partial class Creature
         }
 
         var link = definition.Link(fixedLinkId);
-        return ServoGeometry.HousingReach(definition.Nodes, definition.NodeRadius, link, SensorLength(definition, link));
+        return ServoGeometry.HousingReach(definition.Nodes, definition.CoveredRadius, link, SensorLength(definition, link));
     }
 
     private static float SensorLength(CreatureDef definition, LinkRef link) =>
@@ -69,7 +69,7 @@ public partial class Creature
             var piston = definition.Pistons[i];
             var indexA = definition.NodeIndexOf(piston.NodeA);
             var indexB = definition.NodeIndexOf(piston.NodeB);
-            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB], definition.NodeRadius(piston.NodeA) + definition.NodeRadius(piston.NodeB));
+            _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
             var built = (float)_pistons[i].BuiltLength;
             _pistonCylinders[i] = CreateEndStops(
                 $"Piston{i}",
@@ -85,6 +85,8 @@ public partial class Creature
                 Link = _pistons[i],
                 RadiusA = ToGodotFloat(definition.NodeRadius(piston.NodeA), nameof(ServoDef.JointRadius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(piston.NodeB), nameof(ServoDef.JointRadius)),
+                CoveredA = ToGodotFloat(definition.CoveredRadius(piston.NodeA), nameof(ServoDef.JointRadius)),
+                CoveredB = ToGodotFloat(definition.CoveredRadius(piston.NodeB), nameof(ServoDef.JointRadius)),
                 Travel = (float)(_pistons[i].LongestLength - _pistons[i].ShortestLength),
             };
             AddChild(visual);
@@ -165,7 +167,6 @@ public partial class Creature
             var indexB = definition.NodeIndexOf(spring.NodeB);
             var (nodeA, nodeB) = (_nodeBodies[indexA], _nodeBodies[indexB]);
             var built = Math.Max(nodeA.Position.DistanceTo(nodeB.Position), 1f);
-            var jointRadii = definition.NodeRadius(spring.NodeA) + definition.NodeRadius(spring.NodeB);
 
             // The joint hangs its second anchor Length along its own +Y, so it is turned a quarter back from the axis.
             var joint = new DampedSpringJoint2D
@@ -174,15 +175,15 @@ public partial class Creature
                 Position = nodeA.Position,
                 Rotation = (nodeB.Position - nodeA.Position).Angle() - (Mathf.Pi / 2),
                 Length = built,
-                RestLength = (float)Mechanics.Spring.RestLength(spring, built, jointRadii),
+                RestLength = (float)Mechanics.Spring.RestLength(spring, built, Mechanics.Travel.HubRadii),
                 Stiffness = (float)spring.Stiffness,
                 Damping = (float)(spring.Damping / dampingPasses),
             };
             AddChild(joint);
             joint.NodeA = joint.GetPathTo(nodeA);
             joint.NodeB = joint.GetPathTo(nodeB);
-            var shortest = Mechanics.Spring.ShortestLength(spring, built, jointRadii);
-            var longest = Mechanics.Spring.LongestLength(spring, built, jointRadii);
+            var shortest = Mechanics.Spring.ShortestLength(spring, built, Mechanics.Travel.HubRadii);
+            var longest = Mechanics.Spring.LongestLength(spring, built, Mechanics.Travel.HubRadii);
             _springCylinders[i] = CreateEndStops($"Spring{i}", nodeA, nodeB, built, (float)shortest, (float)longest);
             _springs[i] = new SpringLink(joint, nodeA, nodeB, joint.RestLength, shortest, longest);
 
@@ -194,6 +195,8 @@ public partial class Creature
                 NodeB = nodeB,
                 RadiusA = ToGodotFloat(definition.NodeRadius(spring.NodeA), nameof(ServoDef.JointRadius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(spring.NodeB), nameof(ServoDef.JointRadius)),
+                CoveredA = ToGodotFloat(definition.CoveredRadius(spring.NodeA), nameof(ServoDef.JointRadius)),
+                CoveredB = ToGodotFloat(definition.CoveredRadius(spring.NodeB), nameof(ServoDef.JointRadius)),
                 Travel = (float)(longest - shortest),
                 Rest = joint.RestLength,
                 Stiffness = spring.Stiffness,

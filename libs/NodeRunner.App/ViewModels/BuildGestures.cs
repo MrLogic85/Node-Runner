@@ -686,13 +686,13 @@ public sealed class BuildGestures
         }
 
         var (nodeA, nodeB) = CameraBeam(start.Sensor);
-        var middle = Midpoint(nodeA, nodeB);
-        if (position == middle)
+        var centre = _build.SensorCentre(start.Sensor);
+        if (position == centre)
         {
             return;
         }
 
-        _build.SetParameter(PartParameterId.Aim, CameraRays.AimAlong(Math.Atan2(position.Y - middle.Y, position.X - middle.X), nodeA, nodeB));
+        _build.SetParameter(PartParameterId.Aim, CameraRays.AimAlong(Math.Atan2(position.Y - centre.Y, position.X - centre.X), nodeA, nodeB));
     }
 
     private (Vector2D NodeA, Vector2D NodeB) CameraBeam(int sensorId)
@@ -817,10 +817,10 @@ public sealed class BuildGestures
     {
         var (nodeA, nodeB) = CameraBeam(camera);
         var aim = CameraRays.BeamAngle(nodeA, nodeB) + (_build.Sensors.Single(sensor => sensor.Id == camera).Aim ?? 0);
-        var middle = View.ToView(Midpoint(nodeA, nodeB));
+        var centre = View.ToView(_build.SensorCentre(camera));
         var direction = new Vector2D(Math.Cos(aim), Math.Sin(aim));
         var reach = _aimReachScale * ((SensorPicture.CameraSize / Math.Sqrt(2) * View.Zoom) + _aimGap + HandleHitRadius);
-        return new Vector2D(middle.X + (direction.X * reach), middle.Y + (direction.Y * reach));
+        return new Vector2D(centre.X + (direction.X * reach), centre.Y + (direction.Y * reach));
     }
 
     private SelectionHandle? FindHandle(Vector2D viewPosition) =>
@@ -844,8 +844,7 @@ public sealed class BuildGestures
 
     /// <summary>
     /// The parts whose centres lie in the box from <paramref name="start"/> to <paramref name="end"/>
-    /// (#704): a joint's centre, a beam's or link's midpoint, and a sensor's, which is its beam's
-    /// midpoint. A joint with parts comes in as all of them, never as the joint (#973, #1044). Null while the box is too small to count.
+    /// (#704): a joint's centre and a beam's or link's midpoint; a sensor comes with its beam. A joint with parts comes in as all of them, never as the joint (#973, #1044). Null while the box is too small to count.
     /// </summary>
     private PartSet? PartsInBox(Vector2D start, Vector2D end)
     {

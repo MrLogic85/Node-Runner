@@ -124,20 +124,31 @@ public sealed class CreatureReadinessTests
     }
 
     [Fact]
-    public void Problems_WithAServoJoint_UsesServoRadiusForTooShortCheck()
+    public void IsTooShort_CountsHubToHub()
     {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 120))],
-            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
-            [],
-            [new ServoDef(6, 1, 4, 5)],
-            [],
-            [],
-            nextPartId: 7);
+        var gap = CreatureReadiness.MinimumBeamGap + (2 * NodeDef.HubRadius);
 
-        CreatureReadiness.IsTooShort(new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), NodeDef.PlainJointRadius, NodeDef.PlainJointRadius).ShouldBeFalse();
-        CreatureReadiness.IsTooShort(creature, 1, 2).ShouldBeTrue();
-        CreatureReadiness.Problems(creature).ShouldContain(UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2));
+        CreatureReadiness.IsTooShort(new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(gap - 1, 0))).ShouldBeTrue();
+        CreatureReadiness.IsTooShort(new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(gap, 0))).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsTooShort_IgnoresAServoOrWheelOnTheJoint()
+    {
+        // #1086: a link counts hub to hub whatever sits on its joints.
+        var gap = CreatureReadiness.MinimumBeamGap + (2 * NodeDef.HubRadius);
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(gap, 0)), new NodeDef(3, new Vector2D(0, 120)), new NodeDef(4, new Vector2D(gap, 120))],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 1, 3), new BeamDef(7, 2, 4)],
+            [],
+            [new ServoDef(8, 1, 5, 6)],
+            [],
+            [],
+            [new WheelDef(9, 2, radius: WheelDef.MaxRadius)],
+            nextPartId: 10);
+
+        CreatureReadiness.IsTooShort(creature, 1, 2).ShouldBeFalse();
+        CreatureReadiness.Problems(creature).ShouldNotContain(UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2));
     }
 
     [Fact]

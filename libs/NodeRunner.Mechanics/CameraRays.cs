@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The camera's pure math (#575, #604, #594, #578): its rays leave its beam's midpoint, evenly
+/// The camera's pure math (#575, #604, #594, #578): its rays leave where it sits on its beam, evenly
 /// spaced around its aim, the outer ones <see cref="SensorDef.Spread"/> apart, and reach
 /// <see cref="SensorDef.Range"/>. The aim is an angle relative to its beam's direction (from its
 /// first node to its second), so the camera turns with the beam. A placed camera looks level, at

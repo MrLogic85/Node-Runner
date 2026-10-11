@@ -2,8 +2,9 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// Where a sensor's picture sits on its beam (#576): a square of its kind's <see cref="SizeOf"/>,
-/// centred on the beam's midpoint and turned with the beam. A beam holds one sensor (#593), so this
-/// is also the sensor's tap area. Stateless and shared by Build's canvas and gestures and the
+/// centred midway between what is drawn over the beam's two ends (<see cref="Shift"/>, #1086) and
+/// turned with the beam. A beam holds one sensor (#593), so this is also the sensor's
+/// tap area, and the sensor senses from its centre. Stateless and shared by Build's canvas and gestures and the
 /// creature in Training. See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class SensorPicture
@@ -14,7 +15,7 @@ public static class SensorPicture
     /// <summary>The Camera picture's side, in canvas units: twice the first size so it reads on a phone (#622).</summary>
     public const double CameraSize = 44;
 
-    /// <summary>The largest picture's side; every beam leaves room for it (#593), since any sensor can go on any beam.</summary>
+    /// <summary>The largest picture's side; every beam leaves room for it between its hubs (#593, #1086), since any sensor can go on any beam; a Servo may cover its ends.</summary>
     public const double LargestSize = CameraSize;
 
     /// <summary>The picture's side for <paramref name="kind"/>, in canvas units.</summary>
@@ -25,18 +26,41 @@ public static class SensorPicture
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown sensor kind."),
     };
 
+    /// <summary>
+    /// How far the picture's centre sits from its beam's midpoint, towards node B (#1086): midway
+    /// between what is drawn over the beam's two ends, its hubs or a Servo
+    /// (<see cref="CreatureDef.CoveredRadius(int, IEnumerable{ServoDef})"/>), so at the midpoint
+    /// unless a Servo sits on one end. A Wheel's size does not move it: the Wheel is see-through
+    /// under its links.
+    /// </summary>
+    public static double Shift(double coveredA, double coveredB) => (coveredA - coveredB) / 2;
+
+    /// <summary>The picture's centre on the beam from <paramref name="nodeA"/> to <paramref name="nodeB"/>: see <see cref="Shift"/>.</summary>
+    public static Vector2D Centre(Vector2D nodeA, Vector2D nodeB, double coveredA, double coveredB)
+    {
+        var (alongX, alongY) = Along(nodeA, nodeB);
+        var shift = Shift(coveredA, coveredB);
+        return new Vector2D(((nodeA.X + nodeB.X) / 2) + (alongX * shift), ((nodeA.Y + nodeB.Y) / 2) + (alongY * shift));
+    }
+
     /// <summary>Whether <paramref name="point"/> is on the picture of the <paramref name="kind"/> sensor on the beam from <paramref name="nodeA"/> to <paramref name="nodeB"/>.</summary>
-    public static bool Contains(SensorKind kind, Vector2D point, Vector2D nodeA, Vector2D nodeB)
+    public static bool Contains(SensorKind kind, Vector2D point, Vector2D nodeA, Vector2D nodeB, double coveredA, double coveredB)
     {
         var half = SizeOf(kind) / 2;
-        var dx = nodeB.X - nodeA.X;
-        var dy = nodeB.Y - nodeA.Y;
-        var length = Math.Sqrt((dx * dx) + (dy * dy));
-        var (alongX, alongY) = length > 0 ? (dx / length, dy / length) : (1.0, 0.0);
-        var relativeX = point.X - ((nodeA.X + nodeB.X) / 2);
-        var relativeY = point.Y - ((nodeA.Y + nodeB.Y) / 2);
+        var (alongX, alongY) = Along(nodeA, nodeB);
+        var centre = Centre(nodeA, nodeB, coveredA, coveredB);
+        var relativeX = point.X - centre.X;
+        var relativeY = point.Y - centre.Y;
         var along = (relativeX * alongX) + (relativeY * alongY);
         var across = (-relativeX * alongY) + (relativeY * alongX);
         return Math.Abs(along) <= half && Math.Abs(across) <= half;
+    }
+
+    private static (double X, double Y) Along(Vector2D nodeA, Vector2D nodeB)
+    {
+        var dx = nodeB.X - nodeA.X;
+        var dy = nodeB.Y - nodeA.Y;
+        var length = Math.Sqrt((dx * dx) + (dy * dy));
+        return length > 0 ? (dx / length, dy / length) : (1.0, 0.0);
     }
 }

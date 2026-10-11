@@ -77,11 +77,17 @@ public partial class CreatureParts : Node2D
             var hasPart = CreatureDef.HasJointPart(node.Id, shape.Servos, shape.Wheels);
             part.Selected = marks.Selected.Nodes.Contains(node.Id) && !hasPart;
             part.ShowsRing = !hasPart && marks.PreviewJointPart?.NodeId != node.Id;
+            part.ShowsHub = HasWheelAndNoServo(shape, marks, node.Id);
             var takes = marks.Placing.Joints.Contains(node.Id);
             part.Placing = takes ? PlacingMark.Takes : marks.Placing.RefusedJoints.Contains(node.Id) ? PlacingMark.Refuses : PlacingMark.None;
             part.PlacingRadius = (float)(takes ? marks.Placing.JointRing : NodeRadius(shape, node.Id));
         }
     }
+
+    // A Wheel's hub is drawn by its joint, over the links (#1086); a Servo, placed or previewed, covers it.
+    private static bool HasWheelAndNoServo(CreatureShape shape, CreatureMarks marks, int nodeId) =>
+        (shape.Wheels.Any(wheel => wheel.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.Wheel) == nodeId)
+        && shape.Servos.All(servo => servo.NodeId != nodeId) && marks.PreviewNodeOf(BuildPart.Servo) != nodeId;
 
     // A Wheel stands in for its joint (#129), so it shows the joint's loose mark too. Build shows it
     // unturned; a tray drag previews the smallest Wheel on the joint it would take.
@@ -200,7 +206,7 @@ public partial class CreatureParts : Node2D
     }
 
     private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, LinkRef link) =>
-        ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => NodeRadius(shape, nodeId), link, SensorLength(shape, link));
+        ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => CreatureDef.CoveredRadius(nodeId, shape.Servos), link, SensorLength(shape, link));
 
     private static float SensorLength(CreatureShape shape, LinkRef link) =>
         link.Kind == CreatureElementKind.Beam && shape.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
@@ -221,7 +227,7 @@ public partial class CreatureParts : Node2D
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
             // A beam too short for training (#593) is drawn in danger until its joints move apart.
-            part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);
+            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
             part.HaloA = selected.Nodes.Contains(beam.NodeA);
             part.HaloB = selected.Nodes.Contains(beam.NodeB);
             part.Selected = selected.Beams.Contains(beam.Id);
@@ -244,9 +250,10 @@ public partial class CreatureParts : Node2D
             part.B = ToGodot(nodeB.Position);
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
-            var radii = NodeRadius(shape, nodeA.Id) + NodeRadius(shape, nodeB.Id);
-            part.Travel = (float)(Piston.LongestLength(piston, built, radii) - Piston.ShortestLength(piston, built, radii));
-            part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);
+            part.CoveredA = (float)CreatureDef.CoveredRadius(nodeA.Id, shape.Servos);
+            part.CoveredB = (float)CreatureDef.CoveredRadius(nodeB.Id, shape.Servos);
+            part.Travel = (float)(Piston.LongestLength(piston, built, Travel.HubRadii) - Piston.ShortestLength(piston, built, Travel.HubRadii));
+            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
             part.HaloA = selected.Nodes.Contains(piston.NodeA);
             part.HaloB = selected.Nodes.Contains(piston.NodeB);
             part.Selected = selected.Pistons.Contains(piston.Id);
@@ -264,13 +271,14 @@ public partial class CreatureParts : Node2D
             var part = PartFor(_springs, spring.Id);
             part.A = ToGodot(nodeA.Position);
             part.B = ToGodot(nodeB.Position);
-            var radii = NodeRadius(shape, nodeA.Id) + NodeRadius(shape, nodeB.Id);
-            part.Travel = (float)(Spring.LongestLength(spring, built, radii) - Spring.ShortestLength(spring, built, radii));
-            part.Rest = (float)Spring.RestLength(spring, built, radii);
+            part.Travel = (float)(Spring.LongestLength(spring, built, Travel.HubRadii) - Spring.ShortestLength(spring, built, Travel.HubRadii));
+            part.Rest = (float)Spring.RestLength(spring, built, Travel.HubRadii);
             part.Stiffness = spring.Stiffness;
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
-            part.Danger = marks.ShowsTooShort && IsTooShort(shape, nodeA, nodeB);
+            part.CoveredA = (float)CreatureDef.CoveredRadius(nodeA.Id, shape.Servos);
+            part.CoveredB = (float)CreatureDef.CoveredRadius(nodeB.Id, shape.Servos);
+            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
             part.HaloA = selected.Nodes.Contains(spring.NodeA);
             part.HaloB = selected.Nodes.Contains(spring.NodeB);
             part.Selected = selected.Springs.Contains(spring.Id);
@@ -278,7 +286,7 @@ public partial class CreatureParts : Node2D
     }
 
     /// <summary>
-    /// Each sensor as a picture at the middle of its beam (#576), upright on the beam's built up
+    /// Each sensor as a picture on its beam (#576, <see cref="SensorPicture.Centre"/>), upright on the beam's built up
     /// side: the Accelerometer with its weight where <see cref="CreatureMarks.WeightOffset"/> has
     /// it (at rest by default), and the camera looking along its rays.
     /// </summary>
@@ -290,7 +298,7 @@ public partial class CreatureParts : Node2D
         {
             var part = PartFor(_sensors, sensor.Id);
             var beam = beams[sensor.BeamId];
-            PlaceSensor(part, nodes[beam.NodeA].Position, nodes[beam.NodeB].Position, sensor.Kind, sensor.Aim, marks.WeightOffset(sensor.Id));
+            PlaceSensor(part, shape, nodes[beam.NodeA], nodes[beam.NodeB], sensor.Kind, sensor.Aim, marks.WeightOffset(sensor.Id));
             part.Selected = marks.Selected.Sensors.Contains(sensor.Id);
         }
 
@@ -299,16 +307,17 @@ public partial class CreatureParts : Node2D
         _previewSensor.Theme = Theme;
         if (marks.PreviewSensor is ({ } previewBeam, var kind, var aim))
         {
-            PlaceSensor(_previewSensor, nodes[previewBeam.NodeA].Position, nodes[previewBeam.NodeB].Position, kind, aim, null);
+            PlaceSensor(_previewSensor, shape, nodes[previewBeam.NodeA], nodes[previewBeam.NodeB], kind, aim, null);
         }
     }
 
-    private static void PlaceSensor(SensorPart part, Vector2D nodeA, Vector2D nodeB, SensorKind kind, double? aim, Vector2D? weightOffset)
+    private static void PlaceSensor(SensorPart part, CreatureShape shape, NodeDef jointA, NodeDef jointB, SensorKind kind, double? aim, Vector2D? weightOffset)
     {
+        var (nodeA, nodeB) = (jointA.Position, jointB.Position);
         var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
         var upSign = Accelerometer.UpSign(nodeA, nodeB);
         var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
-        part.Position = (ToGodot(nodeA) + ToGodot(nodeB)) / 2;
+        part.Position = ToGodot(SensorPicture.Centre(nodeA, nodeB, CreatureDef.CoveredRadius(jointA.Id, shape.Servos), CreatureDef.CoveredRadius(jointB.Id, shape.Servos)));
         part.Rotation = pictureRotation;
         part.Kind = kind;
         part.WeightOffset = weightOffset ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
@@ -339,7 +348,7 @@ public partial class CreatureParts : Node2D
         foreach (var (id, part) in _wheels)
         {
             var nodeId = id < 0 ? -id : wheelNodes[id];
-            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
+            part.Place(groups, nodeId, raised.Wheels.Contains(nodeId));
         }
 
         foreach (var (id, part) in _beams.Select(entry => (entry.Key, (PartVisual)entry.Value))
@@ -455,6 +464,4 @@ public partial class CreatureParts : Node2D
     private static double NodeRadius(CreatureShape shape, int nodeId) =>
         CreatureDef.JointRadius(nodeId, shape.Servos, shape.Wheels);
 
-    private static bool IsTooShort(CreatureShape shape, NodeDef a, NodeDef b) =>
-        CreatureReadiness.IsTooShort(a, b, NodeRadius(shape, a.Id), NodeRadius(shape, b.Id));
 }

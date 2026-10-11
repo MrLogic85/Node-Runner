@@ -5,10 +5,11 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A Wheel (#129) on its joint, unfilled in every theme: an opaque face, so links stop at the
-/// tyre; a <c>detail</c> tyre whose outer edge is the collision radius, with a fine line
-/// <see cref="TyreWidth"/> inside it; <see cref="CueCount"/> tubes in the tyre band that turn with
-/// the part, so a rolling wheel reads as rolling; and the passive hub. Training hangs it on the
+/// A Wheel (#129) on its joint, unfilled in every theme: an opaque <c>detail</c> tyre whose outer
+/// edge is the collision radius, with a fine line <see cref="TyreWidth"/> inside it, and see-through
+/// within that, so it never hides what lies under it (#1086); and <see cref="CueCount"/> tubes in
+/// the tyre band that turn with the part, so a rolling wheel reads as rolling. Its links are drawn over it to the hub,
+/// which its joint draws over them (<see cref="DrawHub"/>, #1086). Training hangs it on the
 /// wheel's body, so its own rotation is the wheel's; Build shows it at rotation 0.
 /// </summary>
 public partial class WheelPart : PartVisual
@@ -19,7 +20,7 @@ public partial class WheelPart : PartVisual
     /// <summary>The angle each rotation-cue tube spans.</summary>
     public const float CueSpan = 26 * Mathf.Pi / 180;
 
-    /// <summary>How far inside the edge the tyre's inner line runs.</summary>
+    /// <summary>How far inside the edge the tyre's inner line runs, the solid band; inside it the Wheel is see-through.</summary>
     public const float TyreWidth = 6;
 
     /// <summary>How far inside the edge the cue tubes run: midway between the inner line and the tyre ring.</summary>
@@ -78,6 +79,19 @@ public partial class WheelPart : PartVisual
     /// <summary>The centre line of the tyre ring, whose outer edge is <paramref name="radius"/>.</summary>
     public static float TyreRingRadius(float radius, float ringWidth) => radius - (ringWidth / 2);
 
+    /// <summary>
+    /// The passive hub, drawn by the Wheel's joint over the links that reach it (#1086): an opaque
+    /// disc, its ring and the axle dot, all in <c>danger</c> while <paramref name="loose"/>.
+    /// </summary>
+    public static void DrawHub(UiPixelPen pen, VisualTheme theme, bool loose)
+    {
+        ArgumentNullException.ThrowIfNull(theme);
+        var line = loose ? theme.Danger : theme.WheelLine;
+        pen.Disc(Vector2.Zero, HubRadius, theme.ArenaBackground);
+        pen.Ring(Vector2.Zero, TyreRingRadius(HubRadius, theme.JointRingWidth), line, theme.JointRingWidth, _ringSegments);
+        pen.Disc(Vector2.Zero, AxleRadius, line);
+    }
+
     /// <summary>The selected Wheel's <c>halo</c> ring, <see cref="SelectionMarks.Gap"/> outside its edge, as every part's.</summary>
     public static float HaloRadius(float radius) => (float)SelectionMarks.JointHalo(radius);
 
@@ -91,12 +105,10 @@ public partial class WheelPart : PartVisual
             return;
         }
 
-        pen.Disc(Vector2.Zero, Radius, Theme.ArenaBackground);
+        pen.Ring(Vector2.Zero, Radius - (TyreWidth / 2), Theme.ArenaBackground, TyreWidth, _ringSegments);
         pen.Ring(Vector2.Zero, TyreRingRadius(Radius, Theme.JointRingWidth), line, Theme.JointRingWidth, _ringSegments);
         pen.Ring(Vector2.Zero, Radius - TyreWidth, line, Theme.JointInnerRingWidth, _ringSegments);
         pen.Strokes(CueTubes(Radius), line, Theme.MotorSignalWidth);
-        pen.Ring(Vector2.Zero, TyreRingRadius(HubRadius, Theme.JointRingWidth), line, Theme.JointRingWidth, _ringSegments);
-        pen.Disc(Vector2.Zero, AxleRadius, line);
         if (Selected)
         {
             SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, HaloRadius(Radius));

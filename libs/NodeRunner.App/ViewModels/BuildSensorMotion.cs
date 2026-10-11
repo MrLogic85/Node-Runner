@@ -3,12 +3,12 @@ using NodeRunner.Mechanics;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>Where an Accelerometer's beam is this frame in Build: its midpoint, rotation and built up side.</summary>
-public readonly record struct SensorPose(int SensorId, Vector2D Midpoint, double Rotation, int UpSign);
+/// <summary>Where an Accelerometer's beam is this frame in Build: its sensor's centre (#1086), rotation and built up side.</summary>
+public readonly record struct SensorPose(int SensorId, Vector2D Centre, double Rotation, int UpSign);
 
 /// <summary>
 /// Moves each Accelerometer's weight in Build as its beam is dragged or turned (#576). Every frame
-/// the canvas passes each beam's pose; the midpoint's acceleration plus gravity drives the same
+/// the canvas passes each beam's pose; the sensor's acceleration plus gravity drives the same
 /// <see cref="Accelerometer"/> proof mass the sim uses, so the weight swings and then settles. A
 /// sensor seen for the first time, or whose beam's up side flipped, starts at rest.
 /// </summary>
@@ -53,8 +53,8 @@ public sealed class BuildSensorMotion
             }
 
             var follow = 1 - Math.Exp(-dt / _velocitySmoothing);
-            var velocity = Lerp(state.Velocity, Divide(Subtract(pose.Midpoint, state.Midpoint), dt), follow);
-            if (Math.Abs(velocity.X) < _stopped && Math.Abs(velocity.Y) < _stopped && pose.Midpoint == state.Midpoint)
+            var velocity = Lerp(state.Velocity, Divide(Subtract(pose.Centre, state.Centre), dt), follow);
+            if (Math.Abs(velocity.X) < _stopped && Math.Abs(velocity.Y) < _stopped && pose.Centre == state.Centre)
             {
                 velocity = default;
             }
@@ -64,7 +64,7 @@ public sealed class BuildSensorMotion
             var proofMass = Accelerometer.Step(state.ProofMass, force, dt);
             var rest = Accelerometer.Rest(Accelerometer.ToSensorFrame(new Vector2D(0, -1), pose.Rotation, pose.UpSign));
             var still = velocity == default && IsNear(proofMass, rest);
-            _states[pose.SensorId] = new State(pose.Midpoint, velocity, pose.UpSign, still ? rest : proofMass);
+            _states[pose.SensorId] = new State(pose.Centre, velocity, pose.UpSign, still ? rest : proofMass);
             moving |= !still;
         }
 
@@ -81,7 +81,7 @@ public sealed class BuildSensorMotion
         _states.TryGetValue(sensorId, out var state) ? Accelerometer.WeightOffset(state.ProofMass) : null;
 
     private static State AtRest(SensorPose pose) => new(
-        pose.Midpoint,
+        pose.Centre,
         default,
         pose.UpSign,
         Accelerometer.Rest(Accelerometer.ToSensorFrame(new Vector2D(0, -1), pose.Rotation, pose.UpSign)));
@@ -103,5 +103,5 @@ public sealed class BuildSensorMotion
 
     private static Vector2D Divide(Vector2D value, double divisor) => new(value.X / divisor, value.Y / divisor);
 
-    private readonly record struct State(Vector2D Midpoint, Vector2D Velocity, int UpSign, ProofMass ProofMass);
+    private readonly record struct State(Vector2D Centre, Vector2D Velocity, int UpSign, ProofMass ProofMass);
 }

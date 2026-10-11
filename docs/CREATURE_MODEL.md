@@ -48,8 +48,13 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - `NodeDef`. Its radius is not saved but follows from what is on the joint
   (#626, #129): the largest of the plain joint's `NodeDef.PlainJointRadius`
   (15) and each part on it, a Servo's `ServoDef.JointRadius` (27) or a
-  Wheel's Radius (`CreatureDef.NodeRadius`). Link ends, bounds, hit testing
-  and the minimum link length all use it.
+  Wheel's Radius (`CreatureDef.NodeRadius`). Collision and bounds use it.
+  Touch, sensors and links do not (#1086): a joint is touched at its hub or
+  Servo, and a sensor sits by what covers its beam's ends
+  (`CreatureDef.CoveredRadius`). Every link measures from
+  hub to hub, `NodeDef.HubRadius` (15) from each joint's centre, whatever
+  sits on the joint: the minimum link length and a Piston's or Spring's
+  travel.
 - **One part per slot** (#1044): a joint holds at most one Wheel and one
   motor or brake (a Servo), so a Servo can drive the links of a Wheel's
   joint while the Wheel turns freely between them.
@@ -79,18 +84,25 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   Piston or Spring weighs one and a half beams, its cylinder included
   (#731).
 - **Minimum length (#593):** a beam must leave
-  `CreatureReadiness.MinimumBeamGap` (52) free between its two joint rings:
-  room for the largest sensor picture, the Camera's, with a 4-unit gap on
-  each side (#622). A shorter beam can be drawn and saved, but it blocks
-  training until its joints move apart.
+  `CreatureReadiness.MinimumBeamGap` (52) free between its two hubs (#1086),
+  whatever sits on its joints: room for the largest sensor picture, the
+  Camera's, with a 4-unit gap on each side (#622). A Servo covers more than
+  the hub, so on a beam near that length it may cover the ends of a large
+  picture (owner, #1086). A shorter beam can be drawn and saved, but it
+  blocks training until its joints move apart.
 
 ### Sensor
 
 - **Beginner:** A part on a beam that feels something about that beam and
   feeds it to the brain. It is *not* the brain.
 - `SensorDef`: its `SensorKind` and the beam it sits on. A sensor measures
-  its own beam at the beam's midpoint, with no position setting, and shows
-  as a small picture there (#576).
+  its own beam where it sits, with no position setting, and shows as a small
+  picture there (#576): midway between what is drawn over the beam's two
+  ends, a Servo or else the hub (`CreatureDef.CoveredRadius`), so
+  `(d + c1 − c2) / 2` from joint 1's centre for joints `d` apart covered
+  `c1` and `c2` (#1086, `SensorPicture.Shift`). That is the midpoint unless
+  a Servo sits on one end. A Wheel does not move it: the Wheel is
+  see-through under its links.
 - **One sensor per beam (#593).** `CreatureDef` rejects a second one of any
   kind.
 - **Frame fixed as built:** the side of the beam that faces up in the built
@@ -105,7 +117,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   speeds up, slows down or tilts, the weight shifts; that shift is what the
   brain feels. At rest it feels gravity, so it also knows which way is down.
 - A proof mass on a damped spring in the beam's sensor frame, driven by the
-  beam's specific force at its midpoint (1 g "up" at rest, so its direction
+  beam's specific force where it sits (1 g "up" at rest, so its direction
   gives the tilt). Mechanics: `Accelerometer`.
 - **Reading:** two brain inputs, along the beam and across it, always in
   −1…1 (`Accelerometer.Reading`). At rest on a level beam it reads about 0
@@ -145,14 +157,14 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   - **Spread** is the angle between the outer rays; the rays sit evenly
     spaced and symmetric around the aim (`CameraRays.RayAngle`), so three
     rays at 90° are 45° apart. With one ray it has no effect.
-  - **Range** is how far each ray reaches from the beam's midpoint. A Worm
+  - **Range** is how far each ray reaches from the camera. A Worm
     beam is 0.7 m, so the range runs from a little over one beam to about
     fourteen (#1097). The sliders' steps are in `docs/BUILD_MODE.md` →
     "Parameters (#704)".
   - Build and import keep these within the sliders
     (`CreatureBuilder.IsWithinBuildLimits`); `SensorDef` itself accepts any
     odd count up to 5, a spread up to 180° and any positive range.
-- **Rays:** from the beam's midpoint, as long as the camera's range; they
+- **Rays:** from where the camera sits, as long as the camera's range; they
   see the ground only (`CameraRays`).
 - **Ray names** are symmetric around the centre ray, seen from the camera
   looking along its rays: **far left**, **left**, **centre**, **right**,
@@ -222,13 +234,14 @@ fold.
   pulls them together, in a straight line. The brain chooses how far out it
   goes and how hard it may push.
 - `PistonDef`; Mechanics: `Piston`. Settings: **Strength** (its most
-  force), **Stroke** (how much the gap between its joints' edges can grow,
+  force), **Stroke** (how much the gap between its joints' hubs can grow,
   as a share of its shortest), **Start position** (where its drawn length
   sits in that travel, 0% at the shortest, 100% at the longest), **Max
   speed** and **Rise time** (how long its force takes to build to full,
   #801). Its force acts along the line between its nodes.
-- **Travel** (#870: a real cylinder; #835: from the joints' edges): it moves
-  the gap between its joints' edges, so a Servo's bigger joint shortens it.
+- **Travel** (#870: a real cylinder; #835, #1086: from the joints' hubs): it
+  moves the gap between its joints' hubs, `Travel.HubRadii` short of its
+  length whatever sits on its joints.
   A cylinder is at most as long as the shortest gap, so the gap can at most
   double. The drawn gap sits Start position of the way from the shortest to
   the longest (`Piston.ShortestLength`, `Piston.LongestLength`). Example: two
@@ -266,7 +279,7 @@ fold.
   **Damping** (N·s/m), **Stroke** (as a Piston's) and
   **Coil length** (where its rest length sits, #835).
 - **Travel and rest length** (#835, #974): on the gap between its joints'
-  edges, like a Piston's. Coil length moves the rest length evenly from half
+  hubs, like a Piston's. Coil length moves the rest length evenly from half
   the gap short of the shortest stop to half the gap past the longest, so a
   short Stroke can be pressed as hard against a stop as a long one. Between
   the stops it rests at its drawn length and the stops sit round it as a

@@ -7,7 +7,7 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// Draws a sensor on its beam as a small picture of the real thing (#576), shared by Build's canvas
 /// and the creature in Training. Callers pass the draw transform they are in, set so the origin is
-/// the beam's midpoint and -y is the sensor's top (the beam's built up side). Each picture fits its
+/// the picture's centre on its beam (<see cref="SensorPicture.Centre"/>) and -y is the sensor's top (the beam's built up side). Each picture fits its
 /// kind's <see cref="SensorPicture.SizeOf"/> square, which is also its tap area. Everything is
 /// drawn at window-pixel resolution (<see cref="UiPixelSpace"/>), so it stays crisp at any zoom
 /// (#625), and the caller's transform is restored afterwards.

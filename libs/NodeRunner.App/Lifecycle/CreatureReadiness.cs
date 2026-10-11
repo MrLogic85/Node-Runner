@@ -11,28 +11,27 @@ namespace NodeRunner.App.Lifecycle;
 public static class CreatureReadiness
 {
     /// <summary>
-    /// The least free length between a beam's two joint rings (#593, #622): room for the largest
-    /// sensor picture with a 4-unit gap on each side.
+    /// The least free length between a link's two hubs (#593, #622, #1086): room for the largest
+    /// sensor picture with a 4-unit gap on each side. What sits on a joint does not count, so a
+    /// Servo may cover the ends of a large picture near this length.
     /// </summary>
     public const double MinimumBeamGap = SensorPicture.LargestSize + (2 * _sensorGap);
 
     private const double _sensorGap = 4;
 
-    /// <summary>True when the non-zero beam or link between two nodes leaves less than <see cref="MinimumBeamGap"/> between their rings.</summary>
-    public static bool IsTooShort(NodeDef a, NodeDef b, double radiusA, double radiusB)
+    /// <summary>True when the non-zero beam or link between two nodes leaves less than <see cref="MinimumBeamGap"/> between their hubs.</summary>
+    public static bool IsTooShort(NodeDef a, NodeDef b)
     {
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
-        return a.Position != b.Position && FreeLength(a.Position, b.Position, radiusA, radiusB) < MinimumBeamGap;
+        return a.Position != b.Position && FreeLength(a.Position, b.Position) < MinimumBeamGap;
     }
 
-    /// <summary>True when the free length between two nodes' effective rings is too small.</summary>
+    /// <summary>True when the link between these two of the creature's nodes leaves less than <see cref="MinimumBeamGap"/> between their hubs.</summary>
     public static bool IsTooShort(CreatureDef creature, int nodeA, int nodeB)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        var a = creature.Nodes[creature.NodeIndexOf(nodeA)];
-        var b = creature.Nodes[creature.NodeIndexOf(nodeB)];
-        return IsTooShort(a, b, creature.NodeRadius(nodeA), creature.NodeRadius(nodeB));
+        return IsTooShort(creature.Nodes[creature.NodeIndexOf(nodeA)], creature.Nodes[creature.NodeIndexOf(nodeB)]);
     }
 
     /// <summary>Why the creature cannot be simulated yet; empty when it can.</summary>
@@ -188,10 +187,10 @@ public static class CreatureReadiness
     /// </summary>
     public static bool CanTrain(CreatureDef creature) => Problems(creature).Count == 0;
 
-    private static double FreeLength(Vector2D a, Vector2D b, double radiusA, double radiusB)
+    private static double FreeLength(Vector2D a, Vector2D b)
     {
         var dx = b.X - a.X;
         var dy = b.Y - a.Y;
-        return Math.Sqrt((dx * dx) + (dy * dy)) - radiusA - radiusB;
+        return Math.Sqrt((dx * dx) + (dy * dy)) - (2 * NodeDef.HubRadius);
     }
 }

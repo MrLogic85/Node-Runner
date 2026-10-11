@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Theme;
@@ -54,6 +55,9 @@ public static class JointDrawing
 
         canvas.DrawSetTransformMatrix(drawTransform);
     }
+
+    /// <summary>Where every link's drawing ends (<see cref="NodeDef.HubRadius"/>, #1086), whatever sits on its joint.</summary>
+    public const float HubRadius = (float)NodeDef.HubRadius;
 
     /// <summary>
     /// The drawn part of a beam from <paramref name="a"/> to <paramref name="b"/>: from one ring's

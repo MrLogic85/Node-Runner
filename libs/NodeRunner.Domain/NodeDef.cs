@@ -14,6 +14,13 @@ public sealed record NodeDef
     /// </summary>
     public const double PlainJointRadius = 15;
 
+    /// <summary>
+    /// Where every link (beam, Piston, Spring) ends, measured from its joint's centre (#1086): a
+    /// plain joint's radius, whatever sits on the joint. Links' travel and the too-short rule count
+    /// their length from here.
+    /// </summary>
+    public const double HubRadius = PlainJointRadius;
+
     public NodeDef(int id, Vector2D position, string? name = null)
     {
         if (id <= 0)

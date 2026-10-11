@@ -20,8 +20,8 @@ public partial class BuildCanvas
 
         var preview = _gestures.MovedSensorPreview;
         var refused = _gestures.SensorDropTarget is { } target && !_viewModel.CanMoveSensor(sensorId, target, out _);
-        var from = BeamMiddle(moving.BeamId);
-        var to = preview is null ? ToGodot(finger) : BeamMiddle(preview.BeamId);
+        var from = ToGodot(_viewModel.SensorCentreOn(moving.BeamId));
+        var to = ToGodot(preview is null ? finger : _viewModel.SensorCentreOn(preview.BeamId));
         // Like a link drag's line, it starts at the sensor's picture, and ends at its preview or the finger.
         var pictureRadius = (float)SensorPicture.SizeOf(moving.Kind) / 2;
         var endRadius = preview is null ? 0 : pictureRadius;
@@ -33,11 +33,5 @@ public partial class BuildCanvas
         using var pen = ViewPen(canvas);
         var state = refused ? DragLine.Refused : preview is null ? DragLine.Free : DragLine.Attaches;
         DrawDragLine(pen, from.MoveToward(to, pictureRadius), to.MoveToward(from, endRadius), state, arrow: true);
-    }
-
-    private Vector2 BeamMiddle(int beamId)
-    {
-        var beam = _viewModel!.Beams[_viewModel.BeamIndexOf(beamId)];
-        return (ToGodot(NodeById(beam.NodeA).Position) + ToGodot(NodeById(beam.NodeB).Position)) / 2;
     }
 }

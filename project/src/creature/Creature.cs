@@ -502,13 +502,16 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
+            var hasServo = definition.Servos.Any(servo => servo.NodeId == definition.Nodes[i].Id);
+            var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var visual = new NodeVisual
             {
                 Name = $"Node{i}Visual",
                 Theme = Theme,
                 Radius = radius,
-                Visible = definition.Servos.All(servo => servo.NodeId != definition.Nodes[i].Id)
-                    && definition.Wheels.All(wheel => wheel.NodeId != definition.Nodes[i].Id),
+                Visible = !hasServo,
+                ShowsRing = !hasWheel,
+                ShowsHub = hasWheel,
             };
             body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, radius));
             body.AddChild(visual);
@@ -607,7 +610,7 @@ public partial class Creature : Node2D
             _sensors[i] = sensor.Kind switch
             {
                 SensorKind.Accelerometer => CreateAccelerometer(definition, beamIndex, gravity),
-                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], sensor),
+                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], sensor, SensorOnBeam(definition, beamIndex)),
                 _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
             };
         }
@@ -632,6 +635,7 @@ public partial class Creature : Node2D
             {
                 Name = $"Sensor{i}Picture",
                 Theme = Theme,
+                Position = SensorOnBeam(definition, beamIndex),
                 Rotation = glyphRotation,
                 Kind = sensor.Kind,
                 Accelerometer = _sensors[i] as AccelerometerSensor,
@@ -656,7 +660,15 @@ public partial class Creature : Node2D
         var beam = definition.Beams[beamIndex];
         var nodeA = definition.Nodes[definition.NodeIndexOf(beam.NodeA)].Position;
         var nodeB = definition.Nodes[definition.NodeIndexOf(beam.NodeB)].Position;
-        return new AccelerometerSensor(_beamBodies[beamIndex], Accelerometer.UpSign(nodeA, nodeB), gravity);
+        return new AccelerometerSensor(_beamBodies[beamIndex], SensorOnBeam(definition, beamIndex), Accelerometer.UpSign(nodeA, nodeB), gravity);
+    }
+
+    // Where a sensor sits on its beam's body, whose +x runs from node A to node B: see SensorPicture.Shift (#1086).
+    private static Vector2 SensorOnBeam(CreatureDef definition, int beamIndex)
+    {
+        var beam = definition.Beams[beamIndex];
+        var shift = SensorPicture.Shift(definition.CoveredRadius(beam.NodeA), definition.CoveredRadius(beam.NodeB));
+        return new Vector2(ToGodotFloat(shift, nameof(SensorPicture.Shift)), 0);
     }
 
     private void ConfigureBrainBuffers(CreatureDef definition)

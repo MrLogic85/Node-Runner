@@ -8,7 +8,8 @@ namespace NodeRunner.Theme;
 /// Draws a Spring between two joints (#453) as a coilover (#807), shared by Build's canvas, the
 /// creature in Training and the thumbnails; <c>docs/WORLD_VISUALS.md</c> → "Spring" owns its look.
 /// Each side of the helix is one call of the same wire (#835). The body, like a Piston's cylinder,
-/// is as long as the Spring's travel, on the gap between the joints' edges (#835).
+/// reaches as far past joint A's hub as the Spring's travel, on the gap between the hubs (#835,
+/// #1086); body and seats start at the edge of what covers their joint, so a Servo never hides them.
 /// Drawn through <see cref="UiPixelPen"/>, so it stays crisp at any zoom.
 /// </summary>
 public static class SpringDrawing
@@ -52,8 +53,10 @@ public static class SpringDrawing
     /// <param name="theme">The theme its colours and widths come from.</param>
     /// <param name="a">Joint A's centre.</param>
     /// <param name="b">Joint B's centre.</param>
-    /// <param name="radiusA">Joint A's radius: the seat sits a short lead outside its edge.</param>
-    /// <param name="radiusB">Joint B's radius.</param>
+    /// <param name="radiusA">Joint A's drawn radius, whose halo the selection lines join; the rod starts at its hub (#1086).</param>
+    /// <param name="radiusB">Joint B's drawn radius.</param>
+    /// <param name="coveredA">How far what is drawn over joint A reaches, its hub or a Servo; the body and seat start there.</param>
+    /// <param name="coveredB">How far what is drawn over joint B reaches; its seat sits a short lead outside.</param>
     /// <param name="travel">The Spring's travel, its longest length less its shortest, which sets the damper body's length.</param>
     /// <param name="rest">The Spring's rest length, centre to centre, which sets the coil's turns.</param>
     /// <param name="stiffness">The Spring's Stiffness, in N/m, which sets the coil's wire.</param>
@@ -69,6 +72,8 @@ public static class SpringDrawing
         Vector2 b,
         float radiusA,
         float radiusB,
+        float coveredA,
+        float coveredB,
         float travel,
         float rest,
         double stiffness,
@@ -91,31 +96,32 @@ public static class SpringDrawing
         var across = along.Orthogonal();
         var seatHalf = SeatHalf(theme);
 
-        // Like a Piston's rod, it stops under the joint rings (#626), or, when they meet, runs centre to centre.
-        var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, radiusA, b, radiusB) ?? (a, b);
+        // Like a Piston's rod, it runs hub to hub (#1086), or, when they meet, centre to centre.
+        const float hub = JointDrawing.HubRadius;
+        var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, hub, b, hub) ?? (a, b);
         pen.Line(rodStart, rodEnd, line, theme.BeamWidth * _rodPerBeam);
 
-        var seatA = a + (along * (radiusA + _lead));
-        var seatB = b - (along * (radiusB + _lead));
+        var seatA = a + (along * (coveredA + _lead));
+        var seatB = b - (along * (coveredB + _lead));
         var span = (seatB - seatA).Dot(along);
         if (span > _minSpan)
         {
             var radius = theme.BeamWidth * _coilRadiusPerBeam;
             var wire = Wire(stiffness);
-            var turns = CoilTurns(SeatSpan(rest, radiusA, radiusB), wire);
+            var turns = CoilTurns(SeatSpan(rest), wire);
             var segments = HalfTurnSegments(radius * pen.Scale);
 
             // The back strokes are the same wire, so each turn reads as one coil.
             pen.Strokes(Helix(seatA, seatB, across, turns, radius, segments, front: false), line, wire);
 
-            // The travel is on the gap between the joints' edges (#835) and it starts under seat A at
-            // joint A's edge, so at its shortest joint B's edge meets the body's end at most.
-            // A short one still shows past seat A.
-            var length = Math.Min(Math.Max(travel, _lead + _minBodyLength), a.DistanceTo(b) - radiusA - radiusB);
-            if (length > _lead)
+            // The travel is on the gap between the hubs (#835, #1086), so at its shortest joint B's hub
+            // meets the body's end at most. It starts under seat A, at the edge of what covers joint A,
+            // and a short one still shows past seat A.
+            var end = Math.Min(Math.Max(hub + travel, coveredA + _lead + _minBodyLength), a.DistanceTo(b) - hub);
+            if (end - coveredA > _lead)
             {
-                var edgeA = a + (along * radiusA);
-                var body = PistonDrawing.Cylinder(edgeA, edgeA + (along * length), along, across, theme.BeamWidth * _bodyHalfPerBeam);
+                var edgeA = a + (along * coveredA);
+                var body = PistonDrawing.Cylinder(edgeA, a + (along * end), along, across, theme.BeamWidth * _bodyHalfPerBeam);
                 pen.Polygon(body, theme.SensorFill);
                 pen.Polyline([.. body, body[0]], line, _line);
             }
@@ -167,9 +173,9 @@ public static class SpringDrawing
         return Math.Max((int)(span / _freePerSolid / (wire + _solidGap)), MinTurns);
     }
 
-    /// <summary>The distance from seat to seat at a <paramref name="length"/>, centre to centre.</summary>
-    public static float SeatSpan(float length, float radiusA, float radiusB) =>
-        length - radiusA - radiusB - (2 * _lead);
+    /// <summary>The distance from seat to seat at a <paramref name="length"/>, centre to centre: a lead outside each hub (#1086).</summary>
+    public static float SeatSpan(float length) =>
+        length - (2 * (JointDrawing.HubRadius + _lead));
 
     /// <summary>
     /// The segments in each half turn of a coil <paramref name="radiusPixels"/> wide on screen:

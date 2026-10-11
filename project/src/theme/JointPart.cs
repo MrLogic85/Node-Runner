@@ -6,8 +6,9 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// A joint (#767): its ring (<see cref="JointDrawing"/>) at its origin and, while selected, its halo;
-/// and over them its <see cref="Placing"/> mark, which it draws even where a Servo or Wheel stands
-/// in for its ring (<see cref="ShowsRing"/>).
+/// a Wheel's hub (<see cref="ShowsHub"/>) where a Wheel stands in for its ring, so the hub sits over
+/// the links that reach it (#1086); and over them its <see cref="Placing"/> mark, which it draws even
+/// where a Servo or Wheel stands in for its ring (<see cref="ShowsRing"/>).
 /// </summary>
 public partial class JointPart : PartVisual
 {
@@ -18,6 +19,7 @@ public partial class JointPart : PartVisual
     private bool _simplified;
     private bool _loose;
     private bool _showsRing = true;
+    private bool _showsHub;
     private PlacingMark _placing;
     private float _placingRadius;
 
@@ -53,6 +55,16 @@ public partial class JointPart : PartVisual
         set => Change(ref _showsRing, value);
     }
 
+    /// <summary>
+    /// Whether it draws a Wheel's hub (<see cref="WheelPart.DrawHub"/>): where a Wheel, placed or
+    /// previewed, and no Servo sits on it. A shadow (<see cref="Simplified"/>) draws only its joint's outer ring at the hub.
+    /// </summary>
+    public bool ShowsHub
+    {
+        get => _showsHub;
+        set => Change(ref _showsHub, value);
+    }
+
     /// <summary>Whether it would take or refuse the joint part being placed: a ring at <see cref="PlacingRadius"/>'s halo.</summary>
     public PlacingMark Placing
     {
@@ -82,12 +94,23 @@ public partial class JointPart : PartVisual
             }
         }
 
+        if (ShowsHub && !ShowsRing && Simplified)
+        {
+            // A shadow's Wheel joint shows its outer ring at the hub, as every shadow joint does.
+            JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, JointDrawing.HubRadius, Loose ? JointLook.Loose : JointLook.Plain, simplified: true);
+        }
+
+        using var pen = UiPixelPen.Begin(this);
+        if (ShowsHub && !ShowsRing && !Simplified)
+        {
+            WheelPart.DrawHub(pen, Theme, Loose);
+        }
+
         if (Placing == PlacingMark.None)
         {
             return;
         }
 
-        using var pen = UiPixelPen.Begin(this);
         var ring = (float)SelectionMarks.JointHalo(PlacingRadius);
         if (Placing == PlacingMark.Takes)
         {

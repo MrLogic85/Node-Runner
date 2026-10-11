@@ -10,6 +10,8 @@ public partial class SpringPart : PartVisual
     private Vector2 _b;
     private float _radiusA;
     private float _radiusB;
+    private float _coveredA = JointDrawing.HubRadius;
+    private float _coveredB = JointDrawing.HubRadius;
     private float _travel;
     private float _rest;
     private double _stiffness = SpringDef.DefaultStiffness;
@@ -44,6 +46,20 @@ public partial class SpringPart : PartVisual
     {
         get => _radiusB;
         set => Change(ref _radiusB, value);
+    }
+
+    /// <summary>How far what is drawn over joint A reaches (<see cref="CreatureDef.CoveredRadius(int)"/>), where its parts start.</summary>
+    public float CoveredA
+    {
+        get => _coveredA;
+        set => Change(ref _coveredA, value);
+    }
+
+    /// <summary>How far what is drawn over joint B reaches.</summary>
+    public float CoveredB
+    {
+        get => _coveredB;
+        set => Change(ref _coveredB, value);
     }
 
     /// <summary>Its travel, longest length less shortest, which sets its damper body's length (#835).</summary>
@@ -89,5 +105,5 @@ public partial class SpringPart : PartVisual
     }
 
     public override void _Draw() =>
-        SpringDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, Travel, Rest, Stiffness, Danger, Selected, HaloA, HaloB);
+        SpringDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, CoveredA, CoveredB, Travel, Rest, Stiffness, Danger, Selected, HaloA, HaloB);
 }

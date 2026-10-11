@@ -39,34 +39,22 @@ public sealed class PistonTests
     }
 
     [Fact]
-    public void AServosBiggerJoint_ShortensItsTravel()
-    {
-        var plain = 2 * NodeDef.PlainJointRadius;
-        var withServo = NodeDef.PlainJointRadius + ServoDef.JointRadius;
-
-        var plainTravel = Piston.LongestLength(_piston, _built, plain) - Piston.ShortestLength(_piston, _built, plain);
-        var servoTravel = Piston.LongestLength(_piston, _built, withServo) - Piston.ShortestLength(_piston, _built, withServo);
-
-        servoTravel.ShouldBeLessThan(plainTravel);
-    }
-
-    [Fact]
     public void WithItsJointsTouching_ItCannotMove()
     {
         Piston.ShortestLength(_piston, _built, 120).ShouldBe(_built);
         Piston.LongestLength(_piston, _built, 120).ShouldBe(_built);
     }
 
-    // So a cylinder from joint A's edge as long as its travel never reaches past joint B's edge.
+    // So a cylinder from joint A's hub as long as its travel never reaches past joint B's hub (#1086).
     [Theory]
     [InlineData(0.1, 0)]
     [InlineData(1, 0)]
     [InlineData(1, 1)]
     [InlineData(0.5, 0.5)]
-    public void AtItsShortest_TheGapBetweenItsJointsEdges_IsAtLeastItsTravel(double stroke, double start)
+    public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastItsTravel(double stroke, double start)
     {
         var piston = new PistonDef(1, 2, 3, stroke: stroke, start: start);
-        var radii = NodeDef.PlainJointRadius + ServoDef.JointRadius;
+        var radii = Travel.HubRadii;
 
         var shortest = Piston.ShortestLength(piston, _built, radii);
         (shortest - radii).ShouldBeGreaterThanOrEqualTo(Piston.LongestLength(piston, _built, radii) - shortest - 1e-9);

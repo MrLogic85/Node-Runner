@@ -61,9 +61,9 @@ public sealed class SpringDrawingTests
     }
 
     [Fact]
-    public void SeatSpan_LeavesALeadOutsideEachJoint()
+    public void SeatSpan_LeavesALeadOutsideEachHub()
     {
-        // Seats sit 3 outside each joint's edge, so seat to seat is length − 2 × (10 + 3).
-        SpringDrawing.SeatSpan(length: 100, radiusA: 10, radiusB: 10).ShouldBe(100 - 26);
+        // Seats sit 3 outside each joint's hub (#1086), so seat to seat is length − 2 × (15 + 3).
+        SpringDrawing.SeatSpan(length: 100).ShouldBe(100 - 36);
     }
 }

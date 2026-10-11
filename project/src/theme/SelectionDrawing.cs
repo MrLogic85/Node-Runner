@@ -28,7 +28,7 @@ public static class SelectionDrawing
 
     /// <summary>
     /// Where a selected link's lines, <paramref name="offset"/> from its axis, end at the joint at
-    /// <paramref name="joint"/>: on a circle of <paramref name="reach"/> round it, the joint's edge or,
+    /// <paramref name="joint"/>: on a circle of <paramref name="reach"/> round it, the joint's hub or,
     /// when the joint is selected too, its halo ring, so a group reads as one outline (#710).
     /// </summary>
     public static Vector2 LineEnd(Vector2 joint, Vector2 other, float reach, float offset) =>
@@ -55,7 +55,7 @@ public static class SelectionDrawing
     /// The two <c>halo</c> lines along a selected link, a Piston or a Spring, from joint
     /// <paramref name="a"/> to joint <paramref name="b"/>, <paramref name="offset"/> from its axis,
     /// drawn with <paramref name="toPixels"/> (<see cref="UiPixelSpace"/>, already entered). They
-    /// stop at the joints' edges or, when a joint is selected too, join its halo (#710).
+    /// stop at the hubs (#1086) or, when a joint is selected too, join its halo (#710).
     /// </summary>
     public static void DrawLink(
         CanvasItem canvas,
@@ -91,8 +91,6 @@ public static class SelectionDrawing
         float scale,
         Vector2 a,
         Vector2 b,
-        float radiusA,
-        float radiusB,
         float halfWidth,
         Color fill,
         Color edge,
@@ -107,7 +105,7 @@ public static class SelectionDrawing
 
         var along = (b - a).Normalized();
         var across = along.Orthogonal();
-        var (start, end) = LinkSpan(a, b, radiusA, radiusB, false, false, halfWidth, along);
+        var (start, end) = LinkSpan(a, b, 0, 0, false, false, halfWidth, along);
         var length = (end - start).Length();
         if (length <= 0)
         {
@@ -146,14 +144,14 @@ public static class SelectionDrawing
     }
 
     /// <summary>
-    /// Where a link's selection lines run: to the selected joints' halos, else to the joint edges,
+    /// Where a link's selection lines run: to the selected joints' halos, else to the hubs (#1086),
     /// else, when the joints crowd too close for either, centre to centre so the mark never vanishes.
     /// </summary>
     private static (Vector2 Start, Vector2 End) LinkSpan(
         Vector2 a, Vector2 b, float radiusA, float radiusB, bool haloA, bool haloB, float offset, Vector2 along)
     {
-        var reachA = haloA ? (float)SelectionMarks.JointHalo(radiusA) : radiusA;
-        var reachB = haloB ? (float)SelectionMarks.JointHalo(radiusB) : radiusB;
+        var reachA = haloA ? (float)SelectionMarks.JointHalo(radiusA) : JointDrawing.HubRadius;
+        var reachB = haloB ? (float)SelectionMarks.JointHalo(radiusB) : JointDrawing.HubRadius;
         var start = LineEnd(a, b, reachA, offset);
         var end = LineEnd(b, a, reachB, offset);
         if ((end - start).Dot(along) > 0)

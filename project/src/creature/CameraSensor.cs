@@ -5,8 +5,8 @@ using NodeRunner.Mechanics;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// One camera on its beam (#575, #604, #594, #578): a <see cref="RayCast2D"/> child per ray at the
-/// beam's midpoint, fanned around its aim by the Mechanics <see cref="CameraRays"/> so they turn with
+/// One camera on its beam (#575, #604, #594, #578): a <see cref="RayCast2D"/> child per ray where its
+/// picture sits on the beam (<see cref="SensorPicture.Centre"/>, #1086), fanned around its aim by the Mechanics <see cref="CameraRays"/> so they turn with
 /// the beam. They see the ground only; <see cref="CameraRays.Read"/> turns their hits into the brain
 /// inputs, relative to the camera's range.
 /// </summary>
@@ -20,7 +20,8 @@ public sealed class CameraSensor : IBeamSensor
 
     /// <param name="beamBody">The camera's beam; its +x runs along the beam, from node A to node B.</param>
     /// <param name="camera">The camera: its aim relative to its beam, rays, spread and range (<see cref="SensorDef"/>).</param>
-    public CameraSensor(RigidBody2D beamBody, SensorDef camera)
+    /// <param name="at">Where it sits on the beam body, in the body's space.</param>
+    public CameraSensor(RigidBody2D beamBody, SensorDef camera, Vector2 at)
     {
         ArgumentNullException.ThrowIfNull(beamBody);
         ArgumentNullException.ThrowIfNull(camera);
@@ -34,6 +35,7 @@ public sealed class CameraSensor : IBeamSensor
             _rays[i] = new RayCast2D
             {
                 Name = $"CameraRay{i}",
+                Position = at,
                 TargetPosition = new Vector2((float)targets[i].X, (float)targets[i].Y),
                 CollisionMask = _groundMask,
                 Enabled = true,
@@ -42,7 +44,7 @@ public sealed class CameraSensor : IBeamSensor
         }
     }
 
-    /// <summary>Where each ray starts, in global space (the beam's midpoint).</summary>
+    /// <summary>Where each ray starts, in global space (the camera's picture).</summary>
     public Vector2 GlobalOrigin => _rays[0].GlobalPosition;
 
     /// <summary>Each ray's ground hit as of the last physics step, in global space; a ray that sees nothing has none.</summary>

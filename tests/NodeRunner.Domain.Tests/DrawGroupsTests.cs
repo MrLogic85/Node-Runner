@@ -70,7 +70,21 @@ public sealed class DrawGroupsTests
     }
 
     [Fact]
-    public void A_link_whose_ends_both_rose_rises_too_so_a_raised_Wheel_never_hides_it()
+    public void A_Wheels_face_rises_only_with_its_selected_joint_not_as_a_raised_links_end()
+    {
+        WheelDef[] wheels = [new(40, 4)];
+        var groups = Frame();
+
+        var byLink = groups.Raised([Part(CreatureElementKind.Beam, 12)], [], wheels);
+        byLink.Joints.ShouldContain(4);
+        byLink.Wheels.ShouldNotContain(4);
+
+        groups.Raised([Part(CreatureElementKind.Wheel, 40)], [], wheels).Wheels.ShouldBe([4]);
+        groups.Raised([], [], wheels, targetJoints: [4]).Wheels.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_link_whose_ends_both_rose_rises_too_so_a_raised_Servo_never_hides_it()
     {
         var raised = Frame().Raised([Part(CreatureElementKind.Node, 3), Part(CreatureElementKind.Node, 4)], [], []);
 
@@ -156,23 +170,49 @@ public sealed class DrawGroupsTests
     }
 
     [Fact]
-    public void A_link_leaves_its_own_ends_reach_to_them_even_drawn_over_them()
+    public void A_link_is_hit_out_from_its_ends_hubs_as_it_is_drawn()
     {
-        // The beam draws over its own Wheel and, raised as a target, over the unraised ring at its end.
-        var onBeamNearItsEnd = new Vector2D(-55, 50);
-        HitCross(onBeamNearItsEnd, wheels: [new WheelDef(40, 3)]).ShouldBe(new CreatureElementSelection(CreatureElementKind.Wheel, 40));
+        // #1086: a link draws hub to hub, over its own Wheel's face and under its hub.
+        WheelDef[] wheels = [new(40, 3)];
+        var hubHalo = SelectionMarks.JointHalo(NodeDef.HubRadius);
+        HitCross(new Vector2D(-60 + hubHalo + 1, 50), wheels: wheels).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 20));
+        HitCross(new Vector2D(-60 + hubHalo, 50), wheels: wheels).ShouldBe(new CreatureElementSelection(CreatureElementKind.Wheel, 40));
 
+        // Raised as a target, the beam draws over the unraised ring at its end, out from the hub.
         var raised = DrawGroups.Of(_crossNodes, [new(20, 3, 4, CreatureElementKind.Beam), new(21, 1, 2, CreatureElementKind.Piston)]).Raised([], [], [], targetLinks: [20]);
-        HitCross(onBeamNearItsEnd, raised: raised).ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 3));
-        HitCross(new Vector2D(-30, 50), raised: raised).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 20));
+        HitCross(new Vector2D(-60 + NodeDef.HubRadius - 1, 50), raised: raised).ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 3));
+        HitCross(new Vector2D(-60 + NodeDef.HubRadius + 1, 50), raised: raised).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 20));
     }
 
     [Fact]
-    public void A_Wheels_face_is_hit_under_its_links_and_a_sensor_over_its_beam()
+    public void A_Wheels_hub_is_hit_over_a_link_raised_to_it_but_not_over_a_Servo()
     {
+        // A selected link raises its ends' joints, so the hub stays over it; a Servo covers the hub.
         WheelDef[] wheels = [new(40, 3)];
-        HitCross(new Vector2D(-60, 50 + WheelDef.DefaultRadius), wheels: wheels).ShouldBe(new CreatureElementSelection(CreatureElementKind.Wheel, 40));
+        var raised = DrawGroups.Of(_crossNodes, [new(20, 3, 4, CreatureElementKind.Beam), new(21, 1, 2, CreatureElementKind.Piston)])
+            .Raised([Part(CreatureElementKind.Beam, 20)], [], wheels);
+        var onHub = new Vector2D(-60 + NodeDef.HubRadius + 1, 50);
+        HitCross(onHub, raised: raised, wheels: wheels).ShouldBe(new CreatureElementSelection(CreatureElementKind.Wheel, 40));
+        HitCross(onHub, wheels: wheels, servos: [new(30, 3)]).ShouldBe(new CreatureElementSelection(CreatureElementKind.Servo, 30));
+    }
 
+    [Fact]
+    public void A_Wheel_is_hit_only_at_its_hub_so_a_touch_on_its_tyre_or_middle_hits_what_lies_under_it()
+    {
+        // A big Wheel on joint 1 (0, 0), under the beam from joint 3 to 4 that crosses it at y = 50.
+        WheelDef[] wheels = [new(40, 1, radius: 100)];
+        var selected = DrawGroups.Of(_crossNodes, [new(20, 3, 4, CreatureElementKind.Beam), new(21, 1, 2, CreatureElementKind.Piston)])
+            .Raised([Part(CreatureElementKind.Wheel, 40)], [], wheels);
+        HitCross(new Vector2D(-30, 50), raised: selected, wheels: wheels).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 20));
+
+        HitCross(new Vector2D(-50, -50), wheels: wheels).ShouldBeNull();
+        HitCross(new Vector2D(0, -100), wheels: wheels).ShouldBeNull();
+        HitCross(new Vector2D(0, -NodeDef.HubRadius), wheels: wheels).ShouldBe(new CreatureElementSelection(CreatureElementKind.Wheel, 40));
+    }
+
+    [Fact]
+    public void A_sensor_is_hit_over_its_beam()
+    {
         SensorDef[] sensors = [new(50, 20, SensorKind.Camera)];
         HitCross(new Vector2D(15, 50), sensors: sensors).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 50));
         HitCross(new Vector2D(300, 300), sensors: sensors).ShouldBeNull();

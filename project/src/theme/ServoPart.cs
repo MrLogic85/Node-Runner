@@ -93,12 +93,12 @@ public partial class ServoPart : PartVisual
         set => Change(ref _simplified, value);
     }
 
-    /// <summary>How far the housing may reach past the Servo ring without crowding a middle sensor.</summary>
-    public static float HousingReachFor(float freeLength, float sensorLength = 0)
-    {
-        var reach = MathF.Min(_housingMaxReach, ((freeLength - sensorLength) / 2) - 2);
-        return reach >= _housingMinReach ? reach : 0;
-    }
+    /// <summary>
+    /// How far the housing reaches past the Servo ring: as far as it can without crowding a middle
+    /// sensor, but always a stub, so the Fixed link always shows.
+    /// </summary>
+    public static float HousingReachFor(float freeLength, float sensorLength = 0) =>
+        Math.Clamp(((freeLength - sensorLength) / 2) - 2, _housingMinReach, _housingMaxReach);
 
     /// <summary>A Servo missing a link cannot train, so the whole part draws in danger (#1111).</summary>
     private bool Missing => !HasFixed || !HasTarget;

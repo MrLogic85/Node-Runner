@@ -12,8 +12,8 @@ public readonly record struct CreatureThumbnailFit(double Scale, Vector2D Offset
     public const double LargestScale = 0.5;
 
     /// <summary>
-    /// Fits <paramref name="creature"/>'s whole picture, every joint ring and every sensor picture at
-    /// its beam's middle (#770), centred in a <paramref name="width"/> × <paramref name="height"/>
+    /// Fits <paramref name="creature"/>'s whole picture, every joint ring and every sensor picture where
+    /// it sits on its beam (#770, <see cref="SensorPicture.Centre"/>), centred in a <paramref name="width"/> × <paramref name="height"/>
     /// thumbnail <paramref name="inset"/> inside each edge, never larger than <paramref name="largestScale"/>.
     /// Null when there is nothing to show or no room.
     /// </summary>
@@ -46,8 +46,10 @@ public readonly record struct CreatureThumbnailFit(double Scale, Vector2D Offset
             var beam = creature.Beams[creature.BeamIndexOf(sensor.BeamId)];
             var a = creature.Nodes[creature.NodeIndexOf(beam.NodeA)].Position;
             var b = creature.Nodes[creature.NodeIndexOf(beam.NodeB)].Position;
+            var centre = SensorPicture.Centre(a, b, creature.CoveredRadius(beam.NodeA), creature.CoveredRadius(beam.NodeB));
+
             // The picture is a square turned with its beam, so its corners reach half its diagonal.
-            extents.Add((new Vector2D((a.X + b.X) / 2, (a.Y + b.Y) / 2), SensorPicture.SizeOf(sensor.Kind) * Math.Sqrt(2) / 2));
+            extents.Add((centre, SensorPicture.SizeOf(sensor.Kind) * Math.Sqrt(2) / 2));
         }
 
         return new CanvasRect(

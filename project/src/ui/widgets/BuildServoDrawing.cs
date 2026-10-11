@@ -47,8 +47,6 @@ public static class BuildServoDrawing
             scale,
             ToGodot(a.Position),
             ToGodot(b.Position),
-            (float)viewModel.NodeRadius(a.Id),
-            (float)viewModel.NodeRadius(b.Id),
             BandHalfWidth(link.Kind),
             fixedMark ? theme.ServoFixedBand : theme.ServoTargetBand,
             fixedMark ? theme.ServoFixedBandEdge : theme.ServoTargetBandEdge,

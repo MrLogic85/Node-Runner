@@ -6,10 +6,12 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// Draws a Piston between two joints (#451), shared by Build's canvas and the creature in
-/// Training: a thin <c>accent</c> rod from ring to ring, a cylinder at its first joint and a cap
-/// at its second. The cylinder starts at joint A's edge and is as long as its travel, which is on
-/// the gap between the joints' edges (#870, #835), so a shorter Stroke gives a shorter cylinder; the rod runs on to joint B. Selected, it gets the beam's two <c>halo</c> lines,
-/// which stop at the joints' edges or join a selected joint's halo (#710). Its stroke ticks are
+/// Training: a thin <c>accent</c> rod from hub to hub (#1086), a cylinder at its first joint and a
+/// cap at its second. The cylinder reaches as far past joint A's hub as its travel, which is on the
+/// gap between the hubs (#870, #835, #1086), so a shorter Stroke gives a shorter cylinder; the rod
+/// runs on to joint B. Cylinder and cap start at the edge of what covers their joint, a Servo or
+/// the hub, so a Servo never hides them. Selected, it gets the beam's two <c>halo</c> lines,
+/// which stop at the joints' hubs or join a selected joint's halo (#710). Its stroke ticks are
 /// drawn apart, by <see cref="DrawStroke"/>, so a view can put them over the joints. Drawn in window
 /// pixels (<see cref="UiPixelSpace"/>) so it stays crisp at any zoom; <c>drawTransform</c> is the
 /// transform the caller draws with, and is restored afterwards.
@@ -35,8 +37,10 @@ public static class PistonDrawing
     /// <param name="theme">The theme its fills come from.</param>
     /// <param name="a">Joint A's centre, where the cylinder sits.</param>
     /// <param name="b">Joint B's centre, where the rod ends in its cap.</param>
-    /// <param name="radiusA">Joint A's radius: the rod and cylinder start at its edge.</param>
-    /// <param name="radiusB">Joint B's radius: the cap sits at its edge.</param>
+    /// <param name="radiusA">Joint A's drawn radius, whose halo the selection lines join; the rod starts at its hub (#1086).</param>
+    /// <param name="radiusB">Joint B's drawn radius.</param>
+    /// <param name="coveredA">How far what is drawn over joint A reaches, its hub or a Servo; the cylinder starts there.</param>
+    /// <param name="coveredB">How far what is drawn over joint B reaches; the cap sits there.</param>
     /// <param name="travel">The Piston's travel: its longest length less its shortest.</param>
     /// <param name="line">The rod, cylinder and cap colour: <c>accent</c>, or <c>danger</c> while too short.</param>
     /// <param name="selected">Whether to draw the selection halo.</param>
@@ -50,6 +54,8 @@ public static class PistonDrawing
         Vector2 b,
         float radiusA,
         float radiusB,
+        float coveredA,
+        float coveredB,
         float travel,
         Color line,
         bool selected,
@@ -69,20 +75,21 @@ public static class PistonDrawing
         var across = along.Orthogonal();
         var cylinderHalf = CylinderHalf(theme);
 
-        // Like a beam, the rod stops under the joint rings (#626), or, when they meet, runs centre to centre.
-        var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, radiusA, b, radiusB) ?? (a, b);
+        // Like a beam, the rod runs hub to hub (#1086), or, when they meet, centre to centre.
+        const float hub = JointDrawing.HubRadius;
+        var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, hub, b, hub) ?? (a, b);
         canvas.DrawLine(toPixels * rodStart, toPixels * rodEnd, line, theme.BeamWidth * _rodPerBeam * scale, antialiased: true);
 
-        // The travel is on the gap between the joints' edges (#835), so at its shortest joint B's edge
-        // meets the cylinder's end at most; it never runs past joint B's edge.
-        var cylinderStart = a + (along * radiusA);
-        var cylinderLength = Math.Min(radiusA + Math.Max(travel, _minCylinder), a.DistanceTo(b) - radiusB);
-        var cylinderEnd = a + (along * Math.Max(cylinderLength, radiusA + _minCylinder));
-        var cylinder = Cylinder(cylinderStart, cylinderEnd, along, across, cylinderHalf);
+        // The travel is on the gap between the hubs (#835, #1086), so at its shortest joint B's hub
+        // meets the cylinder's end at most; it never runs past joint B's hub. It starts at the edge of
+        // what covers joint A, so a Servo there never hides it.
+        var cylinderStart = a + (along * coveredA);
+        var cylinderEnd = Math.Min(hub + Math.Max(travel, _minCylinder), a.DistanceTo(b) - hub);
+        var cylinder = Cylinder(cylinderStart, a + (along * Math.Max(cylinderEnd, coveredA + _minCylinder)), along, across, cylinderHalf);
         canvas.DrawColoredPolygon([.. cylinder.Select(point => toPixels * point)], theme.SensorFill);
         canvas.DrawPolyline([.. cylinder.Append(cylinder[0]).Select(point => toPixels * point)], line, _line * scale, antialiased: true);
 
-        var cap = b - (along * radiusB);
+        var cap = b - (along * coveredB);
         canvas.DrawLine(toPixels * (cap + (across * (_capLength / 2))), toPixels * (cap - (across * (_capLength / 2))), line, _line * scale, antialiased: true);
 
         if (selected)

@@ -92,8 +92,8 @@ public sealed class BuildWheelTests
         build.Wheels.Single().Id.ShouldBe(build.SingleSelectedWheelId!.Value);
     }
 
-    // #1107: a beam lower on screen than a Wheel's joint draws over the Wheel, so a touch hits the
-    // beam there, as drawn, and the Wheel only where it shows.
+    // #1107, #1086: a beam crossing a Wheel draws over its face, so a touch hits the beam there,
+    // and the Wheel only at its hub.
     [Fact]
     public void ABeamDrawnOverAWheel_IsHitOverIt()
     {
@@ -107,19 +107,32 @@ public sealed class BuildWheelTests
         build.Selection.Beams.ShouldBe([crossing]);
 
         build.ClearSelection();
-        Tap(gestures, new Vector2D(100, 60));
+        Tap(gestures, new Vector2D(100, 5));
         build.SingleSelectedWheelId.ShouldBe(wheel);
     }
 
     [Fact]
-    public void Tap_AnywhereOnAWheel_SelectsTheWheel_NotItsJoint()
+    public void Tap_AWheelsHub_SelectsTheWheel_NotItsJoint()
     {
         var (build, gestures, wheel) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
 
-        Tap(gestures, new Vector2D(100, 90));
+        Tap(gestures, new Vector2D(100, 10));
 
         build.SingleSelectedWheelId.ShouldBe(wheel);
         build.SingleSelectedNodeId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Tap_AWheelsSeeThroughFaceOrTyre_SelectsNothing()
+    {
+        // #1086: a Wheel is touched only at its hub, so its face never hides what it covers.
+        var (build, gestures, _) = WheelOnTheMiddleJoint(radius: WheelDef.MaxRadius);
+
+        Tap(gestures, new Vector2D(100, 50));
+        build.SelectedPartCount.ShouldBe(0);
+
+        Tap(gestures, new Vector2D(100, WheelDef.MaxRadius - 2));
+        build.SelectedPartCount.ShouldBe(0);
     }
 
     [Fact]
@@ -345,7 +358,7 @@ public sealed class BuildWheelTests
     }
 
     [Fact]
-    public void AWheel_NeverKeepsACreatureFromTraining_ThoughItsSizeCountsInHowLongALinkMustBe()
+    public void AWheel_NeverKeepsACreatureFromTraining_NorMakesALinkTooShort()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(150, 0))], [new BeamDef(3, 1, 2)], [], nextPartId: 4));
@@ -354,8 +367,10 @@ public sealed class BuildWheelTests
 
         CreatureReadiness.Problems(build.Snapshot()).ShouldBeEmpty();
 
+        // #1086: a link counts hub to hub, so even the biggest Wheels on both ends leave it long enough.
         build.SetParameter(PartParameterId.WheelRadius, WheelDef.MaxRadius);
-        CreatureReadiness.IsTooShort(build.Snapshot(), 1, 2).ShouldBeTrue();
+        CreatureReadiness.IsTooShort(build.Snapshot(), 1, 2).ShouldBeFalse();
+        CreatureReadiness.Problems(build.Snapshot()).ShouldBeEmpty();
     }
 
     /// <summary>Joints 1 (0,0), 2 (100,0) and 3 (200,0); beam 4 joins 1–2 and beam 5 joins 2–3.</summary>
