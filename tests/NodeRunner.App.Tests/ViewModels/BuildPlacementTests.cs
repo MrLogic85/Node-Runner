@@ -506,7 +506,7 @@ public sealed class BuildPlacementTests
         servo.TargetLinkId.ShouldBe(5);
         build.ShowTrainingBlockers();
         var note = build.CanvasNotes().Single(note => note.Target.Id == servoId);
-        note.Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        note.Text.ShouldBe(CreatureBuilder.ServoNeedsTwoSidesReason);
         CanvasNoteTargets.JointIds(note.Target, build).ShouldBe([2]);
 
         build.ReplaceSelection(PartSet.None with { Springs = new HashSet<int> { 5 } });
@@ -602,10 +602,10 @@ public sealed class BuildPlacementTests
         servo.FixedLinkId.ShouldBeNull();
         servo.TargetLinkId.ShouldBe(5);
         build.ShowTrainingBlockers();
-        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoSidesReason);
         build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
         var pickers = new BuildPresentationViewModel(build).SinglePart!.Pickers!;
-        pickers[0].Note.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        pickers[0].Note.ShouldBe(CreatureBuilder.ServoNeedsTwoSidesReason);
         pickers[1].Note.ShouldBeNull();
     }
 
@@ -741,7 +741,7 @@ public sealed class BuildPlacementTests
         servo.TargetLinkId.ShouldBe(5);
         build.ShowTrainingBlockers();
         var note = build.CanvasNotes().Single(note => note.Target.Id == servoId);
-        note.Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        note.Text.ShouldBe(CreatureBuilder.ServoNeedsTwoSidesReason);
         CanvasNoteTargets.JointIds(note.Target, build).ShouldBe([2]);
     }
 
@@ -787,7 +787,7 @@ public sealed class BuildPlacementTests
 
         build.ShowTrainingBlockers();
 
-        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoLinksReason);
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(CreatureBuilder.ServoNeedsTwoSidesReason);
     }
 
     // Like "Not connected" (#844, #1006): a Servo missing a link is marked on a Play tap, stays

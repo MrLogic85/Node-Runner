@@ -90,7 +90,7 @@ public enum ServoLinkRole
 }
 
 /// <summary>
-/// One link a Servo picker offers: its <see cref="Role"/> on the Servo today, and the <see cref="Note"/>
+/// One link a Servo picker offers, or its joint's Wheel, a one-sided link (#1118): its <see cref="Role"/> on the Servo today, and the <see cref="Note"/>
 /// "swaps" when picking it swaps the Fixed and Target links (#1130).
 /// </summary>
 public sealed record PartPickerOption(int LinkId, UiText Name, CreatureElementKind Kind, ServoLinkRole Role, UiText? Note = null);

@@ -1,17 +1,37 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Servo (#452): a powered joint part on one node. It holds one link fixed and turns another
-/// link relative to it. Either link reference may be missing after that link is deleted; readiness
-/// then blocks training until the player picks a replacement or deletes the Servo.
+/// A Servo (#452): a powered joint part on one node. It holds one side fixed and turns another
+/// side relative to it. A side is a link touching its joint, or the Wheel on its joint, a one-sided
+/// link whose direction is its own turn (#1118). Either reference may be missing after that part is
+/// deleted; readiness then blocks training until the player picks a replacement or deletes the Servo.
 /// </summary>
 public sealed record ServoDef
 {
     /// <summary>A Servo's visible/collision joint radius, about 11/6 of a plain joint (#452).</summary>
     public const double JointRadius = 27;
 
-    /// <summary>Whether a joint with <paramref name="linksAtJoint"/> can hold a working Servo: it needs one Fixed and one Target link.</summary>
-    public static bool HasTwoLinks(IReadOnlyCollection<LinkRef> linksAtJoint) => linksAtJoint.Count >= 2;
+    /// <summary>
+    /// Whether a joint with <paramref name="linksAtJoint"/>, and a Wheel when <paramref name="hasWheel"/>,
+    /// can hold a working Servo: it needs a Fixed and a Target side, two links or a link and the Wheel.
+    /// </summary>
+    public static bool HasTwoSides(IReadOnlyCollection<LinkRef> linksAtJoint, bool hasWheel) => linksAtJoint.Count + (hasWheel ? 1 : 0) >= 2;
+
+    /// <summary>
+    /// A new Servo's Fixed and Target on a joint with <paramref name="linksAtJoint"/> and
+    /// <paramref name="wheel"/>: the two lowest-id links, or with fewer the link as Fixed and the
+    /// Wheel as Target (#1118). A role nothing fills stays empty.
+    /// </summary>
+    public static (int? Fixed, int? Target) DefaultSides(IEnumerable<LinkRef> linksAtJoint, WheelDef? wheel)
+    {
+        var links = linksAtJoint.OrderBy(link => link.Id).Select(link => link.Id).Take(2).ToArray();
+        return links.Length switch
+        {
+            2 => (links[0], links[1]),
+            1 => (links[0], wheel?.Id),
+            _ => (null, wheel?.Id),
+        };
+    }
 
     /// <summary>A new Servo's <see cref="Strength"/>: 50 N·m at 100 world units per metre.</summary>
     public const double DefaultStrength = 500000;
@@ -106,8 +126,10 @@ public sealed record ServoDef
 
     public int NodeId { get; }
 
+    /// <summary>The side held still: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
     public int? FixedLinkId { get; }
 
+    /// <summary>The side turned: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
     public int? TargetLinkId { get; }
 
     public string? Name { get; }

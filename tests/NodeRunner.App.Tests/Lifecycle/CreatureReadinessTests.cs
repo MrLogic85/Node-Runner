@@ -102,7 +102,7 @@ public sealed class CreatureReadinessTests
             nextPartId: 7);
 
         CreatureReadiness.Problems(creature).ShouldBe(
-            [UiText.Format("{0} is missing a link. Pick two links at its joint or delete it.",
+            [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.",
                 PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, 6))]);
     }
 
@@ -119,8 +119,25 @@ public sealed class CreatureReadinessTests
             nextPartId: 7);
 
         CreatureReadiness.Problems(creature).ShouldBe(
-            [UiText.Format("{0} needs two links at its joint. Connect another link there or delete it.",
+            [UiText.Format("{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it.",
                 PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, 6))]);
+    }
+
+    [Fact]
+    public void Problems_WithAServoTurningItsJointsWheel_HasNone()
+    {
+        // A link and the Wheel, a one-sided link, are its two sides (#1118).
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(120, 0))],
+            [new BeamDef(4, 1, 2)],
+            [],
+            [new ServoDef(6, 1, 4, 7)],
+            [],
+            [],
+            [new WheelDef(7, 1)],
+            nextPartId: 8);
+
+        CreatureReadiness.Problems(creature).ShouldBeEmpty();
     }
 
     [Fact]

@@ -72,9 +72,9 @@ public static class CreatureReadiness
             if (IsMissingALink(servo))
             {
                 var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, servo.Id);
-                problems.Add(!ServoDef.HasTwoLinks(creature.LinksAt(servo.NodeId))
-                    ? UiText.Format("{0} needs two links at its joint. Connect another link there or delete it.", name)
-                    : UiText.Format("{0} is missing a link. Pick two links at its joint or delete it.", name));
+                problems.Add(!ServoDef.HasTwoSides(creature.LinksAt(servo.NodeId), creature.WheelAt(servo.NodeId) is not null)
+                    ? UiText.Format("{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it.", name)
+                    : UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.", name));
             }
         }
 
@@ -91,7 +91,7 @@ public static class CreatureReadiness
         return problems;
     }
 
-    /// <summary>A Servo without both its Fixed and Target link cannot train.</summary>
+    /// <summary>A Servo without both its Fixed and Target side, a link or its Wheel (#1118), cannot train.</summary>
     public static bool IsMissingALink(ServoDef servo)
     {
         ArgumentNullException.ThrowIfNull(servo);

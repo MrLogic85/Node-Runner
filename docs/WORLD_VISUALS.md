@@ -63,6 +63,11 @@ A housing, a range dial and a horn (#452, #577):
   and an `accent` line across the band marks them (#922);
 - a two-armed horn along the Target link, at the Start position in Build.
 
+A Wheel side (#1118) has no link to point along, so it reads as a spoke
+from the hub along the Wheel's built rightward direction, turning with the
+Wheel: the horn points along it as Target, and as Fixed the housing is only
+the ring and the range turns with the Wheel.
+
 A Servo missing a link keeps its shape on its usual fill, but draws all
 of it in `danger`, like a loose Wheel, with an upright "!" badge at the
 screen's upper right (#1111). It has no housing without a Fixed link, and
@@ -165,7 +170,8 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
   cushion. With a Servo on the same joint, each selected part shows its
   own mark (#1044).
 - **Servo:** a keyhole `halo` outline. Selected alone, a hatched `detail`
-  band also marks its Fixed link and an `accent` band its Target link.
+  band also marks its Fixed link and an `accent` band its Target link; a
+  Wheel side's band is a beam-wide spoke from the hub to the tyre (#1118).
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
   ticks, as wide as a Piston's cylinder or a Spring's seats,
   joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.

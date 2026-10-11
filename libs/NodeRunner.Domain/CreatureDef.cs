@@ -134,8 +134,8 @@ public sealed record CreatureDef
         foreach (var servo in servos)
         {
             ValidateJointPart(servo.NodeId, nodeIds, jointsWithMotor, "motor or brake");
-            ValidateServoLink(servo.FixedLinkId, servo.NodeId, links);
-            ValidateServoLink(servo.TargetLinkId, servo.NodeId, links);
+            ValidateServoLink(servo.FixedLinkId, servo.NodeId, links, wheels);
+            ValidateServoLink(servo.TargetLinkId, servo.NodeId, links, wheels);
         }
 
         var jointsWithWheel = new HashSet<int>();
@@ -223,6 +223,12 @@ public sealed record CreatureDef
     public int SpringIndexOf(int springId) => IndexOf(_springIndexById, springId, "Spring id must point to an existing spring.");
 
     public int WheelIndexOf(int wheelId) => IndexOf(_wheelIndexById, wheelId, "Wheel id must point to an existing wheel.");
+
+    /// <summary>The Wheel on joint <paramref name="nodeId"/>, if it has one.</summary>
+    public WheelDef? WheelAt(int nodeId) => _wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId);
+
+    /// <summary>Whether a Servo side id names a Wheel, a one-sided link (#1118), rather than a link.</summary>
+    public bool IsWheel(int partId) => _wheelIndexById.ContainsKey(partId);
 
     public int TouchSensorIndexOf(int touchSensorId) => IndexOf(_touchSensorIndexById, touchSensorId, "Touch sensor id must point to an existing touch sensor.");
 
@@ -355,16 +361,17 @@ public sealed record CreatureDef
         }
     }
 
-    private static void ValidateServoLink(int? linkId, int nodeId, IReadOnlyList<LinkRef> links)
+    // A Servo side is a link touching its joint, or the Wheel on it (#1118).
+    private static void ValidateServoLink(int? linkId, int nodeId, IReadOnlyList<LinkRef> links, IReadOnlyList<WheelDef> wheels)
     {
         if (linkId is null)
         {
             return;
         }
 
-        if (!links.Any(link => link.Id == linkId.Value && link.Touches(nodeId)))
+        if (!links.Any(link => link.Id == linkId.Value && link.Touches(nodeId)) && !wheels.Any(wheel => wheel.Id == linkId.Value && wheel.NodeId == nodeId))
         {
-            throw new ArgumentException($"Link id {linkId.Value} must touch node id {nodeId} for that servo.");
+            throw new ArgumentException($"Link id {linkId.Value} must touch node id {nodeId}, or be its Wheel, for that servo.");
         }
     }
 

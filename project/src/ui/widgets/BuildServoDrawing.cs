@@ -6,7 +6,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>Build canvas marks for joint parts: a selected Servo's link bands.</summary>
+/// <summary>Build canvas marks for joint parts: a selected Servo's link bands, a Wheel side's as a spoke (#1118).</summary>
 public static class BuildServoDrawing
 {
     private const float _servoBeamBandHalfWidth = 9;
@@ -36,18 +36,34 @@ public static class BuildServoDrawing
         canvas.DrawSetTransformMatrix(viewTransform);
     }
 
+    // The Wheel, a one-sided link (#1118), gets its band as a spoke from its joint to its tyre along
+    // its turn, which is 0 in Build.
     private static void DrawLinkBand(CanvasItem canvas, BuildViewModel viewModel, VisualTheme theme, Transform2D toPixels, float scale, int linkId, bool fixedMark)
     {
-        var link = viewModel.Link(linkId);
-        var a = viewModel.Nodes[viewModel.NodeIndexOf(link.NodeA)];
-        var b = viewModel.Nodes[viewModel.NodeIndexOf(link.NodeB)];
+        Vector2 from;
+        Vector2 to;
+        float halfWidth;
+        if (viewModel.Wheels.FirstOrDefault(wheel => wheel.Id == linkId) is { } wheel)
+        {
+            from = ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(wheel.NodeId)].Position);
+            to = from + new Vector2((float)wheel.Radius, 0);
+            halfWidth = _servoBeamBandHalfWidth;
+        }
+        else
+        {
+            var link = viewModel.Link(linkId);
+            from = ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(link.NodeA)].Position);
+            to = ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(link.NodeB)].Position);
+            halfWidth = BandHalfWidth(link.Kind);
+        }
+
         SelectionDrawing.DrawLinkBand(
             canvas,
             toPixels,
             scale,
-            ToGodot(a.Position),
-            ToGodot(b.Position),
-            BandHalfWidth(link.Kind),
+            from,
+            to,
+            halfWidth,
             fixedMark ? theme.ServoFixedBand : theme.ServoTargetBand,
             fixedMark ? theme.ServoFixedBandEdge : theme.ServoTargetBandEdge,
             fixedMark ? theme.ServoFixedHatch : null,

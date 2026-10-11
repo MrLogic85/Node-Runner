@@ -143,14 +143,14 @@ public partial class CreatureParts : Node2D
         if (marks.PreviewNodeOf(BuildPart.Servo) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var part = PartFor(_servos, -previewNode);
-            var links = LinksAtNode(shape, previewNode).OrderBy(link => link.Id).Take(2).ToArray();
+            var (fixedId, targetId) = ServoDef.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
             ShowServoPart(
                 part,
                 shape,
                 nodes,
                 node.Id,
-                links.ElementAtOrDefault(0).Id is var fixedId && fixedId > 0 ? fixedId : null,
-                links.ElementAtOrDefault(1).Id is var targetId && targetId > 0 ? targetId : null,
+                fixedId,
+                targetId,
                 ServoDef.DefaultRange,
                 ServoDef.DefaultStart,
                 selected: true);
@@ -169,10 +169,8 @@ public partial class CreatureParts : Node2D
         bool selected)
     {
         var joint = nodes[nodeId];
-        var hasFixed = TryLink(shape, nodeId, fixedLinkId, out var fixedLink);
-        var hasTarget = TryLink(shape, nodeId, targetLinkId, out var targetLink);
-        var fixedAngle = hasFixed ? LinkAngle(nodes, nodeId, fixedLink) : 0;
-        var targetAngle = hasTarget ? LinkAngle(nodes, nodeId, targetLink) : 0;
+        var hasFixed = TrySide(shape, nodes, nodeId, fixedLinkId, out var fixedLink, out var fixedAngle);
+        var hasTarget = TrySide(shape, nodes, nodeId, targetLinkId, out _, out var targetAngle);
         var localTarget = hasTarget ? RelativeAngle(fixedAngle, targetAngle) : 0;
 
         part.Position = ToGodot(joint.Position);
@@ -187,7 +185,28 @@ public partial class CreatureParts : Node2D
         part.BuiltAngle = localTarget;
         part.Range = (float)range;
         part.Start = (float)start;
-        part.HousingReach = hasFixed ? HousingReach(shape, nodes, fixedLink) : 0;
+        part.HousingReach = fixedLink is { } link ? HousingReach(shape, nodes, link) : 0;
+    }
+
+    // A side is a link at the joint, pointing to its far joint, or the joint's Wheel, a one-sided
+    // link pointing along its turn (#1118), which is 0 in Build.
+    private static bool TrySide(CreatureShape shape, Dictionary<int, NodeDef> nodes, int nodeId, int? sideId, out LinkRef? link, out float angle)
+    {
+        link = null;
+        angle = 0;
+        if (sideId is { } id && shape.Wheels.Any(wheel => wheel.Id == id && wheel.NodeId == nodeId))
+        {
+            return true;
+        }
+
+        if (!TryLink(shape, nodeId, sideId, out var found))
+        {
+            return false;
+        }
+
+        link = found;
+        angle = LinkAngle(nodes, nodeId, found);
+        return true;
     }
 
     private static bool TryLink(CreatureShape shape, int nodeId, int? linkId, out LinkRef link)

@@ -21,7 +21,7 @@ msgid "3.1 m/s"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "A Servo needs two links at its joint"
+msgid "A Servo needs two links, or a link and a Wheel"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -671,6 +671,10 @@ msgstr ""
 msgid "Phone may stutter above {0}."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+msgid "Pick Fixed and Target links"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Pick a Fixed link"
@@ -679,10 +683,6 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Pick a Target link"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "Pick two links"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
@@ -1356,7 +1356,7 @@ msgid "{0} is driven most by {1}."
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "{0} is missing a link. Pick two links at its joint or delete it."
+msgid "{0} is missing a link. Pick its Fixed and Target links or delete it."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
@@ -1397,7 +1397,7 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "{0} needs two links at its joint. Connect another link there or delete it."
+msgid "{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs

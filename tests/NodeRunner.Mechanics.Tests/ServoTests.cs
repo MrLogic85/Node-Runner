@@ -71,6 +71,24 @@ public sealed class ServoTests
     }
 
     [Fact]
+    public void WheelSide_TurnsLikeALinkToAMarkOnItsTyre()
+    {
+        // A mark on the tyre, 20 units right of the hub at rotation 0, read as a link's far joint (#1118).
+        var hub = new Vector2D(0, 0);
+        const double rotation = Math.PI / 2;
+        const double spin = 3;
+        var mark = new Vector2D(20 * Math.Cos(rotation), 20 * Math.Sin(rotation));
+        var markVelocity = new Vector2D(-20 * spin * Math.Sin(rotation), 20 * spin * Math.Cos(rotation));
+
+        Servo.WheelAngle(rotation).ShouldBe(Servo.LinkAngle(hub, mark), tolerance: 1e-12);
+        Servo.WheelAngularSpeed(spin).ShouldBe(Servo.LinkAngularSpeed(hub, mark, new Vector2D(0, 0), markVelocity), tolerance: 1e-12);
+
+        // The couple a link would get turns the body as the Wheel's body torque does: r × F, y-down.
+        var couple = Servo.CoupleForTorque(hub, new Vector2D(20, 0), torque: 60);
+        Servo.WheelBodyTorque(60).ShouldBe(20 * couple.ForceOnFar.Y, tolerance: 1e-12);
+    }
+
+    [Fact]
     public void CoupleForTorque_ReturnsEqualOppositeForcesWithTheRequestedMoment()
     {
         var couple = Servo.CoupleForTorque(new Vector2D(0, 0), new Vector2D(20, 0), torque: 60);

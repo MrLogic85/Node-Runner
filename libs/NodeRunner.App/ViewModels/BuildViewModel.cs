@@ -459,11 +459,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         foreach (var servo in Servos.Where(servo => _shownBlockers.Contains((CreatureElementKind.Servo, servo.NodeId)) && CreatureReadiness.IsMissingALink(servo)))
         {
-            var text = ServoNeedsTwoLinks(servo.NodeId)
-                ? CreatureBuilder.ServoNeedsTwoLinksReason
+            var text = ServoNeedsTwoSides(servo.NodeId)
+                ? CreatureBuilder.ServoNeedsTwoSidesReason
                 : (servo.FixedLinkId is null, servo.TargetLinkId is null) switch
                 {
-                    (true, true) => UiText.Plain("Pick two links"),
+                    (true, true) => UiText.Plain("Pick Fixed and Target links"),
                     (true, false) => UiText.Plain("Pick a Fixed link"),
                     _ => UiText.Plain("Pick a Target link"),
                 };
@@ -968,7 +968,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
 
-    public bool ServoNeedsTwoLinks(int nodeId) => _builder.ServoNeedsTwoLinks(nodeId);
+    public bool ServoNeedsTwoSides(int nodeId) => _builder.ServoNeedsTwoSides(nodeId);
 
     public int? ServoAtNode(int nodeId) => _builder.Servos.FirstOrDefault(servo => servo.NodeId == nodeId)?.Id;
 

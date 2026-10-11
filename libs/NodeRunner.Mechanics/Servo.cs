@@ -5,7 +5,8 @@ namespace NodeRunner.Mechanics;
 /// <summary>
 /// The brain conventions and torque of a <see cref="ServoDef"/> (#452). Its angle is the direction
 /// from the Servo joint to the target link's other joint minus the direction to the fixed link's
-/// other joint, relative to the built angle. The brain sees −1 at the lower end, 0 as built and
+/// other joint, relative to the built angle; a Wheel side (#1118) stands in a mark on its tyre for
+/// the other joint. The brain sees −1 at the lower end, 0 as built and
 /// +1 at the upper end, and drives an angle target plus a strength share. The motor chases the
 /// wanted speed with a push part and a holding part, so it can hold a load up to its strength.
 /// </summary>
@@ -55,6 +56,19 @@ public static class Servo
     /// <summary>The angle an angle output asks for.</summary>
     public static double TargetAngle(double position, ServoDef servo, double builtAngle = 0) =>
         OutputSignals.PositionFromTarget(position, LowerAngle(servo, builtAngle), builtAngle, UpperAngle(servo, builtAngle));
+
+    /// <summary>
+    /// The live direction of a Wheel side (#1118), a one-sided link that points along its own turn,
+    /// from its body's rotation. Creature coordinates are y-down, so a body's rotation is
+    /// clockwise-positive on screen, and model angles are counter-clockwise-positive.
+    /// </summary>
+    public static double WheelAngle(double bodyRotation) => -bodyRotation;
+
+    /// <summary>A Wheel side's angular speed (#1118) from its body's, in the model's counter-clockwise-positive sense.</summary>
+    public static double WheelAngularSpeed(double bodyAngularVelocity) => -bodyAngularVelocity;
+
+    /// <summary>The body torque that turns a Wheel side (#1118) by a model, counter-clockwise-positive, <paramref name="torque"/>.</summary>
+    public static double WheelBodyTorque(double torque) => -torque;
 
     /// <summary>The live direction from a Servo joint to a link's other joint, in radians.</summary>
     public static double LinkAngle(Vector2D joint, Vector2D far)

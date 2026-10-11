@@ -373,11 +373,14 @@ public sealed class BuildPresentationViewModel
 
     private IReadOnlyList<PartPickerPresentation> ServoPickers(ServoDef servo)
     {
-        var links = _build.LinksAt(servo.NodeId)
-            .OrderBy(link => link.Id)
-            .ToArray();
+        // A Wheel on the joint is a one-sided link, listed after the links (#1118).
+        (int Id, CreatureElementKind Kind)[] links =
+        [
+            .. _build.LinksAt(servo.NodeId).OrderBy(link => link.Id).Select(link => (link.Id, link.Kind)),
+            .. _build.Wheels.Where(wheel => wheel.NodeId == servo.NodeId).Select(wheel => (wheel.Id, CreatureElementKind.Wheel)),
+        ];
         var trainedNote = !_build.IsLocked && _build.TrainingGeneration is not null ? UiText.Plain("Changing these makes it learn again.") : null;
-        var twoLinksNote = _build.ServoNeedsTwoLinks(servo.NodeId) ? CreatureBuilder.ServoNeedsTwoLinksReason : null;
+        var twoLinksNote = _build.ServoNeedsTwoSides(servo.NodeId) ? CreatureBuilder.ServoNeedsTwoSidesReason : null;
 
         // Picking the other role's link swaps the two only when both are set; with one empty, it just moves.
         var bothSet = servo.FixedLinkId is not null && servo.TargetLinkId is not null;
@@ -399,7 +402,7 @@ public sealed class BuildPresentationViewModel
                 _build.IsLocked ? null : chosen ? trainedNote : twoLinksNote,
                 chosen ? null : placeholder);
 
-            PartPickerOption Option(LinkRef link)
+            PartPickerOption Option((int Id, CreatureElementKind Kind) link)
             {
                 var role = link.Id == servo.FixedLinkId ? ServoLinkRole.Fixed
                     : link.Id == servo.TargetLinkId ? ServoLinkRole.Target

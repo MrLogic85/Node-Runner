@@ -76,8 +76,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Creature element selection** — A selected joint, beam, sensor or link: a
   `CreatureElementKind` plus the part's stable id (#220). A selection holds
   any mix of them as a `PartSet` (#704), in every tool (#803).
-- **Fixed / Target** — The two links a Servo uses: it holds Fixed and turns
-  Target.
+- **Fixed / Target** — The two sides a Servo uses: it holds Fixed and turns
+  Target. Each is a link, or the Wheel on its joint as a one-sided link
+  (#1118). See: `docs/CREATURE_MODEL.md` → "Servo".
 - **Hub** — The `NodeDef.HubRadius` circle at every joint's centre where
   links end and are measured from, whatever sits on the joint (#1086). See:
   `docs/CREATURE_MODEL.md` → Node.
