@@ -240,11 +240,13 @@ fold.
   joint, and may share it with a Wheel and a Servo. A Wheel's tyre is its
   joint's, so a tyre on the ground counts.
 - **Reading:** its one input, `touch`, is 1 while its joint touches the
-  ground and 0 otherwise, with no smoothing. Only the ground counts, never
+  ground and 0 otherwise, never nearness or pressure, so it is easy to read
+  while learning; no smoothing. Only the ground counts, never
   the creature's own parts or other shadows. A freshly built or reset body
   reads 0 until it lands.
 - **Size:** it adds no radius and does not change the joint's collider (see
-  Node). It has no settings.
+  Node). Its cushion (#1045) is drawn only and does not change what counts
+  as touching. It has no settings.
 - How it is placed and drawn is #1045.
 
 ### Piston
