@@ -20,12 +20,14 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
 
         var sensorKinds = creature.Sensors.ToDictionary(sensor => sensor.Id, sensor => sensor.Kind);
         var servoIds = creature.Servos.Select(servo => servo.Id).ToHashSet();
+        var touchSensorIds = creature.TouchSensors.Select(touch => touch.Id).ToHashSet();
         UiText Label(BrainPort port)
         {
-            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, port.PartId);
+            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, port.PartId);
             return sensorKinds.TryGetValue(port.PartId, out var kind)
                 ? Reading(kind, port.Channel, name)
                 : servoIds.Contains(port.PartId) ? ServoChannel(port.Channel, name)
+                : touchSensorIds.Contains(port.PartId) ? TouchChannel(port.Channel, name)
                 : PistonChannel(port.Channel, name);
         }
 
@@ -56,6 +58,12 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
         BrainPorts.PistonPositionChannel => UiText.Format("{0}:\u00A0length", name),
         BrainPorts.PistonStrengthChannel => UiText.Format("{0}:\u00A0strength", name),
         _ => throw new InvalidOperationException($"No label for Piston channel {channel}."),
+    };
+
+    private static UiText TouchChannel(string channel, UiText name) => channel switch
+    {
+        BrainPorts.TouchChannel => UiText.Format("{0}:\u00A0touch", name),
+        _ => throw new InvalidOperationException($"No label for Touch sensor channel {channel}."),
     };
 
     private static UiText ServoChannel(string channel, UiText name) => channel switch

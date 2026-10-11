@@ -211,7 +211,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   it, a tap on it does nothing, and a second finger puts the aim back.
 - **Deleting:** there is no Delete tool; the Part settings and selection
   panels delete the selection. Deleting a joint removes every link on it,
-  its Servo and Wheel and those beams' sensors (`CreatureBuilder.RemoveNode`),
+  its Servo, Wheel and Touch sensor and those beams' sensors
+  (`CreatureBuilder.RemoveNode`),
   and deleting a beam removes its sensor. Deleting a Servo or Wheel leaves
   its joint, with its other part or bare,
   unless the same delete takes every part and every link on that joint and

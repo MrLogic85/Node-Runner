@@ -81,6 +81,7 @@ public sealed class ShareDictionaryTests
         builder.AddServo(back);
         builder.AddServo(front);
         builder.AddWheel(frontFoot);
+        builder.AddTouchSensor(backFoot);
         return new CreationDef(Guid.NewGuid(), "Untitled Creation", builder.Build());
     }
 
@@ -112,6 +113,8 @@ public sealed class ShareDictionaryTests
         builder.SetParameter(servo, PartParameterId.ServoStrength, 800000);
         var wheel = builder.AddWheel(backFoot);
         builder.SetParameter(wheel, PartParameterId.WheelRadius, 60);
+        builder.AddTouchSensor(backFoot);
+        builder.AddTouchSensor(frontFoot);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 

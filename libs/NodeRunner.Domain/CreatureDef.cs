@@ -4,8 +4,9 @@ using System.Text.Json.Serialization;
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A drawn creature: nodes, the beams between them, the sensors on them, the joint parts on them
-/// (Servos and Wheels) and the Pistons and Springs that link them. Any drawing is a valid
+/// A drawn creature: nodes, the beams between them, the sensors on them (beam sensors and Touch
+/// sensors on nodes), the joint parts on them (Servos and Wheels) and the Pistons and Springs that
+/// link them. Any drawing is a valid
 /// <see cref="CreatureDef"/>, so an unfinished one can be saved; only its part references must point
 /// at existing parts. Whether it can be simulated and trained is checked before training
 /// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>). A Camera placed without an aim gets
@@ -20,6 +21,7 @@ public sealed record CreatureDef
     private readonly ReadOnlyCollection<PistonDef> _pistons;
     private readonly ReadOnlyCollection<SpringDef> _springs;
     private readonly ReadOnlyCollection<WheelDef> _wheels;
+    private readonly ReadOnlyCollection<TouchSensorDef> _touchSensors;
     private readonly Dictionary<int, int> _nodeIndexById;
     private readonly Dictionary<int, int> _beamIndexById;
     private readonly Dictionary<int, int> _sensorIndexById;
@@ -27,44 +29,50 @@ public sealed record CreatureDef
     private readonly Dictionary<int, int> _pistonIndexById;
     private readonly Dictionary<int, int> _springIndexById;
     private readonly Dictionary<int, int> _wheelIndexById;
+    private readonly Dictionary<int, int> _touchSensorIndexById;
 
     public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors)
-        : this(nodes, beams, sensors, [], [], [], [], nextPartId: null)
+        : this(nodes, beams, sensors, [], [], [], [], [], nextPartId: null)
     {
     }
 
     public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, int nextPartId)
-        : this(nodes, beams, sensors, [], [], [], [], (int?)nextPartId)
+        : this(nodes, beams, sensors, [], [], [], [], [], (int?)nextPartId)
     {
     }
 
     public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons)
-        : this(nodes, beams, sensors, [], pistons, [], [], nextPartId: null)
+        : this(nodes, beams, sensors, [], pistons, [], [], [], nextPartId: null)
     {
     }
 
     public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, int nextPartId)
-        : this(nodes, beams, sensors, [], pistons, [], [], (int?)nextPartId)
+        : this(nodes, beams, sensors, [], pistons, [], [], [], (int?)nextPartId)
     {
     }
 
     public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int nextPartId)
-        : this(nodes, beams, sensors, [], pistons, springs, [], (int?)nextPartId)
+        : this(nodes, beams, sensors, [], pistons, springs, [], [], (int?)nextPartId)
     {
     }
 
     public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, int nextPartId)
-        : this(nodes, beams, sensors, servos, pistons, springs, [], (int?)nextPartId)
+        : this(nodes, beams, sensors, servos, pistons, springs, [], [], (int?)nextPartId)
+    {
+    }
+
+    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, int nextPartId)
+        : this(nodes, beams, sensors, servos, pistons, springs, wheels, [], (int?)nextPartId)
     {
     }
 
     [JsonConstructor]
-    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, int nextPartId)
-        : this(nodes, beams, sensors, servos, pistons, springs, wheels, (int?)nextPartId)
+    public CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, int nextPartId)
+        : this(nodes, beams, sensors, servos, pistons, springs, wheels, touchSensors, (int?)nextPartId)
     {
     }
 
-    private CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, int? nextPartId)
+    private CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, int? nextPartId)
     {
         ArgumentNullException.ThrowIfNull(nodes);
         ArgumentNullException.ThrowIfNull(beams);
@@ -73,7 +81,8 @@ public sealed record CreatureDef
         ArgumentNullException.ThrowIfNull(pistons);
         ArgumentNullException.ThrowIfNull(springs);
         ArgumentNullException.ThrowIfNull(wheels);
-        if (nodes.Contains(null!) || beams.Contains(null!) || sensors.Contains(null!) || servos.Contains(null!) || pistons.Contains(null!) || springs.Contains(null!) || wheels.Contains(null!))
+        ArgumentNullException.ThrowIfNull(touchSensors);
+        if (nodes.Contains(null!) || beams.Contains(null!) || sensors.Contains(null!) || servos.Contains(null!) || pistons.Contains(null!) || springs.Contains(null!) || wheels.Contains(null!) || touchSensors.Contains(null!))
         {
             throw new ArgumentException("A creature's part lists cannot contain null.");
         }
@@ -87,6 +96,7 @@ public sealed record CreatureDef
         ValidatePartIds(pistons.Select(piston => piston.Id), ids, ref maxId);
         ValidatePartIds(springs.Select(spring => spring.Id), ids, ref maxId);
         ValidatePartIds(wheels.Select(wheel => wheel.Id), ids, ref maxId);
+        ValidatePartIds(touchSensors.Select(touch => touch.Id), ids, ref maxId);
 
         var resolvedNextPartId = nextPartId ?? maxId + 1;
         if (resolvedNextPartId <= 0)
@@ -135,6 +145,13 @@ public sealed record CreatureDef
             ValidateJointPart(wheel.NodeId, nodeIds, jointsWithWheel, "Wheel");
         }
 
+        // A Touch sensor takes no joint-part slot: it sits next to a Servo and a Wheel (#1043).
+        var jointsWithTouch = new HashSet<int>();
+        foreach (var touch in touchSensors)
+        {
+            ValidateJointPart(touch.NodeId, nodeIds, jointsWithTouch, "Touch sensor");
+        }
+
         var beamsWithSensor = new HashSet<int>();
         foreach (var sensor in sensors)
         {
@@ -152,6 +169,7 @@ public sealed record CreatureDef
         _pistons = Array.AsReadOnly(pistons.ToArray());
         _springs = Array.AsReadOnly(springs.ToArray());
         _wheels = Array.AsReadOnly(wheels.ToArray());
+        _touchSensors = Array.AsReadOnly(touchSensors.ToArray());
         NextPartId = resolvedNextPartId;
         _nodeIndexById = BuildIndex(_nodes, node => node.Id);
         _beamIndexById = BuildIndex(_beams, beam => beam.Id);
@@ -160,6 +178,7 @@ public sealed record CreatureDef
         _pistonIndexById = BuildIndex(_pistons, piston => piston.Id);
         _springIndexById = BuildIndex(_springs, spring => spring.Id);
         _wheelIndexById = BuildIndex(_wheels, wheel => wheel.Id);
+        _touchSensorIndexById = BuildIndex(_touchSensors, touch => touch.Id);
     }
 
     public IReadOnlyList<NodeDef> Nodes => _nodes;
@@ -180,12 +199,15 @@ public sealed record CreatureDef
     /// <summary>The Wheels (#129): passive joint parts that roll on the ground.</summary>
     public IReadOnlyList<WheelDef> Wheels => _wheels;
 
+    /// <summary>The Touch sensors (#1043): one input each, whether its node touches the ground.</summary>
+    public IReadOnlyList<TouchSensorDef> TouchSensors => _touchSensors;
+
     /// <summary>
-    /// Every part: nodes, beams, sensors, Servos, Pistons, Springs and Wheels. A new kind of part counts here too,
+    /// Every part: nodes, beams, sensors, Servos, Pistons, Springs, Wheels and Touch sensors. A new kind of part counts here too,
     /// since what scales with the creature's size reads it (#318).
     /// </summary>
     [JsonIgnore]
-    public int PartCount => _nodes.Count + _beams.Count + _sensors.Count + _servos.Count + _pistons.Count + _springs.Count + _wheels.Count;
+    public int PartCount => _nodes.Count + _beams.Count + _sensors.Count + _servos.Count + _pistons.Count + _springs.Count + _wheels.Count + _touchSensors.Count;
 
     public int NextPartId { get; }
 
@@ -202,6 +224,8 @@ public sealed record CreatureDef
     public int SpringIndexOf(int springId) => IndexOf(_springIndexById, springId, "Spring id must point to an existing spring.");
 
     public int WheelIndexOf(int wheelId) => IndexOf(_wheelIndexById, wheelId, "Wheel id must point to an existing wheel.");
+
+    public int TouchSensorIndexOf(int touchSensorId) => IndexOf(_touchSensorIndexById, touchSensorId, "Touch sensor id must point to an existing touch sensor.");
 
     /// <summary>A node's drawn and collision radius: see <see cref="JointRadius"/>.</summary>
     public double NodeRadius(int nodeId)

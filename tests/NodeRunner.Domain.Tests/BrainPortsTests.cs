@@ -146,6 +146,37 @@ public sealed class BrainPortsTests
     }
 
     [Fact]
+    public void Of_GivesATouchSensorOneTouchInput_InPartIdOrder()
+    {
+        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))];
+        BeamDef[] beams = [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)];
+        var creature = new CreatureDef(
+            nodes,
+            beams,
+            [new SensorDef(8, 4, SensorKind.Accelerometer)],
+            [new ServoDef(6, 1, 4, 5)],
+            [],
+            [],
+            [],
+            [new TouchSensorDef(9, 3), new TouchSensorDef(7, 1)],
+            nextPartId: 10);
+
+        var layout = BrainPorts.Of(creature);
+
+        layout.Inputs.ShouldBe(
+        [
+            BrainPort.Input(6, "angle"),
+            BrainPort.Input(6, "speed"),
+            BrainPort.Input(7, "touch"),
+            BrainPort.Input(8, "along"),
+            BrainPort.Input(8, "across"),
+            BrainPort.Input(9, "touch"),
+        ]);
+        layout.Outputs.Select(port => port.PartId).ShouldAllBe(id => id == 6);
+        BrainPorts.TouchInput(7).ShouldBe(BrainPort.Input(7, BrainPorts.TouchChannel));
+    }
+
+    [Fact]
     public void SensorPorts_UseTheSavedChannelKeys()
     {
         BrainPorts.AccelerometerChannels.ShouldBe(["along", "across"]);

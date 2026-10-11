@@ -9,4 +9,5 @@ public enum CreatureElementKind
     Piston,
     Spring,
     Wheel,
+    TouchSensor,
 }

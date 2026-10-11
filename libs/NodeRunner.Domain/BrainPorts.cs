@@ -36,6 +36,9 @@ public static class BrainPorts
             ? _cameraChannels[rays / 2]
             : throw new ArgumentOutOfRangeException(nameof(rays), $"A Camera has an odd ray count from 1 to {SensorDef.MaxRays}.");
 
+    /// <summary>A Touch sensor's input key (#1043): 1 while its node touches the ground, else 0.</summary>
+    public const string TouchChannel = "touch";
+
     /// <summary>A Piston's length input key: where it is in its travel, 0 at its shortest length and 1 at its longest.</summary>
     public const string PistonLengthChannel = "length";
 
@@ -70,6 +73,11 @@ public static class BrainPorts
             blocks.Add((sensor.Id, SensorPorts(sensor).ToArray()));
         }
 
+        foreach (var touch in creature.TouchSensors)
+        {
+            blocks.Add((touch.Id, [TouchInput(touch.Id)]));
+        }
+
         foreach (var piston in creature.Pistons)
         {
             blocks.Add((piston.Id, [.. PistonInputs(piston.Id), .. PistonOutputs(piston.Id)]));
@@ -102,6 +110,9 @@ public static class BrainPorts
         };
         return channels.Select(channel => BrainPort.Input(sensor.Id, channel));
     }
+
+    /// <summary>A Touch sensor's one input port.</summary>
+    public static BrainPort TouchInput(int touchSensorId) => BrainPort.Input(touchSensorId, TouchChannel);
 
     /// <summary>A Piston's input ports, length then speed.</summary>
     public static IEnumerable<BrainPort> PistonInputs(int pistonId) =>

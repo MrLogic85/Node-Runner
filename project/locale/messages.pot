@@ -629,6 +629,10 @@ msgid "One sensor per beam"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "One sensor per joint"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "One wheel per joint"
 msgstr ""
 
@@ -1074,8 +1078,21 @@ msgstr ""
 msgid "Too short"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Touch sensor"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Touch sensors"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "Touch sensors go on a joint"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Touch {0}"
 msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
@@ -1260,6 +1277,10 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/src/ui/lib/UiPicker.cs
 msgid "swaps"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "touch"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1480,6 +1501,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
 msgid "{0}: strength"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+msgid "{0}: touch"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

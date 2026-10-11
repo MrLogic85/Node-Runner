@@ -135,7 +135,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// True for a locked Creation (#896): it refuses every edit that would change its model, adding or
     /// deleting a part with brain ports or clearing a Servo's link. Joints, beams, Springs and Wheels
-    /// have no ports, so they can still be added and deleted.
+    /// have no ports, so they can still be added and deleted, unless a delete takes a joint's Touch sensor.
     /// </summary>
     public bool IsLocked => _locked;
 
@@ -210,7 +210,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
         var selectedServoJoints = reselect is null ? SelectedServoJoints() : [];
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, nextPartId));
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, nextPartId));
         if (reselect is not null)
         {
             ClearSelectionSets();
@@ -603,6 +603,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         CreatureElementKind.Piston => _builder.Pistons.Any(piston => piston.Id == element.Id),
         CreatureElementKind.Spring => _builder.Springs.Any(spring => spring.Id == element.Id),
         CreatureElementKind.Wheel => _builder.Wheels.Any(wheel => wheel.Id == element.Id),
+        CreatureElementKind.TouchSensor => _builder.TouchSensors.Any(touch => touch.Id == element.Id),
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
@@ -782,10 +783,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, partId);
 
-    /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Wheel 1", "Accel 1" or "Camera 1".</summary>
-    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, partId);
+    /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Wheel 1", "Accel 1", "Camera 1" or "Touch 1".</summary>
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -803,7 +804,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             && !_builder.Servos.Any(servo => servo.Id == partId)
             && !_builder.Pistons.Any(piston => piston.Id == partId)
             && !_builder.Springs.Any(spring => spring.Id == partId)
-            && !_builder.Wheels.Any(wheel => wheel.Id == partId))
+            && !_builder.Wheels.Any(wheel => wheel.Id == partId)
+            && !_builder.TouchSensors.Any(touch => touch.Id == partId))
         {
             return;
         }
@@ -819,7 +821,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         RaiseAnatomyChanged();
     }
 
-    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, partId);
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, partId);
 
     /// <summary>
     /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,
