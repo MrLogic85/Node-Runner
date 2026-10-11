@@ -43,6 +43,7 @@ public sealed class PartTrayTests
     [InlineData(BuildPart.Servo, "A motor that tries to hold a target angle.", "Tap a joint to place it. A joint holds one motor or brake.")]
     [InlineData(BuildPart.Wheel, "Rolls freely on the ground.", "Tap a joint to place it. A joint holds one wheel.")]
     [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
+    [InlineData(BuildPart.TouchSensor, "Feels how near its joint is to the ground.", "Tap a joint to place it. A joint holds one sensor.")]
     public void Create_WithAPickedPart_SelectsItsRow_AndSaysUnderItWhatItDoesAndWhereItGoes(BuildPart part, string info, string placement)
     {
         var tray = PartTray.Create(part);
@@ -98,7 +99,7 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void SensorsTab_HasTheAccelerometerAndCameraAvailable_AndTheRestComingLater()
+    public void SensorsTab_HasTheAccelerometerCameraAndTouchSensorAvailable_AndPulseComingLater()
     {
         var sensors = PartTray.Groups()[1].Rows;
 
@@ -106,7 +107,7 @@ public sealed class PartTrayTests
             [
                 (BuildPart.Accelerometer, PartTrayRowState.Available),
                 (BuildPart.Camera, PartTrayRowState.Available),
-                (BuildPart.TouchSensor, PartTrayRowState.ComingLater),
+                (BuildPart.TouchSensor, PartTrayRowState.Available),
                 (BuildPart.Pulse, PartTrayRowState.ComingLater),
             ]);
     }
@@ -116,7 +117,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.Servo and not BuildPart.Wheel).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.Servo and not BuildPart.Wheel).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable);
     }
 
@@ -131,7 +132,7 @@ public sealed class PartTrayTests
             (BuildPart.Wheel, null),
             (BuildPart.Accelerometer, null),
             (BuildPart.Camera, null),
-            (BuildPart.TouchSensor, "0.14.1"),
+            (BuildPart.TouchSensor, null),
             (BuildPart.Pulse, "0.14.4"),
             (BuildPart.Battery, "0.18.0"),
             (BuildPart.Generator, "0.18.0"),
@@ -160,7 +161,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Create(picked: null, creationLocked: true).Groups.SelectMany(group => group.Rows).ToList();
         rows.Where(row => row.State == PartTrayRowState.ComingLater).Select(row => row.Version).ShouldAllBe(version => version != null);
-        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(8);
+        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(7);
     }
 
     [Fact]

@@ -29,7 +29,7 @@ boundary. `reference design/components/Build/README.md`,
   they can be added, copied and deleted; joints move, sensors move to another beam (#806),
   cameras aim, the selection handles all work (scaling changes only beam
   lengths), parameters change, except a Camera's Rays (#578), and parts can
-  be renamed. A part with ports (a sensor, Piston or Servo) can be neither
+  be renamed. A part with ports (a sensor, Touch sensor, Piston or Servo) can be neither
   added nor deleted: every tray row except the Wheel's is locked, and so is
   the Piston row; the tray's help line says "Unlock to add parts the brain
   uses.", and tapping a row so locked shows "The creation is locked to avoid changes to the model, unlock to enable."
@@ -104,13 +104,13 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     removes it, even under a handle (`BuildViewModel.ToggleSelected`). A
     tap on empty canvas clears the selection; a tap on a handle over empty
     canvas does nothing. A tap on a joint with parts steps down its
-    stack, top → down as drawn (motor or brake, then Wheel): the first tap
+    stack, top → down (motor or brake, then Wheel, then Touch sensor): the first tap
     adds the top part, each next tap swaps it for the one below, and a tap
     on the last, or with more than one of them selected, removes the
     joint's parts. The rest of the selection stays
     (`BuildViewModel.ToggleJointSelected`, #1044).
   - **Parts stand in for their joint** (#973, #1044): while any part sits
-    on a joint (today a Servo or Wheel), the joint itself is never selected, so it
+    on a joint (a Servo, Wheel or Touch sensor), the joint itself is never selected, so it
     gets no selection mark and no panel; only a bare joint does. Links
     still start and end on it. Selecting a part never also
     selects the joint under it, but the selection moves that joint, and
@@ -203,6 +203,15 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   Servo's joint takes it (#1044). A placement is one Undo step; a drop also
   selects the Wheel. Tapping or dragging its joint selects the Wheel, as a
   Servo's; a joint with both follows the stack rule in Interactions.
+- **Touch sensor (#665, #1045):** placed from Parts → Sensors on any joint,
+  by drag or tap, like a Wheel. A beam, sensor or link refuses with "Touch
+  sensors go on a joint"; a joint with one refuses with "One sensor per
+  joint", while a Servo's or Wheel's joint takes it
+  (`docs/CREATURE_MODEL.md` → Node → One part per slot). Its cushion adds
+  no tap area (Touch sensor → Size there): tapping or dragging its joint
+  selects it as the stack rule says, and its panel shows only
+  Name and its note. It cannot be dragged to another joint; delete it and
+  place it again.
 - **Camera aim (#594, #622):** a Camera selected alone shows an Aim handle
   out along its centre ray, in any tool; the handle may cover a
   joint, which then cannot be tapped there (#639). Dragging the handle
@@ -213,7 +222,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   panels delete the selection. Deleting a joint removes every link on it,
   its Servo, Wheel and Touch sensor and those beams' sensors
   (`CreatureBuilder.RemoveNode`),
-  and deleting a beam removes its sensor. Deleting a Servo or Wheel leaves
+  and deleting a beam removes its sensor. Deleting a Servo, Wheel or Touch sensor leaves
   its joint, with its other part or bare,
   unless the same delete takes every part and every link on that joint and
   the joint had a link before: then the joint goes too, so a box that
@@ -272,16 +281,16 @@ active one, clears the selection so its panel shows (#1096).
   (`PartTray.OpeningGroup`), so a tab of padlocks never reads as every part
   being locked (#887). The open tab then stays for the visit (#874).
 - Parts are unlimited (#525), so rows show no count. Every planned part has
-  a locked row, so the tray shows what is coming: the Touch sensor (#665)
-  and the Pulse (#527) are locked rows in Sensors. A tap on a locked row
+  a locked row, so the tray shows what is coming: the Pulse (#527) is a
+  locked row in Sensors. A tap on a locked row
   names the part and the version that brings it, as "Battery comes in version 0.18.0", in a
   notification (#992); `PartTray.ComingLaterReason` and
   `BuildLinkList.ComingLaterReason` own it.
 - An available row is dragged out (#376). The drop lands where a tap would
   hit (Interactions; `BuildGestures.DropTargetAt`), except that a sensor's
-  picture stands for its beam. A Servo or Wheel lands first on the
-  joint whose placing ring (`PartTray.PlacingRingRadius`; a Wheel's is
-  its 0.4 m size) it is inside, ahead of the beams the ring crosses
+  picture stands for its beam. A Servo, Wheel or Touch sensor lands first on the
+  joint whose placing ring (`PlacingTargets.JointRingOf`;
+  `docs/WORLD_VISUALS.md` → Placing a part) it is inside, ahead of the beams the ring crosses
   (#1055). `BuildViewModel.PlacePart` places it with
   a fresh id and selects it, or refuses it with a canvas note at that part
   (`PlacementNote`) until the next touch or for 3 s. A Piston or Spring
@@ -291,7 +300,8 @@ active one, clears the selection so its panel shows (#1096).
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
   settings note) and where it goes ("Tap a joint to place it. A joint holds
-  one motor or brake." for a Servo, "… holds one wheel." for a Wheel), per part, not per tab, as a tab can mix placements. Under
+  one motor or brake." for a Servo, "… holds one wheel." for a Wheel, "…
+  holds one sensor." for a Touch sensor), per part, not per tab, as a tab can mix placements. Under
   the rows the help line says "Tap a part to pick it, or drag it onto the
   creature." A canvas tap then places the part where a drop there would
   land, with the same refusals, notes and Undo. The placed part is not
@@ -325,7 +335,7 @@ changed is still the same part, so the panel keeps its place
 **On this joint (#1044).** When the selected part's joint holds two or more
 parts, a small "On this joint" label and a strip of glyph tabs sit between
 the title and Name (`PartSettingsPresentation.OnThisJoint`), one per part,
-top → down: motor or brake, then Wheel. The strip is the tray's tab
+top → down: motor or brake, then Wheel, then Touch sensor. The strip is the tray's tab
 strip (`UiIconTabs`), with the selected part's tab filled. A tab tap selects
 that part alone, which moves the canvas mark and scrolls the panel to the
 top. A joint with one part shows no strip; tabs work on a locked creation
@@ -438,12 +448,12 @@ Several selected parts show the selection panel instead (#558, #704), titled
   with their settings but not their names, and selects the copy; Undo
   removes it. A part copies only with what it sits on: a beam, Spring or
   Piston with both its joints and a sensor with its beam. A Servo is its
-  joint to the player, so it brings that joint along (#1000), as does a
-  Wheel; a joint's other part is copied only when it is selected itself, and
+  joint to the player, so it brings that joint along (#1000), as do a
+  Wheel and a Touch sensor; a joint's other part is copied only when it is selected itself, and
   the copied joint is sized for the parts it carries (#1044). A copied Servo uses the copies of its Fixed
   and Target links and leaves a role empty whose link was not copied, so
-  it shows its error note. On a locked creation a sensor, Piston or Servo
-  would change the model, so it blocks Copy too, with the note "Locked:
+  it shows its error note. On a locked creation a sensor, Touch sensor,
+  Piston or Servo would change the model, so it blocks Copy too, with the note "Locked:
   would change the model". Copy is dimmed while the selection
   holds a part it cannot take; a tap then puts a danger note on each such
   part until the selection changes, the creation is unlocked or the next

@@ -415,6 +415,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;
 
+    public IReadOnlyList<TouchSensorDef> TouchSensors => _builder.TouchSensors;
+
     public IReadOnlyList<PistonDef> Pistons => _builder.Pistons;
 
     public IReadOnlyList<SpringDef> Springs => _builder.Springs;
@@ -576,10 +578,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         && !Springs.Any(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
 
     /// <summary>
-    /// Whether joint <paramref name="nodeId"/> draws the loose mark (ring and cross): a bare loose joint
-    /// only. A Servo or Wheel on a loose joint shows the error in its own <c>danger</c> look (#1140).
+    /// Whether joint <paramref name="nodeId"/> draws the loose mark (ring and cross): a loose joint
+    /// without a Servo or Wheel. Those show the error in their own <c>danger</c> look (#1140); a Touch
+    /// sensor's cushion has none, so it does not count.
     /// </summary>
-    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, _builder.Servos, _builder.Wheels);
+    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, _builder.Servos, _builder.Wheels, touchSensors: []);
 
     /// <summary>The pieces the links join the joints into (<see cref="CreatureReadiness.Pieces"/>); more than one cannot train.</summary>
     public IReadOnlyList<IReadOnlyList<int>> Pieces() => CreatureReadiness.Pieces(Nodes, LinkRef.All(Beams, Pistons, Springs));
@@ -752,7 +755,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees
     /// (<see cref="DrawGroups.PartAt"/>), with the selection and the <paramref name="targets"/> on
     /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A Servo or Wheel
-    /// is hit as its joint; null off every part.
+    /// is hit as its joint; a Touch sensor adds no tap area (#1045). Null off every part.
     /// </summary>
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
     {
@@ -768,7 +771,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// What the canvas draws on the selected surface (#1107), which a touch hits there too
-    /// (<see cref="DrawnPartAt"/>): what belongs with <paramref name="selected"/>, a Servo or Wheel
+    /// (<see cref="DrawnPartAt"/>): what belongs with <paramref name="selected"/>, a joint part
     /// as its joint, and the <paramref name="targets"/> alone, with the moved sensor.
     /// </summary>
     public RaisedParts RaisedParts(PartSet selected, PlacingTargets targets) => RaisedIn(DrawGroups(), selected, targets);
@@ -783,7 +786,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             parts = parts.Append(new CreatureElementSelection(CreatureElementKind.Sensor, moving));
         }
 
-        return groups.Raised(parts, _builder.Servos, _builder.Wheels, targets.Beams, targets.Joints);
+        return groups.Raised(parts, _builder.Servos, _builder.Wheels, _builder.TouchSensors, targets.Beams, targets.Joints);
     }
 
     private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));
@@ -961,6 +964,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int WheelIndexOf(int wheelId) => _builder.WheelIndexOf(wheelId);
 
+    public int TouchSensorIndexOf(int touchSensorId) => _builder.TouchSensorIndexOf(touchSensorId);
+
     public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
 
     public bool ServoNeedsTwoLinks(int nodeId) => _builder.ServoNeedsTwoLinks(nodeId);
@@ -974,7 +979,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint (#973): a tap, drag
     /// or box selects them, never the joint on its own.
     /// </summary>
-    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.Servos, _builder.Wheels);
+    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.Servos, _builder.Wheels, _builder.TouchSensors);
 
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
 

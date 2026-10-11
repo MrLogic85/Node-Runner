@@ -20,6 +20,7 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 
 - `Accelerometer`, `ProofMass` — the proof-mass step, reading and sensor frame
 - `CameraRays` — the camera's ray targets and reading
+- `Touch` — a Touch sensor's reading
 - `Servo` — a Servo's angle inputs, torque and endpoint force couple
 - `Piston` — a Piston's travel, inputs, target length and force
 - `Spring` — a Spring's travel

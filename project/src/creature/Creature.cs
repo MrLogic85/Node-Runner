@@ -67,6 +67,7 @@ public partial class Creature : Node2D
     private IReadOnlyList<CreatureElementSelection> _selection = [];
     private IBeamSensor[] _sensors = [];
     private TouchSensor[] _touchSensors = [];
+    private NodeVisual[] _touchVisuals = [];
     private double[] _rawInputs = [];
     private int[] _inputPortOf = [];
     private int[] _outputPortOf = [];
@@ -116,6 +117,8 @@ public partial class Creature : Node2D
         {
             spring.Step(delta);
         }
+
+        SenseTouches();
 
         if (Brain is null)
         {
@@ -388,11 +391,29 @@ public partial class Creature : Node2D
         ApplySelection();
     }
 
+    // Every body senses the ground; the followed creature's cushions show its readings (#1045), a shadow draws none.
+    private void SenseTouches()
+    {
+        for (var i = 0; i < _touchSensors.Length; i++)
+        {
+            _touchSensors[i].Sense();
+            if (!_isShadow)
+            {
+                _touchVisuals[i].Touch = (float)_touchSensors[i].Reading;
+            }
+        }
+    }
+
     private void ResetSensors()
     {
         foreach (var sensor in _sensors)
         {
             sensor.Reset();
+        }
+
+        foreach (var touch in _touchSensors)
+        {
+            touch.Reset();
         }
     }
 
@@ -505,16 +526,20 @@ public partial class Creature : Node2D
 
             var hasServo = definition.Servos.Any(servo => servo.NodeId == definition.Nodes[i].Id);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
+            var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
+
             var visual = new NodeVisual
             {
                 Name = $"Node{i}Visual",
                 Theme = Theme,
                 Radius = radius,
-                Visible = !hasServo,
-                ShowsRing = !hasWheel,
-                ShowsHub = hasWheel,
+                ShowsRing = !hasWheel && !hasServo,
+                ShowsHub = hasWheel && !hasServo,
+                Cushion = hasTouch,
             };
-            body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, radius));
+
+            // The knock-out runs past a cushion, so it breaks the ground edge round a touching foot (#1045).
+            body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, hasTouch ? radius + (float)TouchSensorDef.Cushion : radius));
             body.AddChild(visual);
             if (definition.Wheels.FirstOrDefault(wheel => wheel.NodeId == definition.Nodes[i].Id) is { } wheel)
             {
@@ -618,7 +643,10 @@ public partial class Creature : Node2D
 
         CreateSensorVisuals(definition);
         _touchSensors = definition.TouchSensors
-            .Select(touch => new TouchSensor(_nodeBodies[definition.NodeIndexOf(touch.NodeId)]))
+            .Select(touch => new TouchSensor(_nodeBodies[definition.NodeIndexOf(touch.NodeId)], _nodeColliderRadii[definition.NodeIndexOf(touch.NodeId)]))
+            .ToArray();
+        _touchVisuals = definition.TouchSensors
+            .Select(touch => _nodeVisuals[definition.NodeIndexOf(touch.NodeId)])
             .ToArray();
     }
 

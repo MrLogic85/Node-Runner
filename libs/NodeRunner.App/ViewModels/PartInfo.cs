@@ -19,4 +19,6 @@ public static class PartInfo
     public static UiText Accelerometer { get; } = UiText.Plain("Measures its beam's acceleration.");
 
     public static UiText Camera { get; } = UiText.Plain("Its rays see how near the ground is.");
+
+    public static UiText Touch { get; } = UiText.Plain("Feels how near its joint is to the ground.");
 }

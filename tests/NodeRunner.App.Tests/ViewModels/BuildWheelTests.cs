@@ -73,7 +73,7 @@ public sealed class BuildWheelTests
         var gestures = new BuildGestures(TwoBeams());
         var ring = SelectionMarks.JointHalo(WheelDef.DefaultRadius);
 
-        PartTray.PlacingRingRadius(BuildPart.Wheel).ShouldBe(WheelDef.DefaultRadius);
+        PartTray.PlacingRingRadius(BuildPart.Wheel, NodeDef.PlainJointRadius).ShouldBe(WheelDef.DefaultRadius);
         gestures.DropTargetAt(new Vector2D(35, 0), BuildPart.Wheel).ShouldBe(_firstJoint);
         gestures.DropTargetAt(new Vector2D(35, 0), BuildPart.Accelerometer).ShouldBe(_firstBeam);
         gestures.DropTargetAt(new Vector2D(0, ring), BuildPart.Wheel).ShouldBe(_firstJoint);

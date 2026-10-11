@@ -107,15 +107,18 @@ public static class PartTray
         BuildPart.Wheel => PartInfo.Wheel,
         BuildPart.Accelerometer => PartInfo.Accelerometer,
         BuildPart.Camera => PartInfo.Camera,
+        BuildPart.TouchSensor => PartInfo.Touch,
         _ => null,
     };
 
     /// <summary>Where a picked part goes, per part rather than per tab, as a tab can mix placements (#805).</summary>
-    public static UiText Placement(BuildPart part) => SensorKindOf(part) is not null
-        ? UiText.Plain("Tap a beam to place it. A beam holds one sensor.")
-        : part == BuildPart.Wheel
-            ? UiText.Plain("Tap a joint to place it. A joint holds one wheel.")
-            : UiText.Plain("Tap a joint to place it. A joint holds one motor or brake.");
+    public static UiText Placement(BuildPart part) => part switch
+    {
+        _ when SensorKindOf(part) is not null => UiText.Plain("Tap a beam to place it. A beam holds one sensor."),
+        BuildPart.Wheel => UiText.Plain("Tap a joint to place it. A joint holds one wheel."),
+        BuildPart.TouchSensor => UiText.Plain("Tap a joint to place it. A joint holds one sensor."),
+        _ => UiText.Plain("Tap a joint to place it. A joint holds one motor or brake."),
+    };
 
     /// <summary>
     /// The tab the tray opens on: the first with a part the player can place (#887), so a
@@ -139,17 +142,20 @@ public static class PartTray
         _ => null,
     };
 
-    /// <summary>Whether a tray part goes on a joint (a Servo or a Wheel, #129) rather than on a beam.</summary>
-    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Wheel;
+    /// <summary>Whether a tray part goes on a joint (a Servo, a Wheel, #129, or a Touch sensor, #1045) rather than on a beam.</summary>
+    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Wheel or BuildPart.TouchSensor;
 
     /// <summary>
-    /// The radius of the joint part <paramref name="placing"/> as placed, round which the canvas
-    /// marks each joint while it is placed (#1055); see <see cref="IsJointPart"/>.
+    /// The radius of the joint part <paramref name="placing"/> as placed on a joint drawn
+    /// <paramref name="jointRadius"/> wide, round which the canvas marks that joint while it is
+    /// placed (#1055); see <see cref="IsJointPart"/>. A Touch sensor's cushion goes round the
+    /// joint's largest part (#1045).
     /// </summary>
-    public static double PlacingRingRadius(BuildPart placing) => placing switch
+    public static double PlacingRingRadius(BuildPart placing, double jointRadius) => placing switch
     {
         BuildPart.Servo => ServoDef.JointRadius,
         BuildPart.Wheel => WheelDef.DefaultRadius,
+        BuildPart.TouchSensor => jointRadius + TouchSensorDef.Cushion,
         _ => throw new ArgumentOutOfRangeException(nameof(placing), placing, "Only a joint part has a placing ring."),
     };
 
@@ -167,7 +173,7 @@ public static class PartTray
         [
             Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
             Available(BuildPart.Camera, UiText.Plain("Camera")),
-            Locked(BuildPart.TouchSensor, UiText.Plain("Touch sensor"), "0.14.1"),
+            Available(BuildPart.TouchSensor, UiText.Plain("Touch sensor")),
             Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.4"),
         ]),
         new(UiText.Plain("Blocks"),

@@ -64,8 +64,8 @@ public sealed class DrawGroups
         _joints.TryGetValue(nodeId, out var span) ? slot == DrawSlot.Under ? span.First : span.Last : null;
 
     /// <summary>
-    /// What rises to the selected surface (#1107): the <paramref name="selected"/> joints, a Servo
-    /// or Wheel as its joint, with their links; the selected links; the joints at the ends of all
+    /// What rises to the selected surface (#1107): the <paramref name="selected"/> joints, a Servo,
+    /// Wheel or Touch sensor (#1045) as its joint, with their links; the selected links; the joints at the ends of all
     /// those links, so a link never covers the ring, hub or Servo at its end; every link whose ends
     /// both rose with its sensor, so a raised Servo never hides it; and the selected sensors. A
     /// Wheel's face, under its links, rises only with a selected joint, so a raised link never makes
@@ -77,21 +77,25 @@ public sealed class DrawGroups
         IEnumerable<CreatureElementSelection> selected,
         IEnumerable<ServoDef> servos,
         IEnumerable<WheelDef> wheels,
+        IEnumerable<TouchSensorDef> touchSensors,
         IEnumerable<int>? targetLinks = null,
         IEnumerable<int>? targetJoints = null)
     {
         ArgumentNullException.ThrowIfNull(selected);
         ArgumentNullException.ThrowIfNull(servos);
         ArgumentNullException.ThrowIfNull(wheels);
+        ArgumentNullException.ThrowIfNull(touchSensors);
         var parts = selected.ToArray();
         var servoNodes = servos.ToDictionary(servo => servo.Id, servo => servo.NodeId);
         var wheelNodes = wheels.ToDictionary(wheel => wheel.Id, wheel => wheel.NodeId);
+        var touchNodes = touchSensors.ToDictionary(touch => touch.Id, touch => touch.NodeId);
         var joints = parts
             .Select(part => part.Kind switch
             {
                 CreatureElementKind.Node => part.Id,
                 CreatureElementKind.Servo => servoNodes.GetValueOrDefault(part.Id, -1),
                 CreatureElementKind.Wheel => wheelNodes.GetValueOrDefault(part.Id, -1),
+                CreatureElementKind.TouchSensor => touchNodes.GetValueOrDefault(part.Id, -1),
                 _ => -1,
             })
             .Where(nodeId => nodeId >= 0)

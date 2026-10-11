@@ -600,7 +600,7 @@ public sealed class CreatureBuilder
 
     /// <summary>
     /// Whether a Touch sensor can sit on this node (#1043); if not, <paramref name="reason"/> says
-    /// why. A joint holds one, next to its joint parts: it takes no joint-part slot.
+    /// why. A joint holds one, in its own joint-part slot next to a Servo and a Wheel.
     /// </summary>
     public bool CanAddTouchSensor(int nodeId, [NotNullWhen(false)] out UiText? reason)
     {

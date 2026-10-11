@@ -232,13 +232,13 @@ public sealed class BuildGestures
     /// beam; off every part, which covers every joint's reach, a Piston or Spring within reach
     /// (#1033), then a beam within reach. Null over empty canvas. A joint part being placed
     /// (<paramref name="placing"/>) is marked by a ring round each joint, so it lands on a joint
-    /// anywhere inside that ring first (#1055): a Servo's at its housing, a Wheel's at a new Wheel's
-    /// size (#129). <paramref name="placing"/> is null for a moved sensor.
+    /// anywhere inside that ring first (#1055, <see cref="PlacingTargets.JointRingOf"/>): a Servo's
+    /// at its housing, a Wheel's at a new Wheel's size (#129), a Touch sensor's round its cushion (#1045). <paramref name="placing"/> is null for a moved sensor.
     /// </summary>
     public CreatureElementSelection? DropTargetAt(Vector2D viewPosition, BuildPart? placing)
     {
         var position = View.ToCanvas(viewPosition);
-        if (placing is { } part && PartTray.IsJointPart(part) && JointInPlacingRing(position, PartTray.PlacingRingRadius(part)) is { } ringed)
+        if (placing is { } part && PartTray.IsJointPart(part) && JointInPlacingRing(position, TargetsOf(part)) is { } ringed)
         {
             return new CreatureElementSelection(CreatureElementKind.Node, ringed);
         }
@@ -267,17 +267,14 @@ public sealed class BuildGestures
     /// </summary>
     public PlacingTargets TargetsOf(BuildPart? placing) => _build.PlacingTargetsOf(placing, placing is null ? MovingSensorId : null);
 
-    /// <summary>The joint nearest <paramref name="position"/> within the ring a joint part of <paramref name="radius"/> being placed draws round every joint, or null.</summary>
-    private int? JointInPlacingRing(Vector2D position, double radius)
-    {
-        var ring = SelectionMarks.JointHalo(radius);
-        return _build.Nodes
+    /// <summary>The joint nearest <paramref name="position"/> within the ring the joint part being placed draws round it (<paramref name="targets"/>), or null.</summary>
+    private int? JointInPlacingRing(Vector2D position, PlacingTargets targets) =>
+        _build.Nodes
             .Select(node => (node.Id, Distance: Distance(node.Position, position)))
-            .Where(entry => entry.Distance <= ring)
+            .Where(entry => entry.Distance <= SelectionMarks.JointHalo(targets.JointRingOf(entry.Id)))
             .OrderBy(entry => entry.Distance)
             .Select(entry => (int?)entry.Id)
             .FirstOrDefault();
-    }
 
     /// <summary>Places a tray part dropped at <paramref name="viewPosition"/>; see <see cref="BuildViewModel.PlacePart"/>.</summary>
     public int? DropPart(BuildPart part, Vector2D viewPosition) => _build.PlacePart(part, DropTargetAt(viewPosition, part));
@@ -866,7 +863,7 @@ public sealed class BuildGestures
             _build.Pistons.Where(piston => MidInside(piston.NodeA, piston.NodeB)).Select(piston => piston.Id).ToHashSet(),
             _build.Springs.Where(spring => MidInside(spring.NodeA, spring.NodeB)).Select(spring => spring.Id).ToHashSet(),
             _build.Wheels.Where(wheel => Inside(NodeById(wheel.NodeId).Position)).Select(wheel => wheel.Id).ToHashSet(),
-            new HashSet<int>());
+            _build.TouchSensors.Where(touch => Inside(NodeById(touch.NodeId).Position)).Select(touch => touch.Id).ToHashSet());
     }
 
     private double HitDistance(double viewDistance) => viewDistance / View.Zoom;

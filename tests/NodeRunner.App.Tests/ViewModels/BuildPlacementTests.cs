@@ -94,7 +94,7 @@ public sealed class BuildPlacementTests
 
     [Theory]
     [InlineData(BuildPart.Battery)]
-    [InlineData(BuildPart.TouchSensor)]
+    [InlineData(BuildPart.Pulse)]
     public void PlacePart_ComingLater_IsRefused(BuildPart part)
     {
         var build = TwoBeams();
@@ -153,11 +153,11 @@ public sealed class BuildPlacementTests
         var servo = build.PlacingTargetsOf(BuildPart.Servo, null);
         servo.Joints.ShouldBe([_firstJoint.Id, 3], ignoreOrder: true);
         servo.RefusedJoints.ShouldBe([_middleJoint.Id]);
-        servo.JointRing.ShouldBe(ServoDef.JointRadius);
+        servo.JointRingOf(_firstJoint.Id).ShouldBe(ServoDef.JointRadius);
         var wheel = build.PlacingTargetsOf(BuildPart.Wheel, null);
         wheel.Joints.ShouldBe([_firstJoint.Id, _middleJoint.Id], ignoreOrder: true);
         wheel.RefusedJoints.ShouldBe([3]);
-        wheel.JointRing.ShouldBe(WheelDef.DefaultRadius);
+        wheel.JointRingOf(_firstJoint.Id).ShouldBe(WheelDef.DefaultRadius);
     }
 
     [Fact]

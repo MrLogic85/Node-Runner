@@ -673,7 +673,7 @@ public partial class BuildScreen : Control
         Apply();
     }
 
-    /// <summary>The part a tray row can be dragged out as (#376, #577): an available sensor or joint part (Servo or Wheel, #129), or null.</summary>
+    /// <summary>The part a tray row can be dragged out as (#376, #577): an available sensor or joint part (#129), or null.</summary>
     public static BuildPart? DraggablePart(PartTrayRow row) =>
         row.IsAvailable && (PartTray.SensorKindOf(row.Part) is not null || PartTray.IsJointPart(row.Part)) ? row.Part : null;
 

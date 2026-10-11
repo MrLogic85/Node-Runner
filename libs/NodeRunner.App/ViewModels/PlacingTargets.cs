@@ -18,6 +18,15 @@ public sealed record PlacingTargets(IReadOnlySet<int> Beams, IReadOnlySet<int> J
     /// <summary>The joints that hold a part and would refuse the joint part: each shows a dashed <c>danger</c> ring.</summary>
     public IReadOnlySet<int> RefusedJoints { get; init; } = _empty;
 
-    /// <summary>The radius of the joint part being placed, round which each joint that takes it is ringed (#1055); 0 otherwise.</summary>
-    public double JointRing { get; init; }
+    /// <summary>
+    /// The radius each joint is ringed round while a joint part is placed
+    /// (<see cref="PartTray.PlacingRingRadius"/>); empty otherwise.
+    /// </summary>
+    public IReadOnlyDictionary<int, double> JointRings { get; init; } = new Dictionary<int, double>();
+
+    /// <summary>
+    /// The radius joint <paramref name="nodeId"/> is ringed round while a joint part is placed: the
+    /// ring the canvas draws there and where a tap or drop lands on it (#1055).
+    /// </summary>
+    public double JointRingOf(int nodeId) => JointRings[nodeId];
 }

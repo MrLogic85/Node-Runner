@@ -9,7 +9,8 @@ namespace NodeRunner.Theme;
 /// edge is the collision radius, with a fine line <see cref="TyreWidth"/> inside it, and see-through
 /// within that, so it never hides what lies under it (#1086); and <see cref="CueCount"/> tubes in
 /// the tyre band that turn with the part, so a rolling wheel reads as rolling. Its links are drawn over it to the hub,
-/// which its joint draws over them (<see cref="DrawHub"/>, #1086). Training hangs it on the
+/// which its joint draws over them (<see cref="DrawHub"/>, #1086). A Wheel is chosen at its hub,
+/// so its joint draws its selection mark too (<see cref="JointPart.WheelSelected"/>). Training hangs it on the
 /// wheel's body, so its own rotation is the wheel's; Build shows it at rotation 0.
 /// </summary>
 public partial class WheelPart : PartVisual
@@ -92,9 +93,6 @@ public partial class WheelPart : PartVisual
         pen.Disc(Vector2.Zero, AxleRadius, line);
     }
 
-    /// <summary>The selected Wheel's <c>halo</c> ring, <see cref="SelectionMarks.Gap"/> outside its edge, as every part's.</summary>
-    public static float HaloRadius(float radius) => (float)SelectionMarks.JointHalo(radius);
-
     public override void _Draw()
     {
         using var pen = UiPixelPen.Begin(this);
@@ -109,10 +107,6 @@ public partial class WheelPart : PartVisual
         pen.Ring(Vector2.Zero, TyreRingRadius(Radius, Theme.JointRingWidth), line, Theme.JointRingWidth, _ringSegments);
         pen.Ring(Vector2.Zero, Radius - TyreWidth, line, Theme.JointInnerRingWidth, _ringSegments);
         pen.Strokes(CueTubes(Radius), line, Theme.MotorSignalWidth);
-        if (Selected)
-        {
-            SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, HaloRadius(Radius));
-        }
     }
 
     private static Vector2[] ArcPoints(float radius, float from, float to) =>

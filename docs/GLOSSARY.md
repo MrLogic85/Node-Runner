@@ -114,7 +114,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   how much of it to use this tick.
 - **Stroke** — How far a Piston or Spring travels between its end stops.
 - **Touch sensor** — A sensor on a joint (#1043) that tells the brain
-  whether that joint touches the ground (`TouchSensorDef`); one per joint.
+  how close that joint is to touching the ground (`TouchSensorDef`); one
+  per joint.
 - **Wheel** — A passive joint part (#129) that turns freely on its joint and
   rolls on the ground; no brain ports.
 

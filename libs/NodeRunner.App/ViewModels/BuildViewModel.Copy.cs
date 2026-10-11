@@ -5,9 +5,9 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// The selection panel's Copy (#937, #990): several selected parts duplicated beside themselves,
 /// inside the same Creation. A part copies only with what it sits on: a link with both its joints
-/// and a sensor with its beam. A joint part, a Servo or a Wheel, is its joint to the player (#973),
-/// so it brings that joint along (#1000). A locked Creation copies no part with brain ports, since a
-/// copy would change its model; a Wheel has none.
+/// and a sensor with its beam. A joint part, a Servo, a Wheel or a Touch sensor (#1045), is its joint
+/// to the player (#973), so it brings that joint along (#1000). A locked Creation copies no part with
+/// brain ports, since a copy would change its model; a Wheel has none.
 /// </summary>
 public sealed partial class BuildViewModel
 {
@@ -19,7 +19,7 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// A danger note at each selected part a copy cannot take, in id order within each kind: on a
-    /// locked Creation a sensor, Servo or Piston for its brain ports; a beam, Spring or Piston
+    /// locked Creation a sensor, Servo, Piston or Touch sensor for its brain ports; a beam, Spring or Piston
     /// without both joints among <see cref="SelectedNodeIds"/>; a sensor without its beam.
     /// </summary>
     public IReadOnlyList<CanvasNote> CopyBlockers()
@@ -31,6 +31,7 @@ public sealed partial class BuildViewModel
             AddBrainPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
             AddBrainPortNotes(CreatureElementKind.Servo, _selectedServoIds);
             AddBrainPortNotes(CreatureElementKind.Piston, _selectedPistonIds);
+            AddBrainPortNotes(CreatureElementKind.TouchSensor, _selectedTouchSensorIds);
         }
 
         foreach (var beam in Beams)
@@ -113,6 +114,7 @@ public sealed partial class BuildViewModel
         var sensors = Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id)).ToList();
         var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
         var wheels = Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).ToList();
+        var touchSensors = TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).ToList();
 
         // A copied joint is as big as the joint parts that come along with it (#1044).
         var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, servos, wheels));
@@ -166,6 +168,11 @@ public sealed partial class BuildViewModel
             foreach (var wheel in wheels)
             {
                 _selectedWheelIds.Add(CopySettings(wheel.Id, _builder.AddWheel(nodeCopies[wheel.NodeId])));
+            }
+
+            foreach (var touch in touchSensors)
+            {
+                _selectedTouchSensorIds.Add(_builder.AddTouchSensor(nodeCopies[touch.NodeId]));
             }
 
             int? CopyOf(int? linkId) => linkId is { } id && linkCopies.TryGetValue(id, out var copy) ? copy : null;

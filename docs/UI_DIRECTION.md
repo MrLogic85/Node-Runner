@@ -67,9 +67,10 @@ token import does not bring back a dead one.
   cannot derive an alpha variant; `UiGlow` derives glow from the base colour,
   and Paper turns glow off with `effects_enabled`.
 - **`accent-soft`** is not a colour: it is any base colour at the theme's
-  `alpha_soft` (Neon 31, Paper 26, out of 255). `alpha_shadow` (82, 0.32 in
-  both themes) is the opacity of every Training shadow but the followed one
-  (#385).
+  `alpha_soft` (Neon 31, Paper 26, out of 255). It also sets a Touch
+  sensor's cushion at rest (#1045), the one world part in `accent-soft`.
+  `alpha_shadow` (82, 0.32 in both themes) is the opacity of every Training
+  shadow but the followed one (#385).
 - **`shadow.glow`** is not imported. A CSS blur radius has no 1:1
   `StyleBoxFlat` equivalent, so `UiGlow` owns the Android-reviewed values
   (extent 10, opacity 12%) for every glowing surface.
@@ -392,6 +393,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Core part | Sensors on beams (#127) | WV → Sensors |
 | Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top (#1107) | WV → Draw layers, BM → Interactions |
 | "Sensors go on a beam" | Each sensor names itself: "Cameras go on a beam" (#1053) | BM → Sensors |
+| Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with a Servo and a Wheel; its own glyph (#665, #1044, #1045) | BM → Touch sensor, WV → Touch sensor |
 | Brain setup screen; hidden neurons | Removed; the direct brain (#536) | Screens → BrainFocus |
 | Speed control | None (#787) | TL → No speed-up |
 | Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
