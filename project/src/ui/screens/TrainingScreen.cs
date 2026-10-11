@@ -143,7 +143,7 @@ public partial class TrainingScreen : Control
 
     /// <summary>
     /// One part's section of the part callout (#1064, #1066): its glyph if it shows one, its name,
-    /// then its senses in <c>accent</c> and its outputs in <c>output</c>, each a centred bar for
+    /// then its inputs in <c>accent</c> and its outputs in <c>output</c>, each a centred bar for
     /// −1…1 or a filling bar for 0…1; or its <paramref name="note"/>; or no lines for a part that
     /// shows only its name. <paramref name="name"/> is <c>callout.Name</c>, <paramref name="note"/>
     /// <c>callout.Note</c> and <paramref name="label"/> each port's label, all in the player's
@@ -168,9 +168,9 @@ public partial class TrainingScreen : Control
         }
 
         var lines = new List<UiCalloutLine>();
-        if (callout.Senses.Count > 0)
+        if (callout.Inputs.Count > 0)
         {
-            lines.Add(Line(UiTokens.Color.Accent, callout.Senses, label));
+            lines.Add(Line(UiTokens.Color.Accent, callout.Inputs, label));
         }
 
         if (callout.Outputs.Count > 0)
@@ -304,7 +304,7 @@ public partial class TrainingScreen : Control
 
         if (counts)
         {
-            GetNode<UiStageCard>("%SensesStage").NoteSource = UiTextTranslation.Source(signalFlow.SensesNote);
+            GetNode<UiStageCard>("%InputsStage").NoteSource = UiTextTranslation.Source(signalFlow.InputsNote);
             GetNode<UiStageCard>("%OutputsStage").NoteSource = UiTextTranslation.Source(signalFlow.OutputsNote);
         }
 

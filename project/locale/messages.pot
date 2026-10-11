@@ -462,6 +462,11 @@ msgstr ""
 msgid "Import failed"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: project/scenes/screens/TrainingScreen.tscn
+msgid "Inputs"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
 msgid "Its rays see how near the ground is."
 msgstr ""
@@ -805,11 +810,6 @@ msgstr ""
 msgid "Selects the parts inside."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
-#: project/scenes/screens/TrainingScreen.tscn
-msgid "Senses"
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Sensors"
 msgstr ""
@@ -979,7 +979,7 @@ msgid "Tap a part to pick it, or drag it onto the creature."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
-msgid "Tap a sense or an output to see what drives what."
+msgid "Tap an input or an output to see what drives what."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -1348,6 +1348,12 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+msgid "{0} input"
+msgid_plural "{0} inputs"
+msgstr[0] ""
+msgstr[1] ""
+
+#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "{0} is driven most by {1} and {2}."
 msgstr ""
 
@@ -1360,7 +1366,7 @@ msgid "{0} is missing a link. Pick two links at its joint or delete it."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
-msgid "{0} is not driven by any sense yet."
+msgid "{0} is not driven by any input yet."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
@@ -1438,12 +1444,6 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "{0} selected"
 msgid_plural "{0} selected"
-msgstr[0] ""
-msgstr[1] ""
-
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
-msgid "{0} sense"
-msgid_plural "{0} senses"
 msgstr[0] ""
 msgstr[1] ""
 

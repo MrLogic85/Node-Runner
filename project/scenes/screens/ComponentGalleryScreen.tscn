@@ -2967,21 +2967,21 @@ theme_override_constants/v_separation = 12
 
 [node name="Senses" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556226 instance=ExtResource("23_stage_card")]
 layout_mode = 2
-Title = "Senses"
+Title = "Inputs"
 Note = "Left foot"
 Collapsed = true
 
 [node name="Thinks" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556225 instance=ExtResource("23_stage_card")]
 layout_mode = 2
 NumberText = "2"
-Title = "Thinks"
-Note = "Brain"
+Title = "Brain"
+Note = "Decides"
 Selected = true
 
 [node name="Moves" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556224 instance=ExtResource("23_stage_card")]
 layout_mode = 2
 NumberText = "3"
-Title = "Moves"
+Title = "Outputs"
 Note = "Opens"
 Opens = true
 Collapsed = true

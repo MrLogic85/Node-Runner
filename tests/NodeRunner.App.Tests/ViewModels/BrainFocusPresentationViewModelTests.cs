@@ -11,7 +11,7 @@ public sealed class BrainFocusPresentationViewModelTests
     private static readonly UiText _centre = UiText.Plain("Camera: centre");
     private static readonly UiText _rearKnee = UiText.Plain("Rear knee");
     private static readonly UiText _frontKnee = UiText.Plain("Front knee");
-    private static readonly UiText _noSelection = UiText.Plain("Tap a sense or an output to see what drives what.");
+    private static readonly UiText _noSelection = UiText.Plain("Tap an input or an output to see what drives what.");
 
     private static readonly BrainPortLabels _labels = new([_along, _kneeSpeed, _centre], [_rearKnee, _frontKnee]);
 
@@ -43,9 +43,9 @@ public sealed class BrainFocusPresentationViewModelTests
         viewModel.HasNetwork.ShouldBeTrue();
         viewModel.Summary.ShouldBe(UiText.Format(
             "{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.",
-            UiText.Counted("{0} sense", "{0} senses", 3),
+            UiText.Counted("{0} input", "{0} inputs", 3),
             UiText.Counted("{0} output", "{0} outputs", 2)));
-        viewModel.Layers.Select(layer => layer.Title).ShouldBe([UiText.Plain("Senses"), UiText.Plain("Outputs")]);
+        viewModel.Layers.Select(layer => layer.Title).ShouldBe([UiText.Plain("Inputs"), UiText.Plain("Outputs")]);
         viewModel.Layers[0].Neurons.Select(neuron => neuron.Label).ShouldBe(_labels.Inputs);
         viewModel.Layers[1].Neurons.Select(neuron => neuron.Label).ShouldBe(_labels.Outputs);
         viewModel.Layers[0].Neurons[0].Activation.ShouldBe(0.5);
@@ -68,7 +68,7 @@ public sealed class BrainFocusPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectOutput_NamesTheSensesThatDriveItMost()
+    public void SelectOutput_NamesTheInputsThatDriveItMost()
     {
         var viewModel = Live();
 
@@ -82,7 +82,7 @@ public sealed class BrainFocusPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectSense_NamesTheOutputsItDrivesMost_SkippingZeroAndDisabledConnections()
+    public void SelectInput_NamesTheOutputsItDrivesMost_SkippingZeroAndDisabledConnections()
     {
         var viewModel = Live();
 
@@ -99,11 +99,11 @@ public sealed class BrainFocusPresentationViewModelTests
 
         viewModel.SelectNeuron(BrainFocusPresentationViewModel.OutputLayer, 0);
 
-        viewModel.SelectionText.ShouldBe(UiText.Format("{0} is not driven by any sense yet.", _rearKnee));
+        viewModel.SelectionText.ShouldBe(UiText.Format("{0} is not driven by any input yet.", _rearKnee));
     }
 
     [Fact]
-    public void SelectOutput_WithOneSenseDrivingIt_NamesThatSense()
+    public void SelectOutput_WithOneInputDrivingIt_NamesThatInput()
     {
         var viewModel = Live(disabledGenes: 5);
 
@@ -113,7 +113,7 @@ public sealed class BrainFocusPresentationViewModelTests
     }
 
     [Fact]
-    public void SelectSense_DrivingNothing_SaysItDrivesNoOutput()
+    public void SelectInput_DrivingNothing_SaysItDrivesNoOutput()
     {
         var viewModel = Live(disabledGenes: 1);
 
@@ -203,7 +203,7 @@ public sealed class BrainFocusPresentationViewModelTests
         viewModel.Edges.ShouldBeEmpty();
         viewModel.Summary.ShouldBe(UiText.Format(
             "{0} → {1}.",
-            UiText.Counted("{0} sense", "{0} senses", 1),
+            UiText.Counted("{0} input", "{0} inputs", 1),
             UiText.Counted("{0} output", "{0} outputs", 0)));
         viewModel.SelectionText.ShouldBe(UiText.Plain("Warning, no powered parts added! There is nothing to train"));
     }

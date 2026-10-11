@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The SignalFlow column's four stages at rest: 1 Senses, 2 Brain, 3 Outputs, 4 Distance. Each
+/// The SignalFlow column's four stages at rest: 1 Inputs, 2 Brain, 3 Outputs, 4 Distance. Each
 /// stage shows a short note; the pictures on the cards come with #196.
 /// </summary>
 public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
@@ -11,7 +11,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>How many readings the brain senses, such as "9 readings"; null with none.</summary>
-    public UiText? SensesNote { get; private set; }
+    public UiText? InputsNote { get; private set; }
 
     /// <summary>The parts the brain drives, such as "1 motor" or "2 motors"; null with none.</summary>
     public UiText? OutputsNote { get; private set; }
@@ -28,17 +28,17 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         ArgumentOutOfRangeException.ThrowIfNegative(readings);
         ArgumentOutOfRangeException.ThrowIfNegative(motors);
 
-        var sensesNote = readings > 0 ? UiText.Counted("{0} reading", "{0} readings", readings) : null;
+        var inputsNote = readings > 0 ? UiText.Counted("{0} reading", "{0} readings", readings) : null;
         var outputsNote = motors > 0 ? UiText.Counted("{0} motor", "{0} motors", motors) : null;
         var distanceNote = double.IsFinite(distance) ? Metres.WithUnit(distance) : null;
-        if (Equals(SensesNote, sensesNote) && Equals(OutputsNote, outputsNote) && Equals(DistanceNote, distanceNote))
+        if (Equals(InputsNote, inputsNote) && Equals(OutputsNote, outputsNote) && Equals(DistanceNote, distanceNote))
         {
             return;
         }
 
         // The distance changes every tick and the counts rarely, so a distance-only change says so.
-        var onlyDistance = Equals(SensesNote, sensesNote) && Equals(OutputsNote, outputsNote);
-        SensesNote = sensesNote;
+        var onlyDistance = Equals(InputsNote, inputsNote) && Equals(OutputsNote, outputsNote);
+        InputsNote = inputsNote;
         OutputsNote = outputsNote;
         DistanceNote = distanceNote;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(onlyDistance ? nameof(DistanceNote) : null));

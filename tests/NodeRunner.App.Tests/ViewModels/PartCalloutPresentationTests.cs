@@ -12,7 +12,7 @@ public sealed class PartCalloutPresentationTests
         PartCalloutPresentation.For(PortedCreature.Def, new CreatureElementSelection(kind, id), values);
 
     [Fact]
-    public void AServo_ShowsItsGlyphNameSensesAndOutputs_WithLiveValues()
+    public void AServo_ShowsItsGlyphNameInputsAndOutputs_WithLiveValues()
     {
         var values = Live();
 
@@ -22,7 +22,7 @@ public sealed class PartCalloutPresentationTests
         callout.Name.ShouldBe(UiText.AsWritten("Hip"));
         callout.ShowsGlyph.ShouldBeTrue();
         callout.Note.ShouldBeNull();
-        callout.Senses.Select(port => (port.Label, port.Range)).ShouldBe(
+        callout.Inputs.Select(port => (port.Label, port.Range)).ShouldBe(
         [
             (UiText.Plain("angle"), PortRange.MinusOneToOne),
             (UiText.Plain("speed"), PortRange.MinusOneToOne),
@@ -32,7 +32,7 @@ public sealed class PartCalloutPresentationTests
             (UiText.Plain("angle"), PortRange.MinusOneToOne),
             (UiText.Plain("strength"), PortRange.ZeroToOne),
         ]);
-        callout.Senses.Concat(callout.Outputs).Select(port => port.Value)
+        callout.Inputs.Concat(callout.Outputs).Select(port => port.Value)
             .ShouldBe(values.Of(PortedCreature.Servo).Select(value => value.Value));
     }
 
@@ -40,15 +40,15 @@ public sealed class PartCalloutPresentationTests
     [InlineData(CreatureElementKind.Sensor, PortedCreature.Accelerometer, PartSettingsKind.Accelerometer, 2, 0)]
     [InlineData(CreatureElementKind.Sensor, PortedCreature.Camera, PartSettingsKind.Camera, 6, 0)]
     [InlineData(CreatureElementKind.Piston, PortedCreature.Piston, PartSettingsKind.Piston, 2, 2)]
-    public void APartWithBrainPorts_ShowsEachOfThem(CreatureElementKind element, int id, PartSettingsKind kind, int senses, int outputs)
+    public void APartWithBrainPorts_ShowsEachOfThem(CreatureElementKind element, int id, PartSettingsKind kind, int inputs, int outputs)
     {
         var callout = For(element, id, Live());
 
         callout.Kind.ShouldBe(kind);
         callout.ShowsGlyph.ShouldBeTrue();
-        callout.Senses.Count.ShouldBe(senses);
+        callout.Inputs.Count.ShouldBe(inputs);
         callout.Outputs.Count.ShouldBe(outputs);
-        callout.Senses.Concat(callout.Outputs).ShouldAllBe(port => port.Value != null);
+        callout.Inputs.Concat(callout.Outputs).ShouldAllBe(port => port.Value != null);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public sealed class PartCalloutPresentationTests
 
         callout.ShowsGlyph.ShouldBeTrue();
         callout.Note.ShouldBe(UiText.Plain("No brain ports"));
-        callout.Senses.ShouldBeEmpty();
+        callout.Inputs.ShouldBeEmpty();
         callout.Outputs.ShouldBeEmpty();
     }
 
@@ -72,7 +72,7 @@ public sealed class PartCalloutPresentationTests
 
         callout.ShowsGlyph.ShouldBeFalse();
         callout.Note.ShouldBeNull();
-        callout.Senses.ShouldBeEmpty();
+        callout.Inputs.ShouldBeEmpty();
         callout.Outputs.ShouldBeEmpty();
     }
 
@@ -81,8 +81,8 @@ public sealed class PartCalloutPresentationTests
     {
         var callout = For(CreatureElementKind.Piston, PortedCreature.Piston, BrainPortValues.Sample(PortedCreature.Layout, null, []));
 
-        callout.Senses.Count.ShouldBe(2);
-        callout.Senses.Concat(callout.Outputs).ShouldAllBe(port => port.Value == null);
+        callout.Inputs.Count.ShouldBe(2);
+        callout.Inputs.Concat(callout.Outputs).ShouldAllBe(port => port.Value == null);
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public sealed class PartCalloutPresentationTests
         var callout = For(CreatureElementKind.Piston, PortedCreature.Piston, values);
 
         var layout = PortedCreature.Layout;
-        foreach (var port in callout.Senses)
+        foreach (var port in callout.Inputs)
         {
             var neuron = brainFocus.Layers[BrainFocusPresentationViewModel.InputLayer].Neurons[layout.Inputs.ToList().IndexOf(port.Port)];
             port.Value.ShouldBe(neuron.Activation);

@@ -357,7 +357,7 @@ shadow's strip cell is marked (`accent`). Stats is Unavailable (#198).
 BrainFocus shows the direct brain, inputs straight to outputs (#536; hidden
 layers: #549).
 
-- "SENSES" and "OUTPUTS" (#660) sit over the label columns, flush with
+- "INPUTS" and "OUTPUTS" (#660, #1155) sit over the label columns, flush with
   their inner edge; the sheet's margins are 12 (bottom 8).
 - Every row keeps its `Caption` label (#908), at least one line apart;
   rows scroll under the pinned headings.
@@ -394,6 +394,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top (#1107) | WV → Draw layers, BM → Interactions |
 | "Sensors go on a beam" | Each sensor names itself: "Cameras go on a beam" (#1053) | BM → Sensors |
 | Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with a Servo and a Wheel; its own glyph (#665, #1044, #1045) | BM → Touch sensor, WV → Touch sensor |
+| "Senses" for the brain's inputs (stages, BrainFocus, accent) | "Inputs", the machine-learning word (#1155) | TL → The Training scene, Screens → BrainFocus, WV → Port bars |
 | Brain setup screen; hidden neurons | Removed; the direct brain (#536) | Screens → BrainFocus |
 | Speed control | None (#787) | TL → No speed-up |
 | Callout above the whole creature; ground always 80% down | Callout docked at the arena top; the camera keeps a shelf for it (#1137) | WV → Training arena, TL → Camera |
