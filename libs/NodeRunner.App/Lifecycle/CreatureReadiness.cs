@@ -6,7 +6,7 @@ namespace NodeRunner.App.Lifecycle;
 /// <summary>
 /// Whether a drawn creature can be simulated and trained. Any drawing can be saved
 /// (<see cref="CreatureDef"/>); these rules only stop training. The problems are worded for the
-/// player, and Build's readiness line shortens them.
+/// player, and Build's readiness chip shortens them.
 /// </summary>
 public static class CreatureReadiness
 {

@@ -291,7 +291,7 @@ public sealed class BuildPresentationViewModel
     /// </summary>
     public bool CanCopy => _build.Nodes.Count > 0;
 
-    public BuildPanelPresentation BuildPanel => CreateBuildPanel();
+    public BuildReadinessPresentation Readiness => CreateReadiness();
 
     private ToolPanelPresentation CreateToolPanel()
     {
@@ -310,26 +310,23 @@ public sealed class BuildPresentationViewModel
         };
     }
 
-    private BuildPanelPresentation CreateBuildPanel()
+    private BuildReadinessPresentation CreateReadiness()
     {
-        if (!_build.TryLeave(out var creature, out var errors) || creature is null)
+        // Nothing drawn yet is a start, not a fault: the chip invites rather than warns.
+        if (_build.Nodes.Count == 0)
         {
-            return new BuildPanelPresentation(CanStartTraining: false, ShortReadiness(errors));
+            return new BuildReadinessPresentation(BuildReadiness.Empty, UiText.Plain("Add joints and links"));
         }
 
-        return CreatureReadiness.CanTrain(creature)
-            ? new BuildPanelPresentation(CanStartTraining: true, UiText.Plain("Ready to train"))
-            : new BuildPanelPresentation(CanStartTraining: false, ShortReadiness(CreatureReadiness.Problems(creature)));
+        // With joints drawn, TryBuild fails exactly when CreatureReadiness finds a problem.
+        return _build.TryLeave(out _, out var errors)
+            ? new BuildReadinessPresentation(BuildReadiness.Ready, UiText.Plain("Ready to train"))
+            : new BuildReadinessPresentation(BuildReadiness.Blocked, ShortReadiness(errors));
     }
 
-    // A short form of the builder's errors for the readiness line; CreatureReadiness decides whether training may start.
+    // A short form of the builder's errors for the readiness chip; CreatureReadiness decides whether training may start.
     private UiText ShortReadiness(IReadOnlyList<UiText> errors)
     {
-        if (errors.Count == 0)
-        {
-            return UiText.Plain("Add joints and links");
-        }
-
         var unconnected = Enumerable.Range(0, _build.Nodes.Count)
             .Count(index =>
             {
@@ -348,20 +345,37 @@ public sealed class BuildPresentationViewModel
             return UiText.Counted("{0} piece not connected", "{0} pieces not connected", pieces.Count);
         }
 
-        // Build's canvas names each short beam with a callout (#593), so the line only counts them.
+        // Build's canvas names each short beam with a callout (#593), so the chip only counts them.
         var tooShort = _build.Beams.Count(beam => IsTooShort(beam.NodeA, beam.NodeB));
         var tooShortPistons = _build.Pistons.Count(piston => IsTooShort(piston.NodeA, piston.NodeB));
         var tooShortSprings = _build.Springs.Count(spring => IsTooShort(spring.NodeA, spring.NodeB));
-        return (tooShort, tooShortPistons, tooShortSprings) switch
+        if ((tooShort, tooShortPistons, tooShortSprings) != (0, 0, 0))
         {
-            (0, 0, 0) => errors[0],
-            (0, 0, _) => UiText.Counted("{0} spring too short", "{0} springs too short", tooShortSprings),
-            (0, _, _) => UiText.Counted("{0} piston too short", "{0} pistons too short", tooShortPistons),
-            _ => UiText.Counted("{0} beam too short", "{0} beams too short", tooShort),
-        };
+            return (tooShort, tooShortPistons, tooShortSprings) switch
+            {
+                (0, 0, _) => UiText.Counted("{0} spring too short", "{0} springs too short", tooShortSprings),
+                (0, _, _) => UiText.Counted("{0} piston too short", "{0} pistons too short", tooShortPistons),
+                _ => UiText.Counted("{0} beam too short", "{0} beams too short", tooShort),
+            };
+        }
+
+        var zeroLength = _build.Beams.Count(beam => IsZeroLength(beam.NodeA, beam.NodeB))
+            + _build.Pistons.Count(piston => IsZeroLength(piston.NodeA, piston.NodeB))
+            + _build.Springs.Count(spring => IsZeroLength(spring.NodeA, spring.NodeB));
+        if (zeroLength > 0)
+        {
+            return UiText.Counted("{0} link has zero length", "{0} links have zero length", zeroLength);
+        }
+
+        var servosMissingALink = _build.Servos.Count(CreatureReadiness.IsMissingALink);
+        return servosMissingALink > 0
+            ? UiText.Counted("{0} Servo missing a link", "{0} Servos missing a link", servosMissingALink)
+            : errors[0];
 
         bool IsTooShort(int nodeA, int nodeB) =>
             CreatureReadiness.IsTooShort(NodeById(nodeA), NodeById(nodeB));
+
+        bool IsZeroLength(int nodeA, int nodeB) => NodeById(nodeA).Position == NodeById(nodeB).Position;
     }
 
     private NodeDef NodeById(int nodeId) => _build.Nodes[_build.NodeIndexOf(nodeId)];

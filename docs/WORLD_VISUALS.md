@@ -283,6 +283,8 @@ above every shadow.
   In a stack, notes of the same kind and text join into one callout with a
   leader to each part; a callout with lines or sections under its text
   never joins.
+- **Readiness** is a chip, not a callout, so it never reads as a note
+  whose part is missing (`docs/UI_DIRECTION.md` → "Build").
 
 ## Training arena
 

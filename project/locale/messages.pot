@@ -1328,6 +1328,12 @@ msgstr ""
 msgid "{0} N·s/m"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "{0} Servo missing a link"
+msgid_plural "{0} Servos missing a link"
+msgstr[0] ""
+msgstr[1] ""
+
 #: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
 msgid "{0} beam"
 msgid_plural "{0} beams"
@@ -1405,6 +1411,12 @@ msgstr[1] ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "{0} kg"
 msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "{0} link has zero length"
+msgid_plural "{0} links have zero length"
+msgstr[0] ""
+msgstr[1] ""
 
 #: libs/NodeRunner.App/ViewModels/DistanceRuler.cs
 #: libs/NodeRunner.App/ViewModels/Metres.cs

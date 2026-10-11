@@ -143,8 +143,8 @@ entry (#315). The entries that are not a component of their own (#306):
 - **`c_hint`** is `UiHintCard`, the slider hint at the canvas's top right
   (#867).
 - **`c_bar_cell`** is `UiBarCell`, a cell of the shadow strip (#791).
-- **`c_status`** is Build's readiness row, a `UiIcon` and a `UiLabel` in the
-  side panel's scene.
+- **`c_status`** is Build's readiness chip, a `UiChip` (see "Build" under
+  "Screens").
 - **`c_prog`, `c_meter`** are a `UiSlider` with two Rounded ends.
 - **`c_power`** and read-only facts are `UiValueRow`.
 - **`c_card_actions`** is `UiCardActions`, a bar of text cells.
@@ -330,7 +330,14 @@ and confirms with a "Code copied" notification.
   buttons (#689), and the overflow, where Stats (#198) and Power budget say
   "Coming soon".
 - **Side panel:** the tool's panel or the selection's settings
-  (`docs/BUILD_MODE.md`); its last line says why play is dimmed.
+  (`docs/BUILD_MODE.md`).
+- **Readiness** (#1163): a `c_chip` at the canvas's bottom right,
+  `space-3` in, says whether the creature can train: `accent` with a check
+  when ready, `danger` with a warning and a short counted reason when
+  blocked, and neutral with the Joint icon on an empty canvas, which is a
+  start rather than a fault. It is one line, so every reason has a short
+  form. It shows in every Build state and takes no taps; parts pass under
+  it, and the selection handles and callouts draw over it.
 - **Setting hint** (#867): a finger on a Part settings slider shows a
   240 px `Frame` hint card at the canvas's top right, `space-3` in: the
   setting's name in `Overline` `accent` over one `Body` `ink` line, no icon.

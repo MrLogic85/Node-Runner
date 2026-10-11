@@ -428,7 +428,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void BuildPanel_WhenASpringIsTooShort_CountsItInReadiness()
+    public void Readiness_WhenASpringIsTooShort_CountsItInReadiness()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -439,7 +439,7 @@ public sealed class BuildPresentationViewModelTests
             [new SpringDef(401, 1, 3)],
             nextPartId: 402));
 
-        new BuildPresentationViewModel(build).BuildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} spring too short", "{0} springs too short", 1));
+        new BuildPresentationViewModel(build).Readiness.Text.ShouldBe(UiText.Counted("{0} spring too short", "{0} springs too short", 1));
     }
 
     [Fact]
@@ -698,7 +698,7 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
-    public void BuildPanel_WhenBeamsAreTooShort_CountsThemInReadiness()
+    public void Readiness_WhenBeamsAreTooShort_CountsThemInReadiness()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -707,12 +707,12 @@ public sealed class BuildPresentationViewModelTests
             []));
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.BuildPanel.CanStartTraining.ShouldBeFalse();
-        presentation.BuildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} beam too short", "{0} beams too short", 2));
+        presentation.Readiness.CanStartTraining.ShouldBeFalse();
+        presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} beam too short", "{0} beams too short", 2));
     }
 
     [Fact]
-    public void BuildPanel_WithOnlyAZeroLengthBeam_ShowsTheReasonWithItsNodes()
+    public void Readiness_WithOnlyAZeroLengthBeam_CountsIt()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -720,14 +720,34 @@ public sealed class BuildPresentationViewModelTests
             [new BeamDef(101, 1, 2)],
             []));
 
-        new BuildPresentationViewModel(build).BuildPanel.ReadinessText.ShouldBe(
-            UiText.Format("The beam between joint {0} and joint {1} has zero length. Move one of the joints apart.", 1, 2));
+        new BuildPresentationViewModel(build).Readiness.Text.ShouldBe(
+            UiText.Counted("{0} link has zero length", "{0} links have zero length", 1));
+    }
+
+    // The chip is one line, so a Servo's full sentence would not fit it (#1163).
+    [Fact]
+    public void Readiness_WithAServoMissingALink_CountsIt()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
+            [],
+            [new ServoDef(6, 2, fixedLinkId: 4)],
+            [],
+            [],
+            nextPartId: 7));
+
+        var readiness = new BuildPresentationViewModel(build).Readiness;
+
+        readiness.State.ShouldBe(BuildReadiness.Blocked);
+        readiness.Text.ShouldBe(UiText.Counted("{0} Servo missing a link", "{0} Servos missing a link", 1));
     }
 
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
-    public void BuildPanel_WhenPistonsAreTooShort_CountsThemInReadiness(int tooShort)
+    public void Readiness_WhenPistonsAreTooShort_CountsThemInReadiness(int tooShort)
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -737,36 +757,38 @@ public sealed class BuildPresentationViewModelTests
             [new PistonDef(301, 1, 3), tooShort == 2 ? new PistonDef(302, 2, 4) : new PistonDef(302, 1, 4)]));
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.BuildPanel.CanStartTraining.ShouldBeFalse();
-        presentation.BuildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} piston too short", "{0} pistons too short", tooShort));
+        presentation.Readiness.CanStartTraining.ShouldBeFalse();
+        presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} piston too short", "{0} pistons too short", tooShort));
     }
 
     [Fact]
-    public void BuildPanel_WhenEmpty_AsksForNodesAndBeams()
+    public void Readiness_WhenEmpty_AsksForNodesAndBeams()
     {
         var presentation = new BuildPresentationViewModel(new BuildViewModel());
 
-        var buildPanel = presentation.BuildPanel;
+        var readiness = presentation.Readiness;
 
-        buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Add joints and links"));
+        readiness.State.ShouldBe(BuildReadiness.Empty);
+        readiness.CanStartTraining.ShouldBeFalse();
+        readiness.Text.ShouldBe(UiText.Plain("Add joints and links"));
     }
 
     [Fact]
-    public void BuildPanel_WhenANodeIsUnconnected_SaysSoInReadiness()
+    public void Readiness_WhenANodeIsUnconnected_SaysSoInReadiness()
     {
         var build = new BuildViewModel();
         build.PlaceNode(new Vector2D(0, 0));
         var presentation = new BuildPresentationViewModel(build);
 
-        var buildPanel = presentation.BuildPanel;
+        var readiness = presentation.Readiness;
 
-        buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} joint not connected", "{0} joints not connected", 1));
+        readiness.State.ShouldBe(BuildReadiness.Blocked);
+        readiness.CanStartTraining.ShouldBeFalse();
+        readiness.Text.ShouldBe(UiText.Counted("{0} joint not connected", "{0} joints not connected", 1));
     }
 
     [Fact]
-    public void BuildPanel_WithSeparatePieces_SaysSoInReadiness()
+    public void Readiness_WithSeparatePieces_SaysSoInReadiness()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -774,36 +796,38 @@ public sealed class BuildPresentationViewModelTests
             [new BeamDef(5, 1, 2), new BeamDef(6, 3, 4)],
             []));
 
-        var buildPanel = new BuildPresentationViewModel(build).BuildPanel;
+        var readiness = new BuildPresentationViewModel(build).Readiness;
 
-        buildPanel.CanStartTraining.ShouldBeFalse();
-        buildPanel.ReadinessText.ShouldBe(UiText.Counted("{0} piece not connected", "{0} pieces not connected", 2));
+        readiness.CanStartTraining.ShouldBeFalse();
+        readiness.Text.ShouldBe(UiText.Counted("{0} piece not connected", "{0} pieces not connected", 2));
     }
 
     [Fact]
-    public void BuildPanel_WithAPiston_IsReadyToTrain()
+    public void Readiness_WithAPiston_IsReadyToTrain()
     {
         var build = new BuildViewModel();
         build.Load(PistonCreature());
         var presentation = new BuildPresentationViewModel(build);
 
-        var buildPanel = presentation.BuildPanel;
+        var readiness = presentation.Readiness;
 
-        buildPanel.CanStartTraining.ShouldBeTrue();
-        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Ready to train"));
+        readiness.State.ShouldBe(BuildReadiness.Ready);
+        readiness.CanStartTraining.ShouldBeTrue();
+        readiness.Text.ShouldBe(UiText.Plain("Ready to train"));
     }
 
     [Fact]
-    public void BuildPanel_WithoutAPiston_IsReadyToTrain()
+    public void Readiness_WithoutAPiston_IsReadyToTrain()
     {
         var build = new BuildViewModel();
         build.Load(PairCreature());
         var presentation = new BuildPresentationViewModel(build);
 
-        var buildPanel = presentation.BuildPanel;
+        var readiness = presentation.Readiness;
 
-        buildPanel.CanStartTraining.ShouldBeTrue();
-        buildPanel.ReadinessText.ShouldBe(UiText.Plain("Ready to train"));
+        readiness.State.ShouldBe(BuildReadiness.Ready);
+        readiness.CanStartTraining.ShouldBeTrue();
+        readiness.Text.ShouldBe(UiText.Plain("Ready to train"));
     }
 
     [Fact]

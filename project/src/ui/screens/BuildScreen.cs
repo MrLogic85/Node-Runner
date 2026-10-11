@@ -18,6 +18,7 @@ public partial class BuildScreen : Control
     private BuildPresentationViewModel? _presentation;
     private int? _renamingPartId;
     private (int Selected, PartSettingsKind? Kind, int? PanelId, ToolPanelMode Mode, bool Locked)? _sidePanelShows;
+    private BuildReadinessPresentation? _readinessShows;
     private string? _renamingDefaultName;
     private bool _subscribedToPresentation;
     private UiSlider? _hintSlider;
@@ -406,13 +407,14 @@ public partial class BuildScreen : Control
         }
 
         var locked = presentation.IsLocked;
-        var buildPanel = presentation.BuildPanel;
-        ApplyToolbar(presentation, buildPanel, locked);
+        var readiness = presentation.Readiness;
+        ApplyToolbar(presentation, readiness, locked);
         ApplyTools(presentation);
-        ApplySidePanel(presentation, buildPanel, locked);
+        ApplySidePanel(presentation, locked);
+        ApplyReadiness(readiness);
     }
 
-    private void ApplyToolbar(BuildPresentationViewModel presentation, BuildPanelPresentation buildPanel, bool locked)
+    private void ApplyToolbar(BuildPresentationViewModel presentation, BuildReadinessPresentation readiness, bool locked)
     {
         var name = GetNode<UiTextField>("%CreationName");
         if (name.State != UiTextField.TextInputState.Editing)
@@ -420,7 +422,7 @@ public partial class BuildScreen : Control
             name.TextValue = presentation.CreationName;
         }
 
-        GetNode<UiButton>("%StartTraining").Unavailable = !buildPanel.CanStartTraining;
+        GetNode<UiButton>("%StartTraining").Unavailable = !readiness.CanStartTraining;
         GetNode<UiButton>("%Unlock").Visible = locked;
         GetNode<UiButton>("%Undo").Disabled = !presentation.CanUndo;
         GetNode<UiButton>("%Redo").Disabled = !presentation.CanRedo;
@@ -440,7 +442,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%SelectTool").Selected = presentation.ActiveTool == BuildTool.Select;
     }
 
-    private void ApplySidePanel(BuildPresentationViewModel presentation, BuildPanelPresentation buildPanel, bool locked)
+    private void ApplySidePanel(BuildPresentationViewModel presentation, bool locked)
     {
         // A name being typed belongs to the part it was started on: finish it before another part shows.
         var partName = GetNode<UiTextField>("%PartName");
@@ -460,10 +462,8 @@ public partial class BuildScreen : Control
         tray.Visible = toolPanel.Mode is ToolPanelMode.PartsTray or ToolPanelMode.LinkList;
         jointHelp.Visible = toolPanel.Mode == ToolPanelMode.JointHelp;
         selectHelp.Visible = toolPanel.Mode == ToolPanelMode.SelectHelp;
-        GetNode<Control>("%PanelSpacer").Visible = !tray.Visible;
         partSettings.Visible = selected == 1;
         selection.Visible = selected > 1;
-        GetNode<Control>("%Readiness").Visible = selected == 0;
         var part = presentation.SinglePart;
         var sidePanel = GetNode<UiSidePanel>("%SidePanel");
         var shows = (selected, part?.Kind, part?.PanelId, toolPanel.Mode, locked);
@@ -494,8 +494,6 @@ public partial class BuildScreen : Control
         {
             ApplySelection(group);
         }
-
-        ApplyReadiness(buildPanel);
     }
 
     private void ApplySelection(SelectionPanelPresentation group)
@@ -866,16 +864,23 @@ public partial class BuildScreen : Control
         }
     }
 
-    private void ApplyReadiness(BuildPanelPresentation buildPanel)
+    private void ApplyReadiness(BuildReadinessPresentation readiness)
     {
-        var ready = buildPanel.CanStartTraining;
-        var color = ready ? UiTokens.Color.Accent : UiTokens.Color.Danger;
-        var icon = GetNode<UiIcon>("%ReadinessIcon");
-        icon.IconId = ready ? UiIconId.Check : UiIconId.Warn;
-        icon.Color = color;
-        var text = GetNode<UiLabel>("%ReadinessText");
-        text.ShowText(buildPanel.ReadinessText);
-        text.TextColor = color;
+        // Apply runs on every change, drags included; the chip rebuilds its style on each write.
+        if (readiness == _readinessShows)
+        {
+            return;
+        }
+
+        _readinessShows = readiness;
+        var chip = GetNode<UiChip>("%Readiness");
+        (chip.Kind, chip.IconId) = readiness.State switch
+        {
+            BuildReadiness.Ready => (UiChip.ChipKind.Ok, UiIconId.Check),
+            BuildReadiness.Blocked => (UiChip.ChipKind.Danger, UiIconId.Warn),
+            _ => (UiChip.ChipKind.Neutral, UiIconId.Joint),
+        };
+        chip.TextSource = UiTextTranslation.Source(readiness.Text);
     }
 
     private void SubscribeToPresentation()

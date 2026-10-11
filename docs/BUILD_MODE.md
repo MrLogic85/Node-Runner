@@ -491,11 +491,11 @@ why the creature cannot be simulated yet (the readiness rules are in
 needs no powered part (#845, `docs/TRAINING_LOOP.md` step 2).
 `CreatureBuilder.TryBuild` applies `Problems` to the creature in progress.
 The UI shows those messages and does not duplicate the rules; Build's
-readiness line only shortens them for the narrow side panel ("1 joint not
-connected").
+readiness chip shortens them to one line and treats an empty canvas as a
+start rather than a blocker (`docs/UI_DIRECTION.md` → "Build").
 
-The play button is dimmed until the creature can train, and the panel's
-last line says why; `BuildViewModel.TryLeave` and `CanTrain` gate it. The
+The play button is dimmed until the creature can train, and the readiness
+chip says why; `BuildViewModel.TryLeave` and `CanTrain` gate it. The
 dimmed button can still be tapped
 (#844): the tap starts nothing, and `BuildViewModel.ShowTrainingBlockers`
 gives each joint loose at that moment a "Not connected" canvas note until
