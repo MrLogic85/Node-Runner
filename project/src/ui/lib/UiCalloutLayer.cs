@@ -42,6 +42,7 @@ public partial class UiCalloutLayer : Control
             callout.IconId = placements[i].IconId;
             callout.Text = placements[i].Text;
             callout.Lines = placements[i].Lines;
+            callout.Sections = placements[i].Sections;
             sizes[i] = callout.GetCombinedMinimumSize();
         }
 

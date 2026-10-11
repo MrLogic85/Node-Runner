@@ -954,25 +954,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public int? WheelAtNode(int nodeId) => _builder.Wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId)?.Id;
 
     /// <summary>
-    /// The joint parts on joint <paramref name="nodeId"/>, top → down as drawn: its motor or brake, a
-    /// Servo, then its Wheel (#1044). Empty on a bare joint. To the player they are that joint (#973): a
-    /// tap, drag or box selects them, never the joint on its own.
+    /// The joint parts on joint <paramref name="nodeId"/>, top → down as drawn
+    /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint (#973): a tap, drag
+    /// or box selects them, never the joint on its own.
     /// </summary>
-    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId)
-    {
-        List<CreatureElementSelection> parts = [];
-        if (ServoAtNode(nodeId) is { } servo)
-        {
-            parts.Add(new(CreatureElementKind.Servo, servo));
-        }
-
-        if (WheelAtNode(nodeId) is { } wheel)
-        {
-            parts.Add(new(CreatureElementKind.Wheel, wheel));
-        }
-
-        return parts;
-    }
+    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.Servos, _builder.Wheels);
 
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
 

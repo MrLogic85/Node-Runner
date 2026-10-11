@@ -24,7 +24,8 @@ public static class UiCalloutLayout
 
     /// <summary>
     /// One callout: its spot, the clear direction from it, and how far the figure reaches that
-    /// way; <paramref name="Lines"/> are its live values under the caption, if any (#1064).
+    /// way; <paramref name="Lines"/> are its live values under the caption, if any (#1064), and
+    /// <paramref name="Sections"/> its further captions, if any (#1066).
     /// </summary>
     public readonly record struct Placement(
         Vector2 Anchor,
@@ -33,7 +34,8 @@ public static class UiCalloutLayout
         UiCallout.CalloutKind Kind,
         UiIconId IconId,
         string Text,
-        IReadOnlyList<UiCalloutLine>? Lines = null);
+        IReadOnlyList<UiCalloutLine>? Lines = null,
+        IReadOnlyList<UiCalloutSection>? Sections = null);
 
     /// <summary>
     /// Where a callout went and where its leader from the spot meets it; when it
@@ -111,7 +113,9 @@ public static class UiCalloutLayout
                 && placements[box.Index].IconId == placement.IconId
                 && placements[box.Index].Text == placement.Text
                 && placements[box.Index].Lines is null
-                && placement.Lines is null);
+                && placement.Lines is null
+                && placements[box.Index].Sections is null
+                && placement.Sections is null);
             if (same >= 0)
             {
                 assigned.Add((index, same));

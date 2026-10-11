@@ -1024,6 +1024,14 @@ mouse_filter = 2
 script = ExtResource("26_callout")
 Text = "Wheel 1"
 
+[node name="Stack" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Callout/Kinds"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("26_callout")
+Text = "Hip"
+
 [node name="Signpost" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content"]
 layout_mode = 2
 

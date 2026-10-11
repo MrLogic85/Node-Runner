@@ -124,9 +124,11 @@ public partial class Creature
         static Vector2 Middle(Node2D a, Node2D b) => (a.GlobalPosition + b.GlobalPosition) / 2;
     }
 
-    public void SetSelectedElement(CreatureElementSelection? selection)
+    /// <summary>Marks the <paramref name="parts"/> selected, a stacked joint's all at once (#1066); none with an empty list.</summary>
+    public void SetSelectedParts(IReadOnlyList<CreatureElementSelection> parts)
     {
-        _selection = selection;
+        ArgumentNullException.ThrowIfNull(parts);
+        _selection = parts;
         ApplySelection();
     }
 
@@ -138,35 +140,34 @@ public partial class Creature
             visual.Selected = false;
         }
 
-        ApplyDrawGroups(_isShadow ? null : _selection);
-        if (_selection is null || _isShadow)
+        var selection = _isShadow ? [] : _selection;
+        ApplyDrawGroups(selection);
+        foreach (var part in selection)
         {
-            return;
+            PartVisual selected = part.Kind switch
+            {
+                CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(part.Id)],
+                CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(part.Id)],
+                CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == part.Id)],
+                CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(part.Id)],
+                CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
+                CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],
+                CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(part.Id)],
+                _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
+            };
+            selected.Selected = true;
         }
-
-        PartVisual selected = _selection.Kind switch
-        {
-            CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(_selection.Id)],
-            CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(_selection.Id)],
-            CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == _selection.Id)],
-            CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(_selection.Id)],
-            CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(_selection.Id)],
-            CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(_selection.Id)],
-            CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(_selection.Id)],
-            _ => throw new ArgumentOutOfRangeException(nameof(_selection), _selection.Kind, "Not a part of a creature."),
-        };
-        selected.Selected = true;
     }
 
     // Each part in its draw group (#1107), with what belongs with the selection raised as in Build's CreatureParts.
-    private void ApplyDrawGroups(CreatureElementSelection? selection)
+    private void ApplyDrawGroups(IReadOnlyList<CreatureElementSelection> selection)
     {
         if (Definition is not { } definition || _drawGroups is not { } groups)
         {
             return;
         }
 
-        _raised = groups.Raised(selection is null ? [] : [selection], definition.Servos, definition.Wheels);
+        _raised = groups.Raised(selection, definition.Servos, definition.Wheels);
         for (var i = 0; i < _nodeVisuals.Length; i++)
         {
             var id = definition.Nodes[i].Id;

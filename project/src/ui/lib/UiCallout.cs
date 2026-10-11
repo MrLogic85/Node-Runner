@@ -5,7 +5,7 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>
 /// Callout (<c>c_call</c>): a small note that points at a spot in a figure. Its position is data
 /// set by the caller; kind only colours the border. Code may add <see cref="Lines"/> of live
-/// values under the caption (#1064).
+/// values under the caption (#1064), and further <see cref="Sections"/> below it (#1066).
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -22,18 +22,15 @@ public partial class UiCallout : PanelContainer
     private CalloutKind _kind;
     private string _text = string.Empty;
     private UiIconId _iconId = UiIconId.None;
-    private UiIconCaption? _content;
     private VBoxContainer? _body;
-    private MarginContainer? _linesBox;
-    private VBoxContainer? _rows;
+    private Block? _first;
+    private readonly List<Block> _sectionBlocks = [];
     private IReadOnlyList<UiCalloutLine>? _lines;
-    private IReadOnlyList<UiCalloutLine>? _builtLines;
-    private bool _linesBuilt;
-    private readonly List<(UiLabel Label, UiMeterBar Bar)> _meters = [];
-    private readonly List<UiLabel> _notes = [];
+    private IReadOnlyList<UiCalloutSection>? _sections;
 
     private const string _bodyName = "_UiBody";
-    private const string _linesName = "_UiLines";
+    private const string _sectionPrefix = "_UiSection";
+    private const string _dividerPrefix = "_UiDivider";
 
     [Export]
     public string Text
@@ -111,7 +108,27 @@ public partial class UiCallout : PanelContainer
             }
 
             _lines = value;
-            RefreshLines();
+            RefreshContent();
+        }
+    }
+
+    /// <summary>
+    /// More captions under this one (#1066), each with its own glyph and lines and a divider above
+    /// it, or null for none: one callout about several things at one spot. Set in code and never
+    /// saved. Sections of the same shape update in place; setting the same list again does nothing.
+    /// </summary>
+    public IReadOnlyList<UiCalloutSection>? Sections
+    {
+        get => _sections;
+        set
+        {
+            if (ReferenceEquals(_sections, value))
+            {
+                return;
+            }
+
+            _sections = value;
+            RefreshContent();
         }
     }
 
@@ -150,30 +167,44 @@ public partial class UiCallout : PanelContainer
             return;
         }
 
-        // Re-found after a C# assembly reload, which clears managed fields but keeps the children.
-        EnsureBody();
-
-        UiTranslation.ShareContext(this, _content.Label);
-        _content.Apply(
-            Text,
-            IconId,
-            UiChip.IconSizeFor(IconId, glyphSized: false),
-            UiTokens.Color.Ink,
-            UiThemeLookup.Color(this, UiTokens.Color.Ink));
         AddThemeStyleboxOverride("panel", UiThemeLookup.CreateStyleBox(
             UiThemeLookup.Color(this, UiTokens.Color.Panel),
             UiThemeLookup.Color(this, BorderFor(Kind)),
             radius: UiSize.Radius.Medium,
             horizontalPadding: UiSize.Space.S2 + UiSize.Stroke.Hair,
             verticalPadding: UiSize.Space.S1 + UiSize.Stroke.Hair));
-        RefreshLines();
+        RefreshContent();
     }
 
-    // The caption row, then the lines below it; unowned, so never saved into a scene.
-    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_body), nameof(_content), nameof(_linesBox), nameof(_rows))]
+    private void RefreshContent()
+    {
+        if (!IsInsideTree())
+        {
+            return;
+        }
+
+        // Re-found after a C# assembly reload, which clears managed fields but keeps the children.
+        EnsureBody();
+        IReadOnlyList<UiCalloutSection> sections = _sections ?? [];
+        if (_sectionBlocks.Count != sections.Count)
+        {
+            BuildSections(sections.Count);
+        }
+
+        UiTranslation.ShareContext(this, _first.Label);
+        _first.Apply(this, Text, IconId, _lines ?? []);
+        for (var index = 0; index < sections.Count; index++)
+        {
+            UiTranslation.ShareContext(this, _sectionBlocks[index].Label);
+            _sectionBlocks[index].Apply(this, sections[index].Text, sections[index].IconId, sections[index].Lines ?? []);
+        }
+    }
+
+    // The first caption and its lines straight in the body; unowned, so never saved into a scene.
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_body), nameof(_first))]
     private void EnsureBody()
     {
-        if (_body is not null && _content is not null && _linesBox is not null && _rows is not null)
+        if (_body is not null && _first is not null)
         {
             return;
         }
@@ -186,124 +217,190 @@ public partial class UiCallout : PanelContainer
             AddChild(_body);
         }
 
-        _content = UiIconCaption.Ensure(_body);
-        _linesBox = _body.GetNodeOrNull<MarginContainer>(_linesName);
-        if (_linesBox is null)
+        _first = Block.Ensure(_body);
+        _sectionBlocks.Clear();
+        foreach (var child in _body.GetChildren())
         {
-            _linesBox = new MarginContainer { Name = _linesName, MouseFilter = MouseFilterEnum.Ignore };
-            _rows = new VBoxContainer { Name = "Rows", MouseFilter = MouseFilterEnum.Ignore };
-            _rows.AddThemeConstantOverride("separation", 0);
-            _linesBox.AddChild(_rows);
-            _body.AddChild(_linesBox);
+            if (child.Name.ToString().StartsWith(_sectionPrefix, StringComparison.Ordinal)
+                || child.Name.ToString().StartsWith(_dividerPrefix, StringComparison.Ordinal))
+            {
+                _body.RemoveChild(child);
+                child.QueueFree();
+            }
         }
-
-        _rows = _linesBox.GetNode<VBoxContainer>("Rows");
     }
 
-    private void RefreshLines()
+    // Each section is a divider and then a caption with its lines, as the first one.
+    private void BuildSections(int count)
     {
-        if (!IsInsideTree() || _linesBox is null || _rows is null)
+        while (_sectionBlocks.Count > count)
         {
-            return;
-        }
-
-        IReadOnlyList<UiCalloutLine> lines = _lines ?? [];
-        if (!_linesBuilt || !UiCalloutLine.SameShape(_builtLines, lines))
-        {
-            BuildLines(lines);
-        }
-
-        var meter = 0;
-        var note = 0;
-        foreach (var line in lines)
-        {
-            if (line.Note is { } text)
+            var last = _sectionBlocks.Count;
+            foreach (var name in new[] { $"{_dividerPrefix}{last}", $"{_sectionPrefix}{last}" })
             {
-                _notes[note++].Text = text;
-                continue;
+                var child = _body!.GetNode(name);
+                _body.RemoveChild(child);
+                child.QueueFree();
             }
 
-            foreach (var value in line.Meters)
-            {
-                var (label, bar) = _meters[meter++];
-                label.Text = value.Label;
-                bar.Value = value.Value;
-                bar.Centred = value.Centred;
-                bar.FillColor = line.Color;
-            }
+            _sectionBlocks.RemoveAt(_sectionBlocks.Count - 1);
         }
 
-        _linesBox.Visible = lines.Count > 0;
-
-        // With lines below it the caption starts at the left, so the lines sit under its text.
-        if (_content is not null)
+        while (_sectionBlocks.Count < count)
         {
-            _content.Row.Alignment = lines.Count > 0 ? BoxContainer.AlignmentMode.Begin : BoxContainer.AlignmentMode.Center;
+            var number = _sectionBlocks.Count + 1;
+            var divider = new MarginContainer { Name = $"{_dividerPrefix}{number}", MouseFilter = MouseFilterEnum.Ignore };
+            divider.AddThemeConstantOverride("margin_top", UiSize.Space.S1);
+            divider.AddThemeConstantOverride("margin_bottom", UiSize.Space.S1);
+            divider.AddChild(new UiDivider { Color = UiTokens.Color.Line });
+            var section = new VBoxContainer { Name = $"{_sectionPrefix}{number}", MouseFilter = MouseFilterEnum.Ignore };
+            section.AddThemeConstantOverride("separation", 0);
+            _body!.AddChild(divider);
+            _body.AddChild(section);
+            _sectionBlocks.Add(Block.Ensure(section));
         }
-
-        var indent = IconId == UiIconId.None ? 0 : UiIcons.Pixels(UiChip.IconSizeFor(IconId, glyphSized: false)) + UiSize.Space.S2;
-        _linesBox.AddThemeConstantOverride("margin_left", indent);
     }
 
-    private void BuildLines(IReadOnlyList<UiCalloutLine> lines)
+    // A caption and the lines under it, indented to its text (#1064).
+    private sealed class Block
     {
-        foreach (var child in _rows!.GetChildren())
+        private const string _linesName = "_UiLines";
+
+        private readonly UiIconCaption _caption;
+        private readonly MarginContainer _linesBox;
+        private readonly VBoxContainer _rows;
+        private readonly List<(UiLabel Label, UiMeterBar Bar)> _meters = [];
+        private readonly List<UiLabel> _notes = [];
+        private IReadOnlyList<UiCalloutLine>? _builtLines;
+        private bool _linesBuilt;
+
+        private Block(UiIconCaption caption, MarginContainer linesBox, VBoxContainer rows)
         {
-            _rows.RemoveChild(child);
-            child.QueueFree();
+            _caption = caption;
+            _linesBox = linesBox;
+            _rows = rows;
         }
 
-        _meters.Clear();
-        _notes.Clear();
-        foreach (var line in lines)
+        public static Block Ensure(VBoxContainer container)
         {
-            if (line.Note is not null)
+            var caption = UiIconCaption.Ensure(container);
+            var linesBox = container.GetNodeOrNull<MarginContainer>(_linesName);
+            if (linesBox is null)
             {
-                var note = SmallLabel();
-                _notes.Add(note);
-                _rows.AddChild(note);
-                continue;
+                linesBox = new MarginContainer { Name = _linesName, MouseFilter = MouseFilterEnum.Ignore };
+                var rows = new VBoxContainer { Name = "Rows", MouseFilter = MouseFilterEnum.Ignore };
+                rows.AddThemeConstantOverride("separation", 0);
+                linesBox.AddChild(rows);
+                container.AddChild(linesBox);
             }
 
-            // Labels and bars take their own columns, so wrapped rows keep their bars lined up.
-            var grid = new GridContainer { Columns = UiCalloutLine.MetersPerRow * 2, MouseFilter = MouseFilterEnum.Ignore };
-            grid.AddThemeConstantOverride("h_separation", UiSize.Space.S1);
-            grid.AddThemeConstantOverride("v_separation", 0);
-            for (var index = 0; index < line.Meters.Count; index++)
+            return new Block(caption, linesBox, linesBox.GetNode<VBoxContainer>("Rows"));
+        }
+
+        public UiLabel Label => _caption.Label;
+
+        public void Apply(Control owner, string text, UiIconId iconId, IReadOnlyList<UiCalloutLine> lines)
+        {
+            _caption.Apply(
+                text,
+                iconId,
+                UiChip.IconSizeFor(iconId, glyphSized: false),
+                UiTokens.Color.Ink,
+                UiThemeLookup.Color(owner, UiTokens.Color.Ink));
+
+            if (!_linesBuilt || !UiCalloutLine.SameShape(_builtLines, lines))
             {
-                var label = SmallLabel();
-                var bar = new UiMeterBar();
-                if (index % UiCalloutLine.MetersPerRow == 0)
+                BuildLines(lines);
+            }
+
+            var meter = 0;
+            var note = 0;
+            foreach (var line in lines)
+            {
+                if (line.Note is { } noteText)
                 {
-                    grid.AddChild(label);
-                }
-                else
-                {
-                    // The gap before the next meter is S2, wider than the S1 between a label and its bar.
-                    var gap = new MarginContainer { MouseFilter = MouseFilterEnum.Ignore };
-                    gap.AddThemeConstantOverride("margin_left", UiSize.Space.S2 - UiSize.Space.S1);
-                    gap.AddChild(label);
-                    grid.AddChild(gap);
+                    _notes[note++].Text = noteText;
+                    continue;
                 }
 
-                grid.AddChild(bar);
-                _meters.Add((label, bar));
+                foreach (var value in line.Meters)
+                {
+                    var (label, bar) = _meters[meter++];
+                    label.Text = value.Label;
+                    bar.Value = value.Value;
+                    bar.Centred = value.Centred;
+                    bar.FillColor = line.Color;
+                }
             }
 
-            _rows.AddChild(grid);
+            _linesBox.Visible = lines.Count > 0;
+
+            // With lines below it the caption starts at the left, so the lines sit under its text.
+            _caption.Row.Alignment = lines.Count > 0 ? BoxContainer.AlignmentMode.Begin : BoxContainer.AlignmentMode.Center;
+            var indent = iconId == UiIconId.None ? 0 : UiIcons.Pixels(UiChip.IconSizeFor(iconId, glyphSized: false)) + UiSize.Space.S2;
+            _linesBox.AddThemeConstantOverride("margin_left", indent);
         }
 
-        _builtLines = lines;
-        _linesBuilt = true;
-    }
+        private void BuildLines(IReadOnlyList<UiCalloutLine> lines)
+        {
+            foreach (var child in _rows.GetChildren())
+            {
+                _rows.RemoveChild(child);
+                child.QueueFree();
+            }
 
-    // Line text arrives in the player's language, so it is not translated again.
-    private static UiLabel SmallLabel() => new()
-    {
-        TextStyle = UiTokens.Typography.Caption,
-        TextColor = UiTokens.Color.Muted,
-        VerticalAlignment = VerticalAlignment.Center,
-        MouseFilter = MouseFilterEnum.Ignore,
-        AutoTranslateMode = AutoTranslateModeEnum.Disabled,
-    };
+            _meters.Clear();
+            _notes.Clear();
+            foreach (var line in lines)
+            {
+                if (line.Note is not null)
+                {
+                    var note = SmallLabel();
+                    _notes.Add(note);
+                    _rows.AddChild(note);
+                    continue;
+                }
+
+                // Labels and bars take their own columns, so wrapped rows keep their bars lined up.
+                var grid = new GridContainer { Columns = UiCalloutLine.MetersPerRow * 2, MouseFilter = MouseFilterEnum.Ignore };
+                grid.AddThemeConstantOverride("h_separation", UiSize.Space.S1);
+                grid.AddThemeConstantOverride("v_separation", 0);
+                for (var index = 0; index < line.Meters.Count; index++)
+                {
+                    var label = SmallLabel();
+                    var bar = new UiMeterBar();
+                    if (index % UiCalloutLine.MetersPerRow == 0)
+                    {
+                        grid.AddChild(label);
+                    }
+                    else
+                    {
+                        // The gap before the next meter is S2, wider than the S1 between a label and its bar.
+                        var gap = new MarginContainer { MouseFilter = MouseFilterEnum.Ignore };
+                        gap.AddThemeConstantOverride("margin_left", UiSize.Space.S2 - UiSize.Space.S1);
+                        gap.AddChild(label);
+                        grid.AddChild(gap);
+                    }
+
+                    grid.AddChild(bar);
+                    _meters.Add((label, bar));
+                }
+
+                _rows.AddChild(grid);
+            }
+
+            _builtLines = lines;
+            _linesBuilt = true;
+        }
+
+        // Line text arrives in the player's language, so it is not translated again.
+        private static UiLabel SmallLabel() => new()
+        {
+            TextStyle = UiTokens.Typography.Caption,
+            TextColor = UiTokens.Color.Muted,
+            VerticalAlignment = VerticalAlignment.Center,
+            MouseFilter = MouseFilterEnum.Ignore,
+            AutoTranslateMode = AutoTranslateModeEnum.Disabled,
+        };
+    }
 }

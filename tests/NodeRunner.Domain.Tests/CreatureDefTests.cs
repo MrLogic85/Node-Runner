@@ -357,4 +357,16 @@ public sealed class CreatureDefTests
         creature.Beams[0].ShouldBe(new BeamDef(3, 1, 2));
         creature.Sensors[0].ShouldBe(new SensorDef(4, 3, SensorKind.Accelerometer));
     }
+
+    [Fact]
+    public void JointParts_ListsTheJointsServoThenWheelAndNoOtherJoints()
+    {
+        ServoDef[] servos = [new ServoDef(6, 2, 4, 5), new ServoDef(7, 1, 4, 5)];
+        WheelDef[] wheels = [new WheelDef(8, 1), new WheelDef(9, 3)];
+
+        CreatureDef.JointParts(1, servos, wheels).ShouldBe(
+            [new CreatureElementSelection(CreatureElementKind.Servo, 7), new CreatureElementSelection(CreatureElementKind.Wheel, 8)]);
+        CreatureDef.JointParts(3, servos, wheels).ShouldBe([new CreatureElementSelection(CreatureElementKind.Wheel, 9)]);
+        CreatureDef.JointParts(4, servos, wheels).ShouldBeEmpty();
+    }
 }

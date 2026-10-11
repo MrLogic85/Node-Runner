@@ -225,6 +225,21 @@ public sealed record CreatureDef
             .Aggregate(NodeDef.PlainJointRadius, Math.Max);
     }
 
+    /// <summary>
+    /// The joint parts on joint <paramref name="nodeId"/> among these, top → down as drawn (#1044):
+    /// its Servo (the motor or brake), then its Wheel. Empty on a bare joint.
+    /// </summary>
+    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<ServoDef> servos, IEnumerable<WheelDef> wheels)
+    {
+        ArgumentNullException.ThrowIfNull(servos);
+        ArgumentNullException.ThrowIfNull(wheels);
+        return
+        [
+            .. servos.Where(servo => servo.NodeId == nodeId).Select(servo => new CreatureElementSelection(CreatureElementKind.Servo, servo.Id)),
+            .. wheels.Where(wheel => wheel.NodeId == nodeId).Select(wheel => new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)),
+        ];
+    }
+
     /// <summary>Whether the joint <paramref name="nodeId"/> holds a joint part, a Servo or a Wheel (#129), among these.</summary>
     public static bool HasJointPart(int nodeId, IEnumerable<ServoDef> servos, IEnumerable<WheelDef> wheels)
     {

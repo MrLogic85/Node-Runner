@@ -217,7 +217,8 @@ above every shadow.
   to the part's other side. Overlapping callouts stack in a column, most
   important nearest; leaders are behind all callouts and every note shows.
   In a stack, notes of the same kind and text join into one callout with a
-  leader to each part; a callout with lines under its text never joins.
+  leader to each part; a callout with lines or sections under its text
+  never joins.
 
 ## Training arena
 
@@ -229,9 +230,13 @@ above every shadow.
   (#886), and fades to `alpha_shadow` while a part callout shows.
 - **Start sign (#848):** an `ink` arrow signpost reading "Start" at 0 m,
   half a metre tall in the world, so it zooms with the creatures (#882).
-- **Part callout (#388):** the followed shadow's tapped part keeps its
-  selection look, and its name shows in a `halo` callout above the whole
-  creature, so it never covers the body.
+- **Part callout (#388):** each selected part of the followed shadow keeps
+  its selection look, and its name shows in a `halo` callout above the
+  whole creature. A callout taller than the room above is clamped to the
+  arena top and may cover the body (#1137). Several selected parts share
+  one callout (#1066): a row each, in their stack order
+  (`docs/BUILD_MODE.md` → Interactions), with its own glyph, name and
+  lines, split by a `line` hairline with `S1` above and below.
 - **Port bars (#1064):** a part with brain ports adds its glyph before the
   name and, under the name, a line of its senses in `accent`, then a line
   of its outputs in `output`. Each port is a muted `Caption` label and a

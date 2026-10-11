@@ -60,6 +60,19 @@ public sealed class UiCalloutLayoutTests
     }
 
     [Fact]
+    public void Arrange_NeverJoinsACalloutWithSectionsUnderItsCaption()
+    {
+        var withSections = Placement(new Vector2(0, 0), Vector2.Up) with { Sections = [new UiCalloutSection(UiIconId.None, "Wheel")] };
+
+        var arranged = UiCalloutLayout.Arrange(
+            [withSections, withSections with { Anchor = new Vector2(30, 0) }, Placement(new Vector2(0, 0), Vector2.Up)],
+            [_size, _size, _size],
+            _bounds);
+
+        arranged.ShouldAllBe(callout => !callout.Joined);
+    }
+
+    [Fact]
     public void Arrange_StacksACalloutWithOtherTextAwayFromThePart_FirstListedNearest()
     {
         var arranged = UiCalloutLayout.Arrange(

@@ -35,7 +35,8 @@ public partial class ComponentGalleryScreen : GalleryScreen
         }
     }
 
-    // Lines are set in code only (#1064): a −1…1 and a 0…1 meter at each end and the middle, and a note.
+    // Lines and sections are set in code only (#1064, #1066): a −1…1 and a 0…1 meter at each end
+    // and the middle, a note, and a stacked joint's Servo and Wheel in one callout.
     private void ShowCalloutLines()
     {
         var ports = GetNode<UiCallout>("%Ports");
@@ -49,6 +50,15 @@ public partial class ComponentGalleryScreen : GalleryScreen
         var note = GetNode<UiCallout>("%Note");
         note.IconId = UiIconId.PartWheel;
         note.Lines = [UiCalloutLine.OfNote("No brain ports")];
+
+        var stack = GetNode<UiCallout>("%Stack");
+        stack.IconId = UiIconId.PartServo;
+        stack.Lines =
+        [
+            UiCalloutLine.OfMeters(UiTokens.Color.Accent, [new("angle", 0.5, Centred: true), new("speed", -1, Centred: true)]),
+            UiCalloutLine.OfMeters(UiTokens.Color.Output, [new("angle", 0, Centred: true), new("strength", 1, Centred: false)]),
+        ];
+        stack.Sections = [new UiCalloutSection(UiIconId.PartWheel, "Wheel 1", [UiCalloutLine.OfNote("No brain ports")])];
     }
 
     private void ResetScrollPosition()
