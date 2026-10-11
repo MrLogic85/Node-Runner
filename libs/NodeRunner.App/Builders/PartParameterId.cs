@@ -17,7 +17,6 @@ public enum PartParameterId
     Damping,
     CoilLength,
     WheelRadius,
-    Grip,
     Rays,
     Spread,
     CameraRange,

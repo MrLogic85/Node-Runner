@@ -368,7 +368,6 @@ public sealed class CreatureBuilder
             return parameter switch
             {
                 PartParameterId.WheelRadius => wheel.Radius,
-                PartParameterId.Grip => wheel.Grip,
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
             };
         }
@@ -438,8 +437,7 @@ public sealed class CreatureBuilder
             var wheel = _wheels[wheelIndex];
             _wheels[wheelIndex] = parameter switch
             {
-                PartParameterId.WheelRadius => wheel.WithSettings(value, wheel.Grip),
-                PartParameterId.Grip => wheel.WithSettings(wheel.Radius, value),
+                PartParameterId.WheelRadius => wheel.WithSettings(value),
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
             };
             return;
@@ -480,7 +478,7 @@ public sealed class CreatureBuilder
 
     private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength];
 
-    private static readonly PartParameterId[] _wheelParameters = [PartParameterId.WheelRadius, PartParameterId.Grip];
+    private static readonly PartParameterId[] _wheelParameters = [PartParameterId.WheelRadius];
 
     private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange];
 

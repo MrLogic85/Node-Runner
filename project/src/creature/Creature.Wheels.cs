@@ -14,24 +14,14 @@ public partial class Creature
     // The joint body, already sized to the Wheel's radius (CreatureDef.NodeRadius) and carrying its
     // weight on top of its links' shares, is unlocked so it turns, and turns as a thin ring
     // (Mechanics.Wheel.Inertia): Godot would take its circle for a solid disc. Its links stay pinned at
-    // its centre, so the pins add no torque and it spins freely between them.
-    //
-    // The tyre's material: Godot Physics 2D combines two bodies' friction as the lower of the two and
-    // their bounce as the sum, clamped to 0..1, and a Rough material wins the friction instead. The
-    // ground has Godot's default material (friction 1, bounce 0), so with Rough off the tyre slides
-    // at its Grip exactly and never bounces.
+    // its centre, so the pins add no torque and it spins freely between them. The tyre keeps the joint
+    // body's default material, friction 1 and no bounce, so it grips like a bare joint (#1144).
     private WheelVisual MakeWheel(RigidBody2D body, WheelDef wheel, float radius)
     {
         body.LockRotation = false;
         body.Inertia = ToGodotFloat(Wheel.Inertia(wheel), nameof(Wheel.Inertia));
         body.AngularDamp = _wheelAngularDamp;
         body.AngularDampMode = RigidBody2D.DampMode.Replace;
-        body.PhysicsMaterialOverride = new PhysicsMaterial
-        {
-            Bounce = 0,
-            Friction = ToGodotFloat(wheel.Grip, nameof(WheelDef.Grip)),
-            Rough = false,
-        };
 
         var visual = new WheelVisual
         {

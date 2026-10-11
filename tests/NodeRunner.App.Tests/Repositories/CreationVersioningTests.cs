@@ -271,7 +271,7 @@ public sealed class CreationVersioningTests : IDisposable
     [Fact]
     public void AVersion7Save_TurnsItsPistonTargetLengthsSigmoid_WithTheirBiasAndWeightsDoubled()
     {
-        var current = Version8TrainedWalker();
+        var current = CurrentTrainedWalker();
         var file = current.DeepClone().AsObject();
         file[_versionField] = 7;
         var brain = file["training"]!["brain"]!;
@@ -301,7 +301,7 @@ public sealed class CreationVersioningTests : IDisposable
 
         var written = JsonNode.Parse(File.ReadAllText(path))!;
         JsonNode.DeepEquals(written["training"]!["brain"], current["training"]!["brain"]).ShouldBeTrue();
-        written[_versionField]!.GetValue<int>().ShouldBe(8);
+        written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
     }
 
     [Theory]
@@ -310,7 +310,7 @@ public sealed class CreationVersioningTests : IDisposable
     [InlineData("pistons", "[5]")]
     public void AVersion7Save_ItCouldNotHaveSaved_IsSkipped(string field, string value)
     {
-        var file = Version8TrainedWalker();
+        var file = CurrentTrainedWalker();
         file[_versionField] = 7;
         var parent = field == "pistons" ? file["creature"]!.AsObject() : file;
         parent[field] = JsonNode.Parse(value);
@@ -330,6 +330,56 @@ public sealed class CreationVersioningTests : IDisposable
         new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
 
         JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
+    }
+
+    // #1144: version 8 saved each Wheel's grip; version 9 drops it and keeps everything else.
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(0.8)]
+    [InlineData(1.0)]
+    public void AVersion8Save_DropsEachWheelsGrip_AndKeepsTheRest(double grip)
+    {
+        var current = TrainedWalkerOnWheels();
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 8;
+        foreach (var wheel in file["creature"]!["wheels"]!.AsArray())
+        {
+            wheel!["grip"] = grip;
+        }
+
+        var path = WriteCreation(file.ToJsonString());
+
+        var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        creation.Creature.Wheels.ShouldBe([new WheelDef(11, 1, "Back", radius: 70), new WheelDef(12, 3)]);
+        creation.Training.ShouldNotBeNull();
+        JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ASaveInTheCurrentVersion_WithAWheelsGrip_IsSkipped()
+    {
+        var file = TrainedWalkerOnWheels();
+        file["creature"]!["wheels"]![0]!["grip"] = 0.8;
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("wheels", "[5]")]
+    [InlineData("wheels", "[null]")]
+    [InlineData("wheels", "null")]
+    [InlineData("creature", "[1]")]
+    public void AVersion8Save_ItCouldNotHaveSaved_IsSkipped(string field, string value)
+    {
+        var file = TrainedWalkerOnWheels();
+        file[_versionField] = 8;
+        var parent = field == "wheels" ? file["creature"]!.AsObject() : file;
+        parent[field] = JsonNode.Parse(value);
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
     }
 
     [Theory]
@@ -377,7 +427,7 @@ public sealed class CreationVersioningTests : IDisposable
     }
 
     [Fact]
-    public void AWheel_RoundTripsWithItsRadiusAndGrip_ButNotItsWeight()
+    public void AWheel_RoundTripsWithItsRadius_ButNotItsWeight()
     {
         var repository = new FileCreationRepository(new TestStorageLocation(_directory));
         var creature = new CreatureDef(
@@ -387,14 +437,14 @@ public sealed class CreationVersioningTests : IDisposable
             [],
             [],
             [],
-            [new WheelDef(4, 2, "Front", radius: 70, grip: 0.3)],
+            [new WheelDef(4, 2, "Front", radius: 70)],
             nextPartId: 5);
         var creation = new CreationDef(Guid.NewGuid(), "Roller", creature);
 
         repository.Save(creation);
 
         var wheel = JsonNode.Parse(File.ReadAllText(CreationPath(creation.Id)))!["creature"]!["wheels"]!.AsArray().ShouldHaveSingleItem()!.AsObject();
-        wheel.Select(field => field.Key).ShouldBe(["id", "nodeId", "name", "radius", "grip"]);
+        wheel.Select(field => field.Key).ShouldBe(["id", "nodeId", "name", "radius"]);
         repository.Get(creation.Id).ShouldBe(creation, _creationComparer);
         repository.Get(creation.Id)!.Creature.Wheels.ShouldBe(creature.Wheels);
     }
@@ -535,9 +585,27 @@ public sealed class CreationVersioningTests : IDisposable
     private static CreationDef LoadFixture013(string name) =>
         FileCreationRepository.Format.Deserialize(Fixture013(name), name).Value;
 
-    // The trained 0.13.0 walker as version 8 writes it, with sigmoid Piston target lengths (#1129).
-    private static JsonObject Version8TrainedWalker() =>
+    // The trained 0.13.0 walker as the current version writes it, with sigmoid Piston target lengths (#1129).
+    private static JsonObject CurrentTrainedWalker() =>
         JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("trained-walker.creation.json")))!.AsObject();
+
+    // The trained walker with two Wheels, one named and resized, as the current version writes it.
+    private static JsonObject TrainedWalkerOnWheels()
+    {
+        var walker = LoadFixture013("trained-walker.creation.json");
+        var creature = walker.Creature;
+        var wheels = new CreatureDef(
+            creature.Nodes,
+            creature.Beams,
+            creature.Sensors,
+            creature.Servos,
+            creature.Pistons,
+            creature.Springs,
+            [new WheelDef(11, 1, "Back", radius: 70), new WheelDef(12, 3)],
+            creature.TouchSensors,
+            nextPartId: 13);
+        return JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(wheels, walker.Training)))!.AsObject();
+    }
 
     // The 0.13.0 walker as version 6 wrote it, before Touch sensors (#1043).
     private static JsonObject Version6Walker()

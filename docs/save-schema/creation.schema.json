@@ -322,10 +322,6 @@
               "radius": {
                 "type": "number",
                 "default": 40
-              },
-              "grip": {
-                "type": "number",
-                "default": 0.8
               }
             },
             "required": [

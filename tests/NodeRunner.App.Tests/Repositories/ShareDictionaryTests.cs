@@ -21,6 +21,10 @@ public sealed class ShareDictionaryTests
     // The 0.13.0 walker's code in version 6. It must read for good, so version 6's dictionary never changes.
     private const string _walkerInVersion6 = "NR6.IzL5wlMFlioTIYFRjWELI0vsxQIiRCxMzUExjyoQW1sLACFCsRE";
 
+    // A joint, a beam and a 0.7 m Wheel at 30 % grip, coded in version 8 before #1144 dropped Grip.
+    // It must read for good, so version 8's dictionary never changes.
+    private const string _rollerInVersion8 = "NR8.gyfzoPycHCKTObiGxpY8DWDVN2b6M8biAxOUCgXmAXOkHG8MciMAlxLLLg";
+
     public static TheoryData<int> Versions() => new(Enumerable.Range(_firstVersion, FileCreationRepository.Format.CurrentVersion - _firstVersion + 1));
 
     [Fact]
@@ -60,6 +64,19 @@ public sealed class ShareDictionaryTests
         build.Name.ShouldBe("Walker");
         SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(walker).Creature));
         read.UpdatedFrom.ShouldBe(_firstVersion < FileCreationRepository.Format.CurrentVersion ? _firstVersion : null);
+    }
+
+    [Fact]
+    public void ACodeFromVersion8_WithAGrippyWheel_StillReads_WithoutItsGrip()
+    {
+        var read = CreationShareCode.Read(_rollerInVersion8);
+
+        var creature = read.Build.ShouldNotBeNull().Creature;
+        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
+        creature.Beams.ShouldHaveSingleItem().Id.ShouldBe(3);
+        var wheel = creature.Wheels.ShouldHaveSingleItem();
+        (wheel.Id, wheel.NodeId, wheel.Radius).ShouldBe((4, 1, 70.0));
+        read.UpdatedFrom.ShouldBe(8);
     }
 
     // A walker with every kind of part at its settings as Build adds it and named as a new creation

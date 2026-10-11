@@ -8,28 +8,24 @@ public sealed class WheelDefTests
     private static readonly BeamDef[] _beams = [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)];
 
     [Fact]
-    public void Constructor_DefaultsToTheSmallestRadius_And80PercentGrip()
+    public void Constructor_DefaultsToTheSmallestRadius()
     {
         var wheel = new WheelDef(6, 1);
 
         wheel.Radius.ShouldBe(40);
         wheel.Radius.ShouldBe(WheelDef.MinRadius);
-        wheel.Grip.ShouldBe(0.8);
         wheel.Name.ShouldBeNull();
     }
 
     [Theory]
-    [InlineData(0, 1, 40, 0.8)]
-    [InlineData(6, 0, 40, 0.8)]
-    [InlineData(6, 1, 39.9, 0.8)]
-    [InlineData(6, 1, 100.1, 0.8)]
-    [InlineData(6, 1, double.NaN, 0.8)]
-    [InlineData(6, 1, 40, -0.1)]
-    [InlineData(6, 1, 40, 1.1)]
-    [InlineData(6, 1, 40, double.NaN)]
-    public void Constructor_OutsideItsRanges_Throws(int id, int nodeId, double radius, double grip)
+    [InlineData(0, 1, 40)]
+    [InlineData(6, 0, 40)]
+    [InlineData(6, 1, 39.9)]
+    [InlineData(6, 1, 100.1)]
+    [InlineData(6, 1, double.NaN)]
+    public void Constructor_OutsideItsRanges_Throws(int id, int nodeId, double radius)
     {
-        Should.Throw<ArgumentOutOfRangeException>(() => new WheelDef(id, nodeId, radius: radius, grip: grip));
+        Should.Throw<ArgumentOutOfRangeException>(() => new WheelDef(id, nodeId, radius: radius));
     }
 
     [Fact]
@@ -37,9 +33,9 @@ public sealed class WheelDefTests
     {
         var wheel = new WheelDef(6, 1, "Front");
 
-        var changed = wheel.WithSettings(radius: 100, grip: 0);
+        var changed = wheel.WithSettings(radius: 100);
 
-        changed.ShouldBe(new WheelDef(6, 1, "Front", radius: 100, grip: 0));
+        changed.ShouldBe(new WheelDef(6, 1, "Front", radius: 100));
         wheel.WithName("Back").ShouldBe(new WheelDef(6, 1, "Back"));
     }
 
@@ -89,7 +85,7 @@ public sealed class WheelDefTests
     [Fact]
     public void JsonRoundTrip_PreservesWheels()
     {
-        var original = new CreatureDef(_nodes, _beams, [], [], [], [], [new WheelDef(6, 2, "Front", radius: 70, grip: 0.3)], nextPartId: 7);
+        var original = new CreatureDef(_nodes, _beams, [], [], [], [], [new WheelDef(6, 2, "Front", radius: 70)], nextPartId: 7);
 
         var json = JsonSerializer.Serialize(original);
         var roundTripped = JsonSerializer.Deserialize<CreatureDef>(json);

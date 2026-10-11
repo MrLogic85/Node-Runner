@@ -17,10 +17,7 @@ public sealed record WheelDef
     /// <summary>A new Wheel's <see cref="Radius"/>: the smallest.</summary>
     public const double DefaultRadius = MinRadius;
 
-    /// <summary>A new Wheel's <see cref="Grip"/>: 80 %.</summary>
-    public const double DefaultGrip = 0.8;
-
-    public WheelDef(int id, int nodeId, string? name = null, double radius = DefaultRadius, double grip = DefaultGrip)
+    public WheelDef(int id, int nodeId, string? name = null, double radius = DefaultRadius)
     {
         if (id <= 0)
         {
@@ -37,16 +34,10 @@ public sealed record WheelDef
             throw new ArgumentOutOfRangeException(nameof(radius), $"Wheel radius must be between {MinRadius} and {MaxRadius}.");
         }
 
-        if (!double.IsFinite(grip) || grip < 0 || grip > 1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(grip), "Wheel grip must be a share from 0 to 1.");
-        }
-
         Id = id;
         NodeId = nodeId;
         Name = name;
         Radius = radius;
-        Grip = grip;
     }
 
     public int Id { get; }
@@ -58,10 +49,7 @@ public sealed record WheelDef
     /// <summary>Its drawn and collision radius, in world units: its joint's radius while it is there.</summary>
     public double Radius { get; }
 
-    /// <summary>How well its tyre holds the ground, a share from 0 (slides) to 1: its friction.</summary>
-    public double Grip { get; }
+    public WheelDef WithName(string? name) => new(Id, NodeId, name, Radius);
 
-    public WheelDef WithName(string? name) => new(Id, NodeId, name, Radius, Grip);
-
-    public WheelDef WithSettings(double radius, double grip) => new(Id, NodeId, Name, radius, grip);
+    public WheelDef WithSettings(double radius) => new(Id, NodeId, Name, radius);
 }
