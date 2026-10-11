@@ -15,6 +15,7 @@ public partial class ServoPart : PartVisual
     private const float _bandOuterRadius = 20f;
     private const float _hornLong = (float)ServoDef.JointRadius - 4f;
     private const float _hornShort = 8f;
+    private const float _hubRadius = 3.5f;
     private const int _ringSegments = 64;
 
     private float _radius = (float)ServoDef.JointRadius;
@@ -99,16 +100,19 @@ public partial class ServoPart : PartVisual
         return reach >= _housingMinReach ? reach : 0;
     }
 
+    /// <summary>A Servo missing a link cannot train, so the whole part draws in danger (#1111).</summary>
+    private bool Missing => !HasFixed || !HasTarget;
+
+    private Color Line => Missing ? Theme.Danger : Theme.MotorAccent;
+
     public override void _Draw()
     {
         using var pen = UiPixelPen.Begin(this);
-        var missing = !HasFixed || !HasTarget;
         var showHousing = HasFixed && HousingReach > 0;
-        var ring = missing ? Theme.Danger : Theme.MotorAccent;
 
         if (Simplified)
         {
-            DrawSimplified(pen, ring, showHousing, missing);
+            DrawSimplified(pen, showHousing);
             return;
         }
 
@@ -118,16 +122,16 @@ public partial class ServoPart : PartVisual
         }
 
         pen.Disc(Vector2.Zero, Radius, Theme.ArenaBackground);
-        pen.Disc(Vector2.Zero, Radius, missing ? Theme.DangerFill : Selected ? Theme.SelectionFill : Theme.JointFill);
-        pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), ring, Theme.JointRingWidth, _ringSegments);
-        if (!missing)
-        {
-            DrawRangeBand(pen, filled: true);
-        }
-
+        pen.Disc(Vector2.Zero, Radius, Selected ? Theme.SelectionFill : Theme.JointFill);
+        pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), Line, Theme.JointRingWidth, _ringSegments);
+        DrawRangeBand(pen, filled: true);
         if (HasTarget)
         {
             DrawHorn(pen);
+        }
+        else
+        {
+            pen.Disc(Vector2.Zero, _hubRadius, Line);
         }
 
         if (Selected)
@@ -135,32 +139,32 @@ public partial class ServoPart : PartVisual
             DrawSelection(pen, showHousing);
         }
 
-        if (missing)
+        if (Missing)
         {
             DrawDangerBadge(pen);
         }
     }
 
-    private void DrawSimplified(UiPixelPen pen, Color ring, bool showHousing, bool missing)
+    private void DrawSimplified(UiPixelPen pen, bool showHousing)
     {
         if (showHousing)
         {
             DrawHousing(pen, filled: false);
         }
 
-        pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), ring, Theme.JointRingWidth, _ringSegments);
-        if (missing)
+        pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), Line, Theme.JointRingWidth, _ringSegments);
+        if (Missing)
         {
             return;
         }
 
-        pen.Arc(Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, BandFrom(), BandTo(), 32, Theme.MotorAccent, 3);
+        pen.Arc(Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, BandFrom(), BandTo(), 32, Line, 3);
         if (IsFullTurn)
         {
             DrawStop(pen, BandFrom(), 3);
         }
 
-        pen.Line(Vector2.Zero, Vector2.FromAngle(TargetAngle) * _hornLong, Theme.MotorAccent, 3);
+        pen.Line(Vector2.Zero, Vector2.FromAngle(TargetAngle) * _hornLong, Line, 3);
     }
 
     private void DrawHousing(UiPixelPen pen, bool filled)
@@ -171,7 +175,7 @@ public partial class ServoPart : PartVisual
             pen.Polygon(fill, Theme.ServoPanelFill);
         }
 
-        pen.Polyline(outline, Theme.MotorAccent, Theme.MotorSignalWidth);
+        pen.Polyline(outline, Line, Theme.MotorSignalWidth);
         if (!filled || HousingReach < 6)
         {
             return;
@@ -179,7 +183,7 @@ public partial class ServoPart : PartVisual
 
         foreach (var y in new[] { -6f, 6f })
         {
-            pen.Ring(new Vector2(Radius + (HousingReach / 2), y), 1.4f, Theme.MotorAccent, UiSize.Stroke.Hair, 12);
+            pen.Ring(new Vector2(Radius + (HousingReach / 2), y), 1.4f, Line, UiSize.Stroke.Hair, 12);
         }
     }
 
@@ -224,8 +228,8 @@ public partial class ServoPart : PartVisual
                 pen.Arc(Vector2.Zero, (_bandInnerRadius + _bandOuterRadius) / 2, lower, lower + Mathf.Tau, _ringSegments, Theme.ServoPanelFill, _bandOuterRadius - _bandInnerRadius);
             }
 
-            pen.Arc(Vector2.Zero, _bandInnerRadius, lower, lower + Mathf.Tau, _ringSegments, Theme.MotorAccent, Theme.MotorSignalWidth);
-            pen.Arc(Vector2.Zero, _bandOuterRadius, lower, lower + Mathf.Tau, _ringSegments, Theme.MotorAccent, Theme.MotorSignalWidth);
+            pen.Arc(Vector2.Zero, _bandInnerRadius, lower, lower + Mathf.Tau, _ringSegments, Line, Theme.MotorSignalWidth);
+            pen.Arc(Vector2.Zero, _bandOuterRadius, lower, lower + Mathf.Tau, _ringSegments, Line, Theme.MotorSignalWidth);
             DrawStop(pen, lower, Theme.MotorSignalWidth);
             return;
         }
@@ -236,7 +240,7 @@ public partial class ServoPart : PartVisual
             pen.Polygon(points, Theme.ServoPanelFill);
         }
 
-        pen.Polyline(Closed(points), Theme.MotorAccent, Theme.MotorSignalWidth);
+        pen.Polyline(Closed(points), Line, Theme.MotorSignalWidth);
     }
 
     private bool IsFullTurn => Range >= Mathf.Tau - 0.0001f;
@@ -247,7 +251,7 @@ public partial class ServoPart : PartVisual
     private void DrawStop(UiPixelPen pen, float angle, float width)
     {
         var along = Vector2.FromAngle(angle);
-        pen.Line(along * _bandInnerRadius, along * _bandOuterRadius, Theme.MotorAccent, width);
+        pen.Line(along * _bandInnerRadius, along * _bandOuterRadius, Line, width);
     }
 
     private Vector2[] RangeBandPoints(float lower, float upper)
@@ -282,8 +286,8 @@ public partial class ServoPart : PartVisual
             (-along * _hornShort) + (across * 3.5f),
         };
         pen.Polygon(points, Theme.ServoPanelFill);
-        pen.Polyline(Closed(points), Theme.MotorAccent, Theme.MotorSignalWidth);
-        pen.Disc(Vector2.Zero, 3.5f, Theme.MotorAccent);
+        pen.Polyline(Closed(points), Line, Theme.MotorSignalWidth);
+        pen.Disc(Vector2.Zero, _hubRadius, Line);
     }
 
     private void DrawSelection(UiPixelPen pen, bool showHousing)
@@ -330,9 +334,12 @@ public partial class ServoPart : PartVisual
     public static (float From, float To) BandSweep(float builtAngle, float range, float start) =>
         (builtAngle - ((1 - start) * range), builtAngle + (start * range));
 
-    private float BandFrom() => BandSweep(BuiltAngle, Range, Start).From;
+    /// <summary>Without a Target link the band still shows, placed as if the Target pointed opposite Fixed (#1111).</summary>
+    private float BandAngle => HasTarget ? BuiltAngle : Mathf.Pi;
 
-    private float BandTo() => BandSweep(BuiltAngle, Range, Start).To;
+    private float BandFrom() => BandSweep(BandAngle, Range, Start).From;
+
+    private float BandTo() => BandSweep(BandAngle, Range, Start).To;
 
     private static Vector2[] Closed(Vector2[] points) => [.. points, points[0]];
 }

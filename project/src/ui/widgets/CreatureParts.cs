@@ -163,7 +163,7 @@ public partial class CreatureParts : Node2D
         part.HasFixed = hasFixed;
         part.HasTarget = hasTarget;
         part.TargetAngle = localTarget;
-        part.BuiltAngle = hasFixed && hasTarget ? localTarget : 0;
+        part.BuiltAngle = localTarget;
         part.Range = (float)range;
         part.Start = (float)start;
         part.HousingReach = hasFixed ? HousingReach(shape, nodes, fixedLink) : 0;
