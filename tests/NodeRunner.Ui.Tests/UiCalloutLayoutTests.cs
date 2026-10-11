@@ -148,6 +148,88 @@ public sealed class UiCalloutLayoutTests
         rect.Position.ShouldBe(new Vector2(-30 + UiSize.Space.S1, -20 + UiSize.Space.S1));
     }
 
+    [Theory]
+    [InlineData(0, 300)]
+    [InlineData(-80, 20)]
+    public void Dock_PutsTheTopAtTheBoundsAndCentresWhereverThePartIs(float anchorX, float anchorY)
+    {
+        var arena = new Rect2(0, 0, 600, 240);
+
+        var docked = UiCalloutLayout.Dock(new Vector2(anchorX, anchorY), _size, 258, arena);
+
+        docked.Rect.ShouldBe(new Rect2(208, UiSize.Space.S1, 100, 20));
+        docked.Joined.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Dock_RunsTheLeaderFromThePartToTheBox()
+    {
+        var docked = UiCalloutLayout.Dock(new Vector2(258, 200), _size, 258, new Rect2(0, 0, 600, 240));
+
+        docked.LeaderEnd.ShouldBe(new Vector2(258, UiSize.Space.S1 + 20));
+    }
+
+    [Theory]
+    [InlineData(10, 120)]
+    [InlineData(590, 500 - UiSize.Space.S1)]
+    public void Dock_StaysInsideTheBoundsSideways(float centreX, float expectedLeft)
+    {
+        // Bounds that start at 120, as when the slow-motion chip takes the arena's left corner.
+        var bounds = new Rect2(120 - UiSize.Space.S1, 0, 480 + UiSize.Space.S1, 240);
+
+        var docked = UiCalloutLayout.Dock(Vector2.Zero, _size, centreX, bounds);
+
+        docked.Rect.Position.X.ShouldBe(expectedLeft);
+    }
+
+    [Fact]
+    public void Dock_GrowsATallerCalloutDownward()
+    {
+        var arena = new Rect2(0, 0, 600, 240);
+
+        var small = UiCalloutLayout.Dock(Vector2.Zero, _size, 258, arena);
+        var tall = UiCalloutLayout.Dock(Vector2.Zero, new Vector2(100, 90), 258, arena);
+
+        tall.Rect.Position.ShouldBe(small.Rect.Position);
+    }
+
+    [Fact]
+    public void Dock_PutsACalloutWiderThanTheBoundsAgainstTheirLeft()
+    {
+        var bounds = new Rect2(120, 0, 80, 240);
+
+        var docked = UiCalloutLayout.Dock(Vector2.Zero, _size, 160, bounds);
+
+        docked.Rect.Position.X.ShouldBe(120 + UiSize.Space.S1);
+    }
+
+    [Fact]
+    public void DockedShare_CoversTheBoxItsLeaderAndAMargin()
+    {
+        var docked = new Rect2(208, UiSize.Space.S1, 100, 20);
+
+        var share = UiCalloutLayout.DockedShare(docked, 240);
+
+        share.ShouldBe((UiSize.Space.S1 + 20 + UiCalloutLayout.LeaderLength + UiSize.Space.S1) / 240f, 1e-6f);
+    }
+
+    [Fact]
+    public void DockedShare_IsNoneForAnEmptyView()
+    {
+        UiCalloutLayout.DockedShare(new Rect2(0, 0, 100, 20), 0).ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(120, 120, 480)]
+    [InlineData(-10, 0, 600)]
+    [InlineData(700, 600, 0)]
+    public void RightOf_KeepsWhatLiesRightOfTheEdgeInsideTheBounds(float x, float expectedLeft, float expectedWidth)
+    {
+        var right = UiCalloutLayout.RightOf(new Rect2(0, 0, 600, 240), x);
+
+        right.ShouldBe(new Rect2(expectedLeft, 0, expectedWidth, 240));
+    }
+
     private static UiCalloutLayout.Placement Placement(Vector2 anchor, Vector2 direction, string text = "Note", float clearance = 18) =>
         new(anchor, direction, clearance, UiCallout.CalloutKind.Danger, UiIconId.Warn, text);
 }

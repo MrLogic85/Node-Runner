@@ -213,13 +213,26 @@ the reference's "a training session has finished" (#369).
       500 m wide. It widens quickly and narrows only after the shadow has
       needed less room for 1.5 s, then slowly, so a stretching gait does
       not make it pump.
-    - *Height:* the ground stays 80% down the view at any zoom. A shadow
-      rising into its headroom does not move the camera; past the top
-      margin the camera eases up after it, and back down when it lands.
+    - *Height:* the ground rests 80% down the view at any zoom, unless
+      the callout shelf lowers it. A shadow rising into its headroom does
+      not move the camera; past the top margin the camera eases up after
+      it, and back down when it lands.
+    - *Callout shelf (#1137):* while a part callout shows, the camera
+      keeps a shelf at the top as tall as the callout, its leader and
+      `S1` margins (`docs/WORLD_VISUALS.md` → Part callout). It lowers
+      the ground first, to at most 95% down, and zooms out only for what
+      is still missing; a shelf that already fits moves nothing. Zooming
+      out for the shelf never shrinks the shadow below 25% of the view's
+      height; past that the callout covers its top. The shelf opens as
+      quickly as the zoom widens. When the selection clears, the callout
+      goes at once but the shelf is held 1.5 s, then given back as slowly
+      as the zoom narrows, so tapping from part to part does not pump the
+      view.
     - It cuts back to the start, zoom and height included, when the
       followed shadow starts a new trial, since a new trial is a new scene.
-      It also cuts when the arena changes size, and holds still while
-      training is paused.
+      It also cuts when the arena changes size, the shelf included, and
+      holds still while training is paused, except that the callout
+      shelf still opens and closes.
   - **Ground.** Flat ground (`Maps.Flat`, "Flat ground") is the only map
     (#540), and its ground is endless. A resumed best ever counts only on
     the map it was reached on.
@@ -228,7 +241,8 @@ the reference's "a training session has finished" (#369).
     m so they never overlap, the ticks thinning with them; a closer label
     step comes back only with 20% room to spare, so a zoom resting at the
     switch does not flicker (`DistanceRuler`, #884). Ticks and labels keep
-    their screen size.
+    their screen size. While the callout shelf lowers the ground, the
+    labels may slide out of view below it; the ticks stay.
   - **Best marker (#388).** Marks the best ever on this map at its shown
     distance, with a flag reading "Best 4.2 m". It is behind every
     creature, keeps its screen size, is hidden until its distance is known
@@ -246,8 +260,8 @@ the reference's "a training session has finished" (#369).
     within 16 px of it on screen at least, so it stays easy to hit zoomed
     out; a tap on a joint with parts on it selects them all
     (`docs/BUILD_MODE.md` → "Parts stand in for their joint", #1066). The
-    selected parts' Build names show in one callout that moves with the
-    followed shadow (#388), with a live bar for each of their brain ports
+    selected parts' Build names show in one callout docked at the arena
+    top (#388, #1137), with a live bar for each of their brain ports
     (#1064, `docs/WORLD_VISUALS.md` → Part callout). Each
     BrainFocus refresh samples the followed brain once into one
     `BrainPortValues` keyed by `BrainPort`; BrainFocus and the callout

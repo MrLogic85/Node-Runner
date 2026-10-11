@@ -36,6 +36,12 @@ public partial class TrainingScreen : Control
 
     private BrainFocusSheet BrainFocus => GetNode<BrainFocusSheet>("%BrainFocusSheet");
 
+    /// <summary>
+    /// The share of the arena's height the part callout takes from the top, with its leader and
+    /// margins (#1137): the shelf the camera keeps clear for it. 0 while no callout shows.
+    /// </summary>
+    public double PartCalloutShelf { get; private set; }
+
     /// <summary>Binds the run: its header, its progress, the signal flow and the brain it shows.</summary>
     public void Setup(
         TrainingHeaderPresentation header,
@@ -95,36 +101,44 @@ public partial class TrainingScreen : Control
         if (_partCallout.Count == 0)
         {
             GetNode<UiCalloutLayer>("%PartCallouts").SetCallouts([]);
+            PartCalloutShelf = 0;
         }
     }
 
     /// <summary>
-    /// Places the part callout above the whole creature, its leader down to the part. World
-    /// coordinates; call every frame.
+    /// Places the part callout (#1137): docked at the arena's top over the creature's eased centre,
+    /// where the camera keeps it (<see cref="ArenaFollow.FocusFromLeft"/>), clear of the slow-motion
+    /// chip, so the box holds still and only its leader follows the part at
+    /// <paramref name="worldAnchor"/>, in world coordinates. Call every frame; it updates
+    /// <see cref="PartCalloutShelf"/>.
     /// </summary>
-    public void MovePartCallout(Vector2 worldAnchor, Rect2 worldCreatureBounds)
+    public void MovePartCallout(Vector2 worldAnchor)
     {
         if (_partCallout.Count == 0)
         {
             return;
         }
 
-        var arena = GetNode<UiWorldView>("%ArenaView");
-        var anchor = arena.FromWorld(worldAnchor);
-        var creatureTop = arena.FromWorld(worldCreatureBounds.Position).Y;
+        var layer = GetNode<UiCalloutLayer>("%PartCallouts");
+        var bounds = new Rect2(Vector2.Zero, layer.Size);
+        var chip = GetNode<Control>("%SlowMotionChip");
+        if (chip.Visible)
+        {
+            bounds = UiCalloutLayout.RightOf(bounds, chip.Position.X + chip.Size.X);
+        }
+
         var first = _partCallout[0];
-        GetNode<UiCalloutLayer>("%PartCallouts").SetCallouts(
-        [
-            new UiCalloutLayout.Placement(
-                anchor,
-                Vector2.Up,
-                Math.Max(0, anchor.Y - creatureTop) + UiSize.Space.S1,
-                UiCallout.CalloutKind.Warning,
-                first.IconId,
-                first.Text,
-                first.Lines,
-                _partCalloutSections),
-        ]);
+        var placement = new UiCalloutLayout.Placement(
+            GetNode<UiWorldView>("%ArenaView").FromWorld(worldAnchor),
+            Vector2.Zero,
+            0,
+            UiCallout.CalloutKind.Warning,
+            first.IconId,
+            first.Text,
+            first.Lines,
+            _partCalloutSections);
+        var docked = layer.SetDockedCallout(placement, (float)ArenaFollow.FocusFromLeft * layer.Size.X, bounds);
+        PartCalloutShelf = UiCalloutLayout.DockedShare(docked, layer.Size.Y);
     }
 
     /// <summary>

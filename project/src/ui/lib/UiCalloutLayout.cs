@@ -16,6 +16,7 @@ namespace NodeRunner.Ui.Lib;
 /// another takes it in, until no two overlap.</item>
 /// </list>
 /// Leaders run from each spot to the centre of its callout and are drawn behind all callouts.
+/// A docked callout (<see cref="Dock"/>) instead keeps its own place whatever its part does.
 /// </summary>
 public static class UiCalloutLayout
 {
@@ -71,6 +72,37 @@ public static class UiCalloutLayout
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Where a docked callout goes (#1137): its top at the top of <paramref name="bounds"/> less a
+    /// <see cref="UiSize.Space.S1"/> margin, centred on <paramref name="centreX"/> but pushed inside
+    /// them sideways, or against their left side when it is wider. It does not follow its part at
+    /// <paramref name="anchor"/>; only the leader does. A taller callout grows down, so its first
+    /// row stays put.
+    /// </summary>
+    public static Arranged Dock(Vector2 anchor, Vector2 size, float centreX, Rect2 bounds)
+    {
+        var inner = bounds.Grow(-UiSize.Space.S1);
+        var left = Math.Max(inner.Position.X, Math.Min(centreX - (size.X / 2), inner.End.X - size.X));
+        var rect = new Rect2(new Vector2(left, inner.Position.Y), size);
+        return new Arranged(rect, Entry(rect, anchor));
+    }
+
+    /// <summary>
+    /// The share of a <paramref name="height"/>-tall view a callout docked in it by
+    /// <see cref="Dock"/> as <paramref name="docked"/> takes from the top, with its leader and an
+    /// <see cref="UiSize.Space.S1"/> margin under that: the room to keep clear for it. 0 for an
+    /// empty view.
+    /// </summary>
+    public static float DockedShare(Rect2 docked, float height) =>
+        height > 0 ? (docked.End.Y + LeaderLength + UiSize.Space.S1) / height : 0;
+
+    /// <summary><paramref name="bounds"/> less what lies left of <paramref name="x"/>, as beside a corner chip.</summary>
+    public static Rect2 RightOf(Rect2 bounds, float x)
+    {
+        var left = Math.Clamp(x, bounds.Position.X, bounds.End.X);
+        return new Rect2(left, bounds.Position.Y, bounds.End.X - left, bounds.Size.Y);
     }
 
     private sealed record Stack(Rect2 Bounds, IReadOnlyList<(int Index, Rect2 Rect, bool Joined)> Members);

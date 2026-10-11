@@ -134,8 +134,8 @@ public partial class TrainingHost : Node, IRoutedScene
     }
 
     // Redraws the creatures' parts once the camera has zoomed them to a new pixel scale, also
-    // while paused (a resize re-frames the camera). Moves the part callout with the creature every
-    // frame. Refreshes the signal flow, brain focus and part callout from the creature's last
+    // while paused (a resize re-frames the camera). Moves the part callout's leader with the part
+    // every frame and hands the camera the shelf the callout needs. Refreshes the signal flow, brain focus and part callout from the creature's last
     // physics tick at a fixed cadence: the numbers are for a person to read, so every rendered
     // frame is wasted work.
     public override void _Process(double delta)
@@ -150,8 +150,10 @@ public partial class TrainingHost : Node, IRoutedScene
         // A stacked joint's parts share their joint, so the first one's anchor serves them all.
         if (_selection.SelectedParts is [var selected, ..])
         {
-            _screen.MovePartCallout(_followed.PartAnchor(selected), _followed.Bounds);
+            _screen.MovePartCallout(_followed.PartAnchor(selected));
         }
+
+        Camera.Shelf = _screen.PartCalloutShelf;
 
         _signalRefreshElapsed += delta;
         if (_signalRefreshElapsed < _signalRefreshIntervalSeconds)
