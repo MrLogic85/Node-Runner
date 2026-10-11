@@ -105,7 +105,7 @@ public sealed class PartCalloutPresentationTests
         foreach (var port in callout.Outputs)
         {
             var neuron = brainFocus.Layers[BrainFocusPresentationViewModel.OutputLayer].Neurons[layout.Outputs.ToList().IndexOf(port.Port)];
-            port.Value.ShouldBe(BrainPortDisplay.ShownValue(PartSettingsKind.Piston, port.Port, neuron.Activation));
+            port.Value.ShouldBe(neuron.Activation);
         }
     }
 }

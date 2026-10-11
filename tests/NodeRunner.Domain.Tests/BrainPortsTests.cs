@@ -20,7 +20,7 @@ public sealed class BrainPortsTests
             BrainPort.Input(8, "right1"),
             BrainPort.Input(8, "hit"),
         ]);
-        layout.Outputs.ShouldBe([BrainPort.Output(6, "position", PortSignal.Position), BrainPort.Output(6, "strength", PortSignal.Strength)]);
+        layout.Outputs.ShouldBe([BrainPort.Output(6, "position", PortSignal.Length), BrainPort.Output(6, "strength", PortSignal.Strength)]);
     }
 
     [Theory]
@@ -85,7 +85,7 @@ public sealed class BrainPortsTests
 
         after.Inputs.Where(before.Inputs.Contains).ShouldBe(before.Inputs);
         after.Outputs.Where(before.Outputs.Contains).ShouldBe(before.Outputs);
-        after.Outputs.ShouldContain(BrainPort.Output(11, "position", PortSignal.Position));
+        after.Outputs.ShouldContain(BrainPort.Output(11, "position", PortSignal.Length));
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public sealed class BrainPortsTests
         var layout = BrainPorts.Of(creature);
 
         layout.Inputs.ShouldBe([BrainPort.Input(3, "length"), BrainPort.Input(3, "speed")]);
-        layout.Outputs.ShouldBe([BrainPort.Output(3, "position", PortSignal.Position), BrainPort.Output(3, "strength", PortSignal.Strength)]);
+        layout.Outputs.ShouldBe([BrainPort.Output(3, "position", PortSignal.Length), BrainPort.Output(3, "strength", PortSignal.Strength)]);
     }
 
     [Fact]

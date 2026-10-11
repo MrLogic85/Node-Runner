@@ -106,18 +106,18 @@ public sealed class DirectBrainTests
     [Fact]
     public void OutputActivations_FollowTheSignalEachPortDrives()
     {
-        var ports = _ports with { Outputs = [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Position), BrainPort.Output(9, "strength", PortSignal.Strength)] };
+        var ports = _ports with { Outputs = [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Length), BrainPort.Output(9, "strength", PortSignal.Strength)] };
 
-        DirectBrain.OutputActivations(ports).ShouldBe([Activation.Tanh, Activation.Tanh, Activation.Sigmoid]);
+        DirectBrain.OutputActivations(ports).ShouldBe([Activation.Tanh, Activation.Sigmoid, Activation.Sigmoid]);
         DirectBrain.ToBrainDef(ports, new double[12], previous: null).Neurons.TakeLast(3).Select(neuron => neuron.Activation)
-            .ShouldBe([NeuronActivation.Tanh, NeuronActivation.Tanh, NeuronActivation.Sigmoid]);
+            .ShouldBe([NeuronActivation.Tanh, NeuronActivation.Sigmoid, NeuronActivation.Sigmoid]);
     }
 
     [Fact]
     public void Compile_ANewPart_StartsAlmostPassive()
     {
         var trained = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
-        var grown = _ports with { Outputs = [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Position), BrainPort.Output(9, "strength", PortSignal.Strength)] };
+        var grown = _ports with { Outputs = [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Length), BrainPort.Output(9, "strength", PortSignal.Strength)] };
 
         var genome = DirectBrain.Compile(trained, grown);
 
@@ -125,7 +125,7 @@ public sealed class DirectBrainTests
         genome.ShouldBe([0.5, -0.25, 0.75, 0, 0, 0, 0, 0, 0, 0.1, 0, PortSignals.PassiveStrengthBias]);
         var outputs = NeuralNetwork.FromGenome(DirectBrain.LayerSizes(grown), genome, Activation.Tanh, DirectBrain.OutputActivations(grown))
             .Forward([1, -1, 1]);
-        outputs[1].ShouldBe(0);
+        outputs[1].ShouldBe(0.5);
         outputs[2].ShouldBe(0.018, tolerance: 0.001);
     }
 
@@ -148,7 +148,7 @@ public sealed class DirectBrainTests
         // Part 2's angle input is gone and a new part 9 brings a position and a strength output.
         var rebuilt = new BrainPortLayout(
             [_ports.Inputs[1], _ports.Inputs[2]],
-            [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Position), BrainPort.Output(9, "strength", PortSignal.Strength)]);
+            [.. _ports.Outputs, BrainPort.Output(9, "position", PortSignal.Length), BrainPort.Output(9, "strength", PortSignal.Strength)]);
 
         var refitted = DirectBrain.Refit(brain, rebuilt);
 

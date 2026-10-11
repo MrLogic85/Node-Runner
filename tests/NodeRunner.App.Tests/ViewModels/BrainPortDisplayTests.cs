@@ -47,28 +47,23 @@ public sealed class BrainPortDisplayTests
         layout.Outputs.Count.ShouldBe(4);
     }
 
+    // The bar draws the value as it leaves the brain, so each output's range must be its activation's.
     [Fact]
-    public void EveryOutputsShownValue_SpansItsRange()
+    public void EveryOutputsRange_IsItsActivationsRange()
     {
         foreach (var port in PortedCreature.Layout.Outputs)
         {
-            var kind = KindOf(port.PartId);
-            var (low, high) = port.Signal == PortSignal.Strength ? (0.0, 1.0) : (-1.0, 1.0);
-            var range = BrainPortDisplay.Range(kind, port) == PortRange.ZeroToOne ? (0.0, 1.0) : (-1.0, 1.0);
+            var range = PortSignals.Activation(port.Signal) == NeuronActivation.Sigmoid ? PortRange.ZeroToOne : PortRange.MinusOneToOne;
 
-            (BrainPortDisplay.ShownValue(kind, port, low), BrainPortDisplay.ShownValue(kind, port, high)).ShouldBe(range, port.ToString());
+            BrainPortDisplay.Range(KindOf(port.PartId), port).ShouldBe(range, port.ToString());
         }
     }
 
     [Fact]
     public void APistonsTargetLength_IsShownLikeItsMeasuredLength()
     {
-        var target = BrainPort.Output(1, BrainPorts.PistonPositionChannel, PortSignal.Position);
+        var target = BrainPorts.PistonOutputs(1).First();
 
-        BrainPortDisplay.ShownValue(PartSettingsKind.Piston, target, -1).ShouldBe(0);
-        BrainPortDisplay.ShownValue(PartSettingsKind.Piston, target, 0).ShouldBe(0.5);
-        BrainPortDisplay.ShownValue(PartSettingsKind.Piston, target, 1).ShouldBe(1);
-        BrainPortDisplay.ShownValue(PartSettingsKind.Piston, target, null).ShouldBeNull();
         BrainPortDisplay.Range(PartSettingsKind.Piston, target).ShouldBe(BrainPortDisplay.Range(PartSettingsKind.Piston, BrainPort.Input(1, BrainPorts.PistonLengthChannel)));
     }
 

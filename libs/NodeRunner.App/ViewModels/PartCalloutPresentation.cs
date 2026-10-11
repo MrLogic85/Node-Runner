@@ -45,7 +45,7 @@ public sealed record PartCalloutPresentation(
         var ports = values.Of(selection.Id);
         PartCalloutPort[] Of(PortDirection direction) => ports
             .Where(value => value.Port.Direction == direction)
-            .Select(value => new PartCalloutPort(value.Port, BrainPortDisplay.ShortLabel(kind, value.Port), BrainPortDisplay.Range(kind, value.Port), BrainPortDisplay.ShownValue(kind, value.Port, value.Value)))
+            .Select(value => new PartCalloutPort(value.Port, BrainPortDisplay.ShortLabel(kind, value.Port), BrainPortDisplay.Range(kind, value.Port), value.Value))
             .ToArray();
         return new PartCalloutPresentation(kind, name, ShowsGlyph: true, Of(PortDirection.Input), Of(PortDirection.Output), null);
     }

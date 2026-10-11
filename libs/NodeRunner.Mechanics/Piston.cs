@@ -9,8 +9,8 @@ namespace NodeRunner.Mechanics;
 /// <item>Length input: where it is in its travel, 0 at its shortest and 1 at its longest; the drawn
 /// length reads its <see cref="PistonDef.Start"/> (#870).</item>
 /// <item>Speed input: <c>tanh(v / maxSpeed)</c>, extending positive.</item>
-/// <item>Position output (<c>tanh</c>): the length to reach, straight from −1 fully in to +1 fully
-/// out; <see cref="DrawnPosition"/> asks for the drawn length.</item>
+/// <item>Position output (<c>sigmoid</c>): the length to reach on the same scale as the length input,
+/// 0 fully in to 1 fully out (#1129); <see cref="DrawnPosition"/> asks for the drawn length.</item>
 /// <item>Strength output (<c>sigmoid</c>): the share of its Strength setting it may use this tick.</item>
 /// </list>
 /// The force builds up over its <see cref="PistonDef.RiseTime"/> towards the target length and dies
@@ -65,19 +65,19 @@ public static class Piston
         return Travel.Longest(builtLength, jointRadii, piston.Stroke, piston.Start);
     }
 
-    /// <summary>The length a position output asks for: −1 its shortest … +1 its longest, in a straight line.</summary>
+    /// <summary>The length a position output asks for: 0 its shortest … 1 its longest, in a straight line.</summary>
     public static double TargetLength(PistonDef piston, double builtLength, double jointRadii, double position)
     {
         var shortest = ShortestLength(piston, builtLength, jointRadii);
-        var share = (Math.Clamp(position, -1, 1) + 1) / 2;
+        var share = Math.Clamp(position, 0, 1);
         return shortest + (share * (LongestLength(piston, builtLength, jointRadii) - shortest));
     }
 
-    /// <summary>The position output that asks for its drawn length: −1 at Start 0, +1 at Start 1.</summary>
+    /// <summary>The position output that asks for its drawn length: its <see cref="PistonDef.Start"/>.</summary>
     public static double DrawnPosition(PistonDef piston)
     {
         ArgumentNullException.ThrowIfNull(piston);
-        return (2 * piston.Start) - 1;
+        return piston.Start;
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ public static class Piston
     /// <param name="jointRadii">The radii its two ends leave out together, its hubs' (<see cref="Travel.HubRadii"/>): its travel is on the gap between them.</param>
     /// <param name="length">Its length now.</param>
     /// <param name="speed">How fast its length grows, in world units per second.</param>
-    /// <param name="position">The brain's position output, −1 fully in … +1 fully out (<see cref="TargetLength"/>).</param>
+    /// <param name="position">The brain's position output, 0 fully in … 1 fully out (<see cref="TargetLength"/>).</param>
     /// <param name="strength">The brain's strength output, 0…1 of its Strength setting.</param>
     /// <param name="force">The force it pushed with last step; 0 as built.</param>
     /// <param name="step">The step length, in seconds.</param>

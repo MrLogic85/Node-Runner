@@ -212,14 +212,15 @@ public sealed class SaveFormatTests : IDisposable
     // The direct brain for ExampleCreation's ports: the Accelerometer (6), the Camera (7) and the
     // Piston (9). Every input drives the Piston's position, one connection is disabled, and its
     // strength starts passive with no connection. The file is older than #870, so loading it doubles
-    // the Piston length weight (0.5) and takes 0.5 off the position bias (0.25).
+    // the Piston length weight (0.5) and takes 0.5 off the position bias (0.25). It is older than
+    // #1129 too, so the position output turns sigmoid with its bias and every weight into it doubled.
     private static BrainDef ExampleBrain()
     {
         (int Part, string Channel)[] inputs = [(6, "along"), (6, "across"), (7, "left1"), (7, "centre"), (7, "right1"), (9, BrainPorts.PistonLengthChannel), (9, BrainPorts.PistonSpeedChannel)];
-        double[] weights = [0.125, 1, -1, 0.75, -0.5, 2 * 0.5, -0.25];
+        double[] weights = [2 * 0.125, 2 * 1, 2 * -1, 2 * 0.75, 2 * -0.5, 2 * 2 * 0.5, 2 * -0.25];
         var neurons = inputs
             .Select((input, index) => new NeuronDef(index + 1, NeuronKind.Input, input.Part, input.Channel, 0, 0, NeuronActivation.Identity))
-            .Append(new NeuronDef(8, NeuronKind.Output, 9, BrainPorts.PistonPositionChannel, 1, 0.25 - 0.5, NeuronActivation.Tanh))
+            .Append(new NeuronDef(8, NeuronKind.Output, 9, BrainPorts.PistonPositionChannel, 1, 2 * (0.25 - 0.5), NeuronActivation.Sigmoid))
             .Append(new NeuronDef(9, NeuronKind.Output, 9, BrainPorts.PistonStrengthChannel, 1, -4, NeuronActivation.Sigmoid))
             .ToArray();
         var connections = weights

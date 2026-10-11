@@ -161,6 +161,7 @@ Current `creation.json` migrations:
 | 4 | 5 | #129: add required `creature.wheels: []`. |
 | 5 | 6 | #578: each Camera gets `rays: 3`, `spread: π/2` and `range: 220`, the fan every Camera had, so it sees and reads as before. |
 | 6 | 7 | #1043: add required `creature.touchSensors: []`. |
+| 7 | 8 | #1129: a Piston's `position` output went from `tanh`, −1…1, to `sigmoid`, 0…1 like its `length` input. As (tanh(x) + 1) / 2 = sigmoid(2x), its `activation` becomes `sigmoid` and its `bias` and the `weight` of every connection into it, enabled or not, double: a trained brain drives its Pistons as before. |
 
 #1086 needs no migration: its saved shape is unchanged, but a saved creature
 with a Wheel or Servo moves and senses a little differently, since links and
@@ -196,7 +197,7 @@ owns it.
 - The code is `NR`, the format version and a dot, then its JSON
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
-  scratch. The Walker example's is about 50 characters, starting `NR7.`;
+  scratch. The Walker example's is about 50 characters, starting `NR8.`;
   two joints and a Spring about 60 (#1094).
 - Its JSON is `creation.json` on one line with `training` and
   `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,

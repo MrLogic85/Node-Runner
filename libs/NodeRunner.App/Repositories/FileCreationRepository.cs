@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -219,6 +219,68 @@ public sealed class FileCreationRepository : ICreationRepository
         }
 
         creature["touchSensors"] ??= new JsonArray();
+    }
+
+    // Before #1129 a Piston's target-length output was tanh, −1 shortest … +1 longest, and is now
+    // sigmoid, 0…1 like its length input. (tanh(x) + 1) / 2 = sigmoid(2x), so doubling its bias and
+    // every weight into it keeps a trained brain asking for the same lengths. A disabled connection
+    // doubles too, so mutation can enable it as it was.
+    private static void PistonTargetLengthSigmoid(JsonObject file)
+    {
+        // A file without training, or with one the strict load refuses, has no brain to change.
+        if (file["training"] is not JsonObject training || training["brain"] is not JsonObject brain)
+        {
+            return;
+        }
+
+        if (brain["neurons"] is not JsonArray neurons || brain["connections"] is not JsonArray connections)
+        {
+            throw new InvalidDataException("creation.json has a brain without neurons or connections.");
+        }
+
+        if (file["creature"] is not JsonObject creature || creature["pistons"] is not JsonArray pistons)
+        {
+            throw new InvalidDataException("creation.json is missing its creature's pistons.");
+        }
+
+        var pistonIds = pistons
+            .Select(piston => piston is JsonObject entry
+                ? IntOf(entry["id"], "piston id")
+                : throw new InvalidDataException("creation.json has a piston that is not an object."))
+            .ToHashSet();
+        var targets = new HashSet<int>();
+        foreach (var node in neurons)
+        {
+            if (node is not JsonObject neuron)
+            {
+                throw new InvalidDataException("creation.json has a neuron that is not an object.");
+            }
+
+            // Any other activation already fails to compile (DirectBrain.Compile), as it did before.
+            if (TextOf(neuron["kind"]) == "output"
+                && TextOf(neuron["channel"]) == BrainPorts.PistonPositionChannel
+                && TextOf(neuron["activation"]) == "tanh"
+                && neuron["partId"] is { } partId
+                && pistonIds.Contains(IntOf(partId, "neuron partId")))
+            {
+                neuron["activation"] = "sigmoid";
+                neuron["bias"] = 2 * NumberOf(neuron["bias"], "neuron bias");
+                targets.Add(IntOf(neuron["id"], "neuron id"));
+            }
+        }
+
+        foreach (var node in connections)
+        {
+            if (node is not JsonObject connection)
+            {
+                throw new InvalidDataException("creation.json has a connection that is not an object.");
+            }
+
+            if (targets.Contains(IntOf(connection["to"], "connection to")))
+            {
+                connection["weight"] = 2 * NumberOf(connection["weight"], "connection weight");
+            }
+        }
     }
 
     private static string? TextOf(JsonNode? node) =>

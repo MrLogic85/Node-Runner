@@ -58,7 +58,7 @@ public sealed class PistonLink
 
     private Vector2 Axis => (NodeB.GlobalPosition - NodeA.GlobalPosition).Normalized();
 
-    /// <param name="position">The brain's position output, −1 fully in … +1 fully out.</param>
+    /// <param name="position">The brain's position output, 0 fully in … 1 fully out.</param>
     /// <param name="strength">The brain's strength output, 0…1 of its Strength setting.</param>
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double position, double strength, double step)

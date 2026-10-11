@@ -5,8 +5,10 @@ namespace NodeRunner.Domain;
 /// newly added output starts. A new output has no incoming weight and an almost passive bias, so a
 /// part added to a trained brain starts close to doing nothing and mutation can still teach it.
 /// <list type="bullet">
-/// <item>Velocity and position use <c>tanh</c>: −1…1, with 0 meaning stand still, a Servo's built
-/// pose, or the middle of a Piston's travel (#870).</item>
+/// <item>Velocity and position use <c>tanh</c>: −1…1, with 0 meaning stand still or a Servo's
+/// built pose.</item>
+/// <item>Length uses <c>sigmoid</c>: 0…1 of a Piston's travel, like its length input (#1129). A new
+/// length output starts at bias 0, the middle of its travel.</item>
 /// <item>Strength uses <c>sigmoid</c>: 0…1 of the part's Strength setting, which stays the maximum.
 /// A new strength output starts at bias −4, about 2% force, with no dead zone below it.</item>
 /// </list>
@@ -21,7 +23,7 @@ public static class PortSignals
     {
         PortSignal.Reading => NeuronActivation.Identity,
         PortSignal.Velocity or PortSignal.Position => NeuronActivation.Tanh,
-        PortSignal.Strength => NeuronActivation.Sigmoid,
+        PortSignal.Length or PortSignal.Strength => NeuronActivation.Sigmoid,
         _ => throw new ArgumentOutOfRangeException(nameof(signal), signal, null),
     };
 
@@ -29,7 +31,7 @@ public static class PortSignals
     public static double PassiveBias(PortSignal signal) => signal switch
     {
         PortSignal.Strength => PassiveStrengthBias,
-        PortSignal.Reading or PortSignal.Velocity or PortSignal.Position => 0,
+        PortSignal.Reading or PortSignal.Velocity or PortSignal.Position or PortSignal.Length => 0,
         _ => throw new ArgumentOutOfRangeException(nameof(signal), signal, null),
     };
 }

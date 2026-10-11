@@ -14,10 +14,16 @@ public enum PortSignal
     Velocity,
 
     /// <summary>
-    /// A pose to reach, −1…1: for a Servo 0 is the built pose (<c>OutputSignals.PositionFromTarget</c>
-    /// in NodeRunner.Mechanics), for a Piston −1 is its shortest and +1 its longest length (<c>Piston.TargetLength</c>, #870).
+    /// A pose to reach, −1…1 with 0 the built pose, as a Servo's target angle
+    /// (<c>OutputSignals.PositionFromTarget</c> in NodeRunner.Mechanics).
     /// </summary>
     Position,
+
+    /// <summary>
+    /// A length to reach, 0…1 of the part's travel: for a Piston 0 is its shortest and 1 its longest
+    /// length, like its length input (<c>Piston.TargetLength</c> in NodeRunner.Mechanics, #1129).
+    /// </summary>
+    Length,
 
     /// <summary>How much of the part's Strength setting to use this tick, 0…1.</summary>
     Strength,

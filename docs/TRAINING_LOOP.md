@@ -168,8 +168,8 @@ the reference's "a training session has finished" (#369).
   its base brain holds the built pose at full strength: all weights 0,
   positions at the built pose, strength at bias 3 (about 95%). A Servo's
   angle output holds its built pose at 0; a Piston's position output gets
-  the bias that asks for its drawn length, clamped to ±3
-  (`Piston.DrawnPositions`, #870). A brain kept after its Start position
+  the bias that asks for its drawn length, clamped to ±6, about 0.25%
+  short of either end (`Piston.DrawnPositions`, #870, #1129). A brain kept after its Start position
   changes keeps its old bias. This is how robots start in robotics ML:
   stiff in a default pose, the network learning offsets from it.
   `GenerationZero` builds the first population from it whenever there is
@@ -177,7 +177,10 @@ the reference's "a training session has finished" (#369).
   - The last shadow runs the base brain unchanged, as a reference that
     stays near 0 m.
   - Every other shadow perturbs it: Gaussian noise on every weight (σ 1.5)
-    and bias (σ 0.5), so every Piston and Servo pushes from the start.
+    and bias (σ 0.5), so every Piston and Servo pushes from the start. A
+    Piston's length output, a sigmoid, gets twice that noise and bias limit:
+    sigmoid(2x) = (tanh(x) + 1) / 2, so it spreads its lengths as widely as
+    a tanh output would (#1129).
   - A full-strength base learned far faster than a near-passive one, and
     σ 1.5 saturates the outputs into visible, decisive motion (#785).
     Backprop needs a different start (#955).

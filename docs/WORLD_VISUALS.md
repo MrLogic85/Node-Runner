@@ -264,8 +264,7 @@ above every shadow.
   row, more wrap, with labels and bars in their own columns so wrapped bars
   line up. A −1…1 port fills from the centre, past a 1-wide muted
   tick at 0; a 0…1 port fills from the left. Values outside the range
-  clamp. A Piston's target length is drawn 0…1, as (v+1)/2 of its −1…1
-  output, so it looks like the measured length it is compared with. A Wheel shows its glyph and a muted "No brain ports"; a Joint,
+  clamp. A Wheel shows its glyph and a muted "No brain ports"; a Joint,
   Beam or Spring shows only its name.
 - **Slow-motion chip (#318):** a Warning chip, "Too many shadows!", top
   left, over the Best flag when that scrolls past.
