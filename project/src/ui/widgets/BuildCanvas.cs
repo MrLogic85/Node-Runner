@@ -694,7 +694,7 @@ public partial class BuildCanvas : Node2D
         using var pen = ViewPen(canvas);
         foreach (var node in _viewModel.Nodes)
         {
-            if (!ShowsAsLoose(node.Id))
+            if (!_viewModel.ShowsLooseMark(node.Id) || IsBeingJoined(node.Id))
             {
                 continue;
             }
@@ -708,10 +708,11 @@ public partial class BuildCanvas : Node2D
     }
 
     // Joined to nothing. The beam drag's own rings replace the warning on the joints being joined.
-    private bool ShowsAsLoose(int nodeId) =>
-        _viewModel!.IsLoose(nodeId)
-        && nodeId != _gestures?.BeamStartNodeId
-        && nodeId != _gestures?.BeamTargetNodeId;
+    private bool ShowsAsLoose(int nodeId) => _viewModel!.IsLoose(nodeId) && !IsBeingJoined(nodeId);
+
+    private bool IsBeingJoined(int nodeId) =>
+        nodeId == _gestures?.BeamStartNodeId
+        || nodeId == _gestures?.BeamTargetNodeId;
 
     private void DrawInvalidBeamMarkers(CanvasItem canvas)
     {
