@@ -6,7 +6,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>Build canvas marks for joint parts: a selected Servo's link bands, a Wheel side's as a spoke (#1118).</summary>
+/// <summary>Build canvas marks for joint parts: a selected Servo's link bands, a Wheel side's under its tyre (#1118).</summary>
 public static class BuildServoDrawing
 {
     private const float _servoBeamBandHalfWidth = 9;
@@ -21,52 +21,50 @@ public static class BuildServoDrawing
         }
 
         var servo = viewModel.Servos[viewModel.ServoIndexOf(servoId)];
-        var toPixels = UiPixelSpace.Enter(canvas, viewTransform);
-        var scale = UiPixelSpace.ScaleOf(toPixels);
+        using var pen = UiPixelPen.Begin(canvas, viewTransform);
         if (servo.FixedLinkId is { } fixedLink)
         {
-            DrawLinkBand(canvas, viewModel, theme, toPixels, scale, fixedLink, fixedMark: true);
+            DrawLinkBand(pen, viewModel, theme, fixedLink, fixedMark: true);
         }
 
         if (servo.TargetLinkId is { } targetLink)
         {
-            DrawLinkBand(canvas, viewModel, theme, toPixels, scale, targetLink, fixedMark: false);
+            DrawLinkBand(pen, viewModel, theme, targetLink, fixedMark: false);
         }
-
-        canvas.DrawSetTransformMatrix(viewTransform);
     }
 
-    // The Wheel, a one-sided link (#1118), gets its band as a spoke from its joint to its tyre along
-    // its turn, which is 0 in Build.
-    private static void DrawLinkBand(CanvasItem canvas, BuildViewModel viewModel, VisualTheme theme, Transform2D toPixels, float scale, int linkId, bool fixedMark)
+    // The Wheel, a one-sided link (#1118), gets its band as a ring under its tyre, showing past
+    // both edges as a beam's band does past the beam; its see-through face shows the inner edge.
+    private static void DrawLinkBand(UiPixelPen pen, BuildViewModel viewModel, VisualTheme theme, int linkId, bool fixedMark)
     {
-        Vector2 from;
-        Vector2 to;
-        float halfWidth;
+        var fill = fixedMark ? theme.ServoFixedBand : theme.ServoTargetBand;
+        var edge = fixedMark ? theme.ServoFixedBandEdge : theme.ServoTargetBandEdge;
+        var hatch = fixedMark ? theme.ServoFixedHatch : (Color?)null;
         if (viewModel.Wheels.FirstOrDefault(wheel => wheel.Id == linkId) is { } wheel)
         {
-            from = ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(wheel.NodeId)].Position);
-            to = from + new Vector2((float)wheel.Radius, 0);
-            halfWidth = _servoBeamBandHalfWidth;
-        }
-        else
-        {
-            var link = viewModel.Link(linkId);
-            from = ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(link.NodeA)].Position);
-            to = ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(link.NodeB)].Position);
-            halfWidth = BandHalfWidth(link.Kind);
+            var hub = ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(wheel.NodeId)].Position);
+            var tyreMiddle = (float)wheel.Radius - (WheelPart.TyreWidth / 2);
+            SelectionDrawing.DrawRingBand(
+                pen,
+                hub,
+                tyreMiddle - _servoBeamBandHalfWidth,
+                tyreMiddle + _servoBeamBandHalfWidth,
+                fill,
+                edge,
+                hatch,
+                theme.RigidHatchSpacing);
+            return;
         }
 
+        var link = viewModel.Link(linkId);
         SelectionDrawing.DrawLinkBand(
-            canvas,
-            toPixels,
-            scale,
-            from,
-            to,
-            halfWidth,
-            fixedMark ? theme.ServoFixedBand : theme.ServoTargetBand,
-            fixedMark ? theme.ServoFixedBandEdge : theme.ServoTargetBandEdge,
-            fixedMark ? theme.ServoFixedHatch : null,
+            pen,
+            ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(link.NodeA)].Position),
+            ToGodot(viewModel.Nodes[viewModel.NodeIndexOf(link.NodeB)].Position),
+            BandHalfWidth(link.Kind),
+            fill,
+            edge,
+            hatch,
             theme.RigidHatchSpacing);
     }
 

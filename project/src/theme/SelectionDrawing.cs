@@ -14,6 +14,7 @@ namespace NodeRunner.Theme;
 public static class SelectionDrawing
 {
     private const int _ringSegments = 64;
+    private const float _hatchWidth = 1.2f;
 
     /// <summary>The ring around a selected joint at <paramref name="center"/>, <paramref name="radius"/> out.</summary>
     public static void DrawJoint(CanvasItem canvas, VisualTheme theme, Transform2D drawTransform, Vector2 center, float radius)
@@ -86,9 +87,7 @@ public static class SelectionDrawing
     /// the Fixed and Target links without hiding their own drawings.
     /// </summary>
     public static void DrawLinkBand(
-        CanvasItem canvas,
-        Transform2D toPixels,
-        float scale,
+        UiPixelPen pen,
         Vector2 a,
         Vector2 b,
         float halfWidth,
@@ -97,7 +96,6 @@ public static class SelectionDrawing
         Color? hatch,
         float hatchSpacing)
     {
-        ArgumentNullException.ThrowIfNull(canvas);
         if (a == b)
         {
             return;
@@ -112,22 +110,22 @@ public static class SelectionDrawing
             return;
         }
 
-        canvas.DrawColoredPolygon(
+        pen.Polygon(
             [
-                toPixels * (start + (across * halfWidth)),
-                toPixels * (end + (across * halfWidth)),
-                toPixels * (end - (across * halfWidth)),
-                toPixels * (start - (across * halfWidth)),
+                start + (across * halfWidth),
+                end + (across * halfWidth),
+                end - (across * halfWidth),
+                start - (across * halfWidth),
             ],
             fill);
-        var width = UiSize.Stroke.Hair * scale;
-        canvas.DrawLine(toPixels * (start + (across * halfWidth)), toPixels * (end + (across * halfWidth)), edge, width, antialiased: true);
-        canvas.DrawLine(toPixels * (start - (across * halfWidth)), toPixels * (end - (across * halfWidth)), edge, width, antialiased: true);
+        pen.Line(start + (across * halfWidth), end + (across * halfWidth), edge, UiSize.Stroke.Hair);
+        pen.Line(start - (across * halfWidth), end - (across * halfWidth), edge, UiSize.Stroke.Hair);
         if (hatch is not { } hatchColor)
         {
             return;
         }
 
+        var hatchLines = new List<Vector2[]>();
         for (var t = -2 * halfWidth; t < length; t += hatchSpacing)
         {
             var t0 = Math.Max(t, 0);
@@ -139,8 +137,46 @@ public static class SelectionDrawing
 
             var p0 = start + (along * t0) + (across * (-halfWidth + (t0 - t)));
             var p1 = start + (along * t1) + (across * (-halfWidth + (t1 - t)));
-            canvas.DrawLine(toPixels * p0, toPixels * p1, hatchColor, 1.2f * scale, antialiased: true);
+            hatchLines.Add([p0, p1]);
         }
+
+        pen.Strokes(hatchLines, hatchColor, _hatchWidth);
+    }
+
+    /// <summary>
+    /// <see cref="DrawLinkBand"/> bent round a circle: a filled ring band between two radii,
+    /// optionally hatched across. A selected Servo marks a Wheel side with it under the tyre (#1118).
+    /// </summary>
+    public static void DrawRingBand(
+        UiPixelPen pen,
+        Vector2 centre,
+        float innerRadius,
+        float outerRadius,
+        Color fill,
+        Color edge,
+        Color? hatch,
+        float hatchSpacing)
+    {
+        var middle = (innerRadius + outerRadius) / 2;
+        pen.Ring(centre, middle, fill, outerRadius - innerRadius, _ringSegments);
+        pen.Ring(centre, innerRadius, edge, UiSize.Stroke.Hair, _ringSegments);
+        pen.Ring(centre, outerRadius, edge, UiSize.Stroke.Hair, _ringSegments);
+        if (hatch is not { } hatchColor)
+        {
+            return;
+        }
+
+        // Evenly spaced round the middle so the lines meet without a seam, each leaning 45° like a link's.
+        var count = Math.Max(1, (int)Math.Round(Mathf.Tau * middle / hatchSpacing));
+        var lean = (outerRadius - innerRadius) / middle;
+        var hatchLines = new Vector2[count][];
+        for (var i = 0; i < count; i++)
+        {
+            var angle = Mathf.Tau * i / count;
+            hatchLines[i] = [centre + (Vector2.FromAngle(angle) * innerRadius), centre + (Vector2.FromAngle(angle + lean) * outerRadius)];
+        }
+
+        pen.Strokes(hatchLines, hatchColor, _hatchWidth);
     }
 
     /// <summary>
