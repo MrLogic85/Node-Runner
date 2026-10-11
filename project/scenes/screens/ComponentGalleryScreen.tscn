@@ -2560,6 +2560,7 @@ script = ExtResource("2_cpfof")
 TextStyle = 9
 
 [node name="InteractivePicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Interactive" unique_id=1923261699]
+custom_minimum_size = Vector2(152, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
@@ -2578,6 +2579,7 @@ script = ExtResource("2_cpfof")
 TextStyle = 9
 
 [node name="LockedPicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Locked" unique_id=888456967]
+custom_minimum_size = Vector2(152, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
@@ -2599,6 +2601,7 @@ TextStyle = 9
 
 [node name="DisabledPicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Disabled" unique_id=1742418974]
 modulate = Color(1, 1, 1, 0.5)
+custom_minimum_size = Vector2(152, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
@@ -2618,6 +2621,7 @@ script = ExtResource("2_cpfof")
 TextStyle = 9
 
 [node name="MissingPicker" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Picker/Examples/Missing" unique_id=1580663414]
+custom_minimum_size = Vector2(152, 0)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1

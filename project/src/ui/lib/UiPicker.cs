@@ -18,7 +18,6 @@ public readonly record struct UiPickerOption(
 [GlobalClass]
 public partial class UiPicker : PanelContainer
 {
-    private const float _minimumWidth = 160;
     private const float _viewportMargin = 16;
 
     public enum PickerState
@@ -228,7 +227,6 @@ public partial class UiPicker : PanelContainer
         var stack = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            CustomMinimumSize = new Vector2(_minimumWidth, 0),
         };
         stack.AddThemeConstantOverride("separation", (int)UiSize.Space.S1);
         AddChild(stack);
@@ -267,7 +265,7 @@ public partial class UiPicker : PanelContainer
         var rowButton = new Button
         {
             Disabled = IsLocked || Disabled || Options.Length == 0,
-            CustomMinimumSize = new Vector2(_minimumWidth, UiSize.Control.Small),
+            CustomMinimumSize = new Vector2(0, UiSize.Control.Small),
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
             TooltipText = LabelText,
             MouseFilter = MouseFilterEnum.Pass,
@@ -371,8 +369,7 @@ public partial class UiPicker : PanelContainer
     private float MenuWidth()
     {
         var viewportWidth = GetViewportRect().Size.X;
-        var available = viewportWidth > 0 ? Math.Max(_minimumWidth, viewportWidth - (2 * _viewportMargin)) : UiLayout.SidePanelWidth;
-        return Math.Min(Math.Max(_minimumWidth, Size.X), available);
+        return viewportWidth > 0 ? Math.Min(Size.X, viewportWidth - (2 * _viewportMargin)) : Size.X;
     }
 
     private StyleBoxFlat ClosedRowStyle(bool focused = false, bool disabled = false)
