@@ -393,6 +393,7 @@ public sealed class BuildPresentationViewModel
             {
                 CreatureElementKind.Wheel => PartSettingsKind.Wheel,
                 CreatureElementKind.Servo => PartSettingsKind.Servo,
+                CreatureElementKind.VelocityMotor => PartSettingsKind.VelocityMotor,
                 CreatureElementKind.Rubber => PartSettingsKind.Rubber,
                 CreatureElementKind.TouchSensor => PartSettingsKind.Touch,
                 _ => throw new InvalidOperationException($"{part.Kind} is not a joint part."),

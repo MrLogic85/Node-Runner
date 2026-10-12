@@ -24,6 +24,10 @@ msgstr ""
 msgid "A Servo needs two links, or a link and a Wheel"
 msgstr ""
 
+#: libs/NodeRunner.App/Builders/CreatureBuilder.VelocityMotors.cs
+msgid "A Velocity motor needs two links, or a link and a Wheel"
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "A beam already joins these joints"
 msgstr ""
@@ -540,6 +544,10 @@ msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "More maps come in a later version."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Motor {0}"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -1185,8 +1193,17 @@ msgstr ""
 msgid "Update Node Runner to open this creation."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Velocity motor"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Velocity motors"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.VelocityMotors.cs
+msgid "Velocity motors go on a joint"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
@@ -1265,6 +1282,14 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
 msgid "angle"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "angle cos"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+msgid "angle sin"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
@@ -1506,6 +1531,14 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
 msgid "{0}: angle"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+msgid "{0}: angle cos"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+msgid "{0}: angle sin"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs

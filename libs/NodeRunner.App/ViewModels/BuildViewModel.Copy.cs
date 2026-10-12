@@ -5,7 +5,7 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// The selection panel's Copy (#937, #990): several selected parts duplicated beside themselves,
 /// inside the same Creation. A part copies only with what it sits on: a link with both its joints
-/// and a sensor with its beam. A joint part, a Servo, a Wheel, a Touch sensor (#1045) or a Rubber (#1142), is its joint
+/// and a sensor with its beam. A joint part, a Servo, a Velocity motor, a Wheel, a Touch sensor (#1045) or a Rubber (#1142), is its joint
 /// to the player (#973), so it brings that joint along (#1000). A locked Creation copies no part with
 /// brain ports, since a copy would change its model; a Wheel and a Rubber have none.
 /// </summary>
@@ -19,7 +19,7 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// A danger note at each selected part a copy cannot take, in id order within each kind: on a
-    /// locked Creation a sensor, Servo, Piston or Touch sensor for its brain ports; a beam, Spring or Piston
+    /// locked Creation a sensor, motor, Piston or Touch sensor for its brain ports; a beam, Spring or Piston
     /// without both joints among <see cref="SelectedNodeIds"/>; a sensor without its beam.
     /// </summary>
     public IReadOnlyList<CanvasNote> CopyBlockers()
@@ -30,6 +30,7 @@ public sealed partial class BuildViewModel
         {
             AddBrainPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
             AddBrainPortNotes(CreatureElementKind.Servo, _selectedServoIds);
+            AddBrainPortNotes(CreatureElementKind.VelocityMotor, _selectedVelocityMotorIds);
             AddBrainPortNotes(CreatureElementKind.Piston, _selectedPistonIds);
             AddBrainPortNotes(CreatureElementKind.TouchSensor, _selectedTouchSensorIds);
         }
@@ -84,7 +85,7 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
-    /// selects the originals again. Each copy keeps its settings but not its name; a copied Servo
+    /// selects the originals again. Each copy keeps its settings but not its name; a copied motor
     /// sits on the copy of its joint, uses the copies of its Fixed and Target links or Wheel, and
     /// leaves a role empty whose side was not copied. A copied joint part brings its joint along, but the
     /// joint's other parts only when they are selected too (#1044). The copy is selected as the
@@ -113,12 +114,13 @@ public sealed partial class BuildViewModel
         var springs = Springs.Where(spring => _selectedSpringIds.Contains(spring.Id)).ToList();
         var sensors = Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id)).ToList();
         var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
+        var velocityMotors = VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).ToList();
         var wheels = Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).ToList();
         var touchSensors = TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).ToList();
         var rubbers = Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).ToList();
 
         // A copied joint is as big as the joint parts that come along with it (#1044).
-        var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, servos, wheels));
+        var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, [.. servos, .. velocityMotors], wheels));
         var offset = CopyOffset(nodes, copiedRadii);
         _history.Change(() =>
         {
@@ -160,7 +162,7 @@ public sealed partial class BuildViewModel
                 _selectedSensorIds.Add(CopySettings(sensor.Id, copy));
             }
 
-            // A Wheel before its Servo: to the Servo it is a one-sided link (#1118).
+            // A Wheel before its motor: to the motor it is a one-sided link (#1118).
             foreach (var wheel in wheels)
             {
                 linkCopies[wheel.Id] = CopySettings(wheel.Id, _builder.AddWheel(nodeCopies[wheel.NodeId]));
@@ -171,6 +173,12 @@ public sealed partial class BuildViewModel
             {
                 var copy = _builder.AddServo(nodeCopies[servo.NodeId], CopyOf(servo.FixedLinkId), CopyOf(servo.TargetLinkId));
                 _selectedServoIds.Add(CopySettings(servo.Id, copy));
+            }
+
+            foreach (var motor in velocityMotors)
+            {
+                var copy = _builder.AddVelocityMotor(nodeCopies[motor.NodeId], CopyOf(motor.FixedLinkId), CopyOf(motor.TargetLinkId));
+                _selectedVelocityMotorIds.Add(CopySettings(motor.Id, copy));
             }
 
             foreach (var touch in touchSensors)

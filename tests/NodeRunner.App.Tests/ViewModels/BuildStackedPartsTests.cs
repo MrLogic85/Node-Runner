@@ -186,7 +186,7 @@ public sealed class BuildStackedPartsTests
         build.Wheels.Count.ShouldBe(1);
         var copy = build.Servos.Single(servo => servo.Id != _servoId);
         build.Nodes.Single(node => node.Id == copy.NodeId).Position.ShouldBe(new Vector2D(stack.X + step, stack.Y + step));
-        build.NodeRadius(copy.NodeId).ShouldBe(ServoDef.JointRadius);
+        build.NodeRadius(copy.NodeId).ShouldBe(JointMotor.Radius);
     }
 
     [Fact]

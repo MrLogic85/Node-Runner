@@ -69,7 +69,7 @@ public sealed class WheelDefTests
         var creature = new CreatureDef(_nodes, _beams, [], [new ServoDef(6, 1, 4, 5)], [], [], [new WheelDef(7, 2, radius: radius)], nextPartId: 8);
 
         creature.NodeRadius(2).ShouldBe(radius);
-        creature.NodeRadius(1).ShouldBe(ServoDef.JointRadius);
+        creature.NodeRadius(1).ShouldBe(JointMotor.Radius);
         creature.NodeRadius(3).ShouldBe(NodeDef.PlainJointRadius);
     }
 
@@ -77,7 +77,7 @@ public sealed class WheelDefTests
     public void JointRadius_IsTheLargestOfThePlainJointAndEveryRadialPartOnIt()
     {
         CreatureDef.JointRadius(1, [], []).ShouldBe(NodeDef.PlainJointRadius);
-        CreatureDef.JointRadius(1, [new ServoDef(6, 1, 4, 5)], []).ShouldBe(ServoDef.JointRadius);
+        CreatureDef.JointRadius(1, [new ServoDef(6, 1, 4, 5)], []).ShouldBe(JointMotor.Radius);
         CreatureDef.JointRadius(1, [new ServoDef(6, 1, 4, 5)], [new WheelDef(7, 1)]).ShouldBe(WheelDef.MinRadius);
         CreatureDef.JointRadius(2, [new ServoDef(6, 1, 4, 5)], [new WheelDef(7, 1)]).ShouldBe(NodeDef.PlainJointRadius);
     }

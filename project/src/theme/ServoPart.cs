@@ -13,12 +13,12 @@ public partial class ServoPart : PartVisual
     private const float _housingCornerRadius = 2.5f;
     private const float _bandInnerRadius = 12f;
     private const float _bandOuterRadius = 20f;
-    private const float _hornLong = (float)ServoDef.JointRadius - 4f;
+    private const float _hornLong = (float)JointMotor.Radius - 4f;
     private const float _hornShort = 8f;
     private const float _hubRadius = 3.5f;
     private const int _ringSegments = 64;
 
-    private float _radius = (float)ServoDef.JointRadius;
+    private float _radius = (float)JointMotor.Radius;
     private float _targetAngle;
     private float _builtAngle;
     private float _range = (float)ServoDef.DefaultRange;

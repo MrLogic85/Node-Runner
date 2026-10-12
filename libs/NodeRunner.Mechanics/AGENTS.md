@@ -22,6 +22,8 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 - `CameraRays` — the camera's ray targets and reading
 - `Touch` — a Touch sensor's reading
 - `Servo` — a Servo's angle inputs, torque and endpoint force couple
+- `VelocityMotor` — a Velocity motor's angle and speed inputs and torque
+- `MotorLoop` — the speed loop both motors drive their torque with
 - `Piston` — a Piston's travel, inputs, target length and force
 - `Spring` — a Spring's travel
 - `Wheel` — a Wheel's weight and thin-ring turning inertia

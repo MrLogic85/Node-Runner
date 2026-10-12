@@ -29,6 +29,10 @@ public sealed class ShareDictionaryTests
     // It must read for good, so version 9's dictionary never changes.
     private const string _feelerInVersion9 = "NR9.q8bSBIEmfLdUUHwQlfDBFTW2BGsAq8UxU6QxFj8heckIpzeQSgpDkB8AJ7jUBQ";
 
+    // Two joints, a beam, a Wheel with a Servo and a Rubber, coded in version 10 before #454 added Velocity motors.
+    // It must read for good, so version 10's dictionary never changes.
+    private const string _spinnerInVersion10 = "NR10.g-eEYGC5kEdkVgDX89iSsAGsEYCZRo2xRKEpWgwao8egCZagQSp4DLH5Eqm0MAJ5EQAN-Pb1";
+
     public static TheoryData<int> Versions() => new(Enumerable.Range(_firstVersion, FileCreationRepository.Format.CurrentVersion - _firstVersion + 1));
 
     [Fact]
@@ -98,6 +102,22 @@ public sealed class ShareDictionaryTests
         read.UpdatedFrom.ShouldBe(9);
     }
 
+    [Fact]
+    public void ACodeFromVersion10_StillReads_WithoutVelocityMotors()
+    {
+        var read = CreationShareCode.Read(_spinnerInVersion10);
+
+        var build = read.Build.ShouldNotBeNull();
+        build.Name.ShouldBe("Spinner");
+        var creature = build.Creature;
+        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
+        creature.Wheels.ShouldBe([new WheelDef(4, 1)]);
+        creature.Servos.ShouldBe([new ServoDef(5, 1, 3, 4)]);
+        creature.Rubbers.ShouldBe([new RubberDef(6, 2)]);
+        creature.VelocityMotors.ShouldBeEmpty();
+        read.UpdatedFrom.ShouldBe(10);
+    }
+
     // A walker with every kind of part at its settings as Build adds it and named as a new creation
     // is (NewCreationWorkflow.UntitledName), so a code leaves out what it didn't change.
     private static CreationDef Template()
@@ -119,6 +139,7 @@ public sealed class ShareDictionaryTests
         builder.AddWheel(frontFoot);
         builder.AddTouchSensor(backFoot);
         builder.AddRubber(backFoot);
+        builder.AddVelocityMotor(frontFoot);
         return new CreationDef(Guid.NewGuid(), "Untitled Creation", builder.Build());
     }
 
@@ -154,6 +175,8 @@ public sealed class ShareDictionaryTests
         builder.AddTouchSensor(frontFoot);
         builder.AddRubber(backFoot);
         builder.AddRubber(frontFoot);
+        var velocityMotor = builder.AddVelocityMotor(front);
+        builder.SetParameter(velocityMotor, PartParameterId.AngularMaxSpeed, 4);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 

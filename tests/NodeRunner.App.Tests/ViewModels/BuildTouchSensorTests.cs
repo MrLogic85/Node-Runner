@@ -83,10 +83,10 @@ public sealed class BuildTouchSensorTests
 
         var targets = build.PlacingTargetsOf(BuildPart.TouchSensor, movingSensorId: null);
 
-        targets.JointRingOf(1).ShouldBe(ServoDef.JointRadius + TouchSensorDef.Cushion);
+        targets.JointRingOf(1).ShouldBe(JointMotor.Radius + TouchSensorDef.Cushion);
         targets.JointRingOf(2).ShouldBe(NodeDef.PlainJointRadius + TouchSensorDef.Cushion);
         targets.JointRingOf(3).ShouldBe(WheelDef.DefaultRadius + TouchSensorDef.Cushion);
-        build.PlacingTargetsOf(BuildPart.Servo, movingSensorId: null).JointRingOf(3).ShouldBe(ServoDef.JointRadius);
+        build.PlacingTargetsOf(BuildPart.Servo, movingSensorId: null).JointRingOf(3).ShouldBe(JointMotor.Radius);
         var edge = SelectionMarks.JointHalo(targets.JointRingOf(3));
         gestures.DropTargetAt(new Vector2D(200, edge), BuildPart.TouchSensor).ShouldBe(new CreatureElementSelection(CreatureElementKind.Node, 3));
         gestures.DropTargetAt(new Vector2D(200, edge + 1), BuildPart.TouchSensor).ShouldBeNull();

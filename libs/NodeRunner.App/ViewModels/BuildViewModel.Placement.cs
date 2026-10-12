@@ -176,7 +176,7 @@ public sealed partial class BuildViewModel
                 {
                     Joints = joints,
                     RefusedJoints = Nodes.Where(node => !joints.Contains(node.Id) && JointPartsAt(node.Id).Count > 0).Select(node => node.Id).ToHashSet(),
-                    JointRings = Nodes.ToDictionary(node => node.Id, node => PartTray.PlacingRingRadius(placing, CreatureDef.JointRadius(node.Id, Servos, Wheels))),
+                    JointRings = Nodes.ToDictionary(node => node.Id, node => PartTray.PlacingRingRadius(placing, CreatureDef.JointRadius(node.Id, JointMotors, Wheels))),
                 };
             }
 

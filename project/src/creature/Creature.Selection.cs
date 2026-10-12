@@ -24,7 +24,7 @@ public partial class Creature
         for (var nodeIndex = 0; nodeIndex < _nodeVisuals.Length; nodeIndex++)
         {
             // A Wheel is touched only at its hub (#1086), as it is drawn over its links.
-            var radius = Math.Max(tolerance, ToGodotFloat(Definition!.CoveredRadius(Definition.Nodes[nodeIndex].Id), nameof(ServoDef.JointRadius)));
+            var radius = Math.Max(tolerance, ToGodotFloat(Definition!.CoveredRadius(Definition.Nodes[nodeIndex].Id), nameof(JointMotor.Radius)));
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
                 var nodeId = Definition!.Nodes[nodeIndex].Id;
@@ -104,7 +104,7 @@ public partial class Creature
         return groups.PartAt(
             ToDomain(globalPosition),
             nodeId => ToDomain(_nodeVisuals[definition.NodeIndexOf(nodeId)].GlobalPosition),
-            definition.Servos,
+            definition.JointMotors,
             definition.Wheels,
             definition.Sensors,
             _raised);
@@ -206,7 +206,7 @@ public partial class Creature
             return;
         }
 
-        _raised = groups.Raised(selection, definition.Servos, definition.Wheels, definition.TouchSensors, definition.Rubbers);
+        _raised = groups.Raised(selection, definition.JointMotors, definition.Wheels, definition.TouchSensors, definition.Rubbers);
         for (var i = 0; i < _nodeVisuals.Length; i++)
         {
             var id = definition.Nodes[i].Id;

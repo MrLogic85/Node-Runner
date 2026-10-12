@@ -96,7 +96,7 @@ public partial class CreatureParts : Node2D
         Math.Max(
             NodeRadius(shape, nodeId),
             marks.PreviewNodeOf(BuildPart.Wheel) == nodeId ? WheelDef.DefaultRadius
-            : marks.PreviewNodeOf(BuildPart.Servo) == nodeId ? ServoDef.JointRadius
+            : marks.PreviewNodeOf(BuildPart.Servo) == nodeId ? JointMotor.Radius
             : 0);
 
     private static bool HasWheel(CreatureShape shape, CreatureMarks marks, int nodeId) =>
@@ -146,7 +146,7 @@ public partial class CreatureParts : Node2D
         if (marks.PreviewNodeOf(BuildPart.Servo) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var part = PartFor(_servos, -previewNode);
-            var (fixedId, targetId) = ServoDef.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
+            var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
             ShowServoPart(
                 part,
                 shape,
@@ -178,7 +178,7 @@ public partial class CreatureParts : Node2D
 
         part.Position = ToGodot(joint.Position);
         part.Rotation = fixedAngle;
-        part.Radius = (float)ServoDef.JointRadius;
+        part.Radius = (float)JointMotor.Radius;
         part.Selected = selected;
         part.Visible = true;
         part.Simplified = false;

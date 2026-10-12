@@ -7,19 +7,15 @@ namespace NodeRunner.Mechanics;
 /// from the Servo joint to the target link's other joint minus the direction to the fixed link's
 /// other joint, relative to the built angle; a Wheel side (#1118) stands in a mark on its tyre for
 /// the other joint. The brain sees −1 at the lower end, 0 as built and
-/// +1 at the upper end, and drives an angle target plus a strength share. The motor chases the
-/// wanted speed with a push part and a holding part, so it can hold a load up to its strength.
+/// +1 at the upper end, and drives an angle target plus a strength share. The motor chases a
+/// wanted speed towards that angle with <see cref="MotorLoop"/>, so it can hold a load up to its
+/// strength. A Velocity motor (#454) reuses its side angles, speeds, couple and inertia.
 /// </summary>
 public static class Servo
 {
     private const double _approachRate = 10;
     private const double _safeDampingFraction = 0.5;
     private const double _safeStiffnessFraction = 0.25;
-    // Both gains scale with the estimated inertia. A real inertia far above the estimate (a planted
-    // leg) slows the loop, and a holding part that gathers too fast then makes it swing: these keep
-    // it settling from about 3x too light down to about 30x too heavy.
-    private const double _pushGain = 0.6;
-    private const double _holdingGain = 0.004;
     private const double _minimumInertia = 1e-6;
     public const double MinimumLeverArm = NodeDef.PlainJointRadius;
 
@@ -146,8 +142,8 @@ public static class Servo
     public static ServoEndStopGains StableEndStopGains(ServoDef servo, double effectiveInertia, double step)
     {
         ArgumentNullException.ThrowIfNull(servo);
-        RequirePositive(effectiveInertia, nameof(effectiveInertia), "Effective inertia");
-        RequirePositive(step, nameof(step), "Step");
+        MotorLoop.RequirePositive(effectiveInertia, nameof(effectiveInertia), "Effective inertia");
+        MotorLoop.RequirePositive(step, nameof(step), "Step");
 
         var desiredStiffness = 4 * servo.Strength / servo.Range;
         var desiredDamping = servo.Strength / servo.MaxSpeed;
@@ -173,11 +169,8 @@ public static class Servo
     }
 
     /// <summary>
-    /// The motor's next state from its last. The push part closes most of the gap to the wanted speed
-    /// in one step (capped by <paramref name="effectiveInertia"/> so an explicit step cannot overshoot).
-    /// The holding part slowly gathers what a steady load needs; it stops gathering while the motor
-    /// already gives all it can, so it does not wind up. Torque builds at most the chosen strength per
-    /// Rise time and drops at once.
+    /// The motor's next state from its last (<see cref="MotorLoop.Next"/>): it wants to close the gap
+    /// to the target angle quickly, but no faster than its Max speed.
     /// <c>position</c> is the brain's angle output (−1 lower end … +1 upper end) and <c>strength</c>
     /// its share of Max strength (0…1).
     /// </summary>
@@ -193,19 +186,9 @@ public static class Servo
         double effectiveInertia)
     {
         ArgumentNullException.ThrowIfNull(servo);
-        RequirePositive(effectiveInertia, nameof(effectiveInertia), "Effective inertia");
-        RequirePositive(step, nameof(step), "Step");
-
         var chosen = OutputSignals.StrengthFromOutput(strength, servo.Strength);
         var wantedSpeed = Math.Clamp((TargetAngle(position, servo, builtAngle) - angle) * _approachRate, -servo.MaxSpeed, servo.MaxSpeed);
-        var speedLacking = wantedSpeed - speed;
-        var torquePerSpeed = effectiveInertia / step;
-        var push = _pushGain * torquePerSpeed * speedLacking;
-        var holding = Math.Clamp(previous.Holding + (_holdingGain * torquePerSpeed * speedLacking), -chosen, chosen);
-        var torque = Rise(previous.Torque, Math.Clamp(holding + push, -chosen, chosen), step * chosen / servo.RiseTime);
-        var shortfall = holding + push - torque;
-        var heldBack = shortfall != 0 && Math.Sign(shortfall) == Math.Sign(speedLacking);
-        return new ServoMotor(torque, heldBack ? Math.Clamp(previous.Holding, -chosen, chosen) : holding);
+        return MotorLoop.Next(wantedSpeed, speed, chosen, servo.RiseTime, previous, step, effectiveInertia);
     }
 
     /// <summary>Unwraps an angle reading around ±π into a continuous angle.</summary>
@@ -215,27 +198,9 @@ public static class Servo
         return previousContinuous + delta;
     }
 
-    private static double Rise(double torque, double wanted, double maxRise)
-    {
-        if (wanted == 0 || (Math.Sign(wanted) == Math.Sign(torque) && Math.Abs(wanted) <= Math.Abs(torque)))
-        {
-            return wanted;
-        }
-
-        var from = Math.Sign(wanted) == Math.Sign(torque) ? torque : 0;
-        return from + Math.Clamp(wanted - from, -maxRise, maxRise);
-    }
-
-    private static void RequirePositive(double value, string name, string label)
-    {
-        if (!double.IsFinite(value) || value <= 0)
-        {
-            throw new ArgumentOutOfRangeException(name, $"{label} must be finite and positive.");
-        }
-    }
 }
 
-/// <summary>A Servo motor between steps: the torque it applied and the holding part it has gathered.</summary>
+/// <summary>A joint motor, a Servo or a Velocity motor, between steps: the torque it applied and the holding part it has gathered (<see cref="MotorLoop"/>).</summary>
 public readonly record struct ServoMotor(double Torque, double Holding);
 
 /// <summary>Equal-and-opposite forces for a Servo torque expressed as a force couple.</summary>

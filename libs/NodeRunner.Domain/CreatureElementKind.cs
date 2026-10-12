@@ -11,4 +11,5 @@ public enum CreatureElementKind
     Wheel,
     TouchSensor,
     Rubber,
+    VelocityMotor,
 }

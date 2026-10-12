@@ -5,34 +5,10 @@ namespace NodeRunner.Domain;
 /// side relative to it. A side is a link touching its joint, or the Wheel on its joint, a one-sided
 /// link whose direction is its own turn (#1118). Either reference may be missing after that part is
 /// deleted; readiness then blocks training until the player picks a replacement or deletes the Servo.
+/// Its joint radius and side rules are <see cref="JointMotor"/>'s.
 /// </summary>
-public sealed record ServoDef
+public sealed record ServoDef : IJointMotorDef
 {
-    /// <summary>A Servo's visible/collision joint radius, about 11/6 of a plain joint (#452).</summary>
-    public const double JointRadius = 27;
-
-    /// <summary>
-    /// Whether a joint with <paramref name="linksAtJoint"/>, and a Wheel when <paramref name="hasWheel"/>,
-    /// can hold a working Servo: it needs a Fixed and a Target side, two links or a link and the Wheel.
-    /// </summary>
-    public static bool HasTwoSides(IReadOnlyCollection<LinkRef> linksAtJoint, bool hasWheel) => linksAtJoint.Count + (hasWheel ? 1 : 0) >= 2;
-
-    /// <summary>
-    /// A new Servo's Fixed and Target on a joint with <paramref name="linksAtJoint"/> and
-    /// <paramref name="wheel"/>: the two lowest-id links, or with fewer the link as Fixed and the
-    /// Wheel as Target (#1118). A role nothing fills stays empty.
-    /// </summary>
-    public static (int? Fixed, int? Target) DefaultSides(IEnumerable<LinkRef> linksAtJoint, WheelDef? wheel)
-    {
-        var links = linksAtJoint.OrderBy(link => link.Id).Select(link => link.Id).Take(2).ToArray();
-        return links.Length switch
-        {
-            2 => (links[0], links[1]),
-            1 => (links[0], wheel?.Id),
-            _ => (null, wheel?.Id),
-        };
-    }
-
     /// <summary>A new Servo's <see cref="Strength"/>: 50 N·m at 100 world units per metre.</summary>
     public const double DefaultStrength = 500000;
 
@@ -148,6 +124,8 @@ public sealed record ServoDef
 
     /// <summary>How long, in seconds, its torque takes to build up to the strength the brain chose.</summary>
     public double RiseTime { get; }
+
+    CreatureElementKind IJointMotorDef.Kind => CreatureElementKind.Servo;
 
     public ServoDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, Range, Start, MaxSpeed, RiseTime);
 

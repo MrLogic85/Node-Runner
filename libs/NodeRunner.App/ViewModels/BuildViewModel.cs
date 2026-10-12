@@ -205,12 +205,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     // Part ids are never reused (#220): the restored body keeps the highest NextPartId this visit reached.
-    // A selected Servo stays selected through a link change's new id (#911), unless the step reselects its own parts.
+    // A selected motor stays selected through a link change's new id (#911), unless the step reselects its own parts.
     private void Restore(CreatureDef body, PartSet? reselect)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
-        var selectedServoJoints = reselect is null ? SelectedServoJoints() : [];
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, nextPartId));
+        var selectedMotorJoints = reselect is null ? SelectedMotorJoints() : [];
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, body.VelocityMotors, nextPartId));
         if (reselect is not null)
         {
             ClearSelectionSets();
@@ -220,7 +220,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             }
         }
 
-        PruneSelection(selectedServoJoints);
+        PruneSelection(selectedMotorJoints);
         if (reselect is null)
         {
             SelectJointPartsInsteadOfTheirJoints();
@@ -413,6 +413,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<ServoDef> Servos => _builder.Servos;
 
+    public IReadOnlyList<VelocityMotorDef> VelocityMotors => _builder.VelocityMotors;
+
+    /// <summary>Every joint motor: the Servos, then the Velocity motors.</summary>
+    public IReadOnlyList<IJointMotorDef> JointMotors => _builder.JointMotors;
+
     public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;
 
     public IReadOnlyList<TouchSensorDef> TouchSensors => _builder.TouchSensors;
@@ -459,17 +464,17 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             AddTooShortNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
         }
 
-        foreach (var servo in Servos.Where(servo => _shownBlockers.Contains((CreatureElementKind.Servo, servo.NodeId)) && CreatureReadiness.IsMissingALink(servo)))
+        foreach (var motor in JointMotors.Where(motor => _shownBlockers.Contains((motor.Kind, motor.NodeId)) && CreatureReadiness.IsMissingALink(motor)))
         {
-            var text = ServoNeedsTwoSides(servo.NodeId)
-                ? CreatureBuilder.ServoNeedsTwoSidesReason
-                : (servo.FixedLinkId is null, servo.TargetLinkId is null) switch
+            var text = ServoNeedsTwoSides(motor.NodeId)
+                ? motor.Kind == CreatureElementKind.Servo ? CreatureBuilder.ServoNeedsTwoSidesReason : CreatureBuilder.VelocityMotorNeedsTwoSidesReason
+                : (motor.FixedLinkId is null, motor.TargetLinkId is null) switch
                 {
                     (true, true) => UiText.Plain("Pick Fixed and Target links"),
                     (true, false) => UiText.Plain("Pick a Fixed link"),
                     _ => UiText.Plain("Pick a Target link"),
                 };
-            notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, servo.Id), text));
+            notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(motor.Kind, motor.Id), text));
         }
 
         foreach (var piston in Pistons)
@@ -584,7 +589,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// without a Servo or Wheel. Those show the error in their own <c>danger</c> look (#1140); a Touch
     /// sensor's cushion and a Rubber's skin (#1142) have none, so they do not count.
     /// </summary>
-    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, _builder.Servos, _builder.Wheels, touchSensors: [], rubbers: []);
+    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, _builder.JointMotors, _builder.Wheels, touchSensors: [], rubbers: []);
 
     /// <summary>The pieces the links join the joints into (<see cref="CreatureReadiness.Pieces"/>); more than one cannot train.</summary>
     public IReadOnlyList<IReadOnlyList<int>> Pieces() => CreatureReadiness.Pieces(Nodes, LinkRef.All(Beams, Pistons, Springs));
@@ -601,7 +606,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _showPieces = Pieces().Count > 1;
         _shownBlockers.Clear();
         _shownBlockers.UnionWith(Nodes.Where(node => IsLoose(node.Id)).Select(node => (CreatureElementKind.Node, node.Id)));
-        _shownBlockers.UnionWith(Servos.Where(CreatureReadiness.IsMissingALink).Select(servo => (CreatureElementKind.Servo, servo.NodeId)));
+        _shownBlockers.UnionWith(JointMotors.Where(CreatureReadiness.IsMissingALink).Select(motor => (motor.Kind, motor.NodeId)));
 
         OnPropertyChanged(nameof(CanvasNotes));
     }
@@ -616,6 +621,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         CreatureElementKind.Wheel => _builder.Wheels.Any(wheel => wheel.Id == element.Id),
         CreatureElementKind.TouchSensor => _builder.TouchSensors.Any(touch => touch.Id == element.Id),
         CreatureElementKind.Rubber => _builder.Rubbers.Any(rubber => rubber.Id == element.Id),
+        CreatureElementKind.VelocityMotor => _builder.VelocityMotors.Any(motor => motor.Id == element.Id),
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
@@ -698,7 +704,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public Vector2D SensorCentreOn(int beamId)
     {
         var beam = Beams[BeamIndexOf(beamId)];
-        return SensorPicture.Centre(Nodes[NodeIndexOf(beam.NodeA)].Position, Nodes[NodeIndexOf(beam.NodeB)].Position, CreatureDef.CoveredRadius(beam.NodeA, Servos), CreatureDef.CoveredRadius(beam.NodeB, Servos));
+        return SensorPicture.Centre(Nodes[NodeIndexOf(beam.NodeA)].Position, Nodes[NodeIndexOf(beam.NodeB)].Position, CreatureDef.CoveredRadius(beam.NodeA, JointMotors), CreatureDef.CoveredRadius(beam.NodeB, Servos));
     }
 
     /// <summary>
@@ -757,16 +763,17 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees
     /// (<see cref="DrawGroups.PartAt"/>), with the selection and the <paramref name="targets"/> on
-    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A Servo or Wheel
+    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A motor or Wheel
     /// is hit as its joint; a Touch sensor (#1045) and a Rubber (#1142) add no tap area. Null off every part.
     /// </summary>
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
     {
         var groups = DrawGroups();
-        var hit = groups.PartAt(position, nodeId => NodeById(nodeId).Position, _builder.Servos, _builder.Wheels, _builder.Sensors, RaisedIn(groups, Selection, targets));
+        var hit = groups.PartAt(position, nodeId => NodeById(nodeId).Position, _builder.JointMotors, _builder.Wheels, _builder.Sensors, RaisedIn(groups, Selection, targets));
         return hit?.Kind switch
         {
             CreatureElementKind.Servo => new CreatureElementSelection(CreatureElementKind.Node, _builder.Servos[_builder.ServoIndexOf(hit.Id)].NodeId),
+            CreatureElementKind.VelocityMotor => new CreatureElementSelection(CreatureElementKind.Node, _builder.VelocityMotors[_builder.VelocityMotorIndexOf(hit.Id)].NodeId),
             CreatureElementKind.Wheel => new CreatureElementSelection(CreatureElementKind.Node, _builder.Wheels[_builder.WheelIndexOf(hit.Id)].NodeId),
             _ => hit,
         };
@@ -798,16 +805,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             parts = parts.Append(new CreatureElementSelection(CreatureElementKind.Sensor, moving));
         }
 
-        return groups.Raised(parts, _builder.Servos, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, targets.Beams, targets.Joints);
+        return groups.Raised(parts, _builder.JointMotors, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, targets.Beams, targets.Joints);
     }
 
     private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, partId);
 
     /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Wheel 1", "Accel 1", "Camera 1" or "Touch 1".</summary>
-    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, partId);
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -827,7 +834,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             && !_builder.Springs.Any(spring => spring.Id == partId)
             && !_builder.Wheels.Any(wheel => wheel.Id == partId)
             && !_builder.TouchSensors.Any(touch => touch.Id == partId)
-            && !_builder.Rubbers.Any(rubber => rubber.Id == partId))
+            && !_builder.Rubbers.Any(rubber => rubber.Id == partId)
+            && !_builder.VelocityMotors.Any(motor => motor.Id == partId))
         {
             return;
         }
@@ -843,7 +851,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         RaiseAnatomyChanged();
     }
 
-    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, partId);
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, partId);
 
     /// <summary>
     /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,
@@ -981,6 +989,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int RubberIndexOf(int rubberId) => _builder.RubberIndexOf(rubberId);
 
+    public int VelocityMotorIndexOf(int velocityMotorId) => _builder.VelocityMotorIndexOf(velocityMotorId);
+
     public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
 
     public bool ServoNeedsTwoSides(int nodeId) => _builder.ServoNeedsTwoSides(nodeId);
@@ -994,7 +1004,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint (#973): a tap, drag
     /// or box selects them, never the joint on its own.
     /// </summary>
-    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.Servos, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers);
+    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.JointMotors, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers);
 
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
 

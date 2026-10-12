@@ -63,7 +63,8 @@ public sealed class ImportPresentationTests
             [new WheelDef(12, 4)],
             [new TouchSensorDef(13, 1)],
             [new RubberDef(14, 4)],
-            nextPartId: 15);
+            [new VelocityMotorDef(15, 4, 7, 12)],
+            nextPartId: 16);
 
         var preview = ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "All", creature), null), []);
 
@@ -73,6 +74,7 @@ public sealed class ImportPresentationTests
             (PartSettingsKind.Accelerometer, 1),
             (PartSettingsKind.Camera, 1),
             (PartSettingsKind.Servo, 1),
+            (PartSettingsKind.VelocityMotor, 1),
             (PartSettingsKind.Piston, 1),
             (PartSettingsKind.Spring, 1),
             (PartSettingsKind.Wheel, 1),

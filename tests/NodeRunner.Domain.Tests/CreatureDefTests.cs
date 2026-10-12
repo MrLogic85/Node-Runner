@@ -19,7 +19,7 @@ public sealed class CreatureDefTests
             nextPartId: 9);
 
         creature.CoveredRadius(1).ShouldBe(NodeDef.HubRadius);
-        creature.CoveredRadius(2).ShouldBe(ServoDef.JointRadius);
+        creature.CoveredRadius(2).ShouldBe(JointMotor.Radius);
         creature.CoveredRadius(3).ShouldBe(NodeDef.HubRadius);
         Should.Throw<ArgumentException>(() => creature.CoveredRadius(99));
     }

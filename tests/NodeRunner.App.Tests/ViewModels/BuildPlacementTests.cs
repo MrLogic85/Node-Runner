@@ -153,7 +153,7 @@ public sealed class BuildPlacementTests
         var servo = build.PlacingTargetsOf(BuildPart.Servo, null);
         servo.Joints.ShouldBe([_firstJoint.Id, 3], ignoreOrder: true);
         servo.RefusedJoints.ShouldBe([_middleJoint.Id]);
-        servo.JointRingOf(_firstJoint.Id).ShouldBe(ServoDef.JointRadius);
+        servo.JointRingOf(_firstJoint.Id).ShouldBe(JointMotor.Radius);
         var wheel = build.PlacingTargetsOf(BuildPart.Wheel, null);
         wheel.Joints.ShouldBe([_firstJoint.Id, _middleJoint.Id], ignoreOrder: true);
         wheel.RefusedJoints.ShouldBe([3]);
@@ -230,7 +230,7 @@ public sealed class BuildPlacementTests
     public void DropTargetAt_ForAServo_LandsOnAJointAnywhereInsideItsRing_BeforeABeam()
     {
         var gestures = new BuildGestures(TwoBeams());
-        var ring = SelectionMarks.JointHalo(ServoDef.JointRadius);
+        var ring = SelectionMarks.JointHalo(JointMotor.Radius);
 
         gestures.DropTargetAt(new Vector2D(20, 0), BuildPart.Servo).ShouldBe(_firstJoint);
         gestures.DropTargetAt(new Vector2D(20, 0), BuildPart.Accelerometer).ShouldBe(_firstBeam);
@@ -332,7 +332,7 @@ public sealed class BuildPlacementTests
         build.Servos.Select(servo => (servo.Id, servo.NodeId, servo.FixedLinkId, servo.TargetLinkId))
             .ShouldBe([(freshId, 2, 4, 5)]);
         build.SingleSelectedServoId.ShouldBe(freshId);
-        build.NodeRadius(2).ShouldBe(ServoDef.JointRadius);
+        build.NodeRadius(2).ShouldBe(JointMotor.Radius);
     }
 
     [Theory]

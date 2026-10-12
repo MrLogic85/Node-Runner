@@ -138,7 +138,7 @@ public class BuildPartPickTests
         var gestures = new BuildGestures(build);
         build.PickPart(BuildPart.Servo);
 
-        Tap(gestures, new Vector2D(0, SelectionMarks.JointHalo(ServoDef.JointRadius) - 1));
+        Tap(gestures, new Vector2D(0, SelectionMarks.JointHalo(JointMotor.Radius) - 1));
 
         build.Servos.Select(servo => servo.NodeId).ShouldBe([1]);
         build.PickedPart.ShouldBe(BuildPart.Servo);

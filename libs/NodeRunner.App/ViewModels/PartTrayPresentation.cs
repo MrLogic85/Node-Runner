@@ -156,7 +156,7 @@ public static class PartTray
     /// </summary>
     public static double PlacingRingRadius(BuildPart placing, double jointRadius) => placing switch
     {
-        BuildPart.Servo => ServoDef.JointRadius,
+        BuildPart.Servo => JointMotor.Radius,
         BuildPart.Wheel => WheelDef.DefaultRadius,
         BuildPart.TouchSensor => jointRadius + TouchSensorDef.Cushion,
         BuildPart.Rubber => jointRadius + RubberDef.Skin,

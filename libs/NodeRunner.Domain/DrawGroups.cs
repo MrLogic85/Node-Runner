@@ -64,10 +64,10 @@ public sealed class DrawGroups
         _joints.TryGetValue(nodeId, out var span) ? slot == DrawSlot.Under ? span.First : span.Last : null;
 
     /// <summary>
-    /// What rises to the selected surface (#1107): the <paramref name="selected"/> joints, a Servo,
-    /// Wheel, Touch sensor (#1045) or Rubber (#1142) as its joint, with their links; the selected links; the joints at the ends of all
-    /// those links, so a link never covers the ring, hub or Servo at its end; every link whose ends
-    /// both rose with its sensor, so a raised Servo never hides it; and the selected sensors. A
+    /// What rises to the selected surface (#1107): the <paramref name="selected"/> joints, a motor
+    /// (a Servo or Velocity motor), Wheel, Touch sensor (#1045) or Rubber (#1142) as its joint, with their links; the selected links; the joints at the ends of all
+    /// those links, so a link never covers the ring, hub or motor at its end; every link whose ends
+    /// both rose with its sensor, so a raised motor never hides it; and the selected sensors. A
     /// Wheel's face, under its links, rises only with a selected joint, so a raised link never makes
     /// it cover the Wheel's other links (#1086). The <paramref name="targetLinks"/> and
     /// <paramref name="targetJoints"/> a placed part can take rise alone, without what they join,
@@ -75,7 +75,7 @@ public sealed class DrawGroups
     /// </summary>
     public RaisedParts Raised(
         IEnumerable<CreatureElementSelection> selected,
-        IEnumerable<ServoDef> servos,
+        IEnumerable<IJointMotorDef> motors,
         IEnumerable<WheelDef> wheels,
         IEnumerable<TouchSensorDef> touchSensors,
         IEnumerable<RubberDef> rubbers,
@@ -83,12 +83,12 @@ public sealed class DrawGroups
         IEnumerable<int>? targetJoints = null)
     {
         ArgumentNullException.ThrowIfNull(selected);
-        ArgumentNullException.ThrowIfNull(servos);
+        ArgumentNullException.ThrowIfNull(motors);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(touchSensors);
         ArgumentNullException.ThrowIfNull(rubbers);
         var parts = selected.ToArray();
-        var servoNodes = servos.ToDictionary(servo => servo.Id, servo => servo.NodeId);
+        var motorNodes = motors.ToDictionary(motor => motor.Id, motor => motor.NodeId);
         var wheelNodes = wheels.ToDictionary(wheel => wheel.Id, wheel => wheel.NodeId);
         var touchNodes = touchSensors.ToDictionary(touch => touch.Id, touch => touch.NodeId);
         var rubberNodes = rubbers.ToDictionary(rubber => rubber.Id, rubber => rubber.NodeId);
@@ -96,7 +96,7 @@ public sealed class DrawGroups
             .Select(part => part.Kind switch
             {
                 CreatureElementKind.Node => part.Id,
-                CreatureElementKind.Servo => servoNodes.GetValueOrDefault(part.Id, -1),
+                CreatureElementKind.Servo or CreatureElementKind.VelocityMotor => motorNodes.GetValueOrDefault(part.Id, -1),
                 CreatureElementKind.Wheel => wheelNodes.GetValueOrDefault(part.Id, -1),
                 CreatureElementKind.TouchSensor => touchNodes.GetValueOrDefault(part.Id, -1),
                 CreatureElementKind.Rubber => rubberNodes.GetValueOrDefault(part.Id, -1),
@@ -117,24 +117,24 @@ public sealed class DrawGroups
 
     /// <summary>
     /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees,
-    /// in Build and Training alike: a joint's ring or Servo, or a Wheel's hub, each out to its halo
+    /// in Build and Training alike: a joint's ring or motor, or a Wheel's hub, each out to its halo
     /// (<see cref="SelectionMarks.JointHalo"/>); a sensor's picture; or a link within its drawn body
     /// (<see cref="SelectionMarks.LinkBody"/>), outside its ends' hubs, since it is drawn hub to hub
-    /// (#1086), under a ring, hub or Servo. A Wheel is hit only at its hub (#1086); its tyre and its
+    /// (#1086), under a ring, hub or motor. A Wheel is hit only at its hub (#1086); its tyre and its
     /// see-through middle are left to a tap's last fallback, <see cref="WheelDiscAt"/>. Parts rank by <see cref="Rank"/>, the <paramref name="raised"/> ones on
-    /// the selected surface. A Servo or Wheel is hit as itself; null off every part. Joint positions
+    /// the selected surface. A motor (a Servo or Velocity motor) or Wheel is hit as itself; null off every part. Joint positions
     /// come from <c>nodeAt</c>, so a moving creature is hit where it is drawn now.
     /// </summary>
     public CreatureElementSelection? PartAt(
         Vector2D position,
         Func<int, Vector2D> nodeAt,
-        IReadOnlyCollection<ServoDef> servos,
+        IReadOnlyCollection<IJointMotorDef> motors,
         IReadOnlyCollection<WheelDef> wheels,
         IEnumerable<SensorDef> sensors,
         RaisedParts raised)
     {
         ArgumentNullException.ThrowIfNull(nodeAt);
-        ArgumentNullException.ThrowIfNull(servos);
+        ArgumentNullException.ThrowIfNull(motors);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(sensors);
         ArgumentNullException.ThrowIfNull(raised);
@@ -144,16 +144,16 @@ public sealed class DrawGroups
         foreach (var nodeId in _nodes)
         {
             var distance = Math.Sqrt(DistanceSquared(nodeAt(nodeId), position));
-            var servo = servos.FirstOrDefault(servo => servo.NodeId == nodeId);
+            var motor = motors.FirstOrDefault(motor => motor.NodeId == nodeId);
             var wheel = wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId);
             var lifted = raised.Joints.Contains(nodeId);
-            // A Servo, a joint's ring or a Wheel's hub draws over the joint's links. A Wheel is hit only
+            // A motor, a joint's ring or a Wheel's hub draws over the joint's links. A Wheel is hit only
             // at its hub, so its see-through tyre and middle never stand in the way of what lies under it.
-            if (servo is not null && distance <= SelectionMarks.JointHalo(ServoDef.JointRadius))
+            if (motor is not null && distance <= SelectionMarks.JointHalo(JointMotor.Radius))
             {
-                Consider(new CreatureElementSelection(CreatureElementKind.Servo, servo.Id), Rank(DrawSlot.Over, Joint(nodeId, DrawSlot.Over), lifted));
+                Consider(new CreatureElementSelection(motor.Kind, motor.Id), Rank(DrawSlot.Over, Joint(nodeId, DrawSlot.Over), lifted));
             }
-            else if (servo is null && distance <= SelectionMarks.JointHalo(NodeDef.HubRadius))
+            else if (motor is null && distance <= SelectionMarks.JointHalo(NodeDef.HubRadius))
             {
                 var part = wheel is null
                     ? new CreatureElementSelection(CreatureElementKind.Node, nodeId)
@@ -165,7 +165,7 @@ public sealed class DrawGroups
         foreach (var sensor in sensors)
         {
             if (_linkRefs.TryGetValue(sensor.BeamId, out var beam)
-                && SensorPicture.Contains(sensor.Kind, position, nodeAt(beam.NodeA), nodeAt(beam.NodeB), CreatureDef.CoveredRadius(beam.NodeA, servos), CreatureDef.CoveredRadius(beam.NodeB, servos)))
+                && SensorPicture.Contains(sensor.Kind, position, nodeAt(beam.NodeA), nodeAt(beam.NodeB), CreatureDef.CoveredRadius(beam.NodeA, motors), CreatureDef.CoveredRadius(beam.NodeB, motors)))
             {
                 Consider(new CreatureElementSelection(CreatureElementKind.Sensor, sensor.Id), Rank(DrawSlot.Sensor, Link(beam.Id), raised.Sensor(sensor)));
             }

@@ -23,6 +23,11 @@ public sealed class BrainPortDisplayTests
     [InlineData(PartSettingsKind.Servo, PortDirection.Output, "angle", PortRange.MinusOneToOne, "angle")]
     [InlineData(PartSettingsKind.Servo, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
     [InlineData(PartSettingsKind.Touch, PortDirection.Input, "touch", PortRange.ZeroToOne, "touch")]
+    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
+    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
+    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
+    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Output, "speed", PortRange.MinusOneToOne, "speed")]
+    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
     public void EveryPort_HasItsRangeAndShortLabel(PartSettingsKind kind, PortDirection direction, string channel, PortRange range, string label)
     {
         var port = new BrainPort(1, channel, direction, direction == PortDirection.Input ? PortSignal.Reading : PortSignal.Position);
@@ -43,8 +48,8 @@ public sealed class BrainPortDisplayTests
             Should.NotThrow(() => BrainPortDisplay.ShortLabel(kind, port));
         }
 
-        layout.Inputs.Count.ShouldBe(13);
-        layout.Outputs.Count.ShouldBe(4);
+        layout.Inputs.Count.ShouldBe(16);
+        layout.Outputs.Count.ShouldBe(6);
     }
 
     // The bar draws the value as it leaves the brain, so each output's range must be its activation's.
@@ -86,6 +91,7 @@ public sealed class BrainPortDisplayTests
         PortedCreature.Servo => PartSettingsKind.Servo,
         PortedCreature.Piston => PartSettingsKind.Piston,
         PortedCreature.Touch => PartSettingsKind.Touch,
+        PortedCreature.VelocityMotor => PartSettingsKind.VelocityMotor,
         _ => throw new ArgumentOutOfRangeException(nameof(partId)),
     };
 }

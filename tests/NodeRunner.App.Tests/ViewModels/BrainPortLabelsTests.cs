@@ -89,6 +89,29 @@ public sealed class BrainPortLabelsTests
         labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0angle", servo), UiText.Format("{0}:\u00A0strength", servo)]);
     }
 
+    [Fact]
+    public void For_AnUnnamedVelocityMotor_NamesItsInputsAndOutputsByTheQuantitiesTheySet()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(0, 2))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [new VelocityMotorDef(6, 1, 4, 5)],
+            nextPartId: 7);
+
+        var labels = BrainPortLabels.For(creature);
+
+        var motor = UiText.Format("Motor {0}", 1);
+        labels.Inputs.ShouldBe([UiText.Format("{0}:\u00A0angle sin", motor), UiText.Format("{0}:\u00A0angle cos", motor), UiText.Format("{0}:\u00A0speed", motor)]);
+        labels.Outputs.ShouldBe([UiText.Format("{0}:\u00A0speed", motor), UiText.Format("{0}:\u00A0strength", motor)]);
+    }
+
     [Theory]
     [InlineData(1, new[] { "centre", "hit" })]
     [InlineData(3, new[] { "left", "centre", "right", "hit" })]

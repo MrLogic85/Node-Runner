@@ -156,6 +156,12 @@ public partial class Creature : Node2D
             throw new InvalidOperationException($"Servo {incompleteServo.Id} must have two links before the creature is built for simulation.");
         }
 
+        // Its joint, drive and brain wiring come in #454's next milestone.
+        if (definition.VelocityMotors.Count > 0)
+        {
+            throw new NotSupportedException("Velocity motors cannot be simulated yet (#454).");
+        }
+
         Definition = definition;
         _selection = [];
         Build(definition);
@@ -457,8 +463,8 @@ public partial class Creature : Node2D
                 Theme = Theme,
                 A = new Vector2(-halfLength, 0),
                 B = new Vector2(halfLength, 0),
-                RadiusA = ToGodotFloat(definition.NodeRadius(beamDef.NodeA), nameof(ServoDef.JointRadius)),
-                RadiusB = ToGodotFloat(definition.NodeRadius(beamDef.NodeB), nameof(ServoDef.JointRadius)),
+                RadiusA = ToGodotFloat(definition.NodeRadius(beamDef.NodeA), nameof(JointMotor.Radius)),
+                RadiusB = ToGodotFloat(definition.NodeRadius(beamDef.NodeB), nameof(JointMotor.Radius)),
             };
             body.AddChild(CreateKnockout(visual.A, visual.B, Theme.BeamWidth / 2));
             body.AddChild(visual);
@@ -509,7 +515,7 @@ public partial class Creature : Node2D
         for (var i = 0; i < count; i++)
         {
             var position = ToGodot(definition.Nodes[i].Position);
-            var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(ServoDef.JointRadius));
+            var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(JointMotor.Radius));
 
             // No CCD (#1171; why: AGENTS.md rule 3).
             var body = new RigidBody2D
@@ -600,7 +606,7 @@ public partial class Creature : Node2D
             var b = ToGodot(definition.Nodes[triangle.NodeB].Position);
             var c = ToGodot(definition.Nodes[triangle.NodeC].Position);
             var toBeam = _beamBodies[beamIndex].Transform.AffineInverse();
-            var jointRadius = ToGodotFloat(definition.NodeRadius(definition.Nodes[triangle.NodeA].Id), nameof(ServoDef.JointRadius));
+            var jointRadius = ToGodotFloat(definition.NodeRadius(definition.Nodes[triangle.NodeA].Id), nameof(JointMotor.Radius));
             var visual = new RigidHatchVisual
             {
                 Name = $"Hatch{hatches.Count}",
