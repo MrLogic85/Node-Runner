@@ -13,10 +13,11 @@ namespace NodeRunner.Ui.Widgets;
 /// view's bottom edge, its ticks rising from the edge and labels above them; the height scale runs
 /// up the left edge from the ground's top (0 m), its ticks reaching in and labels sitting on them, and
 /// stops above the distance scale's band, so the corner stays clear. Both share one label step, so
-/// a metre reads the same either way. It draws only what the camera shows and redraws when the view
-/// moves. Ticks and labels keep their screen size at any zoom; every metre is labelled, or every 2,
-/// 5, 10, … when labels would overlap (#675), and from 5 m between labels the ticks thin out with
-/// them (#884).
+/// a metre reads the same either way. It draws only what the camera shows, and the distance labels
+/// half a label past it, so they slide in and out under the view's sides (#1191); it redraws when
+/// the view moves. Ticks and labels keep their screen size at any zoom; every metre is labelled, or
+/// every 2, 5, 10, … when labels would overlap (#675), and from 5 m between labels the ticks thin
+/// out with them (#884).
 /// </summary>
 public partial class ArenaRuler : Node2D
 {
@@ -28,7 +29,8 @@ public partial class ArenaRuler : Node2D
     // Clear space above the distance labels, inside the band the camera keeps the ground out of.
     private const float _bandPadding = UiSize.Space.S1;
 
-    // A label fades out over this distance as it nears an edge, so none shows cut in half.
+    // A height label fades out over this distance as it nears the top clearance or the distance
+    // band, so none shows cut in half or runs under them.
     private const float _labelFade = UiSize.Space.S4;
 
     // The least clear space between two labels, on screen.
@@ -45,6 +47,7 @@ public partial class ArenaRuler : Node2D
     private double _startX;
     private Rect2 _drawnView;
     private int _metresPerLabel = 1;
+    private float _widestLabel;
     private float _topClear;
 
     public VisualTheme Theme
@@ -123,7 +126,9 @@ public partial class ArenaRuler : Node2D
         using (var pen = UiPixelPen.Begin(this))
         {
             pen.Line(new Vector2(view.Position.X, 0), new Vector2(view.End.X, 0), _theme.GroundEdge, _theme.GroundEdgeWidth);
-            DistanceRuler.Fill(_startX, view.Position.X, view.End.X, metresPerLabel, _marks);
+            // Half a label past each side, so a label slides in under the view's edge, which clips it (#1191).
+            var reach = _widestLabel / 2 * screenScale;
+            DistanceRuler.Fill(_startX, view.Position.X - reach, view.End.X + reach, metresPerLabel, _marks);
             foreach (var mark in _marks)
             {
                 var x = (float)mark.X;
@@ -164,7 +169,8 @@ public partial class ArenaRuler : Node2D
         var farthest = Math.Max(Math.Abs(view.Position.X - _startX), Math.Abs(view.End.X - _startX));
         var digits = Math.Clamp(Math.Ceiling(farthest / Metres.WorldUnitsPerMetre).ToString(CultureInfo.InvariantCulture).Length, _minLabelDigits, _maxLabelDigits);
         var widest = Label(-long.Parse(new string('9', digits), CultureInfo.InvariantCulture));
-        var room = _theme.RulerFont.GetStringSize(widest, HorizontalAlignment.Left, -1, _theme.RulerFontSize).X + _labelSpacing;
+        _widestLabel = _theme.RulerFont.GetStringSize(widest, HorizontalAlignment.Left, -1, _theme.RulerFontSize).X;
+        var room = _widestLabel + _labelSpacing;
         _metresPerLabel = DistanceRuler.MetresPerLabel(Metres.WorldUnitsPerMetre / screenScale, room, _metresPerLabel);
         return _metresPerLabel;
     }
@@ -179,9 +185,8 @@ public partial class ArenaRuler : Node2D
         var label = Label(metre);
         var width = _theme.RulerFont.GetStringSize(label, HorizontalAlignment.Left, -1, _theme.RulerFontSize).X;
         var left = (float)mark.X - (width * screenScale / 2);
-        var room = Mathf.Min(left - view.Position.X, view.End.X - (left + (width * screenScale))) / screenScale;
         var baseline = view.End.Y - ((_majorTickLength + _tickToLabel + _theme.RulerFont.GetDescent(_theme.RulerFontSize)) * screenScale);
-        DrawLabel(label, new Vector2(left, baseline), room, screenScale);
+        DrawLabel(label, new Vector2(left, baseline), 1f, screenScale);
     }
 
     // The label sits on its tick's line, just above it, so 0 m reads above the ground line rather
@@ -200,14 +205,12 @@ public partial class ArenaRuler : Node2D
             (top - (view.Position.Y + ((_topClear + _tickToLabel) * screenScale))) / screenScale,
             ((bandTop - baseline) / screenScale) + _labelFade);
         var left = view.Position.X + ((_majorTickLength + _tickToLabel) * screenScale);
-        DrawLabel(Label(metre), new Vector2(left, baseline), room, screenScale);
+        DrawLabel(Label(metre), new Vector2(left, baseline), Mathf.Clamp(room / _labelFade, 0f, 1f), screenScale);
     }
 
-    // Drawn at screen size, scaled back up by as much as the camera zooms out, and faded over the
-    // last stretch of room so a label never shows cut off.
-    private void DrawLabel(string label, Vector2 baselineLeft, float room, float screenScale)
+    // Drawn at screen size, scaled back up by as much as the camera zooms out.
+    private void DrawLabel(string label, Vector2 baselineLeft, float fade, float screenScale)
     {
-        var fade = Mathf.Clamp(room / _labelFade, 0f, 1f);
         if (fade <= 0f)
         {
             return;

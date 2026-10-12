@@ -321,9 +321,10 @@ above every shadow.
   reaching in with each label sitting on its tick, so 0 m reads above the
   ground line. Behind the creatures, with no grid: labels `ReadoutMedium`
   in `muted`, ticks `line-strong`; what they count is in
-  `docs/TRAINING_LOOP.md` → Scales. The height scale stops above the
-  distance scale's band; its labels fade into the band and before the
-  slow-motion chip and best flag along the top.
+  `docs/TRAINING_LOOP.md` → Scales. Distance labels slide in and out under
+  the view's sides, cut off by its edge like the ground (#1191). The
+  height scale stops above the distance scale's band; its labels fade into
+  the band and before the slow-motion chip and best flag along the top.
 - **Best marker (#388):** a dashed marker whose flag reads "Best 4.2 m". It
   flies left of its line where it would run past the view's right edge
   (#886), and fades to `alpha_shadow` while a part callout shows.
