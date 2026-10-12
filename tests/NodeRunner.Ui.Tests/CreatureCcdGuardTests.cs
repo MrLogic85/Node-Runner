@@ -15,7 +15,7 @@ public sealed class CreatureCcdGuardTests
             .ToList();
 
         violations.ShouldBeEmpty(
-            "Godot's ray CCD sets a fast node's velocity outright and launched rolling creatures (#1171; project/src/creature/AGENTS.md rule 3). Revisit only with shaped grounds (#91).");
+            "Leave ContinuousCd unset on creature bodies (#1171; why: project/src/creature/AGENTS.md rule 3).");
     }
 
     [Theory]

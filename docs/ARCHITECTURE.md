@@ -135,7 +135,7 @@ Node Runner/
     ├── NodeRunner.ML.Tests/
     ├── NodeRunner.App.Tests/
     ├── NodeRunner.Arch.Tests/      # layer rules and source conventions
-    └── NodeRunner.Ui.Tests/        # static Godot UI contracts; no scene tree
+    └── NodeRunner.Ui.Tests/        # static Godot source contracts; no scene tree
 ```
 
 ## The tick
