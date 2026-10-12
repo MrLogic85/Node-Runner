@@ -20,13 +20,13 @@ public readonly record struct FramedCreature(double CentreX, double CentreY, dou
 
 /// <summary>
 /// The Training camera's framing (#675, #1169): where it looks and how far it zooms out. It
-/// follows the creature's centre of mass on both axes through one <see cref="ArenaFollow"/> each,
-/// keeping it in the middle of the view, except that the ground line never rises above
+/// follows the creature's centre of mass on both axes through one <see cref="ArenaFollow"/> each and
+/// shows it in the middle of the view at rest, except that the ground line never rises above
 /// <see cref="GroundFromTop"/>, so a creature on the ground sits low and a hopping gait does not
-/// bob the view. It zooms out so the creature fits, and further the faster it moves on either
+/// bob the view, and that a moving creature shows behind the middle (the lead, below). It zooms out so the creature fits, and further the faster it moves on either
 /// axis; it zooms out quickly and back in only after the creature has stayed smaller for a while,
 /// and then slowly, so a stretching gait does not make it pump. The room speed adds goes in front:
-/// the view slides back by half of it, so the room behind stays as at rest. While a part callout
+/// the view slides ahead by half of it, so the room behind stays as at rest. While a part callout
 /// shows, the framing keeps a <see cref="Shelf"/> for it at the top (#1137): it lowers the ground
 /// toward <see cref="ShelfGroundFromTop"/> first and zooms out only for the rest. All sizes are in
 /// world units; the view's size is the size it shows at zoom 1. See

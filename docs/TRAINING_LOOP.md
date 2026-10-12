@@ -201,11 +201,13 @@ the reference's "a training session has finished" (#369).
     shadow through `ArenaFraming`, from its centre of mass and its box. It moves on physics ticks, as the creatures do, so on a
     120 Hz screen the world never judders against it (#909). The other
     shadows may leave the view.
-    - *Centre (#1169):* it keeps the shadow's centre of mass in the
-      middle of the view on both axes, through one `ArenaFollow` per
-      axis, eased in two stages so a gait's wobble never shakes the view
-      and a switch to another shadow glides in. The aim leads a moving
-      shadow by its eased speed, so the eased centre stays in the middle.
+    - *Centre (#1169):* it follows the shadow's centre of mass on both
+      axes, through one `ArenaFollow` per axis, eased in two stages so a
+      gait's wobble never shakes the view and a switch to another shadow
+      glides in. Each follower's aim leads by the eased speed, so its
+      eased point keeps up with a moving shadow instead of trailing it.
+      At rest the centre of mass shows in the middle of the view; *Ground*
+      and *Lead* below move it from there.
     - *Ground:* the ground line never rises above 80% down the view,
       unless the callout shelf lowers that limit. A shadow on the ground
       therefore sits low, with the ground at 80%, and a hopping gait does
