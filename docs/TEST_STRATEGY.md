@@ -11,7 +11,8 @@ test focus is in its `libs/*/AGENTS.md`.
 2. **Deterministic.** Tests follow the determinism rules in
    `docs/CODE_DESIGN_PRINCIPLES.md` §4.
 3. **Layer boundaries are code.** The library layer rules live in
-   `NodeRunner.Arch.Tests` and UI ownership rules in `NodeRunner.Ui.Tests`.
+   `NodeRunner.Arch.Tests`; UI ownership rules and other static Godot
+   source contracts in `NodeRunner.Ui.Tests`.
 4. **Test the risky bits, not the trivia.** Unit tests are mandatory for
    Domain, Mechanics and ML. Compiler-checked things (record equality, enum
    switches) get one canary test at most. We chase "the tricky parts are
@@ -26,8 +27,8 @@ test focus is in its `libs/*/AGENTS.md`.
 | ML | `libs/NodeRunner.ML/` | xUnit + Shouldly | Forward pass, GA operators, activation math, genome round-trips |
 | App | `libs/NodeRunner.App/` | xUnit + Shouldly + NSubstitute | View-models, repositories, services |
 | Architecture | `libs/`, `project/` | xUnit + NetArchTest | Layer graph, source conventions, Android export |
-| Static UI contracts | `project/src/`, `project/scenes/`, theme files | xUnit + Shouldly + Roslyn | See "UI contracts" |
-| Godot Nodes | `project/src/` | Manual (`docs/MANUAL_TESTING.md`) | Node lifecycle, physics, input |
+| Static Godot contracts | `project/src/`, `project/scenes/`, theme files | xUnit + Shouldly + Roslyn | See "UI contracts" and "Physics setup guards" |
+| Godot Nodes | `project/src/` | Manual (`docs/MANUAL_TESTING.md`) | Node lifecycle, physics behaviour, input |
 | End-to-end | full app on device | Manual, decided per change | Feel, latency, battery |
 
 Godot Node behaviour is verified manually; GdUnit4 tests are #957.
@@ -74,6 +75,15 @@ view-models, and component behaviour in pure contract functions in the UI
 library (`UiComponentContracts`, slider values, progress), both tested
 without a scene. Whether a scene's controls reach the right view-model
 action is checked on device.
+
+## Physics setup guards
+
+How creature bodies behave is checked by hand, but a body setting that is
+known to break them is guarded in `NodeRunner.Ui.Tests` from source:
+
+| Concern | Tests | Rule owner |
+|---|---|---|
+| Creature bodies run without CCD | `CreatureCcdGuardTests` | `project/src/creature/AGENTS.md` rule 3 |
 
 ## What we do NOT test
 

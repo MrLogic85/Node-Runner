@@ -129,13 +129,13 @@ Node Runner/
 │           ├── lib/                # reusable Controls
 │           ├── screens/            # full-screen scenes
 │           └── widgets/            # app-specific composite widgets
-└── tests/                          # xUnit — libs plus static UI contracts
+└── tests/                          # xUnit — libs plus static Godot source contracts
     ├── NodeRunner.Domain.Tests/
     ├── NodeRunner.Mechanics.Tests/
     ├── NodeRunner.ML.Tests/
     ├── NodeRunner.App.Tests/
     ├── NodeRunner.Arch.Tests/      # layer rules and source conventions
-    └── NodeRunner.Ui.Tests/        # static Godot UI contracts; no scene tree
+    └── NodeRunner.Ui.Tests/        # static Godot source contracts; no scene tree
 ```
 
 ## The tick
