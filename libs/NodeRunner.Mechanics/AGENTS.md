@@ -26,6 +26,7 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 - `Spring` — a Spring's travel
 - `Wheel` — a Wheel's weight and thin-ring turning inertia
 - `Rubber` — a Rubber's friction against the ground
+- `EndStop` — the most force a Piston's or Spring's end stop holds
 - `Travel` — the shortest and longest length a Piston's or Spring's stroke
   gives
 - `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a

@@ -313,8 +313,12 @@ fold.
   overshoots. Those are for the player's settings, the brain and fitness
   (#546).
 - **End stops** (#701): its length stays within its travel under ordinary
-  loads; a hard impact can give a little before it is pushed back. Inside
-  the travel nothing but its own force moves it.
+  loads; a hard impact can give a little before it is pushed back, more
+  past the cap below. Inside the travel nothing but its own force moves it.
+- **A stop's force is capped** (#1115) at three times what the creature
+  can put on it by itself: all its Pistons at full Strength plus its
+  weight. Past that the stop slides. Example: a creature of 2.4 kg with one
+  150 N Piston holds 3 × (150 + 23.5) = 520 N.
 - **Not a beam:** it adds no rigidity but counts as attached for the degree
   rules. Two nodes hold at most one link (Piston or Spring).
 - **Minimum length:** the same as a beam's.
@@ -344,7 +348,7 @@ fold.
   gap) with Stroke 100%: Coil length 0% gives 1…1.7 m resting at 0.65 m,
   50% 0.83…1.35 m and 100% 0.65…1 m resting at 1.35 m. Changing either
   setting never moves a node.
-- **End stops** are hard, as a Piston's (#701). **A preload stays inside the
+- **End stops** are hard and capped, as a Piston's (#701, #1115). **A preload stays inside the
   stop** (#835): as on a real preloaded spring, its nodes feel nothing until
   a load beats the preload. A stop that carries the creature's weight still
   chatters a little and can creep (#935).
