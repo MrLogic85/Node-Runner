@@ -28,7 +28,8 @@ public readonly record struct FramedCreature(double CentreX, double CentreY, dou
 /// and then slowly, so a stretching gait does not make it pump. The room speed adds goes in front:
 /// the view slides ahead by half of it, so the room behind stays as at rest. While a part callout
 /// shows, the framing keeps a <see cref="Shelf"/> for it at the top (#1137): it lowers the ground
-/// toward <see cref="ShelfGroundFromTop"/> first and zooms out only for the rest. All sizes are in
+/// first, toward <see cref="ShelfGroundFromTop"/> but never into the <see cref="ScaleBand"/> along
+/// the bottom (#1170), and zooms out only for the rest. All sizes are in
 /// world units; the view's size is the size it shows at zoom 1. See
 /// <c>docs/TRAINING_LOOP.md</c> → Camera.
 /// </summary>
@@ -73,7 +74,10 @@ public sealed class ArenaFraming
     /// <summary>How long the creature must need less room before the zoom narrows, in seconds.</summary>
     public const double ZoomInDelaySeconds = 1.5;
 
-    /// <summary>The lowest the ground goes, measured from the top, to make room for a <see cref="Shelf"/>.</summary>
+    /// <summary>
+    /// The lowest the ground goes, measured from the top, to make room for a <see cref="Shelf"/>;
+    /// a <see cref="ScaleBand"/> stops it higher.
+    /// </summary>
     public const double ShelfGroundFromTop = 0.95;
 
     /// <summary>
@@ -92,6 +96,7 @@ public sealed class ArenaFraming
     private HeldEase _shelfLogZoom = new(0, roomIsUp: false);
     private (FramedCreature Creature, double GroundY, double ViewWidth, double ViewHeight)? _cutNotStepped;
     private double _shelf;
+    private double _scaleBand;
     private double _groundY;
 
     /// <summary>False until the first <see cref="Step"/> or <see cref="Cut"/> with a usable creature.</summary>
@@ -116,10 +121,27 @@ public sealed class ArenaFraming
             }
 
             _shelf = value;
-            if (_cutNotStepped is var (creature, groundY, viewWidth, viewHeight))
+            RecutIfNotStepped();
+        }
+    }
+
+    /// <summary>
+    /// The share of the view's height the distance scale takes along the bottom (#1170); 0 with
+    /// none. Making room for a <see cref="Shelf"/> lowers the ground no further than its top. Set
+    /// between a <see cref="Cut"/> and the next step, it is part of that cut, as for the shelf.
+    /// </summary>
+    public double ScaleBand
+    {
+        get => _scaleBand;
+        set
+        {
+            if (value == _scaleBand)
             {
-                Cut(creature, groundY, viewWidth, viewHeight);
+                return;
             }
+
+            _scaleBand = value;
+            RecutIfNotStepped();
         }
     }
 
@@ -157,21 +179,23 @@ public sealed class ArenaFraming
     /// How the view makes room for a <paramref name="shelf"/> above <paramref name="creature"/>
     /// shown at <paramref name="zoom"/> in a view <paramref name="viewHeight"/> tall: the highest
     /// the ground line goes, from the top, between <see cref="GroundFromTop"/> and
-    /// <see cref="ShelfGroundFromTop"/>, and the zoom the view needs at most once the ground is as
+    /// <see cref="ShelfGroundFromTop"/> or the top of a <paramref name="scaleBand"/> along the
+    /// bottom, whichever is higher up, and the zoom the view needs at most once the ground is as
     /// low as it goes, never smaller than keeps the creature <see cref="CreatureFloor"/> tall.
     /// A shelf the view already has room for keeps the ground where it is and asks no zoom.
     /// </summary>
-    public static (double GroundFromTop, double Zoom) FitShelf(FramedCreature creature, double zoom, double viewHeight, double shelf)
+    public static (double GroundFromTop, double Zoom) FitShelf(FramedCreature creature, double zoom, double viewHeight, double shelf, double scaleBand = 0)
     {
         var top = Math.Max(TopMargin, shelf) + Headroom;
         var tall = creature.Bottom - creature.Top;
-        var ground = Math.Clamp(top + (tall * zoom / viewHeight), GroundFromTop, ShelfGroundFromTop);
+        var lowest = Math.Max(GroundFromTop, Math.Min(ShelfGroundFromTop, 1 - scaleBand));
+        var ground = Math.Clamp(top + (tall * zoom / viewHeight), GroundFromTop, lowest);
         if (tall <= 0)
         {
             return (ground, MaxZoom);
         }
 
-        var room = Math.Max(ShelfGroundFromTop - top, CreatureFloor) * viewHeight / tall;
+        var room = Math.Max(lowest - top, CreatureFloor) * viewHeight / tall;
         return (ground, Math.Min(MaxZoom, room));
     }
 
@@ -191,7 +215,7 @@ public sealed class ArenaFraming
         var rest = Math.Log(ZoomToFit(creature, 0, 0, viewWidth, viewHeight));
         _logZoom = new HeldEase(rest, roomIsUp: false);
         _restLogZoom = new HeldEase(rest, roomIsUp: false);
-        var (ground, zoom) = FitShelf(creature, Math.Exp(rest), viewHeight, Shelf);
+        var (ground, zoom) = FitShelf(creature, Math.Exp(rest), viewHeight, Shelf, ScaleBand);
         _groundFromTop = new HeldEase(ground, roomIsUp: true);
         _shelfLogZoom = new HeldEase(Math.Log(zoom), roomIsUp: false);
         _groundY = groundY;
@@ -258,6 +282,14 @@ public sealed class ArenaFraming
         Place(viewWidth, viewHeight);
     }
 
+    private void RecutIfNotStepped()
+    {
+        if (_cutNotStepped is var (creature, groundY, viewWidth, viewHeight))
+        {
+            Cut(creature, groundY, viewWidth, viewHeight);
+        }
+    }
+
     private static bool IsUsableView(double groundY, double viewWidth, double viewHeight) =>
         double.IsFinite(groundY) && viewWidth > 0 && viewHeight > 0
         && double.IsFinite(viewWidth) && double.IsFinite(viewHeight);
@@ -273,7 +305,7 @@ public sealed class ArenaFraming
     // Measured against the zoom the creature alone needs, so the shelf's own zoom never feeds back.
     private void StepShelfRoom(FramedCreature creature, double viewHeight, double deltaSeconds)
     {
-        var (ground, zoom) = FitShelf(creature, Math.Exp(_logZoom.Value), viewHeight, Shelf);
+        var (ground, zoom) = FitShelf(creature, Math.Exp(_logZoom.Value), viewHeight, Shelf, ScaleBand);
         _groundFromTop.Step(ground, deltaSeconds);
         _shelfLogZoom.Step(Math.Log(zoom), deltaSeconds);
     }

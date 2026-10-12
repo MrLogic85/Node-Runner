@@ -153,6 +153,7 @@ public partial class TrainingHost : Node, IRoutedScene
             _screen.MovePartCallout(_followed.PartAnchor(selected));
         }
 
+        Camera.ScaleBand = Ruler.BandShare;
         Camera.Shelf = _screen.PartCalloutShelf;
 
         _signalRefreshElapsed += delta;
@@ -341,6 +342,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private void BindScreen(CreationDef? creation)
     {
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
+        Ruler.TopClear = Math.Max(ArenaBestMarker.FlagBottom, _screen.SlowMotionChipBottom);
         _screen.Setup(
             creation is null
                 ? TrainingHeaderPresentation.ForWalker(Mode, _map.Id)

@@ -59,9 +59,9 @@ the reference's "a training session has finished" (#369).
     count; a crawler scores 0.
   - `FrontDistance`: how far ahead of its start the creature's front-most
     point is at the latest tick, never below 0 (#725). It is the **shown
-    distance**: the ruler, the shadow strip, SignalFlow's Distance stage,
+    distance**: the distance scale, the shadow strip, SignalFlow's Distance stage,
     the best marker and the Creations card read it, so the number on screen
-    matches where the creature's nose stands on the ruler. It is not the
+    matches where the creature's nose stands on the scale. It is not the
     score; the GA ranks by `Distance`.
   - `IsValid`: false when physics blew up (#650): a sample was NaN or
     infinite, or a tracked point moved further in one tick than
@@ -231,7 +231,8 @@ the reference's "a training session has finished" (#369).
     - *Callout shelf (#1137):* while a part callout shows, the camera
       keeps a shelf at the top as tall as the callout, its leader and
       `S1` margins (`docs/WORLD_VISUALS.md` → Part callout). It lowers
-      the ground first, to at most 95% down, and zooms out only for what
+      the ground first, to at most 95% down but never into the distance
+      scale's band along the bottom (#1170), and zooms out only for what
       is still missing; a shelf that already fits moves nothing. Zooming
       out for the shelf never shrinks the shadow below 25% of the view's
       height; past that the callout covers its top. The shelf opens as
@@ -247,13 +248,16 @@ the reference's "a training session has finished" (#369).
   - **Ground.** Flat ground (`Maps.Flat`, "Flat ground") is the only map
     (#540), and its ground is endless. A resumed best ever counts only on
     the map it was reached on.
-  - **Ruler.** Counted from where the followed creature's front starts each
-    trial (0 m, #725), negative behind it. Labels come every 1, 2, 5, 10 …
-    m so they never overlap, the ticks thinning with them; a closer label
-    step comes back only with 20% room to spare, so a zoom resting at the
-    switch does not flicker (`DistanceRuler`, #884). Ticks and labels keep
-    their screen size. While the callout shelf lowers the ground, the
-    labels may slide out of view below it; the ticks stay.
+  - **Scales (#1170).** Two scales on the view's edges, so distance and
+    height read wherever the camera looks (`docs/WORLD_VISUALS.md` →
+    Training arena). Distance is counted from where the followed
+    creature's front starts each trial (0 m, #725), negative behind it.
+    Height is counted from the ground's top (0 m), with nothing below the
+    ground; it shows true heights even when the ground is out of view.
+    Both share one label step: labels come every 1, 2, 5, 10 … m so they
+    never overlap, the ticks thinning with them; a closer label step comes
+    back only with 20% room to spare, so a zoom resting at the switch does
+    not flicker (`DistanceRuler`, #884).
   - **Best marker (#388).** Marks the best ever on this map at its shown
     distance, with a flag reading "Best 4.2 m". It is behind every
     creature, keeps its screen size, is hidden until its distance is known

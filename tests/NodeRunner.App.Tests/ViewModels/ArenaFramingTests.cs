@@ -507,6 +507,57 @@ public sealed class ArenaFramingTests
     }
 
     [Fact]
+    public void FitShelf_StopsTheGroundAtTheScaleBand()
+    {
+        var (ground, zoom) = ArenaFraming.FitShelf(Standing(0, 100, 120), 1, _viewHeight, 0.5, scaleBand: 0.1);
+
+        ground.ShouldBe(0.9, tolerance: 1e-9);
+        // The creature fills the 35% between the shelf's headroom and the band's top instead.
+        zoom.ShouldBe((0.9 - 0.5 - ArenaFraming.Headroom) * _viewHeight / 120, tolerance: 1e-9);
+    }
+
+    [Theory]
+    [InlineData(0.02, 0.95)]
+    [InlineData(0.3, 0.8)]
+    public void FitShelf_KeepsTheGroundBetweenItsRestAndTheShelfLimitWhateverTheBand(double scaleBand, double expectedGround)
+    {
+        var (ground, _) = ArenaFraming.FitShelf(Standing(0, 100, 120), 1, _viewHeight, 0.5, scaleBand);
+
+        ground.ShouldBe(expectedGround, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Cut_KeepsTheGroundAboveTheScaleBandSetBeforeIt()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming { Shelf = 0.5 };
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+
+        framing.ScaleBand = 0.1;
+
+        GroundFromTop(framing).ShouldBe(0.9, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Step_OpensTheShelfNoLowerThanTheScaleBand()
+    {
+        var creature = Standing(0, 100, 120);
+        var framing = new ArenaFraming();
+        framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
+        framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+
+        framing.ScaleBand = 0.1;
+        framing.Shelf = 0.5;
+        for (var frame = 0; frame < 120; frame++)
+        {
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        GroundFromTop(framing).ShouldBe(0.9, tolerance: 0.001);
+        FromTop(framing, creature.Top).ShouldBe(0.5 + ArenaFraming.Headroom, tolerance: 0.001);
+    }
+
+    [Fact]
     public void Step_OpensTheShelfAtTheZoomOutRate()
     {
         var creature = Standing(0, 100, 120);

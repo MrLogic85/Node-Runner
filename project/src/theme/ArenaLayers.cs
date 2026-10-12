@@ -13,7 +13,7 @@ public static class ArenaLayers
     /// <summary>The start sign (#848), with the best marker behind the ground and every creature.</summary>
     public const int StartSign = BestMarker;
 
-    /// <summary>The ground's fill and edge, and the ruler on it.</summary>
+    /// <summary>The ground's fill and edge, and the arena's scales drawn with it.</summary>
     public const int Ground = 0;
 
     /// <summary>The root of every shadow creature (#385): above the ground.</summary>

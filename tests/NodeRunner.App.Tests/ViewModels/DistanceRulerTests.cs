@@ -25,6 +25,43 @@ public sealed class DistanceRulerTests
     }
 
     [Fact]
+    public void FillHeights_CountsUpFromTheGroundAndNothingBelowIt()
+    {
+        var marks = new List<RulerMark>();
+
+        DistanceRuler.FillHeights(low: -120, high: 160, metresPerLabel: 1, marks);
+
+        marks.ShouldBe(
+        [
+            new RulerMark(0, true, 0),
+            new RulerMark(50, false, null),
+            new RulerMark(100, true, 1),
+            new RulerMark(150, false, null),
+        ]);
+    }
+
+    [Fact]
+    public void FillHeights_ThinsTheTicksWithTheSharedLabelStep()
+    {
+        var marks = new List<RulerMark>();
+
+        DistanceRuler.FillHeights(low: 150, high: 1050, metresPerLabel: 5, marks);
+
+        marks.ShouldBe(
+        [
+            new RulerMark(200, false, null),
+            new RulerMark(300, false, null),
+            new RulerMark(400, false, null),
+            new RulerMark(500, true, 5),
+            new RulerMark(600, false, null),
+            new RulerMark(700, false, null),
+            new RulerMark(800, false, null),
+            new RulerMark(900, false, null),
+            new RulerMark(1000, true, 10),
+        ]);
+    }
+
+    [Fact]
     public void Fill_ReplacesWhatTheListHeld()
     {
         var marks = new List<RulerMark> { new(1, true, 7) };

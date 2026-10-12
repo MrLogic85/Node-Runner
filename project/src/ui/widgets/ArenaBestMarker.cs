@@ -19,6 +19,9 @@ public partial class ArenaBestMarker : ArenaMark
     private const float _notchDepth = _flagHeight / 4;
     private const float _dash = 4f;
 
+    /// <summary>How far down from the view's top the flag reaches, in UI units.</summary>
+    public const float FlagBottom = _flagTop + _flagHeight;
+
     private double _distance = double.NegativeInfinity;
     private string? _text;
     private Func<string>? _textSource;

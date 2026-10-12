@@ -406,6 +406,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Speed control | None (#787) | TL → No speed-up |
 | The followed shadow about 43% from the left | Its centre of mass in the middle, the ground never above 80% down, and the room speed adds in front (#1169) | TL → Camera |
 | Callout above the whole creature; ground always 80% down | Callout docked at the arena top; the camera keeps a shelf for it (#1137) | WV → Training arena, TL → Camera |
+| Ruler hanging from the ground line | Distance and height scales on the view's bottom and left edges (#1170) | WV → Training arena, TL → Scales |
 | Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
 | UI size multiplies the canvas | Pixels per unit (#299, #738) | UI size |
 | Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim (#578) | BM → Parameters |
