@@ -14,7 +14,7 @@ comments there.
 
 A creature is built from two structural parts (Node, Beam), sensor parts
 that sit on beams (the Accelerometer and the Camera), joint parts (the
-Servo and the Motor, which are joint motors, the Wheel, which rolls, the
+Servo and the Motor, which turn their joint, the Wheel, which rolls, the
 Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
@@ -220,10 +220,10 @@ fold.
   can hold weight up to the strength the brain chose (`Servo.NextMotor`).
   Under a sudden load it sags a little, then climbs back within a second or
   two. Its torque builds to that strength over Rise time and drops at once.
-- **Settings:** Max strength (torque, 5–200 N·m in the panel, 50 new),
-  Range (20°–360°), Start position (0–100% inside the range), Max speed
-  (5–120 rpm, 60 new) and Rise time (s). A Servo is weaker than a Piston
-  and stronger than a Motor.
+- **Settings:** **Max strength** (torque, N·m), **Range** (its total
+  swing, °), **Start position** (where the built angle sits in the range,
+  0% at the lower end, 100% at the upper), **Max speed** (rpm) and **Rise
+  time** (s). Their ranges are in `docs/BUILD_MODE.md` → Parameters.
 
 ### Motor (Velocity motor in code)
 
@@ -242,10 +242,10 @@ fold.
   straight from the brain: the speed output times Max speed
   (`VelocityMotor.NextMotor`). It keeps that speed against a load up to the
   strength the brain chose; a larger load slows it or turns it back.
-- **Settings:** Max strength (5–40 N·m, 40 new), Max speed (10–240 rpm,
-  60 new) and Rise time (a Servo's). It is clearly weaker than a Servo,
-  enough to struggle up hills; the values will be tuned again as more maps
-  arrive.
+- **Settings:** **Max strength** (torque, N·m), **Max speed** (rpm) and
+  **Rise time** (s, as a Servo's); their ranges are in `docs/BUILD_MODE.md`
+  → Parameters. Its Max strength tops out at a fifth of a Servo's, so it
+  struggles up hills.
 
 ### Wheel
 

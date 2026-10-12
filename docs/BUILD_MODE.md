@@ -6,8 +6,8 @@ a Creation is locked is in `docs/TRAINING_LOOP.md` → Product lifecycle
 boundary. `reference design/components/Build/README.md`,
 `BuildLocked/README.md` and `Navigation/README.md` are its guide.
 
-A *joint motor* here is a Servo or a Motor (`docs/GLOSSARY.md` → Joint
-motor): Build treats the two alike wherever a rule says joint motor.
+Wherever a rule here says *joint motor* (`docs/GLOSSARY.md` → Joint
+motor), Build treats every kind alike.
 
 ## Mode
 

@@ -112,15 +112,50 @@ public sealed class ServoTests
 
     [Theory]
     [InlineData(30, 1000)]
+    [InlineData(720, 1000)]
+    [InlineData(720, 340)]
+    [InlineData(30, 500)]
+    [InlineData(30, 8000)]
+    [InlineData(720, 16000)]
+    [InlineData(30, 30000)]
     [InlineData(720, 30000)]
-    public void NextMotor_WithItsEndStops_SettlesOnItsUpperEnd(double maxSpeedDegrees, double realInertia)
+    public void NextMotor_AtSliderExtremes_SettlesWithoutOscillating_EvenWhenItsInertiaGuessIsFarOff(double maxSpeedDegrees, double realInertia)
     {
         var servo = ExtremeServo(maxSpeedDegrees);
 
-        var (finalAngle, lastSecondSwing) = RunMotor(servo, effectiveInertia: 1000, realInertia, position: 1);
+        var result = RunMotor(servo, effectiveInertia: 1000, realInertia, load: 0, position: 1);
 
-        finalAngle.ShouldBe(Servo.UpperAngle(servo), tolerance: 0.01);
-        lastSecondSwing.ShouldBeLessThan(0.001);
+        result.Fastest.ShouldBeLessThanOrEqualTo(1.5 * servo.MaxSpeed);
+        result.FinalAngle.ShouldBe(Servo.TargetAngle(1, servo), tolerance: 0.01);
+        result.LastSecondSwing.ShouldBeLessThan(0.001);
+    }
+
+    [Theory]
+    [InlineData(30, 0, 1385)]
+    [InlineData(30, 1, 1385)]
+    [InlineData(360, -1, 1385)]
+    [InlineData(720, 1, 1385)]
+    [InlineData(360, -1, 27700)]
+    [InlineData(720, 1, 27700)]
+    public void NextMotor_HoldsASteadyLoadBelowItsStrength(double maxSpeedDegrees, double position, double realInertia)
+    {
+        var servo = _servo.WithSettings(_servo.Strength, _servo.Range, _servo.Start, Degrees(maxSpeedDegrees), _servo.RiseTime);
+        var load = -0.5 * servo.Strength;
+
+        var result = RunMotor(servo, effectiveInertia: 1385, realInertia, load, position);
+
+        result.FinalAngle.ShouldBe(Servo.TargetAngle(position, servo), tolerance: 0.01);
+        result.LastSecondSwing.ShouldBeLessThan(0.001);
+        result.Torque.ShouldBe(-load, tolerance: 0.01 * servo.Strength);
+    }
+
+    [Fact]
+    public void NextMotor_OnAPlantedLeg_StopsGatheringAtFullStrength_AndSettles()
+    {
+        var result = RunMotor(_servo, effectiveInertia: 6750, realInertia: 6750 * 30, load: 0, position: 0.5);
+
+        result.FinalAngle.ShouldBe(Servo.TargetAngle(0.5, _servo), tolerance: 0.01);
+        result.LastSecondSwing.ShouldBeLessThan(0.001);
     }
 
     private static ServoDef ExtremeServo(double maxSpeedDegrees) =>
@@ -144,11 +179,17 @@ public sealed class ServoTests
     private static MotorState Next(ServoDef servo, double angle, double position, double strength, MotorState previous, double effectiveInertia) =>
         Servo.NextMotor(servo, builtAngle: 0, angle, speed: 0, position, strength, previous, _step, effectiveInertia);
 
-    private static (double FinalAngle, double LastSecondSwing) RunMotor(ServoDef servo, double effectiveInertia, double realInertia, double position)
+    private static (double Fastest, double FinalAngle, double LastSecondSwing, double Torque) RunMotor(
+        ServoDef servo,
+        double effectiveInertia,
+        double realInertia,
+        double load,
+        double position)
     {
         var angle = 0.0;
         var speed = 0.0;
         var motor = default(MotorState);
+        var fastest = 0.0;
         var steps = 1800;
         var lowest = double.MaxValue;
         var highest = double.MinValue;
@@ -156,8 +197,9 @@ public sealed class ServoTests
         {
             motor = Servo.NextMotor(servo, builtAngle: 0, angle, speed, position, strength: 1, motor, _step, effectiveInertia);
             var endStop = Servo.EndStopTorque(servo, builtAngle: 0, angle, speed, effectiveInertia, _step);
-            speed += (motor.Torque + endStop) / realInertia * _step;
+            speed += (motor.Torque + endStop + load) / realInertia * _step;
             angle += speed * _step;
+            fastest = Math.Max(fastest, Math.Abs(speed));
             if (step >= steps - 60)
             {
                 lowest = Math.Min(lowest, angle);
@@ -165,7 +207,7 @@ public sealed class ServoTests
             }
         }
 
-        return (angle, highest - lowest);
+        return (fastest, angle, highest - lowest, motor.Torque);
     }
 
     private static double Degrees(double value) => value * Math.PI / 180;

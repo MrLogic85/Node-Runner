@@ -20,9 +20,9 @@ UI around the world is in `docs/UI_DIRECTION.md`. Drawing code rules are in
 
 ## Parts
 
-A *joint motor* is a Servo or a Motor (`docs/GLOSSARY.md` → Joint motor).
-Both stand in for their joint's ring in the same place, so a rule that
-says joint motor draws alike for both.
+Every *joint motor* (`docs/GLOSSARY.md` → Joint motor) stands in for its
+joint's ring in the same place, so a rule that says joint motor draws alike
+for each.
 
 ### Joint
 

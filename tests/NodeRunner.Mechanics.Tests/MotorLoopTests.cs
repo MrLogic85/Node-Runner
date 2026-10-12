@@ -76,56 +76,6 @@ public sealed class MotorLoopTests
     }
 
     [Theory]
-    [InlineData(30, 1000)]
-    [InlineData(720, 1000)]
-    [InlineData(720, 340)]
-    [InlineData(30, 500)]
-    [InlineData(30, 8000)]
-    [InlineData(720, 16000)]
-    [InlineData(30, 30000)]
-    [InlineData(720, 30000)]
-    public void Next_AtSliderExtremes_SettlesWithoutOscillating_EvenWhenItsInertiaGuessIsFarOff(double maxSpeedDegrees, double realInertia)
-    {
-        var maxSpeed = Degrees(maxSpeedDegrees);
-        var target = Degrees(10);
-
-        var result = RunChase(target, maxSpeed, chosenTorque: 2_000_000, effectiveInertia: 1000, realInertia, load: 0);
-
-        result.Fastest.ShouldBeLessThanOrEqualTo(1.5 * maxSpeed);
-        result.FinalAngle.ShouldBe(target, tolerance: 0.01);
-        result.LastSecondSwing.ShouldBeLessThan(0.001);
-    }
-
-    [Theory]
-    [InlineData(30, 0, 1385)]
-    [InlineData(30, Math.PI / 2, 1385)]
-    [InlineData(360, -Math.PI / 2, 1385)]
-    [InlineData(720, Math.PI / 2, 1385)]
-    [InlineData(360, -Math.PI / 2, 27700)]
-    [InlineData(720, Math.PI / 2, 27700)]
-    public void Next_HoldsASteadyLoadBelowItsStrength(double maxSpeedDegrees, double target, double realInertia)
-    {
-        var load = -0.5 * _strength;
-
-        var result = RunChase(target, Degrees(maxSpeedDegrees), _strength, effectiveInertia: 1385, realInertia, load);
-
-        result.FinalAngle.ShouldBe(target, tolerance: 0.01);
-        result.LastSecondSwing.ShouldBeLessThan(0.001);
-        result.Torque.ShouldBe(-load, tolerance: 0.01 * _strength);
-    }
-
-    [Fact]
-    public void Next_OnAPlantedLeg_StopsGatheringAtFullStrength_AndSettles()
-    {
-        var target = Math.PI / 4;
-
-        var result = RunChase(target, _maxSpeed, _strength, effectiveInertia: 6750, realInertia: 6750 * 30, load: 0);
-
-        result.FinalAngle.ShouldBe(target, tolerance: 0.01);
-        result.LastSecondSwing.ShouldBeLessThan(0.001);
-    }
-
-    [Theory]
     [InlineData(340)]
     [InlineData(30000)]
     public void Next_KeepsTheWantedSpeed_EvenWhenItsInertiaGuessIsFarOff(double realInertia)
@@ -163,40 +113,4 @@ public sealed class MotorLoopTests
 
     private static MotorState Next(double wantedSpeed, double chosenTorque, double riseTime, MotorState previous) =>
         MotorLoop.Next(wantedSpeed, speed: 0, chosenTorque, riseTime, previous, _step, _heavy);
-
-    // Chases target the way a Servo does: a wanted speed that closes the gap quickly, never past
-    // maxSpeed, so these runs check the loop under the speeds a position chase asks for.
-    private static (double Fastest, double FinalAngle, double LastSecondSwing, double Torque) RunChase(
-        double target,
-        double maxSpeed,
-        double chosenTorque,
-        double effectiveInertia,
-        double realInertia,
-        double load)
-    {
-        var angle = 0.0;
-        var speed = 0.0;
-        var motor = default(MotorState);
-        var fastest = 0.0;
-        var steps = 1800;
-        var lowest = double.MaxValue;
-        var highest = double.MinValue;
-        for (var step = 0; step < steps; step++)
-        {
-            var wantedSpeed = Math.Clamp((target - angle) * 10, -maxSpeed, maxSpeed);
-            motor = MotorLoop.Next(wantedSpeed, speed, chosenTorque, _riseTime, motor, _step, effectiveInertia);
-            speed += (motor.Torque + load) / realInertia * _step;
-            angle += speed * _step;
-            fastest = Math.Max(fastest, Math.Abs(speed));
-            if (step >= steps - 60)
-            {
-                lowest = Math.Min(lowest, angle);
-                highest = Math.Max(highest, angle);
-            }
-        }
-
-        return (fastest, angle, highest - lowest, motor.Torque);
-    }
-
-    private static double Degrees(double value) => value * Math.PI / 180;
 }
