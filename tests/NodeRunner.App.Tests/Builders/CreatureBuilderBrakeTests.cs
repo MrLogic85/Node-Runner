@@ -45,7 +45,7 @@ public sealed class CreatureBuilderBrakeTests
 
         builder.AddServo(far);
         Should.Throw<ArgumentException>(() => builder.AddBrake(far));
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.AddBrake(999));
+        Should.Throw<ArgumentException>(() => builder.AddBrake(999)).Message.ShouldBe(CreatureBuilder.BrakesGoOnAJointReason.Message);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class CreatureBuilderBrakeTests
     {
         var builder = Joint(out var joint, out _, out var first, out var second);
         var brake = builder.AddBrake(joint);
-        builder.SetBrakeStrength(brake, BrakeDef.LockedStrength);
+        builder.SetParameter(brake, PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
 
         builder.RemoveBeam(first);
 
@@ -139,9 +139,50 @@ public sealed class CreatureBuilderBrakeTests
     {
         var builder = Joint(out var joint, out _, out _, out _);
 
-        builder.SetBrakeStrength(builder.AddBrake(joint), strength);
+        builder.SetParameter(builder.AddBrake(joint), PartParameterId.BrakeStrength, strength);
 
         builder.IsWithinBuildLimits().ShouldBe(within);
+    }
+
+    [Fact]
+    public void CanAddBrake_SaysWhyNot_OffAJoint_OrOnAFullSlot()
+    {
+        var builder = Joint(out var joint, out _, out _, out _);
+
+        builder.CanAddBrake(999, out var offJoint).ShouldBeFalse();
+        offJoint.ShouldBe(CreatureBuilder.BrakesGoOnAJointReason);
+        builder.CanAddBrake(joint, out var free).ShouldBeTrue();
+        free.ShouldBeNull();
+        builder.AddVelocityMotor(joint);
+        builder.CanAddBrake(joint, out var full).ShouldBeFalse();
+        full.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+    }
+
+    // A Brake has no ports, so a new side keeps its id (#1041).
+    [Fact]
+    public void SetBrakeLink_PickingTheOtherRolesLink_SwapsTheSides_AndKeepsTheId()
+    {
+        var builder = Joint(out var joint, out _, out var first, out var second);
+        var brake = builder.AddBrake(joint);
+        builder.SetParameter(brake, PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
+
+        builder.SetBrakeLink(brake, fixedRole: true, second).ShouldBe(brake);
+
+        builder.Brakes.Single().ShouldBe(new BrakeDef(brake, joint, second, first, strength: BrakeDef.LockedStrength));
+        Should.Throw<ArgumentException>(() => builder.SetBrakeLink(brake, fixedRole: true, linkId: 999));
+    }
+
+    [Fact]
+    public void ABrakesStrength_IsItsOnlySetting_AndSetsThroughSetParameter()
+    {
+        var builder = Joint(out var joint, out _, out _, out _);
+        var brake = builder.AddBrake(joint);
+
+        builder.ParametersOf(brake).ShouldBe([PartParameterId.BrakeStrength]);
+        builder.ParameterValue(brake, PartParameterId.BrakeStrength).ShouldBe(BrakeDef.DefaultStrength);
+        builder.SetParameter(brake, PartParameterId.BrakeStrength, 600000);
+        builder.Brakes.Single().Strength.ShouldBe(600000);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(brake, PartParameterId.MotorStrength, 600000));
     }
 
     // A joint with two beams, to far and to a third node.

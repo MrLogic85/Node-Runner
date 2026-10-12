@@ -3,7 +3,7 @@ using NodeRunner.ML;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>One creature with every part kind that has brain ports, a Wheel and a Rubber, and a direct brain that fits it.</summary>
+/// <summary>One creature with every part kind that has brain ports, a Wheel, a Rubber and a Brake, and a direct brain that fits it.</summary>
 internal static class PortedCreature
 {
     public const int Accelerometer = 8;
@@ -15,6 +15,7 @@ internal static class PortedCreature
     public const int Touch = 14;
     public const int Rubber = 15;
     public const int VelocityMotor = 16;
+    public const int Brake = 17;
 
     public static CreatureDef Def { get; } = new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(4, new Vector2D(0, 2))],
@@ -27,8 +28,8 @@ internal static class PortedCreature
         [new TouchSensorDef(Touch, 2)],
         [new RubberDef(Rubber, 3)],
         [new VelocityMotorDef(VelocityMotor, 2, 5, 6, "Drive")],
-        [],
-        nextPartId: 17);
+        [new BrakeDef(Brake, 3, 6, Wheel)],
+        nextPartId: 18);
 
     public static BrainPortLayout Layout { get; } = BrainPorts.Of(Def);
 

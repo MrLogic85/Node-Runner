@@ -42,6 +42,29 @@ public sealed class BuildViewModelTests
         build.ShowsLooseMark(10).ShouldBeTrue();
     }
 
+    // A Brake missing its sides draws in danger itself (#1041).
+    [Fact]
+    public void ShowsLooseMark_NotUnderABrake()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0))],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [new BrakeDef(2, 1)],
+            nextPartId: 3));
+
+        build.IsLoose(1).ShouldBeTrue();
+        build.ShowsLooseMark(1).ShouldBeFalse();
+    }
+
     [Fact]
     public void MoveNode_PastTheBuildArea_StopsAtTheEdge()
     {
@@ -149,7 +172,7 @@ public sealed class BuildViewModelTests
             new HashSet<int> { 301 },
             new HashSet<int>(),
             new HashSet<int>(),
-            new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
+            new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
 
         build.DeleteSelectedParts();
 
@@ -233,7 +256,7 @@ public sealed class BuildViewModelTests
             parts.Where(id => id is > 300 and < 400).ToHashSet(),
             parts.Where(id => id > 400).ToHashSet(),
             new HashSet<int>(),
-            new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
+            new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
 
         string.Join(',', build.EditableParameters).ShouldBe(editable);
     }

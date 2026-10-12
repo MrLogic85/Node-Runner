@@ -64,8 +64,8 @@ public sealed class ImportPresentationTests
             [new TouchSensorDef(13, 1)],
             [new RubberDef(14, 4)],
             [new VelocityMotorDef(15, 4, 7, 12)],
-            [],
-            nextPartId: 16);
+            [new BrakeDef(16, 1, 5)],
+            nextPartId: 17);
 
         var preview = ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "All", creature), null), []);
 
@@ -81,6 +81,7 @@ public sealed class ImportPresentationTests
             (PartSettingsKind.Wheel, 1),
             (PartSettingsKind.Touch, 1),
             (PartSettingsKind.Rubber, 1),
+            (PartSettingsKind.Brake, 1),
         ], ignoreOrder: true);
     }
 

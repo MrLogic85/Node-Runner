@@ -55,7 +55,8 @@ public sealed class PartCalloutPresentationTests
     [Theory]
     [InlineData(CreatureElementKind.Wheel, PortedCreature.Wheel, PartSettingsKind.Wheel)]
     [InlineData(CreatureElementKind.Rubber, PortedCreature.Rubber, PartSettingsKind.Rubber)]
-    public void AWheelOrRubber_SaysItHasNoBrainPorts(CreatureElementKind element, int id, PartSettingsKind kind)
+    [InlineData(CreatureElementKind.Brake, PortedCreature.Brake, PartSettingsKind.Brake)]
+    public void AWheelRubberOrBrake_SaysItHasNoBrainPorts(CreatureElementKind element, int id, PartSettingsKind kind)
     {
         var callout = For(element, id, Live());
 

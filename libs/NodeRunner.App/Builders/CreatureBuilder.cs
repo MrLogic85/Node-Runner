@@ -325,6 +325,7 @@ public sealed partial class CreatureBuilder
         _pistons.Any(piston => piston.Id == partId) ? _pistonParameters
         : _servos.Any(servo => servo.Id == partId) ? _servoParameters
         : _velocityMotors.Any(motor => motor.Id == partId) ? _velocityMotorParameters
+        : _brakes.Any(brake => brake.Id == partId) ? _brakeParameters
         : _springs.Any(spring => spring.Id == partId) ? _springParameters
         : _wheels.Any(wheel => wheel.Id == partId) ? _wheelParameters
         : _sensors.Any(sensor => sensor.Id == partId && sensor.Kind == SensorKind.Camera) ? _cameraParameters
@@ -332,20 +333,20 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Whether the drawing is one Build lets a player make (#899): every joint inside
-    /// <see cref="BuildViewModel.BuildArea"/>, every panel setting inside its slider's range and every
-    /// Brake's Strength on its Build range or Locked (#1039). A creature from outside the app, like a share
-    /// code, is checked with this.
+    /// <see cref="BuildViewModel.BuildArea"/> and every panel setting inside its slider's range, a
+    /// Locked Brake's top step included (#1041). A creature from outside the app, like a share code,
+    /// is checked with this.
     /// </summary>
     public bool IsWithinBuildLimits() =>
         _nodes.All(node => BuildViewModel.BuildArea.Contains(node.Position))
-        && PartIdsWithSettings.All(partId => ParametersOf(partId).All(parameter => IsOnItsSlider(parameter, ParameterValue(partId, parameter))))
-        && _brakes.All(IsWithinBuildLimits);
+        && PartIdsWithSettings.All(partId => ParametersOf(partId).All(parameter => IsOnItsSlider(parameter, ParameterValue(partId, parameter))));
 
     /// <summary>Every part with settings (<see cref="ParametersOf"/>).</summary>
     public IEnumerable<int> PartIdsWithSettings =>
         _sensors.Select(sensor => sensor.Id)
             .Concat(_servos.Select(servo => servo.Id))
             .Concat(_velocityMotors.Select(motor => motor.Id))
+            .Concat(_brakes.Select(brake => brake.Id))
             .Concat(_pistons.Select(piston => piston.Id))
             .Concat(_springs.Select(spring => spring.Id))
             .Concat(_wheels.Select(wheel => wheel.Id))
@@ -353,7 +354,7 @@ public sealed partial class CreatureBuilder
 
     /// <summary>Whether <paramref name="value"/>, in world units, is one <paramref name="parameter"/>'s slider can set; a setting without one can be any.</summary>
     public static bool IsOnItsSlider(PartParameterId parameter, double value) =>
-        PartParameters.Of(parameter).Slider is not { } slider || slider.Range.Allows(slider.Shown(value));
+        PartParameters.Of(parameter).Slider is not { } slider || slider.Allows(value);
 
     /// <summary>
     /// Whether <paramref name="parameter"/> does anything on part <paramref name="partId"/> as it is
@@ -418,6 +419,13 @@ public sealed partial class CreatureBuilder
         if (_velocityMotors.Any(motor => motor.Id == partId))
         {
             return VelocityMotorParameterValue(partId, parameter);
+        }
+
+        if (_brakes.Any(brake => brake.Id == partId))
+        {
+            return parameter == PartParameterId.BrakeStrength
+                ? _brakes[BrakeIndexOf(partId)].Strength
+                : throw new ArgumentOutOfRangeException(nameof(parameter));
         }
 
         return parameter switch
@@ -496,6 +504,12 @@ public sealed partial class CreatureBuilder
         if (_velocityMotors.Any(motor => motor.Id == partId))
         {
             SetVelocityMotorParameter(partId, parameter, value);
+            return;
+        }
+
+        if (_brakes.Any(brake => brake.Id == partId))
+        {
+            SetBrakeStrength(partId, parameter == PartParameterId.BrakeStrength ? value : throw new ArgumentOutOfRangeException(nameof(parameter)));
             return;
         }
 

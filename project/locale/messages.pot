@@ -20,6 +20,10 @@ msgstr ""
 msgid "3.1 m/s"
 msgstr ""
 
+#: libs/NodeRunner.App/Builders/CreatureBuilder.Brakes.cs
+msgid "A Brake needs two links, or a link and a Wheel"
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.VelocityMotors.cs
 msgid "A Motor needs two links, or a link and a Wheel"
 msgstr ""
@@ -164,12 +168,21 @@ msgstr ""
 msgid "BrainFocus · Decides"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Brake"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
 msgid "Brake {0}"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Brakes"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.Brakes.cs
+msgid "Brakes go on a joint"
 msgstr ""
 
 #: project/src/hosts/BuildHost.cs
@@ -427,6 +440,10 @@ msgid "How fast it's allowed to move"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How hard it holds the joint still. Locked holds it fully."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How hard it springs back"
 msgstr ""
 
@@ -510,6 +527,7 @@ msgstr ""
 msgid "Links on a deleted joint go with it."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Locked"
 msgstr ""
@@ -899,6 +917,10 @@ msgstr ""
 msgid "Simulating · {0}"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Slows its joint's turning, or holds it still when Locked."
+msgstr ""
+
 #: project/scenes/widgets/ShadowStrip.tscn
 #: project/src/ui/widgets/ShadowStrip.cs
 msgid "Sort by distance"
@@ -973,6 +995,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "Stiffness"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Strength"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1355,6 +1381,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0} N·m"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0} N·m–Locked"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

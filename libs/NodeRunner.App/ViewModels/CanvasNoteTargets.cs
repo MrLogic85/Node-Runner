@@ -15,6 +15,7 @@ public static class CanvasNoteTargets
             CreatureElementKind.TouchSensor => [build.TouchSensors[build.TouchSensorIndexOf(target.Id)].NodeId],
             CreatureElementKind.Rubber => [build.Rubbers[build.RubberIndexOf(target.Id)].NodeId],
             CreatureElementKind.VelocityMotor => [build.VelocityMotors[build.VelocityMotorIndexOf(target.Id)].NodeId],
+            CreatureElementKind.Brake => [build.Brakes[build.BrakeIndexOf(target.Id)].NodeId],
             CreatureElementKind.Beam or CreatureElementKind.Piston or CreatureElementKind.Spring => LinkJoints(build.Link(target.Id)),
             CreatureElementKind.Sensor => SensorJoints(target.Id, build),
             _ => throw new ArgumentOutOfRangeException(nameof(target)),

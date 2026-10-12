@@ -31,7 +31,7 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    - A Wheel's mark is drawn by its joint (`JointPart`), which draws its
      hub, so it lies over the links and the cushion
      (`docs/WORLD_VISUALS.md` → "Selection marks").
-   - A selected joint motor's (a Servo's or Velocity motor's) Fixed and Target
+   - A selected joint motor's (a Servo's or Velocity motor's) or Brake's Fixed and Target
      link bands lie along other parts' links, so the Build canvas draws them on
      `CreatureLayers.SelectedUnderlays`, under the selected surface.
 4. **Strokes follow the pen rule** in `project/src/ui/lib/AGENTS.md` →
@@ -43,12 +43,12 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 - `VisualTheme.cs` — the arena, creature and selection colours
 - `JointDrawing.cs`, `PistonDrawing.cs`, `SpringDrawing.cs`,
   `SensorDrawing.cs`, `SelectionDrawing.cs`, `TriangleHatch.cs`, `ServoGeometry.cs`,
-  `HubMotorGeometry.cs`, `JointMotorDrawing.cs` — static drawing helpers
+  `HubMotorGeometry.cs`, `BrakeGeometry.cs`, `JointMotorDrawing.cs` — static drawing helpers
 - `PartVisual.cs` — the base of every part visual: theme, selection and
   layer, and the redraw on a new pixel scale every view that holds parts
   calls, which also redraws any child a part draws on from its `Draw` signal
-  (`VelocityMotorPart`'s turning layers)
-- `JointPart.cs`, `BeamPart.cs`, `ServoPart.cs`, `VelocityMotorPart.cs`,
+  (`VelocityMotorPart`'s and `BrakePart`'s turning layers)
+- `JointPart.cs`, `BeamPart.cs`, `ServoPart.cs`, `VelocityMotorPart.cs`, `BrakePart.cs`,
   `PistonPart.cs`, `SpringPart.cs`, `WheelPart.cs`, `SensorPart.cs`,
   `HatchPart.cs` — one visual per part kind
 - `KnockoutPart.cs` — the arena background around a beam or joint, under the

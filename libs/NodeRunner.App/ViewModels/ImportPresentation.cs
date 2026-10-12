@@ -101,6 +101,7 @@ public sealed record ImportPresentation(
             new(PartSettingsKind.Touch, creature.TouchSensors.Count),
             new(PartSettingsKind.Servo, creature.Servos.Count),
             new(PartSettingsKind.VelocityMotor, creature.VelocityMotors.Count),
+            new(PartSettingsKind.Brake, creature.Brakes.Count),
             new(PartSettingsKind.Piston, creature.Pistons.Count),
             new(PartSettingsKind.Spring, creature.Springs.Count),
             new(PartSettingsKind.Wheel, creature.Wheels.Count),

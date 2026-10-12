@@ -67,7 +67,7 @@ public static class CreatureReadiness
             AddLengthProblem(creature, CreatureElementKind.Beam, beam.NodeA, beam.NodeB, problems);
         }
 
-        foreach (var part in creature.JointMotors.Concat<IMotorOrBrakeDef>(creature.Brakes))
+        foreach (var part in creature.MotorsAndBrakes)
         {
             if (IsMissingALink(part))
             {

@@ -252,7 +252,7 @@ fold.
 - **Beginner:** A brake on a joint: it stops its two sides turning against
   each other, up to its Strength (#456). It has no brain ports and draws no power.
 - `BrakeDef` (#1039), saved under `brakes`: it is saved, loaded, validated,
-  shared and simulated (#1040), but not yet placed in Build (#1041). Its
+  shared and simulated (#1040), and placed in Build (#1041). Its
   sides and slot are a Servo's (see Servo, and Node → One part per slot),
   so one with a missing side blocks training like a Servo. Unlike a joint
   motor it has no ports; Editing identity rules says what that means for

@@ -13,8 +13,8 @@ public sealed partial class BuildViewModel
     /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
     /// refuses a delete that would change its model: one that takes a part with brain ports, also by
     /// cascade (a joint's Piston, motor or Touch sensor, a beam's sensor), or clears a motor's Fixed or Target link,
-    /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel
-    /// and a Rubber have no ports, so they can go.
+    /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel,
+    /// a Rubber and a Brake have no ports, so they can go, and so can a Brake's side (#1041).
     /// </summary>
     public UiText? DeleteLockedReason => DeleteRefusalNotes().Count > 0 ? LockedReason : null;
 
@@ -48,7 +48,7 @@ public sealed partial class BuildViewModel
             foreach (var (joint, linksBefore) in partJoints)
             {
                 if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0
-                    && !CreatureDef.HasJointPart(joint, [.. _builder.JointMotors, .. _builder.Brakes], _builder.Wheels, _builder.TouchSensors, _builder.Rubbers))
+                    && !CreatureDef.HasJointPart(joint, _builder.MotorsAndBrakes, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers))
                 {
                     _builder.RemoveNode(joint);
                 }
@@ -152,6 +152,11 @@ public sealed partial class BuildViewModel
         foreach (var velocityMotorId in parts.VelocityMotors)
         {
             builder.RemoveVelocityMotor(velocityMotorId);
+        }
+
+        foreach (var brakeId in parts.Brakes)
+        {
+            builder.RemoveBrake(brakeId);
         }
 
         foreach (var springId in parts.Springs)

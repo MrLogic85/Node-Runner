@@ -104,8 +104,7 @@ public sealed partial class CreatureBuilder
     }
 
     // Whether the joint's motor-or-brake slot is taken (#1044).
-    private bool HasMotorOrBrake(int nodeId) =>
-        _servos.Any(servo => servo.NodeId == nodeId) || _velocityMotors.Any(motor => motor.NodeId == nodeId) || _brakes.Any(brake => brake.NodeId == nodeId);
+    private bool HasMotorOrBrake(int nodeId) => MotorsAndBrakes.Any(part => part.NodeId == nodeId);
 
     private double VelocityMotorParameterValue(int velocityMotorId, PartParameterId parameter)
     {

@@ -61,12 +61,13 @@ public sealed class DrawGroupsTests
     }
 
     [Fact]
-    public void A_selected_Servo_Velocity_motor_Wheel_Touch_sensor_or_Rubber_raises_as_its_joint()
+    public void A_selected_Servo_Velocity_motor_Brake_Wheel_Touch_sensor_or_Rubber_raises_as_its_joint()
     {
         var groups = Frame();
 
         groups.Raised([Part(CreatureElementKind.Servo, 30)], [new ServoDef(30, 3)], [], [], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
         groups.Raised([Part(CreatureElementKind.VelocityMotor, 70)], [new VelocityMotorDef(70, 3)], [], [], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
+        groups.Raised([Part(CreatureElementKind.Brake, 80)], [new BrakeDef(80, 3)], [], [], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
         groups.Raised([Part(CreatureElementKind.Wheel, 40)], [], [new WheelDef(40, 4)], [], []).Links.ShouldBe([12]);
         groups.Raised([Part(CreatureElementKind.TouchSensor, 50)], [], [], [new TouchSensorDef(50, 3)], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
         groups.Raised([Part(CreatureElementKind.Rubber, 60)], [], [], [], [new RubberDef(60, 3)]).Joints.ShouldBe([1, 3], ignoreOrder: true);
@@ -124,7 +125,7 @@ public sealed class DrawGroupsTests
         Vector2D at,
         CreatureElementKind kind = CreatureElementKind.Piston,
         RaisedParts? raised = null,
-        IJointMotorDef[]? servos = null,
+        IMotorOrBrakeDef[]? motorsAndBrakes = null,
         WheelDef[]? wheels = null,
         SensorDef[]? sensors = null,
         NodeDef[]? nodes = null)
@@ -132,7 +133,7 @@ public sealed class DrawGroupsTests
         nodes ??= _crossNodes;
         var groups = DrawGroups.Of(nodes, [new(20, 3, 4, CreatureElementKind.Beam), new(21, 1, 2, kind)]);
         var positions = nodes.ToDictionary(node => node.Id, node => node.Position);
-        return groups.PartAt(at, id => positions[id], servos ?? [], wheels ?? [], sensors ?? [], raised ?? RaisedParts.None);
+        return groups.PartAt(at, id => positions[id], motorsAndBrakes ?? [], wheels ?? [], sensors ?? [], raised ?? RaisedParts.None);
     }
 
     [Theory]
@@ -168,9 +169,20 @@ public sealed class DrawGroupsTests
 
         var servoHalo = SelectionMarks.JointHalo(JointMotor.Radius);
         ServoDef[] servos = [new(30, 1)];
-        HitCross(new Vector2D(0, servoHalo), servos: servos).ShouldBe(new CreatureElementSelection(CreatureElementKind.Servo, 30));
-        HitCross(new Vector2D(0, servoHalo + 1), servos: servos).ShouldBe(new CreatureElementSelection(CreatureElementKind.Piston, 21));
-        HitCross(new Vector2D(0, servoHalo), servos: [new VelocityMotorDef(70, 1)]).ShouldBe(new CreatureElementSelection(CreatureElementKind.VelocityMotor, 70));
+        HitCross(new Vector2D(0, servoHalo), motorsAndBrakes: servos).ShouldBe(new CreatureElementSelection(CreatureElementKind.Servo, 30));
+        HitCross(new Vector2D(0, servoHalo + 1), motorsAndBrakes: servos).ShouldBe(new CreatureElementSelection(CreatureElementKind.Piston, 21));
+        HitCross(new Vector2D(0, servoHalo), motorsAndBrakes: [new VelocityMotorDef(70, 1)]).ShouldBe(new CreatureElementSelection(CreatureElementKind.VelocityMotor, 70));
+    }
+
+    // A Brake is drawn at a plain joint's size in place of the ring or the Wheel's hub (#1041).
+    [Fact]
+    public void A_Brake_is_hit_to_a_plain_joints_halo_over_its_joint_and_its_Wheels_hub()
+    {
+        var plainHalo = SelectionMarks.JointHalo(NodeDef.HubRadius);
+        BrakeDef[] brakes = [new(80, 1)];
+        HitCross(new Vector2D(0, plainHalo), motorsAndBrakes: brakes).ShouldBe(new CreatureElementSelection(CreatureElementKind.Brake, 80));
+        HitCross(new Vector2D(0, plainHalo + 1), motorsAndBrakes: brakes).ShouldBe(new CreatureElementSelection(CreatureElementKind.Piston, 21));
+        HitCross(new Vector2D(0, plainHalo), motorsAndBrakes: brakes, wheels: [new(40, 1)]).ShouldBe(new CreatureElementSelection(CreatureElementKind.Brake, 80));
     }
 
     [Fact]
@@ -197,7 +209,7 @@ public sealed class DrawGroupsTests
             .Raised([Part(CreatureElementKind.Beam, 20)], [], wheels, [], []);
         var onHub = new Vector2D(-60 + NodeDef.HubRadius + 1, 50);
         HitCross(onHub, raised: raised, wheels: wheels).ShouldBe(new CreatureElementSelection(CreatureElementKind.Wheel, 40));
-        HitCross(onHub, wheels: wheels, servos: [new ServoDef(30, 3)]).ShouldBe(new CreatureElementSelection(CreatureElementKind.Servo, 30));
+        HitCross(onHub, wheels: wheels, motorsAndBrakes: [new ServoDef(30, 3)]).ShouldBe(new CreatureElementSelection(CreatureElementKind.Servo, 30));
     }
 
     [Fact]

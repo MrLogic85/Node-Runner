@@ -30,8 +30,8 @@ A bearing in a cell (#626): a `line-strong` `stroke-signal` ring whose
 outer edge is `NodeDef.PlainJointRadius`, a `stroke-hair` inner ring at 0.55
 of that radius, and an `alpha_soft` tint (`line-strong`, `halo` when
 selected, `danger` when loose) on an opaque `background` disc. A bare loose
-joint shows a `danger` ring and cross instead of the inner ring. A joint motor or
-Wheel on a loose joint shows the error in its own `danger` look instead, with
+joint shows a `danger` ring and cross instead of the inner ring. A joint motor,
+Brake or Wheel on a loose joint shows the error in its own `danger` look instead, with
 no ring or cross over it (#1140). A Touch sensor's cushion and a Rubber's
 skin have no `danger` look, so a loose joint with only those keeps the ring
 and cross.
@@ -39,8 +39,8 @@ and cross.
 Every link (beam, Piston, Spring) runs from hub to hub (#1086): it stops flat
 `NodeDef.HubRadius` (a plain joint's radius) from each joint's centre,
 whatever sits on the joint. Its drawing ends under the middle of the ring
-or hub ring there, so it runs over a Wheel's face and under a ring, hub or
-joint motor.
+or hub ring there, so it runs over a Wheel's face and under a ring, hub,
+joint motor or Brake.
 
 ### Beam and rigid triangle
 
@@ -101,6 +101,25 @@ in for the hub, and as Target its solid magnets sit on the tyre's tubes.
 
 A Motor missing a link draws in `danger` with the Servo's "!"
 badge; a missing side points to the screen's right.
+
+### Brake
+
+A disc brake, standing in for the joint's ring or a Wheel's hub (#1041).
+It is a plain joint's size, as its joint collides as a plain joint does,
+and `detail`, as it is passive. Its parts are in `BrakeGeometry`:
+
+- an opaque `panel` disc on a `background` disc, with a `detail` ring
+  just inside its edge;
+- a caliper: four pads either side of the Fixed side;
+- a disc: a ring and an axle dot, with a hand along the Target side that
+  runs out past the ring toward the pads.
+
+The caliper turns with the Fixed side and the disc with the Target side,
+so a slip shows as the hand sweeping past the pads. A Locked Brake's disc
+is solid, with no hand: one piece. It has no other live cue.
+
+A Brake missing a side draws in `danger` with the Servo's "!" badge, as a
+Motor does.
 
 ### Piston
 
@@ -216,6 +235,9 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
   `accent` colour alone tells Fixed from Target.
 - **Motor:** a 2-wide `halo` ring round it, with the Servo's
   Fixed and Target bands.
+- **Brake:** a 2-wide `halo` ring round it, like a joint's, with the
+  Servo's Fixed and Target bands in their colours (`docs/UI_DIRECTION.md`
+  → Reference token mapping deviations → `detail`).
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
   ticks, as wide as a Piston's cylinder or a Spring's seats,
   joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
@@ -232,7 +254,7 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
 A creature draws on two surfaces, the unselected parts and over them the
 selected ones, which draw alike (#1107). Each surface draws from the bottom
 up: its parts, then the joints joined to no link; the selected surface
-starts with a selected joint motor's bands (Selection marks). On top
+starts with a selected joint motor's or Brake's bands (Selection marks). On top
 of both go the overlays (camera rays, link travel marks, the link drag and
 sensor move lines, the picked link's start rings, the beam a link drag
 replaces, the selection frame). Training's knock-out outline and the rigid
@@ -243,8 +265,8 @@ Training and never changes while the creature moves (`DrawGroups`). The link
 whose lower end sits highest on screen draws first, so what is lower is
 nearer; ties keep link id order. Within a group: a Wheel (with its joint's
 first link), the link, its sensor, then a joint's Touch cushion, Rubber skin, ring,
-Wheel hub or joint motor (with its joint's last link). So a link covers a Wheel's face and a ring
-or hub covers its link's end. Joint motors, joints, hubs and tyre bands are
+Wheel hub, joint motor or Brake (with its joint's last link). So a link covers a Wheel's face and a ring
+or hub covers its link's end. Joint motors, Brakes, joints, hubs and tyre bands are
 filled, so nothing shows through them; a Wheel's face inside the tyre is
 see-through.
 
@@ -287,7 +309,7 @@ above every shadow.
   taken beams dashed `danger`, and its picture where it would land. A
   dragged joint part rings the joints that take it `halo` and the joints
   that refuse it dashed `danger` (slot rules: `docs/BUILD_MODE.md`), each ring at the size the part will have there
-  (`PlacingTargets.JointRingOf`): a joint motor's edge, a new Wheel, a
+  (`PlacingTargets.JointRingOf`): a joint motor's or Brake's edge, a new Wheel, a
   Rubber's skin, or a Touch sensor's cushion round the joint's largest
   part. A dragged Wheel, Rubber or Touch sensor also shows itself on a free
   joint it would land on, a Rubber as its skin and a Touch sensor as its
@@ -353,7 +375,7 @@ above every shadow.
   bars in their own columns so wrapped bars line up, and the word shows on
   a line's first row only. A −1…1 port fills from the centre, past a
   1-wide muted tick at 0; a 0…1 port fills from the left. Values outside
-  the range clamp. A Wheel or Rubber shows its glyph and a muted "No brain
+  the range clamp. A Wheel, Rubber or Brake shows its glyph and a muted "No brain
   ports"; a Joint, Beam or Spring shows only its name.
 - **Slow-motion chip (#318):** a Warning chip, "Too many shadows!", top
   left, over the Best flag when that scrolls past.
@@ -388,6 +410,7 @@ rule 10):
   plus the 360° line.
 - **Motor:** its outer ring and a circle round the coils; no
   magnets, and it does not turn.
+- **Brake:** its outer ring and its disc's ring; it does not turn.
 - **Wheel:** the plain circle at its Radius: no tubes or line, and its
   joint's outer ring at the hub, like any shadow joint.
 - **Beam:** its line.

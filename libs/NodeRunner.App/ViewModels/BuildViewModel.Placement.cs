@@ -18,7 +18,7 @@ public sealed partial class BuildViewModel
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
         ArgumentNullException.ThrowIfNull(target);
-        // Every tray part but the Wheel and the Rubber has brain ports (#896, #129, #1142).
+        // Every tray part but the Wheel, the Rubber and the Brake has brain ports (#896, #129, #1142, #1041).
         if (_locked && PartTray.HasBrainPorts(part))
         {
             reason = LockedReason;
@@ -51,6 +51,17 @@ public sealed partial class BuildViewModel
             }
 
             return _builder.CanAddVelocityMotor(target.Id, out reason);
+        }
+
+        if (part == BuildPart.Brake)
+        {
+            if (target.Kind != CreatureElementKind.Node)
+            {
+                reason = CreatureBuilder.BrakesGoOnAJointReason;
+                return false;
+            }
+
+            return _builder.CanAddBrake(target.Id, out reason);
         }
 
         if (part == BuildPart.Wheel)
@@ -126,6 +137,13 @@ public sealed partial class BuildViewModel
             var motorId = _history.Change(() => _builder.AddVelocityMotor(target.Id));
             SelectPlaced(PartSet.None with { VelocityMotors = new HashSet<int> { motorId } }, select);
             return motorId;
+        }
+
+        if (part == BuildPart.Brake)
+        {
+            var brakeId = _history.Change(() => _builder.AddBrake(target.Id));
+            SelectPlaced(PartSet.None with { Brakes = new HashSet<int> { brakeId } }, select);
+            return brakeId;
         }
 
         if (part == BuildPart.Wheel)

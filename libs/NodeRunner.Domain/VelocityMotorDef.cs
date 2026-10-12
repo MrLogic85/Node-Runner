@@ -102,7 +102,7 @@ public sealed record VelocityMotorDef : IJointMotorDef
     /// <summary>How long, in seconds, its torque takes to build up to the strength the brain chose.</summary>
     public double RiseTime { get; }
 
-    CreatureElementKind IJointMotorDef.Kind => CreatureElementKind.VelocityMotor;
+    CreatureElementKind IMotorOrBrakeDef.Kind => CreatureElementKind.VelocityMotor;
 
     public VelocityMotorDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, MaxSpeed, RiseTime);
 

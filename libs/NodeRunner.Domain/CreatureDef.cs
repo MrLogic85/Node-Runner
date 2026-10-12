@@ -202,6 +202,7 @@ public sealed record CreatureDef
         _velocityMotors = Array.AsReadOnly(velocityMotors.ToArray());
         _brakes = Array.AsReadOnly(brakes.ToArray());
         JointMotors = Array.AsReadOnly(_servos.Concat<IJointMotorDef>(_velocityMotors).ToArray());
+        MotorsAndBrakes = Array.AsReadOnly(JointMotors.Concat<IMotorOrBrakeDef>(_brakes).ToArray());
         NextPartId = resolvedNextPartId;
         _nodeIndexById = BuildIndex(_nodes, node => node.Id);
         _beamIndexById = BuildIndex(_beams, beam => beam.Id);
@@ -252,6 +253,10 @@ public sealed record CreatureDef
     /// </summary>
     [JsonIgnore]
     public IReadOnlyList<IJointMotorDef> JointMotors { get; }
+
+    /// <summary>What fills the joints' motor-or-brake slots (#1044): the <see cref="JointMotors"/>, then the <see cref="Brakes"/>.</summary>
+    [JsonIgnore]
+    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes { get; }
 
     /// <summary>
     /// Every part: nodes, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers, Velocity motors and Brakes. A new kind of part counts here too,
@@ -314,18 +319,18 @@ public sealed record CreatureDef
 
     /// <summary>
     /// The joint parts on joint <paramref name="nodeId"/> among these that are selected in its place, top → down as
-    /// drawn (#1044): its joint motor, then its Wheel, its Rubber (#1142) and its Touch sensor (#1045). A Brake is
-    /// not listed: it is not drawn or selected yet (#1041), so its joint is selected as itself. Empty on a bare joint.
+    /// drawn (#1044): its joint motor or Brake (#1041), then its Wheel, its Rubber (#1142) and its Touch sensor (#1045).
+    /// Empty on a bare joint.
     /// </summary>
-    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<IJointMotorDef> motors, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors, IEnumerable<RubberDef> rubbers)
+    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<IMotorOrBrakeDef> motorsAndBrakes, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors, IEnumerable<RubberDef> rubbers)
     {
-        ArgumentNullException.ThrowIfNull(motors);
+        ArgumentNullException.ThrowIfNull(motorsAndBrakes);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(touchSensors);
         ArgumentNullException.ThrowIfNull(rubbers);
         return
         [
-            .. motors.Where(motor => motor.NodeId == nodeId).Select(motor => new CreatureElementSelection(motor.Kind, motor.Id)),
+            .. motorsAndBrakes.Where(part => part.NodeId == nodeId).Select(part => new CreatureElementSelection(part.Kind, part.Id)),
             .. wheels.Where(wheel => wheel.NodeId == nodeId).Select(wheel => new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)),
             .. rubbers.Where(rubber => rubber.NodeId == nodeId).Select(rubber => new CreatureElementSelection(CreatureElementKind.Rubber, rubber.Id)),
             .. touchSensors.Where(touch => touch.NodeId == nodeId).Select(touch => new CreatureElementSelection(CreatureElementKind.TouchSensor, touch.Id)),
