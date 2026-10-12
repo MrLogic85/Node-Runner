@@ -221,6 +221,61 @@ public sealed class PartParametersTests
         PartParameters.ValueAt(PartParameterId.ServoStrength, 1).ShouldBe(2000000);
     }
 
+    // 20–400 N·m in steps of 20, then one step more that reads Locked: an infinite Strength (#1041).
+    [Fact]
+    public void BrakeStrength_RunsFrom20To400NewtonMetres_InStepsOf20_ThenLocked()
+    {
+        PartParameters.Of(PartParameterId.BrakeStrength).ShouldBe(PartParameters.BrakeStrength);
+        PartParameters.BrakeStrength.MultiEditable.ShouldBeTrue();
+        PartParameters.BrakeStrength.Advanced.ShouldBeFalse();
+        PartParameters.BrakeStrength.ChangesPorts.ShouldBeFalse();
+        PartParameters.BrakeStrength.Slider!.Label.ShouldBe(UiText.Plain("Strength"));
+        PartParameters.ValueAt(PartParameterId.BrakeStrength, 0).ShouldBe(200000);
+        var steps = PartParameters.SliderOver(PartParameterId.BrakeStrength, [BrakeDef.DefaultStrength]).Step;
+        steps.ShouldBe(1.0 / 20, tolerance: 1e-12);
+        PartParameters.ValueAt(PartParameterId.BrakeStrength, 1 - steps).ShouldBe(4000000, tolerance: 1e-6);
+        PartParameters.ValueAt(PartParameterId.BrakeStrength, 1).ShouldBe(BrakeDef.LockedStrength);
+    }
+
+    [Fact]
+    public void BrakeStrength_ReadsLocked_AtItsTopStep_AndTheDefaultSitsOnAStep()
+    {
+        var locked = PartParameters.SliderOver(PartParameterId.BrakeStrength, [BrakeDef.LockedStrength]);
+        locked.Readout.ShouldBe(UiText.Plain("Locked"));
+        locked.High.ShouldBe(1);
+
+        var top = PartParameters.SliderOver(PartParameterId.BrakeStrength, [4000000]);
+        top.Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(400, 0)));
+
+        var standard = PartParameters.SliderOver(PartParameterId.BrakeStrength, [BrakeDef.DefaultStrength]);
+        standard.Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(200, 0)));
+        (standard.High / standard.Step).ShouldBe(Math.Round(standard.High / standard.Step), tolerance: 1e-9);
+        PartParameters.ValueAt(PartParameterId.BrakeStrength, standard.High).ShouldBe(BrakeDef.DefaultStrength, tolerance: 1e-6);
+    }
+
+    [Fact]
+    public void BrakeStrength_OverASpanUpToLocked_ReadsFromItsLowestToLocked()
+    {
+        var span = PartParameters.SliderOver(PartParameterId.BrakeStrength, [BrakeDef.LockedStrength, 600000]);
+
+        span.Readout.ShouldBe(UiText.Format("{0} N·m–Locked", new FixedNumber(60, 0)));
+        span.High.ShouldBe(1);
+        PartParameters.SliderOver(PartParameterId.BrakeStrength, [600000, 4000000]).Readout
+            .ShouldBe(UiText.Format("{0}–{1} N·m", new FixedNumber(60, 0), new FixedNumber(400, 0)));
+    }
+
+    [Theory]
+    [InlineData(200000.0, true)]
+    [InlineData(4000000.0, true)]
+    [InlineData(BrakeDef.LockedStrength, true)]
+    [InlineData(4100000.0, false)]
+    [InlineData(4200000.0, false)]
+    [InlineData(199999.0, false)]
+    public void BrakeStrength_IsOnItsSlider_UpTo400NewtonMetres_OrLocked(double strength, bool onIt)
+    {
+        CreatureBuilder.IsOnItsSlider(PartParameterId.BrakeStrength, strength).ShouldBe(onIt);
+    }
+
     [Fact]
     public void Aim_IsSetOnTheCanvas_OnePartAtATime()
     {

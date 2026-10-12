@@ -6,7 +6,10 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>Build canvas marks for joint parts: a selected motor's link bands, a Servo's or a Velocity motor's (#454), a Wheel side's under its tyre (#1118).</summary>
+/// <summary>
+/// Build canvas marks for joint parts: the link bands of a selected Servo, Velocity motor (#454) or
+/// Brake (#1041), a Wheel side's under its tyre (#1118). The bands name the sides, so a Brake's are a motor's.
+/// </summary>
 public static class BuildServoDrawing
 {
     private const float _servoBeamBandHalfWidth = 9;
@@ -15,8 +18,9 @@ public static class BuildServoDrawing
 
     public static void DrawSelectedBands(CanvasItem canvas, BuildViewModel viewModel, VisualTheme theme, Transform2D viewTransform)
     {
-        IJointMotorDef? motor = viewModel.SingleSelectedServoId is { } servoId ? viewModel.Servos[viewModel.ServoIndexOf(servoId)]
+        IMotorOrBrakeDef? motor = viewModel.SingleSelectedServoId is { } servoId ? viewModel.Servos[viewModel.ServoIndexOf(servoId)]
             : viewModel.SingleSelectedVelocityMotorId is { } motorId ? viewModel.VelocityMotors[viewModel.VelocityMotorIndexOf(motorId)]
+            : viewModel.SingleSelectedBrakeId is { } brakeId ? viewModel.Brakes[viewModel.BrakeIndexOf(brakeId)]
             : null;
         if (motor is null)
         {

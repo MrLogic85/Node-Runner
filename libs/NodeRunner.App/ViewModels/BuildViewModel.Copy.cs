@@ -5,9 +5,9 @@ namespace NodeRunner.App.ViewModels;
 /// <summary>
 /// The selection panel's Copy (#937, #990): several selected parts duplicated beside themselves,
 /// inside the same Creation. A part copies only with what it sits on: a link with both its joints
-/// and a sensor with its beam. A joint part, a Servo, a Velocity motor, a Wheel, a Touch sensor (#1045) or a Rubber (#1142), is its joint
+/// and a sensor with its beam. A joint part, a Servo, a Velocity motor, a Brake (#1041), a Wheel, a Touch sensor (#1045) or a Rubber (#1142), is its joint
 /// to the player (#973), so it brings that joint along (#1000). A locked Creation copies no part with
-/// brain ports, since a copy would change its model; a Wheel and a Rubber have none.
+/// brain ports, since a copy would change its model; a Wheel, a Rubber and a Brake have none.
 /// </summary>
 public sealed partial class BuildViewModel
 {
@@ -85,7 +85,7 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
-    /// selects the originals again. Each copy keeps its settings but not its name; a copied motor
+    /// selects the originals again. Each copy keeps its settings but not its name; a copied motor or Brake
     /// sits on the copy of its joint, uses the copies of its Fixed and Target links or Wheel, and
     /// leaves a role empty whose side was not copied. A copied joint part brings its joint along, but the
     /// joint's other parts only when they are selected too (#1044). The copy is selected as the
@@ -115,6 +115,7 @@ public sealed partial class BuildViewModel
         var sensors = Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id)).ToList();
         var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
         var velocityMotors = VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).ToList();
+        var brakes = Brakes.Where(brake => _selectedBrakeIds.Contains(brake.Id)).ToList();
         var wheels = Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).ToList();
         var touchSensors = TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).ToList();
         var rubbers = Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).ToList();
@@ -179,6 +180,12 @@ public sealed partial class BuildViewModel
             {
                 var copy = _builder.AddVelocityMotor(nodeCopies[motor.NodeId], CopyOf(motor.FixedLinkId), CopyOf(motor.TargetLinkId));
                 _selectedVelocityMotorIds.Add(CopySettings(motor.Id, copy));
+            }
+
+            foreach (var brake in brakes)
+            {
+                var copy = _builder.AddBrake(nodeCopies[brake.NodeId], CopyOf(brake.FixedLinkId), CopyOf(brake.TargetLinkId));
+                _selectedBrakeIds.Add(CopySettings(brake.Id, copy));
             }
 
             foreach (var touch in touchSensors)

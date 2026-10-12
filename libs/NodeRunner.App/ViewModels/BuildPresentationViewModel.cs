@@ -107,6 +107,24 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(motor.NodeId));
             }
 
+            if (_build.SingleSelectedBrakeId is { } brakeId)
+            {
+                var brake = _build.Brakes[_build.BrakeIndexOf(brakeId)];
+                return new PartSettingsPresentation(
+                    brakeId,
+                    PartSettingsKind.Brake,
+                    _build.PartDisplayName(brakeId),
+                    _build.DefaultPartName(brakeId),
+                    null,
+                    null,
+                    PartInfo.Brake,
+                    canDelete,
+                    PanelSliders(),
+                    MotorPickers(brake, CreatureBuilder.BrakeNeedsTwoSidesReason),
+                    brake.NodeId,
+                    OnThisJoint: OnThisJoint(brake.NodeId));
+            }
+
             if (_build.SingleSelectedPistonId is { } pistonId)
             {
                 return new PartSettingsPresentation(
@@ -385,7 +403,7 @@ public sealed class BuildPresentationViewModel
             return UiText.Counted("{0} link has zero length", "{0} links have zero length", zeroLength);
         }
 
-        var missingALink = _build.JointMotors.Count(CreatureReadiness.IsMissingALink) + _build.Brakes.Count(CreatureReadiness.IsMissingALink);
+        var missingALink = _build.MotorsAndBrakes.Count(CreatureReadiness.IsMissingALink);
         return missingALink > 0
             ? UiText.Counted("{0} part missing a link", "{0} parts missing a link", missingALink)
             : errors[0];
@@ -412,6 +430,7 @@ public sealed class BuildPresentationViewModel
                 CreatureElementKind.Wheel => PartSettingsKind.Wheel,
                 CreatureElementKind.Servo => PartSettingsKind.Servo,
                 CreatureElementKind.VelocityMotor => PartSettingsKind.VelocityMotor,
+                CreatureElementKind.Brake => PartSettingsKind.Brake,
                 CreatureElementKind.Rubber => PartSettingsKind.Rubber,
                 CreatureElementKind.TouchSensor => PartSettingsKind.Touch,
                 _ => throw new InvalidOperationException($"{part.Kind} is not a joint part."),
@@ -421,16 +440,19 @@ public sealed class BuildPresentationViewModel
 
     private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];
 
-    // A motor's Fixed and Target pickers, the Servo's and the Velocity motor's alike (#454).
-    private IReadOnlyList<PartPickerPresentation> MotorPickers(IJointMotorDef motor, UiText needsTwoSidesReason)
+    // The Fixed and Target pickers of a joint's motor-or-brake slot, the Servo's, Velocity motor's (#454)
+    // and Brake's (#1041) alike. A Brake has no ports: its sides change no model, so a locked Creation
+    // changes them too and a trained one does not learn again.
+    private IReadOnlyList<PartPickerPresentation> MotorPickers(IMotorOrBrakeDef motor, UiText needsTwoSidesReason)
     {
+        var keptLocked = _build.IsLocked && motor is IJointMotorDef;
         // A Wheel on the joint is a one-sided link, listed after the links (#1118).
         (int Id, CreatureElementKind Kind)[] links =
         [
             .. _build.LinksAt(motor.NodeId).OrderBy(link => link.Id).Select(link => (link.Id, link.Kind)),
             .. _build.Wheels.Where(wheel => wheel.NodeId == motor.NodeId).Select(wheel => (wheel.Id, CreatureElementKind.Wheel)),
         ];
-        var trainedNote = !_build.IsLocked && _build.TrainingGeneration is not null ? UiText.Plain("Changing these makes it learn again.") : null;
+        var trainedNote = !_build.IsLocked && _build.TrainingGeneration is not null && motor is IJointMotorDef ? UiText.Plain("Changing these makes it learn again.") : null;
         var twoLinksNote = _build.ServoNeedsTwoSides(motor.NodeId) ? needsTwoSidesReason : null;
 
         // Picking the other role's link swaps the two only when both are set; with one empty, it just moves.
@@ -449,8 +471,8 @@ public sealed class BuildPresentationViewModel
                 label,
                 [.. links.Select(Option)],
                 chosen ? selected : null,
-                _build.IsLocked,
-                _build.IsLocked ? null : chosen ? trainedNote : twoLinksNote,
+                keptLocked,
+                keptLocked ? null : chosen ? trainedNote : twoLinksNote,
                 chosen ? null : placeholder);
 
             PartPickerOption Option((int Id, CreatureElementKind Kind) link)

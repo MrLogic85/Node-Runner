@@ -9,7 +9,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// A creature shown still, made of the same part visuals Training draws (#769, #770): one
-/// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="VelocityMotorPart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
+/// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="VelocityMotorPart"/>, <see cref="BrakePart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
 /// <see cref="SpringPart"/> and <see cref="SensorPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
 /// its <see cref="CreatureLayers"/> layer. Its points are creature units; its owner places it and
 /// hands it what to show after every change. Build's <see cref="BuildCanvas"/> shows its edits
@@ -20,6 +20,7 @@ public partial class CreatureParts : Node2D
     private readonly Dictionary<int, JointPart> _joints = [];
     private readonly Dictionary<int, ServoPart> _servos = [];
     private readonly Dictionary<int, VelocityMotorPart> _velocityMotors = [];
+    private readonly Dictionary<int, BrakePart> _brakes = [];
     private readonly Dictionary<int, WheelPart> _wheels = [];
     private readonly Dictionary<int, BeamPart> _beams = [];
     private readonly Dictionary<int, PistonPart> _pistons = [];
@@ -41,7 +42,7 @@ public partial class CreatureParts : Node2D
     public void Show(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors), CreatureMarks.None);
+        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes), CreatureMarks.None);
     }
 
     /// <summary>
@@ -57,6 +58,7 @@ public partial class CreatureParts : Node2D
         ShowJoints(shape, marks);
         ShowServos(shape, nodes, marks);
         ShowVelocityMotors(shape, nodes, marks);
+        ShowBrakes(shape, nodes, marks);
         ShowWheels(shape, nodes, marks);
         ShowBeams(shape, nodes, marks);
         ShowPistons(shape, nodes, marks);
@@ -76,7 +78,7 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointMotors, shape.Wheels, shape.TouchSensors, shape.Rubbers);
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.MotorsAndBrakes, shape.Wheels, shape.TouchSensors, shape.Rubbers);
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasMotor(shape, marks, node.Id);
             part.ShowsHub = HasWheelAndNoServo(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
@@ -108,9 +110,9 @@ public partial class CreatureParts : Node2D
     private static bool HasWheelAndNoServo(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         HasWheel(shape, marks, nodeId) && !HasMotor(shape, marks, nodeId);
 
-    // A Servo or Velocity motor (#454), placed or previewed, stands in for its joint's ring.
+    // A Servo, Velocity motor (#454) or Brake (#1041), placed or previewed, stands in for its joint's ring.
     private static bool HasMotor(CreatureShape shape, CreatureMarks marks, int nodeId) =>
-        shape.JointMotors.Any(motor => motor.NodeId == nodeId) || PreviewsMotor(marks, nodeId);
+        shape.MotorsAndBrakes.Any(motor => motor.NodeId == nodeId) || PreviewsMotor(marks, nodeId) || marks.PreviewNodeOf(BuildPart.Brake) == nodeId;
 
     private static bool PreviewsMotor(CreatureMarks marks, int nodeId) =>
         marks.PreviewNodeOf(BuildPart.Servo) == nodeId || marks.PreviewNodeOf(BuildPart.VelocityMotor) == nodeId;
@@ -200,6 +202,45 @@ public partial class CreatureParts : Node2D
         part.Selected = selected;
         part.Visible = true;
         part.Simplified = false;
+        part.HasFixed = TrySide(shape, nodes, nodeId, fixedLinkId, out _, out var fixedAngle);
+        part.HasTarget = TrySide(shape, nodes, nodeId, targetLinkId, out _, out var targetAngle);
+        part.FixedAngle = fixedAngle;
+        part.TargetAngle = targetAngle;
+    }
+
+    private void ShowBrakes(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
+    {
+        var ids = shape.Brakes.Select(brake => brake.Id).Concat(marks.PreviewNodeOf(BuildPart.Brake) is { } nodeId ? [-nodeId] : []);
+        Prune(_brakes, ids);
+        foreach (var brake in shape.Brakes)
+        {
+            var part = PartFor(_brakes, brake.Id);
+            ShowBrakePart(part, shape, nodes, brake.NodeId, brake.FixedLinkId, brake.TargetLinkId, brake.Locked, marks.Selected.Brakes.Contains(brake.Id));
+        }
+
+        if (marks.PreviewNodeOf(BuildPart.Brake) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
+        {
+            var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
+            ShowBrakePart(PartFor(_brakes, -previewNode), shape, nodes, node.Id, fixedId, targetId, locked: false, selected: true);
+        }
+    }
+
+    // At rest the caliper and the disc each take their side's built direction, as a Velocity motor's layers do.
+    private static void ShowBrakePart(
+        BrakePart part,
+        CreatureShape shape,
+        Dictionary<int, NodeDef> nodes,
+        int nodeId,
+        int? fixedLinkId,
+        int? targetLinkId,
+        bool locked,
+        bool selected)
+    {
+        part.Position = ToGodot(nodes[nodeId].Position);
+        part.Selected = selected;
+        part.Visible = true;
+        part.Simplified = false;
+        part.Locked = locked;
         part.HasFixed = TrySide(shape, nodes, nodeId, fixedLinkId, out _, out var fixedAngle);
         part.HasTarget = TrySide(shape, nodes, nodeId, targetLinkId, out _, out var targetAngle);
         part.FixedAngle = fixedAngle;
@@ -431,6 +472,13 @@ public partial class CreatureParts : Node2D
         foreach (var (id, part) in _velocityMotors)
         {
             var nodeId = id < 0 ? -id : velocityMotorNodes[id];
+            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
+        }
+
+        var brakeNodes = shape.Brakes.ToDictionary(brake => brake.Id, brake => brake.NodeId);
+        foreach (var (id, part) in _brakes)
+        {
+            var nodeId = id < 0 ? -id : brakeNodes[id];
             part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
         }
 

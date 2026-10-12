@@ -100,7 +100,7 @@ public sealed class BrakeDefTests
         apart.Brakes.ShouldHaveSingleItem().NodeId.ShouldBe(1);
     }
 
-    // It is no joint motor: it has no ports, and no housing or selection yet (#1041).
+    // It is no joint motor: it has no ports, and is drawn at a plain joint's size (#1041).
     [Fact]
     public void CreatureDef_CountsABrakeAsAPart_ButNotAsAJointMotor()
     {
@@ -113,6 +113,14 @@ public sealed class BrakeDefTests
         with.CoveredRadius(1).ShouldBe(without.CoveredRadius(1));
         Should.Throw<ArgumentOutOfRangeException>(() => Creature([new BrakeDef(10, 1)]));
         Should.Throw<ArgumentException>(() => Creature([new BrakeDef(4, 1)]));
+    }
+
+    [Fact]
+    public void MotorsAndBrakes_ListsTheJointMotors_ThenTheBrakes()
+    {
+        var creature = Creature([new BrakeDef(6, 1, 4, 5)], servos: [new ServoDef(7, 2, 4)], motors: [new VelocityMotorDef(8, 3)]);
+
+        creature.MotorsAndBrakes.Select(part => (part.Kind, part.Id)).ShouldBe([(CreatureElementKind.Servo, 7), (CreatureElementKind.VelocityMotor, 8), (CreatureElementKind.Brake, 6)]);
     }
 
     [Fact]

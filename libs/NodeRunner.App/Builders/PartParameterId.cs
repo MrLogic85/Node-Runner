@@ -22,4 +22,5 @@ public enum PartParameterId
     CameraRange,
     MotorStrength,
     MotorMaxSpeed,
+    BrakeStrength,
 }

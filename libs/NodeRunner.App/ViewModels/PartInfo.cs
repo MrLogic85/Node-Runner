@@ -16,6 +16,8 @@ public static class PartInfo
 
     public static UiText VelocityMotor { get; } = UiText.Plain("Turns one side round and round. The brain picks how fast and which way.");
 
+    public static UiText Brake { get; } = UiText.Plain("Slows its joint's turning, or holds it still when Locked.");
+
     public static UiText Wheel { get; } = UiText.Plain("Rolls freely on the ground. Add a Motor or Servo to power it.");
 
     public static UiText Accelerometer { get; } = UiText.Plain("Measures its beam's acceleration.");

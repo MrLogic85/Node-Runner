@@ -28,7 +28,7 @@ public partial class Creature
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
                 var nodeId = Definition!.Nodes[nodeIndex].Id;
-                selection = Definition.JointMotors.FirstOrDefault(motor => motor.NodeId == nodeId) is { } motor
+                selection = Definition.MotorsAndBrakes.FirstOrDefault(motor => motor.NodeId == nodeId) is { } motor
                     ? new CreatureElementSelection(motor.Kind, motor.Id)
                     : Definition.Wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId) is { } wheel
                         ? new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)
@@ -104,7 +104,7 @@ public partial class Creature
         return groups.PartAt(
             ToDomain(globalPosition),
             nodeId => ToDomain(_nodeVisuals[definition.NodeIndexOf(nodeId)].GlobalPosition),
-            definition.JointMotors,
+            definition.MotorsAndBrakes,
             definition.Wheels,
             definition.Sensors,
             _raised);
@@ -124,6 +124,7 @@ public partial class Creature
             CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].GlobalPosition,
             CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.VelocityMotor => _velocityMotorVisuals[Definition!.VelocityMotorIndexOf(selection.Id)].GlobalPosition,
+            CreatureElementKind.Brake => _brakeVisuals[Definition!.BrakeIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.Piston => Middle(_pistons[Definition!.PistonIndexOf(selection.Id)].NodeA, _pistons[Definition.PistonIndexOf(selection.Id)].NodeB),
             CreatureElementKind.Spring => Middle(_springVisuals[Definition!.SpringIndexOf(selection.Id)].NodeA, _springVisuals[Definition.SpringIndexOf(selection.Id)].NodeB),
             CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(selection.Id)].GlobalPosition,
@@ -146,7 +147,7 @@ public partial class Creature
     // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
     private void ApplySelection()
     {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_velocityMotorVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
+        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_velocityMotorVisuals).Concat(_brakeVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
         {
             visual.Selected = false;
         }
@@ -195,6 +196,7 @@ public partial class Creature
             CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == part.Id)],
             CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(part.Id)],
             CreatureElementKind.VelocityMotor => _velocityMotorVisuals[Definition!.VelocityMotorIndexOf(part.Id)],
+            CreatureElementKind.Brake => _brakeVisuals[Definition!.BrakeIndexOf(part.Id)],
             CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
             CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],
             _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
@@ -208,7 +210,7 @@ public partial class Creature
             return;
         }
 
-        _raised = groups.Raised(selection, definition.JointMotors, definition.Wheels, definition.TouchSensors, definition.Rubbers);
+        _raised = groups.Raised(selection, definition.MotorsAndBrakes, definition.Wheels, definition.TouchSensors, definition.Rubbers);
         for (var i = 0; i < _nodeVisuals.Length; i++)
         {
             var id = definition.Nodes[i].Id;
@@ -225,6 +227,12 @@ public partial class Creature
         {
             var id = definition.VelocityMotors[i].NodeId;
             _velocityMotorVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
+        }
+
+        for (var i = 0; i < _brakeVisuals.Length; i++)
+        {
+            var id = definition.Brakes[i].NodeId;
+            _brakeVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
         }
 
         for (var i = 0; i < _wheelVisuals.Length; i++)

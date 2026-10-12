@@ -125,7 +125,7 @@ public sealed record ServoDef : IJointMotorDef
     /// <summary>How long, in seconds, its torque takes to build up to the strength the brain chose.</summary>
     public double RiseTime { get; }
 
-    CreatureElementKind IJointMotorDef.Kind => CreatureElementKind.Servo;
+    CreatureElementKind IMotorOrBrakeDef.Kind => CreatureElementKind.Servo;
 
     public ServoDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, Range, Start, MaxSpeed, RiseTime);
 

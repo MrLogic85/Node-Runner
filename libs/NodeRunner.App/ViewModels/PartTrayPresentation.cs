@@ -76,7 +76,7 @@ public static class PartTray
     /// <summary>
     /// The tray with <paramref name="picked"/> selected (#805). On a locked creation each available
     /// part with brain ports shows locked, so it does not look like it can be picked or dragged out,
-    /// and the help says how to unlock (#896); a part without, like the Wheel or the Rubber, stays available.
+    /// and the help says how to unlock (#896); a part without, like the Wheel, the Rubber or the Brake, stays available.
     /// </summary>
     public static PartTrayPresentation Create(BuildPart? picked, bool creationLocked = false)
     {
@@ -90,8 +90,8 @@ public static class PartTray
     /// <summary>Whether the part can be picked or dragged out now: available, and on a locked creation without brain ports (#896).</summary>
     public static bool CanPick(BuildPart part, bool creationLocked) => IsAvailable(part) && !(creationLocked && HasBrainPorts(part));
 
-    /// <summary>Whether placing <paramref name="part"/> adds brain ports, so a locked creation refuses it (#896): every part but the Wheel (#129) and the Rubber (#1142).</summary>
-    public static bool HasBrainPorts(BuildPart part) => part is not (BuildPart.Wheel or BuildPart.Rubber);
+    /// <summary>Whether placing <paramref name="part"/> adds brain ports, so a locked creation refuses it (#896): every part but the Wheel (#129), the Rubber (#1142) and the Brake (#1041).</summary>
+    public static bool HasBrainPorts(BuildPart part) => part is not (BuildPart.Wheel or BuildPart.Rubber or BuildPart.Brake);
 
     private static PartTrayRow Shown(PartTrayRow row, BuildPart? picked, bool creationLocked) =>
         creationLocked && row.IsAvailable && HasBrainPorts(row.Part) ? row with { State = PartTrayRowState.CreationLocked }
@@ -106,6 +106,7 @@ public static class PartTray
     {
         BuildPart.Servo => PartInfo.Servo,
         BuildPart.VelocityMotor => PartInfo.VelocityMotor,
+        BuildPart.Brake => PartInfo.Brake,
         BuildPart.Wheel => PartInfo.Wheel,
         BuildPart.Accelerometer => PartInfo.Accelerometer,
         BuildPart.Camera => PartInfo.Camera,
@@ -146,18 +147,19 @@ public static class PartTray
         _ => null,
     };
 
-    /// <summary>Whether a tray part goes on a joint (a Servo, a Velocity motor, #454, a Wheel, #129, a Touch sensor, #1045, or a Rubber, #1142) rather than on a beam.</summary>
-    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.VelocityMotor or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber;
+    /// <summary>Whether a tray part goes on a joint (a Servo, a Velocity motor, #454, a Brake, #1041, a Wheel, #129, a Touch sensor, #1045, or a Rubber, #1142) rather than on a beam.</summary>
+    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.VelocityMotor or BuildPart.Brake or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber;
 
     /// <summary>
     /// The radius of the joint part <paramref name="placing"/> as placed on a joint drawn
     /// <paramref name="jointRadius"/> wide, round which the canvas marks that joint while it is
-    /// placed (#1055); see <see cref="IsJointPart"/>. A Touch sensor's cushion (#1045) and a Rubber's
-    /// skin (#1142) go round the joint's largest part.
+    /// placed (#1055); see <see cref="IsJointPart"/>. A Brake (#1041) is drawn at a hub's size; a Touch
+    /// sensor's cushion (#1045) and a Rubber's skin (#1142) go round the joint's largest part.
     /// </summary>
     public static double PlacingRingRadius(BuildPart placing, double jointRadius) => placing switch
     {
         BuildPart.Servo or BuildPart.VelocityMotor => JointMotor.Radius,
+        BuildPart.Brake => NodeDef.HubRadius,
         BuildPart.Wheel => WheelDef.DefaultRadius,
         BuildPart.TouchSensor => jointRadius + TouchSensorDef.Cushion,
         BuildPart.Rubber => jointRadius + RubberDef.Skin,
@@ -171,7 +173,7 @@ public static class PartTray
             Available(BuildPart.Servo, UiText.Plain("Servo")),
             Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.3"),
             Available(BuildPart.VelocityMotor, UiText.Plain("Motor")),
-            Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.2"),
+            Available(BuildPart.Brake, UiText.Plain("Brake")),
             Available(BuildPart.Wheel, UiText.Plain("Wheel")),
             Available(BuildPart.Rubber, UiText.Plain("Rubber")),
         ]),

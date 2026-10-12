@@ -59,8 +59,10 @@ Every reference token has a named Godot mapping or a reason here, so a later
 token import does not bring back a dead one.
 
 - **`detail`** marks passive parts and passive details, which the brain
-  neither drives nor reads: the Spring's coil (#1059), the Servo's
-  Fixed-link band and picker icon. Structure (beams, joints, rods, seats,
+  neither drives nor reads: the Spring's coil (#1059), the Brake (#1041),
+  the Servo's Fixed-link band and picker icon. A Target-link band stays
+  `accent` on a Brake too: the band colours name the side, not who drives
+  it. Structure (beams, joints, rods, seats,
   bodies) stays `line-strong` and `panel`. `accent` marks what the brain
   drives or reads.
 - **`*-glow` colours** are not imported. CSS needs them only because it
@@ -412,3 +414,5 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim (#578) | BM → Parameters |
 | Velocity motor | Motor; Velocity motor only in code and the save format (#454) | BM → Interactions |
 | Servo Max speed in °/s | In rpm, like the Motor's (#454) | BM → Parameters |
+| Brake "Max strength 30 N·m" | "Strength", ending in Locked (#1041) | BM → Parameters |
+| Brake "Power: None: passive" | No Power row until the Power budget (#460) | — |

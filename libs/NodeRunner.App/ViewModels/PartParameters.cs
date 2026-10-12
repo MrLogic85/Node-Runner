@@ -21,6 +21,7 @@ public sealed record PartParameter(PartParameterId Id, bool MultiEditable, Param
 /// How a panel slider shows a setting: its label, the one line shown while its slider is touched (#867), its range
 /// and step in shown units, its readout with the unit for one value ("{0} N") and for a span of
 /// values ("{0}–{1} N"), and how shown units convert from and to world units, like <see cref="Metres"/>.
+/// A slider whose top step is no number, like a Brake's Locked (#1041), has a <see cref="Top"/>; its numbers end a step below.
 /// </summary>
 public sealed record ParameterScale(
     UiText Label,
@@ -30,10 +31,36 @@ public sealed record ParameterScale(
     string Readout,
     string SpanReadout,
     Func<double, double> Shown,
-    Func<double, double> World)
+    Func<double, double> World,
+    TopStep? Top = null)
 {
     public FixedNumber Number(double shown) => new(shown, Decimals);
+
+    /// <summary>Whether <paramref name="world"/>, in world units, is one this slider can set: on its range, or its <see cref="Top"/> step's value.</summary>
+    public bool Allows(double world)
+    {
+        var shown = Shown(world);
+        return Top is null
+            ? Range.Allows(shown)
+            : World(Range.Max).Equals(world) || (Range with { Max = Range.Max - Range.Step }).Allows(shown);
+    }
+
+    /// <summary>The readout for the shown values <paramref name="low"/> to <paramref name="high"/>: one value when both ends read the same.</summary>
+    public UiText ReadoutOf(double low, double high)
+    {
+        var shownLow = Number(low);
+        var shownHigh = Number(high);
+        if (Top is { } top && Range.Allows(high) && high >= Range.Max)
+        {
+            return shownLow == shownHigh ? top.Readout : UiText.Format(top.SpanReadout, shownLow);
+        }
+
+        return shownLow == shownHigh ? UiText.Format(Readout, shownHigh) : UiText.Format(SpanReadout, shownLow, shownHigh);
+    }
 }
+
+/// <summary>A slider's top step that is no number (#1041): its <paramref name="Readout"/> there ("Locked") and for a span up to it ("{0} N·m–Locked").</summary>
+public sealed record TopStep(UiText Readout, string SpanReadout);
 
 /// <summary>
 /// A slider's range and step, in the units its readout shows. With <see cref="Stops"/> it snaps to
@@ -128,7 +155,8 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 /// Coil length in % like a Piston's Stroke and Start position (#835); a Wheel's Radius is in m
 /// (#129); a Camera's aim is turned on the canvas (#594), and its Rays snap to 1, 3 or 5,
 /// its Spread is in degrees and its Range in m (#578). A Servo's and a Motor's (a Velocity motor's)
-/// Max strength is in N·m and Max speed in rpm, each on its own range (#454).
+/// Max strength is in N·m and Max speed in rpm, each on its own range (#454). A Brake's Strength is in
+/// N·m, and its top step is Locked (#1041).
 /// </summary>
 public static class PartParameters
 {
@@ -142,6 +170,10 @@ public static class PartParameters
     // Weaker than a Servo, so a Motor struggles up hills (#454).
     public static PartParameter MotorStrength { get; } = new(
         PartParameterId.MotorStrength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can turn with"), new(5, 40, 5), 0, "{0} N·m", "{0}–{1} N·m", NewtonMetres, ToWorldTorque), Advanced: false);
+
+    // 20–400 N·m in steps of 20, and one step more that reads Locked: an infinite Strength (#1041).
+    public static PartParameter BrakeStrength { get; } = new(
+        PartParameterId.BrakeStrength, MultiEditable: true, new(UiText.Plain("Strength"), UiText.Plain("How hard it holds the joint still. Locked holds it fully."), new(20, _lockedBrakeStep, 20), 0, "{0} N·m", "{0}–{1} N·m", BrakeNewtonMetres, BrakeTorque, new TopStep(UiText.Plain("Locked"), "{0} N·m–Locked")), Advanced: false);
 
     public static PartParameter Stroke { get; } = new(
         PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), UiText.Plain("How far it moves in and out"), new(10, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);
@@ -218,6 +250,7 @@ public static class PartParameters
         PartParameterId.CameraRange => CameraRange,
         PartParameterId.MotorStrength => MotorStrength,
         PartParameterId.MotorMaxSpeed => MotorMaxSpeed,
+        PartParameterId.BrakeStrength => BrakeStrength,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 
@@ -228,12 +261,9 @@ public static class PartParameters
         var scale = ScaleOf(id);
         var low = values.Min(scale.Shown);
         var high = values.Max(scale.Shown);
-        var shownLow = scale.Number(low);
-        var shownHigh = scale.Number(high);
         // One value when both ends read the same.
-        return shownLow == shownHigh
-            ? new ParameterSlider(id, scale.Label, UiText.Format(scale.Readout, shownHigh), scale.Range.Position(high), scale.Range.Position(high), scale.Range.PositionStep)
-            : new ParameterSlider(id, scale.Label, UiText.Format(scale.SpanReadout, shownLow, shownHigh), scale.Range.Position(low), scale.Range.Position(high), scale.Range.PositionStep);
+        var lowPosition = scale.Number(low) == scale.Number(high) ? scale.Range.Position(high) : scale.Range.Position(low);
+        return new ParameterSlider(id, scale.Label, scale.ReadoutOf(low, high), lowPosition, scale.Range.Position(high), scale.Range.PositionStep);
     }
 
     /// <summary>The value of <paramref name="id"/>, in world units, at slider <paramref name="position"/>.</summary>
@@ -256,6 +286,15 @@ public static class PartParameters
     private static double NewtonMetres(double torque) => torque / 10000;
 
     private static double ToWorldTorque(double newtonMetres) => newtonMetres * 10000;
+
+    // The Brake slider's last step, one past 400 N·m, stands for Locked.
+    private const double _lockedBrakeStep = 420;
+
+    private static double BrakeNewtonMetres(double strength) =>
+        double.IsPositiveInfinity(strength) ? _lockedBrakeStep : NewtonMetres(strength);
+
+    private static double BrakeTorque(double newtonMetres) =>
+        newtonMetres >= _lockedBrakeStep ? BrakeDef.LockedStrength : ToWorldTorque(newtonMetres);
 
     private static double Rpm(double radiansPerSecond) => radiansPerSecond * 60 / Math.Tau;
 

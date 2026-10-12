@@ -16,6 +16,7 @@ public enum PartSettingsKind
     Touch,
     Rubber,
     VelocityMotor,
+    Brake,
 }
 
 /// <summary>
@@ -75,6 +76,7 @@ public sealed record PartSettingsPresentation(
         PartSettingsKind.Touch => UiText.Plain("Touch sensor"),
         PartSettingsKind.Rubber => UiText.Plain("Rubber"),
         PartSettingsKind.VelocityMotor => UiText.Plain("Motor"),
+        PartSettingsKind.Brake => UiText.Plain("Brake"),
         _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Unknown part kind."),
     };
 }
@@ -85,7 +87,7 @@ public sealed record JointPartTab(PartSettingsKind Kind, CreatureElementSelectio
 /// <summary>A read-only row in the Part settings panel: a label and the value it reads, like "Weight" and "1.2 kg".</summary>
 public sealed record PartReadout(UiText Label, UiText Value);
 
-/// <summary>The role a link has on its motor today, a Servo or a Velocity motor.</summary>
+/// <summary>The role a link has on its motor or Brake today: a Servo's, a Velocity motor's or a Brake's.</summary>
 public enum ServoLinkRole
 {
     None,

@@ -85,6 +85,8 @@ public sealed record BrakeDef : IMotorOrBrakeDef
     [JsonIgnore]
     public bool Locked => double.IsPositiveInfinity(Strength);
 
+    CreatureElementKind IMotorOrBrakeDef.Kind => CreatureElementKind.Brake;
+
     public BrakeDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength);
 
     public BrakeDef WithStrength(double strength) => new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength);

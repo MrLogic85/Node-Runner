@@ -58,6 +58,7 @@ public partial class Creature : Node2D
     private VelocityMotorJoint[] _velocityMotors = [];
     private VelocityMotorVisual[] _velocityMotorVisuals = [];
     private BrakeJoint[] _brakes = [];
+    private BrakeVisual[] _brakeVisuals = [];
     private WheelVisual[] _wheelVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
@@ -403,6 +404,11 @@ public partial class Creature : Node2D
             visual.IsShadow = _isShadow;
         }
 
+        foreach (var visual in _brakeVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
         foreach (var visual in _pistonVisuals)
         {
             visual.IsShadow = _isShadow;
@@ -558,7 +564,7 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
-            var hasMotor = definition.JointMotors.Any(motor => motor.NodeId == definition.Nodes[i].Id);
+            var hasMotor = definition.MotorsAndBrakes.Any(part => part.NodeId == definition.Nodes[i].Id);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
             var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);

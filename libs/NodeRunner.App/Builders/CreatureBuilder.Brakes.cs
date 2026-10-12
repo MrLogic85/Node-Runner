@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Builders;
@@ -8,14 +10,39 @@ namespace NodeRunner.App.Builders;
 /// </summary>
 public sealed partial class CreatureBuilder
 {
+    /// <summary>Why a Brake dropped on anything but a joint is refused (#1041).</summary>
+    public static UiText BrakesGoOnAJointReason { get; } = UiText.Plain("Brakes go on a joint");
+
+    /// <summary>Why a Brake cannot work yet: it needs two sides at its joint (#1118).</summary>
+    public static UiText BrakeNeedsTwoSidesReason { get; } = UiText.Plain("A Brake needs two links, or a link and a Wheel");
+
+    private static readonly PartParameterId[] _brakeParameters = [PartParameterId.BrakeStrength];
+
     private readonly List<BrakeDef> _brakes = [];
 
     public IReadOnlyList<BrakeDef> Brakes => _brakes;
 
-    // Build's slider range for a Brake's finite Strength, 20–400 N·m in world torque units; #1041 moves it
-    // to a PartParameters slider whose last step is Locked.
-    private const double _minBuildStrength = 200000;
-    private const double _maxBuildStrength = 4000000;
+    /// <summary>What fills the joints' motor-or-brake slots, as <see cref="CreatureDef.MotorsAndBrakes"/> lists them.</summary>
+    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => [.. JointMotors, .. _brakes];
+
+    /// <summary>Whether a Brake can sit on this node; if not, <paramref name="reason"/> says why.</summary>
+    public bool CanAddBrake(int nodeId, [NotNullWhen(false)] out UiText? reason)
+    {
+        if (!HasNode(nodeId))
+        {
+            reason = BrakesGoOnAJointReason;
+            return false;
+        }
+
+        if (HasMotorOrBrake(nodeId))
+        {
+            reason = OneMotorOrBrakePerJointReason;
+            return false;
+        }
+
+        reason = null;
+        return true;
+    }
 
     /// <summary>Adds a Brake with its sides picked as a new Servo's are (<see cref="JointMotor.DefaultSides"/>).</summary>
     public int AddBrake(int nodeId)
@@ -27,10 +54,9 @@ public sealed partial class CreatureBuilder
     /// <summary>Adds a Brake with the given Fixed and Target sides, each at the joint or empty.</summary>
     public int AddBrake(int nodeId, int? fixedLinkId, int? targetLinkId)
     {
-        NodeIndexOf(nodeId);
-        if (HasMotorOrBrake(nodeId))
+        if (!CanAddBrake(nodeId, out var reason))
         {
-            throw new ArgumentException(OneMotorOrBrakePerJointReason.Message);
+            throw new ArgumentException(reason.Message);
         }
 
         foreach (var linkId in new[] { fixedLinkId, targetLinkId }.OfType<int>())
@@ -43,11 +69,25 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    /// <summary>Sets a Brake's Strength, in world torque units, or <see cref="BrakeDef.LockedStrength"/>.</summary>
-    public void SetBrakeStrength(int brakeId, double strength)
+    // In world torque units, or BrakeDef.LockedStrength; set through SetParameter (#1041).
+    private void SetBrakeStrength(int brakeId, double strength)
     {
         var index = BrakeIndexOf(brakeId);
         _brakes[index] = _brakes[index].WithStrength(strength);
+    }
+
+    /// <summary>
+    /// Changes the Brake's fixed or target side, as <see cref="SetServoLink"/> does a Servo's:
+    /// picking the other role swaps them. It keeps its id, since it has no ports (<see cref="BrakeDef.WithLinks"/>).
+    /// </summary>
+    public int SetBrakeLink(int brakeId, bool fixedRole, int linkId)
+    {
+        var index = BrakeIndexOf(brakeId);
+        var brake = _brakes[index];
+        ValidateServoSide(linkId, brake.NodeId);
+        var (fixedLink, targetLink) = PickSide(brake, fixedRole, linkId);
+        _brakes[index] = brake.WithLinks(fixedLink, targetLink);
+        return brake.Id;
     }
 
     /// <summary>Removes a Brake by id.</summary>
@@ -63,9 +103,6 @@ public sealed partial class CreatureBuilder
 
         return index;
     }
-
-    private static bool IsWithinBuildLimits(BrakeDef brake) =>
-        brake.Locked || (brake.Strength >= _minBuildStrength && brake.Strength <= _maxBuildStrength);
 
     private bool RenameBrake(int partId, string? name)
     {

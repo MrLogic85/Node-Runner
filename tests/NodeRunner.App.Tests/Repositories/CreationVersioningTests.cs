@@ -494,10 +494,10 @@ public sealed class CreationVersioningTests : IDisposable
         var builder = new CreatureBuilder(walker.Creature);
         var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
         var locked = builder.AddBrake(joints[0]);
-        builder.SetBrakeStrength(locked, BrakeDef.LockedStrength);
+        builder.SetParameter(locked, PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
         builder.Rename(locked, "Lock");
         var wheel = builder.AddWheel(joints[1]);
-        builder.SetBrakeStrength(builder.AddBrake(joints[1], builder.LinksAt(joints[1])[0].Id, wheel), 700000);
+        builder.SetParameter(builder.AddBrake(joints[1], builder.LinksAt(joints[1])[0].Id, wheel), PartParameterId.BrakeStrength, 700000);
         var creature = builder.Build();
         var repository = new FileCreationRepository(new TestStorageLocation(_directory));
         repository.Save(walker.WithCreature(creature, training: null));

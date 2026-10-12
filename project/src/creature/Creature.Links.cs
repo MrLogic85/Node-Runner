@@ -59,19 +59,35 @@ public partial class Creature
         }
     }
 
-    // A Brake (#1040) holds its sides as a Servo turns them, so it shares the Servo's sides; its
-    // picture comes with #1041. A Locked one is no friction but a weld (WeldSides), unless both its
-    // sides slide at the joint: then it is friction without a limit. Run once the Piston and Spring
+    // A Brake (#1040) holds its sides as a Servo turns them, so it shares the Servo's sides. A Locked
+    // one is no friction but a weld (WeldSides), unless both its sides slide at the joint: then it is
+    // friction without a limit. Each is drawn whatever holds it (#1041). Run once the Piston and Spring
     // cylinders exist, as a Locked side can be one.
     private void CreateBrakes(CreatureDef definition)
     {
         var brakes = new List<BrakeJoint>();
-        foreach (var brake in definition.Brakes)
+        _brakeVisuals = new BrakeVisual[definition.Brakes.Count];
+        for (var i = 0; i < definition.Brakes.Count; i++)
         {
+            var brake = definition.Brakes[i];
+            var sides = MotorSidesFor(definition, brake);
             if (!brake.Locked || !WeldSides(definition, brake))
             {
-                brakes.Add(new BrakeJoint(brake, MotorSidesFor(definition, brake)));
+                brakes.Add(new BrakeJoint(brake, sides));
             }
+
+            var visual = new BrakeVisual
+            {
+                Name = $"Brake{i}Visual",
+                Theme = Theme,
+                Sides = sides,
+                Locked = brake.Locked,
+                Position = sides.JointLocalPosition,
+                FixedAngle = (float)sides.FixedRotation,
+                TargetAngle = (float)sides.TargetRotation,
+            };
+            AddChild(visual);
+            _brakeVisuals[i] = visual;
         }
 
         _brakes = [.. brakes];

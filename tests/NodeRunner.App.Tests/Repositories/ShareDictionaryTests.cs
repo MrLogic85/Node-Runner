@@ -197,8 +197,8 @@ public sealed class ShareDictionaryTests
         builder.AddRubber(frontFoot);
         var velocityMotor = builder.AddVelocityMotor(front);
         builder.SetParameter(velocityMotor, PartParameterId.MotorMaxSpeed, 4);
-        builder.SetBrakeStrength(builder.AddBrake(backFoot, backLeg, wheel), BrakeDef.LockedStrength);
-        builder.SetBrakeStrength(builder.AddBrake(frontFoot), 1200000);
+        builder.SetParameter(builder.AddBrake(backFoot, backLeg, wheel), PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
+        builder.SetParameter(builder.AddBrake(frontFoot), PartParameterId.BrakeStrength, 1200000);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 

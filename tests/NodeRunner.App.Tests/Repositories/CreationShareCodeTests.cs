@@ -106,9 +106,9 @@ public sealed class CreationShareCodeTests
         var walker = LoadFixture013("walker.creation.json");
         var builder = new CreatureBuilder(walker.Creature);
         var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
-        builder.SetBrakeStrength(builder.AddBrake(joints[0]), BrakeDef.LockedStrength);
+        builder.SetParameter(builder.AddBrake(joints[0]), PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
         var wheel = builder.AddWheel(joints[1]);
-        builder.SetBrakeStrength(builder.AddBrake(joints[1], builder.LinksAt(joints[1])[0].Id, wheel), 1500000);
+        builder.SetParameter(builder.AddBrake(joints[1], builder.LinksAt(joints[1])[0].Id, wheel), PartParameterId.BrakeStrength, 1500000);
         var braked = walker.WithCreature(builder.Build(), training: null);
 
         var build = CreationShareCode.Read(CreationShareCode.Create(braked)).Build.ShouldNotBeNull();
@@ -261,7 +261,7 @@ public sealed class CreationShareCodeTests
         builder.AddWheel(nodes[4]);
         builder.AddRubber(nodes[3]);
         builder.AddVelocityMotor(nodes[3]);
-        builder.SetBrakeStrength(builder.AddBrake(nodes[2]), BrakeDef.LockedStrength);
+        builder.SetParameter(builder.AddBrake(nodes[2]), PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
         builder.RemoveNode(builder.AddNode(new Vector2D(300, 300)));
         builder.RemoveBeam(beams[3]);
         builder.AddBeam(nodes[3], nodes[4]);

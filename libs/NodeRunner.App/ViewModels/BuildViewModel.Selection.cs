@@ -24,6 +24,7 @@ public sealed partial class BuildViewModel
     private readonly HashSet<int> _selectedTouchSensorIds = [];
     private readonly HashSet<int> _selectedRubberIds = [];
     private readonly HashSet<int> _selectedVelocityMotorIds = [];
+    private readonly HashSet<int> _selectedBrakeIds = [];
 
     /// <summary>How many joints the selection moves: <see cref="SelectedNodeIds"/>.</summary>
     public int SelectedNodeCount => SelectedNodeIds.Count;
@@ -46,7 +47,9 @@ public sealed partial class BuildViewModel
 
     public int SelectedVelocityMotorCount => _selectedVelocityMotorIds.Count;
 
-    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount + SelectedTouchSensorCount + SelectedRubberCount + SelectedVelocityMotorCount;
+    public int SelectedBrakeCount => _selectedBrakeIds.Count;
+
+    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount + SelectedTouchSensorCount + SelectedRubberCount + SelectedVelocityMotorCount + SelectedBrakeCount;
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
@@ -68,6 +71,8 @@ public sealed partial class BuildViewModel
 
     public int? SingleSelectedVelocityMotorId => Single(_selectedVelocityMotorIds);
 
+    public int? SingleSelectedBrakeId => Single(_selectedBrakeIds);
+
     /// <summary>A copy of everything selected (#704).</summary>
     public PartSet Selection => new(
         _selectedNodeIds.ToHashSet(),
@@ -79,13 +84,14 @@ public sealed partial class BuildViewModel
         _selectedWheelIds.ToHashSet(),
         _selectedTouchSensorIds.ToHashSet(),
         _selectedRubberIds.ToHashSet(),
-        _selectedVelocityMotorIds.ToHashSet());
+        _selectedVelocityMotorIds.ToHashSet(),
+        _selectedBrakeIds.ToHashSet());
 
     /// <summary>
     /// The joints the selection moves: the selected joints and the joints under selected joint
-    /// parts, Servos, Velocity motors, Wheels, Touch sensors and Rubbers, since to the player a joint part is its joint (#973).
+    /// parts, Servos, Velocity motors, Brakes, Wheels, Touch sensors and Rubbers, since to the player a joint part is its joint (#973).
     /// </summary>
-    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0 && _selectedRubberIds.Count == 0 && _selectedVelocityMotorIds.Count == 0
+    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0 && _selectedRubberIds.Count == 0 && _selectedVelocityMotorIds.Count == 0 && _selectedBrakeIds.Count == 0
         ? _selectedNodeIds
         : _selectedNodeIds.Union(SelectedJointPartJoints()).ToHashSet();
 
@@ -137,7 +143,7 @@ public sealed partial class BuildViewModel
     }
 
     private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds).Concat(_selectedTouchSensorIds).Concat(_selectedRubberIds).Concat(_selectedVelocityMotorIds);
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds).Concat(_selectedTouchSensorIds).Concat(_selectedRubberIds).Concat(_selectedVelocityMotorIds).Concat(_selectedBrakeIds);
 
     public void ClearSelection()
     {
@@ -182,6 +188,7 @@ public sealed partial class BuildViewModel
         CreatureElementKind.TouchSensor => _selectedTouchSensorIds,
         CreatureElementKind.Rubber => _selectedRubberIds,
         CreatureElementKind.VelocityMotor => _selectedVelocityMotorIds,
+        CreatureElementKind.Brake => _selectedBrakeIds,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -197,6 +204,7 @@ public sealed partial class BuildViewModel
         _selectedTouchSensorIds.Clear();
         _selectedRubberIds.Clear();
         _selectedVelocityMotorIds.Clear();
+        _selectedBrakeIds.Clear();
     }
 
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
@@ -208,11 +216,12 @@ public sealed partial class BuildViewModel
         .. _builder.VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).Select(motor => motor.NodeId),
     ];
 
-    // The joints under the selected joint parts, motors, Wheels, Rubbers and Touch sensors.
+    // The joints under the selected joint parts, motors, Brakes, Wheels, Rubbers and Touch sensors.
     // Each joint once, though several parts of a stack can be selected (#1044).
     private HashSet<int> SelectedJointPartJoints() =>
     [
         .. SelectedMotorJoints(),
+        .. _builder.Brakes.Where(brake => _selectedBrakeIds.Contains(brake.Id)).Select(brake => brake.NodeId),
         .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId),
         .. _builder.Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).Select(rubber => rubber.NodeId),
         .. _builder.TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).Select(touch => touch.NodeId),
@@ -247,6 +256,14 @@ public sealed partial class BuildViewModel
             if (_selectedNodeIds.Remove(motor.NodeId))
             {
                 _selectedVelocityMotorIds.Add(motor.Id);
+            }
+        }
+
+        foreach (var brake in _builder.Brakes)
+        {
+            if (_selectedNodeIds.Remove(brake.NodeId))
+            {
+                _selectedBrakeIds.Add(brake.Id);
             }
         }
 
@@ -424,5 +441,7 @@ public sealed partial class BuildViewModel
         OnPropertyChanged(nameof(SingleSelectedRubberId));
         OnPropertyChanged(nameof(SelectedVelocityMotorCount));
         OnPropertyChanged(nameof(SingleSelectedVelocityMotorId));
+        OnPropertyChanged(nameof(SelectedBrakeCount));
+        OnPropertyChanged(nameof(SingleSelectedBrakeId));
     }
 }

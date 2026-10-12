@@ -121,7 +121,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.Servo and not BuildPart.VelocityMotor and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.Servo and not BuildPart.VelocityMotor and not BuildPart.Brake and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable);
     }
 
@@ -132,7 +132,7 @@ public sealed class PartTrayTests
             (BuildPart.Servo, null),
             (BuildPart.Stepper, "0.14.3"),
             (BuildPart.VelocityMotor, null),
-            (BuildPart.Brake, "0.14.2"),
+            (BuildPart.Brake, null),
             (BuildPart.Wheel, null),
             (BuildPart.Rubber, null),
             (BuildPart.Accelerometer, null),
@@ -166,7 +166,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Create(picked: null, creationLocked: true).Groups.SelectMany(group => group.Rows).ToList();
         rows.Where(row => row.State == PartTrayRowState.ComingLater).Select(row => row.Version).ShouldAllBe(version => version != null);
-        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(6);
+        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(5);
     }
 
     [Fact]

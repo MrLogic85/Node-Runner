@@ -6,6 +6,4 @@ namespace NodeRunner.Domain;
 /// </summary>
 public interface IJointMotorDef : IMotorOrBrakeDef
 {
-    /// <summary>Which kind of motor this is, as it is selected.</summary>
-    CreatureElementKind Kind { get; }
 }
