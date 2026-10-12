@@ -46,7 +46,7 @@ sensor off are #960.
 - **Where:** `libs/NodeRunner.ML/Ga/TrialMeasurement.cs`
 - **How we show it:** Fitness is how far the creature's centre got, but the
   app shows where its front ended (#725, `docs/TRAINING_LOOP.md` → Trial),
-  so the number on screen matches the ruler. The GA ranks by a number the
+  so the number on screen matches the distance scale. The GA ranks by a number the
   player does not see directly. Several fitness functions at once, each
   winner a parent of the next generation, are #317 and #546.
 

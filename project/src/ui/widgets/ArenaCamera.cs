@@ -35,6 +35,20 @@ public partial class ArenaCamera : Camera2D
     }
 
     /// <summary>
+    /// The share of the view's height the distance scale takes along the bottom (#1170): making
+    /// room for the <see cref="Shelf"/> lowers the ground no further than its top.
+    /// </summary>
+    public double ScaleBand
+    {
+        get => _framing.ScaleBand;
+        set
+        {
+            _framing.ScaleBand = value;
+            Apply();
+        }
+    }
+
+    /// <summary>
     /// Frames the creature <paramref name="creature"/> describes, read every physics tick in world
     /// coordinates. The camera starts on it at once and glides after it as it moves; see
     /// <see cref="Retarget"/> and <see cref="Cut"/> for when it changes creature or trial.

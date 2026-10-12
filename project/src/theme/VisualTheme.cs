@@ -184,12 +184,12 @@ public sealed class VisualTheme
 
     public float GroundEdgeWidth { get; private init; }
 
-    /// <summary>The Training ruler's ticks, hanging from the ground line (#668).</summary>
+    /// <summary>The ticks of the Training arena's distance and height scales along the view's edges (#668, #1170).</summary>
     public Color RulerTick { get; private init; }
 
     public float RulerTickWidth { get; private init; }
 
-    /// <summary>The Training ruler's distance labels, in the readout style.</summary>
+    /// <summary>The Training arena's distance and height labels, in the readout style.</summary>
     public Color RulerLabel { get; private init; }
 
     public Font RulerFont { get; private init; } = null!;
