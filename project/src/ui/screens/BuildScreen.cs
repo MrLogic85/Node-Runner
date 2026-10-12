@@ -17,7 +17,7 @@ public partial class BuildScreen : Control
     private BuildViewModel? _build;
     private BuildPresentationViewModel? _presentation;
     private int? _renamingPartId;
-    private (int Selected, PartSettingsKind? Kind, int? PanelId, ToolPanelMode Mode, bool Locked)? _sidePanelShows;
+    private (int Selected, PartSettingsKind? Kind, int? PartId, ToolPanelMode Mode, bool Locked)? _sidePanelShows;
     private BuildReadinessPresentation? _readinessShows;
     private string? _renamingDefaultName;
     private bool _subscribedToPresentation;
@@ -466,7 +466,7 @@ public partial class BuildScreen : Control
         selection.Visible = selected > 1;
         var part = presentation.SinglePart;
         var sidePanel = GetNode<UiSidePanel>("%SidePanel");
-        var shows = (selected, part?.Kind, part?.PanelId, toolPanel.Mode, locked);
+        var shows = (selected, part?.Kind, part?.Id, toolPanel.Mode, locked);
         if (_sidePanelShows is { } showed && showed != shows)
         {
             sidePanel.ScrollContentToTop();

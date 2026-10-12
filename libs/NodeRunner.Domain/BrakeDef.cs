@@ -91,10 +91,7 @@ public sealed record BrakeDef : IMotorOrBrakeDef
 
     public BrakeDef WithStrength(double strength) => new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength);
 
-    /// <summary>
-    /// The Brake with new sides. It keeps its id: a joint motor's side change gives it a new one
-    /// because its ports change meaning, and a Brake has none.
-    /// </summary>
+    /// <summary>The Brake with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
     public BrakeDef WithLinks(int? fixedLinkId, int? targetLinkId) =>
         new(Id, NodeId, fixedLinkId, targetLinkId, Name, Strength);
 }

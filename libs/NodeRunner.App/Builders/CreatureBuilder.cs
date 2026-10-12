@@ -288,8 +288,7 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    // The new link takes the beam's place (#849) and its motor and Brake roles: a link change, so such a motor gets
-    // a new id, while a Brake, with no ports, keeps its own (BrakeDef.WithLinks).
+    // The new link takes the beam's place (#849) and its motor and Brake roles.
     private void ReplaceBeamWith(int nodeIdA, int nodeIdB, int linkId)
     {
         if (BeamBetween(nodeIdA, nodeIdB) is not { } beamId)
@@ -298,12 +297,18 @@ public sealed partial class CreatureBuilder
         }
 
         _beams.RemoveAt(BeamIndexOf(beamId));
-        ReplaceSide(_servos, beamId, linkId, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink, AllocatePartId()));
-        ReplaceSide(_velocityMotors, beamId, linkId, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink, AllocatePartId()));
-        ReplaceSide(_brakes, beamId, linkId, (brake, fixedLink, targetLink) => brake.WithLinks(fixedLink, targetLink));
+        ReplaceSides(beamId, linkId);
     }
 
-    // Each of parts with linkId as a side gets newLinkId there instead, or no side when it is null.
+    // Each motor and Brake with linkId as a side gets newLinkId there instead, or no side when it is null; each
+    // keeps its id (ServoDef.WithLinks).
+    private void ReplaceSides(int linkId, int? newLinkId)
+    {
+        ReplaceSide(_servos, linkId, newLinkId, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink));
+        ReplaceSide(_velocityMotors, linkId, newLinkId, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink));
+        ReplaceSide(_brakes, linkId, newLinkId, (brake, fixedLink, targetLink) => brake.WithLinks(fixedLink, targetLink));
+    }
+
     private static void ReplaceSide<T>(List<T> parts, int linkId, int? newLinkId, Func<T, int?, int?, T> withSides)
         where T : IMotorOrBrakeDef
     {
@@ -579,13 +584,8 @@ public sealed partial class CreatureBuilder
         ClearSides(beamId);
     }
 
-    // A deleted link or Wheel leaves each motor and Brake that used it as a side without that side (#1118); each keeps its id.
-    private void ClearSides(int linkId)
-    {
-        ReplaceSide(_servos, linkId, null, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink, servo.Id));
-        ReplaceSide(_velocityMotors, linkId, null, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink, motor.Id));
-        ReplaceSide(_brakes, linkId, null, (brake, fixedLink, targetLink) => brake.WithLinks(fixedLink, targetLink));
-    }
+    // A deleted link or Wheel leaves each motor and Brake that used it as a side without that side (#1118).
+    private void ClearSides(int linkId) => ReplaceSides(linkId, null);
 
     /// <summary>Whether a Servo can sit on this node; if not, <paramref name="reason"/> says why.</summary>
     public bool CanAddServo(int nodeId, [NotNullWhen(false)] out UiText? reason)
@@ -766,23 +766,19 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Changes the Servo's fixed or target side, a link at its joint or its Wheel (#1118). Picking the
-    /// other role swaps them; any real role change gives the Servo a fresh part id so old
-    /// sign-dependent weights are not reused.
+    /// other role swaps them. The Servo keeps its id (<see cref="ServoDef.WithLinks"/>).
     /// </summary>
-    public int SetServoLink(int servoId, bool fixedRole, int linkId)
-    {
-        var index = ServoIndexOf(servoId);
-        var servo = _servos[index];
-        ValidateServoSide(linkId, servo.NodeId);
-        var (fixedLink, targetLink) = PickSide(servo, fixedRole, linkId);
-        if (fixedLink == servo.FixedLinkId && targetLink == servo.TargetLinkId)
-        {
-            return servo.Id;
-        }
+    public void SetServoLink(int servoId, bool fixedRole, int linkId) =>
+        SetSide(_servos, ServoIndexOf(servoId), fixedRole, linkId, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink));
 
-        var newId = AllocatePartId();
-        _servos[index] = servo.WithLinks(fixedLink, targetLink, newId);
-        return newId;
+    // Gives parts[index], a motor or Brake, linkId as its fixed or target side.
+    private void SetSide<T>(List<T> parts, int index, bool fixedRole, int linkId, Func<T, int?, int?, T> withSides)
+        where T : IMotorOrBrakeDef
+    {
+        var part = parts[index];
+        ValidateServoSide(linkId, part.NodeId);
+        var (fixedLink, targetLink) = PickSide(part, fixedRole, linkId);
+        parts[index] = withSides(part, fixedLink, targetLink);
     }
 
     // A motor's or Brake's sides once linkId takes the fixed or target role; picking the other role swaps them.

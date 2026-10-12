@@ -78,17 +78,10 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Changes the Brake's fixed or target side, as <see cref="SetServoLink"/> does a Servo's:
-    /// picking the other role swaps them. It keeps its id, since it has no ports (<see cref="BrakeDef.WithLinks"/>).
+    /// picking the other role swaps them, and it keeps its id.
     /// </summary>
-    public int SetBrakeLink(int brakeId, bool fixedRole, int linkId)
-    {
-        var index = BrakeIndexOf(brakeId);
-        var brake = _brakes[index];
-        ValidateServoSide(linkId, brake.NodeId);
-        var (fixedLink, targetLink) = PickSide(brake, fixedRole, linkId);
-        _brakes[index] = brake.WithLinks(fixedLink, targetLink);
-        return brake.Id;
-    }
+    public void SetBrakeLink(int brakeId, bool fixedRole, int linkId) =>
+        SetSide(_brakes, BrakeIndexOf(brakeId), fixedRole, linkId, (brake, fixedLink, targetLink) => brake.WithLinks(fixedLink, targetLink));
 
     /// <summary>Removes a Brake by id.</summary>
     public void RemoveBrake(int brakeId) => _brakes.RemoveAt(BrakeIndexOf(brakeId));

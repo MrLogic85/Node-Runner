@@ -22,31 +22,50 @@ public sealed class CreatureBuilderVelocityMotorTests
     }
 
     [Fact]
-    public void AVelocityMotor_TakesTheServosDefaultSides_AndASideChangeGivesItANewId()
+    public void AVelocityMotor_TakesTheServosDefaultSides()
     {
         var builder = Joint(out var joint, out _, out var first, out var second);
+
         var motor = builder.AddVelocityMotor(joint);
+
         builder.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(motor, joint, first, second));
-
-        builder.SetVelocityMotorLink(motor, fixedRole: true, first).ShouldBe(motor);
-        var swapped = builder.SetVelocityMotorLink(motor, fixedRole: true, second);
-
-        swapped.ShouldNotBe(motor);
-        builder.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(swapped, joint, second, first));
     }
 
+    // Every link change keeps the motor's id, and so its brain ports and training (#1177).
     [Fact]
-    public void ALinkReplacingAVelocityMotorsBeam_TakesItsRole_UnderANewId()
+    public void SetVelocityMotorLink_KeepsItsId_ThroughEveryLinkChange()
+    {
+        var builder = Joint(out var joint, out _, out var first, out var second);
+        var third = builder.AddBeam(joint, builder.AddNode(new Vector2D(-90, 0)));
+        var motor = builder.AddVelocityMotor(joint);
+        var wheel = builder.AddWheel(joint);
+        builder.RemoveBeam(first);
+        var nextPartId = builder.NextPartId;
+
+        builder.SetVelocityMotorLink(motor, fixedRole: true, third);
+        builder.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(motor, joint, third, second));
+        builder.SetVelocityMotorLink(motor, fixedRole: false, wheel);
+        builder.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(motor, joint, third, wheel));
+        builder.SetVelocityMotorLink(motor, fixedRole: true, wheel);
+        builder.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(motor, joint, wheel, third));
+        builder.SetVelocityMotorLink(motor, fixedRole: false, second);
+        builder.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(motor, joint, wheel, second));
+
+        builder.NextPartId.ShouldBe(nextPartId);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ALinkReplacingAVelocityMotorsBeam_TakesItsRole_AndKeepsTheMotorsId(bool piston)
     {
         var builder = Joint(out var joint, out var far, out _, out var second);
         var motor = builder.AddVelocityMotor(joint);
 
-        var spring = builder.AddSpring(joint, far);
+        var link = piston ? builder.AddPiston(joint, far) : builder.AddSpring(joint, far);
 
-        var moved = builder.VelocityMotors.Single();
-        moved.Id.ShouldBeGreaterThan(spring);
-        (moved.FixedLinkId, moved.TargetLinkId).ShouldBe((spring, second));
-        moved.Id.ShouldNotBe(motor);
+        builder.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(motor, joint, link, second));
+        builder.NextPartId.ShouldBe(link + 1);
     }
 
     [Fact]

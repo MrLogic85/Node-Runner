@@ -65,7 +65,7 @@ public sealed class BrakeDefTests
     }
 
     [Fact]
-    public void WithLinks_KeepsItsIdAndSettings_SinceItHasNoPorts()
+    public void WithLinks_KeepsItsIdAndSettings()
     {
         var brake = new BrakeDef(6, 1, 4, 5, "Hold", strength: BrakeDef.LockedStrength);
 

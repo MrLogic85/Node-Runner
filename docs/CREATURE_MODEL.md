@@ -465,10 +465,10 @@ fold.
     creature refits its brain to the new ports (`DirectBrain.Refit`). Ports
     match by part id, channel and direction: a kept port keeps its weights
     and bias, a new port starts almost passive, and a removed part's
-    neurons and connections are dropped. Moving nodes or changing settings
-    keeps every port, except a Camera's Rays, which add or remove its outer
-    rays' ports while the rays it keeps keep their weights (#578); a joint
-    motor whose sides change gets a new id, so its weights reset.
+    neurons and connections are dropped. Moving nodes, changing settings or
+    changing a joint motor's links keeps every port, except a Camera's Rays,
+    which add or remove its outer rays' ports while the rays it keeps keep
+    their weights (#578).
   - **Build refits the brain it opened with (#689):** every save in one
     Build visit refits the brain as it was when Build opened, not the last
     saved one, so a part an Undo brings back gets its neurons, ids and
@@ -491,9 +491,11 @@ fold.
   their ids.
 - Saving, loading, moving, renaming, rebuilding a body and copying a whole
   Creation keep part ids and the counter.
-- Changing a joint motor's Fixed or Target link or Wheel gives it a new id, because the
-  meaning and sign of its ports changed, so its old weights are not reused.
-  A Brake has no ports, so it keeps its id.
+- A joint motor or Brake keeps its id through every change of its Fixed or
+  Target side: filling an empty one, picking another link or the Wheel,
+  swapping the two, or a Piston or Spring replacing the beam it held (#1177).
+  A motor's ports may change meaning or sign, but the brain keeps their
+  weights and adapts through training.
 - Parts refer to each other by id. Code that needs an array position uses
   `CreatureDef`'s id-to-index lookups at the boundary.
 

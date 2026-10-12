@@ -27,9 +27,8 @@ public enum PartSettingsKind
 /// <see cref="ConnectionsLabel"/> and <see cref="ConnectionsValue"/> are null. <see cref="Name"/> is
 /// the player's own name as written, or <see cref="DefaultName"/>. The panel's title is
 /// <see cref="Title"/>, what kind of part it is, so a renamed part still says what it is.
-/// <see cref="PanelId"/> says which part the panel shows across edits. <see cref="Readouts"/> are
-/// read-only values the part's settings derive, shown after its basic settings, like a Wheel's
-/// Weight (#129). <see cref="OnThisJoint"/> are the "On this joint" tabs, top → down, when the
+/// <see cref="Readouts"/> are read-only values the part's settings derive, shown after its basic
+/// settings, like a Wheel's Weight (#129). <see cref="OnThisJoint"/> are the "On this joint" tabs, top → down, when the
 /// part's joint holds two or more parts (#1044); null otherwise.
 /// </summary>
 public sealed record PartSettingsPresentation(
@@ -43,19 +42,11 @@ public sealed record PartSettingsPresentation(
     bool CanDelete,
     IReadOnlyList<ParameterSlider> Settings,
     IReadOnlyList<PartPickerPresentation>? Pickers = null,
-    int? JointId = null,
     IReadOnlyList<PartReadout>? Readouts = null,
     IReadOnlyList<JointPartTab>? OnThisJoint = null)
 {
     /// <summary>The index of this part's tab in <see cref="OnThisJoint"/>, or null without tabs.</summary>
     public int? OnThisJointIndex => OnThisJoint?.Select((tab, index) => (tab, index)).First(entry => entry.tab.Part.Id == Id).index;
-
-    /// <summary>
-    /// The part the panel shows, kept across edits: <see cref="Id"/>, or a motor's <see cref="JointId"/>,
-    /// since a link change gives a Servo or Velocity motor a new id (<c>docs/CREATURE_MODEL.md</c> → "Editing identity
-    /// rules") but it is the same motor to the player (#910, #911).
-    /// </summary>
-    public int PanelId => JointId ?? Id;
 
     /// <summary>The <see cref="Settings"/> shown above the Advanced section (#903).</summary>
     public IReadOnlyList<ParameterSlider> BasicSettings => [.. Settings.Where(setting => !setting.Advanced)];

@@ -59,9 +59,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private string _creationName = string.Empty;
     private int? _trainingGeneration;
     private CanvasNote? _placementNote;
-    // What a Play tap pointed at, each with its joint: loose joints (Node) and Servos missing a link
-    // (Servo). By joint, as picking a Servo's link gives it a new id (#911).
-    private readonly HashSet<(CreatureElementKind Kind, int JointId)> _shownBlockers = [];
+    // What a Play tap pointed at: loose joints and motors or Brakes missing a link.
+    private readonly HashSet<CreatureElementSelection> _shownBlockers = [];
     private bool _showPieces;
     // The notes a refused Copy or Delete tap put on the parts that block it (#937, #987), until the
     // selection changes, the Creation is unlocked or the canvas is touched.
@@ -205,11 +204,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     // Part ids are never reused (#220): the restored body keeps the highest NextPartId this visit reached.
-    // A selected motor stays selected through a link change's new id (#911), unless the step reselects its own parts.
     private void Restore(CreatureDef body, PartSet? reselect)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
-        var selectedMotorJoints = reselect is null ? SelectedMotorJoints() : [];
         _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, body.VelocityMotors, body.Brakes, nextPartId));
         if (reselect is not null)
         {
@@ -220,7 +217,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             }
         }
 
-        PruneSelection(selectedMotorJoints);
+        PruneSelection();
         if (reselect is null)
         {
             SelectJointPartsInsteadOfTheirJoints();
@@ -452,7 +449,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         foreach (var node in Nodes)
         {
-            if (_shownBlockers.Contains((CreatureElementKind.Node, node.Id)) && IsLoose(node.Id))
+            if (_shownBlockers.Contains(new CreatureElementSelection(CreatureElementKind.Node, node.Id)) && IsLoose(node.Id))
             {
                 notes.Add(NotConnected(node.Id));
             }
@@ -470,7 +467,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             AddTooShortNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
         }
 
-        foreach (var motor in MotorsAndBrakes.Where(motor => _shownBlockers.Contains((motor.Kind, motor.NodeId)) && CreatureReadiness.IsMissingALink(motor)))
+        foreach (var motor in MotorsAndBrakes.Where(motor => _shownBlockers.Contains(new CreatureElementSelection(motor.Kind, motor.Id)) && CreatureReadiness.IsMissingALink(motor)))
         {
             var text = ServoNeedsTwoSides(motor.NodeId)
                 ? NeedsTwoSidesReason(motor.Kind)
@@ -620,8 +617,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         _showPieces = Pieces().Count > 1;
         _shownBlockers.Clear();
-        _shownBlockers.UnionWith(Nodes.Where(node => IsLoose(node.Id)).Select(node => (CreatureElementKind.Node, node.Id)));
-        _shownBlockers.UnionWith(MotorsAndBrakes.Where(CreatureReadiness.IsMissingALink).Select(motor => (motor.Kind, motor.NodeId)));
+        _shownBlockers.UnionWith(Nodes.Where(node => IsLoose(node.Id)).Select(node => new CreatureElementSelection(CreatureElementKind.Node, node.Id)));
+        _shownBlockers.UnionWith(MotorsAndBrakes.Where(CreatureReadiness.IsMissingALink).Select(motor => new CreatureElementSelection(motor.Kind, motor.Id)));
 
         OnPropertyChanged(nameof(CanvasNotes));
     }
@@ -1033,32 +1030,34 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Gives the Servo, Velocity motor or Brake <paramref name="motorId"/> a new Fixed or Target side,
-    /// from its panel's pickers, and returns its id after. A motor takes a fresh id and stays selected
-    /// under it; a locked Creation keeps its motors' sides (#896). A Brake has no ports, so it keeps
-    /// its id and a locked Creation changes its sides too (#1041). Null when nothing could change.
+    /// from its panel's pickers; it keeps its id. A locked Creation keeps its motors' sides (#896),
+    /// but a Brake has no ports, so a locked Creation changes its sides too (#1041).
     /// </summary>
-    public int? SetMotorLink(int motorId, bool fixedRole, int linkId)
+    public void SetMotorLink(int motorId, bool fixedRole, int linkId)
     {
         var isBrake = _builder.Brakes.Any(brake => brake.Id == motorId);
         if (_locked && !isBrake)
         {
-            return null;
+            return;
         }
 
         var isServo = _builder.Servos.Any(servo => servo.Id == motorId);
-        var newId = _history.Change(() =>
+        _history.Change(() =>
         {
-            var id = isBrake ? _builder.SetBrakeLink(motorId, fixedRole, linkId)
-                : isServo ? _builder.SetServoLink(motorId, fixedRole, linkId)
-                : _builder.SetVelocityMotorLink(motorId, fixedRole, linkId);
-
-            // Within the step: its Undo row refresh must not find the motor's old id still selected.
-            ClearSelectionSets();
-            (isBrake ? _selectedBrakeIds : isServo ? _selectedServoIds : _selectedVelocityMotorIds).Add(id);
-            return id;
+            if (isBrake)
+            {
+                _builder.SetBrakeLink(motorId, fixedRole, linkId);
+            }
+            else if (isServo)
+            {
+                _builder.SetServoLink(motorId, fixedRole, linkId);
+            }
+            else
+            {
+                _builder.SetVelocityMotorLink(motorId, fixedRole, linkId);
+            }
         });
-        SelectionChanged();
-        return newId;
+        RaiseAnatomyChanged();
     }
 
     private NodeDef NodeById(int nodeId) => _builder.Nodes[_builder.NodeIndexOf(nodeId)];

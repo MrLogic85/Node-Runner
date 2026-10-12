@@ -109,7 +109,7 @@ public sealed record VelocityMotorDef : IJointMotorDef
     public VelocityMotorDef WithSettings(double strength, double maxSpeed, double riseTime) =>
         new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength, maxSpeed, riseTime);
 
-    /// <summary>The motor with new sides under <paramref name="newId"/>: a side change gives it a new id, like a Servo.</summary>
-    public VelocityMotorDef WithLinks(int? fixedLinkId, int? targetLinkId, int newId) =>
-        new(newId, NodeId, fixedLinkId, targetLinkId, Name, Strength, MaxSpeed, RiseTime);
+    /// <summary>The motor with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
+    public VelocityMotorDef WithLinks(int? fixedLinkId, int? targetLinkId) =>
+        new(Id, NodeId, fixedLinkId, targetLinkId, Name, Strength, MaxSpeed, RiseTime);
 }

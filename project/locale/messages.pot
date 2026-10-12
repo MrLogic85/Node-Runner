@@ -211,10 +211,6 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Changing these makes it learn again."
-msgstr ""
-
 #: project/src/hosts/BuildHost.cs
 msgid "Code copied"
 msgstr ""

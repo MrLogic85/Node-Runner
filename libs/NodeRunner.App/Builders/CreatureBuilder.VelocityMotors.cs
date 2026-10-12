@@ -71,23 +71,10 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Changes the Velocity motor's fixed or target side, as <see cref="SetServoLink"/> does a
-    /// Servo's: picking the other role swaps them, and a real change gives it a fresh part id.
+    /// Servo's: picking the other role swaps them, and it keeps its id.
     /// </summary>
-    public int SetVelocityMotorLink(int velocityMotorId, bool fixedRole, int linkId)
-    {
-        var index = VelocityMotorIndexOf(velocityMotorId);
-        var motor = _velocityMotors[index];
-        ValidateServoSide(linkId, motor.NodeId);
-        var (fixedLink, targetLink) = PickSide(motor, fixedRole, linkId);
-        if (fixedLink == motor.FixedLinkId && targetLink == motor.TargetLinkId)
-        {
-            return motor.Id;
-        }
-
-        var newId = AllocatePartId();
-        _velocityMotors[index] = motor.WithLinks(fixedLink, targetLink, newId);
-        return newId;
-    }
+    public void SetVelocityMotorLink(int velocityMotorId, bool fixedRole, int linkId) =>
+        SetSide(_velocityMotors, VelocityMotorIndexOf(velocityMotorId), fixedRole, linkId, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink));
 
     /// <summary>Removes a Velocity motor by id.</summary>
     public void RemoveVelocityMotor(int velocityMotorId) => _velocityMotors.RemoveAt(VelocityMotorIndexOf(velocityMotorId));

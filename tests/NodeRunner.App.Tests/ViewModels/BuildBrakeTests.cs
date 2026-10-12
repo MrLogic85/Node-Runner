@@ -93,7 +93,6 @@ public sealed class BuildBrakeTests
         part.Kind.ShouldBe(PartSettingsKind.Brake);
         part.Title.ShouldBe(UiText.Plain("Brake"));
         part.Note.ShouldBe(PartInfo.Brake);
-        part.JointId.ShouldBe(2);
         part.BasicSettings.Select(slider => (slider.Id, slider.Readout, slider.Locked)).ShouldBe([(PartParameterId.BrakeStrength, UiText.Format("{0} N·m", new FixedNumber(200, 0)), false)]);
         part.AdvancedSettings.ShouldBeEmpty();
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.IsLocked, picker.Note)).ShouldBe(
@@ -184,9 +183,9 @@ public sealed class BuildBrakeTests
             .ShouldBe(UiText.Format("{0} N·m–Locked", new FixedNumber(200, 0)));
     }
 
-    // A Brake has no ports, so changing its sides on a trained Creation keeps what it learned.
+    // A link change keeps a Brake's or motor's id, so a trained Creation keeps what it learned (#1177).
     [Fact]
-    public void OnATrainedCreation_ABrakesPickers_HaveNoNote_WhileAMotorsSayItLearnsAgain()
+    public void OnATrainedCreation_ABrakesAndAMotorsPickers_HaveNoNote()
     {
         var build = new BuildViewModel();
         build.Load(WithABrake(), training: TestTraining.State(9));
@@ -197,8 +196,7 @@ public sealed class BuildBrakeTests
         build.Load(WithAVelocityMotor(), training: TestTraining.State(9));
         build.SelectOnly(CreatureElementKind.VelocityMotor, 6);
 
-        var learnAgain = UiText.Plain("Changing these makes it learn again.");
-        new BuildPresentationViewModel(build).SinglePart!.Pickers!.Select(picker => picker.Note).ShouldBe([learnAgain, learnAgain]);
+        new BuildPresentationViewModel(build).SinglePart!.Pickers!.Select(picker => picker.Note).ShouldBe([null, null]);
     }
 
     [Fact]
@@ -208,7 +206,7 @@ public sealed class BuildBrakeTests
         build.Load(WithABrake());
         build.SelectOnly(CreatureElementKind.Brake, 6);
 
-        build.SetMotorLink(6, fixedRole: true, linkId: 5).ShouldBe(6);
+        build.SetMotorLink(6, fixedRole: true, linkId: 5);
 
         build.Brakes.Single().ShouldBe(new BrakeDef(6, 2, fixedLinkId: 5, targetLinkId: 4));
         build.SingleSelectedBrakeId.ShouldBe(6);
@@ -233,7 +231,7 @@ public sealed class BuildBrakeTests
 
         pickers[1].Options.Select(option => (option.LinkId, option.Kind)).ShouldContain((wheel, CreatureElementKind.Wheel));
         pickers[1].LinkIdAt(pickers[1].SelectedIndex!.Value).ShouldBe(wheel);
-        build.SetMotorLink(brakeId, fixedRole: true, linkId: wheel).ShouldBe(brakeId);
+        build.SetMotorLink(brakeId, fixedRole: true, linkId: wheel);
         build.Brakes.Single().ShouldBe(new BrakeDef(brakeId, 1, fixedLinkId: wheel, targetLinkId: 4));
     }
 
@@ -392,7 +390,7 @@ public sealed class BuildBrakeTests
 
         new BuildPresentationViewModel(build).SinglePart!.Pickers!.ShouldAllBe(picker => !picker.IsLocked);
         new BuildPresentationViewModel(build).SinglePart!.BasicSettings.Single().Locked.ShouldBeFalse();
-        build.SetMotorLink(6, fixedRole: true, linkId: 5).ShouldBe(6);
+        build.SetMotorLink(6, fixedRole: true, linkId: 5);
         build.SetParameter(PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
         build.Brakes.Single().ShouldBe(new BrakeDef(6, 2, fixedLinkId: 5, targetLinkId: 4, strength: BrakeDef.LockedStrength));
 

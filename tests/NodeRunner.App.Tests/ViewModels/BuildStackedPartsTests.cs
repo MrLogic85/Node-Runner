@@ -230,7 +230,6 @@ public sealed class BuildStackedPartsTests
         part.Kind.ShouldBe(PartSettingsKind.Wheel);
         part.OnThisJoint.ShouldBe(servoPanel.OnThisJoint);
         part.OnThisJointIndex.ShouldBe(1);
-        part.PanelId.ShouldNotBe(servoPanel.PanelId);
     }
 
     [Fact]
