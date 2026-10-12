@@ -449,7 +449,6 @@ public partial class Creature : Node2D
                 CenterOfMass = Vector2.Zero,
                 Inertia = _beamBodyMass * ((4 * halfLength * halfLength) + (_beamInertiaThickness * _beamInertiaThickness)) / 12,
                 CanSleep = false,
-                ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
 
             var visual = new BeamVisual
@@ -512,6 +511,9 @@ public partial class Creature : Node2D
             var position = ToGodot(definition.Nodes[i].Position);
             var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(ServoDef.JointRadius));
 
+            // No continuous collision detection (#1171): the ground is an endless half-plane a node
+            // cannot tunnel through, and Godot's ray CCD sets a fast node's velocity outright, which
+            // made rolling creatures launch.
             var body = new RigidBody2D
             {
                 Name = $"Node{i}",
@@ -521,7 +523,6 @@ public partial class Creature : Node2D
                 Mass = Math.Max(masses[i], _minNodeMass),
                 LockRotation = true,
                 CanSleep = false,
-                ContinuousCd = RigidBody2D.CcdMode.CastRay,
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 

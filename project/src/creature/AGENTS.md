@@ -13,7 +13,11 @@ file owns how Godot realises it.
 3. **Bodies and joints.** Each node and each beam is its own `RigidBody2D`
    (`CanSleep = false`), and a `PinJoint2D` pins every beam to its two
    nodes, so beams are rigid by geometry, not springs. Only nodes collide (a
-   circle each); beams and links have no collider. A link's weight sits on
+   circle each); beams and links have no collider. No body uses continuous
+   collision detection (#1171): the ground is an endless half-plane that a
+   node cannot tunnel through, and Godot's ray CCD sets a fast body's
+   velocity outright, which launched rolling creatures. Revisit this when
+   grounds get shapes (#91). A link's weight sits on
    its nodes; a beam keeps half its own (`docs/CREATURE_MODEL.md` → Beam).
    Bodies set no `LinearDamp` or `AngularDamp` of their own, so only the
    project's physics defaults slow them (`docs/CREATURE_MODEL.md` → Air
