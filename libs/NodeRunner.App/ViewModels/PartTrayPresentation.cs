@@ -105,6 +105,7 @@ public static class PartTray
     public static UiText? Info(BuildPart part) => part switch
     {
         BuildPart.Servo => PartInfo.Servo,
+        BuildPart.VelocityMotor => PartInfo.VelocityMotor,
         BuildPart.Wheel => PartInfo.Wheel,
         BuildPart.Accelerometer => PartInfo.Accelerometer,
         BuildPart.Camera => PartInfo.Camera,
@@ -145,8 +146,8 @@ public static class PartTray
         _ => null,
     };
 
-    /// <summary>Whether a tray part goes on a joint (a Servo, a Wheel, #129, a Touch sensor, #1045, or a Rubber, #1142) rather than on a beam.</summary>
-    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber;
+    /// <summary>Whether a tray part goes on a joint (a Servo, a Velocity motor, #454, a Wheel, #129, a Touch sensor, #1045, or a Rubber, #1142) rather than on a beam.</summary>
+    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.VelocityMotor or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber;
 
     /// <summary>
     /// The radius of the joint part <paramref name="placing"/> as placed on a joint drawn
@@ -156,7 +157,7 @@ public static class PartTray
     /// </summary>
     public static double PlacingRingRadius(BuildPart placing, double jointRadius) => placing switch
     {
-        BuildPart.Servo => JointMotor.Radius,
+        BuildPart.Servo or BuildPart.VelocityMotor => JointMotor.Radius,
         BuildPart.Wheel => WheelDef.DefaultRadius,
         BuildPart.TouchSensor => jointRadius + TouchSensorDef.Cushion,
         BuildPart.Rubber => jointRadius + RubberDef.Skin,
@@ -169,7 +170,7 @@ public static class PartTray
         [
             Available(BuildPart.Servo, UiText.Plain("Servo")),
             Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.3"),
-            Locked(BuildPart.VelocityMotor, UiText.Plain("Velocity motor"), "0.14.2"),
+            Available(BuildPart.VelocityMotor, UiText.Plain("Velocity motor")),
             Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.2"),
             Available(BuildPart.Wheel, UiText.Plain("Wheel")),
             Available(BuildPart.Rubber, UiText.Plain("Rubber")),

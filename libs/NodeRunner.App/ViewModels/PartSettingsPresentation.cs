@@ -50,9 +50,9 @@ public sealed record PartSettingsPresentation(
     public int? OnThisJointIndex => OnThisJoint?.Select((tab, index) => (tab, index)).First(entry => entry.tab.Part.Id == Id).index;
 
     /// <summary>
-    /// The part the panel shows, kept across edits: <see cref="Id"/>, or a Servo's <see cref="JointId"/>,
-    /// since a link change gives the Servo a new id (<c>docs/CREATURE_MODEL.md</c> → "Editing identity
-    /// rules") but it is the same Servo to the player (#910, #911).
+    /// The part the panel shows, kept across edits: <see cref="Id"/>, or a motor's <see cref="JointId"/>,
+    /// since a link change gives a Servo or Velocity motor a new id (<c>docs/CREATURE_MODEL.md</c> → "Editing identity
+    /// rules") but it is the same motor to the player (#910, #911).
     /// </summary>
     public int PanelId => JointId ?? Id;
 
@@ -85,7 +85,7 @@ public sealed record JointPartTab(PartSettingsKind Kind, CreatureElementSelectio
 /// <summary>A read-only row in the Part settings panel: a label and the value it reads, like "Weight" and "1.2 kg".</summary>
 public sealed record PartReadout(UiText Label, UiText Value);
 
-/// <summary>The role a link has on its Servo today.</summary>
+/// <summary>The role a link has on its motor today, a Servo or a Velocity motor.</summary>
 public enum ServoLinkRole
 {
     None,
@@ -94,13 +94,13 @@ public enum ServoLinkRole
 }
 
 /// <summary>
-/// One link a Servo picker offers, or its joint's Wheel, a one-sided link (#1118): its <see cref="Role"/> on the Servo today, and the <see cref="Note"/>
+/// One link a motor picker offers, or its joint's Wheel, a one-sided link (#1118): its <see cref="Role"/> on the Servo today, and the <see cref="Note"/>
 /// "swaps" when picking it swaps the Fixed and Target links (#1130).
 /// </summary>
 public sealed record PartPickerOption(int LinkId, UiText Name, CreatureElementKind Kind, ServoLinkRole Role, UiText? Note = null);
 
 /// <summary>
-/// A Servo link picker: the links it offers, which one is chosen, and the <see cref="Placeholder"/>
+/// A motor's link picker: the links it offers, which one is chosen, and the <see cref="Placeholder"/>
 /// shown instead when none is (a deleted held link), which is never one of the options.
 /// </summary>
 public sealed record PartPickerPresentation(

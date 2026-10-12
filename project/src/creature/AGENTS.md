@@ -1,6 +1,6 @@
 # AGENTS.md — `src/creature/`
 
-The Godot side of a creature: bodies, joints, sensors, Servos, Pistons,
+The Godot side of a creature: bodies, joints, sensors, Servos, Velocity motors, Pistons,
 Springs, Wheels and the brain wiring. `docs/CREATURE_MODEL.md` owns the model; this
 file owns how Godot realises it.
 
@@ -34,12 +34,15 @@ file owns how Godot realises it.
    Each tick `SpringLink` sets its rest length to `Spring.StepRestLength`:
    Godot's spring would push a preload past a stop into the stop's joints,
    which gave way (#835). Behaviour: `docs/CREATURE_MODEL.md` → Spring.
-6. **Servos.** Each side of a `ServoJoint` is a `ServoSide`: a link
-   (`ServoLinkSide`) gets equal-and-opposite force couples
+6. **Servos and Velocity motors.** A joint motor (`ServoJoint`, or
+   `VelocityMotorJoint`, #454) measures and drives its two sides through one
+   `MotorSides`, so both motors share it. Each side is a `MotorSide`: a link
+   (`MotorLinkSide`) gets equal-and-opposite force couples
    (`Servo.CoupleForTorque`) on the joint body and the link's far body; the
-   joint's Wheel (`ServoWheelSide`, #1118) gets a plain body torque on the
+   joint's Wheel (`MotorWheelSide`, #1118) gets a plain body torque on the
    Wheel body, with the signs of `Servo.WheelAngle`/`WheelBodyTorque` and
-   the Wheel's own inertia. A soft end-stop torque acts outside its range.
+   the Wheel's own inertia. A Servo adds a soft end-stop torque outside its
+   range; a Velocity motor has no stops, and at zero strength no torque.
    No Godot angular joint: Pistons and Springs slide on a groove, and force
    couples work for every link kind without link-kind branches. The lever arm is clamped to
    `Servo.MinimumLeverArm` so a compressed Spring cannot make unbounded
@@ -87,7 +90,8 @@ file owns how Godot realises it.
 - `TouchSensor.cs` — a Touch sensor: how near its joint body is to the ground
 - `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is
   one `RayCast2D` child per ray, aimed and sized by `CameraRays`)
-- `ServoJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
+- `MotorSides.cs` — a joint motor's two sides: angle, speed, inertia, torque
+- `ServoJoint.cs`, `VelocityMotorJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
 - `*Visual.cs` — rendering only: Training's adapters over the shared part
   visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds
   `IShadowVisual`

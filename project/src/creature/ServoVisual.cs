@@ -7,7 +7,7 @@ public partial class ServoVisual : ServoPart, IShadowVisual
 {
     public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
 
-    public required ServoJoint Link { get; init; }
+    public required MotorSides Sides { get; init; }
 
     public bool IsShadow
     {
@@ -17,10 +17,10 @@ public partial class ServoVisual : ServoPart, IShadowVisual
 
     public override void _Process(double delta)
     {
-        GlobalPosition = Link.JointPosition;
-        GlobalRotation = (float)Link.FixedRotation;
-        BuiltAngle = (float)Link.BuiltRelativeRotation;
-        TargetAngle = (float)Link.TargetRelativeRotation;
+        GlobalPosition = Sides.JointPosition;
+        GlobalRotation = (float)Sides.FixedRotation;
+        BuiltAngle = (float)Sides.BuiltRelativeRotation;
+        TargetAngle = (float)Sides.TargetRelativeRotation;
         QueueRedraw();
     }
 }

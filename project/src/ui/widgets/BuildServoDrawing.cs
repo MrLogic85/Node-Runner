@@ -6,7 +6,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>Build canvas marks for joint parts: a selected Servo's link bands, a Wheel side's under its tyre (#1118).</summary>
+/// <summary>Build canvas marks for joint parts: a selected motor's link bands, a Servo's or a Velocity motor's (#454), a Wheel side's under its tyre (#1118).</summary>
 public static class BuildServoDrawing
 {
     private const float _servoBeamBandHalfWidth = 9;
@@ -15,19 +15,21 @@ public static class BuildServoDrawing
 
     public static void DrawSelectedBands(CanvasItem canvas, BuildViewModel viewModel, VisualTheme theme, Transform2D viewTransform)
     {
-        if (viewModel.SingleSelectedServoId is not { } servoId)
+        IJointMotorDef? motor = viewModel.SingleSelectedServoId is { } servoId ? viewModel.Servos[viewModel.ServoIndexOf(servoId)]
+            : viewModel.SingleSelectedVelocityMotorId is { } motorId ? viewModel.VelocityMotors[viewModel.VelocityMotorIndexOf(motorId)]
+            : null;
+        if (motor is null)
         {
             return;
         }
 
-        var servo = viewModel.Servos[viewModel.ServoIndexOf(servoId)];
         using var pen = UiPixelPen.Begin(canvas, viewTransform);
-        if (servo.FixedLinkId is { } fixedLink)
+        if (motor.FixedLinkId is { } fixedLink)
         {
             DrawLinkBand(pen, viewModel, theme, fixedLink, fixedMark: true);
         }
 
-        if (servo.TargetLinkId is { } targetLink)
+        if (motor.TargetLinkId is { } targetLink)
         {
             DrawLinkBand(pen, viewModel, theme, targetLink, fixedMark: false);
         }
@@ -72,7 +74,7 @@ public static class BuildServoDrawing
         CreatureElementKind.Beam => _servoBeamBandHalfWidth,
         CreatureElementKind.Piston => _servoPistonBandHalfWidth,
         CreatureElementKind.Spring => _servoSpringBandHalfWidth,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a Servo link kind."),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a motor link kind."),
     };
 
     private static Vector2 ToGodot(Vector2D position) => new((float)position.X, (float)position.Y);

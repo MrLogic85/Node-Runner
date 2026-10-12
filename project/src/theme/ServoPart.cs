@@ -100,6 +100,9 @@ public partial class ServoPart : PartVisual
     public static float HousingReachFor(float freeLength, float sensorLength = 0) =>
         Math.Clamp(((freeLength - sensorLength) / 2) - 2, _housingMinReach, _housingMaxReach);
 
+    /// <summary>Whether it draws its range band; a part without stops, like the Velocity motor, leaves it out (#454).</summary>
+    protected virtual bool DrawsRange => true;
+
     /// <summary>A Servo missing a link cannot train, so the whole part draws in danger (#1111).</summary>
     private bool Missing => !HasFixed || !HasTarget;
 
@@ -124,7 +127,11 @@ public partial class ServoPart : PartVisual
         pen.Disc(Vector2.Zero, Radius, Theme.ArenaBackground);
         pen.Disc(Vector2.Zero, Radius, Selected ? Theme.SelectionFill : Theme.JointFill);
         pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), Line, Theme.JointRingWidth, _ringSegments);
-        DrawRangeBand(pen, filled: true);
+        if (DrawsRange)
+        {
+            DrawRangeBand(pen, filled: true);
+        }
+
         if (HasTarget)
         {
             DrawHorn(pen);
@@ -155,6 +162,12 @@ public partial class ServoPart : PartVisual
         pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), Line, Theme.JointRingWidth, _ringSegments);
         if (Missing)
         {
+            return;
+        }
+
+        if (!DrawsRange)
+        {
+            pen.Line(Vector2.Zero, Vector2.FromAngle(TargetAngle) * _hornLong, Line, 3);
             return;
         }
 

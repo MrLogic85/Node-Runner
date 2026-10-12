@@ -704,7 +704,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public Vector2D SensorCentreOn(int beamId)
     {
         var beam = Beams[BeamIndexOf(beamId)];
-        return SensorPicture.Centre(Nodes[NodeIndexOf(beam.NodeA)].Position, Nodes[NodeIndexOf(beam.NodeB)].Position, CreatureDef.CoveredRadius(beam.NodeA, JointMotors), CreatureDef.CoveredRadius(beam.NodeB, Servos));
+        return SensorPicture.Centre(Nodes[NodeIndexOf(beam.NodeA)].Position, Nodes[NodeIndexOf(beam.NodeB)].Position, CreatureDef.CoveredRadius(beam.NodeA, JointMotors), CreatureDef.CoveredRadius(beam.NodeB, JointMotors));
     }
 
     /// <summary>
@@ -1024,6 +1024,31 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             // Within the step: its Undo row refresh must not find the Servo's old id still selected.
             ClearSelectionSets();
             _selectedServoIds.Add(id);
+            return id;
+        });
+        SelectionChanged();
+        return newId;
+    }
+
+    /// <summary>Gives the Servo or Velocity motor <paramref name="motorId"/> a new Fixed or Target side, from its panel's pickers.</summary>
+    public int? SetMotorLink(int motorId, bool fixedRole, int linkId) =>
+        _builder.Servos.Any(servo => servo.Id == motorId)
+            ? SetServoLink(motorId, fixedRole, linkId)
+            : SetVelocityMotorLink(motorId, fixedRole, linkId);
+
+    /// <summary>Gives a Velocity motor a new Fixed or Target side, as <see cref="SetServoLink"/> does a Servo (#454).</summary>
+    public int? SetVelocityMotorLink(int velocityMotorId, bool fixedRole, int linkId)
+    {
+        if (_locked)
+        {
+            return null;
+        }
+
+        var newId = _history.Change(() =>
+        {
+            var id = _builder.SetVelocityMotorLink(velocityMotorId, fixedRole, linkId);
+            ClearSelectionSets();
+            _selectedVelocityMotorIds.Add(id);
             return id;
         });
         SelectionChanged();

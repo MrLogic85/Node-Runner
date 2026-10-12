@@ -395,7 +395,7 @@ public partial class BuildCanvas : Node2D
         _creature.Transform = ViewTransform();
         _creature.Theme = Theme;
         _creature.Show(
-            new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Servos, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors, _viewModel.Wheels, _viewModel.TouchSensors, _viewModel.Rubbers),
+            new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Servos, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors, _viewModel.Wheels, _viewModel.TouchSensors, _viewModel.Rubbers, _viewModel.VelocityMotors),
             new CreatureMarks(
                 selected,
                 ShowsAsLoose,
@@ -407,7 +407,7 @@ public partial class BuildCanvas : Node2D
                 _viewModel.RaisedParts(selected, targets)));
     }
 
-    /// <summary>What goes under the selected parts (#1107): the selected Servo's link bands.</summary>
+    /// <summary>What goes under the selected parts (#1107): the selected motor's link bands.</summary>
     private void DrawSelectedUnderlay(CanvasItem canvas)
     {
         if (_viewModel is not null && _gestures is not null)

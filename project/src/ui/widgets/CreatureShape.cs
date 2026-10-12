@@ -15,4 +15,9 @@ public sealed record CreatureShape(
     IReadOnlyList<SensorDef> Sensors,
     IReadOnlyList<WheelDef> Wheels,
     IReadOnlyList<TouchSensorDef> TouchSensors,
-    IReadOnlyList<RubberDef> Rubbers);
+    IReadOnlyList<RubberDef> Rubbers,
+    IReadOnlyList<VelocityMotorDef> VelocityMotors)
+{
+    /// <summary>Every joint motor, the Servos then the Velocity motors (#454), as <see cref="CreatureDef.JointMotors"/>.</summary>
+    public IReadOnlyList<IJointMotorDef> JointMotors => [.. Servos, .. VelocityMotors];
+}

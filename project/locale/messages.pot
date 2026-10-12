@@ -768,7 +768,7 @@ msgid "Rise time"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Rolls freely on the ground."
+msgid "Rolls freely on the ground. Add a motor to power it."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -1160,6 +1160,10 @@ msgstr ""
 msgid "Turn it around its middle"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Turns one side round and round. The brain picks how fast and which way."
+msgstr ""
+
 #: libs/NodeRunner.App/Services/CreationExamples.cs
 msgid "Two crossed pistons swing two legs: a first walk."
 msgstr ""
@@ -1353,12 +1357,6 @@ msgstr ""
 msgid "{0} N·s/m"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "{0} Servo missing a link"
-msgid_plural "{0} Servos missing a link"
-msgstr[0] ""
-msgstr[1] ""
-
 #: libs/NodeRunner.App/ViewModels/CreationCardPresentation.cs
 msgid "{0} beam"
 msgid_plural "{0} beams"
@@ -1457,6 +1455,12 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
 msgid "{0} motor"
 msgid_plural "{0} motors"
+msgstr[0] ""
+msgstr[1] ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "{0} motor missing a link"
+msgid_plural "{0} motors missing a link"
 msgstr[0] ""
 msgstr[1] ""
 

@@ -77,6 +77,13 @@ for a complete Servo; without a Target link, as if the Target pointed
 opposite the Fixed link, or to the screen's left when it has neither.
 Thumbnails draw it as in Build, badge included.
 
+### Velocity motor
+
+For now (#454) it draws as a Servo without the range band, in every place a
+Servo draws: the housing, the ring and the horn along the Target side,
+turning with it in Training. Its final look comes later. It has no Training
+angle arc.
+
 ### Piston
 
 A telescoping rod from joint A to joint B. The cylinder starts at the edge

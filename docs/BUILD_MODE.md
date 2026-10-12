@@ -205,6 +205,12 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   (#1006).
   Tapping or dragging that joint selects the Servo; dragging moves the
   joint with it.
+- **Velocity motor (#454):** placed from Parts → Moving parts on any joint
+  exactly like a Servo, sharing its joint's motor-or-brake slot, so a
+  joint holds a Servo or a Velocity motor, never both. A beam, sensor or
+  link refuses with "Velocity motors go on a joint"; its sides, missing
+  roles and notes follow the Servo's, with "A Velocity motor needs two
+  links, or a link and a Wheel".
 - **Wheel (#129):** placed from Parts → Moving parts on any joint, by drag
   or tap, like a Servo. A beam, sensor or link refuses with "Wheels go on a
   joint"; a joint with a Wheel refuses with "One wheel per joint", while a
@@ -315,7 +321,7 @@ active one, clears the selection so its panel shows (#1096).
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
   settings note) and where it goes ("Tap a joint to place it. A joint holds
-  one motor or brake." for a Servo, "… holds one wheel." for a Wheel, "…
+  one motor or brake." for a Servo or Velocity motor, "… holds one wheel." for a Wheel, "…
   holds one rubber." for a Rubber, "… holds one sensor." for a Touch
   sensor), per part, not per tab, as a tab can mix placements. Under
   the rows the help line says "Tap a part to pick it, or drag it onto the
@@ -394,9 +400,14 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   and the play-blocked reason asks to connect another link or add a Wheel there, because
   no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
   "Editing identity rules".
+- **Velocity motor (#454):** Max strength, Max speed and Rise time with the
+  Servo's ranges, and the Servo's "Fixed link" and "Target link" pickers,
+  Wheel included, locked with the creation. It has no Range or Start
+  position, since it turns round and round. Its note: "Turns one side round
+  and round. The brain picks how fast and which way."
 - **Wheel:** Radius (0.4–1.0 m, step 0.1), then a read-only Weight
   ("1.2 kg", `PartSettingsPresentation.Readouts`) that follows Radius. Its
-  note: "Rolls freely on the ground."
+  note: "Rolls freely on the ground. Add a motor to power it."
 - **Camera:** Aim, set on the canvas, one Camera at a time; Rays (1, 3 or
   5, three evenly spaced stops, #578), Spread (15°–90°, step 5) and Range
   (1.0–10.0 m, step 0.1, #1097) in the panel. Spread shows disabled while every
@@ -501,7 +512,7 @@ dimmed button can still be tapped
 gives each joint loose at that moment a "Not connected" canvas note until
 it is joined or removed. A creation in separate pieces gets the same note
 on every piece's joint nearest another piece, none being the main one, until
-it is one piece (#930), and every Servo missing a link gets its
+it is one piece (#930), and every Servo or Velocity motor missing a link gets its
 missing-link note (see Servo settings) until it has both (#1006); a blocker
 that appears later waits for the next tap. The next canvas touch hides
 these notes, so they do not stay in the way while building (#991). Too-short parts always have their "Too short" note. The edits are saved first either way. Back never validates: it saves

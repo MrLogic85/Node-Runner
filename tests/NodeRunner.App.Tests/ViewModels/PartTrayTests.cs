@@ -41,7 +41,8 @@ public sealed class PartTrayTests
 
     [Theory]
     [InlineData(BuildPart.Servo, "A motor that tries to hold a target angle.", "Tap a joint to place it. A joint holds one motor or brake.")]
-    [InlineData(BuildPart.Wheel, "Rolls freely on the ground.", "Tap a joint to place it. A joint holds one wheel.")]
+    [InlineData(BuildPart.VelocityMotor, "Turns one side round and round. The brain picks how fast and which way.", "Tap a joint to place it. A joint holds one motor or brake.")]
+    [InlineData(BuildPart.Wheel, "Rolls freely on the ground. Add a motor to power it.", "Tap a joint to place it. A joint holds one wheel.")]
     [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
     [InlineData(BuildPart.TouchSensor, "Feels how near its joint is to the ground.", "Tap a joint to place it. A joint holds one sensor.")]
     [InlineData(BuildPart.Rubber, "Makes its joint grip the ground.", "Tap a joint to place it. A joint holds one rubber.")]
@@ -120,7 +121,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.Servo and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.Servo and not BuildPart.VelocityMotor and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable);
     }
 
@@ -130,7 +131,7 @@ public sealed class PartTrayTests
         PartTray.Groups().SelectMany(group => group.Rows).Select(row => (row.Part, row.Version)).ShouldBe([
             (BuildPart.Servo, null),
             (BuildPart.Stepper, "0.14.3"),
-            (BuildPart.VelocityMotor, "0.14.2"),
+            (BuildPart.VelocityMotor, null),
             (BuildPart.Brake, "0.14.2"),
             (BuildPart.Wheel, null),
             (BuildPart.Rubber, null),
@@ -165,7 +166,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Create(picked: null, creationLocked: true).Groups.SelectMany(group => group.Rows).ToList();
         rows.Where(row => row.State == PartTrayRowState.ComingLater).Select(row => row.Version).ShouldAllBe(version => version != null);
-        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(7);
+        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(6);
     }
 
     [Fact]
