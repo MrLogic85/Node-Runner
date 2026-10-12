@@ -107,7 +107,7 @@ public partial class Creature
     // turning with the Piston. It weighs half a beam (#731): Godot's joints give far past an end
     // when the cylinder or its nodes are much lighter than the rest. Inside the stroke the groove
     // pushes nothing along the piston, so only the piston's own force moves it; at an end it
-    // holds whatever the load. A Spring has the same stops (#835).
+    // holds up to EndStop.MaxForce, then slides (CapEndStops). A Spring has the same stops (#835).
     private RigidBody2D CreateEndStops(string name, RigidBody2D nodeA, RigidBody2D nodeB, float built, float shortest, float longest)
     {
         var a = nodeA.Position;
@@ -147,6 +147,20 @@ public partial class Creature
         groove.NodeA = groove.GetPathTo(cylinder);
         groove.NodeB = groove.GetPathTo(nodeB);
         return cylinder;
+    }
+
+    // Every end stop gives way past EndStop.MaxForce (#1115; why: AGENTS.md rule 4). Godot has no
+    // such cap on the GrooveJoint2D node, only the server's MaxForce, which it keeps when it
+    // remakes the joint. Run once every body exists, as the weight counts them all.
+    private void CapEndStops(CreatureDef definition)
+    {
+        var mass = GetChildren().OfType<RigidBody2D>().Sum(body => (double)body.Mass);
+        var gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsDouble();
+        var maxForce = (float)Mechanics.EndStop.MaxForce(definition.Pistons.Select(piston => piston.Strength), mass, gravity);
+        foreach (var stop in GetChildren().OfType<GrooveJoint2D>())
+        {
+            PhysicsServer2D.JointSetParam(stop.GetRid(), PhysicsServer2D.JointParam.MaxForce, maxForce);
+        }
     }
 
     // A Spring is Godot's DampedSpringJoint2D between its two node bodies (#453): it pulls them

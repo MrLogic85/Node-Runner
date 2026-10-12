@@ -185,6 +185,7 @@ public partial class Creature : Node2D
         CreateServos(definition);
         CreatePistons(definition);
         CreateSprings(definition);
+        CapEndStops(definition);
         _drawGroups = DrawGroups.Of(definition.Nodes, LinkRef.All(definition.Beams, definition.Pistons, definition.Springs));
         ConfigureBrainBuffers(definition);
         ShowInEitherArenaView(this);

@@ -21,7 +21,10 @@ file owns how Godot realises it.
 4. **End stops.** Each Piston and Spring has a hidden, collider-free
    cylinder body pinned to node A and a `GrooveJoint2D` to node B that holds
    its length between the stops (`Creature.CreateEndStops`, #701). Anything
-   that moves or resets every body must include the cylinders.
+   that moves or resets every body must include the cylinders. Each groove's
+   force is capped at `Mechanics.EndStop.MaxForce` (`CapEndStops`, #1115):
+   Godot's solver cannot settle stops that close a loop with beams, and an
+   uncapped stop stores a push that throws the creature into the air.
 5. **Springs.** A Spring is a `DampedSpringJoint2D` between its nodes
    (#453), which has no stops of its own, so it gets the cylinder above.
    Each tick `SpringLink` sets its rest length to `Spring.StepRestLength`:
