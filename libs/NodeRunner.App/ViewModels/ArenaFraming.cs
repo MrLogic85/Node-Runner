@@ -23,10 +23,14 @@ public readonly record struct FramedCreature(double CentreX, double CentreY, dou
 /// follows the creature's centre of mass on both axes through one <see cref="ArenaFollow"/> each and
 /// shows it in the middle of the view at rest, except that the ground line never rises above
 /// <see cref="GroundFromTop"/>, so a creature on the ground sits low and a hopping gait does not
-/// bob the view, and that a moving creature shows behind the middle (the lead, below). It zooms out so the creature fits, and further the faster it moves on either
-/// axis; it zooms out quickly and back in only after the creature has stayed smaller for a while,
-/// and then slowly, so a stretching gait does not make it pump. The room speed adds goes in front:
-/// the view slides ahead by half of it, so the room behind stays as at rest. While a part callout
+/// bob the view, and that a moving creature shows behind the middle. It zooms out so the creature
+/// fits, and further the faster it moves on either axis; it zooms out quickly and back in only
+/// after the creature has stayed smaller for a while, and then slowly, so a stretching gait does
+/// not make it pump. The room speed adds is shared (#1190): the view slides ahead by a sixth of it,
+/// so a third of it shows behind and the creature nears a third of the view in from the back edge
+/// as it speeds up. After all smoothing, a safe zone keeps the creature's box
+/// <see cref="SafeMargin"/> inside the view's sides and top, so a sudden start or launch, which the
+/// eased speed lags, never takes it off screen. While a part callout
 /// shows, the framing keeps a <see cref="Shelf"/> for it at the top (#1137): it lowers the ground
 /// first, toward <see cref="ShelfGroundFromTop"/> but never into the <see cref="ScaleBand"/> along
 /// the bottom (#1170), and zooms out only for the rest. All sizes are in
@@ -52,6 +56,13 @@ public sealed class ArenaFraming
 
     /// <summary>The share of the view's width kept clear on either side of the creature.</summary>
     public const double SideMargin = 0.05;
+
+    /// <summary>
+    /// The least share of the view kept between the creature's box and the view's sides and top
+    /// (#1190), or half the room the box has there at rest when that is less, so the safe zone never
+    /// moves a creature at rest. The ground limit holds the bottom.
+    /// </summary>
+    public const double SafeMargin = 0.1;
 
     /// <summary>How far ahead the view widens for the creature's speed, in seconds of travel.</summary>
     public const double SpeedLookaheadSeconds = 1;
@@ -98,6 +109,7 @@ public sealed class ArenaFraming
     private double _shelf;
     private double _scaleBand;
     private double _groundY;
+    private bool _safeZoneHolds;
 
     /// <summary>False until the first <see cref="Step"/> or <see cref="Cut"/> with a usable creature.</summary>
     public bool HasFrame { get; private set; }
@@ -220,13 +232,15 @@ public sealed class ArenaFraming
         _shelfLogZoom = new HeldEase(Math.Log(zoom), roomIsUp: false);
         _groundY = groundY;
         _cutNotStepped = (creature, groundY, viewWidth, viewHeight);
+        _safeZoneHolds = true;
         HasFrame = true;
-        Place(viewWidth, viewHeight);
+        Place(creature, viewWidth, viewHeight);
     }
 
     /// <summary>
     /// Follows another creature, now framed as <paramref name="creature"/>: the view glides there,
-    /// zoom and height included, and the jump between the two is not taken as speed.
+    /// zoom and height included, and the jump between the two is not taken as speed. The safe zone
+    /// holds it only once its box has glided inside, so the switch never jumps.
     /// </summary>
     public void Retarget(FramedCreature creature)
     {
@@ -234,6 +248,7 @@ public sealed class ArenaFraming
         {
             _followX.Retarget(creature.CentreX);
             _followY.Retarget(creature.CentreY);
+            _safeZoneHolds = false;
         }
     }
 
@@ -262,13 +277,14 @@ public sealed class ArenaFraming
         _logZoom.Step(Math.Log(ZoomToFit(creature, _followX.Speed, _followY.Speed, viewWidth, viewHeight)), deltaSeconds);
         _restLogZoom.Step(Math.Log(ZoomToFit(creature, 0, 0, viewWidth, viewHeight)), deltaSeconds);
         StepShelfRoom(creature, viewHeight, deltaSeconds);
-        Place(viewWidth, viewHeight);
+        Place(creature, viewWidth, viewHeight);
     }
 
     /// <summary>
     /// Eases only the room for the <see cref="Shelf"/> over <paramref name="deltaSeconds"/>, as
     /// while paused: the shelf opens and closes for a callout read then, but nothing else follows
-    /// the creature. Does nothing before the first frame.
+    /// the creature. The safe zone still holds, so a shelf narrowing the view back may move it, and
+    /// resuming never jumps. Does nothing before the first frame.
     /// </summary>
     public void StepShelf(FramedCreature creature, double viewWidth, double viewHeight, double deltaSeconds)
     {
@@ -279,7 +295,7 @@ public sealed class ArenaFraming
 
         _cutNotStepped = null;
         StepShelfRoom(creature, viewHeight, deltaSeconds);
-        Place(viewWidth, viewHeight);
+        Place(creature, viewWidth, viewHeight);
     }
 
     private void RecutIfNotStepped()
@@ -298,9 +314,15 @@ public sealed class ArenaFraming
     internal static double Ease(double rate, double deltaSeconds) => 1 - Math.Exp(-rate * deltaSeconds);
 
     // How far the view slides ahead of a creature moving at speed, given the room the view shows
-    // beyond what it needs at rest: half of the room speed added, so the room behind stays as at rest.
+    // beyond what it needs at rest: a sixth of the room speed added, so two thirds of it show in
+    // front and one third behind.
     private static double Lead(double speed, double extraRoom) =>
-        Math.Sign(speed) * Math.Min(Math.Abs(speed) * SpeedLookaheadSeconds, Math.Max(0, extraRoom)) / 2;
+        Math.Sign(speed) * Math.Min(Math.Abs(speed) * SpeedLookaheadSeconds, Math.Max(0, extraRoom)) / 6;
+
+    // The safe zone's margin on one side, in world units: SafeMargin of the shown span, or half the
+    // room the box's edge, reaching extent from the centre of mass, has there at rest when less.
+    private static double SafeRoom(double extent, double restSpan, double shownSpan) =>
+        Math.Clamp(((_viewCentre * restSpan) - extent) / (2 * restSpan), 0, SafeMargin) * shownSpan;
 
     // Measured against the zoom the creature alone needs, so the shelf's own zoom never feeds back.
     private void StepShelfRoom(FramedCreature creature, double viewHeight, double deltaSeconds)
@@ -311,15 +333,34 @@ public sealed class ArenaFraming
     }
 
     // Centred on the eased centre plus its lead, but never so high that the ground line rises above
-    // its place: that holds a creature on the ground still and stops the lead into a fall at the ground.
-    private void Place(double viewWidth, double viewHeight)
+    // its place: that holds a creature on the ground still and stops the lead into a fall at the
+    // ground. Then the safe zone moves the view as little as keeps the box inside it; a box too
+    // wide for both sides' margins is centred between them.
+    private void Place(FramedCreature creature, double viewWidth, double viewHeight)
     {
         var shownWidth = viewWidth / Zoom;
         var shownHeight = viewHeight / Zoom;
         var restZoom = Math.Exp(_restLogZoom.Value);
-        CameraX = _followX.Shown + Lead(_followX.Speed, shownWidth - (viewWidth / restZoom));
-        var centredY = _followY.Shown + Lead(_followY.Speed, shownHeight - (viewHeight / restZoom));
-        CameraY = Math.Min(centredY, _groundY - ((_groundFromTop.Value - _viewCentre) * shownHeight));
+        var restWidth = viewWidth / restZoom;
+        var restHeight = viewHeight / restZoom;
+        var x = _followX.Shown + Lead(_followX.Speed, shownWidth - restWidth);
+        var centredY = _followY.Shown + Lead(_followY.Speed, shownHeight - restHeight);
+        var y = Math.Min(centredY, _groundY - ((_groundFromTop.Value - _viewCentre) * shownHeight));
+
+        // The camera centres the safe zone allows: right of lowestX keeps the box's right side in,
+        // left of highestX its left side, and above highestY its top.
+        var lowestX = creature.Right + SafeRoom(creature.Right - creature.CentreX, restWidth, shownWidth) - (shownWidth / 2);
+        var highestX = creature.Left - SafeRoom(creature.CentreX - creature.Left, restWidth, shownWidth) + (shownWidth / 2);
+        var highestY = creature.Top - SafeRoom(creature.CentreY - creature.Top, restHeight, shownHeight) + (shownHeight / 2);
+        _safeZoneHolds |= lowestX <= x && x <= highestX && y <= highestY;
+        if (_safeZoneHolds)
+        {
+            x = lowestX <= highestX ? Math.Clamp(x, lowestX, highestX) : (lowestX + highestX) / 2;
+            y = Math.Min(y, highestY);
+        }
+
+        CameraX = x;
+        CameraY = y;
     }
 
     /// <summary>

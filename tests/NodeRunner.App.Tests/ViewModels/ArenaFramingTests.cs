@@ -258,7 +258,7 @@ public sealed class ArenaFramingTests
     [Theory]
     [InlineData(3 * Metres.WorldUnitsPerMetre)]
     [InlineData(-3 * Metres.WorldUnitsPerMetre)]
-    public void Step_PutsTheRoomSpeedAddsInFrontOfAWalker(double speed)
+    public void Step_SharesTheRoomSpeedAddsWithAThirdBehindAWalker(double speed)
     {
         var framing = new ArenaFraming();
         framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
@@ -270,16 +270,16 @@ public sealed class ArenaFramingTests
             framing.Step(Standing(centre, 100, 60), _groundY, _viewWidth, _viewHeight, _frame);
         }
 
-        // Shown 565 + 300 wide: 150 of the added 300 slides the view ahead, and the room behind
-        // stays the 282.5 it is at rest.
+        // Shown 565 + 300 wide: 50 of the added 300 slides the view ahead, so the room behind is
+        // the 282.5 it is at rest and a third of the 300.
         var shown = _viewWidth / framing.Zoom;
         shown.ShouldBe(_viewWidth + Math.Abs(speed), tolerance: 1);
-        RoomBehind(framing, centre, speed, shown).ShouldBe(_viewWidth / 2, tolerance: 0.01 * _viewWidth);
+        RoomBehind(framing, centre, speed, shown).ShouldBe((_viewWidth / 2) + (Math.Abs(speed) / 3), tolerance: 0.01 * _viewWidth);
         GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
     }
 
     [Fact]
-    public void Step_KeepsTheRoomBehindAtTheWidestView()
+    public void Step_SharesOnlyTheRoomTheWidestViewHas()
     {
         // 44 000 wide fits in 48 889 at rest, so the widest view has 1 111 to spare for 3 000 a second.
         const double width = 44_000;
@@ -297,7 +297,7 @@ public sealed class ArenaFramingTests
 
         var shown = _viewWidth / framing.Zoom;
         shown.ShouldBe(ArenaFraming.MaxShownWidth, tolerance: 1);
-        RoomBehind(framing, centre, speed, shown).ShouldBe(rest / 2, tolerance: 0.01 * rest);
+        RoomBehind(framing, centre, speed, shown).ShouldBe((rest / 2) + ((shown - rest) / 3), tolerance: 0.001 * rest);
     }
 
     [Theory]
@@ -315,14 +315,15 @@ public sealed class ArenaFramingTests
             framing.Step(Standing(0, 100, 60, bottom), _groundY, _viewWidth, _viewHeight, _frame);
         }
 
-        // Shown 240 + 200 tall: the room behind it, the way it came from, stays the 120 it is at rest.
+        // Shown 240 + 200 tall: the room behind it, the way it came from, is the 120 it is at rest
+        // and a third of the 200.
         var shown = _viewHeight / framing.Zoom;
         shown.ShouldBe(_viewHeight + Math.Abs(speedY), tolerance: 1);
         var centre = bottom - 30;
         var behind = speedY < 0
             ? framing.CameraY + (shown / 2) - centre
             : centre - (framing.CameraY - (shown / 2));
-        behind.ShouldBe(_viewHeight / 2, tolerance: 0.01 * _viewHeight);
+        behind.ShouldBe((_viewHeight / 2) + (Math.Abs(speedY) / 3), tolerance: 0.01 * _viewHeight);
     }
 
     [Fact]
@@ -341,6 +342,116 @@ public sealed class ArenaFramingTests
         }
 
         GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+    }
+
+    [Theory]
+    [InlineData(10)]
+    [InlineData(20)]
+    [InlineData(-20)]
+    public void Step_KeepsAWalkerThatStopsAtOnceInsideTheSafeZone(double metresPerSecond)
+    {
+        var speed = metresPerSecond * Metres.WorldUnitsPerMetre;
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var centre = 0.0;
+        for (var frame = 0; frame < 10 * 60; frame++)
+        {
+            centre += speed * _frame;
+            framing.Step(Standing(centre, 100, 60), _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        // Stopped dead, as against a wall: the eased speed still leads the view on for a while.
+        var creature = Standing(centre, 100, 60);
+        for (var frame = 0; frame < 6 * 60; frame++)
+        {
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+            FromLeft(framing, creature.Left).ShouldBeGreaterThanOrEqualTo(ArenaFraming.SafeMargin);
+            FromLeft(framing, creature.Right).ShouldBeLessThanOrEqualTo(1 - ArenaFraming.SafeMargin);
+        }
+    }
+
+    [Theory]
+    [InlineData(20)]
+    [InlineData(40)]
+    [InlineData(-40)]
+    public void Step_HoldsAWalkerThatSetsOffAtOnceAtTheSafeZone(double metresPerSecond)
+    {
+        // Off at full speed from a standstill: the view's eased speed lags, so its lead falls short.
+        var speed = metresPerSecond * Metres.WorldUnitsPerMetre;
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var centre = 0.0;
+        var closest = 1.0;
+        for (var frame = 0; frame < 4 * 60; frame++)
+        {
+            centre += speed * _frame;
+            var creature = Standing(centre, 100, 60);
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+            var front = speed > 0 ? 1 - FromLeft(framing, creature.Right) : FromLeft(framing, creature.Left);
+            front.ShouldBeGreaterThanOrEqualTo(ArenaFraming.SafeMargin - 1e-9);
+            closest = Math.Min(closest, front);
+        }
+
+        closest.ShouldBe(ArenaFraming.SafeMargin, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Step_DoesNotPanForAGaitStretchingNearTheSafeZone()
+    {
+        // At rest the box reaches 5% in from the right: inside SafeMargin, so the zone there is half that.
+        var framing = new ArenaFraming();
+        framing.Cut(new FramedCreature(0, 366, -100, 336, 370, _groundY), _groundY, _viewWidth, _viewHeight);
+        var cameraX = new List<double>();
+
+        for (var frame = 0; frame < 10 * 60; frame++)
+        {
+            var reach = 335 + (35 * Math.Sin(Math.PI * 4 * frame * _frame));
+            framing.Step(new FramedCreature(0, 366, -100, 336, reach, _groundY), _groundY, _viewWidth, _viewHeight, _frame);
+            if (frame >= 3 * 60)
+            {
+                cameraX.Add(framing.CameraX);
+            }
+        }
+
+        (cameraX.Max() - cameraX.Min()).ShouldBe(0, tolerance: 1e-9);
+        FromLeft(framing, 0).ShouldBe(0.5, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Step_HoldsALaunchOfSixtyMetresAtTheSafeZoneAndLandsItOnTheGround()
+    {
+        // Off the ground at 40 m/s at once, up for a second and a half, and back as fast.
+        const double speed = 40 * Metres.WorldUnitsPerMetre;
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var closest = 1.0;
+        for (var frame = 0; frame < 8 * 60; frame++)
+        {
+            var seconds = (frame + 1) * _frame;
+            var lift = speed * Math.Max(0, Math.Min(seconds, 3 - seconds));
+            var creature = Standing(0, 100, 60, _groundY - lift);
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+            GroundFromTop(framing).ShouldBeGreaterThanOrEqualTo(ArenaFraming.GroundFromTop - 1e-9);
+            FromTop(framing, creature.Top).ShouldBeGreaterThanOrEqualTo(ArenaFraming.SafeMargin - 1e-9);
+            closest = Math.Min(closest, FromTop(framing, creature.Top));
+        }
+
+        closest.ShouldBe(ArenaFraming.SafeMargin, tolerance: 1e-9);
+        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Step_CentresABoxTooWideForTheSafeZone()
+    {
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+
+        // Spread wider than the view at once, the zoom still easing out to it, its centre of mass
+        // well off the middle of its box.
+        var creature = new FramedCreature(200, 366, -1000, 336, 600, _groundY);
+        framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+
+        (FromLeft(framing, creature.Left) + FromLeft(framing, creature.Right)).ShouldBe(1, tolerance: 1e-9);
     }
 
     [Fact]
@@ -372,7 +483,7 @@ public sealed class ArenaFramingTests
         var high = Standing(0, 100, 60, bottom: _groundY - 400);
         var framing = new ArenaFraming();
         framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
-        var cameraY = new List<double>();
+        var cameraY = new List<double> { framing.CameraY };
 
         framing.Retarget(high);
         for (var frame = 0; frame < 6 * 60; frame++)
@@ -382,8 +493,36 @@ public sealed class ArenaFramingTests
             framing.Zoom.ShouldBe(1);
         }
 
+        // It glides up, never a step of more than a fortieth of the way: the safe zone holds only once there.
         cameraY.ShouldBeInOrder(SortDirection.Descending);
+        cameraY.Zip(cameraY.Skip(1), (a, b) => a - b).Max().ShouldBeLessThan(10);
         FromTop(framing, high.CentreY).ShouldBe(0.5, tolerance: 0.001);
+    }
+
+    [Fact]
+    public void Retarget_GlidesToADistantCreatureThenHoldsItInTheSafeZone()
+    {
+        var far = Standing(3000, 100, 60);
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var cameraX = new List<double> { framing.CameraX };
+        var entered = false;
+
+        framing.Retarget(far);
+        for (var frame = 0; frame < 8 * 60; frame++)
+        {
+            framing.Step(far, _groundY, _viewWidth, _viewHeight, _frame);
+            cameraX.Add(framing.CameraX);
+            var inside = FromLeft(framing, far.Left) >= ArenaFraming.SafeMargin - 1e-9
+                && FromLeft(framing, far.Right) <= 1 - ArenaFraming.SafeMargin + 1e-9;
+            entered.ShouldBeLessThanOrEqualTo(inside);
+            entered = inside;
+        }
+
+        // It glides out and settles: a step of at most a tenth of the way, never back.
+        cameraX.ShouldBeInOrder(SortDirection.Ascending);
+        cameraX.Zip(cameraX.Skip(1), (a, b) => b - a).Max().ShouldBeLessThan(300);
+        FromLeft(framing, far.CentreX).ShouldBe(0.5, tolerance: 0.001);
     }
 
     [Fact]
@@ -594,6 +733,15 @@ public sealed class ArenaFramingTests
         GroundFromTop(framing).ShouldBe(ArenaFraming.ShelfGroundFromTop, tolerance: 1e-9);
         (GroundFromTop(framing) - FromTop(framing, creature.Top)).ShouldBe(ArenaFraming.CreatureFloor, tolerance: 1e-9);
         FromTop(framing, creature.Top).ShouldBeLessThan(0.75);
+
+        // The safe zone counts from the arena's top, not the shelf's, so it leaves this be.
+        for (var frame = 0; frame < 120; frame++)
+        {
+            framing.Step(creature, _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        GroundFromTop(framing).ShouldBe(ArenaFraming.ShelfGroundFromTop, tolerance: 1e-9);
+        (GroundFromTop(framing) - FromTop(framing, creature.Top)).ShouldBe(ArenaFraming.CreatureFloor, tolerance: 1e-9);
     }
 
     [Fact]
@@ -686,7 +834,9 @@ public sealed class ArenaFramingTests
         framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
         framing.StepShelf(Standing(0, 100, 60), _viewWidth, _viewHeight, _frame);
         var x = framing.CameraX;
-        var moved = Standing(300, 100, 60);
+
+        // Moved, but not out of the safe zone, which still holds while paused.
+        var moved = Standing(100, 100, 60);
 
         framing.Shelf = 0.55;
         for (var frame = 0; frame < 120; frame++)
@@ -696,6 +846,41 @@ public sealed class ArenaFramingTests
 
         framing.CameraX.ShouldBe(x);
         GroundFromTop(framing).ShouldBe(0.85, tolerance: 0.001);
+    }
+
+    [Fact]
+    public void StepShelf_KeepsAWalkerHeldAtTheSafeZoneThereAsTheShelfClosesAndOnResuming()
+    {
+        // Paused just after setting off at 40 m/s, held at the zone's front edge.
+        const double speed = 40 * Metres.WorldUnitsPerMetre;
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var centre = 0.0;
+        for (var frame = 0; frame < 30; frame++)
+        {
+            centre += speed * _frame;
+            framing.Step(Standing(centre, 100, 60), _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        var creature = Standing(centre, 100, 60);
+        (1 - FromLeft(framing, creature.Right)).ShouldBe(ArenaFraming.SafeMargin, tolerance: 1e-9);
+        var cameraX = new List<double> { framing.CameraX };
+
+        // A tall callout opens and closes again, then play resumes.
+        framing.Shelf = 0.9;
+        for (var frame = 0; frame < 20 * 60; frame++)
+        {
+            framing.Shelf = frame < 2 * 60 ? 0.9 : 0;
+            framing.StepShelf(creature, _viewWidth, _viewHeight, _frame);
+            cameraX.Add(framing.CameraX);
+            FromLeft(framing, creature.Right).ShouldBeLessThanOrEqualTo(1 - ArenaFraming.SafeMargin + 1e-9);
+        }
+
+        centre += speed * _frame;
+        framing.Step(Standing(centre, 100, 60), _groundY, _viewWidth, _viewHeight, _frame);
+        cameraX.Add(framing.CameraX);
+
+        cameraX.Zip(cameraX.Skip(1), (a, b) => Math.Abs(b - a)).Max().ShouldBeLessThan(2 * speed * _frame);
     }
 
     [Fact]
