@@ -199,7 +199,7 @@ the reference's "a training session has finished" (#369).
     save or count. The header reads "Simulating" with no generation
     caption, the Distance card reads the run's front distance, and the best
     marker stays at the saved best on this map.
-  - **Camera (#668, #675, #1169).** `ArenaCamera` frames the followed
+  - **Camera (#668, #675, #1169, #1190).** `ArenaCamera` frames the followed
     shadow through `ArenaFraming`, from its centre of mass and its box. It moves on physics ticks, as the creatures do, so on a
     120 Hz screen the world never judders against it (#909). The other
     shadows may leave the view.
@@ -208,13 +208,14 @@ the reference's "a training session has finished" (#369).
       gait's wobble never shakes the view and a switch to another shadow
       glides in. Each follower's aim leads by the eased speed, so its
       eased point keeps up with a moving shadow instead of trailing it.
-      At rest the centre of mass shows in the middle of the view; *Ground*
-      and *Lead* below move it from there.
+      At rest the centre of mass shows in the middle of the view; *Ground*,
+      *Lead* and *Safe zone* below move it from there.
     - *Ground:* the ground line never rises above 80% down the view,
       unless the callout shelf lowers that limit. A shadow on the ground
       therefore sits low, with the ground at 80%, and a hopping gait does
       not bob the view; the camera follows a shadow up only once
-      centring it would put the ground below that line.
+      centring it would put the ground below that line, or the safe zone
+      holds its top.
     - *Zoom* fits the shadow's box inside side margins, standing on the
       ground below a top margin with headroom, and centred in the air
       clear of the top margin above and below. Speed on either axis
@@ -224,10 +225,28 @@ the reference's "a training session has finished" (#369).
       It widens quickly and narrows only after the shadow has needed less
       room for 1.5 s, then slowly, so a stretching gait does not make it
       pump.
-    - *Lead:* the room speed adds goes in front. The view slides ahead by
-      half the room it shows beyond the rest view, up to half a second of
-      travel, so the room behind the shadow stays as at rest. Leading
-      into a fall stops at the ground limit.
+    - *Lead (#1190):* the room speed adds is shared, two thirds in front
+      and a third behind, so a fast shadow keeps room behind it to show
+      where it came from. The view slides ahead by a sixth of the room it
+      shows beyond the rest view, up to a sixth of a second of travel: at
+      a steady speed the centre of mass sits half the rest view plus a
+      third of the added room from the back edge, tending to a third of
+      the view. Leading into a fall stops at the ground limit.
+    - *Safe zone (#1190):* the shadow's box keeps 10% of the view clear
+      to the sides and the top, as platformer cameras keep a player clear
+      of the screen's edges. The ground limit holds the bottom. Where the
+      box reaches nearer the edge than that at rest, its margin there is
+      half the room it has at rest, so the zone never moves a shadow at
+      rest and always fits. It moves the view as little as keeps the box
+      inside, and only when the follow alone would not: a sudden start or
+      launch, when the eased speed lags. A gait stretching the box has
+      room, so the view follows the centre of mass and does not shake. A
+      box too wide for both sides' margins, before the zoom has widened
+      for it, is centred. After a switch to another shadow the zone holds
+      only once the glide has brought its box inside, so the switch never
+      jumps. The ground limit and callout shelf come first: the zone's top
+      is measured in the whole view, so it never pushes a shadow that the
+      shelf holds at its 25% floor.
     - *Callout shelf (#1137):* while a part callout shows, the camera
       keeps a shelf at the top as tall as the callout, its leader and
       `S1` margins (`docs/WORLD_VISUALS.md` → Part callout). It lowers

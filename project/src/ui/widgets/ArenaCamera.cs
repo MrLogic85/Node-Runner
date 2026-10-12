@@ -4,12 +4,10 @@ using NodeRunner.App.ViewModels;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The Training arena's camera (#668, #675, #1169): it frames the followed creature through
-/// <see cref="ArenaFraming"/>, which follows its centre of mass with the ground never above its
-/// line, zooms out to fit it and its speed, and leads it the way it moves; while a part
-/// callout shows, it keeps a <see cref="Shelf"/> for it (#1137). The
-/// framing does all the smoothing, so the camera's own is off: a gait's wobble never shakes the
-/// view and a change of target glides in and settles.
+/// The Training arena's camera (#668): it frames the followed creature through
+/// <see cref="ArenaFraming"/>, and while a part callout shows keeps a <see cref="Shelf"/> for it
+/// (#1137). The framing does all the smoothing, so the camera's own is off. See
+/// <c>docs/TRAINING_LOOP.md</c> → Camera.
 /// </summary>
 public partial class ArenaCamera : Camera2D
 {
@@ -112,8 +110,8 @@ public partial class ArenaCamera : Camera2D
             return;
         }
 
-        // The host runs while paused, but a paused scene keeps its framing: nothing moves to follow,
-        // only the shelf for a callout read then opens or closes.
+        // The host runs while paused, but a paused scene keeps its framing: only the shelf for a
+        // callout read then opens or closes.
         if (GetTree().Paused)
         {
             _framing.StepShelf(_creature(), _framedView.X, _framedView.Y, delta);
