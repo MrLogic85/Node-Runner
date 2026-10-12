@@ -129,7 +129,7 @@ Node Runner/
 │           ├── lib/                # reusable Controls
 │           ├── screens/            # full-screen scenes
 │           └── widgets/            # app-specific composite widgets
-└── tests/                          # xUnit — libs plus static UI contracts
+└── tests/                          # xUnit — libs plus static Godot source contracts
     ├── NodeRunner.Domain.Tests/
     ├── NodeRunner.Mechanics.Tests/
     ├── NodeRunner.ML.Tests/
