@@ -200,7 +200,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
 - **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
   drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
   go on a joint"; a joint that already has a joint motor or brake refuses with
-  "One motor or brake per joint", while a Wheel's joint takes it (#1044). A good placement picks its Fixed and Target as
+  "One Servo, Motor or Brake per joint", while a Wheel's joint takes it (#1044). A good placement picks its Fixed and Target as
   `docs/CREATURE_MODEL.md` → "Servo" says and is one Undo step; a drop also selects the Servo. Without two sides the missing roles
   stay empty and the Servo's panel note says "A Servo needs two links, or a
   link and a Wheel" until another link or a Wheel is added there and picked: drop first,
@@ -324,7 +324,7 @@ active one, clears the selection so its panel shows (#1096).
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
   settings note) and where it goes ("Tap a joint to place it. A joint holds
-  one motor or brake." for a joint motor, "… holds one wheel." for a Wheel, "…
+  one Servo, Motor or Brake." for a joint motor, "… holds one wheel." for a Wheel, "…
   holds one rubber." for a Rubber, "… holds one sensor." for a Touch
   sensor), per part, not per tab, as a tab can mix placements. Under
   the rows the help line says "Tap a part to pick it, or drag it onto the

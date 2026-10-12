@@ -154,7 +154,7 @@ A skin around its joint (#1142): a solid `detail` band 3 units wide
 (`RubberDef.Skin`) just outside the joint's largest drawn radius R, the
 tyre on a Wheel's joint, so a Wheel with a Rubber reads as a thicker tyre.
 It draws on its joint after a Touch sensor's cushion, so it covers the
-cushion's inner part, and under the ring, hub or joint motor housing, which may
+cushion's inner part, and under the ring, hub or joint motor, which may
 cover part of it. The skin is only drawn (`docs/CREATURE_MODEL.md` →
 Rubber → Size). Thumbnails draw it; shadows do not.
 
@@ -165,8 +165,8 @@ just outside the joint's largest drawn radius R, the tyre on a Wheel's
 joint. Its colour is the brain's reading
 (`docs/CREATURE_MODEL.md` → Touch sensor → Reading): `accent` at
 `alpha_soft` at 0 and in Build, solid `accent` at 1, blended between. It
-draws first on its joint, under the ring, hub or joint motor
-housing, which may cover part of it. It is drawn only
+draws first on its joint, under the ring, hub or joint motor,
+which may cover part of it. It is drawn only
 (`docs/CREATURE_MODEL.md` → Touch sensor → Size). Thumbnails draw it at
 rest.
 

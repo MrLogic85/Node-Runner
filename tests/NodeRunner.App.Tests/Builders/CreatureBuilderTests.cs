@@ -625,7 +625,7 @@ public sealed class CreatureBuilderTests
 
         notAJoint.ShouldBe(UiText.Plain("Wheels go on a joint"));
         secondWheel.ShouldBe(UiText.Plain("One wheel per joint"));
-        secondServo.ShouldBe(UiText.Plain("One motor or brake per joint"));
+        secondServo.ShouldBe(UiText.Plain("One Servo, Motor or Brake per joint"));
         Should.Throw<ArgumentException>(() => builder.AddWheel(joint));
     }
 

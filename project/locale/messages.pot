@@ -639,7 +639,7 @@ msgid "On this joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "One motor or brake per joint"
+msgid "One Servo, Motor or Brake per joint"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -988,7 +988,7 @@ msgid "Tap a beam to place it. A beam holds one sensor."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a joint to place it. A joint holds one motor or brake."
+msgid "Tap a joint to place it. A joint holds one Servo, Motor or Brake."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs

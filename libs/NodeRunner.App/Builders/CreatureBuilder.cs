@@ -24,7 +24,7 @@ public sealed partial class CreatureBuilder
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
     /// <summary>Why a motor or brake, a Servo or a Velocity motor, cannot be added to a joint that already has one (#1044).</summary>
-    public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One motor or brake per joint");
+    public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One Servo, Motor or Brake per joint");
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
     public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");

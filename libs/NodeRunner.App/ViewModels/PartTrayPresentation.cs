@@ -121,7 +121,7 @@ public static class PartTray
         BuildPart.Wheel => UiText.Plain("Tap a joint to place it. A joint holds one wheel."),
         BuildPart.TouchSensor => UiText.Plain("Tap a joint to place it. A joint holds one sensor."),
         BuildPart.Rubber => UiText.Plain("Tap a joint to place it. A joint holds one rubber."),
-        _ => UiText.Plain("Tap a joint to place it. A joint holds one motor or brake."),
+        _ => UiText.Plain("Tap a joint to place it. A joint holds one Servo, Motor or Brake."),
     };
 
     /// <summary>
