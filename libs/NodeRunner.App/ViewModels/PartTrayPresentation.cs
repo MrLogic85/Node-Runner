@@ -170,7 +170,7 @@ public static class PartTray
         [
             Available(BuildPart.Servo, UiText.Plain("Servo")),
             Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.3"),
-            Available(BuildPart.VelocityMotor, UiText.Plain("Velocity motor")),
+            Available(BuildPart.VelocityMotor, UiText.Plain("Motor")),
             Locked(BuildPart.Brake, UiText.Plain("Brake"), "0.14.2"),
             Available(BuildPart.Wheel, UiText.Plain("Wheel")),
             Available(BuildPart.Rubber, UiText.Plain("Rubber")),

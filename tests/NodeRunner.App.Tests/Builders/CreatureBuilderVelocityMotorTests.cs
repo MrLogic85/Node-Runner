@@ -63,14 +63,17 @@ public sealed class CreatureBuilderVelocityMotorTests
     }
 
     [Fact]
-    public void ParametersOf_AVelocityMotor_AreTheServosWithoutRangeOrStart()
+    public void ParametersOf_AVelocityMotor_AreItsOwnStrengthAndSpeed_AndTheServosRiseTime()
     {
         var builder = Joint(out var joint, out _, out _, out _);
         var motor = builder.AddVelocityMotor(joint);
 
-        builder.ParametersOf(motor).ShouldBe([PartParameterId.ServoStrength, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime]);
-        builder.SetParameter(motor, PartParameterId.AngularMaxSpeed, 2);
+        builder.ParametersOf(motor).ShouldBe([PartParameterId.MotorStrength, PartParameterId.MotorMaxSpeed, PartParameterId.RiseTime]);
+        builder.SetParameter(motor, PartParameterId.MotorMaxSpeed, 2);
+        builder.SetParameter(motor, PartParameterId.MotorStrength, 300000);
         builder.Build().VelocityMotors.Single().MaxSpeed.ShouldBe(2);
+        builder.Build().VelocityMotors.Single().Strength.ShouldBe(300000);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(motor, PartParameterId.ServoStrength, 1));
         Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(motor, PartParameterId.Range, 1));
     }
 

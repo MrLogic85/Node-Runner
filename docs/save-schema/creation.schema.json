@@ -417,7 +417,7 @@
               },
               "strength": {
                 "type": "number",
-                "default": 500000
+                "default": 400000
               },
               "maxSpeed": {
                 "type": "number",

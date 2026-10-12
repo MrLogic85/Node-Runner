@@ -11,12 +11,12 @@ namespace NodeRunner.App.Builders;
 public sealed partial class CreatureBuilder
 {
     /// <summary>Why a Velocity motor dropped on anything but a joint is refused (#454).</summary>
-    public static UiText VelocityMotorsGoOnAJointReason { get; } = UiText.Plain("Velocity motors go on a joint");
+    public static UiText VelocityMotorsGoOnAJointReason { get; } = UiText.Plain("Motors go on a joint");
 
     /// <summary>Why a Velocity motor cannot work yet: it needs two sides at its joint (#1118).</summary>
-    public static UiText VelocityMotorNeedsTwoSidesReason { get; } = UiText.Plain("A Velocity motor needs two links, or a link and a Wheel");
+    public static UiText VelocityMotorNeedsTwoSidesReason { get; } = UiText.Plain("A Motor needs two links, or a link and a Wheel");
 
-    private static readonly PartParameterId[] _velocityMotorParameters = [PartParameterId.ServoStrength, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime];
+    private static readonly PartParameterId[] _velocityMotorParameters = [PartParameterId.MotorStrength, PartParameterId.MotorMaxSpeed, PartParameterId.RiseTime];
 
     private readonly List<VelocityMotorDef> _velocityMotors = [];
 
@@ -110,8 +110,8 @@ public sealed partial class CreatureBuilder
         var motor = _velocityMotors[VelocityMotorIndexOf(velocityMotorId)];
         return parameter switch
         {
-            PartParameterId.ServoStrength => motor.Strength,
-            PartParameterId.AngularMaxSpeed => motor.MaxSpeed,
+            PartParameterId.MotorStrength => motor.Strength,
+            PartParameterId.MotorMaxSpeed => motor.MaxSpeed,
             PartParameterId.RiseTime => motor.RiseTime,
             _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
         };
@@ -123,8 +123,8 @@ public sealed partial class CreatureBuilder
         var motor = _velocityMotors[index];
         _velocityMotors[index] = parameter switch
         {
-            PartParameterId.ServoStrength => motor.WithSettings(value, motor.MaxSpeed, motor.RiseTime),
-            PartParameterId.AngularMaxSpeed => motor.WithSettings(motor.Strength, value, motor.RiseTime),
+            PartParameterId.MotorStrength => motor.WithSettings(value, motor.MaxSpeed, motor.RiseTime),
+            PartParameterId.MotorMaxSpeed => motor.WithSettings(motor.Strength, value, motor.RiseTime),
             PartParameterId.RiseTime => motor.WithSettings(motor.Strength, motor.MaxSpeed, value),
             _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
         };

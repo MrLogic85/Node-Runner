@@ -21,9 +21,13 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 - `Accelerometer`, `ProofMass` — the proof-mass step, reading and sensor frame
 - `CameraRays` — the camera's ray targets and reading
 - `Touch` — a Touch sensor's reading
-- `Servo` — a Servo's angle inputs, torque and endpoint force couple
-- `VelocityMotor` — a Velocity motor's angle and speed inputs and torque
-- `MotorLoop` — the speed loop both motors drive their torque with
+- `Servo` — a Servo's angle input, target angle, end stops and torque
+- `VelocityMotor` — a Velocity motor's angle inputs, wanted speed and torque
+- `MotorLoop`, `MotorState` — the speed loop both motors drive their torque
+  with, and the speed input both give the brain
+- `MotorSideGeometry`, `MotorCouple` — how both motors measure and turn their
+  sides: a link's angle, speed, inertia and force couple, a Wheel side's
+  signs, and the unwrapped angle
 - `Piston` — a Piston's travel, inputs, target length and force
 - `Spring` — a Spring's travel
 - `Wheel` — a Wheel's weight and thin-ring turning inertia

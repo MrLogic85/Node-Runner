@@ -91,7 +91,7 @@ public sealed class CreationShareCodeTests
         var walker = LoadFixture013("walker.creation.json");
         var builder = new CreatureBuilder(walker.Creature);
         var motor = builder.AddVelocityMotor(walker.Creature.Nodes[0].Id);
-        builder.SetParameter(motor, PartParameterId.AngularMaxSpeed, 3.5);
+        builder.SetParameter(motor, PartParameterId.MotorMaxSpeed, 3.5);
         var driven = walker.WithCreature(builder.Build(), training: null);
 
         var build = CreationShareCode.Read(CreationShareCode.Create(driven)).Build.ShouldNotBeNull();

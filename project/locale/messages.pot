@@ -20,12 +20,12 @@ msgstr ""
 msgid "3.1 m/s"
 msgstr ""
 
-#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "A Servo needs two links, or a link and a Wheel"
+#: libs/NodeRunner.App/Builders/CreatureBuilder.VelocityMotors.cs
+msgid "A Motor needs two links, or a link and a Wheel"
 msgstr ""
 
-#: libs/NodeRunner.App/Builders/CreatureBuilder.VelocityMotors.cs
-msgid "A Velocity motor needs two links, or a link and a Wheel"
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "A Servo needs two links, or a link and a Wheel"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -34,10 +34,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "A beam must connect two different joints."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "A motor that tries to hold a target angle."
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -546,8 +542,21 @@ msgstr ""
 msgid "More maps come in a later version."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Motor"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
 msgid "Motor {0}"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Motors"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.VelocityMotors.cs
+msgid "Motors go on a joint"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -768,7 +777,7 @@ msgid "Rise time"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Rolls freely on the ground. Add a motor to power it."
+msgid "Rolls freely on the ground. Add a Motor or Servo to power it."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -1161,6 +1170,10 @@ msgid "Turn it around its middle"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Turns its joint to a target angle and holds it there."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
 msgid "Turns one side round and round. The brain picks how fast and which way."
 msgstr ""
 
@@ -1195,19 +1208,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
 msgid "Update Node Runner to open this creation."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Velocity motor"
-msgstr ""
-
-#: project/scenes/screens/ImportScreen.tscn
-msgid "Velocity motors"
-msgstr ""
-
-#: libs/NodeRunner.App/Builders/CreatureBuilder.VelocityMotors.cs
-msgid "Velocity motors go on a joint"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
@@ -1452,18 +1452,6 @@ msgstr ""
 msgid "{0} m/s"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
-msgid "{0} motor"
-msgid_plural "{0} motors"
-msgstr[0] ""
-msgstr[1] ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "{0} motor missing a link"
-msgid_plural "{0} motors missing a link"
-msgstr[0] ""
-msgstr[1] ""
-
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
 msgid "{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it."
 msgstr ""
@@ -1471,6 +1459,18 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
 msgid "{0} output"
 msgid_plural "{0} outputs"
+msgstr[0] ""
+msgstr[1] ""
+
+#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
+msgid "{0} part"
+msgid_plural "{0} parts"
+msgstr[0] ""
+msgstr[1] ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "{0} part missing a link"
+msgid_plural "{0} parts missing a link"
 msgstr[0] ""
 msgstr[1] ""
 
@@ -1497,6 +1497,10 @@ msgid "{0} reading"
 msgid_plural "{0} readings"
 msgstr[0] ""
 msgstr[1] ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0} rpm"
+msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
@@ -1586,10 +1590,6 @@ msgid "{0}: touch"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "{0}°/s"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0}–{1} N"
 msgstr ""
 
@@ -1614,11 +1614,11 @@ msgid "{0}–{1} m/s"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "{0}–{1} s"
+msgid "{0}–{1} rpm"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "{0}–{1}°/s"
+msgid "{0}–{1} s"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs

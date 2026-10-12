@@ -65,7 +65,7 @@ public sealed class MotorSides
     public void UpdatePhysicsState()
     {
         var current = RelativeAngle;
-        ContinuousAngle = Mechanics.Servo.UnwrapAngle(ContinuousAngle, _lastRelativeAngle, current);
+        ContinuousAngle = Mechanics.MotorSideGeometry.UnwrapAngle(ContinuousAngle, _lastRelativeAngle, current);
         _lastRelativeAngle = current;
     }
 
@@ -103,15 +103,15 @@ public sealed class MotorLinkSide(RigidBody2D jointBody, RigidBody2D farBody) : 
 {
     private readonly RigidBody2D _farBody = farBody;
 
-    public override double Angle => Mechanics.Servo.LinkAngle(ToVector(JointBody.GlobalPosition), ToVector(_farBody.GlobalPosition));
+    public override double Angle => Mechanics.MotorSideGeometry.LinkAngle(ToVector(JointBody.GlobalPosition), ToVector(_farBody.GlobalPosition));
 
-    public override double AngularSpeed => Mechanics.Servo.LinkAngularSpeed(
+    public override double AngularSpeed => Mechanics.MotorSideGeometry.LinkAngularSpeed(
         ToVector(JointBody.GlobalPosition),
         ToVector(_farBody.GlobalPosition),
         ToVector(JointBody.LinearVelocity),
         ToVector(_farBody.LinearVelocity));
 
-    public override double EffectiveInertia => Mechanics.Servo.LinkInertia(
+    public override double EffectiveInertia => Mechanics.MotorSideGeometry.LinkInertia(
         ToVector(JointBody.GlobalPosition),
         ToVector(_farBody.GlobalPosition),
         JointBody.Mass,
@@ -119,7 +119,7 @@ public sealed class MotorLinkSide(RigidBody2D jointBody, RigidBody2D farBody) : 
 
     public override void ApplyTorque(double torque)
     {
-        var couple = Mechanics.Servo.CoupleForTorque(ToVector(JointBody.GlobalPosition), ToVector(_farBody.GlobalPosition), torque);
+        var couple = Mechanics.MotorSideGeometry.CoupleForTorque(ToVector(JointBody.GlobalPosition), ToVector(_farBody.GlobalPosition), torque);
         JointBody.ApplyCentralForce(ToGodot(couple.ForceOnJoint));
         _farBody.ApplyCentralForce(ToGodot(couple.ForceOnFar));
     }
@@ -131,11 +131,11 @@ public sealed class MotorLinkSide(RigidBody2D jointBody, RigidBody2D farBody) : 
 /// </summary>
 public sealed class MotorWheelSide(RigidBody2D wheelBody) : MotorSide(wheelBody)
 {
-    public override double Angle => Mechanics.Servo.WheelAngle(JointBody.GlobalRotation);
+    public override double Angle => Mechanics.MotorSideGeometry.WheelAngle(JointBody.GlobalRotation);
 
-    public override double AngularSpeed => Mechanics.Servo.WheelAngularSpeed(JointBody.AngularVelocity);
+    public override double AngularSpeed => Mechanics.MotorSideGeometry.WheelAngularSpeed(JointBody.AngularVelocity);
 
     public override double EffectiveInertia => JointBody.Inertia;
 
-    public override void ApplyTorque(double torque) => JointBody.ApplyTorque((float)Mechanics.Servo.WheelBodyTorque(torque));
+    public override void ApplyTorque(double torque) => JointBody.ApplyTorque((float)Mechanics.MotorSideGeometry.WheelBodyTorque(torque));
 }

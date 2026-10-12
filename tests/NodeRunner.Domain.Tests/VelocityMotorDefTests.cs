@@ -7,7 +7,7 @@ public sealed class VelocityMotorDefTests
     private static readonly BeamDef[] _beams = [new(4, 1, 2), new(5, 1, 3)];
 
     [Fact]
-    public void Constructor_ValidatesItsSettings_AndDefaultsToTheServos()
+    public void Constructor_ValidatesItsSettings_AndDefaultsToTheServosButWeaker()
     {
         Should.Throw<ArgumentOutOfRangeException>(() => new VelocityMotorDef(0, 1, 2, 3));
         Should.Throw<ArgumentOutOfRangeException>(() => new VelocityMotorDef(1, 0, 2, 3));
@@ -18,7 +18,7 @@ public sealed class VelocityMotorDefTests
         Should.Throw<ArgumentException>(() => new VelocityMotorDef(1, 1, 2, 2));
 
         var motor = new VelocityMotorDef(1, 1);
-        motor.Strength.ShouldBe(ServoDef.DefaultStrength);
+        motor.Strength.ShouldBe(400000);
         motor.MaxSpeed.ShouldBe(ServoDef.DefaultMaxSpeed);
         motor.RiseTime.ShouldBe(ServoDef.DefaultRiseTime);
     }

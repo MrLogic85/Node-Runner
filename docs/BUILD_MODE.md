@@ -6,6 +6,9 @@ a Creation is locked is in `docs/TRAINING_LOOP.md` → Product lifecycle
 boundary. `reference design/components/Build/README.md`,
 `BuildLocked/README.md` and `Navigation/README.md` are its guide.
 
+A *joint motor* here is a Servo or a Motor (`docs/GLOSSARY.md` → Joint
+motor): Build treats the two alike wherever a rule says joint motor.
+
 ## Mode
 
 - Build state lives in `BuildViewModel` while Build is open. Build always
@@ -29,17 +32,17 @@ boundary. `reference design/components/Build/README.md`,
   they can be added, copied and deleted; joints move, sensors move to another beam (#806),
   cameras aim, the selection handles all work (scaling changes only beam
   lengths), parameters change, except a Camera's Rays (#578), and parts can
-  be renamed. A part with ports (a sensor, Touch sensor, Piston or Servo) can be neither
+  be renamed. A part with ports (a sensor, Touch sensor, Piston or joint motor) can be neither
   added nor deleted: every tray row except the Wheel's and the Rubber's is locked, and so is
   the Piston row; the tray's help line says "Unlock to add parts the brain
   uses.", and tapping a row so locked shows "The creation is locked to avoid changes to the model, unlock to enable."
   (`BuildViewModel.LockedReason`) in a notification; a Coming later row
   still names its version (see Parts tray). Delete stays,
   Unavailable, when it would take a part with ports along, also by cascade,
-  or clear a Servo's link (`BuildViewModel.DeleteLockedReason`); a tap shows
+  or clear a joint motor's link (`BuildViewModel.DeleteLockedReason`); a tap shows
   the same notification and the danger note "Locked: would change the model"
   on each part that blocks it: each part with ports it would take and each
-  kept Servo whose link it would clear (#987), which clear like Copy's.
+  kept joint motor whose link it would clear (#987), which clear like Copy's.
   Copy stays too (see Selection panel). There is no
   training summary: the Creations card shows the latest training (#479).
   The padlock unlocks it for this visit and keeps the training
@@ -69,7 +72,7 @@ boundary. `reference design/components/Build/README.md`,
   Delete creation are not steps and cannot be undone.
   - Undo keeps the selected parts that still exist; undoing a delete
     selects the deleted parts again and Redo of it clears them (#878). A
-    selected Servo stays selected when Undo or Redo swaps its links (#911).
+    selected joint motor stays selected when Undo or Redo swaps its links (#911).
     An undone delete gets its trained weights back
     (`docs/CREATURE_MODEL.md` → "Build refits the brain it opened with").
   - Each edit has an owner, the canvas or a slider, so one never closes or
@@ -88,7 +91,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
 
 - A pointer that travels at most `TapSlop` view units is a tap. A tap or
   drop hits the part drawn on top there (#1107, `docs/WORLD_VISUALS.md` →
-  Draw layers), in Build and Training alike: a joint's ring, Servo or a
+  Draw layers), in Build and Training alike: a joint's ring, joint motor or a
   Wheel's hub, each with the selection gap (#710); a sensor's picture; or a
   link within `SelectionMarks.LinkBody` of its line, outside its ends' hubs,
   as it is drawn (#1086). A press or drop touches a Wheel only at its hub,
@@ -112,13 +115,13 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     removes it, even under a handle (`BuildViewModel.ToggleSelected`). A
     tap on empty canvas clears the selection; a tap on a handle over empty
     canvas does nothing. A tap on a joint with parts steps down its
-    stack, top → down (motor or brake, then Wheel, then Rubber, then Touch sensor): the first tap
+    stack, top → down (joint motor or brake, then Wheel, then Rubber, then Touch sensor): the first tap
     adds the top part, each next tap swaps it for the one below, and a tap
     on the last, or with more than one of them selected, removes the
     joint's parts. The rest of the selection stays
     (`BuildViewModel.ToggleJointSelected`, #1044).
   - **Parts stand in for their joint** (#973, #1044): while any part sits
-    on a joint (a Servo, Wheel, Rubber or Touch sensor), the joint itself is never selected, so it
+    on a joint (a joint motor, Wheel, Rubber or Touch sensor), the joint itself is never selected, so it
     gets no selection mark and no panel; only a bare joint does. Links
     still start and end on it. Selecting a part never also
     selects the joint under it, but the selection moves that joint, and
@@ -168,7 +171,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   - A Piston or Spring dropped on a pair a beam joins replaces that beam
     (#849), unless a sensor sits on it or the creation is locked, which
     shows "A beam already joins these joints"; while dragging, the beam is
-    outlined. A Servo that held the beam holds the new link in the same
+    outlined. A joint motor that held the beam holds the new link in the same
     role, under a new id. One Undo brings the beam back. A Beam never
     replaces a link.
 - **Parts:** with nothing selected, the panel shows the Parts tray; drag a
@@ -196,7 +199,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     A good drop selects it.
 - **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
   drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
-  go on a joint"; a joint that already has a motor or brake refuses with
+  go on a joint"; a joint that already has a joint motor or brake refuses with
   "One motor or brake per joint", while a Wheel's joint takes it (#1044). A good placement picks its Fixed and Target as
   `docs/CREATURE_MODEL.md` → "Servo" says and is one Undo step; a drop also selects the Servo. Without two sides the missing roles
   stay empty and the Servo's panel note says "A Servo needs two links, or a
@@ -205,18 +208,18 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   (#1006).
   Tapping or dragging that joint selects the Servo; dragging moves the
   joint with it.
-- **Velocity motor (#454):** placed from Parts → Moving parts on any joint
-  exactly like a Servo, sharing its joint's motor-or-brake slot, so a
-  joint holds a Servo or a Velocity motor, never both. A beam, sensor or
-  link refuses with "Velocity motors go on a joint"; its sides, missing
-  roles and notes follow the Servo's, with "A Velocity motor needs two
+- **Motor (#454):** placed from Parts → Moving parts on any joint
+  exactly like a Servo, in its joint's slot for a joint motor or brake
+  (`docs/CREATURE_MODEL.md` → Node → One part per slot). A beam, sensor or
+  link refuses with "Motors go on a joint"; its sides, missing
+  roles and notes follow the Servo's, with "A Motor needs two
   links, or a link and a Wheel".
 - **Wheel (#129):** placed from Parts → Moving parts on any joint, by drag
   or tap, like a Servo. A beam, sensor or link refuses with "Wheels go on a
   joint"; a joint with a Wheel refuses with "One wheel per joint", while a
-  Servo's joint takes it (#1044). A placement is one Undo step; a drop also
+  joint motor's joint takes it (#1044). A placement is one Undo step; a drop also
   selects the Wheel. Tapping or dragging its joint selects the Wheel, as a
-  Servo's; a joint with both follows the stack rule in Interactions.
+  joint motor's; a joint with both follows the stack rule in Interactions.
 - **Rubber (#1142):** placed from Parts → Moving parts on any joint, by
   drag or tap, like a Wheel, also on a locked creation. A beam, sensor or
   link refuses with "Rubber goes on a joint"; a joint with one refuses with
@@ -242,15 +245,15 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   it, a tap on it does nothing, and a second finger puts the aim back.
 - **Deleting:** there is no Delete tool; the Part settings and selection
   panels delete the selection. Deleting a joint removes every link on it,
-  its Servo, Wheel, Rubber and Touch sensor and those beams' sensors
+  its joint motor, Wheel, Rubber and Touch sensor and those beams' sensors
   (`CreatureBuilder.RemoveNode`),
-  and deleting a beam removes its sensor. Deleting a Servo, Wheel, Rubber or Touch sensor leaves
+  and deleting a beam removes its sensor. Deleting a joint motor, Wheel, Rubber or Touch sensor leaves
   its joint, with its other part or bare,
   unless the same delete takes every part and every link on that joint and
   the joint had a link before: then the joint goes too, so a box that
   clears an area leaves no bare joint (#973, #1044); a joint that had no
-  link stays. Deleting a link or Wheel a Servo holds keeps
-  the Servo with that role missing (see `docs/CREATURE_MODEL.md` → "Servo").
+  link stays. Deleting a link or Wheel a joint motor holds keeps
+  the joint motor with that role missing (see `docs/CREATURE_MODEL.md` → "Servo").
 - **Two fingers, any tool (#400):** pinch zooms about the point between the
   fingers and dragging both pans. The second finger cancels the first
   finger's gesture, putting back any joint it moved and any selection its
@@ -294,7 +297,7 @@ several the selection panel instead. Picking a tool on the rail, even the
 active one, clears the selection so its panel shows (#1096).
 
 - Three tabs, Moving parts, Sensors and Blocks, group parts by what they
-  do, not where they go: Moving parts holds the motors, Brake, Wheel and Rubber,
+  do, not where they go: Moving parts holds the joint motors, Brake, Wheel and Rubber,
   and Sensors every sensor, on a beam or, like the Touch sensor (#665), on
   a joint. Each part decides its own placement. `PartTray` owns the groups,
   their order, the help line and each row's state.
@@ -309,7 +312,7 @@ active one, clears the selection so its panel shows (#1096).
   `BuildLinkList.ComingLaterReason` own it.
 - An available row is dragged out (#376). The drop lands where a tap would
   hit (Interactions; `BuildGestures.DropTargetAt`), except that a sensor's
-  picture stands for its beam. A Servo, Wheel, Rubber or Touch sensor lands first on the
+  picture stands for its beam. A joint motor, Wheel, Rubber or Touch sensor lands first on the
   joint whose placing ring (`PlacingTargets.JointRingOf`;
   `docs/WORLD_VISUALS.md` → Placing a part) it is inside, ahead of the beams the ring crosses
   (#1055). `BuildViewModel.PlacePart` places it with
@@ -321,7 +324,7 @@ active one, clears the selection so its panel shows (#1096).
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
   settings note) and where it goes ("Tap a joint to place it. A joint holds
-  one motor or brake." for a Servo or Velocity motor, "… holds one wheel." for a Wheel, "…
+  one motor or brake." for a joint motor, "… holds one wheel." for a Wheel, "…
   holds one rubber." for a Rubber, "… holds one sensor." for a Touch
   sensor), per part, not per tab, as a tab can mix placements. Under
   the rows the help line says "Tap a part to pick it, or drag it onto the
@@ -350,14 +353,14 @@ back, selected (#866, #878). Structure is read-only here: a beam's length
 is drawn, not a number. A part's note is its `PartInfo` line, the same as
 its row in the Links list; `BuildPresentationViewModel.SinglePart` owns the
 rows and copy. The panel scrolls back to the top when it shows another
-part, tool or selection count; a Servo whose links a picker, Undo or Redo
+part, tool or selection count; a joint motor whose links a picker, Undo or Redo
 changed is still the same part, so the panel keeps its place
 (`PartSettingsPresentation.PanelId`, #910).
 
 **On this joint (#1044).** When the selected part's joint holds two or more
 parts, a small "On this joint" label and a strip of glyph tabs sit between
 the title and Name (`PartSettingsPresentation.OnThisJoint`), one per part,
-top → down: motor or brake, then Wheel, then Rubber, then Touch sensor. The strip is the tray's tab
+top → down: joint motor or brake, then Wheel, then Rubber, then Touch sensor. The strip is the tray's tab
 strip (`UiIconTabs`), with the selected part's tab filled. A tab tap selects
 that part alone, which moves the canvas mark and scrolls the panel to the
 top. A joint with one part shows no strip; tabs work on a locked creation
@@ -374,7 +377,7 @@ panel shows it (`InPanel`). Each kind lists its own
 Each parameter is basic or `Advanced` for every part that has it (#903):
 Start position, Max speed, Rise time, Damping and Coil length (#989) are
 advanced. The panel shows Name, the basic sliders and any other controls,
-like a Servo's link pickers, then a closed Advanced section with the rest, left out when there
+like a joint motor's link pickers, then a closed Advanced section with the rest, left out when there
 is none, then the part's note. The section stays open or closed across selections
 until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
 
@@ -385,8 +388,8 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
 - **Spring:** Stiffness (50–2000 N/m, step 50), Damping (0–100 N·s/m,
   step 1), Stroke (as the Piston's) and Coil length (0–100%, step 1, #835;
   a new Stroke keeps it).
-- **Servo:** Max strength (5–200 N·m), Range (20°–360°), Start position
-  (0–100%), Max speed (30°/s–720°/s) and Rise time, plus "Fixed link" and
+- **Servo:** Max strength (5–200 N·m, step 5), Range (20°–360°), Start position
+  (0–100%), Max speed (5–120 rpm, step 5) and Rise time, plus "Fixed link" and
   "Target link" pickers. They list the joint's links by id, then its
   Wheel with a Wheel icon (#1118). A missing role's picker reads "Pick a
   Fixed link" or "Pick a Target link" in danger colour and lists only the
@@ -399,15 +402,16 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   Play-tap canvas note say "A Servo needs two links, or a link and a Wheel" instead,
   and the play-blocked reason asks to connect another link or add a Wheel there, because
   no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
-  "Editing identity rules".
-- **Velocity motor (#454):** Max strength, Max speed and Rise time with the
-  Servo's ranges, and the Servo's "Fixed link" and "Target link" pickers,
+  "Editing identity rules". Its note: "Turns its joint to a target angle and
+  holds it there."
+- **Motor (#454):** Max strength (5–40 N·m, step 5), Max speed (10–240
+  rpm, step 10) and the Servo's Rise time, and the Servo's "Fixed link" and "Target link" pickers,
   Wheel included, locked with the creation. It has no Range or Start
   position, since it turns round and round. Its note: "Turns one side round
   and round. The brain picks how fast and which way."
 - **Wheel:** Radius (0.4–1.0 m, step 0.1), then a read-only Weight
   ("1.2 kg", `PartSettingsPresentation.Readouts`) that follows Radius. Its
-  note: "Rolls freely on the ground. Add a motor to power it."
+  note: "Rolls freely on the ground. Add a Motor or Servo to power it."
 - **Camera:** Aim, set on the canvas, one Camera at a time; Rays (1, 3 or
   5, three evenly spaced stops, #578), Spread (15°–90°, step 5) and Range
   (1.0–10.0 m, step 0.1, #1097) in the panel. Spread shows disabled while every
@@ -475,13 +479,13 @@ Several selected parts show the selection panel instead (#558, #704), titled
 - Copy (#937, #990) duplicates the selected parts one grid step aside,
   with their settings but not their names, and selects the copy; Undo
   removes it. A part copies only with what it sits on: a beam, Spring or
-  Piston with both its joints and a sensor with its beam. A Servo is its
+  Piston with both its joints and a sensor with its beam. A joint motor is its
   joint to the player, so it brings that joint along (#1000), as do a
   Wheel, a Rubber and a Touch sensor; a joint's other part is copied only when it is selected itself, and
-  the copied joint is sized for the parts it carries (#1044). A copied Servo uses the copies of its Fixed
+  the copied joint is sized for the parts it carries (#1044). A copied joint motor uses the copies of its Fixed
   and Target links or Wheel and leaves a role empty whose link was not copied, so
   it shows its error note. On a locked creation a sensor, Touch sensor,
-  Piston or Servo would change the model, so it blocks Copy too, with the note "Locked:
+  Piston or joint motor would change the model, so it blocks Copy too, with the note "Locked:
   would change the model". Copy is dimmed while the selection
   holds a part it cannot take; a tap then puts a danger note on each such
   part until the selection changes, the creation is unlocked or the next
@@ -512,7 +516,7 @@ dimmed button can still be tapped
 gives each joint loose at that moment a "Not connected" canvas note until
 it is joined or removed. A creation in separate pieces gets the same note
 on every piece's joint nearest another piece, none being the main one, until
-it is one piece (#930), and every Servo or Velocity motor missing a link gets its
+it is one piece (#930), and every joint motor missing a link gets its
 missing-link note (see Servo settings) until it has both (#1006); a blocker
 that appears later waits for the next tap. The next canvas touch hides
 these notes, so they do not stay in the way while building (#991). Too-short parts always have their "Too short" note. The edits are saved first either way. Back never validates: it saves

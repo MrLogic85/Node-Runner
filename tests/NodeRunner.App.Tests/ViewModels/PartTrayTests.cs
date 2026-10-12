@@ -16,7 +16,7 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().Select(group => group.Rows.Select(row => row.Name).ToArray()).ShouldBe(
         [
-            Plain("Servo", "Stepper", "Velocity motor", "Brake", "Wheel", "Rubber"),
+            Plain("Servo", "Stepper", "Motor", "Brake", "Wheel", "Rubber"),
             Plain("Accelerometer", "Camera", "Touch sensor", "Pulse"),
             Plain("Battery", "Generator", "Fuel tank"),
         ]);
@@ -40,9 +40,9 @@ public sealed class PartTrayTests
     }
 
     [Theory]
-    [InlineData(BuildPart.Servo, "A motor that tries to hold a target angle.", "Tap a joint to place it. A joint holds one motor or brake.")]
+    [InlineData(BuildPart.Servo, "Turns its joint to a target angle and holds it there.", "Tap a joint to place it. A joint holds one motor or brake.")]
     [InlineData(BuildPart.VelocityMotor, "Turns one side round and round. The brain picks how fast and which way.", "Tap a joint to place it. A joint holds one motor or brake.")]
-    [InlineData(BuildPart.Wheel, "Rolls freely on the ground. Add a motor to power it.", "Tap a joint to place it. A joint holds one wheel.")]
+    [InlineData(BuildPart.Wheel, "Rolls freely on the ground. Add a Motor or Servo to power it.", "Tap a joint to place it. A joint holds one wheel.")]
     [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
     [InlineData(BuildPart.TouchSensor, "Feels how near its joint is to the ground.", "Tap a joint to place it. A joint holds one sensor.")]
     [InlineData(BuildPart.Rubber, "Makes its joint grip the ground.", "Tap a joint to place it. A joint holds one rubber.")]

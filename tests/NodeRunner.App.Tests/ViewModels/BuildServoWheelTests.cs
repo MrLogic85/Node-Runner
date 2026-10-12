@@ -84,12 +84,12 @@ public sealed class BuildServoWheelTests
     }
 
     [Fact]
-    public void SetServoLink_ToTheWheel_SwapsWithTheOtherRole_GivesAFreshId_AndUndoes()
+    public void SetMotorLink_ToTheWheel_SwapsWithTheOtherRole_GivesAFreshId_AndUndoes()
     {
         var (build, wheel) = WheelOnTheEndJoint();
         var servoId = build.PlacePart(BuildPart.Servo, _endJoint)!.Value;
 
-        var swapped = build.SetServoLink(servoId, fixedRole: true, linkId: wheel).ShouldNotBeNull();
+        var swapped = build.SetMotorLink(servoId, fixedRole: true, linkId: wheel).ShouldNotBeNull();
 
         swapped.ShouldNotBe(servoId);
         build.Servos.Single().ShouldBe(new ServoDef(swapped, 1, wheel, 4));
@@ -98,13 +98,13 @@ public sealed class BuildServoWheelTests
     }
 
     [Fact]
-    public void SetServoLink_ToAnotherJointsWheel_Throws()
+    public void SetMotorLink_ToAnotherJointsWheel_Throws()
     {
         var (build, _) = WheelOnTheEndJoint();
         var other = build.PlacePart(BuildPart.Wheel, _middleJoint)!.Value;
         var servoId = build.PlacePart(BuildPart.Servo, _endJoint)!.Value;
 
-        Should.Throw<ArgumentException>(() => build.SetServoLink(servoId, fixedRole: false, linkId: other));
+        Should.Throw<ArgumentException>(() => build.SetMotorLink(servoId, fixedRole: false, linkId: other));
     }
 
     [Fact]

@@ -580,6 +580,23 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void SelectedServo_OffItsRpmSteps_ReadsRounded_AndKeepsItsValue()
+    {
+        // Servos saved on the old 15°/s steps can sit between two 5 rpm steps: 105°/s is 17.5 rpm.
+        var offStep = 105 * Math.PI / 180;
+        var build = new BuildViewModel();
+        build.Load(ServoCreature(maxSpeed: offStep));
+        build.SelectOnly(CreatureElementKind.Servo, 6);
+
+        var speed = new BuildPresentationViewModel(build).SinglePart!.AdvancedSettings.Single(slider => slider.Id == PartParameterId.AngularMaxSpeed);
+
+        speed.Readout.ShouldBe(UiText.Format("{0} rpm", new FixedNumber(18, 0)));
+        speed.High.ShouldBe(12.5 / 115, tolerance: 1e-9);
+        build.Snapshot().Servos.Single().MaxSpeed.ShouldBe(offStep);
+        build.CanUndo.ShouldBeFalse();
+    }
+
+    [Fact]
     public void SelectedSpring_HasDampingAndCoilLengthUnderAdvanced()
     {
         var build = new BuildViewModel();
@@ -742,7 +759,7 @@ public sealed class BuildPresentationViewModelTests
         var readiness = new BuildPresentationViewModel(build).Readiness;
 
         readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} motor missing a link", "{0} motors missing a link", 1));
+        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 1));
     }
 
     [Fact]
@@ -765,7 +782,7 @@ public sealed class BuildPresentationViewModelTests
         var readiness = new BuildPresentationViewModel(build).Readiness;
 
         readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} motor missing a link", "{0} motors missing a link", 2));
+        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 2));
     }
 
     [Theory]
@@ -927,11 +944,11 @@ public sealed class BuildPresentationViewModelTests
         [new SpringDef(401, 2, 3)],
         nextPartId: 402);
 
-    private static CreatureDef ServoCreature() => new(
+    private static CreatureDef ServoCreature(double maxSpeed = ServoDef.DefaultMaxSpeed) => new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
         [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
         [],
-        [new ServoDef(6, 2, 4, 5)],
+        [new ServoDef(6, 2, 4, 5, maxSpeed: maxSpeed)],
         [],
         [],
         nextPartId: 7);

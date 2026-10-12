@@ -387,7 +387,7 @@ public sealed class BuildPresentationViewModel
 
         var motorsMissingALink = _build.JointMotors.Count(CreatureReadiness.IsMissingALink);
         return motorsMissingALink > 0
-            ? UiText.Counted("{0} motor missing a link", "{0} motors missing a link", motorsMissingALink)
+            ? UiText.Counted("{0} part missing a link", "{0} parts missing a link", motorsMissingALink)
             : errors[0];
 
         bool IsTooShort(int nodeA, int nodeB) =>

@@ -443,7 +443,7 @@ public sealed class CreationVersioningTests : IDisposable
         var builder = new CreatureBuilder(walker.Creature);
         var id = builder.AddVelocityMotor(walker.Creature.Nodes[0].Id);
         builder.Rename(id, "Drive");
-        builder.SetParameter(id, PartParameterId.AngularMaxSpeed, 3);
+        builder.SetParameter(id, PartParameterId.MotorMaxSpeed, 3);
         var creature = builder.Build();
         var repository = new FileCreationRepository(new TestStorageLocation(_directory));
         repository.Save(walker.WithCreature(creature, training: null));

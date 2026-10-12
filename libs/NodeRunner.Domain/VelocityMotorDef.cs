@@ -5,14 +5,17 @@ namespace NodeRunner.Domain;
 /// its Fixed side at the speed the brain chooses, with no end stops. Its sides follow the Servo's
 /// rules (#1118): a link at the joint or the joint's Wheel, not both the same, either null once
 /// that part is deleted. It shares the joint's motor-or-brake slot with a Servo (#1044); see
-/// <see cref="JointMotor"/>. Its defaults and limits are the Servo's.
+/// <see cref="JointMotor"/>. Players know it as the Motor.
 /// </summary>
 public sealed record VelocityMotorDef : IJointMotorDef
 {
-    /// <summary>A new Velocity motor's <see cref="Strength"/>: 50 N·m, like a Servo.</summary>
-    public const double DefaultStrength = ServoDef.DefaultStrength;
+    /// <summary>
+    /// A new Velocity motor's <see cref="Strength"/>: 40 N·m at 100 world units per metre, less
+    /// than a Servo's, so a Motor-driven creature struggles up hills.
+    /// </summary>
+    public const double DefaultStrength = 400000;
 
-    /// <summary>A new Velocity motor's <see cref="MaxSpeed"/>: 360°/s, like a Servo.</summary>
+    /// <summary>A new Velocity motor's <see cref="MaxSpeed"/>: 60 rpm, like a Servo.</summary>
     public const double DefaultMaxSpeed = ServoDef.DefaultMaxSpeed;
 
     /// <summary>A new Velocity motor's <see cref="RiseTime"/>: 0.2 s, like a Servo.</summary>

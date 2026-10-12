@@ -19,8 +19,8 @@ public partial class VelocityMotorPart : PartVisual
 
     // The layers draw behind the part, the magnets over the base the coils' layer draws; the
     // coils end inside the magnets, so the two never overlap and either may turn alone.
-    private readonly PartLayer _coilLayer = new() { Name = "Coils", ShowBehindParent = true };
-    private readonly PartLayer _magnetLayer = new() { Name = "Magnets", ShowBehindParent = true };
+    private readonly Node2D _coilLayer = new() { Name = "Coils", ShowBehindParent = true };
+    private readonly Node2D _magnetLayer = new() { Name = "Magnets", ShowBehindParent = true };
     private bool _hasFixed = true;
     private bool _hasTarget = true;
     private bool _simplified;
@@ -28,8 +28,8 @@ public partial class VelocityMotorPart : PartVisual
     public VelocityMotorPart()
         : base(DrawSlot.Over)
     {
-        _coilLayer.Drawing = DrawCoilLayer;
-        _magnetLayer.Drawing = DrawMagnetLayer;
+        _coilLayer.Draw += DrawCoilLayer;
+        _magnetLayer.Draw += DrawMagnetLayer;
         AddChild(_coilLayer);
         AddChild(_magnetLayer);
     }
@@ -98,8 +98,9 @@ public partial class VelocityMotorPart : PartVisual
         }
     }
 
-    private void DrawCoilLayer(UiPixelPen pen)
+    private void DrawCoilLayer()
     {
+        using var pen = UiPixelPen.Begin(_coilLayer);
         if (Simplified)
         {
             pen.Ring(Vector2.Zero, HubMotorGeometry.RingRadius, Line, Theme.JointRingWidth);
@@ -117,13 +118,14 @@ public partial class VelocityMotorPart : PartVisual
     }
 
     // The outlined magnets lie on the panel fill the coils' layer draws under them.
-    private void DrawMagnetLayer(UiPixelPen pen)
+    private void DrawMagnetLayer()
     {
         if (Simplified)
         {
             return;
         }
 
+        using var pen = UiPixelPen.Begin(_magnetLayer);
         for (var index = 0; index < _magnetShapes.Length; index++)
         {
             if (HubMotorGeometry.IsSolid(index))

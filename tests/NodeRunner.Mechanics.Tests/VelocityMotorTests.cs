@@ -32,13 +32,6 @@ public sealed class VelocityMotorTests
     }
 
     [Fact]
-    public void SpeedInput_IsPositiveCounterClockwise_AndSaturatesSoftly()
-    {
-        VelocityMotor.SpeedInput(_motor.MaxSpeed, _motor.MaxSpeed).ShouldBe(Math.Tanh(1), tolerance: 1e-12);
-        VelocityMotor.SpeedInput(-1000 * _motor.MaxSpeed, _motor.MaxSpeed).ShouldBe(-1, tolerance: 1e-9);
-    }
-
-    [Fact]
     public void WantedSpeed_IsTheOutputTimesMaxSpeed_ClampedToIt()
     {
         VelocityMotor.WantedSpeed(0.5, _motor).ShouldBe(0.5 * _motor.MaxSpeed);
@@ -81,13 +74,13 @@ public sealed class VelocityMotorTests
         speed.ShouldBeLessThan(0);
     }
 
-    private static ServoMotor Next(double speedOutput, double strength, ServoMotor previous) =>
+    private static MotorState Next(double speedOutput, double strength, MotorState previous) =>
         VelocityMotor.NextMotor(_motor, speed: 0, speedOutput, strength, previous, _step, _heavy);
 
     private static (double Speed, double Torque) Run(double speedOutput, double load, double realInertia)
     {
         var speed = 0.0;
-        var motor = default(ServoMotor);
+        var motor = default(MotorState);
         for (var step = 0; step < 1800; step++)
         {
             motor = VelocityMotor.NextMotor(_motor, speed, speedOutput, strength: 1, motor, _step, effectiveInertia: realInertia);

@@ -123,16 +123,19 @@ public partial class PartVisual : Node2D
         RedrawParts(root);
     }
 
-    private static void RedrawParts(Node node)
+    // A part may draw on child canvas items of its own (VelocityMotorPart's turning layers), so
+    // everything under a part is redrawn with it.
+    private static void RedrawParts(Node node, bool insidePart = false)
     {
         foreach (var child in node.GetChildren())
         {
-            if (child is PartVisual or PartLayer)
+            var isPart = insidePart || child is PartVisual;
+            if (isPart && child is CanvasItem item)
             {
-                ((CanvasItem)child).QueueRedraw();
+                item.QueueRedraw();
             }
 
-            RedrawParts(child);
+            RedrawParts(child, isPart);
         }
     }
 }

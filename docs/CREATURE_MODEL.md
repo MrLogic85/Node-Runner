@@ -10,11 +10,11 @@ types, and no rules that differ by how a part happens to be simulated. How
 Godot realises each part is in `project/src/creature/AGENTS.md` and the code
 comments there.
 
-## Parts: Node, Beam, Sensor, Servo, Velocity motor, Piston, Spring, Wheel, Rubber, Touch sensor
+## Parts: Node, Beam, Sensor, Servo, Motor, Piston, Spring, Wheel, Rubber, Touch sensor
 
 A creature is built from two structural parts (Node, Beam), sensor parts
 that sit on beams (the Accelerometer and the Camera), joint parts (the
-Servo and the Velocity motor, which are motors, the Wheel, which rolls, the
+Servo and the Motor, which are joint motors, the Wheel, which rolls, the
 Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
@@ -25,7 +25,7 @@ thinks" (the brain) stay separate; this is the most important rule here:
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
 so it sits on a beam, or on a joint, a body of its own (Touch sensor); a
 part acting between two beams or on the ground around a joint sits on that
-joint (Servo, Velocity motor, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
+joint (Servo, Motor, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
 one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
@@ -49,17 +49,17 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   relative to each other. Nodes are where the creature touches the world.
 - `NodeDef`. Its radius is not saved but follows from what is on the joint
   (#626, #129): the largest of the plain joint's `NodeDef.PlainJointRadius`
-  (15) and each part on it, a Servo's or Velocity motor's
+  (15) and each part on it, a joint motor's
   `JointMotor.Radius` (27) or a Wheel's Radius (`CreatureDef.NodeRadius`). Collision and bounds use it.
   A Rubber or a Touch sensor adds none. Taps, sensors and links do not use it (#1086):
   a joint is tapped at its hub or
-  motor, and a sensor sits by what covers its beam's ends
+  joint motor, and a sensor sits by what covers its beam's ends
   (`CreatureDef.CoveredRadius`). Every link measures from
   hub to hub, `NodeDef.HubRadius` (15) from each joint's centre, whatever
   sits on the joint: the minimum link length and a Piston's or Spring's
   travel.
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
-  motor or brake (a Servo or a Velocity motor), one Rubber (#1142) and one Touch sensor
+  joint motor or brake (a Servo or a Motor), one Rubber (#1142) and one Touch sensor
   (#1043), so a Servo can drive the links of a Wheel's joint while the
   Wheel turns freely between them, or drive the Wheel itself (see Servo),
   and a Rubber and a Touch sensor may share its joint with both.
@@ -68,12 +68,12 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   - **0 links:** a loose point that cannot be simulated. It can be saved,
     but `CreatureReadiness` stops training until it is connected or removed.
   - **1 link:** a dangling tip.
-  - **2+ links:** a passive joint unless a motor sits on it: the links turn
+  - **2+ links:** a passive joint unless a joint motor sits on it: the links turn
     freely against each other unless beams close a rigid triangle. A plain
     joint has no settings, angle limits or brain ports.
 - **One piece (#930):** the links must join every linked joint into one
   piece. Separate pieces can be saved, but `CreatureReadiness` stops training
-  until they are joined or all but one are removed. Motors and sensors join
+  until they are joined or all but one are removed. Joint motors and sensors join
   nothing.
 
 ### Beam
@@ -91,7 +91,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Minimum length (#593):** a beam must leave
   `CreatureReadiness.MinimumBeamGap` (52) free between its two hubs (#1086),
   whatever sits on its joints: room for the largest sensor picture, the
-  Camera's, with a 4-unit gap on each side (#622). A motor covers more than
+  Camera's, with a 4-unit gap on each side (#622). A joint motor covers more than
   the hub, so on a beam near that length it may cover the ends of a large
   picture (owner, #1086). A shorter beam can be drawn and saved, but it
   blocks training until its joints move apart.
@@ -103,10 +103,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - `SensorDef`: its `SensorKind` and the beam it sits on. A sensor measures
   its own beam where it sits, with no position setting, and shows as a small
   picture there (#576): midway between what is drawn over the beam's two
-  ends, a motor or else the hub (`CreatureDef.CoveredRadius`), so
+  ends, a joint motor or else the hub (`CreatureDef.CoveredRadius`), so
   `(d + c1 − c2) / 2` from joint 1's centre for joints `d` apart covered
   `c1` and `c2` (#1086, `SensorPicture.Shift`). That is the midpoint unless
-  a motor sits on one end. A Wheel does not move it: the Wheel is
+  a joint motor sits on one end. A Wheel does not move it: the Wheel is
   see-through under its links.
 - **One sensor per beam (#593).** `CreatureDef` rejects a second one of any
   kind.
@@ -195,11 +195,11 @@ fold.
 
 ### Servo
 
-- **Beginner:** A motor on a joint. It holds one link as Fixed and turns
+- **Beginner:** A joint motor that turns to the angle the brain picks. It holds one link as Fixed and turns
   another as Target; any other links at that joint stay free. It can turn
   its joint's Wheel too, as if the Wheel were a link.
 - `ServoDef`; Mechanics: `Servo`. Fixed and Target may be Beams, Pistons or
-  Springs, or the Wheel on the Servo's joint (#1118): to a motor the Wheel
+  Springs, or the Wheel on the Servo's joint (#1118): to a joint motor the Wheel
   is a one-sided link, its angle that of a mark on its tyre, so the same
   link ids name it and saves need no change. Everywhere else the Wheel
   stays a joint part: it counts toward no link rule. A Servo
@@ -207,7 +207,7 @@ fold.
   (`JointMotor.HasTwoSides`); a new one takes the two lowest-id links, or a
   lone link as Fixed and the Wheel as Target (`JointMotor.DefaultSides`).
   Within its Range it turns the Wheel back and forth; rolling on and on is
-  a Velocity motor's job. A missing link id is allowed, so deleting
+  a Motor's job. A missing link id is allowed, so deleting
   a held link or Wheel keeps the Servo, and readiness blocks training
   until the player picks a replacement or deletes the Servo.
 - **Angle:** the direction from its joint to the Target link's other joint
@@ -220,29 +220,32 @@ fold.
   can hold weight up to the strength the brain chose (`Servo.NextMotor`).
   Under a sudden load it sags a little, then climbs back within a second or
   two. Its torque builds to that strength over Rise time and drops at once.
-- **Settings:** Max strength (torque, N·m in the panel), Range (20°–360°),
-  Start position (0–100% inside the range), Max speed (°/s) and Rise time
-  (s).
+- **Settings:** Max strength (torque, 5–200 N·m in the panel, 50 new),
+  Range (20°–360°), Start position (0–100% inside the range), Max speed
+  (5–120 rpm, 60 new) and Rise time (s). A Servo is weaker than a Piston
+  and stronger than a Motor.
 
-### Velocity motor
+### Motor (Velocity motor in code)
 
-- **Beginner:** A motor on a joint that turns at the speed the brain
+- **Beginner:** A joint motor that turns at the speed the brain
   chooses, round and round if it likes. Like a Servo it holds one side as
   Fixed and turns the other as Target, but the brain picks a speed, not an
   angle.
-- `VelocityMotorDef` (#454); Mechanics: `VelocityMotor`. Its sides follow
+- The code and save format call it the Velocity motor: `VelocityMotorDef`
+  (#454), saved under `velocityMotors`; Mechanics: `VelocityMotor`. Its sides follow
   the Servo's rules: a Beam, Piston, Spring or its joint's Wheel, two
   different ones, either missing after a deletion (`JointMotor`). It takes
-  the joint's motor or brake slot, so a joint has a Servo or a Velocity
-  motor, not both (see Node).
+  the joint's slot for a joint motor or brake (see Node → One part per slot).
 - **Angle:** a Servo's, the Target side's direction minus the Fixed
   side's, relative to the built pose. It has no Range and no end stops.
 - **Torque:** the Servo's loop (`MotorLoop`), with the wanted speed set
   straight from the brain: the speed output times Max speed
   (`VelocityMotor.NextMotor`). It keeps that speed against a load up to the
   strength the brain chose; a larger load slows it or turns it back.
-- **Settings:** Max strength, Max speed and Rise time, with a Servo's
-  defaults and limits.
+- **Settings:** Max strength (5–40 N·m, 40 new), Max speed (10–240 rpm,
+  60 new) and Rise time (a Servo's). It is clearly weaker than a Servo,
+  enough to struggle up hills; the values will be tuned again as more maps
+  arrive.
 
 ### Wheel
 
@@ -260,7 +263,7 @@ fold.
   forever.
 - **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
   at 0.4 m, added to its joint. Derived, never saved.
-- **Driving it:** a Servo or Velocity motor on its joint may name it as
+- **Driving it:** a joint motor on its joint may name it as
   Fixed or Target (#1118, see Servo). Later: #1070, which reuses the
   one-sided link.
 
@@ -404,7 +407,7 @@ fold.
   - **Servo (#452):** inputs `angle` (−1 lower end, 0 built, +1 upper end)
     and `speed` (`tanh(ω / maxSpeed)`, counter-clockwise positive); outputs
     `angle` and `strength`.
-  - **Velocity motor (#454):** inputs `angleSin` and `angleCos` (the sine
+  - **Motor (#454):** inputs `angleSin` and `angleCos` (the sine
     and cosine of its angle from the built pose, 0 and 1 as built, so a full
     turn never jumps) and `speed` (as a Servo's); outputs `speed` (Velocity,
     −1…1 of Max speed, counter-clockwise positive) and `strength`.
@@ -435,8 +438,8 @@ fold.
     and bias, a new port starts almost passive, and a removed part's
     neurons and connections are dropped. Moving nodes or changing settings
     keeps every port, except a Camera's Rays, which add or remove its outer
-    rays' ports while the rays it keeps keep their weights (#578); a Servo
-    or Velocity motor whose sides change gets a new id, so its weights reset.
+    rays' ports while the rays it keeps keep their weights (#578); a joint
+    motor whose sides change gets a new id, so its weights reset.
   - **Build refits the brain it opened with (#689):** every save in one
     Build visit refits the brain as it was when Build opened, not the last
     saved one, so a part an Undo brings back gets its neurons, ids and
@@ -459,7 +462,7 @@ fold.
   their ids.
 - Saving, loading, moving, renaming, rebuilding a body and copying a whole
   Creation keep part ids and the counter.
-- Changing a Servo's or Velocity motor's Fixed or Target link or Wheel gives it a new id, because the
+- Changing a joint motor's Fixed or Target link or Wheel gives it a new id, because the
   meaning and sign of its ports changed, so its old weights are not reused.
 - Parts refer to each other by id. Code that needs an array position uses
   `CreatureDef`'s id-to-index lookups at the boundary.

@@ -18,7 +18,7 @@ public sealed record ServoDef : IJointMotorDef
     /// <summary>A new Servo's <see cref="Start"/>: the built angle sits midway between the stops.</summary>
     public const double DefaultStart = 0.5;
 
-    /// <summary>A new Servo's <see cref="MaxSpeed"/>: 360°/s.</summary>
+    /// <summary>A new Servo's <see cref="MaxSpeed"/>: 60 rpm, one turn a second.</summary>
     public const double DefaultMaxSpeed = Math.Tau;
 
     /// <summary>A new Servo's <see cref="RiseTime"/>: 0.2 s (#801), like a Piston.</summary>

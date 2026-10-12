@@ -8,7 +8,7 @@ namespace NodeRunner.Creature;
 /// </summary>
 public sealed class ServoJoint
 {
-    private Mechanics.ServoMotor _motor;
+    private Mechanics.MotorState _motor;
 
     public ServoJoint(ServoDef definition, MotorSides sides)
     {
@@ -22,7 +22,7 @@ public sealed class ServoJoint
 
     public double AngleInput => Mechanics.Servo.AngleInput(Sides.ContinuousAngle, Definition, Sides.BuiltAngle);
 
-    public double SpeedInput => Mechanics.Servo.SpeedInput(Sides.Speed, Definition.MaxSpeed);
+    public double SpeedInput => Mechanics.MotorLoop.SpeedInput(Sides.Speed, Definition.MaxSpeed);
 
     /// <param name="position">The brain's angle output, −1 lower end … +1 upper end.</param>
     /// <param name="strength">The brain's strength output, 0…1 of its Max strength setting.</param>

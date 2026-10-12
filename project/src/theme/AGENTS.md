@@ -31,8 +31,8 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    - A Wheel's mark is drawn by its joint (`JointPart`), which draws its
      hub, so it lies over the links and the cushion
      (`docs/WORLD_VISUALS.md` → "Selection marks").
-   - A selected Servo's Fixed and Target link bands lie along other
-     parts' links, so the Build canvas draws them on
+   - A selected joint motor's (a Servo's or Velocity motor's) Fixed and Target
+     link bands lie along other parts' links, so the Build canvas draws them on
      `CreatureLayers.SelectedUnderlays`, under the selected surface.
 4. **Strokes follow the pen rule** in `project/src/ui/lib/AGENTS.md` →
    Drawing (`UiStrokeGuardTests`). `docs/WORLD_VISUALS.md` owns how parts
@@ -45,12 +45,12 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
   `SensorDrawing.cs`, `SelectionDrawing.cs`, `TriangleHatch.cs`, `ServoGeometry.cs`,
   `HubMotorGeometry.cs`, `JointMotorDrawing.cs` — static drawing helpers
 - `PartVisual.cs` — the base of every part visual: theme, selection and
-  layer, and the redraw on a new pixel scale every view that holds parts calls
+  layer, and the redraw on a new pixel scale every view that holds parts
+  calls, which also redraws any child a part draws on from its `Draw` signal
+  (`VelocityMotorPart`'s turning layers)
 - `JointPart.cs`, `BeamPart.cs`, `ServoPart.cs`, `VelocityMotorPart.cs`,
   `PistonPart.cs`, `SpringPart.cs`, `WheelPart.cs`, `SensorPart.cs`,
   `HatchPart.cs` — one visual per part kind
-- `PartLayer.cs` — a child layer a part draws and turns on its own, so it
-  turns without a redraw
 - `KnockoutPart.cs` — the arena background around a beam or joint, under the
   whole creature (#818)
 - `CreatureLayers.cs`, `ArenaLayers.cs` — the named draw layers and

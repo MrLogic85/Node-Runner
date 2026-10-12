@@ -1010,45 +1010,27 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public LinkRef Link(int linkId) => _builder.Link(linkId);
 
-    public int? SetServoLink(int servoId, bool fixedRole, int linkId)
+    /// <summary>
+    /// Gives the Servo or Velocity motor <paramref name="motorId"/> a new Fixed or Target side, from
+    /// its panel's pickers. The motor takes a fresh id and stays selected under it.
+    /// </summary>
+    public int? SetMotorLink(int motorId, bool fixedRole, int linkId)
     {
         if (_locked)
         {
             return null;
         }
 
+        var isServo = _builder.Servos.Any(servo => servo.Id == motorId);
         var newId = _history.Change(() =>
         {
-            var id = _builder.SetServoLink(servoId, fixedRole, linkId);
+            var id = isServo
+                ? _builder.SetServoLink(motorId, fixedRole, linkId)
+                : _builder.SetVelocityMotorLink(motorId, fixedRole, linkId);
 
-            // Within the step: its Undo row refresh must not find the Servo's old id still selected.
+            // Within the step: its Undo row refresh must not find the motor's old id still selected.
             ClearSelectionSets();
-            _selectedServoIds.Add(id);
-            return id;
-        });
-        SelectionChanged();
-        return newId;
-    }
-
-    /// <summary>Gives the Servo or Velocity motor <paramref name="motorId"/> a new Fixed or Target side, from its panel's pickers.</summary>
-    public int? SetMotorLink(int motorId, bool fixedRole, int linkId) =>
-        _builder.Servos.Any(servo => servo.Id == motorId)
-            ? SetServoLink(motorId, fixedRole, linkId)
-            : SetVelocityMotorLink(motorId, fixedRole, linkId);
-
-    /// <summary>Gives a Velocity motor a new Fixed or Target side, as <see cref="SetServoLink"/> does a Servo (#454).</summary>
-    public int? SetVelocityMotorLink(int velocityMotorId, bool fixedRole, int linkId)
-    {
-        if (_locked)
-        {
-            return null;
-        }
-
-        var newId = _history.Change(() =>
-        {
-            var id = _builder.SetVelocityMotorLink(velocityMotorId, fixedRole, linkId);
-            ClearSelectionSets();
-            _selectedVelocityMotorIds.Add(id);
+            (isServo ? _selectedServoIds : _selectedVelocityMotorIds).Add(id);
             return id;
         });
         SelectionChanged();

@@ -84,10 +84,11 @@ public sealed class BuildVelocityMotorTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.Kind.ShouldBe(PartSettingsKind.VelocityMotor);
+        part.Title.ShouldBe(UiText.Plain("Motor"));
         part.Note.ShouldBe(PartInfo.VelocityMotor);
         part.JointId.ShouldBe(2);
-        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.ServoStrength]);
-        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime]);
+        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorStrength]);
+        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorMaxSpeed, PartParameterId.RiseTime]);
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.IsLocked)).ShouldBe(
         [
             (UiText.Plain("Fixed link"), 0, false),
@@ -109,6 +110,37 @@ public sealed class BuildVelocityMotorTests
         build.SingleSelectedVelocityMotorId.ShouldBe(swapped);
         build.Undo();
         build.VelocityMotors.Single().Id.ShouldBe(6);
+    }
+
+    [Fact]
+    public void DeleteSelectedParts_RemovesTheMotor_KeepsItsLinks_AndUndoBringsItBack()
+    {
+        var build = new BuildViewModel();
+        build.Load(WithAMotor());
+        build.SelectOnly(CreatureElementKind.VelocityMotor, 6);
+
+        build.DeleteSelectedParts();
+
+        build.VelocityMotors.ShouldBeEmpty();
+        build.Beams.Count.ShouldBe(2);
+        build.Selection.Count.ShouldBe(0);
+        build.Undo();
+        build.VelocityMotors.ShouldBe([new VelocityMotorDef(6, 2, fixedLinkId: 4, targetLinkId: 5)]);
+        build.Selection.VelocityMotors.ShouldBe([6]);
+    }
+
+    [Fact]
+    public void DeleteSelectedParts_OfItsFixedLink_LeavesTheMotorWithoutIt_AndUndoGivesItBack()
+    {
+        var build = new BuildViewModel();
+        build.Load(WithAMotor());
+        build.SelectOnly(CreatureElementKind.Beam, 4);
+
+        build.DeleteSelectedParts();
+
+        build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(6, 2, fixedLinkId: null, targetLinkId: 5));
+        build.Undo();
+        build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(6, 2, fixedLinkId: 4, targetLinkId: 5));
     }
 
     [Fact]

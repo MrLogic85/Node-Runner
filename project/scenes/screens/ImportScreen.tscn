@@ -344,7 +344,7 @@ IconId = 52
 [node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/VelocityMotor"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Velocity motors"
+text = "Motors"
 text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4

@@ -74,7 +74,7 @@ public sealed record PartSettingsPresentation(
         PartSettingsKind.Wheel => UiText.Plain("Wheel"),
         PartSettingsKind.Touch => UiText.Plain("Touch sensor"),
         PartSettingsKind.Rubber => UiText.Plain("Rubber"),
-        PartSettingsKind.VelocityMotor => UiText.Plain("Velocity motor"),
+        PartSettingsKind.VelocityMotor => UiText.Plain("Motor"),
         _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Unknown part kind."),
     };
 }

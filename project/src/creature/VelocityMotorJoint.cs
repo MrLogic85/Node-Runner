@@ -9,7 +9,7 @@ namespace NodeRunner.Creature;
 /// </summary>
 public sealed class VelocityMotorJoint
 {
-    private Mechanics.ServoMotor _motor;
+    private Mechanics.MotorState _motor;
 
     public VelocityMotorJoint(VelocityMotorDef definition, MotorSides sides)
     {
@@ -24,7 +24,7 @@ public sealed class VelocityMotorJoint
     /// <summary>The turn from the built angle as its sine and cosine, which never jump across a whole turn.</summary>
     public (double Sin, double Cos) AngleInputs => Mechanics.VelocityMotor.AngleInputs(Sides.ContinuousAngle, Sides.BuiltAngle);
 
-    public double SpeedInput => Mechanics.VelocityMotor.SpeedInput(Sides.Speed, Definition.MaxSpeed);
+    public double SpeedInput => Mechanics.MotorLoop.SpeedInput(Sides.Speed, Definition.MaxSpeed);
 
     /// <param name="speedOutput">The brain's speed output, −1…1 of its Max speed setting, counter-clockwise positive.</param>
     /// <param name="strength">The brain's strength output, 0…1 of its Max strength setting.</param>

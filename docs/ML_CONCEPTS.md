@@ -71,9 +71,16 @@ sensor off are #960.
 - **What:** What the network gets to *see*. Bad inputs cap performance;
   redundant inputs waste capacity.
 - **Where:** Sensor parts on beams (Accelerometer, Camera) and on joints
-  (Touch; `docs/CREATURE_MODEL.md`) and Servo and Piston readings. There is no
-  speed or elevation input: the brain learns movement from what its parts
-  feel. Pulse, a rhythm input, is #527.
+  (Touch; `docs/CREATURE_MODEL.md`) and Servo, Motor and Piston
+  readings. There is no speed or elevation input: the brain learns
+  movement from what its parts feel. Pulse, a rhythm input, is #527.
+- **Why a turning angle reads as sine and cosine (#454):** a Motor may
+  turn round and round, so a plain angle would jump from one
+  end to the other after each full turn, and the brain would see a sudden
+  change where nothing moved. Its sine and cosine change smoothly all the
+  way round and together still say exactly where it is. The cosine reads
+  about 1 at rest, so, unlike the "nothing seen" 0 below, its weight acts
+  partly like an extra bias until the Motor turns.
 - **Why "nothing seen" reads 0 (#604):** a zero input adds nothing to the
   brain's weighted sum, so the weight on a camera ray only matters while
   something is in view. Mutating that weight adds no noise while the

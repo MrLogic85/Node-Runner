@@ -176,7 +176,7 @@ public sealed class ShareDictionaryTests
         builder.AddRubber(backFoot);
         builder.AddRubber(frontFoot);
         var velocityMotor = builder.AddVelocityMotor(front);
-        builder.SetParameter(velocityMotor, PartParameterId.AngularMaxSpeed, 4);
+        builder.SetParameter(velocityMotor, PartParameterId.MotorMaxSpeed, 4);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 

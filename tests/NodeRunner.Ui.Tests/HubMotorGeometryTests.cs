@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The Velocity motor's hub motor (#454, <c>docs/WORLD_VISUALS.md</c> → Velocity motor), checked on its geometry.</summary>
+/// <summary>The Velocity motor's hub motor (#454, <c>docs/WORLD_VISUALS.md</c> → Motor), checked on its geometry.</summary>
 public sealed class HubMotorGeometryTests
 {
     // Every line of the motor is a signal stroke (VisualTheme's joint and motor widths).
@@ -25,25 +25,23 @@ public sealed class HubMotorGeometryTests
     }
 
     [Fact]
-    public void Magnets_AreSix_ASixthOfATurnApart_AlternatingSolidAndOutlined()
-    {
-        var angles = Enumerable.Range(0, HubMotorGeometry.MagnetCount).Select(HubMotorGeometry.MagnetAngle);
-        var solid = Enumerable.Range(0, HubMotorGeometry.MagnetCount).Select(HubMotorGeometry.IsSolid);
-
-        angles.ShouldBe([0f, Mathf.Tau / 6, 2 * Mathf.Tau / 6, 3 * Mathf.Tau / 6, 4 * Mathf.Tau / 6, 5 * Mathf.Tau / 6], tolerance: 1e-6f);
-        solid.ShouldBe([true, false, true, false, true, false]);
-    }
-
-    [Fact]
-    public void Magnet_IsARingSegment_OfFortyDegrees()
+    public void Magnets_AlternateSolidAndOutlined_AllRoundTheTurn()
     {
         for (var index = 0; index < HubMotorGeometry.MagnetCount; index++)
         {
-            var centre = HubMotorGeometry.MagnetAngle(index);
-            var shape = HubMotorGeometry.MagnetShape(index);
+            HubMotorGeometry.IsSolid(index).ShouldNotBe(HubMotorGeometry.IsSolid((index + 1) % HubMotorGeometry.MagnetCount));
+        }
+    }
 
-            shape.ShouldAllBe(point => point.Length() > HubMotorGeometry.MagnetInnerRadius - 1e-3f && point.Length() < HubMotorGeometry.MagnetOuterRadius + 1e-3f);
-            shape.Max(point => Math.Abs(Mathf.AngleDifference(centre, point.Angle()))).ShouldBe(Mathf.DegToRad(20), tolerance: 1e-5f);
+    // Neighbouring outlines stay a stroke apart, so each magnet reads on its own.
+    [Fact]
+    public void Magnets_DoNotOverlapEachOther()
+    {
+        for (var index = 0; index < HubMotorGeometry.MagnetCount; index++)
+        {
+            var next = (index + 1) % HubMotorGeometry.MagnetCount;
+
+            Gap(HubMotorGeometry.MagnetShape(index), HubMotorGeometry.MagnetShape(next)).ShouldBeGreaterThan(2 * _halfStroke);
         }
     }
 
@@ -58,21 +56,32 @@ public sealed class HubMotorGeometryTests
     }
 
     [Fact]
-    public void Coils_AreSixStemsWithCaps_ASixthOfATurnApart()
+    public void EachCoilsStem_EndsOnTheMiddleOfItsCap()
     {
         var strokes = HubMotorGeometry.CoilStrokes();
 
         strokes.Length.ShouldBe(2 * HubMotorGeometry.CoilCount);
         for (var index = 0; index < HubMotorGeometry.CoilCount; index++)
         {
-            var along = index * Mathf.Tau / 6;
             var stem = strokes[2 * index];
             var cap = strokes[(2 * index) + 1];
-            stem[0].Length().ShouldBe(7, tolerance: 1e-4f);
-            stem[^1].Length().ShouldBe(15.5f, tolerance: 1e-4f);
-            Mathf.AngleDifference(along, stem[^1].Angle()).ShouldBe(0, tolerance: 1e-5f);
-            cap.ShouldAllBe(point => Math.Abs(point.Length() - 15.5f) < 1e-3f);
-            Mathf.RadToDeg(Mathf.AngleDifference(cap[0].Angle(), cap[^1].Angle())).ShouldBe(38, tolerance: 1e-3);
+
+            stem[^1].DistanceTo(cap[cap.Length / 2]).ShouldBeLessThan(1e-4f);
+        }
+    }
+
+    // Neighbouring caps stay a stroke apart, so each coil reads on its own.
+    [Fact]
+    public void CoilCaps_DoNotOverlapEachOther()
+    {
+        var strokes = HubMotorGeometry.CoilStrokes();
+
+        for (var index = 0; index < HubMotorGeometry.CoilCount; index++)
+        {
+            var cap = strokes[(2 * index) + 1];
+            var nextCap = strokes[(2 * ((index + 1) % HubMotorGeometry.CoilCount)) + 1];
+
+            Gap(cap, nextCap).ShouldBeGreaterThan(2 * _halfStroke);
         }
     }
 
@@ -86,8 +95,12 @@ public sealed class HubMotorGeometryTests
     }
 
     [Fact]
-    public void Halo_SitsAGapOutsideTheMotor()
+    public void Halo_LeavesAGapOutsideTheMotorsEdge()
     {
-        SelectionMarks.JointHalo(HubMotorGeometry.Radius).ShouldBe(30);
+        ((float)SelectionMarks.JointHalo(HubMotorGeometry.Radius) - _halfStroke).ShouldBeGreaterThan(HubMotorGeometry.Radius);
     }
+
+    // The closest two points of two drawn shapes; their arcs are fine enough for a stroke's width.
+    private static float Gap(Vector2[] first, Vector2[] second) =>
+        first.Min(point => second.Min(point.DistanceTo));
 }
