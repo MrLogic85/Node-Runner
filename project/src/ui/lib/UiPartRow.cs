@@ -135,7 +135,7 @@ public partial class UiPartRow : BaseButton
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         Rebuild();
     }
 

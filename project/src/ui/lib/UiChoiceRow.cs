@@ -83,7 +83,7 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         InitializeContent();
     }
 

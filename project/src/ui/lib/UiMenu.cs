@@ -92,7 +92,7 @@ public partial class UiMenu : Container, IUiClipping
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Stop;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Stop);
         SizeFlagsHorizontal = SizeFlags.ShrinkBegin;
         SetProcess(false);
         ApplyItemSizes();

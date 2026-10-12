@@ -18,7 +18,7 @@ public sealed partial class UiMeterBar : Control
 
     public UiMeterBar()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         SizeFlagsVertical = SizeFlags.ShrinkCenter;
     }
 

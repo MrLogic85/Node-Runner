@@ -225,7 +225,7 @@ public partial class UiPicker : PanelContainer
         }
 
         AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         Modulate = Disabled ? Colors.White.ScaleAlpha(0.5f) : Colors.White;
 
         var stack = new VBoxContainer
@@ -495,7 +495,7 @@ public partial class UiPicker : PanelContainer
 
         public override void _Ready()
         {
-            MouseFilter = MouseFilterEnum.Ignore;
+            UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         }
 
         public override void _Draw()

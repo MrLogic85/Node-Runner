@@ -114,7 +114,7 @@ public partial class UiChip : PanelContainer
 
     public override void _EnterTree() => RequestReady();
 
-    public UiChip() => MouseFilter = MouseFilterEnum.Pass;
+    public UiChip() => UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
 
     public override void _Ready() => Refresh();
 

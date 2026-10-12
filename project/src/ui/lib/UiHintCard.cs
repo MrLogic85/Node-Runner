@@ -22,7 +22,7 @@ public partial class UiHintCard : UiCard
     public override void _Ready()
     {
         base._Ready();
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
     }
 
     public void ShowNow()

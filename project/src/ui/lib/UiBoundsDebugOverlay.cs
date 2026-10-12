@@ -23,7 +23,7 @@ public partial class UiBoundsDebugOverlay : Control
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         SetProcess(true);
     }

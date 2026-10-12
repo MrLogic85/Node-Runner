@@ -49,7 +49,7 @@ public partial class UiDivider : Control
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
     }
 
     public override void _Notification(int what)

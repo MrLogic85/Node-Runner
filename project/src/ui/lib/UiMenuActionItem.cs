@@ -113,7 +113,7 @@ public partial class UiMenuActionItem : UiMenuItem, ISerializationListener
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         Build();
     }
 

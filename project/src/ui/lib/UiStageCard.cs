@@ -109,7 +109,7 @@ public partial class UiStageCard : UiCard
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         SizeVariant = CardSize.Snug;
         _number = GetNode<UiNumber>("%Number");
         _titleLabel = GetNode<Label>("%Title");

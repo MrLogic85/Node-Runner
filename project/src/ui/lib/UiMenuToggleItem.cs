@@ -56,7 +56,7 @@ public partial class UiMenuToggleItem : UiMenuItem, ISerializationListener
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Stop;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Stop);
         InitializeToggle();
     }
 

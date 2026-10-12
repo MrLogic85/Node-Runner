@@ -72,7 +72,7 @@ public partial class UiExpandSection : VBoxContainer, ISerializationListener
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         AddThemeConstantOverride("separation", UiSize.Space.S1);
         InitializeHeader();
     }

@@ -52,7 +52,7 @@ public partial class UiIconTabs : HBoxContainer
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         _group ??= new ButtonGroup { AllowUnpress = false };
         _activeIndex = UiComponentContracts.NormalizeTabIndex(_activeIndex, _icons.Count);
         RebuildButtons();

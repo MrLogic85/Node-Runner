@@ -53,7 +53,7 @@ public partial class UiVerticalLabel : Control
 
     private string DisplayText => UiThemeLookup.LetterCase(Atr(Text), TextStyle);
 
-    public override void _Ready() => MouseFilter = MouseFilterEnum.Ignore;
+    public override void _Ready() => UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
 
     public override void _Notification(int what)
     {

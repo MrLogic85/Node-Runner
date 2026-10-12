@@ -22,7 +22,7 @@ public partial class UiSignpost : Container
     private UiTokens.Color _color = UiTokens.Color.Ink;
     private UiIconCaption? _content;
 
-    public UiSignpost() => MouseFilter = MouseFilterEnum.Ignore;
+    public UiSignpost() => UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
 
     [Export]
     public string Text
