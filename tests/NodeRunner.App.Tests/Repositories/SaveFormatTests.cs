@@ -33,7 +33,7 @@ public sealed class SaveFormatTests : IDisposable
     public void Schema_MatchesTheCommittedSchema(Type type, string name, bool versioned)
     {
         var schema = JsonSchemaExporter
-            .GetJsonSchemaAsNode(SaveJson.Options, type, new JsonSchemaExporterOptions { TreatNullObliviousAsNonNullable = true })
+            .GetJsonSchemaAsNode(SaveJson.Options, type, new JsonSchemaExporterOptions { TreatNullObliviousAsNonNullable = true, TransformSchemaNode = OnlyLockedIsInfinite })
             .AsObject();
         if (versioned)
         {
@@ -230,6 +230,21 @@ public sealed class SaveFormatTests : IDisposable
     }
 
     // VersionedSaveFile writes the version first, outside the record.
+    // A Brake's Strength is the one number saved as a named literal, and only "Infinity" when Locked
+    // (#1039); BrakeDef rejects the others, so the schema allows a positive number or "Infinity".
+    private static JsonNode OnlyLockedIsInfinite(JsonSchemaExporterContext context, JsonNode schema)
+    {
+        if (context.PropertyInfo is not { Name: "strength" } property || property.DeclaringType != typeof(BrakeDef))
+        {
+            return schema;
+        }
+
+        schema["anyOf"] = new JsonArray(
+            new JsonObject { ["type"] = "number", ["exclusiveMinimum"] = 0 },
+            new JsonObject { ["enum"] = new JsonArray("Infinity") });
+        return schema;
+    }
+
     private static void AddVersionField(JsonObject schema)
     {
         const string field = VersionedSaveFile<CreationDef>.VersionField;

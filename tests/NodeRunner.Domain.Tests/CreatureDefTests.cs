@@ -428,4 +428,12 @@ public sealed class CreatureDefTests
         CreatureDef.HasJointPart(1, [], [], [], [new RubberDef(2, 1)]).ShouldBeTrue();
         CreatureDef.HasJointPart(3, [], [], [], [new RubberDef(2, 1)]).ShouldBeFalse();
     }
+
+    // A Brake fills its joint's motor-or-brake slot (#1039), so its joint is not bare.
+    [Fact]
+    public void HasJointPart_CountsABrake()
+    {
+        CreatureDef.HasJointPart(1, [new BrakeDef(2, 1)], [], [], []).ShouldBeTrue();
+        CreatureDef.HasJointPart(3, [new BrakeDef(2, 1)], [], [], []).ShouldBeFalse();
+    }
 }

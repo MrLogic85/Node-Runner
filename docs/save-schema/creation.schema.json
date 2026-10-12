@@ -435,6 +435,60 @@
             "additionalProperties": false
           }
         },
+        "brakes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nodeId": {
+                "type": "integer"
+              },
+              "fixedLinkId": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "targetLinkId": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              },
+              "strength": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  {
+                    "enum": [
+                      "Infinity"
+                    ]
+                  }
+                ],
+                "default": 2000000
+              }
+            },
+            "required": [
+              "id",
+              "nodeId"
+            ],
+            "additionalProperties": false
+          }
+        },
         "nextPartId": {
           "type": "integer"
         }
@@ -450,6 +504,7 @@
         "touchSensors",
         "rubbers",
         "velocityMotors",
+        "brakes",
         "nextPartId"
       ],
       "additionalProperties": false

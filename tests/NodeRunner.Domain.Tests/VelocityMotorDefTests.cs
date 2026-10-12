@@ -67,5 +67,5 @@ public sealed class VelocityMotorDefTests
     }
 
     private static CreatureDef Creature(VelocityMotorDef[] motors, ServoDef[]? servos = null, WheelDef[]? wheels = null) =>
-        new(_nodes, _beams, [], servos ?? [], [], [], wheels ?? [], [], [], motors, nextPartId: 10);
+        new(_nodes, _beams, [], servos ?? [], [], [], wheels ?? [], [], [], motors, [], nextPartId: 10);
 }

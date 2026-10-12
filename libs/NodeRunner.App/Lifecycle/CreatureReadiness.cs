@@ -67,12 +67,12 @@ public static class CreatureReadiness
             AddLengthProblem(creature, CreatureElementKind.Beam, beam.NodeA, beam.NodeB, problems);
         }
 
-        foreach (var motor in creature.JointMotors)
+        foreach (var part in creature.JointMotors.Concat<IMotorOrBrakeDef>(creature.Brakes))
         {
-            if (IsMissingALink(motor))
+            if (IsMissingALink(part))
             {
-                var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, motor.Id);
-                problems.Add(!JointMotor.HasTwoSides(creature.LinksAt(motor.NodeId), creature.WheelAt(motor.NodeId) is not null)
+                var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, part.Id);
+                problems.Add(!JointMotor.HasTwoSides(creature.LinksAt(part.NodeId), creature.WheelAt(part.NodeId) is not null)
                     ? UiText.Format("{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it.", name)
                     : UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.", name));
             }
@@ -91,11 +91,11 @@ public static class CreatureReadiness
         return problems;
     }
 
-    /// <summary>A motor without both its Fixed and Target side, a link or its Wheel (#1118), cannot train.</summary>
-    public static bool IsMissingALink(IJointMotorDef motor)
+    /// <summary>A motor or Brake without both its Fixed and Target side, a link or its Wheel (#1118), cannot train.</summary>
+    public static bool IsMissingALink(IMotorOrBrakeDef part)
     {
-        ArgumentNullException.ThrowIfNull(motor);
-        return motor.FixedLinkId is null || motor.TargetLinkId is null;
+        ArgumentNullException.ThrowIfNull(part);
+        return part.FixedLinkId is null || part.TargetLinkId is null;
     }
 
     /// <summary>Whether a beam or a link, a Piston (#451) or a Spring (#453), holds the node to the rest of the creature.</summary>

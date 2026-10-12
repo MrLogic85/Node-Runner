@@ -27,6 +27,7 @@ internal static class PortedCreature
         [new TouchSensorDef(Touch, 2)],
         [new RubberDef(Rubber, 3)],
         [new VelocityMotorDef(VelocityMotor, 2, 5, 6, "Drive")],
+        [],
         nextPartId: 17);
 
     public static BrainPortLayout Layout { get; } = BrainPorts.Of(Def);

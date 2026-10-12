@@ -103,6 +103,7 @@ public sealed class BrainPortLabelsTests
             [],
             [],
             [new VelocityMotorDef(6, 1, 4, 5)],
+            [],
             nextPartId: 7);
 
         var labels = BrainPortLabels.For(creature);

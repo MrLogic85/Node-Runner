@@ -10,12 +10,12 @@ types, and no rules that differ by how a part happens to be simulated. How
 Godot realises each part is in `project/src/creature/AGENTS.md` and the code
 comments there.
 
-## Parts: Node, Beam, Sensor, Servo, Motor, Piston, Spring, Wheel, Rubber, Touch sensor
+## Parts: Node, Beam, Sensor, Servo, Motor, Brake, Piston, Spring, Wheel, Rubber, Touch sensor
 
 A creature is built from two structural parts (Node, Beam), sensor parts
 that sit on beams (the Accelerometer and the Camera), joint parts (the
-Servo and the Motor, which turn their joint, the Wheel, which rolls, the
-Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
+Servo and the Motor, which turn their joint, the Brake, meant to resist
+that, the Wheel, which rolls, the Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
 parts with brain ports move the body. "What senses" (sensors) and "what
@@ -25,7 +25,7 @@ thinks" (the brain) stay separate; this is the most important rule here:
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
 so it sits on a beam, or on a joint, a body of its own (Touch sensor); a
 part acting between two beams or on the ground around a joint sits on that
-joint (Servo, Motor, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
+joint (Servo, Motor, Brake, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
 one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
@@ -59,7 +59,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   sits on the joint: the minimum link length and a Piston's or Spring's
   travel.
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
-  joint motor or brake (a Servo or a Motor), one Rubber (#1142) and one Touch sensor
+  joint motor or brake (a Servo, a Motor or a Brake), one Rubber (#1142) and one Touch sensor
   (#1043), so a Servo can drive the links of a Wheel's joint while the
   Wheel turns freely between them, or drive the Wheel itself (see Servo),
   and a Rubber and a Touch sensor may share its joint with both.
@@ -247,6 +247,19 @@ fold.
   → Parameters. Its Max strength tops out at a fifth of a Servo's, so it
   struggles up hills.
 
+### Brake
+
+- **Beginner:** A brake on a joint, meant to stop its two sides turning
+  against each other (#456). It has no brain ports and draws no power.
+- `BrakeDef` (#1039), saved under `brakes`: it is saved, loaded, validated
+  and shared, but not yet simulated (#1040) or placed in Build (#1041). Its
+  sides and slot are a Servo's (see Servo, and Node → One part per slot),
+  so one with a missing side blocks training like a Servo. Unlike a joint
+  motor it has no ports; Editing identity rules says what that means for
+  its id.
+- **Settings:** **Strength**, the most torque it resists with (N·m), or
+  **Locked** (`BrakeDef.Locked`), an endless Strength.
+
 ### Wheel
 
 - **Beginner:** A wheel on a joint. It turns freely there and rolls on the
@@ -264,8 +277,7 @@ fold.
 - **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
   at 0.4 m, added to its joint. Derived, never saved.
 - **Driving it:** a joint motor on its joint may name it as
-  Fixed or Target (#1118, see Servo). Later: #1070, which reuses the
-  one-sided link.
+  Fixed or Target (#1118, see Servo), and so may a Brake.
 
 ### Rubber
 
@@ -464,6 +476,7 @@ fold.
   Creation keep part ids and the counter.
 - Changing a joint motor's Fixed or Target link or Wheel gives it a new id, because the
   meaning and sign of its ports changed, so its old weights are not reused.
+  A Brake has no ports, so it keeps its id.
 - Parts refer to each other by id. Code that needs an array position uses
   `CreatureDef`'s id-to-index lookups at the boundary.
 

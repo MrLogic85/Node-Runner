@@ -1,6 +1,9 @@
 namespace NodeRunner.Domain;
 
-/// <summary>What every joint motor, a Servo or a Velocity motor (<see cref="IJointMotorDef"/>), shares.</summary>
+/// <summary>
+/// What every joint motor, a Servo or a Velocity motor (<see cref="IJointMotorDef"/>), shares. A
+/// <see cref="BrakeDef"/> takes its sides by the same rules (#1039).
+/// </summary>
 public static class JointMotor
 {
     /// <summary>A joint motor's visible/collision joint radius, about 11/6 of a plain joint (#452).</summary>

@@ -278,6 +278,7 @@ public sealed class BuildLockedTests
                 [],
                 [],
                 [new VelocityMotorDef(65, 61, fixedLinkId: 63, targetLinkId: 64)],
+                [],
                 nextPartId: 66),
             locked: true);
         return build;

@@ -101,6 +101,52 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
+    public void Code_RoundTripsABrake_LockedOrWithAWheelSide()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
+        builder.SetBrakeStrength(builder.AddBrake(joints[0]), BrakeDef.LockedStrength);
+        var wheel = builder.AddWheel(joints[1]);
+        builder.SetBrakeStrength(builder.AddBrake(joints[1], builder.LinksAt(joints[1])[0].Id, wheel), 1500000);
+        var braked = walker.WithCreature(builder.Build(), training: null);
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(braked)).Build.ShouldNotBeNull();
+
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(braked).Creature));
+        build.Creature.Brakes.Select(brake => (brake.Locked, brake.Strength)).ShouldBe([(true, double.PositiveInfinity), (false, 1500000)]);
+        build.Creature.IsWheel(build.Creature.Brakes[1].TargetLinkId!.Value).ShouldBeTrue();
+    }
+
+    // Build's Brake slider is 20–400 N·m (200000–4000000 world units) or Locked (#1039), so only a code changed by hand holds another.
+    [Theory]
+    [InlineData(200000.0, null)]
+    [InlineData(4000000.0, null)]
+    [InlineData("Infinity", null)]
+    [InlineData(199999.0, ShareCodeRefusal.Damaged)]
+    [InlineData(4000001.0, ShareCodeRefusal.Damaged)]
+    [InlineData("-Infinity", ShareCodeRefusal.Damaged)]
+    [InlineData("NaN", ShareCodeRefusal.Damaged)]
+    public void Read_ABrakesStrength_IsRefusedAsDamaged_OffItsSlider(object strength, ShareCodeRefusal? refusal)
+    {
+        var file = WalkerFile();
+        var creature = file["creature"]!;
+        var id = creature["nextPartId"]!.GetValue<int>();
+        creature["nextPartId"] = id + 1;
+        creature["brakes"] = new JsonArray(new JsonObject
+        {
+            ["id"] = id,
+            ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(),
+            ["fixedLinkId"] = null,
+            ["targetLinkId"] = null,
+            ["name"] = null,
+            ["strength"] = strength is string text ? JsonValue.Create(text) : JsonValue.Create((double)strength),
+        });
+
+        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(refusal);
+    }
+
+    [Fact]
     public void Code_RoundTripsARubber()
     {
         var walker = LoadFixture013("walker.creation.json");
@@ -215,6 +261,7 @@ public sealed class CreationShareCodeTests
         builder.AddWheel(nodes[4]);
         builder.AddRubber(nodes[3]);
         builder.AddVelocityMotor(nodes[3]);
+        builder.SetBrakeStrength(builder.AddBrake(nodes[2]), BrakeDef.LockedStrength);
         builder.RemoveNode(builder.AddNode(new Vector2D(300, 300)));
         builder.RemoveBeam(beams[3]);
         builder.AddBeam(nodes[3], nodes[4]);
@@ -307,6 +354,7 @@ public sealed class CreationShareCodeTests
     [InlineData(8)]
     [InlineData(9)]
     [InlineData(10)]
+    [InlineData(11)]
     public void Read_AnOlderVersionsCode_WithAWheel_StillReads(int version)
     {
         var read = CreationShareCode.Read(CreationShareCode.Pack(version, Encoding.UTF8.GetBytes(SampleLine(version).ToJsonString())));
@@ -316,7 +364,8 @@ public sealed class CreationShareCodeTests
         var creature = read.Build.ShouldNotBeNull().Creature;
         creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(60);
         creature.Rubbers.Count.ShouldBe(version < 10 ? 0 : 2);
-        creature.VelocityMotors.ShouldBeEmpty();
+        creature.VelocityMotors.Count.ShouldBe(version < 11 ? 0 : 1);
+        creature.Brakes.ShouldBeEmpty();
     }
 
     [Fact]
@@ -565,7 +614,8 @@ public sealed class CreationShareCodeTests
             .Concat(creature.Wheels.Select(part => part.Id))
             .Concat(creature.TouchSensors.Select(part => part.Id))
             .Concat(creature.Rubbers.Select(part => part.Id))
-            .Concat(creature.VelocityMotors.Select(part => part.Id));
+            .Concat(creature.VelocityMotors.Select(part => part.Id))
+            .Concat(creature.Brakes.Select(part => part.Id));
 
     // creature with every part id, and every reference to one, swapped through ids.
     private static CreatureDef Renumbered(CreatureDef creature, Dictionary<int, int> ids)

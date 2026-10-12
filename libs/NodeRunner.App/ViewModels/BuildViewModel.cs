@@ -210,7 +210,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
         var selectedMotorJoints = reselect is null ? SelectedMotorJoints() : [];
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, body.VelocityMotors, nextPartId));
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, body.VelocityMotors, body.Brakes, nextPartId));
         if (reselect is not null)
         {
             ClearSelectionSets();
@@ -417,6 +417,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>Every joint motor: the Servos, then the Velocity motors.</summary>
     public IReadOnlyList<IJointMotorDef> JointMotors => _builder.JointMotors;
+
+    /// <summary>The Brakes (#1039). Build cannot place, draw or select one yet (#1041).</summary>
+    public IReadOnlyList<BrakeDef> Brakes => _builder.Brakes;
 
     public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;
 
@@ -811,10 +814,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, partId);
 
     /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Wheel 1", "Accel 1", "Camera 1" or "Touch 1".</summary>
-    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, partId);
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -851,7 +854,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         RaiseAnatomyChanged();
     }
 
-    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, partId);
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, partId);
 
     /// <summary>
     /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,

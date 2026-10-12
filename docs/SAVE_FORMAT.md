@@ -10,7 +10,8 @@ same PR.
   (`docs/ROADMAP.md` → "Project stage"); see "Versions and migration".
 - **Schemas.** `docs/save-schema/` holds a JSON Schema for each file,
   generated from the domain records by .NET's `JsonSchemaExporter`, plus the
-  `formatVersion` field of a versioned file. It is the exact field list:
+  `formatVersion` field of a versioned file, with a Brake's `strength`
+  narrowed to a positive number or `"Infinity"`. It is the exact field list:
   types, required fields, which may be `null`, allowed enum values and no
   other fields. `SaveFormatTests` keeps it in step with the records.
 - **Strict loading.** An unknown field, a missing required field or a
@@ -48,6 +49,10 @@ Creation deletes its folder.
 - Ids are GUIDs (`"0f3c6a52-7d1e-…"`) for Creations and positive integers
   for parts.
 - Lengths and positions are in creature units; angles are in radians.
+- A number is never `NaN` or infinite, except a Locked Brake's `strength`,
+  written as the string `"Infinity"` (#1039): JSON has no infinity, and
+  .NET's named-literal number handling reads it back as one, on that field
+  only.
 - Names are the player's free text, saved as JSON strings and never part
   of a path, so any name reads back as typed. The one exception: half of a
   UTF-16 surrogate pair is written as `U+FFFD` (#837).
@@ -81,6 +86,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `touchSensors[]` | `{ id, nodeId, name }` | Touch sensors on a node id (#1043), at most one per node. No settings. |
 | `rubbers[]` | `{ id, nodeId, name }` | Rubbers on a node id (#1142), at most one per node: the joint, or its Wheel's tyre, grips the ground. No settings. |
 | `velocityMotors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, maxSpeed, riseTime }` | Motors (#454): a Servo's sides and units, without `range` or `start`. One per node (`docs/CREATURE_MODEL.md` → Node → One part per slot). |
+| `brakes[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength }` | Brakes (#1039): a Servo's sides and slot, no ports. `strength` in world torque units (N·m × 10⁴), above 0, or `"Infinity"` when Locked. |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training` (meaning of latest and best: `docs/TRAINING_LOOP.md` → "Latest
@@ -167,6 +173,7 @@ Current `creation.json` migrations:
 | 8 | 9 | #1144: each Wheel drops its `grip`; every tyre now grips like a bare joint, friction 1. |
 | 9 | 10 | #1142: add required `creature.rubbers: []`. |
 | 10 | 11 | #454: add required `creature.velocityMotors: []`. |
+| 11 | 12 | #1039: add required `creature.brakes: []`. |
 
 #1086 needs no migration: its saved shape is unchanged, but a saved creature
 with a Wheel or Servo moves and senses a little differently, since links and
@@ -202,7 +209,7 @@ owns it.
 - The code is `NR`, the format version and a dot, then its JSON
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
-  scratch. The Walker example's is about 50 characters, starting `NR11.`,
+  scratch. The Walker example's is about 50 characters, starting `NR12.`,
   and so is two joints and a Spring's (#1094).
 - Its JSON is `creation.json` on one line with `training` and
   `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,

@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -241,6 +241,17 @@ public sealed class FileCreationRepository : ICreationRepository
         }
 
         creature["velocityMotors"] ??= new JsonArray();
+    }
+
+    // Before #1039 a creature had no Brakes.
+    private static void AddBrakesArray(JsonObject file)
+    {
+        if (file["creature"] is not JsonObject creature)
+        {
+            throw new InvalidDataException("creation.json is missing its creature object.");
+        }
+
+        creature["brakes"] ??= new JsonArray();
     }
 
     // Before #1129 a Piston's target-length output was tanh, −1 shortest … +1 longest, and is now

@@ -68,6 +68,11 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   its beam speed up, slow down and tilt. Two inputs, along and across the
   beam.
 - **Beam** — A rigid, fixed-length connection between two joints.
+- **Brake** — A passive joint part (#1039) with a Fixed and a Target side
+  and a Strength, the most torque it resists their turning with; it is not
+  simulated yet (#1040). A Locked Brake's Strength is endless; that is not
+  a Locked Creation. It takes a joint motor's slot but has no ports. See:
+  `docs/CREATURE_MODEL.md` → "Brake".
 - **Camera** — A sensor: 1, 3 or 5 rays around its aim that read how near
   the ground is within its range, and whether any sees it. One input per
   ray, plus hit. Not Godot's `Camera2D`.
@@ -76,20 +81,21 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Creature element selection** — A selected joint, beam, sensor or link: a
   `CreatureElementKind` plus the part's stable id (#220). A selection holds
   any mix of them as a `PartSet` (#704), in every tool (#803).
-- **Fixed / Target** — The two sides a joint motor uses: it holds Fixed and turns
-  Target. Each is a link, or the Wheel on its joint as a one-sided link
+- **Fixed / Target** — The two sides a joint motor or Brake uses: Fixed is
+  the reference, and Target turns against it, driven by a joint motor or
+  resisted by a Brake. Each is a link, or the Wheel on its joint as a one-sided link
   (#1118). See: `docs/CREATURE_MODEL.md` → "Servo".
 - **Hub** — The `NodeDef.HubRadius` circle at every joint's centre where
   links end and are measured from, whatever sits on the joint (#1086). See:
   `docs/CREATURE_MODEL.md` → Node.
 - **Joint** — A point where links meet and can turn; in code a node
-  (`NodeDef`). A plain joint is passive (#450); a joint motor, a Wheel, a Rubber and a
+  (`NodeDef`). A plain joint is passive (#450); a joint motor or Brake, a Wheel, a Rubber and a
   Touch sensor can each sit on it, one of each. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
   their joint".
 - **Joint motor** — A powered joint part with a Fixed and a Target side: a
   Servo or a Motor (`IJointMotorDef`, `JointMotor`). See:
   `docs/CREATURE_MODEL.md` → "Servo" and "Motor (Velocity motor in code)".
-- **Link** — A joint-to-joint connection a joint motor may use as Fixed or Target:
+- **Link** — A joint-to-joint connection a joint motor or Brake may use as Fixed or Target:
   Beam, Piston or Spring. The Links tool lists them all, Beam included. Say
   Links for the group and Beam for a beam (#913).
 - **Model input / Model output** — One slot of the brain's input or output

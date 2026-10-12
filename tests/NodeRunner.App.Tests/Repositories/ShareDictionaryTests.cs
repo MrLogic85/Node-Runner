@@ -33,6 +33,10 @@ public sealed class ShareDictionaryTests
     // It must read for good, so version 10's dictionary never changes.
     private const string _spinnerInVersion10 = "NR10.g-eEYGC5kEdkVgDX89iSsAGsEYCZRo2xRKEpWgwao8egCZagQSp4DLH5Eqm0MAJ5EQAN-Pb1";
 
+    // Three joints, two beams, a Wheel and a Velocity motor, coded in version 11 before #1039 added Brakes.
+    // It must read for good, so version 11's dictionary never changes.
+    private const string _rollerInVersion11 = "NR11.g-evoPycHCLzF7hBgy1fGMBaO1gkIVJAJVhyhQkoS2AGLVIJZ4QnCMxxV-Mm6CFgCvI0ACeIRoA";
+
     public static TheoryData<int> Versions() => new(Enumerable.Range(_firstVersion, FileCreationRepository.Format.CurrentVersion - _firstVersion + 1));
 
     [Fact]
@@ -118,6 +122,21 @@ public sealed class ShareDictionaryTests
         read.UpdatedFrom.ShouldBe(10);
     }
 
+    [Fact]
+    public void ACodeFromVersion11_StillReads_WithoutBrakes()
+    {
+        var read = CreationShareCode.Read(_rollerInVersion11);
+
+        var build = read.Build.ShouldNotBeNull();
+        build.Name.ShouldBe("Roller");
+        var creature = build.Creature;
+        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0), new Vector2D(0, 100)]);
+        creature.Wheels.ShouldBe([new WheelDef(6, 2)]);
+        creature.VelocityMotors.ShouldBe([new VelocityMotorDef(7, 1, 4, 5)]);
+        creature.Brakes.ShouldBeEmpty();
+        read.UpdatedFrom.ShouldBe(11);
+    }
+
     // A walker with every kind of part at its settings as Build adds it and named as a new creation
     // is (NewCreationWorkflow.UntitledName), so a code leaves out what it didn't change.
     private static CreationDef Template()
@@ -140,6 +159,7 @@ public sealed class ShareDictionaryTests
         builder.AddTouchSensor(backFoot);
         builder.AddRubber(backFoot);
         builder.AddVelocityMotor(frontFoot);
+        builder.AddBrake(backFoot);
         return new CreationDef(Guid.NewGuid(), "Untitled Creation", builder.Build());
     }
 
@@ -177,6 +197,8 @@ public sealed class ShareDictionaryTests
         builder.AddRubber(frontFoot);
         var velocityMotor = builder.AddVelocityMotor(front);
         builder.SetParameter(velocityMotor, PartParameterId.MotorMaxSpeed, 4);
+        builder.SetBrakeStrength(builder.AddBrake(backFoot, backLeg, wheel), BrakeDef.LockedStrength);
+        builder.SetBrakeStrength(builder.AddBrake(frontFoot), 1200000);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 
