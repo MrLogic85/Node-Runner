@@ -68,6 +68,11 @@ public sealed class BuildLockedTests
     [InlineData(CreatureElementKind.Beam, 10)] // The Servo's Fixed link.
     [InlineData(CreatureElementKind.Beam, 12)] // The Servo's Target link.
     [InlineData(CreatureElementKind.Node, 1)] // Its beam is the Servo's Fixed link.
+    [InlineData(CreatureElementKind.VelocityMotor, 65)]
+    [InlineData(CreatureElementKind.Node, 61)] // Its Velocity motor goes with it.
+    [InlineData(CreatureElementKind.Beam, 63)] // The Velocity motor's Fixed link.
+    [InlineData(CreatureElementKind.Beam, 64)] // The Velocity motor's Target link.
+    [InlineData(CreatureElementKind.Node, 60)] // Its beam is the Velocity motor's Fixed link.
     public void Delete_ThatChangesTheModel_IsLocked_AndChangesNothing(CreatureElementKind kind, int id)
     {
         var build = Locked();
@@ -89,6 +94,11 @@ public sealed class BuildLockedTests
     [InlineData(CreatureElementKind.Node, 2, CreatureElementKind.Servo, 30)] // Its Servo goes with it.
     [InlineData(CreatureElementKind.Beam, 12, CreatureElementKind.Servo, 30)] // The kept Servo's Target link.
     [InlineData(CreatureElementKind.Node, 1, CreatureElementKind.Servo, 30)] // Its beam is the kept Servo's Fixed link.
+    [InlineData(CreatureElementKind.VelocityMotor, 65, CreatureElementKind.VelocityMotor, 65)]
+    [InlineData(CreatureElementKind.Node, 61, CreatureElementKind.VelocityMotor, 65)] // Its Velocity motor goes with it.
+    [InlineData(CreatureElementKind.Beam, 63, CreatureElementKind.VelocityMotor, 65)] // The kept Velocity motor's Fixed link.
+    [InlineData(CreatureElementKind.Beam, 64, CreatureElementKind.VelocityMotor, 65)] // The kept Velocity motor's Target link.
+    [InlineData(CreatureElementKind.Node, 62, CreatureElementKind.VelocityMotor, 65)] // Its beam is the kept Velocity motor's Target link.
     public void LockedDelete_PutsANoteOnThePartThatBlocksIt_AndChangesNothing(CreatureElementKind kind, int id, CreatureElementKind blockerKind, int blockerId)
     {
         var build = Locked();
@@ -244,6 +254,7 @@ public sealed class BuildLockedTests
     // A Servo at joint 2 holds beams 10 and 12; Piston 40 joins 3 and 4, and Piston 41 joins 7 and
     // 8; a sensor sits on beam 14, from 8 to 9. Beams 11 and 13 and Springs 50 and 51 have nothing
     // on them, so deleting joint 2 takes only the Servo and its own links, and joint 7 only Piston 41.
+    // Apart from them, a Velocity motor at joint 61 turns beam 64 (to joint 62) against beam 63 (to 60).
     private static BuildViewModel Locked()
     {
         var build = new BuildViewModel();
@@ -253,13 +264,21 @@ public sealed class BuildLockedTests
                     new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)),
                     new NodeDef(4, new Vector2D(100, 100)), new NodeDef(5, new Vector2D(300, 0)), new NodeDef(6, new Vector2D(300, 100)),
                     new NodeDef(7, new Vector2D(400, 0)), new NodeDef(8, new Vector2D(400, 100)), new NodeDef(9, new Vector2D(500, 100)),
+                    new NodeDef(60, new Vector2D(600, 0)), new NodeDef(61, new Vector2D(700, 0)), new NodeDef(62, new Vector2D(800, 0)),
                 ],
-                [new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 2, 4), new BeamDef(13, 3, 5), new BeamDef(14, 8, 9)],
+                [
+                    new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 2, 4), new BeamDef(13, 3, 5), new BeamDef(14, 8, 9),
+                    new BeamDef(63, 60, 61), new BeamDef(64, 61, 62),
+                ],
                 [new SensorDef(20, 14, SensorKind.Accelerometer)],
                 [new ServoDef(30, 2, 10, 12)],
                 [new PistonDef(40, 3, 4), new PistonDef(41, 7, 8)],
                 [new SpringDef(50, 5, 6), new SpringDef(51, 1, 4)],
-                nextPartId: 52),
+                [],
+                [],
+                [],
+                [new VelocityMotorDef(65, 61, fixedLinkId: 63, targetLinkId: 64)],
+                nextPartId: 66),
             locked: true);
         return build;
     }
@@ -267,6 +286,6 @@ public sealed class BuildLockedTests
     private static CanvasNote WouldChangeModel(CreatureElementKind kind, int id) =>
         new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Locked: would change the model"));
 
-    private static (int Nodes, int Beams, int Springs, int Pistons, int Sensors, int Servos) Parts(CreatureDef creature) =>
-        (creature.Nodes.Count, creature.Beams.Count, creature.Springs.Count, creature.Pistons.Count, creature.Sensors.Count, creature.Servos.Count);
+    private static (int Nodes, int Beams, int Springs, int Pistons, int Sensors, int Servos, int VelocityMotors) Parts(CreatureDef creature) =>
+        (creature.Nodes.Count, creature.Beams.Count, creature.Springs.Count, creature.Pistons.Count, creature.Sensors.Count, creature.Servos.Count, creature.VelocityMotors.Count);
 }

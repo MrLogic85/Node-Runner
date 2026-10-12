@@ -20,13 +20,17 @@ UI around the world is in `docs/UI_DIRECTION.md`. Drawing code rules are in
 
 ## Parts
 
+Every *joint motor* (`docs/GLOSSARY.md` → Joint motor) stands in for its
+joint's ring in the same place, so a rule that says joint motor draws alike
+for each.
+
 ### Joint
 
 A bearing in a cell (#626): a `line-strong` `stroke-signal` ring whose
 outer edge is `NodeDef.PlainJointRadius`, a `stroke-hair` inner ring at 0.55
 of that radius, and an `alpha_soft` tint (`line-strong`, `halo` when
 selected, `danger` when loose) on an opaque `background` disc. A bare loose
-joint shows a `danger` ring and cross instead of the inner ring. A Servo or
+joint shows a `danger` ring and cross instead of the inner ring. A joint motor or
 Wheel on a loose joint shows the error in its own `danger` look instead, with
 no ring or cross over it (#1140). A Touch sensor's cushion and a Rubber's
 skin have no `danger` look, so a loose joint with only those keeps the ring
@@ -36,7 +40,7 @@ Every link (beam, Piston, Spring) runs from hub to hub (#1086): it stops flat
 `NodeDef.HubRadius` (a plain joint's radius) from each joint's centre,
 whatever sits on the joint. Its drawing ends under the middle of the ring
 or hub ring there, so it runs over a Wheel's face and under a ring, hub or
-Servo.
+joint motor.
 
 ### Beam and rigid triangle
 
@@ -77,17 +81,38 @@ for a complete Servo; without a Target link, as if the Target pointed
 opposite the Fixed link, or to the screen's left when it has neither.
 Thumbnails draw it as in Build, badge included.
 
+### Motor
+
+A hub motor in section, standing in for the joint's ring (#454). Its parts
+are in `HubMotorGeometry`:
+
+- an opaque `panel` disc on a `background` disc, out to the joint motor's
+  radius, with an `accent` ring just inside it;
+- six magnets round the inside of the ring, alternating solid `accent` and
+  `accent` outlines on the `panel`;
+- six coils round the centre, each an `accent` stem with a curved cap
+  (six, not nine, so they stay legible zoomed out);
+- an `accent` centre ring with an axle dot.
+
+The magnets turn with the Target side and the coils with the Fixed side,
+each along its link, or with the Wheel as a Wheel side. Nothing else moves,
+and it has no other live cue. Build draws it at rest. On a Wheel it stands
+in for the hub, and as Target its solid magnets sit on the tyre's tubes.
+
+A Motor missing a link draws in `danger` with the Servo's "!"
+badge; a missing side points to the screen's right.
+
 ### Piston
 
 A telescoping rod from joint A to joint B. The cylinder starts at the edge
-of the Servo or hub on the first joint and is as long as the travel, so a
+of the joint motor or hub on the first joint and is as long as the travel, so a
 shorter Stroke gives a shorter cylinder (#835). The cap sits at the edge of
-the Servo or hub on the second joint (#1086).
+the joint motor or hub on the second joint (#1086).
 
 ### Spring
 
 A coilover (#807): a thin `line-strong` rod, a seat plate just outside the
-Servo or hub on each joint (#1086), and a `panel` damper body as long as the
+joint motor or hub on each joint (#1086), and a `panel` damper body as long as the
 travel. A helix winds round
 the body, `detail` front strokes over it (#1059) and `line-strong` back
 strokes under it, all with round ends.
@@ -114,7 +139,7 @@ every theme, with no tint:
   apart, each a 26° arc 3.75 units inside the edge, `stroke-signal` with
   round ends. They turn with the wheel in Training and sit at rotation 0 in
   Build. Their number stays the same at every Radius;
-- the hub, while no motor sits on the joint: an opaque `background` disc
+- the hub, while no joint motor sits on the joint: an opaque `background` disc
   the size of a plain joint with a `detail` `stroke-signal` ring and a
   2.6-unit axle dot. The joint draws it where its ring would go, over the
   links (Draw layers), so links end under it like under a ring and only the
@@ -129,7 +154,7 @@ A skin around its joint (#1142): a solid `detail` band 3 units wide
 (`RubberDef.Skin`) just outside the joint's largest drawn radius R, the
 tyre on a Wheel's joint, so a Wheel with a Rubber reads as a thicker tyre.
 It draws on its joint after a Touch sensor's cushion, so it covers the
-cushion's inner part, and under the ring, hub or Servo housing, which may
+cushion's inner part, and under the ring, hub or joint motor, which may
 cover part of it. The skin is only drawn (`docs/CREATURE_MODEL.md` →
 Rubber → Size). Thumbnails draw it; shadows do not.
 
@@ -140,8 +165,8 @@ just outside the joint's largest drawn radius R, the tyre on a Wheel's
 joint. Its colour is the brain's reading
 (`docs/CREATURE_MODEL.md` → Touch sensor → Reading): `accent` at
 `alpha_soft` at 0 and in Build, solid `accent` at 1, blended between. It
-draws first on its joint, under the ring, hub or Servo
-housing, which may cover part of it. It is drawn only
+draws first on its joint, under the ring, hub or joint motor,
+which may cover part of it. It is drawn only
 (`docs/CREATURE_MODEL.md` → Touch sensor → Size). Thumbnails draw it at
 rest.
 
@@ -169,7 +194,7 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
 
 - **Joint:** an unfilled 2-wide `halo` ring.
 - **Beam or link:** two 2-wide `halo` lines, one on each side, stopping at
-  the joint's ring or Servo, or at the hub over a Wheel (outside a Spring's
+  the joint's ring or joint motor, or at the hub over a Wheel (outside a Spring's
   seats). In a selected group they run on
   to the selected joints' rings, so the group reads as one outline.
 - **Sensor:** its lines turn `halo`.
@@ -180,7 +205,7 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
 - **Wheel:** the joint's ring, outside the tyre. The Wheel stands in for its
   joint, which has no mark of its own. Its joint draws the mark with the
   hub, over the links and a Touch sensor's cushion, however it was chosen
-  (`docs/BUILD_MODE.md` → Interactions). With a Servo on the same joint, each selected part shows its
+  (`docs/BUILD_MODE.md` → Interactions). With a joint motor on the same joint, each selected part shows its
   own mark (#1044).
 - **Servo:** a keyhole `halo` outline. Selected alone, a hatched `detail`
   band also marks its Fixed link and an `accent` band its Target link. A
@@ -189,6 +214,8 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
   link's band past the link, the inner edge through the see-through face
   (#1118). The ring is never hatched (owner's choice); its `detail` or
   `accent` colour alone tells Fixed from Target.
+- **Motor:** a 2-wide `halo` ring round it, with the Servo's
+  Fixed and Target bands.
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
   ticks, as wide as a Piston's cylinder or a Spring's seats,
   joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
@@ -205,7 +232,7 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
 A creature draws on two surfaces, the unselected parts and over them the
 selected ones, which draw alike (#1107). Each surface draws from the bottom
 up: its parts, then the joints joined to no link; the selected surface
-starts with a selected Servo's bands (Selection marks). On top
+starts with a selected joint motor's bands (Selection marks). On top
 of both go the overlays (camera rays, link travel marks, the link drag and
 sensor move lines, the picked link's start rings, the beam a link drag
 replaces, the selection frame). Training's knock-out outline and the rigid
@@ -216,19 +243,19 @@ Training and never changes while the creature moves (`DrawGroups`). The link
 whose lower end sits highest on screen draws first, so what is lower is
 nearer; ties keep link id order. Within a group: a Wheel (with its joint's
 first link), the link, its sensor, then a joint's Touch cushion, Rubber skin, ring,
-Wheel hub or Servo (with its joint's last link). So a link covers a Wheel's face and a ring
-or hub covers its link's end. Servos, joints, hubs and tyre bands are
+Wheel hub or joint motor (with its joint's last link). So a link covers a Wheel's face and a ring
+or hub covers its link's end. Joint motors, joints, hubs and tyre bands are
 filled, so nothing shows through them; a Wheel's face inside the tyre is
 see-through.
 
 The selected surface takes a selected joint or joint part with its links
 and their ends, a selected link with its ends, every link whose ends both
-rose, so a raised Servo never hides it, and a selected sensor or the
-sensor on a raised link. A raised end lifts its ring, hub or Servo but not
+rose, so a raised joint motor never hides it, and a selected sensor or the
+sensor on a raised link. A raised end lifts its ring, hub or joint motor but not
 a Wheel's face, so the Wheel's other links still run over it to the hub
 (#1086). A link with one raised end stays behind, so it can look cut at the
-edge of a Servo that rose as another link's end. While a part is placed or a sensor moved, the
-beams or joints that take it rise alone, with their `halo`, over a Servo
+edge of a joint motor that rose as another link's end. While a part is placed or a sensor moved, the
+beams or joints that take it rise alone, with their `halo`, over a joint motor
 they end on or cross too. Each placing mark is drawn with its beam or joint,
 under the rod or around the ring, so a refused mark stays in its part's
 place (Build canvas → Placing a part). A touch hits what is drawn on top
@@ -251,7 +278,7 @@ above every shadow.
   it from has a dashed `halo` ring at `JointHalo` (12 dashes, the selection
   ring's width), over the creature. It is dashed, as the drag line is
   before it will attach, so it never reads as the solid selection ring.
-  Selected joints are left unmarked, and so is a selected Servo's joint,
+  Selected joints are left unmarked, and so is a selected joint motor's joint,
   which still draws a link but has its own outline there. No ring is
   `danger` until a drag, since a refusal depends on the target. A link
   drag hides the rings; its start joint takes the solid ring.
@@ -260,7 +287,7 @@ above every shadow.
   taken beams dashed `danger`, and its picture where it would land. A
   dragged joint part rings the joints that take it `halo` and the joints
   that refuse it dashed `danger` (slot rules: `docs/BUILD_MODE.md`), each ring at the size the part will have there
-  (`PlacingTargets.JointRingOf`): a Servo's housing, a new Wheel, a
+  (`PlacingTargets.JointRingOf`): a joint motor's edge, a new Wheel, a
   Rubber's skin, or a Touch sensor's cushion round the joint's largest
   part. A dragged Wheel, Rubber or Touch sensor also shows itself on a free
   joint it would land on, a Rubber as its skin and a Touch sensor as its
@@ -352,6 +379,8 @@ rule 10):
 - **Joint:** its outer ring only.
 - **Servo:** its ring, housing outline, one range arc and one horn line,
   plus the 360° line.
+- **Motor:** its outer ring and a circle round the coils; no
+  magnets, and it does not turn.
 - **Wheel:** the plain circle at its Radius: no tubes or line, and its
   joint's outer ring at the hub, like any shadow joint.
 - **Beam:** its line.

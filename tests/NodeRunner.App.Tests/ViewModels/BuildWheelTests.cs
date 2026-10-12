@@ -402,7 +402,7 @@ public sealed class BuildWheelTests
         part.Kind.ShouldBe(PartSettingsKind.Wheel);
         part.Title.ShouldBe(UiText.Plain("Wheel"));
         part.DefaultName.ShouldBe(UiText.Format("Wheel {0}", 1));
-        part.Note.ShouldBe(UiText.Plain("Rolls freely on the ground."));
+        part.Note.ShouldBe(UiText.Plain("Rolls freely on the ground. Add a Motor or Servo to power it."));
         part.CanDelete.ShouldBeTrue();
         part.ConnectionsLabel.ShouldBeNull();
         part.AdvancedSettings.ShouldBeEmpty();

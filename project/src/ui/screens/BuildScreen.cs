@@ -23,7 +23,7 @@ public partial class BuildScreen : Control
     private bool _subscribedToPresentation;
     private UiSlider? _hintSlider;
     private string? _shownPartGroup;
-    private int _shownServoPickerId;
+    private int _shownMotorPickerId;
     private PartPickerPresentation? _fixedPicker;
     private PartPickerPresentation? _targetPicker;
 
@@ -109,7 +109,7 @@ public partial class BuildScreen : Control
     public delegate void ParameterChangeFinishedEventHandler();
 
     [Signal]
-    public delegate void ServoLinkChangedEventHandler(int servoId, bool fixedRole, int linkId);
+    public delegate void MotorLinkChangedEventHandler(int motorId, bool fixedRole, int linkId);
 
     /// <summary>An "On this joint" tab was tapped (#1044): select that part instead.</summary>
     [Signal]
@@ -188,8 +188,8 @@ public partial class BuildScreen : Control
                 EmitSignal(SignalName.PartPickHidden);
             }
         };
-        GetNode<UiPicker>("%FixedPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: true);
-        GetNode<UiPicker>("%TargetPicker").SelectionChanged += selected => OnServoPickerChanged(selected, fixedRole: false);
+        GetNode<UiPicker>("%FixedPicker").SelectionChanged += selected => OnMotorPickerChanged(selected, fixedRole: true);
+        GetNode<UiPicker>("%TargetPicker").SelectionChanged += selected => OnMotorPickerChanged(selected, fixedRole: false);
         GetNode<UiExpandSection>("%PartAdvanced").Toggled += open => EmitSignal(SignalName.AdvancedSettingsToggled, open);
         GetNode<UiExpandSection>("%SelectionAdvanced").Toggled += open => EmitSignal(SignalName.AdvancedSettingsToggled, open);
         BindViewModels();
@@ -802,7 +802,7 @@ public partial class BuildScreen : Control
         var container = GetNode<VBoxContainer>("%PartPickers");
         var fixedPicker = GetNode<UiPicker>("%FixedPicker");
         var targetPicker = GetNode<UiPicker>("%TargetPicker");
-        _shownServoPickerId = part.Id;
+        _shownMotorPickerId = part.Id;
         var pickers = part.Pickers ?? [];
         container.Visible = pickers.Count > 0;
         fixedPicker.Visible = pickers.Count > 0;
@@ -855,12 +855,12 @@ public partial class BuildScreen : Control
         };
     }
 
-    private void OnServoPickerChanged(int selected, bool fixedRole)
+    private void OnMotorPickerChanged(int selected, bool fixedRole)
     {
         var picker = fixedRole ? _fixedPicker : _targetPicker;
         if (picker?.LinkIdAt(selected) is { } linkId)
         {
-            EmitSignal(SignalName.ServoLinkChanged, _shownServoPickerId, fixedRole, linkId);
+            EmitSignal(SignalName.MotorLinkChanged, _shownMotorPickerId, fixedRole, linkId);
         }
     }
 

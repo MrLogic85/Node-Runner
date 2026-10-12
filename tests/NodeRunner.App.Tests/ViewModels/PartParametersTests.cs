@@ -16,6 +16,7 @@ public sealed class PartParametersTests
             PartParameterId.ServoStartPosition,
             PartParameterId.MaxSpeed,
             PartParameterId.AngularMaxSpeed,
+            PartParameterId.MotorMaxSpeed,
             PartParameterId.RiseTime,
             PartParameterId.Damping,
             PartParameterId.CoilLength,
@@ -175,6 +176,49 @@ public sealed class PartParametersTests
         slider.Readout.ShouldBe(UiText.Format("{0} m", new FixedNumber(2.2, 1)));
         PartParameters.ValueAt(PartParameterId.CameraRange, slider.High).ShouldBe(SensorDef.DefaultRange, tolerance: 1e-9);
         (slider.High / slider.Step).ShouldBe(Math.Round(slider.High / slider.Step), tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void ServoMaxSpeed_RunsFrom5To120Rpm_InStepsOf5_WithTheDefaultOnAStep()
+    {
+        PartParameters.ValueAt(PartParameterId.AngularMaxSpeed, 0).ShouldBe(5 * Math.Tau / 60, tolerance: 1e-12);
+        PartParameters.ValueAt(PartParameterId.AngularMaxSpeed, 1).ShouldBe(120 * Math.Tau / 60, tolerance: 1e-12);
+        var slider = PartParameters.SliderOver(PartParameterId.AngularMaxSpeed, [ServoDef.DefaultMaxSpeed]);
+        slider.Readout.ShouldBe(UiText.Format("{0} rpm", new FixedNumber(60, 0)));
+        slider.Step.ShouldBe(5.0 / 115, tolerance: 1e-12);
+        (slider.High / slider.Step).ShouldBe(Math.Round(slider.High / slider.Step), tolerance: 1e-9);
+        PartParameters.ValueAt(PartParameterId.AngularMaxSpeed, slider.High).ShouldBe(ServoDef.DefaultMaxSpeed, tolerance: 1e-12);
+    }
+
+    [Fact]
+    public void AnOldServoMaxSpeed_StaysWithinItsRpmSlider()
+    {
+        // The old 30–720°/s are exactly 5–120 rpm, so every saved Servo still fits.
+        CreatureBuilder.IsOnItsSlider(PartParameterId.AngularMaxSpeed, 30 * Math.PI / 180).ShouldBeTrue();
+        CreatureBuilder.IsOnItsSlider(PartParameterId.AngularMaxSpeed, 105 * Math.PI / 180).ShouldBeTrue();
+        CreatureBuilder.IsOnItsSlider(PartParameterId.AngularMaxSpeed, 720 * Math.PI / 180).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void MotorMaxSpeed_RunsFrom10To240Rpm_InStepsOf10_WithTheDefaultOnAStep()
+    {
+        PartParameters.ValueAt(PartParameterId.MotorMaxSpeed, 0).ShouldBe(10 * Math.Tau / 60, tolerance: 1e-12);
+        PartParameters.ValueAt(PartParameterId.MotorMaxSpeed, 1).ShouldBe(240 * Math.Tau / 60, tolerance: 1e-12);
+        var slider = PartParameters.SliderOver(PartParameterId.MotorMaxSpeed, [VelocityMotorDef.DefaultMaxSpeed]);
+        slider.Readout.ShouldBe(UiText.Format("{0} rpm", new FixedNumber(60, 0)));
+        slider.Step.ShouldBe(10.0 / 230, tolerance: 1e-12);
+        (slider.High / slider.Step).ShouldBe(Math.Round(slider.High / slider.Step), tolerance: 1e-9);
+        PartParameters.ValueAt(PartParameterId.MotorMaxSpeed, slider.High).ShouldBe(VelocityMotorDef.DefaultMaxSpeed, tolerance: 1e-12);
+    }
+
+    [Fact]
+    public void MotorStrength_RunsFrom5To40NewtonMetres_InStepsOf5_WeakerThanAServo()
+    {
+        PartParameters.ValueAt(PartParameterId.MotorStrength, 0).ShouldBe(50000);
+        PartParameters.ValueAt(PartParameterId.MotorStrength, 1).ShouldBe(400000);
+        PartParameters.SliderOver(PartParameterId.MotorStrength, [VelocityMotorDef.DefaultStrength]).Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(40, 0)));
+        PartParameters.SliderOver(PartParameterId.MotorStrength, [VelocityMotorDef.DefaultStrength]).High.ShouldBe(1);
+        PartParameters.ValueAt(PartParameterId.ServoStrength, 1).ShouldBe(2000000);
     }
 
     [Fact]

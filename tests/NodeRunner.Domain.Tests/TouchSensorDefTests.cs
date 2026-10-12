@@ -66,7 +66,7 @@ public sealed class TouchSensorDefTests
             touched.CoveredRadius(node.Id).ShouldBe(plain.CoveredRadius(node.Id));
         }
 
-        touched.NodeRadius(1).ShouldBe(ServoDef.JointRadius);
+        touched.NodeRadius(1).ShouldBe(JointMotor.Radius);
         touched.NodeRadius(2).ShouldBe(NodeDef.PlainJointRadius);
     }
 

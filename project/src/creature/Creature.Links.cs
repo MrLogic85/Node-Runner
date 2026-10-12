@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
-// Builds the links between body parts: Servos on joints, Pistons with their end stops, and Springs.
+// Builds the links between body parts: Servos and Velocity motors on joints, Pistons with their end stops, and Springs.
 public partial class Creature
 {
     private void CreateServos(CreatureDef definition)
@@ -14,44 +14,71 @@ public partial class Creature
         for (var i = 0; i < definition.Servos.Count; i++)
         {
             var servo = definition.Servos[i];
-            var fixedSide = ServoSideFor(definition, servo.NodeId, servo.FixedLinkId!.Value);
-            var targetSide = ServoSideFor(definition, servo.NodeId, servo.TargetLinkId!.Value);
-            _servos[i] = new ServoJoint(servo, fixedSide, targetSide);
+            _servos[i] = new ServoJoint(servo, MotorSidesFor(definition, servo));
+            var sides = _servos[i].Sides;
             var visual = new ServoVisual
             {
                 Name = $"Servo{i}Visual",
                 Theme = Theme,
-                Link = _servos[i],
-                Radius = ToGodotFloat(ServoDef.JointRadius, nameof(ServoDef.JointRadius)),
-                BuiltAngle = (float)_servos[i].BuiltRelativeRotation,
-                TargetAngle = (float)_servos[i].BuiltRelativeRotation,
+                Sides = sides,
+                Radius = ToGodotFloat(JointMotor.Radius, nameof(JointMotor.Radius)),
+                BuiltAngle = (float)sides.BuiltRelativeRotation,
+                TargetAngle = (float)sides.BuiltRelativeRotation,
                 Range = (float)servo.Range,
                 Start = (float)servo.Start,
-                HousingReach = ServoHousingReach(definition, servo),
-                Position = _servos[i].JointLocalPosition,
-                Rotation = (float)_servos[i].FixedRotation,
+                HousingReach = MotorHousingReach(definition, servo),
+                Position = sides.JointLocalPosition,
+                Rotation = (float)sides.FixedRotation,
             };
             AddChild(visual);
             _servoVisuals[i] = visual;
         }
     }
 
-    private ServoSide ServoSideFor(CreatureDef definition, int servoNodeId, int linkId)
+    // A Velocity motor (#454) turns its sides as a Servo does, with no range or stops.
+    private void CreateVelocityMotors(CreatureDef definition)
     {
-        var joint = _nodeBodies[definition.NodeIndexOf(servoNodeId)];
+        _velocityMotors = new VelocityMotorJoint[definition.VelocityMotors.Count];
+        _velocityMotorVisuals = new VelocityMotorVisual[definition.VelocityMotors.Count];
+        for (var i = 0; i < definition.VelocityMotors.Count; i++)
+        {
+            var motor = definition.VelocityMotors[i];
+            _velocityMotors[i] = new VelocityMotorJoint(motor, MotorSidesFor(definition, motor));
+            var sides = _velocityMotors[i].Sides;
+            var visual = new VelocityMotorVisual
+            {
+                Name = $"VelocityMotor{i}Visual",
+                Theme = Theme,
+                Sides = sides,
+                Position = sides.JointLocalPosition,
+                FixedAngle = (float)sides.FixedRotation,
+                TargetAngle = (float)sides.TargetRotation,
+            };
+            AddChild(visual);
+            _velocityMotorVisuals[i] = visual;
+        }
+    }
+
+    private MotorSides MotorSidesFor(CreatureDef definition, IJointMotorDef motor) => new(
+        MotorSideFor(definition, motor.NodeId, motor.FixedLinkId!.Value),
+        MotorSideFor(definition, motor.NodeId, motor.TargetLinkId!.Value));
+
+    private MotorSide MotorSideFor(CreatureDef definition, int motorNodeId, int linkId)
+    {
+        var joint = _nodeBodies[definition.NodeIndexOf(motorNodeId)];
         if (definition.IsWheel(linkId))
         {
-            return new ServoWheelSide(joint);
+            return new MotorWheelSide(joint);
         }
 
         var link = definition.Link(linkId);
-        return new ServoLinkSide(joint, _nodeBodies[definition.NodeIndexOf(link.FarNodeFrom(servoNodeId))]);
+        return new MotorLinkSide(joint, _nodeBodies[definition.NodeIndexOf(link.FarNodeFrom(motorNodeId))]);
     }
 
-    private static float ServoHousingReach(CreatureDef definition, ServoDef servo)
+    private static float MotorHousingReach(CreatureDef definition, IJointMotorDef motor)
     {
         // A Wheel side has no link for the housing to run along (#1118).
-        if (servo.FixedLinkId is not { } fixedLinkId || definition.IsWheel(fixedLinkId))
+        if (motor.FixedLinkId is not { } fixedLinkId || definition.IsWheel(fixedLinkId))
         {
             return 0;
         }
@@ -89,10 +116,10 @@ public partial class Creature
                 Name = $"Piston{i}Visual",
                 Theme = Theme,
                 Link = _pistons[i],
-                RadiusA = ToGodotFloat(definition.NodeRadius(piston.NodeA), nameof(ServoDef.JointRadius)),
-                RadiusB = ToGodotFloat(definition.NodeRadius(piston.NodeB), nameof(ServoDef.JointRadius)),
-                CoveredA = ToGodotFloat(definition.CoveredRadius(piston.NodeA), nameof(ServoDef.JointRadius)),
-                CoveredB = ToGodotFloat(definition.CoveredRadius(piston.NodeB), nameof(ServoDef.JointRadius)),
+                RadiusA = ToGodotFloat(definition.NodeRadius(piston.NodeA), nameof(JointMotor.Radius)),
+                RadiusB = ToGodotFloat(definition.NodeRadius(piston.NodeB), nameof(JointMotor.Radius)),
+                CoveredA = ToGodotFloat(definition.CoveredRadius(piston.NodeA), nameof(JointMotor.Radius)),
+                CoveredB = ToGodotFloat(definition.CoveredRadius(piston.NodeB), nameof(JointMotor.Radius)),
                 Travel = (float)(_pistons[i].LongestLength - _pistons[i].ShortestLength),
             };
             AddChild(visual);
@@ -213,10 +240,10 @@ public partial class Creature
                 Theme = Theme,
                 NodeA = nodeA,
                 NodeB = nodeB,
-                RadiusA = ToGodotFloat(definition.NodeRadius(spring.NodeA), nameof(ServoDef.JointRadius)),
-                RadiusB = ToGodotFloat(definition.NodeRadius(spring.NodeB), nameof(ServoDef.JointRadius)),
-                CoveredA = ToGodotFloat(definition.CoveredRadius(spring.NodeA), nameof(ServoDef.JointRadius)),
-                CoveredB = ToGodotFloat(definition.CoveredRadius(spring.NodeB), nameof(ServoDef.JointRadius)),
+                RadiusA = ToGodotFloat(definition.NodeRadius(spring.NodeA), nameof(JointMotor.Radius)),
+                RadiusB = ToGodotFloat(definition.NodeRadius(spring.NodeB), nameof(JointMotor.Radius)),
+                CoveredA = ToGodotFloat(definition.CoveredRadius(spring.NodeA), nameof(JointMotor.Radius)),
+                CoveredB = ToGodotFloat(definition.CoveredRadius(spring.NodeB), nameof(JointMotor.Radius)),
                 Travel = (float)(longest - shortest),
                 Rest = joint.RestLength,
                 Stiffness = spring.Stiffness,

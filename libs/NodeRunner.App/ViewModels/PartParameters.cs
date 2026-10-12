@@ -127,7 +127,8 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 /// (#801); a Spring's Stiffness is in N/m, its Damping in N·s/m (#453, #801), and its Stroke and
 /// Coil length in % like a Piston's Stroke and Start position (#835); a Wheel's Radius is in m
 /// (#129); a Camera's aim is turned on the canvas (#594), and its Rays snap to 1, 3 or 5,
-/// its Spread is in degrees and its Range in m (#578).
+/// its Spread is in degrees and its Range in m (#578). A Servo's and a Motor's (a Velocity motor's)
+/// Max strength is in N·m and Max speed in rpm, each on its own range (#454).
 /// </summary>
 public static class PartParameters
 {
@@ -136,7 +137,11 @@ public static class PartParameters
         PartParameterId.Strength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can push or pull with"), new(20, 400, 10), 0, "{0} N", "{0}–{1} N", Metres.FromWorldUnits, ToWorld), Advanced: false);
 
     public static PartParameter ServoStrength { get; } = new(
-        PartParameterId.ServoStrength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can turn with"), new(5, 200, 5), 0, "{0} N·m", "{0}–{1} N·m", value => value / 10000, value => value * 10000), Advanced: false);
+        PartParameterId.ServoStrength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can turn with"), new(5, 200, 5), 0, "{0} N·m", "{0}–{1} N·m", NewtonMetres, ToWorldTorque), Advanced: false);
+
+    // Weaker than a Servo, so a Motor struggles up hills (#454).
+    public static PartParameter MotorStrength { get; } = new(
+        PartParameterId.MotorStrength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can turn with"), new(5, 40, 5), 0, "{0} N·m", "{0}–{1} N·m", NewtonMetres, ToWorldTorque), Advanced: false);
 
     public static PartParameter Stroke { get; } = new(
         PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), UiText.Plain("How far it moves in and out"), new(10, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);
@@ -154,7 +159,10 @@ public static class PartParameters
         PartParameterId.MaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(0.5, 4, 0.1), 1, "{0} m/s", "{0}–{1} m/s", Metres.FromWorldUnits, ToWorld), Advanced: true);
 
     public static PartParameter AngularMaxSpeed { get; } = new(
-        PartParameterId.AngularMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(30, 720, 15), 0, "{0}°/s", "{0}–{1}°/s", RadiansToDegrees, DegreesToRadians), Advanced: true);
+        PartParameterId.AngularMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(5, 120, 5), 0, "{0} rpm", "{0}–{1} rpm", Rpm, RpmToRadiansPerSecond), Advanced: true);
+
+    public static PartParameter MotorMaxSpeed { get; } = new(
+        PartParameterId.MotorMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(10, 240, 10), 0, "{0} rpm", "{0}–{1} rpm", Rpm, RpmToRadiansPerSecond), Advanced: true);
 
     public static PartParameter RiseTime { get; } = new(
         PartParameterId.RiseTime, MultiEditable: true, new(UiText.Plain("Rise time"), UiText.Plain("How quickly it reaches full force"), SettingRange.Of(0.1, 0.2, 0.5, 1), 1, "{0} s", "{0}–{1} s", value => value, value => value), Advanced: true);
@@ -208,6 +216,8 @@ public static class PartParameters
         PartParameterId.Rays => Rays,
         PartParameterId.Spread => Spread,
         PartParameterId.CameraRange => CameraRange,
+        PartParameterId.MotorStrength => MotorStrength,
+        PartParameterId.MotorMaxSpeed => MotorMaxSpeed,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),
     };
 
@@ -241,4 +251,13 @@ public static class PartParameters
     private static double RadiansToDegrees(double radians) => radians * 180 / Math.PI;
 
     private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180;
+
+    // A world torque is a world force times world units, so 10⁴ per N·m at 100 world units per metre.
+    private static double NewtonMetres(double torque) => torque / 10000;
+
+    private static double ToWorldTorque(double newtonMetres) => newtonMetres * 10000;
+
+    private static double Rpm(double radiansPerSecond) => radiansPerSecond * 60 / Math.Tau;
+
+    private static double RpmToRadiansPerSecond(double rpm) => rpm * Math.Tau / 60;
 }

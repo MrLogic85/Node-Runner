@@ -35,7 +35,7 @@ public sealed class BuildStackedPartsTests
         var (build, _) = Stacked();
 
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldBeNull();
-        build.PlacementNote!.Text.ShouldBe(UiText.Plain("One motor or brake per joint"));
+        build.PlacementNote!.Text.ShouldBe(UiText.Plain("One Servo, Motor or Brake per joint"));
         build.PlacePart(BuildPart.Wheel, _middleJoint).ShouldBeNull();
         build.PlacementNote!.Text.ShouldBe(UiText.Plain("One wheel per joint"));
         build.Servos.Count.ShouldBe(1);
@@ -186,7 +186,7 @@ public sealed class BuildStackedPartsTests
         build.Wheels.Count.ShouldBe(1);
         var copy = build.Servos.Single(servo => servo.Id != _servoId);
         build.Nodes.Single(node => node.Id == copy.NodeId).Position.ShouldBe(new Vector2D(stack.X + step, stack.Y + step));
-        build.NodeRadius(copy.NodeId).ShouldBe(ServoDef.JointRadius);
+        build.NodeRadius(copy.NodeId).ShouldBe(JointMotor.Radius);
     }
 
     [Fact]

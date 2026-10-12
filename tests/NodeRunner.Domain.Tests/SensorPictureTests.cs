@@ -3,7 +3,7 @@ namespace NodeRunner.Domain.Tests;
 public sealed class SensorPictureTests
 {
     private const double _hub = NodeDef.HubRadius;
-    private const double _servo = ServoDef.JointRadius;
+    private const double _servo = JointMotor.Radius;
 
     [Theory]
     [InlineData(SensorKind.Accelerometer)]

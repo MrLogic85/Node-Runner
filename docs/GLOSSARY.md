@@ -76,21 +76,29 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Creature element selection** — A selected joint, beam, sensor or link: a
   `CreatureElementKind` plus the part's stable id (#220). A selection holds
   any mix of them as a `PartSet` (#704), in every tool (#803).
-- **Fixed / Target** — The two sides a Servo uses: it holds Fixed and turns
+- **Fixed / Target** — The two sides a joint motor uses: it holds Fixed and turns
   Target. Each is a link, or the Wheel on its joint as a one-sided link
   (#1118). See: `docs/CREATURE_MODEL.md` → "Servo".
 - **Hub** — The `NodeDef.HubRadius` circle at every joint's centre where
   links end and are measured from, whatever sits on the joint (#1086). See:
   `docs/CREATURE_MODEL.md` → Node.
 - **Joint** — A point where links meet and can turn; in code a node
-  (`NodeDef`). A plain joint is passive (#450); a Servo, a Wheel, a Rubber and a
+  (`NodeDef`). A plain joint is passive (#450); a joint motor, a Wheel, a Rubber and a
   Touch sensor can each sit on it, one of each. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
   their joint".
-- **Link** — A joint-to-joint connection a Servo may use as Fixed or Target:
+- **Joint motor** — A powered joint part with a Fixed and a Target side: a
+  Servo or a Motor (`IJointMotorDef`, `JointMotor`). See:
+  `docs/CREATURE_MODEL.md` → "Servo" and "Motor (Velocity motor in code)".
+- **Link** — A joint-to-joint connection a joint motor may use as Fixed or Target:
   Beam, Piston or Spring. The Links tool lists them all, Beam included. Say
   Links for the group and Beam for a beam (#913).
 - **Model input / Model output** — One slot of the brain's input or output
   vector, filled from or consumed by one port.
+- **Motor** — A powered joint part (#454) that turns its Target side against
+  its Fixed one at the speed the brain picks, round and round if it likes.
+  The code and save format call it the Velocity motor (`VelocityMotorDef`,
+  `velocityMotors`). See: `docs/CREATURE_MODEL.md` → "Motor (Velocity motor
+  in code)".
 - **Piston** — A powered link that pushes its two joints apart or pulls them
   together (#451). Not a beam: inside its stroke it adds no rigidity.
 - **Port** — One brain channel a part declares (`BrainPort`): part id,
@@ -176,7 +184,7 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Fixed timestep** — Physics and brain updates run at a locked 60 Hz
   whatever the frame rate, for determinism.
 - **Seed** — The integer the run's RNG starts from.
-- **Tick** — One fixed step: sensors, brain, Servos and Pistons, then the
+- **Tick** — One fixed step: sensors, brain, joint motors and Pistons, then the
   physics step and the trial measurement. See: `docs/ARCHITECTURE.md` →
   "The tick".
 - **Trial** — One shadow's run of Run length; `TrialMeasurement` records its

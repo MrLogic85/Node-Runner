@@ -42,6 +42,17 @@ public sealed partial class BuildViewModel
             return _builder.CanAddServo(target.Id, out reason);
         }
 
+        if (part == BuildPart.VelocityMotor)
+        {
+            if (target.Kind != CreatureElementKind.Node)
+            {
+                reason = CreatureBuilder.VelocityMotorsGoOnAJointReason;
+                return false;
+            }
+
+            return _builder.CanAddVelocityMotor(target.Id, out reason);
+        }
+
         if (part == BuildPart.Wheel)
         {
             if (target.Kind != CreatureElementKind.Node)
@@ -110,6 +121,13 @@ public sealed partial class BuildViewModel
             return servoId;
         }
 
+        if (part == BuildPart.VelocityMotor)
+        {
+            var motorId = _history.Change(() => _builder.AddVelocityMotor(target.Id));
+            SelectPlaced(PartSet.None with { VelocityMotors = new HashSet<int> { motorId } }, select);
+            return motorId;
+        }
+
         if (part == BuildPart.Wheel)
         {
             var wheelId = _history.Change(() => _builder.AddWheel(target.Id));
@@ -176,7 +194,7 @@ public sealed partial class BuildViewModel
                 {
                     Joints = joints,
                     RefusedJoints = Nodes.Where(node => !joints.Contains(node.Id) && JointPartsAt(node.Id).Count > 0).Select(node => node.Id).ToHashSet(),
-                    JointRings = Nodes.ToDictionary(node => node.Id, node => PartTray.PlacingRingRadius(placing, CreatureDef.JointRadius(node.Id, Servos, Wheels))),
+                    JointRings = Nodes.ToDictionary(node => node.Id, node => PartTray.PlacingRingRadius(placing, CreatureDef.JointRadius(node.Id, JointMotors, Wheels))),
                 };
             }
 

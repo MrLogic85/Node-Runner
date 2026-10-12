@@ -123,7 +123,7 @@ public partial class BuildHost : Node, IRoutedScene
             Build.SetParameter((PartParameterId)parameter, value);
         };
         _buildScreen.ParameterChangeFinished += () => Build.EndEdit(_buildScreen);
-        _buildScreen.ServoLinkChanged += (servoId, fixedRole, linkId) => Build.SetServoLink(servoId, fixedRole, linkId);
+        _buildScreen.MotorLinkChanged += (motorId, fixedRole, linkId) => Build.SetMotorLink(motorId, fixedRole, linkId);
         _buildScreen.JointPartChosen += (kind, partId) => Build.ReplaceSelection(PartSet.Of(new CreatureElementSelection((CreatureElementKind)kind, partId)));
         _buildScreen.AdvancedSettingsToggled += open => Build.AdvancedSettingsOpen = open;
         _buildScreen.UndoRequested += Build.Undo;

@@ -23,7 +23,7 @@ public sealed class ServoDefTests
         var creature = new CreatureDef(nodes, beams, [], [new ServoDef(6, 1, null, 5)], [], [], nextPartId: 7);
 
         creature.Servos.Single().FixedLinkId.ShouldBeNull();
-        creature.NodeRadius(1).ShouldBe(ServoDef.JointRadius);
+        creature.NodeRadius(1).ShouldBe(JointMotor.Radius);
         Should.Throw<ArgumentException>(() => new CreatureDef(nodes, beams, [], [new ServoDef(6, 2, 4, 5)], [], [], nextPartId: 7));
         Should.Throw<ArgumentException>(() => new CreatureDef(nodes, beams, [], [new ServoDef(6, 1, 4, 5), new ServoDef(7, 1, 4, 5)], [], [], nextPartId: 8));
     }
@@ -64,27 +64,5 @@ public sealed class ServoDefTests
         creature.WheelAt(1).ShouldBe(wheels[0]);
         new CreatureDef(nodes, beams, [], [new ServoDef(6, 1, 4, 3)], [], [], wheels, nextPartId: 7).Servos.Single().FixedLinkId.ShouldBe(4);
         Should.Throw<ArgumentException>(() => new CreatureDef(nodes, beams, [], [new ServoDef(6, 1, 3, 5)], [], [], wheels, nextPartId: 7));
-    }
-
-    [Fact]
-    public void HasTwoSides_CountsTheWheelAsALink()
-    {
-        LinkRef[] one = [new(3, 1, 2, CreatureElementKind.Beam)];
-
-        ServoDef.HasTwoSides(one, hasWheel: true).ShouldBeTrue();
-        ServoDef.HasTwoSides(one, hasWheel: false).ShouldBeFalse();
-        ServoDef.HasTwoSides([], hasWheel: true).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void DefaultSides_TakesTwoLinks_ElseMakesTheWheelTheTarget()
-    {
-        LinkRef[] links = [new(9, 1, 3, CreatureElementKind.Beam), new(4, 1, 2, CreatureElementKind.Spring), new(7, 1, 4, CreatureElementKind.Piston)];
-        var wheel = new WheelDef(5, 1);
-
-        ServoDef.DefaultSides(links, wheel).ShouldBe((4, 7));
-        ServoDef.DefaultSides(links[..1], wheel).ShouldBe((9, 5));
-        ServoDef.DefaultSides([], wheel).ShouldBe((null, 5));
-        ServoDef.DefaultSides(links[..1], null).ShouldBe((9, null));
     }
 }

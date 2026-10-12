@@ -12,7 +12,7 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
     /// refuses a delete that would change its model: one that takes a part with brain ports, also by
-    /// cascade (a joint's Piston, Servo or Touch sensor, a beam's sensor), or clears a Servo's Fixed or Target link,
+    /// cascade (a joint's Piston, motor or Touch sensor, a beam's sensor), or clears a motor's Fixed or Target link,
     /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel
     /// and a Rubber have no ports, so they can go.
     /// </summary>
@@ -48,7 +48,7 @@ public sealed partial class BuildViewModel
             foreach (var (joint, linksBefore) in partJoints)
             {
                 if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0
-                    && !CreatureDef.HasJointPart(joint, _builder.Servos, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers))
+                    && !CreatureDef.HasJointPart(joint, _builder.JointMotors, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers))
                 {
                     _builder.RemoveNode(joint);
                 }
@@ -62,7 +62,7 @@ public sealed partial class BuildViewModel
     }
 
     // On a locked Creation, a note on each part that makes the delete change the model, in id order
-    // within each kind: each part with brain ports it removes, and each kept Servo whose Fixed or
+    // within each kind: each part with brain ports it removes, and each kept motor whose Fixed or
     // Target link it clears. It tries the delete on a copy of the body, so every cascade counts
     // exactly as the delete does it. Empty when the delete may go ahead.
     private List<CanvasNote> DeleteRefusalNotes()
@@ -87,12 +87,21 @@ public sealed partial class BuildViewModel
             }
         }
 
-        var keptServos = after.Servos.Select(ServoLinks).ToHashSet();
+        var keptServos = after.Servos.Select(MotorLinks).ToHashSet();
         foreach (var servo in before.Servos)
         {
-            if (!keptServos.Contains(ServoLinks(servo)))
+            if (!keptServos.Contains(MotorLinks(servo)))
             {
                 AddNote(CreatureElementKind.Servo, servo.Id);
+            }
+        }
+
+        var keptVelocityMotors = after.VelocityMotors.Select(MotorLinks).ToHashSet();
+        foreach (var motor in before.VelocityMotors)
+        {
+            if (!keptVelocityMotors.Contains(MotorLinks(motor)))
+            {
+                AddNote(CreatureElementKind.VelocityMotor, motor.Id);
             }
         }
 
@@ -117,7 +126,7 @@ public sealed partial class BuildViewModel
 
         return notes;
 
-        static (int, int?, int?) ServoLinks(ServoDef servo) => (servo.Id, servo.FixedLinkId, servo.TargetLinkId);
+        static (int, int?, int?) MotorLinks(IJointMotorDef motor) => (motor.Id, motor.FixedLinkId, motor.TargetLinkId);
         void AddNote(CreatureElementKind kind, int id) =>
             notes.Add(new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), _wouldChangeModelNote));
     }
@@ -138,6 +147,11 @@ public sealed partial class BuildViewModel
         foreach (var servoId in parts.Servos)
         {
             builder.RemoveServo(servoId);
+        }
+
+        foreach (var velocityMotorId in parts.VelocityMotors)
+        {
+            builder.RemoveVelocityMotor(velocityMotorId);
         }
 
         foreach (var springId in parts.Springs)

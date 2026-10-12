@@ -147,7 +147,8 @@ the creature runs four steps:
    `BrainPorts` order (`docs/CREATURE_MODEL.md` → "Sensor–model contract").
 2. **Think:** `Brain.Forward` writes each output port's value into
    caller-owned buffers, with no per-tick allocations.
-3. **Act:** each Servo, then each Piston, drives toward its outputs;
+3. **Act:** each Servo, then each Motor, then each Piston drives toward
+   its outputs;
    Mechanics computes the torque or force and the creature layer applies it
    to the bodies.
 4. **Score:** `TrialMeasurement` records the trial (`docs/TRAINING_LOOP.md`

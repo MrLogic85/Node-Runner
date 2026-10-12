@@ -52,6 +52,8 @@ public partial class Creature : Node2D
     private SensorVisual[] _sensorVisuals = [];
     private ServoJoint[] _servos = [];
     private ServoVisual[] _servoVisuals = [];
+    private VelocityMotorJoint[] _velocityMotors = [];
+    private VelocityMotorVisual[] _velocityMotorVisuals = [];
     private WheelVisual[] _wheelVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
@@ -127,17 +129,28 @@ public partial class Creature : Node2D
 
         foreach (var servo in _servos)
         {
-            servo.UpdatePhysicsState();
+            servo.Sides.UpdatePhysicsState();
+        }
+
+        foreach (var motor in _velocityMotors)
+        {
+            motor.Sides.UpdatePhysicsState();
         }
 
         ReadSensors(_sensorValues, delta);
         Brain.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
 
-        // Each Servo and Piston has two outputs in sim order: target, then strength.
+        // Each Servo, Velocity motor and Piston has two outputs in sim order: target or speed, then strength.
         var output = 0;
         foreach (var servo in _servos)
         {
             servo.Drive(_outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]], delta);
+            output += 2;
+        }
+
+        foreach (var motor in _velocityMotors)
+        {
+            motor.Drive(_outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]], delta);
             output += 2;
         }
 
@@ -151,9 +164,9 @@ public partial class Creature : Node2D
     public void BuildFrom(CreatureDef definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
-        if (definition.Servos.FirstOrDefault(servo => servo.FixedLinkId is null || servo.TargetLinkId is null) is { } incompleteServo)
+        if (definition.JointMotors.FirstOrDefault(motor => motor.FixedLinkId is null || motor.TargetLinkId is null) is { } incomplete)
         {
-            throw new InvalidOperationException($"Servo {incompleteServo.Id} must have two links before the creature is built for simulation.");
+            throw new InvalidOperationException($"{incomplete.Kind} {incomplete.Id} must have two sides before the creature is built for simulation.");
         }
 
         Definition = definition;
@@ -183,6 +196,7 @@ public partial class Creature : Node2D
         PinBeamsToNodes(definition);
         CreateSensors(definition);
         CreateServos(definition);
+        CreateVelocityMotors(definition);
         CreatePistons(definition);
         CreateSprings(definition);
         CapEndStops(definition);
@@ -369,6 +383,11 @@ public partial class Creature : Node2D
             visual.IsShadow = _isShadow;
         }
 
+        foreach (var visual in _velocityMotorVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
         foreach (var visual in _pistonVisuals)
         {
             visual.IsShadow = _isShadow;
@@ -457,8 +476,8 @@ public partial class Creature : Node2D
                 Theme = Theme,
                 A = new Vector2(-halfLength, 0),
                 B = new Vector2(halfLength, 0),
-                RadiusA = ToGodotFloat(definition.NodeRadius(beamDef.NodeA), nameof(ServoDef.JointRadius)),
-                RadiusB = ToGodotFloat(definition.NodeRadius(beamDef.NodeB), nameof(ServoDef.JointRadius)),
+                RadiusA = ToGodotFloat(definition.NodeRadius(beamDef.NodeA), nameof(JointMotor.Radius)),
+                RadiusB = ToGodotFloat(definition.NodeRadius(beamDef.NodeB), nameof(JointMotor.Radius)),
             };
             body.AddChild(CreateKnockout(visual.A, visual.B, Theme.BeamWidth / 2));
             body.AddChild(visual);
@@ -509,7 +528,7 @@ public partial class Creature : Node2D
         for (var i = 0; i < count; i++)
         {
             var position = ToGodot(definition.Nodes[i].Position);
-            var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(ServoDef.JointRadius));
+            var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(JointMotor.Radius));
 
             // No CCD (#1171; why: AGENTS.md rule 3).
             var body = new RigidBody2D
@@ -524,7 +543,7 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
-            var hasServo = definition.Servos.Any(servo => servo.NodeId == definition.Nodes[i].Id);
+            var hasMotor = definition.JointMotors.Any(motor => motor.NodeId == definition.Nodes[i].Id);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
             var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);
@@ -534,8 +553,8 @@ public partial class Creature : Node2D
                 Name = $"Node{i}Visual",
                 Theme = Theme,
                 Radius = radius,
-                ShowsRing = !hasWheel && !hasServo,
-                ShowsHub = hasWheel && !hasServo,
+                ShowsRing = !hasWheel && !hasMotor,
+                ShowsHub = hasWheel && !hasMotor,
                 Cushion = hasTouch,
                 Skin = hasRubber,
             };
@@ -600,7 +619,7 @@ public partial class Creature : Node2D
             var b = ToGodot(definition.Nodes[triangle.NodeB].Position);
             var c = ToGodot(definition.Nodes[triangle.NodeC].Position);
             var toBeam = _beamBodies[beamIndex].Transform.AffineInverse();
-            var jointRadius = ToGodotFloat(definition.NodeRadius(definition.Nodes[triangle.NodeA].Id), nameof(ServoDef.JointRadius));
+            var jointRadius = ToGodotFloat(definition.NodeRadius(definition.Nodes[triangle.NodeA].Id), nameof(JointMotor.Radius));
             var visual = new RigidHatchVisual
             {
                 Name = $"Hatch{hatches.Count}",
@@ -720,12 +739,14 @@ public partial class Creature : Node2D
                 .. definition.Sensors.SelectMany(BrainPorts.SensorPorts),
                 .. definition.TouchSensors.Select(touch => BrainPorts.TouchInput(touch.Id)),
                 .. definition.Servos.SelectMany(servo => BrainPorts.ServoInputs(servo.Id)),
+                .. definition.VelocityMotors.SelectMany(motor => BrainPorts.VelocityMotorInputs(motor.Id)),
                 .. definition.Pistons.SelectMany(piston => BrainPorts.PistonInputs(piston.Id)),
             ],
             Ports.Inputs);
         _outputPortOf = PortPositions(
             [
                 .. definition.Servos.SelectMany(servo => BrainPorts.ServoOutputs(servo.Id)),
+                .. definition.VelocityMotors.SelectMany(motor => BrainPorts.VelocityMotorOutputs(motor.Id)),
                 .. definition.Pistons.SelectMany(piston => BrainPorts.PistonOutputs(piston.Id)),
             ],
             Ports.Outputs);
@@ -762,7 +783,7 @@ public partial class Creature : Node2D
 
     // Each sensor part writes its values (Accelerometer: along, across; Camera: one per ray from
     // left to right, then hit), then each Touch sensor its touch, each Servo its angle and speed,
-    // and each Piston its length and speed, into the raw buffer in sim order;
+    // each Velocity motor its angle's sine and cosine and its speed, and each Piston its length and speed, into the raw buffer in sim order;
     // they are then copied into the brain's port order (BrainPorts).
     private void ReadSensors(double[] values, double delta)
     {
@@ -782,6 +803,14 @@ public partial class Creature : Node2D
         {
             _rawInputs[index++] = servo.AngleInput;
             _rawInputs[index++] = servo.SpeedInput;
+        }
+
+        foreach (var motor in _velocityMotors)
+        {
+            var (sin, cos) = motor.AngleInputs;
+            _rawInputs[index++] = sin;
+            _rawInputs[index++] = cos;
+            _rawInputs[index++] = motor.SpeedInput;
         }
 
         foreach (var piston in _pistons)
@@ -815,7 +844,7 @@ public partial class Creature : Node2D
     }
 
     /// <summary>How many powered outputs the creature has.</summary>
-    public int MotorCount => _pistons.Length + _servos.Length;
+    public int MotorCount => _pistons.Length + _servos.Length + _velocityMotors.Length;
 
     private float GetHitTolerance()
     {

@@ -132,6 +132,42 @@ public sealed class BrainPortsTests
     }
 
     [Fact]
+    public void Of_GivesAVelocityMotorAngleAndSpeedInputs_AndSpeedAndStrengthOutputs_InPartIdOrder()
+    {
+        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0)), new NodeDef(3, new Vector2D(0, 1))];
+        var creature = new CreatureDef(
+            nodes,
+            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
+            [],
+            [new ServoDef(8, 2, 4)],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [new VelocityMotorDef(6, 1, 4, 5)],
+            nextPartId: 9);
+
+        var layout = BrainPorts.Of(creature);
+
+        layout.Inputs.ShouldBe(
+        [
+            BrainPort.Input(6, "angleSin"),
+            BrainPort.Input(6, "angleCos"),
+            BrainPort.Input(6, "speed"),
+            BrainPort.Input(8, "angle"),
+            BrainPort.Input(8, "speed"),
+        ]);
+        layout.Outputs.ShouldBe(
+        [
+            BrainPort.Output(6, "speed", PortSignal.Velocity),
+            BrainPort.Output(6, "strength", PortSignal.Strength),
+            BrainPort.Output(8, "angle", PortSignal.Position),
+            BrainPort.Output(8, "strength", PortSignal.Strength),
+        ]);
+    }
+
+    [Fact]
     public void Of_GivesAWheelNoPorts()
     {
         NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))];

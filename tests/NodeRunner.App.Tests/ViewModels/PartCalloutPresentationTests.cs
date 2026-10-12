@@ -40,6 +40,7 @@ public sealed class PartCalloutPresentationTests
     [InlineData(CreatureElementKind.Sensor, PortedCreature.Accelerometer, PartSettingsKind.Accelerometer, 2, 0)]
     [InlineData(CreatureElementKind.Sensor, PortedCreature.Camera, PartSettingsKind.Camera, 6, 0)]
     [InlineData(CreatureElementKind.Piston, PortedCreature.Piston, PartSettingsKind.Piston, 2, 2)]
+    [InlineData(CreatureElementKind.VelocityMotor, PortedCreature.VelocityMotor, PartSettingsKind.VelocityMotor, 3, 2)]
     public void APartWithBrainPorts_ShowsEachOfThem(CreatureElementKind element, int id, PartSettingsKind kind, int inputs, int outputs)
     {
         var callout = For(element, id, Live());

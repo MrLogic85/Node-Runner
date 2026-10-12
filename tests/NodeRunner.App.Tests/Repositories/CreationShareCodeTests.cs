@@ -86,6 +86,21 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
+    public void Code_RoundTripsAVelocityMotor()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var motor = builder.AddVelocityMotor(walker.Creature.Nodes[0].Id);
+        builder.SetParameter(motor, PartParameterId.MotorMaxSpeed, 3.5);
+        var driven = walker.WithCreature(builder.Build(), training: null);
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(driven)).Build.ShouldNotBeNull();
+
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(driven).Creature));
+        build.Creature.VelocityMotors.ShouldHaveSingleItem().NodeId.ShouldBe(build.Creature.Nodes[0].Id);
+    }
+
+    [Fact]
     public void Code_RoundTripsARubber()
     {
         var walker = LoadFixture013("walker.creation.json");
@@ -199,6 +214,7 @@ public sealed class CreationShareCodeTests
         builder.AddSpring(nodes[2], nodes[4]);
         builder.AddWheel(nodes[4]);
         builder.AddRubber(nodes[3]);
+        builder.AddVelocityMotor(nodes[3]);
         builder.RemoveNode(builder.AddNode(new Vector2D(300, 300)));
         builder.RemoveBeam(beams[3]);
         builder.AddBeam(nodes[3], nodes[4]);
@@ -290,6 +306,7 @@ public sealed class CreationShareCodeTests
     [InlineData(7)]
     [InlineData(8)]
     [InlineData(9)]
+    [InlineData(10)]
     public void Read_AnOlderVersionsCode_WithAWheel_StillReads(int version)
     {
         var read = CreationShareCode.Read(CreationShareCode.Pack(version, Encoding.UTF8.GetBytes(SampleLine(version).ToJsonString())));
@@ -298,7 +315,8 @@ public sealed class CreationShareCodeTests
         read.UpdatedFrom.ShouldBe(version);
         var creature = read.Build.ShouldNotBeNull().Creature;
         creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(60);
-        creature.Rubbers.ShouldBeEmpty();
+        creature.Rubbers.Count.ShouldBe(version < 10 ? 0 : 2);
+        creature.VelocityMotors.ShouldBeEmpty();
     }
 
     [Fact]
@@ -546,7 +564,8 @@ public sealed class CreationShareCodeTests
             .Concat(creature.Springs.Select(part => part.Id))
             .Concat(creature.Wheels.Select(part => part.Id))
             .Concat(creature.TouchSensors.Select(part => part.Id))
-            .Concat(creature.Rubbers.Select(part => part.Id));
+            .Concat(creature.Rubbers.Select(part => part.Id))
+            .Concat(creature.VelocityMotors.Select(part => part.Id));
 
     // creature with every part id, and every reference to one, swapped through ids.
     private static CreatureDef Renumbered(CreatureDef creature, Dictionary<int, int> ids)

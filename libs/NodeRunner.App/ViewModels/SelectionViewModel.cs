@@ -43,9 +43,10 @@ public sealed class SelectionViewModel : INotifyPropertyChanged
             CreatureElementKind.Wheel => creature.Wheels.FirstOrDefault(wheel => wheel.Id == tapped.Id)?.NodeId,
             CreatureElementKind.TouchSensor => creature.TouchSensors.FirstOrDefault(touch => touch.Id == tapped.Id)?.NodeId,
             CreatureElementKind.Rubber => creature.Rubbers.FirstOrDefault(rubber => rubber.Id == tapped.Id)?.NodeId,
+            CreatureElementKind.VelocityMotor => creature.VelocityMotors.FirstOrDefault(motor => motor.Id == tapped.Id)?.NodeId,
             _ => null,
         };
-        var stacked = nodeId is { } node ? CreatureDef.JointParts(node, creature.Servos, creature.Wheels, creature.TouchSensors, creature.Rubbers) : [];
+        var stacked = nodeId is { } node ? CreatureDef.JointParts(node, creature.JointMotors, creature.Wheels, creature.TouchSensors, creature.Rubbers) : [];
         SelectedParts = stacked.Count > 0 ? stacked : [tapped];
     }
 

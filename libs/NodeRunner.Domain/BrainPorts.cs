@@ -63,6 +63,21 @@ public static class BrainPorts
     /// <summary>A Servo's strength output key: the share of its Strength to use.</summary>
     public const string ServoStrengthChannel = "strength";
 
+    /// <summary>A Velocity motor's angle sine input key (#454): sin of its turn from the built angle, smooth across a whole turn.</summary>
+    public const string VelocityMotorAngleSinChannel = "angleSin";
+
+    /// <summary>A Velocity motor's angle cosine input key (#454): cos of its turn from the built angle.</summary>
+    public const string VelocityMotorAngleCosChannel = "angleCos";
+
+    /// <summary>A Velocity motor's angular speed input key.</summary>
+    public const string VelocityMotorSpeedChannel = "speed";
+
+    /// <summary>A Velocity motor's speed output key: the speed to turn at, its sign the direction.</summary>
+    public const string VelocityMotorSpeedOutputChannel = "speed";
+
+    /// <summary>A Velocity motor's strength output key: the share of its Strength to use.</summary>
+    public const string VelocityMotorStrengthChannel = "strength";
+
     public static BrainPortLayout Of(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
@@ -86,6 +101,11 @@ public static class BrainPorts
         foreach (var servo in creature.Servos)
         {
             blocks.Add((servo.Id, [.. ServoInputs(servo.Id), .. ServoOutputs(servo.Id)]));
+        }
+
+        foreach (var motor in creature.VelocityMotors)
+        {
+            blocks.Add((motor.Id, [.. VelocityMotorInputs(motor.Id), .. VelocityMotorOutputs(motor.Id)]));
         }
 
         var ports = blocks
@@ -140,5 +160,20 @@ public static class BrainPorts
     [
         BrainPort.Output(servoId, ServoAngleOutputChannel, PortSignal.Position),
         BrainPort.Output(servoId, ServoStrengthChannel, PortSignal.Strength),
+    ];
+
+    /// <summary>A Velocity motor's input ports, angle sine, angle cosine, then speed.</summary>
+    public static IEnumerable<BrainPort> VelocityMotorInputs(int velocityMotorId) =>
+    [
+        BrainPort.Input(velocityMotorId, VelocityMotorAngleSinChannel),
+        BrainPort.Input(velocityMotorId, VelocityMotorAngleCosChannel),
+        BrainPort.Input(velocityMotorId, VelocityMotorSpeedChannel),
+    ];
+
+    /// <summary>A Velocity motor's output ports, speed then strength.</summary>
+    public static IEnumerable<BrainPort> VelocityMotorOutputs(int velocityMotorId) =>
+    [
+        BrainPort.Output(velocityMotorId, VelocityMotorSpeedOutputChannel, PortSignal.Velocity),
+        BrainPort.Output(velocityMotorId, VelocityMotorStrengthChannel, PortSignal.Strength),
     ];
 }

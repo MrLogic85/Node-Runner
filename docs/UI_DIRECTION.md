@@ -409,3 +409,5 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
 | UI size multiplies the canvas | Pixels per unit (#299, #738) | UI size |
 | Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim (#578) | BM → Parameters |
+| Velocity motor | Motor; Velocity motor only in code and the save format (#454) | BM → Interactions |
+| Servo Max speed in °/s | In rpm, like the Motor's (#454) | BM → Parameters |

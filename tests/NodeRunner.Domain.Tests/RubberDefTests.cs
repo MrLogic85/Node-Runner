@@ -66,7 +66,7 @@ public sealed class RubberDefTests
             rubbered.CoveredRadius(node.Id).ShouldBe(plain.CoveredRadius(node.Id));
         }
 
-        rubbered.NodeRadius(1).ShouldBe(ServoDef.JointRadius);
+        rubbered.NodeRadius(1).ShouldBe(JointMotor.Radius);
         rubbered.NodeRadius(2).ShouldBe(NodeDef.PlainJointRadius);
     }
 

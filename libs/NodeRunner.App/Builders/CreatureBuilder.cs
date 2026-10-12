@@ -18,13 +18,13 @@ namespace NodeRunner.App.Builders;
 /// business logic (add/remove/cascade), and Domain keeps only records and
 /// a short list of stateless helpers (`libs/NodeRunner.Domain/AGENTS.md`).
 /// </summary>
-public sealed class CreatureBuilder
+public sealed partial class CreatureBuilder
 {
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
-    /// <summary>Why a motor or brake, a Servo for now, cannot be added to a joint that already has one (#1044).</summary>
-    public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One motor or brake per joint");
+    /// <summary>Why a motor or brake, a Servo or a Velocity motor, cannot be added to a joint that already has one (#1044).</summary>
+    public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One Servo, Motor or Brake per joint");
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
     public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");
@@ -89,6 +89,7 @@ public sealed class CreatureBuilder
         _wheels.AddRange(creature.Wheels);
         _touchSensors.AddRange(creature.TouchSensors);
         _rubbers.AddRange(creature.Rubbers);
+        _velocityMotors.AddRange(creature.VelocityMotors);
         _nextPartId = creature.NextPartId;
     }
 
@@ -154,12 +155,13 @@ public sealed class CreatureBuilder
         _wheels.RemoveAll(wheel => wheel.NodeId == nodeId);
         _touchSensors.RemoveAll(touch => touch.NodeId == nodeId);
         _rubbers.RemoveAll(rubber => rubber.NodeId == nodeId);
+        _velocityMotors.RemoveAll(motor => motor.NodeId == nodeId);
         _pistons.RemoveAll(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
         _springs.RemoveAll(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
         _nodes.RemoveAt(nodeIndex);
         foreach (var linkId in removedLinkIds)
         {
-            ClearServoLink(linkId);
+            ClearMotorSides(linkId);
         }
     }
 
@@ -284,7 +286,7 @@ public sealed class CreatureBuilder
         return id;
     }
 
-    // The new link takes the beam's place (#849) and its Servo roles: a link change, so such a Servo gets a new id.
+    // The new link takes the beam's place (#849) and its motor roles: a link change, so such a motor gets a new id.
     private void ReplaceBeamWith(int nodeIdA, int nodeIdB, int linkId)
     {
         if (BeamBetween(nodeIdA, nodeIdB) is not { } beamId)
@@ -304,12 +306,25 @@ public sealed class CreatureBuilder
                     AllocatePartId());
             }
         }
+
+        for (var i = 0; i < _velocityMotors.Count; i++)
+        {
+            var motor = _velocityMotors[i];
+            if (motor.FixedLinkId == beamId || motor.TargetLinkId == beamId)
+            {
+                _velocityMotors[i] = motor.WithLinks(
+                    motor.FixedLinkId == beamId ? linkId : motor.FixedLinkId,
+                    motor.TargetLinkId == beamId ? linkId : motor.TargetLinkId,
+                    AllocatePartId());
+            }
+        }
     }
 
     /// <summary>The settings part <paramref name="partId"/> has (#704), in panel order; a joint and a beam have none.</summary>
     public IReadOnlyList<PartParameterId> ParametersOf(int partId) =>
         _pistons.Any(piston => piston.Id == partId) ? _pistonParameters
         : _servos.Any(servo => servo.Id == partId) ? _servoParameters
+        : _velocityMotors.Any(motor => motor.Id == partId) ? _velocityMotorParameters
         : _springs.Any(spring => spring.Id == partId) ? _springParameters
         : _wheels.Any(wheel => wheel.Id == partId) ? _wheelParameters
         : _sensors.Any(sensor => sensor.Id == partId && sensor.Kind == SensorKind.Camera) ? _cameraParameters
@@ -328,6 +343,7 @@ public sealed class CreatureBuilder
     public IEnumerable<int> PartIdsWithSettings =>
         _sensors.Select(sensor => sensor.Id)
             .Concat(_servos.Select(servo => servo.Id))
+            .Concat(_velocityMotors.Select(motor => motor.Id))
             .Concat(_pistons.Select(piston => piston.Id))
             .Concat(_springs.Select(spring => spring.Id))
             .Concat(_wheels.Select(wheel => wheel.Id))
@@ -395,6 +411,11 @@ public sealed class CreatureBuilder
                 PartParameterId.RiseTime => servo.RiseTime,
                 _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
             };
+        }
+
+        if (_velocityMotors.Any(motor => motor.Id == partId))
+        {
+            return VelocityMotorParameterValue(partId, parameter);
         }
 
         return parameter switch
@@ -470,6 +491,12 @@ public sealed class CreatureBuilder
             return;
         }
 
+        if (_velocityMotors.Any(motor => motor.Id == partId))
+        {
+            SetVelocityMotorParameter(partId, parameter, value);
+            return;
+        }
+
         var index = PistonIndexOf(partId);
         var piston = _pistons[index];
         _pistons[index] = parameter switch
@@ -503,28 +530,28 @@ public sealed class CreatureBuilder
         return SensorDef.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
 
-    /// <summary>Removes a Piston by id, leaving any Servo that used it incomplete until the player picks another link.</summary>
+    /// <summary>Removes a Piston by id, leaving any motor that used it incomplete until the player picks another link.</summary>
     public void RemovePiston(int pistonId)
     {
         _pistons.RemoveAt(PistonIndexOf(pistonId));
-        ClearServoLink(pistonId);
+        ClearMotorSides(pistonId);
     }
 
     /// <summary>Removes a Servo by id.</summary>
     public void RemoveServo(int servoId) => _servos.RemoveAt(ServoIndexOf(servoId));
 
-    /// <summary>Removes a Wheel by id, leaving any Servo that used it incomplete until the player picks another side (#1118).</summary>
+    /// <summary>Removes a Wheel by id, leaving any motor that used it incomplete until the player picks another side (#1118).</summary>
     public void RemoveWheel(int wheelId)
     {
         _wheels.RemoveAt(WheelIndexOf(wheelId));
-        ClearServoLink(wheelId);
+        ClearMotorSides(wheelId);
     }
 
-    /// <summary>Removes a Spring by id, leaving any Servo that used it incomplete until the player picks another link.</summary>
+    /// <summary>Removes a Spring by id, leaving any motor that used it incomplete until the player picks another link.</summary>
     public void RemoveSpring(int springId)
     {
         _springs.RemoveAt(SpringIndexOf(springId));
-        ClearServoLink(springId);
+        ClearMotorSides(springId);
     }
 
     /// <summary>Removes a beam by id, cascading to sensors on it.</summary>
@@ -533,10 +560,11 @@ public sealed class CreatureBuilder
         var beamIndex = BeamIndexOf(beamId);
         _beams.RemoveAt(beamIndex);
         _sensors.RemoveAll(sensor => sensor.BeamId == beamId);
-        ClearServoLink(beamId);
+        ClearMotorSides(beamId);
     }
 
-    private void ClearServoLink(int linkId)
+    // A deleted link or Wheel leaves each motor that used it as a side without that side (#1118).
+    private void ClearMotorSides(int linkId)
     {
         for (var i = 0; i < _servos.Count; i++)
         {
@@ -556,6 +584,23 @@ public sealed class CreatureBuilder
                     servo.RiseTime);
             }
         }
+
+        for (var i = 0; i < _velocityMotors.Count; i++)
+        {
+            var motor = _velocityMotors[i];
+            if (motor.FixedLinkId == linkId || motor.TargetLinkId == linkId)
+            {
+                _velocityMotors[i] = new VelocityMotorDef(
+                    motor.Id,
+                    motor.NodeId,
+                    motor.FixedLinkId == linkId ? null : motor.FixedLinkId,
+                    motor.TargetLinkId == linkId ? null : motor.TargetLinkId,
+                    motor.Name,
+                    motor.Strength,
+                    motor.MaxSpeed,
+                    motor.RiseTime);
+            }
+        }
     }
 
     /// <summary>Whether a Servo can sit on this node; if not, <paramref name="reason"/> says why.</summary>
@@ -567,7 +612,7 @@ public sealed class CreatureBuilder
             return false;
         }
 
-        if (_servos.Any(servo => servo.NodeId == nodeId))
+        if (HasMotor(nodeId))
         {
             reason = OneMotorOrBrakePerJointReason;
             return false;
@@ -688,7 +733,7 @@ public sealed class CreatureBuilder
     /// <summary>Removes a Rubber by id.</summary>
     public void RemoveRubber(int rubberId) => _rubbers.RemoveAt(RubberIndexOf(rubberId));
 
-    public bool ServoNeedsTwoSides(int nodeId) => HasNode(nodeId) && !ServoDef.HasTwoSides(LinksAt(nodeId), WheelAt(nodeId) is not null);
+    public bool ServoNeedsTwoSides(int nodeId) => HasNode(nodeId) && !JointMotor.HasTwoSides(LinksAt(nodeId), WheelAt(nodeId) is not null);
 
     /// <summary>
     /// Adds a Servo with the first two links at the joint as Fixed and Target. On a joint with a
@@ -697,7 +742,7 @@ public sealed class CreatureBuilder
     /// </summary>
     public int AddServo(int nodeId)
     {
-        var (fixedSide, targetSide) = HasNode(nodeId) ? ServoDef.DefaultSides(LinksAt(nodeId), WheelAt(nodeId)) : (null, null);
+        var (fixedSide, targetSide) = HasNode(nodeId) ? JointMotor.DefaultSides(LinksAt(nodeId), WheelAt(nodeId)) : (null, null);
         return AddServo(nodeId, fixedSide, targetSide);
     }
 
@@ -732,7 +777,7 @@ public sealed class CreatureBuilder
     public double NodeRadius(int nodeId)
     {
         ValidateNodeId(nodeId);
-        return CreatureDef.JointRadius(nodeId, _servos, _wheels);
+        return CreatureDef.JointRadius(nodeId, JointMotors, _wheels);
     }
 
     /// <summary>
@@ -745,25 +790,7 @@ public sealed class CreatureBuilder
         var index = ServoIndexOf(servoId);
         var servo = _servos[index];
         ValidateServoSide(linkId, servo.NodeId);
-        int? fixedLink = servo.FixedLinkId;
-        int? targetLink = servo.TargetLinkId;
-        if (fixedRole)
-        {
-            fixedLink = linkId;
-            if (targetLink == linkId)
-            {
-                targetLink = servo.FixedLinkId;
-            }
-        }
-        else
-        {
-            targetLink = linkId;
-            if (fixedLink == linkId)
-            {
-                fixedLink = servo.TargetLinkId;
-            }
-        }
-
+        var (fixedLink, targetLink) = PickSide(servo, fixedRole, linkId);
         if (fixedLink == servo.FixedLinkId && targetLink == servo.TargetLinkId)
         {
             return servo.Id;
@@ -772,6 +799,31 @@ public sealed class CreatureBuilder
         var newId = AllocatePartId();
         _servos[index] = servo.WithLinks(fixedLink, targetLink, newId);
         return newId;
+    }
+
+    // A motor's sides once linkId takes the fixed or target role; picking the other role swaps them.
+    private static (int? Fixed, int? Target) PickSide(IJointMotorDef motor, bool fixedRole, int linkId)
+    {
+        int? fixedLink = motor.FixedLinkId;
+        int? targetLink = motor.TargetLinkId;
+        if (fixedRole)
+        {
+            fixedLink = linkId;
+            if (targetLink == linkId)
+            {
+                targetLink = motor.FixedLinkId;
+            }
+        }
+        else
+        {
+            targetLink = linkId;
+            if (fixedLink == linkId)
+            {
+                fixedLink = motor.TargetLinkId;
+            }
+        }
+
+        return (fixedLink, targetLink);
     }
 
     /// <summary>Adds a sensor mounted on an existing beam unless that beam already has a sensor.</summary>
@@ -938,11 +990,18 @@ public sealed class CreatureBuilder
             return;
         }
 
+        var velocityMotorIndex = _velocityMotors.FindIndex(motor => motor.Id == partId);
+        if (velocityMotorIndex >= 0)
+        {
+            _velocityMotors[velocityMotorIndex] = _velocityMotors[velocityMotorIndex].WithName(name);
+            return;
+        }
+
         throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
     }
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _wheels, _touchSensors, _rubbers, _nextPartId);
+    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _wheels, _touchSensors, _rubbers, _velocityMotors, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<UiText> errors)
@@ -1081,7 +1140,7 @@ public sealed class CreatureBuilder
     {
         if (WheelAt(nodeId)?.Id != sideId && !Link(sideId).Touches(nodeId))
         {
-            throw new ArgumentException("A servo can only use links at its joint, or its Wheel.");
+            throw new ArgumentException("A motor can only use links at its joint, or its Wheel.");
         }
     }
 

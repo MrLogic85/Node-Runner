@@ -33,7 +33,8 @@ list; move one only with a new issue.
 ## What lives here
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
-  `ServoDef`, `PistonDef`, `SpringDef`, `WheelDef`, `TouchSensorDef`, `RubberDef`, `LinkRef` — anatomy
+  `ServoDef`, `VelocityMotorDef`, `PistonDef`, `SpringDef`, `WheelDef`, `TouchSensorDef`, `RubberDef`, `LinkRef` — anatomy
+- `IJointMotorDef`, `JointMotor` — what a Servo and a Velocity motor share: sides, slot and radius
 - `CreatureElementKind`, `CreatureElementSelection` — what is selected
 - `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout` — brain ports
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,

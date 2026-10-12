@@ -15,7 +15,7 @@ public static class SensorPicture
     /// <summary>The Camera picture's side, in canvas units: twice the first size so it reads on a phone (#622).</summary>
     public const double CameraSize = 44;
 
-    /// <summary>The largest picture's side; every beam leaves room for it between its hubs (#593, #1086), since any sensor can go on any beam; a Servo may cover its ends.</summary>
+    /// <summary>The largest picture's side; every beam leaves room for it between its hubs (#593, #1086), since any sensor can go on any beam; a motor may cover its ends.</summary>
     public const double LargestSize = CameraSize;
 
     /// <summary>The picture's side for <paramref name="kind"/>, in canvas units.</summary>
@@ -28,9 +28,9 @@ public static class SensorPicture
 
     /// <summary>
     /// How far the picture's centre sits from its beam's midpoint, towards node B (#1086): midway
-    /// between what is drawn over the beam's two ends, its hubs or a Servo
-    /// (<see cref="CreatureDef.CoveredRadius(int, IEnumerable{ServoDef})"/>), so at the midpoint
-    /// unless a Servo sits on one end. A Wheel's size does not move it: the Wheel is see-through
+    /// between what is drawn over the beam's two ends, its hubs or a motor
+    /// (<see cref="CreatureDef.CoveredRadius(int, IEnumerable{IJointMotorDef})"/>), so at the midpoint
+    /// unless a motor sits on one end. A Wheel's size does not move it: the Wheel is see-through
     /// under its links.
     /// </summary>
     public static double Shift(double coveredA, double coveredB) => (coveredA - coveredB) / 2;

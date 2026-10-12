@@ -12,7 +12,7 @@ public enum DrawSlot
     /// <summary>The sensor on a beam.</summary>
     Sensor,
 
-    /// <summary>A Servo or plain joint ring, over every link end at its joint.</summary>
+    /// <summary>A motor or plain joint ring, over every link end at its joint.</summary>
     Over,
 }
 

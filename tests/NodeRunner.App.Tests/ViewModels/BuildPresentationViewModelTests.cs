@@ -580,6 +580,23 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void SelectedServo_OffItsRpmSteps_ReadsRounded_AndKeepsItsValue()
+    {
+        // Servos saved on the old 15°/s steps can sit between two 5 rpm steps: 105°/s is 17.5 rpm.
+        var offStep = 105 * Math.PI / 180;
+        var build = new BuildViewModel();
+        build.Load(ServoCreature(maxSpeed: offStep));
+        build.SelectOnly(CreatureElementKind.Servo, 6);
+
+        var speed = new BuildPresentationViewModel(build).SinglePart!.AdvancedSettings.Single(slider => slider.Id == PartParameterId.AngularMaxSpeed);
+
+        speed.Readout.ShouldBe(UiText.Format("{0} rpm", new FixedNumber(18, 0)));
+        speed.High.ShouldBe(12.5 / 115, tolerance: 1e-9);
+        build.Snapshot().Servos.Single().MaxSpeed.ShouldBe(offStep);
+        build.CanUndo.ShouldBeFalse();
+    }
+
+    [Fact]
     public void SelectedSpring_HasDampingAndCoilLengthUnderAdvanced()
     {
         var build = new BuildViewModel();
@@ -639,7 +656,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(PistonCreature());
-        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
+        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
 
         var selection = new BuildPresentationViewModel(build).Selection!;
 
@@ -724,7 +741,8 @@ public sealed class BuildPresentationViewModelTests
             UiText.Counted("{0} link has zero length", "{0} links have zero length", 1));
     }
 
-    // The chip is one line, so a Servo's full sentence would not fit it (#1163).
+    // The chip is one line, so a motor's full sentence would not fit it (#1163); Servos and
+    // Velocity motors count together (#454).
     [Fact]
     public void Readiness_WithAServoMissingALink_CountsIt()
     {
@@ -741,7 +759,30 @@ public sealed class BuildPresentationViewModelTests
         var readiness = new BuildPresentationViewModel(build).Readiness;
 
         readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} Servo missing a link", "{0} Servos missing a link", 1));
+        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 1));
+    }
+
+    [Fact]
+    public void Readiness_CountsServosAndVelocityMotorsMissingALinkTogether()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
+            [],
+            [new ServoDef(6, 2, fixedLinkId: 4)],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [new VelocityMotorDef(7, 3, fixedLinkId: 5)],
+            nextPartId: 8));
+
+        var readiness = new BuildPresentationViewModel(build).Readiness;
+
+        readiness.State.ShouldBe(BuildReadiness.Blocked);
+        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 2));
     }
 
     [Theory]
@@ -903,11 +944,11 @@ public sealed class BuildPresentationViewModelTests
         [new SpringDef(401, 2, 3)],
         nextPartId: 402);
 
-    private static CreatureDef ServoCreature() => new(
+    private static CreatureDef ServoCreature(double maxSpeed = ServoDef.DefaultMaxSpeed) => new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
         [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
         [],
-        [new ServoDef(6, 2, 4, 5)],
+        [new ServoDef(6, 2, 4, 5, maxSpeed: maxSpeed)],
         [],
         [],
         nextPartId: 7);

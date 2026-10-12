@@ -33,19 +33,23 @@ public sealed class ServoTests
     }
 
     [Fact]
-    public void SpeedInput_IsPositiveCounterClockwise_AndSaturatesSoftly()
-    {
-        Servo.SpeedInput(0, _servo.MaxSpeed).ShouldBe(0);
-        Servo.SpeedInput(_servo.MaxSpeed, _servo.MaxSpeed).ShouldBe(Math.Tanh(1), tolerance: 1e-12);
-        Servo.SpeedInput(-1000 * _servo.MaxSpeed, _servo.MaxSpeed).ShouldBe(-1, tolerance: 1e-9);
-    }
-
-    [Fact]
     public void TargetAngle_MapsThePositionOutputOntoTheStops()
     {
         Servo.TargetAngle(-1, _servo).ShouldBe(-Math.PI / 2, tolerance: 1e-12);
         Servo.TargetAngle(0, _servo).ShouldBe(0, tolerance: 1e-12);
         Servo.TargetAngle(1, _servo).ShouldBe(Math.PI / 2, tolerance: 1e-12);
+    }
+
+    [Fact]
+    public void WantedSpeed_ClosesTheGapToTheTarget_NoFasterThanMaxSpeed()
+    {
+        var target = Servo.TargetAngle(0.5, _servo, builtAngle: 0.3);
+
+        Servo.WantedSpeed(0.5, _servo, builtAngle: 0.3, angle: target).ShouldBe(0);
+        Servo.WantedSpeed(0.5, _servo, builtAngle: 0.3, angle: target - 0.01).ShouldBe(0.1, tolerance: 1e-12);
+        Servo.WantedSpeed(0.5, _servo, builtAngle: 0.3, angle: target + 0.01).ShouldBe(-0.1, tolerance: 1e-12);
+        Servo.WantedSpeed(1, _servo, builtAngle: 0, angle: -Math.PI).ShouldBe(_servo.MaxSpeed);
+        Servo.WantedSpeed(-1, _servo, builtAngle: 0, angle: Math.PI).ShouldBe(-_servo.MaxSpeed);
     }
 
     [Fact]
@@ -59,52 +63,17 @@ public sealed class ServoTests
     }
 
     [Fact]
-    public void LinkAngleAndSpeed_FollowTheFarJointAroundTheServoJoint()
-    {
-        var joint = new Vector2D(0, 0);
-        var right = new Vector2D(20, 0);
-        var up = new Vector2D(0, -20);
-
-        Servo.LinkAngle(joint, up).ShouldBe(Math.PI / 2, tolerance: 1e-12);
-        Servo.LinkAngularSpeed(joint, right, new Vector2D(0, 0), new Vector2D(0, -20))
-            .ShouldBe(1, tolerance: 1e-12);
-    }
+    public void NextMotor_WithStrengthZero_IsZero() =>
+        Next(_servo, angle: 0, position: 1, strength: 0, default, _heavy).Torque.ShouldBe(0);
 
     [Fact]
-    public void WheelSide_TurnsLikeALinkToAMarkOnItsTyre()
+    public void NextMotor_ChasesWithTheChosenShareOfItsStrength()
     {
-        // A mark on the tyre, 20 units right of the hub at rotation 0, read as a link's far joint (#1118).
-        var hub = new Vector2D(0, 0);
-        const double rotation = Math.PI / 2;
-        const double spin = 3;
-        var mark = new Vector2D(20 * Math.Cos(rotation), 20 * Math.Sin(rotation));
-        var markVelocity = new Vector2D(-20 * spin * Math.Sin(rotation), 20 * spin * Math.Cos(rotation));
+        var chosen = OutputSignals.StrengthFromOutput(0.2, _servo.Strength);
 
-        Servo.WheelAngle(rotation).ShouldBe(Servo.LinkAngle(hub, mark), tolerance: 1e-12);
-        Servo.WheelAngularSpeed(spin).ShouldBe(Servo.LinkAngularSpeed(hub, mark, new Vector2D(0, 0), markVelocity), tolerance: 1e-12);
+        var motor = Next(_servo, angle: 0, position: 1, strength: 0.2, new MotorState(_servo.Strength, _servo.Strength), _heavy);
 
-        // The couple a link would get turns the body as the Wheel's body torque does: r × F, y-down.
-        var couple = Servo.CoupleForTorque(hub, new Vector2D(20, 0), torque: 60);
-        Servo.WheelBodyTorque(60).ShouldBe(20 * couple.ForceOnFar.Y, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void CoupleForTorque_ReturnsEqualOppositeForcesWithTheRequestedMoment()
-    {
-        var couple = Servo.CoupleForTorque(new Vector2D(0, 0), new Vector2D(20, 0), torque: 60);
-
-        couple.ForceOnJoint.ShouldBe(new Vector2D(0, 3));
-        couple.ForceOnFar.ShouldBe(new Vector2D(0, -3));
-        (-(20 * couple.ForceOnFar.Y) + (0 * couple.ForceOnFar.X)).ShouldBe(60);
-    }
-
-    [Fact]
-    public void CoupleForTorque_ClampsForceWhenTheLeverArmIsVeryShort()
-    {
-        var couple = Servo.CoupleForTorque(new Vector2D(0, 0), new Vector2D(1, 0), torque: 30);
-
-        couple.ForceOnFar.ShouldBe(new Vector2D(0, -30 / Servo.MinimumLeverArm));
-        couple.ForceOnJoint.ShouldBe(new Vector2D(0, 30 / Servo.MinimumLeverArm));
+        motor.Torque.ShouldBe(chosen);
     }
 
     [Fact]
@@ -129,9 +98,22 @@ public sealed class ServoTests
         result.FinalAngle.ShouldBeLessThanOrEqualTo(Servo.UpperAngle(servo) + 0.01);
     }
 
+    [Fact]
+    public void EndStopTorque_Overload_CapsDesiredGains()
+    {
+        var servo = ExtremeServo(30);
+        var gains = Servo.StableEndStopGains(servo, effectiveInertia: 1000, step: _step);
+
+        gains.Damping.ShouldBeLessThan(servo.Strength / servo.MaxSpeed);
+        gains.Stiffness.ShouldBeLessThan(4 * servo.Strength / servo.Range);
+        Servo.EndStopTorque(servo, 0, Servo.UpperAngle(servo) + 0.1, speed: 1, effectiveInertia: 1000, step: _step)
+            .ShouldBeLessThan(0);
+    }
+
     [Theory]
     [InlineData(30, 1000)]
     [InlineData(720, 1000)]
+    [InlineData(720, 340)]
     [InlineData(30, 500)]
     [InlineData(30, 8000)]
     [InlineData(720, 16000)]
@@ -176,102 +158,6 @@ public sealed class ServoTests
         result.LastSecondSwing.ShouldBeLessThan(0.001);
     }
 
-    [Fact]
-    public void LinkInertia_ForALinkShorterThanTheLeverArm_ShrinksWithItsLength()
-    {
-        var joint = new Vector2D(0, 0);
-        var reducedMass = 0.5;
-
-        Servo.LinkInertia(joint, new Vector2D(30, 0), 1, 1).ShouldBe(reducedMass * 30 * 30, tolerance: 1e-9);
-        Servo.LinkInertia(joint, new Vector2D(1, 0), 1, 1).ShouldBe(reducedMass * 1 * Servo.MinimumLeverArm, tolerance: 1e-9);
-        Servo.LinkInertia(joint, joint, 1, 1).ShouldBeGreaterThan(0);
-        Servo.LinkInertia(joint, joint, 1, 1).ShouldBeLessThan(1e-3);
-    }
-
-    [Fact]
-    public void UnwrapAngle_CrossingPi_StaysContinuous()
-    {
-        var previous = Math.PI - 0.1;
-        var current = -Math.PI + 0.1;
-
-        Servo.UnwrapAngle(previous, previous, current).ShouldBe(Math.PI + 0.1, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void UnwrapAngle_AllowsAFullTurnRange()
-    {
-        var continuous = 0.0;
-        var previous = 0.0;
-        foreach (var current in new[] { Math.PI / 2, Math.PI - 0.1, -Math.PI + 0.1, -Math.PI / 2, 0 })
-        {
-            continuous = Servo.UnwrapAngle(continuous, previous, current);
-            previous = current;
-        }
-
-        continuous.ShouldBe(Math.Tau, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void NextMotor_WithStrengthZero_IsZero() =>
-        Next(_servo, angle: 0, position: 1, strength: 0, default, _heavy).Torque.ShouldBe(0);
-
-    [Fact]
-    public void NextMotor_NeverExceedsChosenStrength()
-    {
-        var chosen = OutputSignals.StrengthFromOutput(0.2, _servo.Strength);
-        var motor = Next(_servo, angle: 0, position: 1, strength: 0.2, new ServoMotor(_servo.Strength, _servo.Strength), _heavy);
-
-        Math.Abs(motor.Torque).ShouldBeLessThanOrEqualTo(chosen);
-        Math.Abs(motor.Holding).ShouldBeLessThanOrEqualTo(chosen);
-    }
-
-    [Fact]
-    public void NextMotor_ReachesFullWithinAboutRiseTime()
-    {
-        var motor = default(ServoMotor);
-        for (var step = 0; step < (int)(1.1 * _servo.RiseTime / _step); step++)
-        {
-            motor = Next(_servo, angle: 0, position: 1, strength: 1, motor, _heavy);
-        }
-
-        motor.Torque.ShouldBe(_servo.Strength);
-    }
-
-    [Fact]
-    public void NextMotor_ALongerRiseTime_BuildsMoreSlowly()
-    {
-        var quick = _servo.WithSettings(_servo.Strength, _servo.Range, _servo.Start, _servo.MaxSpeed, 0.1);
-        var slow = _servo.WithSettings(_servo.Strength, _servo.Range, _servo.Start, _servo.MaxSpeed, 0.5);
-
-        var quickTorque = Next(quick, angle: 0, position: 1, strength: 1, default, _heavy).Torque;
-        var slowTorque = Next(slow, angle: 0, position: 1, strength: 1, default, _heavy).Torque;
-
-        slowTorque.ShouldBe(quickTorque / 5, tolerance: 1e-6);
-    }
-
-    [Fact]
-    public void NextMotor_PastItsTarget_DropsItsPushAtOnce()
-    {
-        var pushing = new ServoMotor(_servo.Strength, 0);
-
-        var motor = Next(_servo, angle: Servo.TargetAngle(1, _servo) + 0.5, position: 1, strength: 1, pushing, effectiveInertia: 1000);
-
-        motor.Torque.ShouldBeLessThan(0);
-        motor.Torque.ShouldBeGreaterThanOrEqualTo(-_servo.Strength * _step / _servo.RiseTime);
-    }
-
-    [Fact]
-    public void EndStopTorque_Overload_CapsDesiredGains()
-    {
-        var servo = ExtremeServo(30);
-        var gains = Servo.StableEndStopGains(servo, effectiveInertia: 1000, step: _step);
-
-        gains.Damping.ShouldBeLessThan(servo.Strength / servo.MaxSpeed);
-        gains.Stiffness.ShouldBeLessThan(4 * servo.Strength / servo.Range);
-        Servo.EndStopTorque(servo, 0, Servo.UpperAngle(servo) + 0.1, speed: 1, effectiveInertia: 1000, step: _step)
-            .ShouldBeLessThan(0);
-    }
-
     private static ServoDef ExtremeServo(double maxSpeedDegrees) =>
         _servo.WithSettings(strength: 2_000_000, range: Degrees(20), start: 0.5, maxSpeed: Degrees(maxSpeedDegrees), riseTime: ServoDef.DefaultRiseTime);
 
@@ -290,7 +176,7 @@ public sealed class ServoTests
         return (fastest, angle);
     }
 
-    private static ServoMotor Next(ServoDef servo, double angle, double position, double strength, ServoMotor previous, double effectiveInertia) =>
+    private static MotorState Next(ServoDef servo, double angle, double position, double strength, MotorState previous, double effectiveInertia) =>
         Servo.NextMotor(servo, builtAngle: 0, angle, speed: 0, position, strength, previous, _step, effectiveInertia);
 
     private static (double Fastest, double FinalAngle, double LastSecondSwing, double Torque) RunMotor(
@@ -302,7 +188,7 @@ public sealed class ServoTests
     {
         var angle = 0.0;
         var speed = 0.0;
-        var motor = default(ServoMotor);
+        var motor = default(MotorState);
         var fastest = 0.0;
         var steps = 1800;
         var lowest = double.MaxValue;

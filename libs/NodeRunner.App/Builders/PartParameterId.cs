@@ -20,4 +20,6 @@ public enum PartParameterId
     Rays,
     Spread,
     CameraRange,
+    MotorStrength,
+    MotorMaxSpeed,
 }

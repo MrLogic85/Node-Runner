@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using NodeRunner.App.Builders;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
 using NodeRunner.ML.Brains;
@@ -45,6 +46,7 @@ public sealed class CreationVersioningTests : IDisposable
         expected["creature"]!.AsObject()["wheels"] = new JsonArray();
         expected["creature"]!.AsObject()["touchSensors"] = new JsonArray();
         expected["creature"]!.AsObject()["rubbers"] = new JsonArray();
+        expected["creature"]!.AsObject()["velocityMotors"] = new JsonArray();
         foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
         {
             piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
@@ -401,6 +403,55 @@ public sealed class CreationVersioningTests : IDisposable
         new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
     }
 
+    // #454: a creature saved before Velocity motors has none.
+    [Fact]
+    public void AVersion10Save_GetsNoVelocityMotors_AndIsWrittenBackInTheCurrentVersion()
+    {
+        var path = WriteCreation(Version10Walker().ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.VelocityMotors.ShouldBeEmpty();
+
+        var written = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
+        written["creature"]!["velocityMotors"]!.AsArray().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AVersion10Save_WithoutACreature_IsSkipped()
+    {
+        var file = Version10Walker();
+        file.Remove("creature");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ASaveInTheCurrentVersion_WithoutVelocityMotors_IsSkipped()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file["creature"]!.AsObject().Remove("velocityMotors");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AVelocityMotor_SurvivesASaveAndALoad()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var id = builder.AddVelocityMotor(walker.Creature.Nodes[0].Id);
+        builder.Rename(id, "Drive");
+        builder.SetParameter(id, PartParameterId.MotorMaxSpeed, 3);
+        var creature = builder.Build();
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        repository.Save(walker.WithCreature(creature, training: null));
+
+        repository.Get(walker.Id)!.Creature.VelocityMotors.ShouldBe(creature.VelocityMotors);
+        creature.VelocityMotors.ShouldHaveSingleItem().MaxSpeed.ShouldBe(3);
+    }
+
     [Fact]
     public void ARubber_SurvivesASaveAndALoad()
     {
@@ -638,6 +689,7 @@ public sealed class CreationVersioningTests : IDisposable
         file["creature"]!.AsObject()["wheels"] = new JsonArray();
         file["creature"]!.AsObject()["touchSensors"] = new JsonArray();
         file["creature"]!.AsObject()["rubbers"] = new JsonArray();
+        file["creature"]!.AsObject()["velocityMotors"] = new JsonArray();
     }
 
     private static CreationDef LoadFixture013(string name) =>
@@ -665,10 +717,19 @@ public sealed class CreationVersioningTests : IDisposable
         return JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(wheels, walker.Training)))!.AsObject();
     }
 
+    // The 0.13.0 walker as version 10 wrote it, before Velocity motors (#454).
+    private static JsonObject Version10Walker()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file[_versionField] = 10;
+        file["creature"]!.AsObject().Remove("velocityMotors");
+        return file;
+    }
+
     // The 0.13.0 walker as version 9 wrote it, before Rubbers (#1142).
     private static JsonObject Version9Walker()
     {
-        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        var file = Version10Walker();
         file[_versionField] = 9;
         file["creature"]!.AsObject().Remove("rubbers");
         return file;

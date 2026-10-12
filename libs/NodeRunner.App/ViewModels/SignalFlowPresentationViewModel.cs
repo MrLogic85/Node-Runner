@@ -13,7 +13,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// <summary>How many readings the brain senses, such as "9 readings"; null with none.</summary>
     public UiText? InputsNote { get; private set; }
 
-    /// <summary>The parts the brain drives, such as "1 motor" or "2 motors"; null with none.</summary>
+    /// <summary>The parts the brain drives, such as "1 part" or "2 parts"; null with none.</summary>
     public UiText? OutputsNote { get; private set; }
 
     /// <summary>How far the visible creature has got in this try, such as "12.4 m"; null when no try runs.</summary>
@@ -21,15 +21,15 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
     /// <summary>Refreshes the stage notes from this tick's brain.</summary>
     /// <param name="readings">How many readings the visible creature's brain takes in.</param>
-    /// <param name="motors">How many motors the brain drives; each has two outputs, so the note counts parts.</param>
+    /// <param name="parts">How many parts the brain drives (Servos, Motors and Pistons); a part can have several outputs, so the note counts parts.</param>
     /// <param name="distance">How far the visible creature has got, in world units; NaN when no try runs.</param>
-    public void Update(int readings, int motors, double distance)
+    public void Update(int readings, int parts, double distance)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(readings);
-        ArgumentOutOfRangeException.ThrowIfNegative(motors);
+        ArgumentOutOfRangeException.ThrowIfNegative(parts);
 
         var inputsNote = readings > 0 ? UiText.Counted("{0} reading", "{0} readings", readings) : null;
-        var outputsNote = motors > 0 ? UiText.Counted("{0} motor", "{0} motors", motors) : null;
+        var outputsNote = parts > 0 ? UiText.Counted("{0} part", "{0} parts", parts) : null;
         var distanceNote = double.IsFinite(distance) ? Metres.WithUnit(distance) : null;
         if (Equals(InputsNote, inputsNote) && Equals(OutputsNote, outputsNote) && Equals(DistanceNote, distanceNote))
         {

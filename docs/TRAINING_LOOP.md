@@ -167,7 +167,8 @@ the reference's "a training session has finished" (#369).
 - **Generation 0 (#537, #810).** A new Creation has no trained brain, so
   its base brain holds the built pose at full strength: all weights 0,
   positions at the built pose, strength at bias 3 (about 95%). A Servo's
-  angle output holds its built pose at 0; a Piston's position output gets
+  angle output holds its built pose at 0, and a Motor's speed
+  output at 0 means standing still, so it holds its joint; a Piston's position output gets
   the bias that asks for its drawn length, clamped to ±6, about 0.25%
   short of either end (`Piston.DrawnPositions`, #870, #1129). A brain kept after its Start position
   changes keeps its old bias. This is how robots start in robotics ML:
@@ -177,7 +178,8 @@ the reference's "a training session has finished" (#369).
   - The last shadow runs the base brain unchanged, as a reference that
     stays near 0 m.
   - Every other shadow perturbs it: Gaussian noise on every weight (σ 1.5)
-    and bias (σ 0.5), so every Piston and Servo pushes from the start. A
+    and bias (σ 0.5), so every Piston and joint motor pushes from the start, and
+    a Motor turns at the speed its noise picks. A
     Piston's length output, a sigmoid, gets twice that noise and bias limit:
     sigmoid(2x) = (tanh(x) + 1) / 2, so it spreads its lengths as widely as
     a tanh output would (#1129).
@@ -296,8 +298,8 @@ the reference's "a training session has finished" (#369).
   ground") and Brain and Stats buttons; unlock progress is not shown (#488).
   Beside the arena a side panel titled "Status" shows the Inputs → Brain →
   Outputs → Distance stages (`SignalFlowPresentationViewModel`, #813);
-  Outputs counts driven motors. The stages count readings and moving parts
-  (#196). Collapsing the panel widens the arena, and the camera refits.
+  Outputs counts the parts the brain drives, Servos, Motors and Pistons
+  alike ("2 parts"). The stages count readings and parts (#196). Collapsing the panel widens the arena, and the camera refits.
   Under the arena are Pause and the generation caption.
   - **Pause** freezes the trial mid-run and resumes exactly where it left
     off; the screen keeps responding. Each visit starts unpaused.

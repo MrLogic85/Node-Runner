@@ -21,6 +21,7 @@ public static class PartIcons
         PartSettingsKind.Wheel => UiIconId.PartWheel,
         PartSettingsKind.Touch => UiIconId.PartTouch,
         PartSettingsKind.Rubber => UiIconId.PartRubber,
+        PartSettingsKind.VelocityMotor => UiIconId.PartVelocity,
         _ => UiIconId.None,
     };
 }
