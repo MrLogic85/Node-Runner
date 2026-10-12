@@ -219,8 +219,8 @@ stayed unsaved. Route and state-validation notices, such as a missing
 creation or a training prerequisite, are not action failures and stay
 Default; dialog-inline errors and log-only failures are not notifications.
 A copy to the
-clipboard confirms through `UiClipboard.Copy`, which waits for Android's
-own toast.
+clipboard confirms through `UiClipboard.Copy` at once, beside Android's own
+toast (#1178).
 
 ### Menus and pickers
 
