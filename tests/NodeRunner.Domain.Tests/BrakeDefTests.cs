@@ -100,7 +100,7 @@ public sealed class BrakeDefTests
         apart.Brakes.ShouldHaveSingleItem().NodeId.ShouldBe(1);
     }
 
-    // It is no joint motor: it has no ports, housing or selection yet (#1040, #1041).
+    // It is no joint motor: it has no ports, and no housing or selection yet (#1041).
     [Fact]
     public void CreatureDef_CountsABrakeAsAPart_ButNotAsAJointMotor()
     {

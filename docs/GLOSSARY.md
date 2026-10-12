@@ -69,9 +69,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   beam.
 - **Beam** — A rigid, fixed-length connection between two joints.
 - **Brake** — A passive joint part (#1039) with a Fixed and a Target side
-  and a Strength, the most torque it resists their turning with; it is not
-  simulated yet (#1040). A Locked Brake's Strength is endless; that is not
-  a Locked Creation. It takes a joint motor's slot but has no ports. See:
+  and a Strength, the most torque it resists their turning with (#1040). A
+  Locked Brake's Strength is endless; that is not a Locked Creation. It takes a joint motor's slot but has no ports. See:
   `docs/CREATURE_MODEL.md` → "Brake".
 - **Camera** — A sensor: 1, 3 or 5 rays around its aim that read how near
   the ground is within its range, and whether any sees it. One input per

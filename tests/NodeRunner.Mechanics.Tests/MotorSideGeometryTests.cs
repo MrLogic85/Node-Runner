@@ -4,6 +4,8 @@ namespace NodeRunner.Mechanics.Tests;
 
 public sealed class MotorSideGeometryTests
 {
+    private const double _heavy = 1e12;
+
     [Fact]
     public void LinkAngleAndSpeed_FollowTheFarJointAroundTheMotorJoint()
     {
@@ -64,6 +66,51 @@ public sealed class MotorSideGeometryTests
         MotorSideGeometry.LinkInertia(joint, new Vector2D(1, 0), 1, 1).ShouldBe(reducedMass * 1 * MotorSideGeometry.MinimumLeverArm, tolerance: 1e-9);
         MotorSideGeometry.LinkInertia(joint, joint, 1, 1).ShouldBeGreaterThan(0);
         MotorSideGeometry.LinkInertia(joint, joint, 1, 1).ShouldBeLessThan(1e-3);
+    }
+
+    [Fact]
+    public void SharedJointInertia_StraightBetweenHeavyEnds_CountsTheJointOnce()
+    {
+        // Pushing a straight joint's node sideways turns both links: a quarter of m·L², where two
+        // links in series would read half.
+        MotorSideGeometry.SharedJointInertia(new Vector2D(0, 0), new Vector2D(-100, 0), new Vector2D(100, 0), 2, _heavy, _heavy)
+            .ShouldBe(2 * 100 * 100 / 4.0, tolerance: 1e-3);
+    }
+
+    [Fact]
+    public void SharedJointInertia_AtARightAngle_MatchesTwoLinksInSeries()
+    {
+        var joint = new Vector2D(0, 0);
+        var fixedFar = new Vector2D(0, 100);
+        var targetFar = new Vector2D(100, 0);
+        var fixedSide = MotorSideGeometry.LinkInertia(joint, fixedFar, 2, 3);
+        var targetSide = MotorSideGeometry.LinkInertia(joint, targetFar, 2, 5);
+
+        var series = fixedSide * targetSide / (fixedSide + targetSide);
+
+        // Each link's push on the joint runs along the other link, so neither turns the other.
+        MotorSideGeometry.SharedJointInertia(joint, fixedFar, targetFar, 2, 3, 5).ShouldBe(series, tolerance: 1e-9 * series);
+        MotorSideGeometry.SharedJointInertia(joint, fixedFar, targetFar, 2, _heavy, _heavy)
+            .ShouldBe(2 * 100 * 100 / 2.0, tolerance: 1e-3);
+    }
+
+    [Fact]
+    public void SharedJointInertia_Folded_TurnsOnlyTheFarEnds()
+    {
+        // Both links point the same way, so the joint is pushed both ways at once and stays put.
+        MotorSideGeometry.SharedJointInertia(new Vector2D(0, 0), new Vector2D(100, 0), new Vector2D(100, 0), 2, 3, 6)
+            .ShouldBe(3.0 * 6 / 9 * 100 * 100, tolerance: 1e-6);
+    }
+
+    [Fact]
+    public void SharedJointInertia_IsTheSameEitherWay_AndPositive()
+    {
+        var joint = new Vector2D(10, 20);
+        var a = new Vector2D(-40, 90);
+        var b = new Vector2D(130, -15);
+
+        MotorSideGeometry.SharedJointInertia(joint, a, b, 1.2, 0.6, 3).ShouldBe(MotorSideGeometry.SharedJointInertia(joint, b, a, 1.2, 3, 0.6), tolerance: 1e-9);
+        MotorSideGeometry.SharedJointInertia(joint, joint, joint, 1, 1, 1).ShouldBeGreaterThan(0);
     }
 
     [Fact]
