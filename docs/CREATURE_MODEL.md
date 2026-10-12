@@ -14,7 +14,7 @@ comments there.
 
 A creature is built from two structural parts (Node, Beam), sensor parts
 that sit on beams (the Accelerometer and the Camera), joint parts (the
-Servo and the Motor, which turn their joint, the Brake, meant to resist
+Servo and the Motor, which turn their joint, the Brake, which resists
 that, the Wheel, which rolls, the Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
@@ -249,16 +249,30 @@ fold.
 
 ### Brake
 
-- **Beginner:** A brake on a joint, meant to stop its two sides turning
-  against each other (#456). It has no brain ports and draws no power.
-- `BrakeDef` (#1039), saved under `brakes`: it is saved, loaded, validated
-  and shared, but not yet simulated (#1040) or placed in Build (#1041). Its
+- **Beginner:** A brake on a joint: it stops its two sides turning against
+  each other, up to its Strength (#456). It has no brain ports and draws no power.
+- `BrakeDef` (#1039), saved under `brakes`: it is saved, loaded, validated,
+  shared and simulated (#1040), but not yet placed in Build (#1041). Its
   sides and slot are a Servo's (see Servo, and Node → One part per slot),
   so one with a missing side blocks training like a Servo. Unlike a joint
   motor it has no ports; Editing identity rules says what that means for
   its id.
 - **Settings:** **Strength**, the most torque it resists with (N·m), or
   **Locked** (`BrakeDef.Locked`), an endless Strength.
+- **Holding:** friction between its sides, always on, brain or not
+  (`Mechanics.Brake`). Each step it stops the turning between them and
+  holds against everything else pushing on the joint, with at most its
+  Strength. Within Strength the joint stays put; past it the joint slips,
+  slowed by the full Strength, and grips again once the push is within
+  Strength. It has no preferred angle: it holds wherever the joint
+  stopped. It feels a push a step late, so a sudden heavy push turns the
+  joint a few degrees before it holds, and a sudden release kicks it back
+  about as far.
+- **Locked:** the two sides are welded together and turn as one, so no
+  push can turn the joint. A Piston or Spring side still slides: only the
+  angle is locked. When both sides are Pistons or Springs that slide at the
+  joint, it holds as endless friction instead, which gives a little under a
+  sudden heavy push.
 
 ### Wheel
 

@@ -77,6 +77,12 @@ file owns how Godot realises it.
 13. **A Rubber is its joint body's material, nothing new.** Give that body
     a Rough `PhysicsMaterial` at `Rubber.Friction`; add no body, shape or
     collider (`Creature.Rubbers.cs` says how, #1142).
+14. **A Brake is friction on its `MotorSides`, or a weld when Locked.** A
+    `BrakeJoint` turns its sides (rule 6) by `Mechanics.Brake`'s torque
+    every tick, brain or not (#1040), using `MotorSides.BrakeInertia`,
+    which must never read heavier than the joint. A Locked Brake is a
+    second Godot joint instead, as no Godot angular joint can brake;
+    `Creature.Links.cs` (WeldSides) says how, and when it stays friction.
 
 ## What lives here
 
@@ -90,8 +96,9 @@ file owns how Godot realises it.
 - `TouchSensor.cs` — a Touch sensor: how near its joint body is to the ground
 - `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is
   one `RayCast2D` child per ray, aimed and sized by `CameraRays`)
-- `MotorSides.cs` — a joint motor's two sides: angle, speed, inertia, torque
+- `MotorSides.cs` — a joint motor's or Brake's two sides: angle, speed, inertia, torque
 - `ServoJoint.cs`, `VelocityMotorJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
+- `BrakeJoint.cs` — a Brake's friction on its sides
 - `*Visual.cs` — rendering only: Training's adapters over the shared part
   visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds
   `IShadowVisual`

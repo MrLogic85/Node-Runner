@@ -140,8 +140,9 @@ Node Runner/
 
 ## The tick
 
-At 60 Hz (`_physics_process`) each Spring first sets its rest length, then
-the creature runs four steps:
+At 60 Hz (`_physics_process`) each Spring first sets its rest length and
+each Brake holds its joint, brain or not (`Mechanics.Brake`), then the
+creature runs four steps:
 
 1. **Sense:** every part writes its readings into one `double[]` in
    `BrainPorts` order (`docs/CREATURE_MODEL.md` → "Sensor–model contract").

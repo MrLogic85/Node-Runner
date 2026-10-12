@@ -4,9 +4,9 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A joint motor's two sides (<see cref="IJointMotorDef"/>, a Servo or a Velocity motor, #454):
-/// links, whose angle is the direction to their far joint body and which turn by a force couple,
-/// or the joint's Wheel, a one-sided link that turns with its body (#1118). It measures the
+/// A joint motor's two sides (<see cref="IJointMotorDef"/>, a Servo or a Velocity motor, #454),
+/// or a Brake's (#1040): links, whose angle is the direction to their far joint body and which
+/// turn by a force couple, or the joint's Wheel, a one-sided link that turns with its body (#1118). It measures the
 /// Target's angle and speed against the Fixed side's, unwrapped across turns, and turns them
 /// apart by an equal and opposite torque.
 /// </summary>
@@ -48,6 +48,15 @@ public sealed class MotorSides
             return (target * fixedSide) / (target + fixedSide);
         }
     }
+
+    /// <summary>
+    /// What a Brake's torque turns (#1040): <see cref="EffectiveInertia"/>, but two links share their
+    /// joint's mass (<see cref="Mechanics.MotorSideGeometry.SharedJointInertia"/>), so it never reads
+    /// heavier than the joint is. A Brake reading it heavier would chatter.
+    /// </summary>
+    public double BrakeInertia => _fixed is MotorLinkSide fixedLink && _target is MotorLinkSide targetLink
+        ? fixedLink.SharedInertia(targetLink)
+        : EffectiveInertia;
 
     /// <summary>The Fixed side's direction as a Godot rotation, clockwise-positive.</summary>
     public double FixedRotation => -_fixed.Angle;
@@ -116,6 +125,15 @@ public sealed class MotorLinkSide(RigidBody2D jointBody, RigidBody2D farBody) : 
         ToVector(_farBody.GlobalPosition),
         JointBody.Mass,
         _farBody.Mass);
+
+    /// <summary>This side and <paramref name="target"/> turned apart at their shared joint (<see cref="MotorSides.BrakeInertia"/>).</summary>
+    public double SharedInertia(MotorLinkSide target) => Mechanics.MotorSideGeometry.SharedJointInertia(
+        ToVector(JointBody.GlobalPosition),
+        ToVector(_farBody.GlobalPosition),
+        ToVector(target._farBody.GlobalPosition),
+        JointBody.Mass,
+        _farBody.Mass,
+        target._farBody.Mass);
 
     public override void ApplyTorque(double torque)
     {

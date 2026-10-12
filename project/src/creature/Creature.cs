@@ -37,6 +37,9 @@ public partial class Creature : Node2D
     // set as a solid bar this thick.
     private const float _beamInertiaThickness = 12f;
 
+    // How far a Locked Brake's groove reaches each way from the joint (Creature.Links.SlideLock): 100 m.
+    private const float _lockGrooveReach = 10000;
+
     // How near a tap must land to a part, on screen, at least: a part drawn smaller when the
     // Training camera zooms out (#675) still takes a finger.
     private const float _hitTolerancePixels = 16;
@@ -54,14 +57,15 @@ public partial class Creature : Node2D
     private ServoVisual[] _servoVisuals = [];
     private VelocityMotorJoint[] _velocityMotors = [];
     private VelocityMotorVisual[] _velocityMotorVisuals = [];
+    private BrakeJoint[] _brakes = [];
     private WheelVisual[] _wheelVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
     private SpringVisual[] _springVisuals = [];
     private DrawGroups? _drawGroups;
     private RaisedParts _raised = RaisedParts.None;
-    private RigidBody2D[] _pistonCylinders = [];
-    private RigidBody2D[] _springCylinders = [];
+    private EndStops[] _pistonEndStops = [];
+    private EndStops[] _springEndStops = [];
     private SpringLink[] _springs = [];
     private CameraRaysVisual? _cameraRaysVisual;
     private readonly List<KnockoutVisual> _knockoutVisuals = [];
@@ -122,6 +126,11 @@ public partial class Creature : Node2D
 
         SenseTouches();
 
+        foreach (var brake in _brakes)
+        {
+            brake.Hold(delta);
+        }
+
         if (Brain is null)
         {
             return;
@@ -169,6 +178,11 @@ public partial class Creature : Node2D
             throw new InvalidOperationException($"{incomplete.Kind} {incomplete.Id} must have two sides before the creature is built for simulation.");
         }
 
+        if (definition.Brakes.FirstOrDefault(brake => brake.FixedLinkId is null || brake.TargetLinkId is null) is { } incompleteBrake)
+        {
+            throw new InvalidOperationException($"Brake {incompleteBrake.Id} must have two sides before the creature is built for simulation.");
+        }
+
         Definition = definition;
         _selection = [];
         Build(definition);
@@ -199,6 +213,7 @@ public partial class Creature : Node2D
         CreateVelocityMotors(definition);
         CreatePistons(definition);
         CreateSprings(definition);
+        CreateBrakes(definition);
         CapEndStops(definition);
         _drawGroups = DrawGroups.Of(definition.Nodes, LinkRef.All(definition.Beams, definition.Pistons, definition.Springs));
         ConfigureBrainBuffers(definition);
@@ -268,7 +283,7 @@ public partial class Creature : Node2D
         Build(Definition);
 
         var offset = GlobalTransform.BasisXformInv(new Vector2(0, lowestPointY - LowestPointY));
-        foreach (var body in _beamBodies.Concat(_nodeBodies).Concat(_pistonCylinders).Concat(_springCylinders))
+        foreach (var body in _beamBodies.Concat(_nodeBodies).Concat(_pistonEndStops.Concat(_springEndStops).Select(stops => stops.Cylinder)))
         {
             body.Position += offset;
         }

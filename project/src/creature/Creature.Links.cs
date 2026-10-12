@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
-// Builds the links between body parts: Servos and Velocity motors on joints, Pistons with their end stops, and Springs.
+// Builds the links between body parts: Servos, Velocity motors and Brakes on joints, Pistons with their end stops, and Springs.
 public partial class Creature
 {
     private void CreateServos(CreatureDef definition)
@@ -59,7 +59,131 @@ public partial class Creature
         }
     }
 
-    private MotorSides MotorSidesFor(CreatureDef definition, IJointMotorDef motor) => new(
+    // A Brake (#1040) holds its sides as a Servo turns them, so it shares the Servo's sides; its
+    // picture comes with #1041. A Locked one is no friction but a weld (WeldSides), unless both its
+    // sides slide at the joint: then it is friction without a limit. Run once the Piston and Spring
+    // cylinders exist, as a Locked side can be one.
+    private void CreateBrakes(CreatureDef definition)
+    {
+        var brakes = new List<BrakeJoint>();
+        foreach (var brake in definition.Brakes)
+        {
+            if (!brake.Locked || !WeldSides(definition, brake))
+            {
+                brakes.Add(new BrakeJoint(brake, MotorSidesFor(definition, brake)));
+            }
+        }
+
+        _brakes = [.. brakes];
+    }
+
+    // A Locked Brake welds its two sides' bodies with a second joint away from the joint's own pin:
+    // two joints hold two bodies rigidly, inside Godot's solver, so no load can turn the joint. A
+    // friction torque lags a step behind the load it holds, so even an endless one gives a little
+    // under a sudden load. Godot's own angular limit and motor on PinJoint2D cannot hold it
+    // (godotengine/godot#91691, #87513). A Piston or Spring whose node B is the joint slides that
+    // node along its cylinder, so a pin would stop its stroke; that side's far node runs in a groove
+    // on the other side's body instead (SlideLock). When both sides slide no Godot joint locks only
+    // the angle, so it returns false and the Brake holds as endless friction.
+    private bool WeldSides(CreatureDef definition, BrakeDef brake)
+    {
+        var fixedSide = brake.FixedLinkId!.Value;
+        var targetSide = brake.TargetLinkId!.Value;
+        var fixedSlides = SlidesAt(definition, brake.NodeId, fixedSide);
+        var targetSlides = SlidesAt(definition, brake.NodeId, targetSide);
+        if (fixedSlides && targetSlides)
+        {
+            return false;
+        }
+
+        var fixedBody = SideBody(definition, brake.NodeId, fixedSide);
+        var targetBody = SideBody(definition, brake.NodeId, targetSide);
+        var joint = _nodeBodies[definition.NodeIndexOf(brake.NodeId)].Position;
+        if (fixedSlides || targetSlides)
+        {
+            // The sliding side's cylinder is not in the lock, so only the holding side turns as a bar.
+            var (holdingSide, holdingBody) = fixedSlides ? (targetSide, targetBody) : (fixedSide, fixedBody);
+            WeighCylinderAsBar(definition, holdingSide, holdingBody);
+            var sliding = definition.Link(fixedSlides ? fixedSide : targetSide);
+            SlideLock($"Brake{brake.Id}Weld", holdingBody, joint, _nodeBodies[definition.NodeIndexOf(sliding.NodeA)]);
+            return true;
+        }
+
+        WeighCylinderAsBar(definition, fixedSide, fixedBody);
+        WeighCylinderAsBar(definition, targetSide, targetBody);
+
+        var along = definition.IsWheel(fixedSide) ? definition.Link(targetSide) : definition.Link(fixedSide);
+        var far = _nodeBodies[definition.NodeIndexOf(along.FarNodeFrom(brake.NodeId))].Position;
+        var weld = new PinJoint2D { Name = $"Brake{brake.Id}Weld", Position = (joint + far) / 2 };
+        AddChild(weld);
+        weld.NodeA = weld.GetPathTo(fixedBody);
+        weld.NodeB = weld.GetPathTo(targetBody);
+        return true;
+    }
+
+    // Locks a sliding Piston's or Spring's angle on the other side's body: its far node (node A)
+    // runs in a groove on that body along the line through the joint, so the stroke stays free. The
+    // groove reaches far past the stroke's ends, so only the end stops stop it, and has no cap
+    // (CapEndStops caps only those): a capped groove would let the lock turn, as Godot caps a
+    // groove's whole push, across it too. It holds the far node, not node B, as the cylinder is
+    // too light to carry the lock: grooves on it gave way when a creature landed.
+    private void SlideLock(string name, RigidBody2D body, Vector2 joint, RigidBody2D farNode)
+    {
+        var toFar = farNode.Position - joint;
+        var groove = new GrooveJoint2D
+        {
+            Name = name,
+            Position = joint - (toFar.Normalized() * _lockGrooveReach),
+            Rotation = toFar.Angle() - (Mathf.Pi / 2),
+            Length = 2 * _lockGrooveReach,
+            InitialOffset = _lockGrooveReach + toFar.Length(),
+        };
+        AddChild(groove);
+        groove.NodeA = groove.GetPathTo(body);
+        groove.NodeB = groove.GetPathTo(farNode);
+    }
+
+    // Whether a Piston or Spring slides its node B at this joint.
+    private static bool SlidesAt(CreatureDef definition, int nodeId, int linkId) =>
+        !definition.IsWheel(linkId)
+        && definition.Link(linkId) is { Kind: CreatureElementKind.Piston or CreatureElementKind.Spring } link
+        && link.NodeB == nodeId;
+
+    // A welded Piston's or Spring's cylinder carries the turning of the whole other side, and a
+    // cylinder turns as a thin rod on node A (CreateEndStops), far lighter to turn than what hangs
+    // on it. Godot's solver launches bodies with such mismatched weights, so the cylinder turns as
+    // a bar its link's length instead, like a beam's own body.
+    private void WeighCylinderAsBar(CreatureDef definition, int linkId, RigidBody2D body)
+    {
+        if (definition.IsWheel(linkId) || definition.Link(linkId).Kind == CreatureElementKind.Beam)
+        {
+            return;
+        }
+
+        var link = definition.Link(linkId);
+        var length = _nodeBodies[definition.NodeIndexOf(link.NodeA)].Position
+            .DistanceTo(_nodeBodies[definition.NodeIndexOf(link.NodeB)].Position);
+        body.Inertia = body.Mass * ((length * length) + (_beamInertiaThickness * _beamInertiaThickness)) / 12;
+    }
+
+    // The body that turns with a side: a beam's own, a Piston's or Spring's cylinder, or the Wheel's joint body.
+    private RigidBody2D SideBody(CreatureDef definition, int nodeId, int linkId)
+    {
+        if (definition.IsWheel(linkId))
+        {
+            return _nodeBodies[definition.NodeIndexOf(nodeId)];
+        }
+
+        return definition.Link(linkId).Kind switch
+        {
+            CreatureElementKind.Beam => _beamBodies[definition.BeamIndexOf(linkId)],
+            CreatureElementKind.Piston => _pistonEndStops[definition.PistonIndexOf(linkId)].Cylinder,
+            CreatureElementKind.Spring => _springEndStops[definition.SpringIndexOf(linkId)].Cylinder,
+            var kind => throw new InvalidOperationException($"A {kind} is no link."),
+        };
+    }
+
+    private MotorSides MotorSidesFor(CreatureDef definition, IMotorOrBrakeDef motor) => new(
         MotorSideFor(definition, motor.NodeId, motor.FixedLinkId!.Value),
         MotorSideFor(definition, motor.NodeId, motor.TargetLinkId!.Value));
 
@@ -96,7 +220,7 @@ public partial class Creature
     {
         _pistons = new PistonLink[definition.Pistons.Count];
         _pistonVisuals = new PistonVisual[definition.Pistons.Count];
-        _pistonCylinders = new RigidBody2D[definition.Pistons.Count];
+        _pistonEndStops = new EndStops[definition.Pistons.Count];
         for (var i = 0; i < _pistons.Length; i++)
         {
             var piston = definition.Pistons[i];
@@ -104,7 +228,7 @@ public partial class Creature
             var indexB = definition.NodeIndexOf(piston.NodeB);
             _pistons[i] = new PistonLink(piston, _nodeBodies[indexA], _nodeBodies[indexB]);
             var built = (float)_pistons[i].BuiltLength;
-            _pistonCylinders[i] = CreateEndStops(
+            _pistonEndStops[i] = CreateEndStops(
                 $"Piston{i}",
                 _pistons[i].NodeA,
                 _pistons[i].NodeB,
@@ -135,7 +259,7 @@ public partial class Creature
     // when the cylinder or its nodes are much lighter than the rest. Inside the stroke the groove
     // pushes nothing along the piston, so only the piston's own force moves it; at an end it
     // holds up to EndStop.MaxForce, then slides (CapEndStops). A Spring has the same stops (#835).
-    private RigidBody2D CreateEndStops(string name, RigidBody2D nodeA, RigidBody2D nodeB, float built, float shortest, float longest)
+    private EndStops CreateEndStops(string name, RigidBody2D nodeA, RigidBody2D nodeB, float built, float shortest, float longest)
     {
         var a = nodeA.Position;
         var axis = (nodeB.Position - a).Normalized();
@@ -173,18 +297,19 @@ public partial class Creature
         AddChild(groove);
         groove.NodeA = groove.GetPathTo(cylinder);
         groove.NodeB = groove.GetPathTo(nodeB);
-        return cylinder;
+        return new EndStops(cylinder, groove);
     }
 
     // Every end stop gives way past EndStop.MaxForce (#1115; why: AGENTS.md rule 4). Godot has no
     // such cap on the GrooveJoint2D node, only the server's MaxForce, which it keeps when it
-    // remakes the joint. Run once every body exists, as the weight counts them all.
+    // remakes the joint. Run once every body exists, as the weight counts them all. A Locked
+    // Brake's groove is no end stop and keeps no cap (SlideLock).
     private void CapEndStops(CreatureDef definition)
     {
         var mass = GetChildren().OfType<RigidBody2D>().Sum(body => (double)body.Mass);
         var gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsDouble();
         var maxForce = (float)Mechanics.EndStop.MaxForce(definition.Pistons.Select(piston => piston.Strength), mass, gravity);
-        foreach (var stop in GetChildren().OfType<GrooveJoint2D>())
+        foreach (var stop in _pistonEndStops.Concat(_springEndStops).Select(stops => stops.Groove))
         {
             PhysicsServer2D.JointSetParam(stop.GetRid(), PhysicsServer2D.JointParam.MaxForce, maxForce);
         }
@@ -200,7 +325,7 @@ public partial class Creature
     private void CreateSprings(CreatureDef definition)
     {
         _springVisuals = new SpringVisual[definition.Springs.Count];
-        _springCylinders = new RigidBody2D[_springVisuals.Length];
+        _springEndStops = new EndStops[_springVisuals.Length];
         _springs = new SpringLink[_springVisuals.Length];
 
         // Godot's damped spring (godot_joints_2d.cpp, checked in 4.7) damps on every second solver
@@ -231,7 +356,7 @@ public partial class Creature
             joint.NodeB = joint.GetPathTo(nodeB);
             var shortest = Mechanics.Spring.ShortestLength(spring, built, Mechanics.Travel.HubRadii);
             var longest = Mechanics.Spring.LongestLength(spring, built, Mechanics.Travel.HubRadii);
-            _springCylinders[i] = CreateEndStops($"Spring{i}", nodeA, nodeB, built, (float)shortest, (float)longest);
+            _springEndStops[i] = CreateEndStops($"Spring{i}", nodeA, nodeB, built, (float)shortest, (float)longest);
             _springs[i] = new SpringLink(joint, nodeA, nodeB, joint.RestLength, shortest, longest);
 
             var visual = new SpringVisual
@@ -252,4 +377,7 @@ public partial class Creature
             _springVisuals[i] = visual;
         }
     }
+
+    // A Piston's or Spring's hidden cylinder and the groove that holds its node B between the stroke's ends.
+    private readonly record struct EndStops(RigidBody2D Cylinder, GrooveJoint2D Groove);
 }

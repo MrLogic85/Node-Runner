@@ -3,8 +3,8 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// How every joint motor, a Servo (#452) or a Velocity motor (#454), measures and turns its two
-/// sides. A link side's direction runs from the motor's joint to the link's other joint, and it
+/// How every joint motor, a Servo (#452) or a Velocity motor (#454), and a Brake (#1040) measure
+/// and turn their two sides. A link side's direction runs from the motor's joint to the link's other joint, and it
 /// turns by an equal and opposite force couple; a Wheel side (#1118) is a one-sided link that
 /// points along its own turn, as a mark on its tyre would, and turns by a body torque.
 /// </summary>
@@ -89,6 +89,37 @@ public static class MotorSideGeometry
         var reducedMass = jointSide * farSide / (jointSide + farSide);
         return Math.Max(reducedMass * length * Math.Max(length, MinimumLeverArm), _minimumInertia);
     }
+
+    /// <summary>
+    /// How hard two links that meet at one joint are to turn apart (#1040): the inertia the torque
+    /// between them works against, with the joint's mass shared by both rather than counted for
+    /// each, as two <see cref="LinkInertia"/> in series would; that reads a straight joint twice as
+    /// heavy. It treats the three joints as free masses and anything else on them only makes them
+    /// harder to turn, so it never reads heavier than the joint is.
+    /// </summary>
+    public static double SharedJointInertia(
+        Vector2D joint,
+        Vector2D fixedFar,
+        Vector2D targetFar,
+        double jointMass,
+        double fixedFarMass,
+        double targetFarMass)
+    {
+        var onTarget = CoupleForTorque(joint, targetFar, 1);
+        var onFixed = CoupleForTorque(joint, fixedFar, -1);
+        var jointSide = Math.Max(jointMass, double.Epsilon);
+        var jointPush = new Vector2D(
+            (onTarget.ForceOnJoint.X + onFixed.ForceOnJoint.X) / jointSide,
+            (onTarget.ForceOnJoint.Y + onFixed.ForceOnJoint.Y) / jointSide);
+        var targetPush = Scaled(onTarget.ForceOnFar, 1 / Math.Max(targetFarMass, double.Epsilon));
+        var fixedPush = Scaled(onFixed.ForceOnFar, 1 / Math.Max(fixedFarMass, double.Epsilon));
+
+        // Turning speed is linear in the end speeds, so the same reading turns pushes into the turn's speed-up.
+        var turn = LinkAngularSpeed(joint, targetFar, jointPush, targetPush) - LinkAngularSpeed(joint, fixedFar, jointPush, fixedPush);
+        return turn > 0 && double.IsFinite(turn) ? Math.Max(1 / turn, _minimumInertia) : _minimumInertia;
+    }
+
+    private static Vector2D Scaled(Vector2D value, double factor) => new(value.X * factor, value.Y * factor);
 
     /// <summary>Unwraps an angle reading around ±π into a continuous angle.</summary>
     public static double UnwrapAngle(double previousContinuous, double previousWrapped, double currentWrapped)

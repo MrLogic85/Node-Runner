@@ -25,9 +25,10 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 - `VelocityMotor` — a Velocity motor's angle inputs, wanted speed and torque
 - `MotorLoop`, `MotorState` — the speed loop both motors drive their torque
   with, and the speed input both give the brain
-- `MotorSideGeometry`, `MotorCouple` — how both motors measure and turn their
-  sides: a link's angle, speed, inertia and force couple, a Wheel side's
-  signs, and the unwrapped angle
+- `Brake`, `BrakeState` — a Brake's friction torque, capped at its Strength
+- `MotorSideGeometry`, `MotorCouple` — how both motors and the Brake measure
+  and turn their sides: a link's angle, speed, inertia and force couple, two
+  links' shared-joint inertia, a Wheel side's signs, and the unwrapped angle
 - `Piston` — a Piston's travel, inputs, target length and force
 - `Spring` — a Spring's travel
 - `Wheel` — a Wheel's weight and thin-ring turning inertia
