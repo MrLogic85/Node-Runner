@@ -68,6 +68,7 @@ Godot scene tree. Each concern's rule lives in the owning doc:
 | Saved scenes survive export | `SceneEditableChildrenTests`, `SceneParentPathTests` | Export re-packs every scene, and a node added inside an instance that is not `[editable]`, under a stale parent path, or beside a same-named sibling vanishes only on device (#333, #407, #496) |
 | Saved enum numbers keep their meaning | `SceneSavedEnumsTests` | The test's summary |
 | Every route opens its scene | `SceneRouterTests` | `docs/ARCHITECTURE.md` → "Navigation" |
+| Creature bodies run without CCD | `CreatureCcdGuardTests` | `project/src/creature/AGENTS.md` rule 3 |
 
 Behaviour is tested apart from layout: rules and state live in App
 view-models, and component behaviour in pure contract functions in the UI

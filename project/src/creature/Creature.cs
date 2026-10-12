@@ -511,9 +511,7 @@ public partial class Creature : Node2D
             var position = ToGodot(definition.Nodes[i].Position);
             var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(ServoDef.JointRadius));
 
-            // No continuous collision detection (#1171): the ground is an endless half-plane a node
-            // cannot tunnel through, and Godot's ray CCD sets a fast node's velocity outright, which
-            // made rolling creatures launch.
+            // No CCD (#1171; why: AGENTS.md rule 3).
             var body = new RigidBody2D
             {
                 Name = $"Node{i}",
