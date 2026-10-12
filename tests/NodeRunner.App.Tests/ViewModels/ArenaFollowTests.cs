@@ -14,7 +14,7 @@ public sealed class ArenaFollowTests
         follow.Step(250, _frame);
 
         follow.HasFocus.ShouldBeTrue();
-        follow.FocusX.ShouldBe(250);
+        follow.Focus.ShouldBe(250);
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public sealed class ArenaFollowTests
         for (var frame = 0; frame < 180; frame++)
         {
             follow.Step(1000, _frame);
-            positions.Add(follow.FocusX);
+            positions.Add(follow.Focus);
         }
 
         positions[0].ShouldBeLessThan(1000 * ArenaFollow.EaseRate * _frame * 1.01);
@@ -50,7 +50,7 @@ public sealed class ArenaFollowTests
             follow.Step(centre, _frame);
             if (frame >= 300)
             {
-                settled.Add(follow.ShownX);
+                settled.Add(follow.Shown);
             }
         }
 
@@ -58,10 +58,9 @@ public sealed class ArenaFollowTests
     }
 
     [Fact]
-    public void Camera_KeepsAFastCreatureAtTheFocus()
+    public void Camera_KeepsAFastCreatureOnTheShownPoint()
     {
         const double speed = 10 * Metres.WorldUnitsPerMetre;
-        const double viewWidth = 460;
         var follow = new ArenaFollow();
         follow.SnapTo(0);
         var centre = 0.0;
@@ -72,8 +71,8 @@ public sealed class ArenaFollowTests
             follow.Step(centre, _frame);
         }
 
-        var fromLeft = ArenaFollow.FocusFromLeft + ((centre - follow.ShownX) / viewWidth);
-        fromLeft.ShouldBeInRange(0.38, 0.48);
+        // Within 5% of a 460-wide view of where it shows.
+        Math.Abs(centre - follow.Shown).ShouldBeLessThan(0.05 * 460);
     }
 
     [Theory]
@@ -102,7 +101,7 @@ public sealed class ArenaFollowTests
             follow.Step(centre, frameSeconds);
             if (frame >= switchFrame)
             {
-                toward.Add((centre - follow.ShownX) * Math.Sign(gap));
+                toward.Add((centre - follow.Shown) * Math.Sign(gap));
             }
         }
 
@@ -123,9 +122,9 @@ public sealed class ArenaFollowTests
 
         follow.SnapTo(-50);
 
-        follow.SpeedX.ShouldBe(0);
-        follow.AimX.ShouldBe(-50);
-        follow.ShownX.ShouldBe(-50);
+        follow.Speed.ShouldBe(0);
+        follow.Aim.ShouldBe(-50);
+        follow.Shown.ShouldBe(-50);
     }
 
     [Fact]
@@ -146,7 +145,7 @@ public sealed class ArenaFollowTests
             at120.Step(500, 1.0 / 120);
         }
 
-        at120.FocusX.ShouldBe(at30.FocusX, tolerance: 1e-9);
+        at120.Focus.ShouldBe(at30.Focus, tolerance: 1e-9);
     }
 
     [Theory]
@@ -159,7 +158,7 @@ public sealed class ArenaFollowTests
 
         follow.Step(centre, _frame);
 
-        follow.FocusX.ShouldBe(120);
+        follow.Focus.ShouldBe(120);
     }
 
     [Fact]
@@ -170,15 +169,5 @@ public sealed class ArenaFollowTests
         follow.Step(double.NaN, _frame);
 
         follow.HasFocus.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void CameraX_PutsTheFocusAtItsShareOfTheView()
-    {
-        const double viewWidth = 1000;
-
-        var cameraX = ArenaFollow.CameraX(400, viewWidth);
-
-        (cameraX - (viewWidth / 2)).ShouldBe(400 - (ArenaFollow.FocusFromLeft * viewWidth), tolerance: 1e-9);
     }
 }

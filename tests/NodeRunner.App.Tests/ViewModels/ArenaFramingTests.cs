@@ -12,7 +12,7 @@ public sealed class ArenaFramingTests
     private const double _groundY = 396;
 
     [Fact]
-    public void Cut_KeepsTodaysViewForASmallCreature()
+    public void Cut_CentresASmallCreatureSidewaysOverTheGround()
     {
         var framing = new ArenaFraming();
 
@@ -20,7 +20,7 @@ public sealed class ArenaFramingTests
 
         framing.Zoom.ShouldBe(1);
         GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
-        FromLeft(framing, 250).ShouldBe(ArenaFollow.FocusFromLeft, tolerance: 1e-9);
+        FromLeft(framing, 250).ShouldBe(0.5, tolerance: 1e-9);
     }
 
     [Theory]
@@ -35,16 +35,16 @@ public sealed class ArenaFramingTests
         framing.Cut(creature, _groundY, _viewWidth, _viewHeight);
 
         framing.Zoom.ShouldBeLessThan(1);
-        FromLeft(framing, 0).ShouldBe(ArenaFollow.FocusFromLeft, tolerance: 1e-9);
+        FromLeft(framing, 0).ShouldBe(0.5, tolerance: 1e-9);
         FromLeft(framing, creature.Left).ShouldBeGreaterThanOrEqualTo(ArenaFraming.SideMargin - 1e-9);
         FromLeft(framing, creature.Right).ShouldBeLessThanOrEqualTo(1 - ArenaFraming.SideMargin + 1e-9);
         FromTop(framing, creature.Top).ShouldBeGreaterThanOrEqualTo(ArenaFraming.TopMargin + ArenaFraming.Headroom - 1e-9);
-        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+        GroundFromTop(framing).ShouldBeInRange(ArenaFraming.GroundFromTop - 1e-9, 1 - ArenaFraming.TopMargin + 1e-9);
 
-        // No farther out than needed: the side or top that binds touches its margin exactly.
+        // No farther out than needed: the side or the standing height that binds touches its margin exactly.
         var leftSlack = FromLeft(framing, creature.Left) - ArenaFraming.SideMargin;
-        var topSlack = FromTop(framing, creature.Top) - ArenaFraming.TopMargin - ArenaFraming.Headroom;
-        Math.Min(leftSlack, topSlack).ShouldBe(0, tolerance: 1e-9);
+        var tallSlack = ArenaFraming.GroundFromTop - ArenaFraming.TopMargin - ArenaFraming.Headroom - (height * framing.Zoom / _viewHeight);
+        Math.Min(leftSlack, tallSlack).ShouldBe(0, tolerance: 1e-9);
     }
 
     [Theory]
@@ -54,18 +54,39 @@ public sealed class ArenaFramingTests
     public void ZoomToFit_ZoomsOutAsFarAsSizeAndSpeedNeed(double width, double height, double speedX)
     {
         var creature = Standing(0, width, height);
-        var still = ArenaFraming.ZoomToFit(creature, 0, _viewWidth, _viewHeight);
+        var still = ArenaFraming.ZoomToFit(creature, 0, 0, _viewWidth, _viewHeight);
 
-        var zoom = ArenaFraming.ZoomToFit(creature, speedX, _viewWidth, _viewHeight);
+        var zoom = ArenaFraming.ZoomToFit(creature, speedX, 0, _viewWidth, _viewHeight);
 
         zoom.ShouldBeLessThan(0.25);
         (_viewWidth / zoom).ShouldBe((_viewWidth / still) + speedX, tolerance: 1e-6);
     }
 
+    [Theory]
+    [InlineData(1000)]
+    [InlineData(-1000)]
+    public void ZoomToFit_ZoomsOutForSpeedUpOrDown(double speedY)
+    {
+        var zoom = ArenaFraming.ZoomToFit(Standing(0, 100, 60), 0, speedY, _viewWidth, _viewHeight);
+
+        (_viewHeight / zoom).ShouldBe(_viewHeight + Math.Abs(speedY), tolerance: 1e-6);
+    }
+
+    [Fact]
+    public void ZoomToFit_KeepsACreatureCentredInTheAirInsideTheMargins()
+    {
+        // Its centre of mass near its top: centred, its bottom needs 0.4 of the height below the middle.
+        var creature = Standing(0, 100, 200, centreY: _groundY - 180);
+
+        var zoom = ArenaFraming.ZoomToFit(creature, 0, 0, _viewWidth, _viewHeight);
+
+        zoom.ShouldBe((0.5 - ArenaFraming.TopMargin) * _viewHeight / 180, tolerance: 1e-9);
+    }
+
     [Fact]
     public void ZoomToFit_ShowsNoMoreThanTheWidestViewForABlowUp()
     {
-        var zoom = ArenaFraming.ZoomToFit(Standing(0, 1e12, 1e12), speedX: 1e12, _viewWidth, _viewHeight);
+        var zoom = ArenaFraming.ZoomToFit(Standing(0, 1e12, 1e12), speedX: 1e12, speedY: 1e12, _viewWidth, _viewHeight);
 
         (_viewWidth / zoom).ShouldBe(ArenaFraming.MaxShownWidth, tolerance: 1e-6);
     }
@@ -76,7 +97,7 @@ public sealed class ArenaFramingTests
         var framing = new ArenaFraming();
         framing.Cut(Standing(0, 200, 60), _groundY, _viewWidth, _viewHeight);
         var stretched = Standing(0, 1200, 60);
-        var fit = ArenaFraming.ZoomToFit(stretched, 0, _viewWidth, _viewHeight);
+        var fit = ArenaFraming.ZoomToFit(stretched, 0, 0, _viewWidth, _viewHeight);
 
         for (var frame = 0; frame < 45; frame++)
         {
@@ -127,18 +148,18 @@ public sealed class ArenaFramingTests
             }
         }
 
-        var widest = ArenaFraming.ZoomToFit(Standing(0, 900, 60), 0, _viewWidth, _viewHeight);
+        var widest = ArenaFraming.ZoomToFit(Standing(0, 900, 60), 0, 0, _viewWidth, _viewHeight);
         settled.ShouldBeInOrder(SortDirection.Descending);
         settled[0].ShouldBe(widest, tolerance: widest * 0.1);
         settled[^1].ShouldBe(widest, tolerance: widest * 0.01);
     }
 
-    // A 100-wide creature fits at zoom 1; a 1200-wide one at 565 × 0.38 / 600, its left half binding.
+    // A 100-wide creature fits at zoom 1; a 1200-wide one at 565 × 0.45 / 600, either half binding.
     [Theory]
     [InlineData(3 * Metres.WorldUnitsPerMetre, 100, 1)]
     [InlineData(-3 * Metres.WorldUnitsPerMetre, 100, 1)]
-    [InlineData(3 * Metres.WorldUnitsPerMetre, 1200, 0.35783333333333334)]
-    [InlineData(-3 * Metres.WorldUnitsPerMetre, 1200, 0.35783333333333334)]
+    [InlineData(3 * Metres.WorldUnitsPerMetre, 1200, 0.42375)]
+    [InlineData(-3 * Metres.WorldUnitsPerMetre, 1200, 0.42375)]
     public void Step_ZoomsOutWithSpeedAndBackAsTheCreatureStops(double speed, double width, double fit)
     {
         var framing = new ArenaFraming();
@@ -160,7 +181,7 @@ public sealed class ArenaFramingTests
         // The view shows what the creature needs plus one second of travel.
         var shownWhileRunning = (_viewWidth / fit) + Math.Abs(speed);
         running.ShouldBe(_viewWidth / shownWhileRunning, tolerance: 0.02 * fit);
-        FromLeft(framing, centre).ShouldBe(ArenaFollow.FocusFromLeft, tolerance: 0.01);
+        FromLeft(framing, centre).ShouldBe(0.5, tolerance: 0.01);
         framing.Zoom.ShouldBe(fit, tolerance: 0.01 * fit);
     }
 
@@ -183,51 +204,143 @@ public sealed class ArenaFramingTests
     }
 
     [Fact]
-    public void Step_DoesNotRiseForAJumpInsideTheTopMargin()
+    public void Step_DoesNotBobForAHoppingGait()
     {
-        const double height = 500;
+        const double hopHertz = 2;
+        const double hop = 40;
         var framing = new ArenaFraming();
-        framing.Cut(Standing(0, 100, height), _groundY, _viewWidth, _viewHeight);
-        var cameraY = framing.CameraY;
-        var room = (ArenaFraming.GroundFromTop - ArenaFraming.TopMargin) * _viewHeight / framing.Zoom - height;
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var settled = new List<double>();
 
-        room.ShouldBe(ArenaFraming.Headroom * _viewHeight / framing.Zoom, tolerance: 1e-9);
-
-        for (var frame = 0; frame < 120; frame++)
+        for (var frame = 0; frame < 10 * 60; frame++)
         {
-            var lift = room * Math.Sin(Math.PI * frame / 120.0);
-            framing.Step(Standing(0, 100, height, bottom: _groundY - lift), _groundY, _viewWidth, _viewHeight, _frame);
-            framing.CameraY.ShouldBe(cameraY);
-        }
-    }
-
-    [Fact]
-    public void Step_RisesSmoothlyAfterAHighJumpAndSettlesBack()
-    {
-        const double height = 60;
-        const double lift = 300;
-        var framing = new ArenaFraming();
-        framing.Cut(Standing(0, 100, height), _groundY, _viewWidth, _viewHeight);
-        var groundLine = new List<double>();
-
-        for (var frame = 0; frame < 4 * 60; frame++)
-        {
-            var bottom = frame < 2 * 60 ? _groundY - lift : _groundY;
-            framing.Step(Standing(0, 100, height, bottom), _groundY, _viewWidth, _viewHeight, _frame);
-            groundLine.Add(framing.GroundLineY);
-            if (frame == (2 * 60) - 1)
+            var lift = hop * Math.Abs(Math.Sin(Math.PI * hopHertz * frame * _frame));
+            framing.Step(Standing(0, 100, 60, bottom: _groundY - lift), _groundY, _viewWidth, _viewHeight, _frame);
+            GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+            if (frame >= 3 * 60)
             {
-                FromTop(framing, bottom - height).ShouldBe(ArenaFraming.TopMargin, tolerance: 0.01);
+                settled.Add(framing.Zoom);
             }
         }
 
-        // The top must sit on the margin: ground line 396 - 360 + 0.7 × 240 = 204, a 192 rise.
-        // A quarter second in, the camera has eased only part of the way.
-        const double fullRise = 192;
-        var shareRisen = (_groundY - groundLine[(60 / 4) - 1]) / fullRise;
-        shareRisen.ShouldBeInRange(0.3, 0.7);
-        (_groundY - groundLine.Min()).ShouldBe(fullRise, tolerance: 1);
-        groundLine[^1].ShouldBe(_groundY, tolerance: 1);
+        (settled.Max() / settled.Min()).ShouldBeLessThan(1.02);
+    }
+
+    [Fact]
+    public void Step_CentresAHighJumpAndSettlesBack()
+    {
+        const double lift = 300;
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var cameraY = new List<double>();
+
+        // Up over half a second, held, and back down over half a second.
+        for (var frame = 0; frame < 24 * 60; frame++)
+        {
+            var seconds = frame * _frame;
+            var up = SmoothStep(seconds * 2) - SmoothStep((seconds - 8) * 2);
+            var bottom = _groundY - (lift * up);
+            framing.Step(Standing(0, 100, 60, bottom), _groundY, _viewWidth, _viewHeight, _frame);
+            cameraY.Add(framing.CameraY);
+            GroundFromTop(framing).ShouldBeGreaterThanOrEqualTo(ArenaFraming.GroundFromTop - 1e-9);
+            if (frame == (8 * 60) - 1)
+            {
+                FromTop(framing, bottom - 30).ShouldBe(0.5, tolerance: 0.01);
+            }
+        }
+
+        // It glides: never faster than the creature itself, at most 15 a frame.
+        cameraY.Zip(cameraY.Skip(1), (a, b) => Math.Abs(b - a)).Max().ShouldBeLessThan(15);
+        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+        framing.Zoom.ShouldBe(1, tolerance: 0.01);
+    }
+
+    [Theory]
+    [InlineData(3 * Metres.WorldUnitsPerMetre)]
+    [InlineData(-3 * Metres.WorldUnitsPerMetre)]
+    public void Step_PutsTheRoomSpeedAddsInFrontOfAWalker(double speed)
+    {
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var centre = 0.0;
+
+        for (var frame = 0; frame < 10 * 60; frame++)
+        {
+            centre += speed * _frame;
+            framing.Step(Standing(centre, 100, 60), _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        // Shown 565 + 300 wide: 150 of the added 300 slides the view ahead, and the room behind
+        // stays the 282.5 it is at rest.
+        var shown = _viewWidth / framing.Zoom;
+        shown.ShouldBe(_viewWidth + Math.Abs(speed), tolerance: 1);
+        RoomBehind(framing, centre, speed, shown).ShouldBe(_viewWidth / 2, tolerance: 0.01 * _viewWidth);
+        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void Step_KeepsTheRoomBehindAtTheWidestView()
+    {
+        // 44 000 wide fits in 48 889 at rest, so the widest view has 1 111 to spare for 3 000 a second.
+        const double width = 44_000;
+        const double speed = 3_000;
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, width, 60), _groundY, _viewWidth, _viewHeight);
+        var rest = _viewWidth / framing.Zoom;
+        var centre = 0.0;
+
+        for (var frame = 0; frame < 10 * 60; frame++)
+        {
+            centre += speed * _frame;
+            framing.Step(Standing(centre, width, 60), _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        var shown = _viewWidth / framing.Zoom;
+        shown.ShouldBe(ArenaFraming.MaxShownWidth, tolerance: 1);
+        RoomBehind(framing, centre, speed, shown).ShouldBe(rest / 2, tolerance: 0.01 * rest);
+    }
+
+    [Theory]
+    [InlineData(-200)]
+    [InlineData(200)]
+    public void Step_LeadsUpAndDownInTheAir(double speedY)
+    {
+        var framing = new ArenaFraming();
+        var bottom = _groundY - 5000;
+        framing.Cut(Standing(0, 100, 60, bottom), _groundY, _viewWidth, _viewHeight);
+
+        for (var frame = 0; frame < 10 * 60; frame++)
+        {
+            bottom += speedY * _frame;
+            framing.Step(Standing(0, 100, 60, bottom), _groundY, _viewWidth, _viewHeight, _frame);
+        }
+
+        // Shown 240 + 200 tall: the room behind it, the way it came from, stays the 120 it is at rest.
+        var shown = _viewHeight / framing.Zoom;
+        shown.ShouldBe(_viewHeight + Math.Abs(speedY), tolerance: 1);
+        var centre = bottom - 30;
+        var behind = speedY < 0
+            ? framing.CameraY + (shown / 2) - centre
+            : centre - (framing.CameraY - (shown / 2));
+        behind.ShouldBe(_viewHeight / 2, tolerance: 0.01 * _viewHeight);
+    }
+
+    [Fact]
+    public void Step_StopsTheLeadIntoAFallAtTheGround()
+    {
+        const double speedY = 300;
+        var framing = new ArenaFraming();
+        var bottom = _groundY - 3000;
+        framing.Cut(Standing(0, 100, 60, bottom), _groundY, _viewWidth, _viewHeight);
+
+        while (bottom < _groundY)
+        {
+            bottom = Math.Min(_groundY, bottom + (speedY * _frame));
+            framing.Step(Standing(0, 100, 60, bottom), _groundY, _viewWidth, _viewHeight, _frame);
+            GroundFromTop(framing).ShouldBeGreaterThanOrEqualTo(ArenaFraming.GroundFromTop - 1e-9);
+        }
+
+        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
     }
 
     [Fact]
@@ -237,7 +350,7 @@ public sealed class ArenaFramingTests
         var big = Standing(400, 1200, 60);
         var framing = new ArenaFraming();
         framing.Cut(small, _groundY, _viewWidth, _viewHeight);
-        var fit = ArenaFraming.ZoomToFit(big, 0, _viewWidth, _viewHeight);
+        var fit = ArenaFraming.ZoomToFit(big, 0, 0, _viewWidth, _viewHeight);
         var zooms = new List<double>();
 
         framing.Retarget(big);
@@ -251,6 +364,26 @@ public sealed class ArenaFramingTests
         zooms[0].ShouldBeLessThan(1);
         zooms.ShouldBeInOrder(SortDirection.Descending);
         zooms.Min().ShouldBe(fit, tolerance: fit * 0.01);
+    }
+
+    [Fact]
+    public void Retarget_GlidesUpToACreatureInTheAirWithoutTakingTheJumpAsSpeed()
+    {
+        var high = Standing(0, 100, 60, bottom: _groundY - 400);
+        var framing = new ArenaFraming();
+        framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
+        var cameraY = new List<double>();
+
+        framing.Retarget(high);
+        for (var frame = 0; frame < 6 * 60; frame++)
+        {
+            framing.Step(high, _groundY, _viewWidth, _viewHeight, _frame);
+            cameraY.Add(framing.CameraY);
+            framing.Zoom.ShouldBe(1);
+        }
+
+        cameraY.ShouldBeInOrder(SortDirection.Descending);
+        FromTop(framing, high.CentreY).ShouldBe(0.5, tolerance: 0.001);
     }
 
     [Fact]
@@ -285,8 +418,8 @@ public sealed class ArenaFramingTests
         framing.Cut(small, _groundY, _viewWidth, _viewHeight);
 
         framing.Zoom.ShouldBe(1);
-        framing.GroundLineY.ShouldBe(_groundY);
-        FromLeft(framing, 500).ShouldBe(ArenaFollow.FocusFromLeft, tolerance: 1e-9);
+        GroundFromTop(framing).ShouldBe(ArenaFraming.GroundFromTop, tolerance: 1e-9);
+        FromLeft(framing, 500).ShouldBe(0.5, tolerance: 1e-9);
     }
 
     [Fact]
@@ -299,20 +432,21 @@ public sealed class ArenaFramingTests
         framing.Step(Standing(250, 1200, 60), _groundY, _viewWidth, _viewHeight, _frame);
 
         framing.HasFrame.ShouldBeTrue();
-        framing.Zoom.ShouldBe(ArenaFraming.ZoomToFit(Standing(250, 1200, 60), 0, _viewWidth, _viewHeight), tolerance: 1e-12);
+        framing.Zoom.ShouldBe(ArenaFraming.ZoomToFit(Standing(250, 1200, 60), 0, 0, _viewWidth, _viewHeight), tolerance: 1e-12);
     }
 
     [Theory]
-    [InlineData(double.NaN, 0)]
-    [InlineData(double.PositiveInfinity, 0)]
-    [InlineData(0, double.NegativeInfinity)]
-    public void Step_HoldsTheFrameWhenTheCreatureIsNotUsable(double centreX, double top)
+    [InlineData(double.NaN, 0, 0)]
+    [InlineData(double.PositiveInfinity, 0, 0)]
+    [InlineData(0, double.NaN, 0)]
+    [InlineData(0, 0, double.NegativeInfinity)]
+    public void Step_HoldsTheFrameWhenTheCreatureIsNotUsable(double centreX, double centreY, double top)
     {
         var framing = new ArenaFraming();
         framing.Cut(Standing(0, 100, 60), _groundY, _viewWidth, _viewHeight);
         var (x, y, zoom) = (framing.CameraX, framing.CameraY, framing.Zoom);
 
-        framing.Step(new FramedCreature(centreX, -50, top, 50, _groundY), _groundY, _viewWidth, _viewHeight, _frame);
+        framing.Step(new FramedCreature(centreX, centreY, -50, top, 50, _groundY), _groundY, _viewWidth, _viewHeight, _frame);
 
         (framing.CameraX, framing.CameraY, framing.Zoom).ShouldBe((x, y, zoom));
     }
@@ -395,7 +529,7 @@ public sealed class ArenaFramingTests
         GroundFromTop(framing).ShouldBe(ArenaFraming.ShelfGroundFromTop, tolerance: 0.001);
         FromTop(framing, creature.Top).ShouldBe(0.5 + ArenaFraming.Headroom, tolerance: 0.001);
         framing.Zoom.ShouldBeLessThan(1);
-        FromLeft(framing, 0).ShouldBe(ArenaFollow.FocusFromLeft, tolerance: 1e-9);
+        FromLeft(framing, 0).ShouldBe(0.5, tolerance: 1e-9);
     }
 
     [Fact]
@@ -510,7 +644,6 @@ public sealed class ArenaFramingTests
         }
 
         framing.CameraX.ShouldBe(x);
-        framing.GroundLineY.ShouldBe(_groundY);
         GroundFromTop(framing).ShouldBe(0.85, tolerance: 0.001);
     }
 
@@ -564,8 +697,19 @@ public sealed class ArenaFramingTests
         framing.HasFrame.ShouldBeFalse();
     }
 
-    private static FramedCreature Standing(double centreX, double width, double height, double bottom = _groundY) =>
-        new(centreX, centreX - (width / 2), bottom - height, centreX + (width / 2), bottom);
+    private static double SmoothStep(double t)
+    {
+        var x = Math.Clamp(t, 0, 1);
+        return x * x * (3 - (2 * x));
+    }
+
+    // A box with its centre of mass in the middle, unless given.
+    private static FramedCreature Standing(double centreX, double width, double height, double bottom = _groundY, double? centreY = null) =>
+        new(centreX, centreY ?? (bottom - (height / 2)), centreX - (width / 2), bottom - height, centreX + (width / 2), bottom);
+
+    // How much of the view lies behind a creature's centre, on the side it comes from.
+    private static double RoomBehind(ArenaFraming framing, double centreX, double speed, double shown) =>
+        speed > 0 ? centreX - (framing.CameraX - (shown / 2)) : framing.CameraX + (shown / 2) - centreX;
 
     // Where a world X shows across the view, measured from the left, as a share of its width.
     private static double FromLeft(ArenaFraming framing, double worldX) =>

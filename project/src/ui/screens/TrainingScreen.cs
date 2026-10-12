@@ -107,8 +107,8 @@ public partial class TrainingScreen : Control
     }
 
     /// <summary>
-    /// Places the part callout (#1137): docked at the arena's top over the creature's eased centre,
-    /// where the camera keeps it (<see cref="ArenaFollow.FocusFromLeft"/>), clear of the slow-motion
+    /// Places the part callout (#1137): docked at the arena's top over its centre, where the camera
+    /// keeps a creature at rest (#1169), clear of the slow-motion
     /// chip, so the box holds still and only its leader follows the part at
     /// <paramref name="worldAnchor"/>, in world coordinates. Call every frame; it updates
     /// <see cref="PartCalloutShelf"/>.
@@ -138,7 +138,7 @@ public partial class TrainingScreen : Control
             first.Text,
             first.Lines,
             _partCalloutSections);
-        var docked = layer.SetDockedCallout(placement, (float)ArenaFollow.FocusFromLeft * layer.Size.X, bounds);
+        var docked = layer.SetDockedCallout(placement, layer.Size.X / 2, bounds);
         PartCalloutShelf = UiCalloutLayout.DockedShare(docked, layer.Size.Y);
     }
 

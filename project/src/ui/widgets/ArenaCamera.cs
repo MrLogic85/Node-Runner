@@ -4,10 +4,10 @@ using NodeRunner.App.ViewModels;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The Training arena's camera (#668, #675): it frames the followed creature through
-/// <see cref="ArenaFraming"/>, which follows its centre sideways, zooms out to fit it and its
-/// speed, and keeps the ground at the same height on screen until the creature rises above the
-/// top margin; while a part callout shows, it keeps a <see cref="Shelf"/> for it (#1137). The
+/// The Training arena's camera (#668, #675, #1169): it frames the followed creature through
+/// <see cref="ArenaFraming"/>, which follows its centre of mass with the ground never above its
+/// line, zooms out to fit it and its speed, and leads it the way it moves; while a part
+/// callout shows, it keeps a <see cref="Shelf"/> for it (#1137). The
 /// framing does all the smoothing, so the camera's own is off: a gait's wobble never shakes the
 /// view and a change of target glides in and settles.
 /// </summary>
@@ -17,7 +17,7 @@ public partial class ArenaCamera : Camera2D
     private Func<FramedCreature>? _creature;
     private Vector2 _framedView;
 
-    /// <summary>The Y of the ground's top, in world coordinates; it stays at the same height on screen.</summary>
+    /// <summary>The Y of the ground's top, in world coordinates; the framing never shows it above its line on screen.</summary>
     public double GroundY { get; set; }
 
     /// <summary>
