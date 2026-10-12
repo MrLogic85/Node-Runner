@@ -100,9 +100,6 @@ public partial class ServoPart : PartVisual
     public static float HousingReachFor(float freeLength, float sensorLength = 0) =>
         Math.Clamp(((freeLength - sensorLength) / 2) - 2, _housingMinReach, _housingMaxReach);
 
-    /// <summary>Whether it draws its range band; a part without stops, like the Velocity motor, leaves it out (#454).</summary>
-    protected virtual bool DrawsRange => true;
-
     /// <summary>A Servo missing a link cannot train, so the whole part draws in danger (#1111).</summary>
     private bool Missing => !HasFixed || !HasTarget;
 
@@ -127,10 +124,7 @@ public partial class ServoPart : PartVisual
         pen.Disc(Vector2.Zero, Radius, Theme.ArenaBackground);
         pen.Disc(Vector2.Zero, Radius, Selected ? Theme.SelectionFill : Theme.JointFill);
         pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), Line, Theme.JointRingWidth, _ringSegments);
-        if (DrawsRange)
-        {
-            DrawRangeBand(pen, filled: true);
-        }
+        DrawRangeBand(pen, filled: true);
 
         if (HasTarget)
         {
@@ -148,7 +142,7 @@ public partial class ServoPart : PartVisual
 
         if (Missing)
         {
-            DrawDangerBadge(pen);
+            JointMotorDrawing.DrawDangerBadge(pen, Theme, Radius);
         }
     }
 
@@ -162,12 +156,6 @@ public partial class ServoPart : PartVisual
         pen.Ring(Vector2.Zero, Radius - (Theme.JointRingWidth / 2), Line, Theme.JointRingWidth, _ringSegments);
         if (Missing)
         {
-            return;
-        }
-
-        if (!DrawsRange)
-        {
-            pen.Line(Vector2.Zero, Vector2.FromAngle(TargetAngle) * _hornLong, Line, 3);
             return;
         }
 
@@ -305,13 +293,14 @@ public partial class ServoPart : PartVisual
 
     private void DrawSelection(UiPixelPen pen, bool showHousing)
     {
-        var width = Theme.SelectionRingWidth;
-        var haloRadius = Radius + 3;
         if (!showHousing)
         {
-            pen.Ring(Vector2.Zero, haloRadius, Theme.SelectionGlow, width, _ringSegments);
+            JointMotorDrawing.DrawHalo(pen, Theme, Radius);
             return;
         }
+
+        var width = Theme.SelectionRingWidth;
+        var haloRadius = (float)SelectionMarks.JointHalo(Radius);
 
         var offset = _housingHalfWidth + 3;
         var gap = MathF.Asin(offset / haloRadius);
@@ -325,18 +314,6 @@ public partial class ServoPart : PartVisual
         }
 
         pen.Line(new Vector2(x1, -offset - 1), new Vector2(x1, offset + 1), Theme.SelectionGlow, width);
-    }
-
-    // The badge keeps to the screen's upper right and stays upright however the Servo turns.
-    private void DrawDangerBadge(UiPixelPen pen)
-    {
-        var turn = pen.ToPixels.Rotation;
-        var up = Vector2.Up.Rotated(-turn);
-        var badge = Vector2.FromAngle((-Mathf.Pi / 4) - turn) * Radius;
-        pen.Disc(badge, 8, Theme.ArenaBackground);
-        pen.Disc(badge, 7, Theme.Danger);
-        pen.Line(badge + (up * 4.2f), badge - (up * 1.2f), Theme.ArenaBackground, 2);
-        pen.Disc(badge - (up * 3.6f), 1.2f, Theme.ArenaBackground);
     }
 
     /// <summary>

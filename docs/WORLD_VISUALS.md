@@ -79,10 +79,23 @@ Thumbnails draw it as in Build, badge included.
 
 ### Velocity motor
 
-For now (#454) it draws as a Servo without the range band, in every place a
-Servo draws: the housing, the ring and the horn along the Target side,
-turning with it in Training. Its final look comes later. It has no Training
-angle arc.
+A hub motor in section, standing in for the joint's ring (#454). Its parts
+are in `HubMotorGeometry`:
+
+- an opaque `panel` disc on a `background` disc, out to the joint motor's
+  radius, with an `accent` ring just inside it;
+- six magnets round the inside of the ring, alternating solid `accent` and
+  `accent` outlines on the `panel`;
+- six coils round the centre, each an `accent` stem with a curved cap;
+- an `accent` centre ring with an axle dot.
+
+The magnets turn with the Target side and the coils with the Fixed side,
+each along its link, or with the Wheel as a Wheel side. Nothing else moves,
+and it has no other live cue. Build draws it at rest. On a Wheel it stands
+in for the hub, and as Target its solid magnets sit on the tyre's tubes.
+
+A Velocity motor missing a link draws in `danger` with the Servo's "!"
+badge; a missing side points to the screen's right.
 
 ### Piston
 
@@ -196,6 +209,8 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
   link's band past the link, the inner edge through the see-through face
   (#1118). The ring is never hatched (owner's choice); its `detail` or
   `accent` colour alone tells Fixed from Target.
+- **Velocity motor:** a 2-wide `halo` ring round it, with the Servo's
+  Fixed and Target bands.
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
   ticks, as wide as a Piston's cylinder or a Spring's seats,
   joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
@@ -359,6 +374,8 @@ rule 10):
 - **Joint:** its outer ring only.
 - **Servo:** its ring, housing outline, one range arc and one horn line,
   plus the 360° line.
+- **Velocity motor:** its outer ring and a circle round the coils; no
+  magnets, and it does not turn.
 - **Wheel:** the plain circle at its Radius: no tubes or line, and its
   joint's outer ring at the hub, like any shadow joint.
 - **Beam:** its line.

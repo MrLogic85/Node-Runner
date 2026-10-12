@@ -49,7 +49,11 @@ public sealed class MotorSides
         }
     }
 
+    /// <summary>The Fixed side's direction as a Godot rotation, clockwise-positive.</summary>
     public double FixedRotation => -_fixed.Angle;
+
+    /// <summary>The Target side's direction as a Godot rotation: a Wheel's is its body's own.</summary>
+    public double TargetRotation => -_target.Angle;
 
     public double TargetRelativeRotation => -RelativeAngle;
 

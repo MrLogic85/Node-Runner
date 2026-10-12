@@ -50,12 +50,9 @@ public partial class Creature
                 Name = $"VelocityMotor{i}Visual",
                 Theme = Theme,
                 Sides = sides,
-                Radius = ToGodotFloat(JointMotor.Radius, nameof(JointMotor.Radius)),
-                BuiltAngle = (float)sides.BuiltRelativeRotation,
-                TargetAngle = (float)sides.BuiltRelativeRotation,
-                HousingReach = MotorHousingReach(definition, motor),
                 Position = sides.JointLocalPosition,
-                Rotation = (float)sides.FixedRotation,
+                FixedAngle = (float)sides.FixedRotation,
+                TargetAngle = (float)sides.TargetRotation,
             };
             AddChild(visual);
             _velocityMotorVisuals[i] = visual;

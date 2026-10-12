@@ -168,7 +168,6 @@ public partial class CreatureParts : Node2D
         }
     }
 
-    // A Velocity motor (#454) draws for now as a Servo without its range band (VelocityMotorPart).
     private void ShowVelocityMotors(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
     {
         var ids = shape.VelocityMotors.Select(motor => motor.Id).Concat(marks.PreviewNodeOf(BuildPart.VelocityMotor) is { } nodeId ? [-nodeId] : []);
@@ -176,14 +175,35 @@ public partial class CreatureParts : Node2D
         foreach (var motor in shape.VelocityMotors)
         {
             var part = PartFor(_velocityMotors, motor.Id);
-            ShowServoPart(part, shape, nodes, motor.NodeId, motor.FixedLinkId, motor.TargetLinkId, ServoDef.DefaultRange, ServoDef.DefaultStart, marks.Selected.VelocityMotors.Contains(motor.Id));
+            ShowVelocityMotorPart(part, shape, nodes, motor.NodeId, motor.FixedLinkId, motor.TargetLinkId, marks.Selected.VelocityMotors.Contains(motor.Id));
         }
 
         if (marks.PreviewNodeOf(BuildPart.VelocityMotor) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
-            ShowServoPart(PartFor(_velocityMotors, -previewNode), shape, nodes, node.Id, fixedId, targetId, ServoDef.DefaultRange, ServoDef.DefaultStart, selected: true);
+            ShowVelocityMotorPart(PartFor(_velocityMotors, -previewNode), shape, nodes, node.Id, fixedId, targetId, selected: true);
         }
+    }
+
+    // At rest each layer takes its side's built direction; a Wheel's is 0, so the solid magnets
+    // sit on its unturned cue tubes.
+    private static void ShowVelocityMotorPart(
+        VelocityMotorPart part,
+        CreatureShape shape,
+        Dictionary<int, NodeDef> nodes,
+        int nodeId,
+        int? fixedLinkId,
+        int? targetLinkId,
+        bool selected)
+    {
+        part.Position = ToGodot(nodes[nodeId].Position);
+        part.Selected = selected;
+        part.Visible = true;
+        part.Simplified = false;
+        part.HasFixed = TrySide(shape, nodes, nodeId, fixedLinkId, out _, out var fixedAngle);
+        part.HasTarget = TrySide(shape, nodes, nodeId, targetLinkId, out _, out var targetAngle);
+        part.FixedAngle = fixedAngle;
+        part.TargetAngle = targetAngle;
     }
 
     private static void ShowServoPart(

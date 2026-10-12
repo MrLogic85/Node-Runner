@@ -127,9 +127,9 @@ public partial class PartVisual : Node2D
     {
         foreach (var child in node.GetChildren())
         {
-            if (child is PartVisual part)
+            if (child is PartVisual or PartLayer)
             {
-                part.QueueRedraw();
+                ((CanvasItem)child).QueueRedraw();
             }
 
             RedrawParts(child);
