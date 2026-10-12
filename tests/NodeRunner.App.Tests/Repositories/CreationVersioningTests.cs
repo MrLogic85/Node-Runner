@@ -47,6 +47,7 @@ public sealed class CreationVersioningTests : IDisposable
         expected["creature"]!.AsObject()["touchSensors"] = new JsonArray();
         expected["creature"]!.AsObject()["rubbers"] = new JsonArray();
         expected["creature"]!.AsObject()["velocityMotors"] = new JsonArray();
+        expected["creature"]!.AsObject()["brakes"] = new JsonArray();
         foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
         {
             piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
@@ -452,6 +453,60 @@ public sealed class CreationVersioningTests : IDisposable
         creature.VelocityMotors.ShouldHaveSingleItem().MaxSpeed.ShouldBe(3);
     }
 
+    // #1039: a creature saved before Brakes has none.
+    [Fact]
+    public void AVersion11Save_GetsNoBrakes_AndIsWrittenBackInTheCurrentVersion()
+    {
+        var path = WriteCreation(Version11Walker().ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Brakes.ShouldBeEmpty();
+
+        var written = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
+        written["creature"]!["brakes"]!.AsArray().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AVersion11Save_WithoutACreature_IsSkipped()
+    {
+        var file = Version11Walker();
+        file.Remove("creature");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ASaveInTheCurrentVersion_WithoutBrakes_IsSkipped()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file["creature"]!.AsObject().Remove("brakes");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    // A Locked Brake's infinite Strength is saved as "Infinity" (docs/SAVE_FORMAT.md).
+    [Fact]
+    public void ABrake_LockedOrWithAWheelSide_SurvivesASaveAndALoad()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
+        var locked = builder.AddBrake(joints[0]);
+        builder.SetBrakeStrength(locked, BrakeDef.LockedStrength);
+        builder.Rename(locked, "Lock");
+        var wheel = builder.AddWheel(joints[1]);
+        builder.SetBrakeStrength(builder.AddBrake(joints[1], builder.LinksAt(joints[1])[0].Id, wheel), 700000);
+        var creature = builder.Build();
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        repository.Save(walker.WithCreature(creature, training: null));
+
+        repository.Get(walker.Id)!.Creature.Brakes.ShouldBe(creature.Brakes);
+        creature.Brakes.Select(brake => (brake.Name, brake.Locked)).ShouldBe([("Lock", true), (null, false)]);
+        File.ReadAllText(CreationPath(walker.Id)).ShouldContain("\"strength\": \"Infinity\"");
+    }
+
     [Fact]
     public void ARubber_SurvivesASaveAndALoad()
     {
@@ -690,6 +745,7 @@ public sealed class CreationVersioningTests : IDisposable
         file["creature"]!.AsObject()["touchSensors"] = new JsonArray();
         file["creature"]!.AsObject()["rubbers"] = new JsonArray();
         file["creature"]!.AsObject()["velocityMotors"] = new JsonArray();
+        file["creature"]!.AsObject()["brakes"] = new JsonArray();
     }
 
     private static CreationDef LoadFixture013(string name) =>
@@ -717,10 +773,19 @@ public sealed class CreationVersioningTests : IDisposable
         return JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(wheels, walker.Training)))!.AsObject();
     }
 
+    // The 0.13.0 walker as version 11 wrote it, before Brakes (#1039).
+    private static JsonObject Version11Walker()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file[_versionField] = 11;
+        file["creature"]!.AsObject().Remove("brakes");
+        return file;
+    }
+
     // The 0.13.0 walker as version 10 wrote it, before Velocity motors (#454).
     private static JsonObject Version10Walker()
     {
-        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        var file = Version11Walker();
         file[_versionField] = 10;
         file["creature"]!.AsObject().Remove("velocityMotors");
         return file;

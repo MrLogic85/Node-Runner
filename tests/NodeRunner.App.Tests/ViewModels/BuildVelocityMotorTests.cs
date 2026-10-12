@@ -176,5 +176,6 @@ public sealed class BuildVelocityMotorTests
         [],
         [],
         [new VelocityMotorDef(6, 2, fixedLinkId: 4, targetLinkId: 5)],
+        [],
         nextPartId: 7);
 }

@@ -103,7 +103,29 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
             [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.",
-                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, 6))]);
+                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, 6))]);
+    }
+
+    // A Brake takes its sides by the Servo's rules (#1039), so one with a deleted side cannot train either.
+    [Fact]
+    public void Problems_WithABrakeMissingASide_SaysItIsMissingALink()
+    {
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(120, 0)), new NodeDef(3, new Vector2D(0, 120))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [new BrakeDef(6, 1, 4, null)],
+            nextPartId: 7);
+
+        CreatureReadiness.Problems(creature).ShouldBe(
+            [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.", UiText.Format("Brake {0}", 1))]);
     }
 
     [Fact]
@@ -120,7 +142,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
             [UiText.Format("{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it.",
-                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, 6))]);
+                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, 6))]);
     }
 
     [Fact]

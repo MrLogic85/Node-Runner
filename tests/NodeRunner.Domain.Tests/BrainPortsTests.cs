@@ -146,6 +146,7 @@ public sealed class BrainPortsTests
             [],
             [],
             [new VelocityMotorDef(6, 1, 4, 5)],
+            [],
             nextPartId: 9);
 
         var layout = BrainPorts.Of(creature);

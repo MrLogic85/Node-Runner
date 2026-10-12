@@ -64,6 +64,7 @@ public sealed class ImportPresentationTests
             [new TouchSensorDef(13, 1)],
             [new RubberDef(14, 4)],
             [new VelocityMotorDef(15, 4, 7, 12)],
+            [],
             nextPartId: 16);
 
         var preview = ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "All", creature), null), []);

@@ -170,7 +170,8 @@ public sealed class BuildHistory
         && a.Wheels.SequenceEqual(b.Wheels)
         && a.TouchSensors.SequenceEqual(b.TouchSensors)
         && a.Rubbers.SequenceEqual(b.Rubbers)
-        && a.VelocityMotors.SequenceEqual(b.VelocityMotors);
+        && a.VelocityMotors.SequenceEqual(b.VelocityMotors)
+        && a.Brakes.SequenceEqual(b.Brakes);
 
     private void Record(CreatureDef before, PartSet? reselect)
     {

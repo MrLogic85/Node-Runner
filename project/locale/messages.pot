@@ -168,6 +168,10 @@ msgstr ""
 msgid "Brake"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Brake {0}"
+msgstr ""
+
 #: project/src/hosts/BuildHost.cs
 msgid "Build"
 msgstr ""

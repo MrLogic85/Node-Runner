@@ -403,6 +403,7 @@ public sealed class BuildCopyTests
         [],
         [],
         [new VelocityMotorDef(6, 2, fixedLinkId: 4, targetLinkId: 5, strength: 300000, maxSpeed: Math.PI, riseTime: 0.4)],
+        [],
         nextPartId: 7);
 
     private static HashSet<int> Ids(params int[] ids) => [.. ids];

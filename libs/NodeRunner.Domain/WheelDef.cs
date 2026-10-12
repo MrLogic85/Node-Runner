@@ -3,7 +3,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// A Wheel (#129): a passive joint part on one node, a disc that turns freely on it and rolls on the
 /// ground. It has no brain ports and draws no power; a Servo or Velocity motor on its joint can drive
-/// it (#1118, #454), a brake later (#1070). Its <see cref="Radius"/> sets how big it is drawn and collides, and what it weighs
+/// it (#1118, #454), and a Brake can hold it (#1039). Its <see cref="Radius"/> sets how big it is drawn and collides, and what it weighs
 /// (<c>NodeRunner.Mechanics.Wheel.Mass</c>). See docs/CREATURE_MODEL.md → "Wheel".
 /// </summary>
 public sealed record WheelDef

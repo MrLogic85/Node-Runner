@@ -777,6 +777,31 @@ public sealed class BuildPresentationViewModelTests
             [],
             [],
             [new VelocityMotorDef(7, 3, fixedLinkId: 5)],
+            [],
+            nextPartId: 8));
+
+        var readiness = new BuildPresentationViewModel(build).Readiness;
+
+        readiness.State.ShouldBe(BuildReadiness.Blocked);
+        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 2));
+    }
+
+    [Fact]
+    public void Readiness_CountsBrakesMissingALink_WithTheJointMotors()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
+            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
+            [],
+            [new ServoDef(6, 2, fixedLinkId: 4)],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [new BrakeDef(7, 3, targetLinkId: 5)],
             nextPartId: 8));
 
         var readiness = new BuildPresentationViewModel(build).Readiness;
