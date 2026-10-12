@@ -144,7 +144,7 @@ public partial class UiCallout : PanelContainer
 
     public override void _EnterTree() => RequestReady();
 
-    public UiCallout() => MouseFilter = MouseFilterEnum.Ignore;
+    public UiCallout() => UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
 
     public override void _Ready() => Refresh();
 

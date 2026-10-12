@@ -75,7 +75,7 @@ public partial class UiValueRow : HBoxContainer
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         Refresh();
     }
 

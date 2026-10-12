@@ -25,7 +25,7 @@ public partial class UiNumber : Control, ISerializationListener
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         InitializeContent();
     }
 

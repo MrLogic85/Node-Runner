@@ -339,7 +339,7 @@ public partial class UiSlider : Control, ISerializationListener
     public override void _Ready()
     {
         FocusMode = FocusModeEnum.None;
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         _style = UiSliderStyle.Default;
         InitializeContent();
     }

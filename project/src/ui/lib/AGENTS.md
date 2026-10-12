@@ -154,6 +154,9 @@ sets no colour override outside `UiIcons`' tint helper (#338).
 - **Drags scroll through buttons.** A Godot button made in code sets
   `MouseFilter = Pass`, so a drag that starts on it still scrolls its
   ScrollContainer (`UiNativeScroll`, `UiButtonScrollGuardTests`, #1001).
+- **A component's mouse filter is a default.** It sets its own with
+  `UiMouseFilter.Prefer`, never `MouseFilter =`, so a scene's
+  `mouse_filter` holds (#1164; the limits are on `UiMouseFilter`).
 
 ## UI levels
 

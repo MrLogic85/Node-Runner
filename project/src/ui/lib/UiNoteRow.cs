@@ -29,7 +29,7 @@ public partial class UiNoteRow : VBoxContainer
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         AddChild(_label);
         Refresh();
     }

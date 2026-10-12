@@ -41,7 +41,7 @@ public sealed partial class UiNotification : Control
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         ClipContents = true;
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         GetViewport().SizeChanged += FitViewport;

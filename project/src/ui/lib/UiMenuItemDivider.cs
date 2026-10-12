@@ -14,7 +14,7 @@ public partial class UiMenuItemDivider : UiMenuItem
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         RefreshItem();
     }
 
@@ -34,7 +34,7 @@ public partial class UiMenuItemDivider : UiMenuItem
 
     protected override void RefreshItem()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         QueueRedraw();
         RefreshLayout();
     }

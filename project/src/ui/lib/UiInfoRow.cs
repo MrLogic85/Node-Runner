@@ -22,7 +22,7 @@ public partial class UiInfoRow : HBoxContainer
     private UiLabel? _titleLabel;
     private UiLabel? _helpLabel;
 
-    public UiInfoRow() => MouseFilter = MouseFilterEnum.Pass;
+    public UiInfoRow() => UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
 
     [Export]
     public UiIconId IconId

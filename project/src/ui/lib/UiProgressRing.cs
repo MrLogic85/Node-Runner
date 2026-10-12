@@ -30,7 +30,7 @@ public partial class UiProgressRing : Control, ISerializationListener
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         InitializeContent();
     }
 

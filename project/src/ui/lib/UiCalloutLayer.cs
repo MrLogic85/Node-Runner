@@ -18,7 +18,7 @@ public partial class UiCalloutLayer : Control
 
     public UiCalloutLayer()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         AutoTranslateMode = AutoTranslateModeEnum.Disabled;
     }
 

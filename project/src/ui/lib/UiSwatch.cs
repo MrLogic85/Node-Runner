@@ -12,7 +12,7 @@ public partial class UiSwatch : Control
 {
     private UiTokens.Color _token = UiTokens.Color.Accent;
 
-    public UiSwatch() => MouseFilter = MouseFilterEnum.Ignore;
+    public UiSwatch() => UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
 
     [Export]
     public UiTokens.Color Token

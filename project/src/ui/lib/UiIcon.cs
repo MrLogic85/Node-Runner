@@ -16,7 +16,7 @@ public partial class UiIcon : Control
 
     public UiIcon()
     {
-        MouseFilter = MouseFilterEnum.Ignore;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Ignore);
         TextureFilter = UiIcons.IconFilter;
     }
 

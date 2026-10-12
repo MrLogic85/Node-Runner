@@ -179,7 +179,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         InitializeContent();
     }
 

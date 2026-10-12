@@ -27,7 +27,7 @@ public partial class UiFrame : PanelContainer
 
     public override void _Ready()
     {
-        MouseFilter = MouseFilterEnum.Pass;
+        UiMouseFilter.Prefer(this, MouseFilterEnum.Pass);
         _background = GetNode<ColorRect>("%Background");
         _margin = GetNode<MarginContainer>("MarginContainer");
         _baseLeft = _margin.GetThemeConstant("margin_left");
