@@ -36,7 +36,7 @@ Training orchestration: trials, slots and generations.
   raises `GenerationCompleted`, `TrainingProgressChanged`,
   `FollowedShadowChanged` and `FollowedTrialStarted`.
 - `ArenaGround.cs` — the arena's ground from the map's `MapGround`: the
-  layer-1 collider, fill and edge. Ground is flat
+  layer-1 collider and fill; `ArenaRuler` draws the edge. Ground is flat
   (`WorldBoundaryShape2D`); #91 adds shaped ground.
 
 ## Tests
