@@ -455,9 +455,12 @@ fold.
     Build; the output is the brain's choice of how much of it to use.
   - **New ports start almost passive:** when a part joins a trained brain,
     its incoming weights are 0 and a new strength output starts at bias −4,
-    about 2% force. Sigmoid has no dead zone, so mutation can still raise
-    it. Position, velocity and length outputs start at bias 0: a length
-    output then asks for the middle of its travel.
+    about 2% force. Position, velocity and length outputs start at bias 0:
+    a length output then asks for the middle of its travel. The saved brain
+    keeps this start so the trained gait never breaks; training redraws the
+    new port's genes in every child instead of mutating them, until one
+    beats the elite (#1180, `docs/TRAINING_LOOP.md` → "New ports are
+    explored").
   - **A rebuild keeps the brain (#516):** saving a Build edit to a trained
     creature refits its brain to the new ports (`DirectBrain.Refit`). Ports
     match by part id, channel and direction: a kept port keeps its weights

@@ -29,6 +29,21 @@ public sealed class GeneticAlgorithmTests
         ga.FromElites([[]], 3, new Random(2)).ShouldAllBe(genome => genome.Length == 0);
     }
 
+    [Theory]
+    [InlineData(new[] { 0.1, 0.3, 0.2 }, 2)]
+    [InlineData(new[] { double.NaN, 0.3, double.NegativeInfinity }, 1)]
+    [InlineData(new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity }, 0)]
+    public void EliteCount_IsTheElitesNextGenerationCarriesOver(double[] fitness, int expected)
+    {
+        var ga = new GeneticAlgorithm(2, 0, 0, elitismCount: 2);
+        double[][] genomes = [[1], [2], [3]];
+
+        ga.EliteCount(fitness).ShouldBe(expected);
+        var next = ga.NextGeneration(genomes, fitness, new Random(1));
+        var validByFitness = Enumerable.Range(0, 3).Where(i => double.IsFinite(fitness[i])).OrderByDescending(i => fitness[i]);
+        next.Take(expected).ShouldBe(validByFitness.Take(expected).Select(i => genomes[i]));
+    }
+
     [Fact]
     public void NextGeneration_RejectsEmptyPopulation()
     {
