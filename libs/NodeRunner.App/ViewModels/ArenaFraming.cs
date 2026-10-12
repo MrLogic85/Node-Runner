@@ -4,43 +4,49 @@ namespace NodeRunner.App.ViewModels;
 /// What the Training camera frames each frame: the followed creature's centre and the box around
 /// its parts, in world units (Y grows downward).
 /// </summary>
-/// <param name="CentreX">The centre point the camera follows sideways.</param>
+/// <param name="CentreX">The centre point the camera follows sideways: the centre of mass.</param>
+/// <param name="CentreY">The centre point the camera follows up and down: the centre of mass.</param>
 /// <param name="Left">The left edge of the creature's box.</param>
 /// <param name="Top">The top of the creature's box, its smallest Y.</param>
 /// <param name="Right">The right edge of the creature's box.</param>
 /// <param name="Bottom">The bottom of the creature's box, its largest Y.</param>
-public readonly record struct FramedCreature(double CentreX, double Left, double Top, double Right, double Bottom)
+public readonly record struct FramedCreature(double CentreX, double CentreY, double Left, double Top, double Right, double Bottom)
 {
     /// <summary>True when every value is finite and the box is not inside out; a physics blow-up is not.</summary>
     public bool IsUsable =>
-        double.IsFinite(CentreX) && double.IsFinite(Left) && double.IsFinite(Top)
+        double.IsFinite(CentreX) && double.IsFinite(CentreY) && double.IsFinite(Left) && double.IsFinite(Top)
         && double.IsFinite(Right) && double.IsFinite(Bottom) && Left <= Right && Top <= Bottom;
 }
 
 /// <summary>
-/// The Training camera's framing (#675): where it looks and how far it zooms out. Sideways it
-/// follows the creature's centre through <see cref="ArenaFollow"/>. It zooms out so the creature
-/// fits, and further the faster it moves; it zooms out quickly and back in only after the creature
-/// has stayed smaller for a while, and then slowly, so a stretching gait does not make it pump.
-/// The ground rests at <see cref="GroundFromTop"/> of the view at any zoom, so the view does not
-/// bob. The zoom leaves <see cref="Headroom"/> above the creature, and only when its top rises past
-/// that into <see cref="TopMargin"/> does the camera ease up after it. While a part callout shows,
-/// the framing keeps a <see cref="Shelf"/> for it at the top (#1137): it lowers the ground toward
-/// <see cref="ShelfGroundFromTop"/> first and zooms out only for the rest. All sizes are in world
-/// units; the view's size is the size it shows at zoom 1. See <c>docs/TRAINING_LOOP.md</c> → Camera.
+/// The Training camera's framing (#675, #1169): where it looks and how far it zooms out. It
+/// follows the creature's centre of mass on both axes through one <see cref="ArenaFollow"/> each,
+/// keeping it in the middle of the view, except that the ground line never rises above
+/// <see cref="GroundFromTop"/>, so a creature on the ground sits low and a hopping gait does not
+/// bob the view. It zooms out so the creature fits, and further the faster it moves on either
+/// axis; it zooms out quickly and back in only after the creature has stayed smaller for a while,
+/// and then slowly, so a stretching gait does not make it pump. The room speed adds goes in front:
+/// the view slides back by half of it, so the room behind stays as at rest. While a part callout
+/// shows, the framing keeps a <see cref="Shelf"/> for it at the top (#1137): it lowers the ground
+/// toward <see cref="ShelfGroundFromTop"/> first and zooms out only for the rest. All sizes are in
+/// world units; the view's size is the size it shows at zoom 1. See
+/// <c>docs/TRAINING_LOOP.md</c> → Camera.
 /// </summary>
 public sealed class ArenaFraming
 {
-    /// <summary>Where the ground line rests across the view's height, measured from the top, unless a <see cref="Shelf"/> lowers it.</summary>
+    /// <summary>
+    /// The highest the ground line goes across the view's height, measured from the top, unless a
+    /// <see cref="Shelf"/> lowers it: where it rests under a creature on the ground.
+    /// </summary>
     public const double GroundFromTop = 0.8;
 
-    /// <summary>The share of the view's height kept clear above the creature.</summary>
+    /// <summary>
+    /// The share of the view's height kept clear above a creature, and below it while the camera
+    /// centres it in the air.
+    /// </summary>
     public const double TopMargin = 0.1;
 
-    /// <summary>
-    /// The share of the view's height the zoom leaves above a standing creature, below the top
-    /// margin, for it to rise into before the camera follows it up.
-    /// </summary>
+    /// <summary>The share of the view's height the zoom leaves above a standing creature, below the top margin.</summary>
     public const double Headroom = 0.05;
 
     /// <summary>The share of the view's width kept clear on either side of the creature.</summary>
@@ -67,9 +73,6 @@ public sealed class ArenaFraming
     /// <summary>How long the creature must need less room before the zoom narrows, in seconds.</summary>
     public const double ZoomInDelaySeconds = 1.5;
 
-    /// <summary>How quickly the camera's height eases after the creature, per second.</summary>
-    public const double RiseRate = ArenaFollow.EaseRate;
-
     /// <summary>The lowest the ground goes, measured from the top, to make room for a <see cref="Shelf"/>.</summary>
     public const double ShelfGroundFromTop = 0.95;
 
@@ -81,13 +84,15 @@ public sealed class ArenaFraming
 
     private const double _viewCentre = 0.5;
 
-    private readonly ArenaFollow _follow = new();
+    private readonly ArenaFollow _followX = new();
+    private readonly ArenaFollow _followY = new();
     private HeldEase _logZoom = new(0, roomIsUp: false);
+    private HeldEase _restLogZoom = new(0, roomIsUp: false);
     private HeldEase _groundFromTop = new(GroundFromTop, roomIsUp: true);
     private HeldEase _shelfLogZoom = new(0, roomIsUp: false);
     private (FramedCreature Creature, double GroundY, double ViewWidth, double ViewHeight)? _cutNotStepped;
     private double _shelf;
-    private double _groundLineY;
+    private double _groundY;
 
     /// <summary>False until the first <see cref="Step"/> or <see cref="Cut"/> with a usable creature.</summary>
     public bool HasFrame { get; private set; }
@@ -121,9 +126,6 @@ public sealed class ArenaFraming
     /// <summary>The camera's zoom: at 1 a world unit spans one view pixel; smaller shows more.</summary>
     public double Zoom => Math.Exp(Math.Min(_logZoom.Value, _shelfLogZoom.Value));
 
-    /// <summary>The world Y shown at the ground line: the ground's, unless the camera has risen after the creature.</summary>
-    public double GroundLineY => _groundLineY;
-
     /// <summary>The camera's centre X, in world units.</summary>
     public double CameraX { get; private set; }
 
@@ -131,24 +133,30 @@ public sealed class ArenaFraming
     public double CameraY { get; private set; }
 
     /// <summary>
-    /// The zoom that fits <paramref name="creature"/> moving at <paramref name="speedX"/> into a
-    /// view <paramref name="viewWidth"/> by <paramref name="viewHeight"/>, with its centre at
-    /// <see cref="ArenaFollow.FocusFromLeft"/> and its margins clear.
+    /// The zoom that fits <paramref name="creature"/> moving at <paramref name="speedX"/> and
+    /// <paramref name="speedY"/> into a view <paramref name="viewWidth"/> by
+    /// <paramref name="viewHeight"/>. At rest the creature fits with its centre in the middle and
+    /// its sides clear of <see cref="SideMargin"/>; standing on the ground at
+    /// <see cref="GroundFromTop"/> below <see cref="TopMargin"/> and <see cref="Headroom"/>; and
+    /// centred in the air clear of <see cref="TopMargin"/> above and below. Speed adds one
+    /// <see cref="SpeedLookaheadSeconds"/> of travel along each axis.
     /// </summary>
-    public static double ZoomToFit(FramedCreature creature, double speedX, double viewWidth, double viewHeight)
+    public static double ZoomToFit(FramedCreature creature, double speedX, double speedY, double viewWidth, double viewHeight)
     {
-        var left = Math.Max(0, creature.CentreX - creature.Left) / (ArenaFollow.FocusFromLeft - SideMargin);
-        var right = Math.Max(0, creature.Right - creature.CentreX) / (1 - ArenaFollow.FocusFromLeft - SideMargin);
-        var tall = (creature.Bottom - creature.Top) / (GroundFromTop - TopMargin - Headroom);
-        var fit = Math.Min(MaxZoom, Math.Min(viewWidth / Math.Max(left, right), viewHeight / tall));
+        var wide = Math.Max(creature.CentreX - creature.Left, creature.Right - creature.CentreX) / (_viewCentre - SideMargin);
+        var standing = (creature.Bottom - creature.Top) / (GroundFromTop - TopMargin - Headroom);
+        var centred = Math.Max(creature.CentreY - creature.Top, creature.Bottom - creature.CentreY) / (_viewCentre - TopMargin);
+        var fit = Math.Min(MaxZoom, Math.Min(viewWidth / Math.Max(0, wide), viewHeight / Math.Max(0, Math.Max(standing, centred))));
         var shownWidth = (viewWidth / fit) + (Math.Abs(speedX) * SpeedLookaheadSeconds);
-        return Math.Min(MaxZoom, Math.Max(viewWidth / shownWidth, viewWidth / MaxShownWidth));
+        var shownHeight = (viewHeight / fit) + (Math.Abs(speedY) * SpeedLookaheadSeconds);
+        var zoom = Math.Min(viewWidth / shownWidth, viewHeight / shownHeight);
+        return Math.Min(MaxZoom, Math.Max(zoom, viewWidth / MaxShownWidth));
     }
 
     /// <summary>
     /// How the view makes room for a <paramref name="shelf"/> above <paramref name="creature"/>
-    /// shown at <paramref name="zoom"/> in a view <paramref name="viewHeight"/> tall: where the
-    /// ground line goes, from the top, between <see cref="GroundFromTop"/> and
+    /// shown at <paramref name="zoom"/> in a view <paramref name="viewHeight"/> tall: the highest
+    /// the ground line goes, from the top, between <see cref="GroundFromTop"/> and
     /// <see cref="ShelfGroundFromTop"/>, and the zoom the view needs at most once the ground is as
     /// low as it goes, never smaller than keeps the creature <see cref="CreatureFloor"/> tall.
     /// A shelf the view already has room for keeps the ground where it is and asks no zoom.
@@ -178,12 +186,15 @@ public sealed class ArenaFraming
             return;
         }
 
-        _follow.SnapTo(creature.CentreX);
-        _logZoom = new HeldEase(Math.Log(ZoomToFit(creature, 0, viewWidth, viewHeight)), roomIsUp: false);
-        var (ground, zoom) = FitShelf(creature, Math.Exp(_logZoom.Value), viewHeight, Shelf);
+        _followX.SnapTo(creature.CentreX);
+        _followY.SnapTo(creature.CentreY);
+        var rest = Math.Log(ZoomToFit(creature, 0, 0, viewWidth, viewHeight));
+        _logZoom = new HeldEase(rest, roomIsUp: false);
+        _restLogZoom = new HeldEase(rest, roomIsUp: false);
+        var (ground, zoom) = FitShelf(creature, Math.Exp(rest), viewHeight, Shelf);
         _groundFromTop = new HeldEase(ground, roomIsUp: true);
         _shelfLogZoom = new HeldEase(Math.Log(zoom), roomIsUp: false);
-        _groundLineY = GroundLineTarget(creature, groundY, viewHeight);
+        _groundY = groundY;
         _cutNotStepped = (creature, groundY, viewWidth, viewHeight);
         HasFrame = true;
         Place(viewWidth, viewHeight);
@@ -197,7 +208,8 @@ public sealed class ArenaFraming
     {
         if (creature.IsUsable)
         {
-            _follow.Retarget(creature.CentreX);
+            _followX.Retarget(creature.CentreX);
+            _followY.Retarget(creature.CentreY);
         }
     }
 
@@ -220,11 +232,12 @@ public sealed class ArenaFraming
         }
 
         _cutNotStepped = null;
-        _follow.Step(creature.CentreX, deltaSeconds);
-        _logZoom.Step(Math.Log(ZoomToFit(creature, _follow.SpeedX, viewWidth, viewHeight)), deltaSeconds);
+        _groundY = groundY;
+        _followX.Step(creature.CentreX, deltaSeconds);
+        _followY.Step(creature.CentreY, deltaSeconds);
+        _logZoom.Step(Math.Log(ZoomToFit(creature, _followX.Speed, _followY.Speed, viewWidth, viewHeight)), deltaSeconds);
+        _restLogZoom.Step(Math.Log(ZoomToFit(creature, 0, 0, viewWidth, viewHeight)), deltaSeconds);
         StepShelfRoom(creature, viewHeight, deltaSeconds);
-        var groundLine = GroundLineTarget(creature, groundY, viewHeight);
-        _groundLineY += (groundLine - _groundLineY) * Ease(RiseRate, deltaSeconds);
         Place(viewWidth, viewHeight);
     }
 
@@ -252,6 +265,11 @@ public sealed class ArenaFraming
     /// <summary>The share of the way to its goal an eased value covers in <paramref name="deltaSeconds"/> at <paramref name="rate"/> per second.</summary>
     internal static double Ease(double rate, double deltaSeconds) => 1 - Math.Exp(-rate * deltaSeconds);
 
+    // How far the view slides ahead of a creature moving at speed, given the room the view shows
+    // beyond what it needs at rest: half of the room speed added, so the room behind stays as at rest.
+    private static double Lead(double speed, double extraRoom) =>
+        Math.Sign(speed) * Math.Min(Math.Abs(speed) * SpeedLookaheadSeconds, Math.Max(0, extraRoom)) / 2;
+
     // Measured against the zoom the creature alone needs, so the shelf's own zoom never feeds back.
     private void StepShelfRoom(FramedCreature creature, double viewHeight, double deltaSeconds)
     {
@@ -260,15 +278,16 @@ public sealed class ArenaFraming
         _shelfLogZoom.Step(Math.Log(zoom), deltaSeconds);
     }
 
-    // The ground, unless the creature's top is above the top margin: then the line that puts the
-    // top right on the margin.
-    private double GroundLineTarget(FramedCreature creature, double groundY, double viewHeight) =>
-        Math.Min(groundY, creature.Top + ((_groundFromTop.Value - TopMargin) * viewHeight / Zoom));
-
+    // Centred on the eased centre plus its lead, but never so high that the ground line rises above
+    // its place: that holds a creature on the ground still and stops the lead into a fall at the ground.
     private void Place(double viewWidth, double viewHeight)
     {
-        CameraX = ArenaFollow.CameraX(_follow.ShownX, viewWidth / Zoom);
-        CameraY = _groundLineY + ((_viewCentre - _groundFromTop.Value) * viewHeight / Zoom);
+        var shownWidth = viewWidth / Zoom;
+        var shownHeight = viewHeight / Zoom;
+        var restZoom = Math.Exp(_restLogZoom.Value);
+        CameraX = _followX.Shown + Lead(_followX.Speed, shownWidth - (viewWidth / restZoom));
+        var centredY = _followY.Shown + Lead(_followY.Speed, shownHeight - (viewHeight / restZoom));
+        CameraY = Math.Min(centredY, _groundY - ((_groundFromTop.Value - _viewCentre) * shownHeight));
     }
 
     /// <summary>

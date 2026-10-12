@@ -197,26 +197,33 @@ the reference's "a training session has finished" (#369).
     save or count. The header reads "Simulating" with no generation
     caption, the Distance card reads the run's front distance, and the best
     marker stays at the saved best on this map.
-  - **Camera (#668, #675).** `ArenaCamera` frames the followed shadow
-    through `ArenaFraming`, from its centre (where its score is measured)
-    and its box. It moves on physics ticks, as the creatures do, so on a
+  - **Camera (#668, #675, #1169).** `ArenaCamera` frames the followed
+    shadow through `ArenaFraming`, from its centre of mass and its box. It moves on physics ticks, as the creatures do, so on a
     120 Hz screen the world never judders against it (#909). The other
     shadows may leave the view.
-    - *Sideways* (`ArenaFollow`) it keeps the centre 43% from the left,
-      eased in two stages so a gait's wobble never shakes the view and a
-      switch to another shadow glides in. The aim leads a moving shadow by
-      its eased speed, so a fast creature stays at 43%.
-    - *Zoom* fits the shadow's box inside side margins and below a top
-      margin with headroom, widened by one second of travel. Zoom 1, the
-      closest, shows one world unit per view pixel. There is no farthest
-      zoom for play (#884); only a physics blow-up is stopped, at a view
-      500 m wide. It widens quickly and narrows only after the shadow has
-      needed less room for 1.5 s, then slowly, so a stretching gait does
-      not make it pump.
-    - *Height:* the ground rests 80% down the view at any zoom, unless
-      the callout shelf lowers it. A shadow rising into its headroom does
-      not move the camera; past the top margin the camera eases up after
-      it, and back down when it lands.
+    - *Centre (#1169):* it keeps the shadow's centre of mass in the
+      middle of the view on both axes, through one `ArenaFollow` per
+      axis, eased in two stages so a gait's wobble never shakes the view
+      and a switch to another shadow glides in. The aim leads a moving
+      shadow by its eased speed, so the eased centre stays in the middle.
+    - *Ground:* the ground line never rises above 80% down the view,
+      unless the callout shelf lowers that limit. A shadow on the ground
+      therefore sits low, with the ground at 80%, and a hopping gait does
+      not bob the view; the camera follows a shadow up only once
+      centring it would put the ground below that line.
+    - *Zoom* fits the shadow's box inside side margins, standing on the
+      ground below a top margin with headroom, and centred in the air
+      clear of the top margin above and below. Speed on either axis
+      widens it by one second of travel. Zoom 1, the closest, shows one
+      world unit per view pixel. There is no farthest zoom for play
+      (#884); only a physics blow-up is stopped, at a view 500 m wide.
+      It widens quickly and narrows only after the shadow has needed less
+      room for 1.5 s, then slowly, so a stretching gait does not make it
+      pump.
+    - *Lead:* the room speed adds goes in front. The view slides ahead by
+      half the room it shows beyond the rest view, up to half a second of
+      travel, so the room behind the shadow stays as at rest. Leading
+      into a fall stops at the ground limit.
     - *Callout shelf (#1137):* while a part callout shows, the camera
       keeps a shelf at the top as tall as the callout, its leader and
       `S1` margins (`docs/WORLD_VISUALS.md` → Part callout). It lowers
