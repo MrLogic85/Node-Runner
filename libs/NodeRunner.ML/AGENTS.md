@@ -27,7 +27,8 @@ Domain only) are in `docs/ARCHITECTURE.md` and enforced by
 ## Scope
 
 - `NeuralNetwork`, `Activation` — the feedforward network
-- `Brains/` — `DirectBrain` (brain graph ↔ network), `GenerationZero`
+- `Brains/` — `DirectBrain` (brain graph ↔ network), `GenerationZero`,
+  `NewPortExploration`
 - `Ga/` — `GeneticAlgorithm`, `CrossoverStrategy`,
   `ParallelEvaluationSchedule`, `TrialMeasurement`
 - `Gaussian` — maths the BCL lacks
@@ -47,3 +48,6 @@ Backpropagation is #955.
 - Round-trips: `FromGenome(LayerSizes, FlattenGenome(), activation)` and
   `DirectBrain.Compile(ToBrainDef(...))` whatever the saved order
 - `Clone` gives an independent network
+- `NewPortExploration`: only new ports' genes are redrawn, with generation
+  0's spread; elites, trained parts and disabled genes are untouched; the
+  same seed gives the same generation

@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.Domain;
 using NodeRunner.ML;
 using NodeRunner.ML.Brains;
 using NodeRunner.ML.Ga;
@@ -22,6 +23,8 @@ public partial class Evolver : Node
     private int[] _layerSizes = [];
     private Activation[] _outputActivations = [];
     private int[] _disabledGenes = [];
+    private BrainPortLayout _ports = BrainPortLayout.Empty;
+    private IReadOnlyDictionary<int, double>? _drawnPositions;
     private double[][] _genomes = [];
     private double[] _fitness = [];
     private TrialResult[] _results = [];
@@ -225,6 +228,8 @@ public partial class Evolver : Node
         _ga = ga;
         _rng = rng;
         _disabledGenes = disabledGenes?.ToArray() ?? [];
+        _ports = creature.Ports;
+        _drawnPositions = creature.Definition is { } definition ? Mechanics.Piston.DrawnPositions(definition) : null;
         Generation = resumeGeneration;
         BestFitness = resumeGenome is null ? double.NegativeInfinity : resumeBestFitness;
         BestGeneration = resumeGenome is null ? 0 : resumeBestGeneration;
@@ -234,8 +239,8 @@ public partial class Evolver : Node
         LatestRun = null;
 
         _genomes = resumeGenome is null
-            ? GenerationZero.Population(creature.Ports, populationSize, rng, creature.Definition is { } definition ? Mechanics.Piston.DrawnPositions(definition) : null)
-            : ga.FromElites([resumeGenome], populationSize, rng);
+            ? GenerationZero.Population(creature.Ports, populationSize, rng, _drawnPositions)
+            : NewPortExploration.Explore(ga.FromElites([resumeGenome], populationSize, rng), 1, _ports, _disabledGenes, rng, _drawnPositions);
         _opensWithPreviousBest = resumeGenome is not null;
 
         SilenceDisabledGenes();
@@ -394,8 +399,9 @@ public partial class Evolver : Node
         var validFitness = _fitness.Where(double.IsFinite).ToArray();
         MeanFitness = validFitness.Length > 0 ? validFitness.Average() : 0;
 
-        _opensWithPreviousBest = _ga!.ElitismCount > 0 && _fitness.Any(double.IsFinite);
-        _genomes = _ga.NextGeneration(_genomes, _fitness, _rng!);
+        var eliteCount = _ga!.EliteCount(_fitness);
+        _opensWithPreviousBest = eliteCount > 0;
+        _genomes = NewPortExploration.Explore(_ga.NextGeneration(_genomes, _fitness, _rng!), eliteCount, _ports, _disabledGenes, _rng!, _drawnPositions);
         SilenceDisabledGenes();
         _fitness = new double[_genomes.Length];
         _results = new TrialResult[_genomes.Length];

@@ -8,8 +8,9 @@ namespace NodeRunner.ML.Brains;
 /// drawn length (#870, #1129), like a robot that starts stiff in its default pose
 /// and learns offsets from it. Generation 0 never changes it. The last shadow runs it unchanged, as a
 /// reference near 0; every other shadow is a wide random perturbation of it. Parts added to a
-/// trained brain later start almost passive instead (<see cref="DirectBrain"/>, #535). See
-/// docs/TRAINING_LOOP.md.
+/// trained brain later start almost passive instead (<see cref="DirectBrain"/>, #535), and every
+/// child of a trained elite redraws them as generation 0 would (<see cref="NewPortExploration"/>,
+/// #1180). See docs/TRAINING_LOOP.md.
 /// </summary>
 public static class GenerationZero
 {
@@ -91,14 +92,23 @@ public static class GenerationZero
     private static double[] Perturb(double[] baseGenome, BrainPortLayout ports, Random random)
     {
         var genome = baseGenome.ToArray();
-        var biasStart = ports.Inputs.Count * ports.Outputs.Count;
         for (var i = 0; i < genome.Length; i++)
         {
-            var output = ports.Outputs[i < biasStart ? i / ports.Inputs.Count : i - biasStart];
-            var scale = output.Signal == PortSignal.Length ? _lengthScale : 1;
-            genome[i] += Gaussian.Next(random) * scale * (i < biasStart ? WeightSpread : BiasSpread);
+            genome[i] += Noise(i, ports, random);
         }
 
         return genome;
+    }
+
+    /// <summary>
+    /// The noise generation 0 adds to gene <paramref name="gene"/>: <see cref="WeightSpread"/> on a
+    /// weight, <see cref="BiasSpread"/> on a bias, twice that into a length output (#1129).
+    /// </summary>
+    internal static double Noise(int gene, BrainPortLayout ports, Random random)
+    {
+        var biasStart = ports.Inputs.Count * ports.Outputs.Count;
+        var output = ports.Outputs[gene < biasStart ? gene / ports.Inputs.Count : gene - biasStart];
+        var scale = output.Signal == PortSignal.Length ? _lengthScale : 1;
+        return Gaussian.Next(random) * scale * (gene < biasStart ? WeightSpread : BiasSpread);
     }
 }

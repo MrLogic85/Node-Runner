@@ -34,7 +34,9 @@ sensor off are #960.
   recombining them, mutating a bit, repeating.
 - **Where:** `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`. Training resumes
   from the saved brain (#538), and Shadows sets the population size per
-  Creation (#528).
+  Creation (#528). A part added to a trained brain is explored hard: every
+  child redraws its genes as generation 0 would, while the elite keeps the
+  trained gait (`Brains/NewPortExploration.cs`, #1180).
 - **How we show it:** Every candidate races at once as a shadow behind the
   followed creature, the best marker moves forward, and mutations produce
   weird outliers.

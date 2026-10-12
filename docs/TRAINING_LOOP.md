@@ -186,6 +186,27 @@ the reference's "a training session has finished" (#369).
   - A full-strength base learned far faster than a near-passive one, and
     σ 1.5 saturates the outputs into visible, decisive motion (#785).
     Backprop needs a different start (#955).
+- **New ports are explored (#1180).** A part or sensor added to a trained
+  brain starts almost passive (`docs/CREATURE_MODEL.md` → "New ports start
+  almost passive"), so mutation alone would take hundreds of generations to
+  find a use for it. Instead, in every generation that opens with an elite,
+  `NewPortExploration` redraws the new ports' genes in every child as
+  generation 0 draws them: the base brain's values plus its noise. The
+  elite, shadow 1, stays unchanged and keeps the trained gait. A
+  generation with no elite (every trial invalid) explores nothing.
+  - Which ports are new is read from the best elite's values, so nothing is
+    saved and exploration survives closing the app. A powered part is new
+    while its strength bias is exactly −4; all its outputs' weights and
+    biases are redrawn. An input is new while every weight out of it is
+    exactly 0; its weights into every output are redrawn. A disabled
+    connection is never redrawn.
+  - Once an explored child becomes the best, it is the elite and its ports
+    no longer read as new, so they mutate as usual. When generation 0's
+    unchanged base wins, every weight is 0, so every input reads as new
+    until something beats it.
+  - Accepted cost: while no explored child beats the elite, every child's
+    new-port genes are noise. For a new sensor that noise reaches the
+    trained outputs too, so the gait may stall until a draw wins.
 
 ## The Training scene
 
@@ -306,7 +327,8 @@ the reference's "a training session has finished" (#369).
     saved `TrainingStateDef`: the generation count goes on, and the saved
     brain (the latest generation's best) is the elite: it runs unchanged as
     shadow 1 and its mutated children fill the other shadows
-    (`GeneticAlgorithm.FromElites`). A disabled connection stays at 0
+    (`GeneticAlgorithm.FromElites`), with any new ports explored (#1180,
+    "New ports are explored" above). A disabled connection stays at 0
     through mutation and crossover. The best ever starts from the saved
     best, so a worse generation never lowers it.
   - **Save.** Each finished generation is saved on the thread pool, so the

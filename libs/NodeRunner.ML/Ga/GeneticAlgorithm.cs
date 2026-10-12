@@ -62,6 +62,16 @@ public sealed class GeneticAlgorithm
     public int ElitismCount => _elitismCount;
 
     /// <summary>
+    /// How many elites <see cref="NextGeneration"/> carries over for <paramref name="fitness"/>: at
+    /// most <see cref="ElitismCount"/>, and only valid trials, so 0 when every trial is invalid.
+    /// </summary>
+    public int EliteCount(double[] fitness)
+    {
+        ArgumentNullException.ThrowIfNull(fitness);
+        return RankValidByFitnessDescending(fitness).Take(_elitismCount).Count();
+    }
+
+    /// <summary>
     /// Produces the next generation of genomes from the current generation's
     /// fitness scores: the fittest <c>elitismCount</c> genomes carry over
     /// unchanged, and the rest are filled by tournament-selecting two
@@ -130,7 +140,9 @@ public sealed class GeneticAlgorithm
     /// The generation that follows saved <paramref name="elites"/> (warm start, #538): the elites
     /// open it unchanged, as <see cref="NextGeneration"/> would carry them over, and the rest are
     /// children of two elites picked at random, crossed and mutated. The elites are the only
-    /// parents, so a resumed run continues from them rather than starting over.
+    /// parents, so a resumed run continues from them rather than starting over. Ports a refit added
+    /// are explored afterwards by <see cref="Brains.NewPortExploration"/> (#1180), as after
+    /// <see cref="NextGeneration"/>.
     /// </summary>
     public double[][] FromElites(IReadOnlyList<double[]> elites, int size, Random random)
     {
