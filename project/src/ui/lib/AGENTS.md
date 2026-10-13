@@ -12,14 +12,17 @@ written. Its rules bind all UI code (`../AGENTS.md`).
   `NodeRunner.Domain` lib; only primitives and system types.
 - Parameters are `[Export]`s, events are signals, one file per Control.
 - A plain `Control` returns a computed size from `_GetMinimumSize`, leaving
-  `custom_minimum_size` to the scene. Button and container subclasses
-  cannot (their native minimum size ignores the script), so `UiButton` owns
-  its `custom_minimum_size`.
+  `custom_minimum_size` to the scene. Button, Label and container
+  subclasses cannot (their native minimum size ignores the script), so
+  `UiButton`, `UiSidePanel` and a `UiLabel` with `BaselineOf` own their
+  `custom_minimum_size`.
 - A `[Tool]` component that writes a property on itself or a node of its own
   scene (a theme override, `clip_children`, text, an icon, a computed size)
   lists it in a `UiUnsavedState` and calls `Handle` first in
   `_Notification`, or Godot saves the derived value in the scene (#309).
-  Add own-node properties to `SceneDerivedStateTests`.
+  Add own-node properties to `SceneDerivedStateTests`; a component that
+  derives them only in one mode, as `UiLabel` with `BaselineOf`, gets its
+  own fact there.
 - Never copy a component's generated internals into a scene; fill its slot
   through Editable Children.
 

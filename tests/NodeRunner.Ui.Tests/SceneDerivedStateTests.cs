@@ -61,4 +61,18 @@ public sealed class SceneDerivedStateTests
                     .Select(property => $"{node} {property}")))
             .ShouldBeEmpty();
     }
+
+    // UiLabel derives these only while it stands on another label's baseline (#1232); a plain
+    // label authors them.
+    [Fact]
+    public void Scenes_DoNotStoreBaselineDerivedProperties()
+    {
+        string[] derived = ["custom_minimum_size", "size_flags_vertical", "vertical_alignment"];
+        SceneNodes.WithScript("UiLabel.cs")
+            .Where(node => node.Body.Contains("\nBaselineOf = ", StringComparison.Ordinal))
+            .SelectMany(node => derived
+                .Where(property => node.Body.Contains("\n" + property + " = ", StringComparison.Ordinal))
+                .Select(property => $"{node} {property}"))
+            .ShouldBeEmpty();
+    }
 }
