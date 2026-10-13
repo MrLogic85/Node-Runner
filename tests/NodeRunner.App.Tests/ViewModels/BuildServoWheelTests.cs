@@ -77,10 +77,10 @@ public sealed class BuildServoWheelTests
         target.Note.ShouldBeNull();
         target.Options.Select(option => option.LinkId).ShouldBe([4, wheel]);
         CreatureReadiness.Problems(build.Snapshot()).ShouldBe(
-            [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.",
+            [UiText.Format("{0} is missing a side. Pick its Fixed and Target parts or delete it.",
                 PartNames.Display(build.Nodes, build.Beams, build.Sensors, build.Servos, build.Pistons, build.Springs, build.Wheels, build.TouchSensors, build.Rubbers, build.VelocityMotors, build.Brakes, build.AngleSensors, servoId))]);
         build.ShowTrainingBlockers();
-        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(UiText.Plain("Pick a Target link"));
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(UiText.Plain("Pick a Target part"));
     }
 
     [Fact]

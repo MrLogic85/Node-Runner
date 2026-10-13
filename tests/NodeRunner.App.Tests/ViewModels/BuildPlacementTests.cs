@@ -627,14 +627,39 @@ public sealed class BuildPlacementTests
         build.DeleteSelectedParts();
         build.ShowTrainingBlockers();
 
-        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(UiText.Plain("Pick a Fixed link"));
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(UiText.Plain("Pick a Fixed part"));
         build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
         var picker = new BuildPresentationViewModel(build).SinglePart!.Pickers![0];
         picker.SelectedIndex.ShouldBeNull();
-        picker.Placeholder.ShouldBe(UiText.Plain("Pick a Fixed link"));
+        picker.Placeholder.ShouldBe(UiText.Plain("Pick a Fixed part"));
         picker.Note.ShouldBeNull();
         picker.Options.Select(option => (option.LinkId, option.Kind, option.Name)).ShouldBe(
             [(6, CreatureElementKind.Beam, UiText.Format("Beam {0}", 1)), (7, CreatureElementKind.Beam, UiText.Format("Beam {0}", 2))]);
+    }
+
+    [Fact]
+    public void DeleteBothHeldLinks_WithTwoLinksLeft_AsksForBothRoles()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(100, 100)), new NodeDef(5, new Vector2D(100, -100))],
+            [new BeamDef(6, 1, 2), new BeamDef(7, 2, 3), new BeamDef(8, 2, 4), new BeamDef(9, 2, 5)],
+            [],
+            [],
+            [],
+            [],
+            nextPartId: 10));
+        var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
+        var servo = build.Servos.Single(servo => servo.Id == servoId);
+
+        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { servo.FixedLinkId!.Value, servo.TargetLinkId!.Value } });
+        build.DeleteSelectedParts();
+        build.ShowTrainingBlockers();
+
+        build.CanvasNotes().Single(note => note.Target.Id == servoId).Text.ShouldBe(UiText.Plain("Pick Fixed and Target parts"));
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        new BuildPresentationViewModel(build).SinglePart!.Pickers!.Select(picker => (picker.SelectedIndex, picker.Placeholder)).ShouldBe(
+            [(null, UiText.Plain("Pick a Fixed part")), (null, UiText.Plain("Pick a Target part"))]);
     }
 
     // Only the role links carry a role, and only the other role's link swaps (#1130).
@@ -698,7 +723,7 @@ public sealed class BuildPlacementTests
         build.SetMotorLink(servoId, fixedRole: false, linkId: 7);
 
         ServoNotes().ShouldHaveSingleItem().ShouldBe(
-            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, servoId), UiText.Plain("Pick a Fixed link")));
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, servoId), UiText.Plain("Pick a Fixed part")));
 
         build.SetMotorLink(servoId, fixedRole: true, linkId: 6);
 

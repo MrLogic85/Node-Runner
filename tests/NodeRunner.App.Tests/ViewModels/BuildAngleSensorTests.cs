@@ -258,8 +258,8 @@ public sealed class BuildAngleSensorTests
         part.Settings.ShouldBeEmpty();
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.Note)).ShouldBe(
         [
-            (UiText.Plain("Fixed link"), 0, null),
-            (UiText.Plain("Target link"), 1, null),
+            (UiText.Plain("Fixed part"), 0, null),
+            (UiText.Plain("Target part"), 1, null),
         ]);
         part.OnThisJoint.ShouldBeNull();
     }

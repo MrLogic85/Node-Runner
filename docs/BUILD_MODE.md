@@ -404,29 +404,29 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   step 1), Stroke (as the Piston's) and Coil length (0–100%, step 1, #835;
   a new Stroke keeps it).
 - **Servo:** Max strength (5–200 N·m, step 5), Range (20°–360°), Start position
-  (0–100%), Max speed (5–120 rpm, step 5) and Rise time, plus "Fixed link" and
-  "Target link" pickers. They list the joint's links by id, then its
+  (0–100%), Max speed (5–120 rpm, step 5) and Rise time, plus "Fixed part" and
+  "Target part" pickers, "part" since a side can be a Wheel (#1225). They list the joint's links by id, then its
   Wheel with a Wheel icon (#1118). A missing role's picker reads "Pick a
-  Fixed link" or "Pick a Target link" in danger colour and lists only the
+  Fixed part" or "Pick a Target part" in danger colour and lists only the
   real links and Wheel; its Play-tap canvas note says the same, or "Pick Fixed and
-  Target links" when both are empty, since one may be the Wheel. Both lists colour the current Fixed and Target links
+  Target parts" when both are empty, since one may be the Wheel. Both lists colour the current Fixed and Target parts
   as their canvas bands (`docs/UI_DIRECTION.md` → "Menus and pickers").
-  When both roles are set, each list marks the other role's link "swaps",
+  When both roles are set, each list marks the other role's part "swaps",
   because picking it swaps the two; with one empty, picking the other
-  role's link just moves it, so nothing says "swaps" (#1130). If the joint has neither two links nor a link and a Wheel, its note and its
+  role's part just moves it, so nothing says "swaps" (#1130). If the joint has neither two links nor a link and a Wheel, its note and its
   Play-tap canvas note say "A Servo needs two links, or a link and a Wheel" instead,
   and the play-blocked reason asks to connect another link or add a Wheel there, because
   no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
   "Editing identity rules". Its note: "Turns its joint to a target angle and
   holds it there."
 - **Motor (#454):** Max strength (5–40 N·m, step 5), Max speed (10–240
-  rpm, step 10) and the Servo's Rise time, and the Servo's "Fixed link" and "Target link" pickers,
+  rpm, step 10) and the Servo's Rise time, and the Servo's "Fixed part" and "Target part" pickers,
   Wheel included. It has no Range or Start
   position, since it turns round and round. Its note: "Turns one side round
   and round. The brain picks how fast and which way."
 - **Brake (#1041):** Strength (20–400 N·m, step 20, then a last step that
   reads "Locked", an endless Strength; a span up to it reads "60 N·m–Locked"),
-  and the Servo's "Fixed link" and "Target link" pickers, Wheel included. Its note: "Slows its
+  and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "Slows its
   joint's turning, or holds it still when Locked."
 - **Angle sensor (#1206):** no parameters, so no sliders and no Advanced
   section: Name, the Motor's pickers, its note and Delete. Its note: "Tells
@@ -538,8 +538,8 @@ dimmed button can still be tapped
 gives each joint loose at that moment a "Not connected" canvas note until
 it is joined or removed. A creation in separate pieces gets the same note
 on every piece's joint nearest another piece, none being the main one, until
-it is one piece (#930), and every joint motor missing a link gets its
-missing-link note (see Servo settings) until it has both (#1006); a blocker
+it is one piece (#930), and every joint motor, Brake or Angle sensor missing a side gets its
+missing-side note (see Servo settings) until it has both (#1006); a blocker
 that appears later waits for the next tap. The next canvas touch hides
 these notes, so they do not stay in the way while building (#991). Too-short parts always have their "Too short" note. The edits are saved first either way. Back never validates: it saves
 the drawing as it stands (#474). Training refuses a saved creature that

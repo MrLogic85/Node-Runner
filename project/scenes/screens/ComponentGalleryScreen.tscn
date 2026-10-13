@@ -2634,8 +2634,8 @@ layout_mode = 2
 size_flags_horizontal = 0
 mouse_filter = 1
 script = ExtResource("18_picker")
-LabelText = "Fixed link"
-MissingText = "Pick a Fixed link"
+LabelText = "Fixed part"
+MissingText = "Pick a Fixed part"
 SelectedIndex = -1
 
 [node name="PartRows" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1472066312]

@@ -144,7 +144,7 @@ public sealed class CreatureReadinessTests
             nextPartId: 7);
 
         CreatureReadiness.Problems(creature).ShouldBe(
-            [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.",
+            [UiText.Format("{0} is missing a side. Pick its Fixed and Target parts or delete it.",
                 PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, 6))]);
     }
 
@@ -167,7 +167,7 @@ public sealed class CreatureReadinessTests
             nextPartId: 7);
 
         CreatureReadiness.Problems(creature).ShouldBe(
-            [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.", UiText.Format("Brake {0}", 1))]);
+            [UiText.Format("{0} is missing a side. Pick its Fixed and Target parts or delete it.", UiText.Format("Brake {0}", 1))]);
     }
 
     // An Angle sensor takes its sides by the Servo's rules (#1204): one with a deleted side cannot train until it is replaced.
@@ -188,7 +188,7 @@ public sealed class CreatureReadinessTests
         builder.RemoveBeam(first);
 
         CreatureReadiness.Problems(builder.Build()).ShouldBe(
-            [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.", UiText.Format("Angle {0}", 1))]);
+            [UiText.Format("{0} is missing a side. Pick its Fixed and Target parts or delete it.", UiText.Format("Angle {0}", 1))]);
         builder.SetAngleSensorLink(sensor, fixedRole: true, third);
         CreatureReadiness.Problems(builder.Build()).ShouldBeEmpty();
     }

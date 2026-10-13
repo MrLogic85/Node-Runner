@@ -34,7 +34,7 @@ public partial class UiPicker : PanelContainer
     [Signal]
     public delegate void StateChangedEventHandler(PickerState state);
 
-    private string _labelText = "Fixed link";
+    private string _labelText = "Fixed part";
     private PickerState _state = PickerState.Collapsed;
     private bool _disabled;
     private string _belowText = string.Empty;

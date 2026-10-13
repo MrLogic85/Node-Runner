@@ -79,7 +79,7 @@ Wheel's built rightward direction, turning with the Wheel: the horn points
 that way as Target, and as Fixed the housing is only the ring and the range
 turns with the Wheel.
 
-A Servo missing a link keeps its shape on its usual fill, but draws all
+A Servo missing a side keeps its shape on its usual fill, but draws all
 of it in `danger`, like a loose Wheel, with an upright "!" badge at the
 screen's upper right (#1111). It has no housing without a Fixed link, and
 only the horn's hub without a Target link. Its range band is placed as
@@ -105,7 +105,7 @@ each along its link, or with the Wheel as a Wheel side. Nothing else moves,
 and it has no other live cue. Build draws it at rest. On a Wheel it stands
 in for the hub, and as Target its solid magnets sit on the tyre's tubes.
 
-A Motor missing a link draws in `danger` with the Servo's "!"
+A Motor missing a side draws in `danger` with the Servo's "!"
 badge; a missing side points to the screen's right.
 
 ### Brake

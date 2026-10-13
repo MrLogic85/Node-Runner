@@ -86,8 +86,8 @@ public sealed class BuildVelocityMotorTests
         part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.RiseTime]);
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex)).ShouldBe(
         [
-            (UiText.Plain("Fixed link"), 0),
-            (UiText.Plain("Target link"), 1),
+            (UiText.Plain("Fixed part"), 0),
+            (UiText.Plain("Target part"), 1),
         ]);
     }
 

@@ -408,7 +408,7 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
-msgid "Fixed link"
+msgid "Fixed part"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/MapNames.cs
@@ -733,17 +733,17 @@ msgid "Phone may stutter above {0}."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "Pick Fixed and Target links"
+msgid "Pick Fixed and Target parts"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "Pick a Fixed link"
+msgid "Pick a Fixed part"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "Pick a Target link"
+msgid "Pick a Target part"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
@@ -1073,7 +1073,7 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
-msgid "Target link"
+msgid "Target part"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
@@ -1467,7 +1467,7 @@ msgid "{0} is driven most by {1}."
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
-msgid "{0} is missing a link. Pick its Fixed and Target links or delete it."
+msgid "{0} is missing a side. Pick its Fixed and Target parts or delete it."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
@@ -1524,8 +1524,8 @@ msgstr[0] ""
 msgstr[1] ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "{0} part missing a link"
-msgid_plural "{0} parts missing a link"
+msgid "{0} part missing a side"
+msgid_plural "{0} parts missing a side"
 msgstr[0] ""
 msgstr[1] ""
 
