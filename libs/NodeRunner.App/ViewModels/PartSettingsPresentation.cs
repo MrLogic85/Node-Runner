@@ -17,6 +17,7 @@ public enum PartSettingsKind
     Rubber,
     VelocityMotor,
     Brake,
+    AngleSensor,
 }
 
 /// <summary>
@@ -68,6 +69,7 @@ public sealed record PartSettingsPresentation(
         PartSettingsKind.Rubber => UiText.Plain("Rubber"),
         PartSettingsKind.VelocityMotor => UiText.Plain("Motor"),
         PartSettingsKind.Brake => UiText.Plain("Brake"),
+        PartSettingsKind.AngleSensor => UiText.Plain("Angle sensor"),
         _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Unknown part kind."),
     };
 }

@@ -174,6 +174,24 @@ public sealed class DirectBrainTests
         DirectBrain.Compile(refitted, withTouch).ShouldBe([0.5, -0.25, 0.75, 0, 0.1]);
     }
 
+    // #1204: an Angle sensor added to a trained creature brings three new inputs whose weights start at 0, so it changes no output.
+    [Fact]
+    public void Refit_WithANewAngleSensor_GivesItsThreeInputsZeroWeights_AndLeavesTheOutputsUnchanged()
+    {
+        var brain = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+        var withSensor = new BrainPortLayout([.. _ports.Inputs, .. BrainPorts.AngleSensorInputs(9)], _ports.Outputs);
+
+        var refitted = DirectBrain.Refit(brain, withSensor);
+
+        var genome = DirectBrain.Compile(refitted, withSensor);
+        genome.ShouldBe([0.5, -0.25, 0.75, 0, 0, 0, 0.1]);
+        int[] before = [_ports.Inputs.Count, _ports.Outputs.Count];
+        int[] after = [withSensor.Inputs.Count, withSensor.Outputs.Count];
+        double[] readings = [0.3, -0.6, 0.2];
+        NeuralNetwork.FromGenome(after, genome, Activation.Tanh).Forward([.. readings, 0.7, -0.4, 0.9])
+            .ShouldBe(NeuralNetwork.FromGenome(before, _genome, Activation.Tanh).Forward(readings));
+    }
+
     [Fact]
     public void Refit_WithIdsFrom_KeepsALaterBrainsIdsForNewPorts_AndNeverReusesAnId()
     {

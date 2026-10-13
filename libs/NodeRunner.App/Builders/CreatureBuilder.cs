@@ -23,7 +23,7 @@ public sealed partial class CreatureBuilder
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
-    /// <summary>Why a motor or brake, a Servo, a Velocity motor or a Brake, cannot be added to a joint that already has one (#1044).</summary>
+    /// <summary>Why a motor or brake, a Servo, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one (#1044).</summary>
     public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One Servo, Motor or Brake per joint");
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
@@ -91,6 +91,7 @@ public sealed partial class CreatureBuilder
         _rubbers.AddRange(creature.Rubbers);
         _velocityMotors.AddRange(creature.VelocityMotors);
         _brakes.AddRange(creature.Brakes);
+        _angleSensors.AddRange(creature.AngleSensors);
         _nextPartId = creature.NextPartId;
     }
 
@@ -158,6 +159,7 @@ public sealed partial class CreatureBuilder
         _rubbers.RemoveAll(rubber => rubber.NodeId == nodeId);
         _velocityMotors.RemoveAll(motor => motor.NodeId == nodeId);
         _brakes.RemoveAll(brake => brake.NodeId == nodeId);
+        _angleSensors.RemoveAll(angleSensor => angleSensor.NodeId == nodeId);
         _pistons.RemoveAll(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
         _springs.RemoveAll(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
         _nodes.RemoveAt(nodeIndex);
@@ -313,6 +315,7 @@ public sealed partial class CreatureBuilder
         ReplaceSide(_servos, linkId, newLinkId, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink));
         ReplaceSide(_velocityMotors, linkId, newLinkId, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink));
         ReplaceSide(_brakes, linkId, newLinkId, (brake, fixedLink, targetLink) => brake.WithLinks(fixedLink, targetLink));
+        ReplaceSide(_angleSensors, linkId, newLinkId, (angleSensor, fixedLink, targetLink) => angleSensor.WithLinks(fixedLink, targetLink));
     }
 
     private static void ReplaceSide<T>(List<T> parts, int linkId, int? newLinkId, Func<T, int?, int?, T> withSides)
@@ -983,7 +986,7 @@ public sealed partial class CreatureBuilder
             return;
         }
 
-        if (RenameBrake(partId, name))
+        if (RenameBrake(partId, name) || RenameAngleSensor(partId, name))
         {
             return;
         }
@@ -992,7 +995,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _wheels, _touchSensors, _rubbers, _velocityMotors, _brakes, _nextPartId);
+    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _wheels, _touchSensors, _rubbers, _velocityMotors, _brakes, _angleSensors, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<UiText> errors)

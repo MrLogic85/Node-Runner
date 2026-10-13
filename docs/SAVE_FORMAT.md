@@ -87,6 +87,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `rubbers[]` | `{ id, nodeId, name }` | Rubbers on a node id (#1142), at most one per node: the joint, or its Wheel's tyre, grips the ground. No settings. |
 | `velocityMotors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, maxSpeed, riseTime }` | Motors (#454): a Servo's sides and units, without `range` or `start`. One per node (`docs/CREATURE_MODEL.md` → Node → One part per slot). |
 | `brakes[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength }` | Brakes (#1039): a Servo's sides and slot, no ports. `strength` in world torque units (N·m × 10⁴), above 0, or `"Infinity"` when Locked. |
+| `angleSensors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name }` | Angle sensors (#1204): a Servo's sides and slot, three inputs, no settings. |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training` (meaning of latest and best: `docs/TRAINING_LOOP.md` → "Latest
@@ -174,6 +175,7 @@ Current `creation.json` migrations:
 | 9 | 10 | #1142: add required `creature.rubbers: []`. |
 | 10 | 11 | #454: add required `creature.velocityMotors: []`. |
 | 11 | 12 | #1039: add required `creature.brakes: []`. |
+| 12 | 13 | #1204: add required `creature.angleSensors: []`. |
 
 #1086 needs no migration: its saved shape is unchanged, but a saved creature
 with a Wheel or Servo moves and senses a little differently, since links and
@@ -209,7 +211,7 @@ owns it.
 - The code is `NR`, the format version and a dot, then its JSON
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
-  scratch. The Walker example's is about 50 characters, starting `NR12.`,
+  scratch. The Walker example's is about 50 characters, starting `NR13.`,
   and so is two joints and a Spring's (#1094).
 - Its JSON is `creation.json` on one line with `training` and
   `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,

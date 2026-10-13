@@ -17,11 +17,15 @@ public sealed record CreatureShape(
     IReadOnlyList<TouchSensorDef> TouchSensors,
     IReadOnlyList<RubberDef> Rubbers,
     IReadOnlyList<VelocityMotorDef> VelocityMotors,
-    IReadOnlyList<BrakeDef> Brakes)
+    IReadOnlyList<BrakeDef> Brakes,
+    IReadOnlyList<AngleSensorDef> AngleSensors)
 {
     /// <summary>Every joint motor, the Servos then the Velocity motors (#454), as <see cref="CreatureDef.JointMotors"/>.</summary>
     public IReadOnlyList<IJointMotorDef> JointMotors => [.. Servos, .. VelocityMotors];
 
-    /// <summary>What sits in each joint's motor-or-brake slot (#1044): the joint motors, then the Brakes (#1041).</summary>
+    /// <summary>
+    /// The joint motors, then the Brakes (#1041): the slot parts drawn in place of their joint's ring. An
+    /// Angle sensor shares the slot (#1204) but is left out until its picture (#1205), so its joint draws plain.
+    /// </summary>
     public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => [.. JointMotors, .. Brakes];
 }

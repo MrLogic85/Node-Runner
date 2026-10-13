@@ -23,7 +23,7 @@ public sealed partial class CreatureBuilder
     public IReadOnlyList<BrakeDef> Brakes => _brakes;
 
     /// <summary>What fills the joints' motor-or-brake slots, as <see cref="CreatureDef.MotorsAndBrakes"/> lists them.</summary>
-    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => [.. JointMotors, .. _brakes];
+    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => [.. JointMotors, .. _brakes, .. _angleSensors];
 
     /// <summary>Whether a Brake can sit on this node; if not, <paramref name="reason"/> says why.</summary>
     public bool CanAddBrake(int nodeId, [NotNullWhen(false)] out UiText? reason)

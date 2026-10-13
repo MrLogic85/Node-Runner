@@ -655,7 +655,7 @@ public sealed class BuildPresentationViewModelTests
     {
         var build = new BuildViewModel();
         build.Load(PistonCreature());
-        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
+        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
 
         var selection = new BuildPresentationViewModel(build).Selection!;
 
@@ -807,6 +807,34 @@ public sealed class BuildPresentationViewModelTests
 
         readiness.State.ShouldBe(BuildReadiness.Blocked);
         readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 2));
+    }
+
+    // The Angle sensor's panel is #1206's: until then a loaded one (from a share code, say) is counted
+    // by readiness and selected without a panel, never throwing.
+    [Fact]
+    public void ALoadedAngleSensorMissingALink_IsCountedInReadiness_AndSelectsWithoutAPanel()
+    {
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))],
+            [new BeamDef(4, 1, 2)],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [new AngleSensorDef(7, 2, fixedLinkId: 4)],
+            nextPartId: 8));
+        build.SelectOnly(CreatureElementKind.AngleSensor, 7);
+        var presentation = new BuildPresentationViewModel(build);
+
+        presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 1));
+        build.SingleSelectedAngleSensorId.ShouldBe(7);
+        presentation.SinglePart.ShouldBeNull();
     }
 
     [Theory]

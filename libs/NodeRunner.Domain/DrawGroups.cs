@@ -96,7 +96,7 @@ public sealed class DrawGroups
             .Select(part => part.Kind switch
             {
                 CreatureElementKind.Node => part.Id,
-                CreatureElementKind.Servo or CreatureElementKind.VelocityMotor or CreatureElementKind.Brake => motorNodes.GetValueOrDefault((part.Kind, part.Id), -1),
+                CreatureElementKind.Servo or CreatureElementKind.VelocityMotor or CreatureElementKind.Brake or CreatureElementKind.AngleSensor => motorNodes.GetValueOrDefault((part.Kind, part.Id), -1),
                 CreatureElementKind.Wheel => wheelNodes.GetValueOrDefault(part.Id, -1),
                 CreatureElementKind.TouchSensor => touchNodes.GetValueOrDefault(part.Id, -1),
                 CreatureElementKind.Rubber => rubberNodes.GetValueOrDefault(part.Id, -1),

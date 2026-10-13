@@ -159,6 +159,11 @@ public sealed partial class BuildViewModel
             builder.RemoveBrake(brakeId);
         }
 
+        foreach (var angleSensorId in parts.AngleSensors)
+        {
+            builder.RemoveAngleSensor(angleSensorId);
+        }
+
         foreach (var springId in parts.Springs)
         {
             builder.RemoveSpring(springId);

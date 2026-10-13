@@ -49,6 +49,9 @@ public static class BrainPortDisplay
         (PartSettingsKind.VelocityMotor, PortDirection.Input, BrainPorts.VelocityMotorSpeedChannel) => (UiText.Plain("speed"), PortRange.MinusOneToOne),
         (PartSettingsKind.VelocityMotor, PortDirection.Output, BrainPorts.VelocityMotorSpeedOutputChannel) => (UiText.Plain("speed"), PortRange.MinusOneToOne),
         (PartSettingsKind.VelocityMotor, PortDirection.Output, BrainPorts.VelocityMotorStrengthChannel) => (UiText.Plain("strength"), PortRange.ZeroToOne),
+        (PartSettingsKind.AngleSensor, PortDirection.Input, BrainPorts.AngleSensorAngleSinChannel) => (UiText.Plain("angle sin"), PortRange.MinusOneToOne),
+        (PartSettingsKind.AngleSensor, PortDirection.Input, BrainPorts.AngleSensorAngleCosChannel) => (UiText.Plain("angle cos"), PortRange.MinusOneToOne),
+        (PartSettingsKind.AngleSensor, PortDirection.Input, BrainPorts.AngleSensorSpeedChannel) => (UiText.Plain("speed"), PortRange.MinusOneToOne),
         _ => throw new InvalidOperationException($"No callout entry for {kind} {port.Direction} {port.Channel}."),
     };
 }

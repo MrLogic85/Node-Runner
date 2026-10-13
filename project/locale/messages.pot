@@ -115,8 +115,20 @@ msgstr ""
 msgid "Adds or removes it."
 msgstr ""
 
+#: libs/NodeRunner.App/Builders/CreatureBuilder.AngleSensors.cs
+msgid "An Angle sensor needs two links, or a link and a Wheel"
+msgstr ""
+
 #: project/scenes/ui/UiDialogContent.tscn
 msgid "An example error. Toggle Visible to preview."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+msgid "Angle sensor"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartNames.cs
+msgid "Angle {0}"
 msgstr ""
 
 #: project/scenes/widgets/BrainFocusSheet.tscn

@@ -130,6 +130,7 @@ public partial class Creature
             CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.TouchSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
             CreatureElementKind.Rubber => _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(selection.Id)].NodeId)].GlobalPosition,
+            CreatureElementKind.AngleSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.AngleSensors[Definition.AngleSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
         };
 
@@ -174,6 +175,13 @@ public partial class Creature
             if (part.Kind == CreatureElementKind.Rubber)
             {
                 _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(part.Id)].NodeId)].SkinSelected = true;
+                continue;
+            }
+
+            // An Angle sensor is drawn as its plain joint until its picture (#1205), so the joint shows its mark.
+            if (part.Kind == CreatureElementKind.AngleSensor)
+            {
+                _nodeVisuals[Definition!.NodeIndexOf(Definition.AngleSensors[Definition.AngleSensorIndexOf(part.Id)].NodeId)].Selected = true;
                 continue;
             }
 

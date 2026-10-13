@@ -89,7 +89,8 @@ public sealed record ImportPresentation(
         _ => (UiText.Plain("This code is damaged"), UiText.Plain("Part of it is missing or changed. Ask for the code again.")),
     };
 
-    // One row per kind of part the creature has; the screen's authored rows set the order.
+    // One row per kind of part the creature has; the screen's authored rows set the order. The Angle
+    // sensor has no row until its glyph and Build placement (#1206).
     private static ImportPartRow[] PartsOf(CreatureDef creature) =>
     [
         .. new ImportPartRow[]

@@ -59,6 +59,7 @@ public partial class Creature : Node2D
     private VelocityMotorVisual[] _velocityMotorVisuals = [];
     private BrakeJoint[] _brakes = [];
     private BrakeVisual[] _brakeVisuals = [];
+    private AngleSensorJoint[] _angleSensors = [];
     private WheelVisual[] _wheelVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
@@ -147,6 +148,11 @@ public partial class Creature : Node2D
             motor.Sides.UpdatePhysicsState();
         }
 
+        foreach (var angleSensor in _angleSensors)
+        {
+            angleSensor.Sides.UpdatePhysicsState();
+        }
+
         ReadSensors(_sensorValues, delta);
         Brain.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
 
@@ -174,14 +180,9 @@ public partial class Creature : Node2D
     public void BuildFrom(CreatureDef definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
-        if (definition.JointMotors.FirstOrDefault(motor => motor.FixedLinkId is null || motor.TargetLinkId is null) is { } incomplete)
+        if (definition.MotorsAndBrakes.FirstOrDefault(part => part.FixedLinkId is null || part.TargetLinkId is null) is { } incomplete)
         {
             throw new InvalidOperationException($"{incomplete.Kind} {incomplete.Id} must have two sides before the creature is built for simulation.");
-        }
-
-        if (definition.Brakes.FirstOrDefault(brake => brake.FixedLinkId is null || brake.TargetLinkId is null) is { } incompleteBrake)
-        {
-            throw new InvalidOperationException($"Brake {incompleteBrake.Id} must have two sides before the creature is built for simulation.");
         }
 
         Definition = definition;
@@ -215,6 +216,7 @@ public partial class Creature : Node2D
         CreatePistons(definition);
         CreateSprings(definition);
         CreateBrakes(definition);
+        CreateAngleSensors(definition);
         CapEndStops(definition);
         _drawGroups = DrawGroups.Of(definition.Nodes, LinkRef.All(definition.Beams, definition.Pistons, definition.Springs));
         ConfigureBrainBuffers(definition);
@@ -564,7 +566,8 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
-            var hasMotor = definition.MotorsAndBrakes.Any(part => part.NodeId == definition.Nodes[i].Id);
+            // An Angle sensor's joint is drawn as a plain one until its picture (#1205).
+            var hasMotor = definition.MotorsAndBrakes.Any(part => part.NodeId == definition.Nodes[i].Id && part.Kind != CreatureElementKind.AngleSensor);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
             var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);
@@ -758,6 +761,7 @@ public partial class Creature : Node2D
             [
                 .. definition.Sensors.SelectMany(BrainPorts.SensorPorts),
                 .. definition.TouchSensors.Select(touch => BrainPorts.TouchInput(touch.Id)),
+                .. definition.AngleSensors.SelectMany(angleSensor => BrainPorts.AngleSensorInputs(angleSensor.Id)),
                 .. definition.Servos.SelectMany(servo => BrainPorts.ServoInputs(servo.Id)),
                 .. definition.VelocityMotors.SelectMany(motor => BrainPorts.VelocityMotorInputs(motor.Id)),
                 .. definition.Pistons.SelectMany(piston => BrainPorts.PistonInputs(piston.Id)),
@@ -802,7 +806,8 @@ public partial class Creature : Node2D
     }
 
     // Each sensor part writes its values (Accelerometer: along, across; Camera: one per ray from
-    // left to right, then hit), then each Touch sensor its touch, each Servo its angle and speed,
+    // left to right, then hit), then each Touch sensor its touch, each Angle sensor its angle's sine and
+    // cosine and its speed, each Servo its angle and speed,
     // each Velocity motor its angle's sine and cosine and its speed, and each Piston its length and speed, into the raw buffer in sim order;
     // they are then copied into the brain's port order (BrainPorts).
     private void ReadSensors(double[] values, double delta)
@@ -817,6 +822,14 @@ public partial class Creature : Node2D
         foreach (var touch in _touchSensors)
         {
             _rawInputs[index++] = touch.Reading;
+        }
+
+        foreach (var angleSensor in _angleSensors)
+        {
+            var (sin, cos) = angleSensor.AngleInputs;
+            _rawInputs[index++] = sin;
+            _rawInputs[index++] = cos;
+            _rawInputs[index++] = angleSensor.SpeedInput;
         }
 
         foreach (var servo in _servos)

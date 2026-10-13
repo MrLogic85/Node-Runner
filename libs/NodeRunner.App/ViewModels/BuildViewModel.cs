@@ -207,7 +207,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private void Restore(CreatureDef body, PartSet? reselect)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, body.VelocityMotors, body.Brakes, nextPartId));
+        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, body.VelocityMotors, body.Brakes, body.AngleSensors, nextPartId));
         if (reselect is not null)
         {
             ClearSelectionSets();
@@ -415,11 +415,14 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Every joint motor: the Servos, then the Velocity motors.</summary>
     public IReadOnlyList<IJointMotorDef> JointMotors => _builder.JointMotors;
 
-    /// <summary>What fills each joint's motor-or-brake slot: the <see cref="JointMotors"/>, then the <see cref="Brakes"/>.</summary>
+    /// <summary>What fills each joint's motor-or-brake slot: the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
     public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => _builder.MotorsAndBrakes;
 
     /// <summary>The Brakes (#1039, #1041).</summary>
     public IReadOnlyList<BrakeDef> Brakes => _builder.Brakes;
+
+    /// <summary>The Angle sensors (#1204). Build cannot place, draw or set one up yet (#1205, #1206).</summary>
+    public IReadOnlyList<AngleSensorDef> AngleSensors => _builder.AngleSensors;
 
     public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;
 
@@ -594,13 +597,14 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// </summary>
     public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, MotorsAndBrakes, _builder.Wheels, touchSensors: [], rubbers: []);
 
-    /// <summary>Why a Servo, Motor or Brake of <paramref name="kind"/> on a joint without two sides cannot work (#1118).</summary>
+    /// <summary>Why a Servo, Motor, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work (#1118).</summary>
     public static UiText NeedsTwoSidesReason(CreatureElementKind kind) => kind switch
     {
         CreatureElementKind.Servo => CreatureBuilder.ServoNeedsTwoSidesReason,
         CreatureElementKind.VelocityMotor => CreatureBuilder.VelocityMotorNeedsTwoSidesReason,
         CreatureElementKind.Brake => CreatureBuilder.BrakeNeedsTwoSidesReason,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Only a Servo, Motor or Brake has sides."),
+        CreatureElementKind.AngleSensor => CreatureBuilder.AngleSensorNeedsTwoSidesReason,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Only a Servo, Motor, Brake or Angle sensor has sides."),
     };
 
     /// <summary>The pieces the links join the joints into (<see cref="CreatureReadiness.Pieces"/>); more than one cannot train.</summary>
@@ -635,6 +639,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         CreatureElementKind.Rubber => _builder.Rubbers.Any(rubber => rubber.Id == element.Id),
         CreatureElementKind.VelocityMotor => _builder.VelocityMotors.Any(motor => motor.Id == element.Id),
         CreatureElementKind.Brake => _builder.Brakes.Any(brake => brake.Id == element.Id),
+        CreatureElementKind.AngleSensor => _builder.AngleSensors.Any(angleSensor => angleSensor.Id == element.Id),
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
@@ -826,10 +831,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));
 
     /// <summary>The name a part shows: its own name if it has one, else <see cref="DefaultPartName"/>.</summary>
-    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, partId);
+    public UiText PartDisplayName(int partId) => PartNames.Display(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, _builder.AngleSensors, partId);
 
     /// <summary>The name a part shows until it is renamed: "Joint 2", "Beam 1", "Piston 1", "Spring 1", "Wheel 1", "Accel 1", "Camera 1" or "Touch 1".</summary>
-    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, partId);
+    public UiText DefaultPartName(int partId) => PartNames.Default(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, _builder.AngleSensors, partId);
 
     /// <summary>
     /// Renames a part by id, so an edit lands on the part it started on even if the selection
@@ -851,7 +856,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             && !_builder.TouchSensors.Any(touch => touch.Id == partId)
             && !_builder.Rubbers.Any(rubber => rubber.Id == partId)
             && !_builder.VelocityMotors.Any(motor => motor.Id == partId)
-            && !_builder.Brakes.Any(brake => brake.Id == partId))
+            && !_builder.Brakes.Any(brake => brake.Id == partId)
+            && !_builder.AngleSensors.Any(angleSensor => angleSensor.Id == partId))
         {
             return;
         }
@@ -867,7 +873,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         RaiseAnatomyChanged();
     }
 
-    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, partId);
+    private string? PartName(int partId) => PartNames.Own(_builder.Nodes, _builder.Beams, _builder.Sensors, _builder.Servos, _builder.Pistons, _builder.Springs, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, _builder.VelocityMotors, _builder.Brakes, _builder.AngleSensors, partId);
 
     /// <summary>
     /// Finds the closest placed node whose ring, grown by <paramref name="margin"/>,
@@ -1009,6 +1015,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int BrakeIndexOf(int brakeId) => _builder.BrakeIndexOf(brakeId);
 
+    public int AngleSensorIndexOf(int angleSensorId) => _builder.AngleSensorIndexOf(angleSensorId);
+
     public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
 
     public bool ServoNeedsTwoSides(int nodeId) => _builder.ServoNeedsTwoSides(nodeId);
@@ -1029,19 +1037,24 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public LinkRef Link(int linkId) => _builder.Link(linkId);
 
     /// <summary>
-    /// Gives the Servo, Velocity motor or Brake <paramref name="motorId"/> a new Fixed or Target side,
+    /// Gives the Servo, Velocity motor, Brake or Angle sensor <paramref name="motorId"/> a new Fixed or Target side,
     /// from its panel's pickers; it keeps its id (#1177). Its ports do not depend on its sides, so a locked
     /// Creation changes them too (#1041, #1179).
     /// </summary>
     public void SetMotorLink(int motorId, bool fixedRole, int linkId)
     {
         var isBrake = _builder.Brakes.Any(brake => brake.Id == motorId);
+        var isAngleSensor = _builder.AngleSensors.Any(angleSensor => angleSensor.Id == motorId);
         var isServo = _builder.Servos.Any(servo => servo.Id == motorId);
         _history.Change(() =>
         {
             if (isBrake)
             {
                 _builder.SetBrakeLink(motorId, fixedRole, linkId);
+            }
+            else if (isAngleSensor)
+            {
+                _builder.SetAngleSensorLink(motorId, fixedRole, linkId);
             }
             else if (isServo)
             {

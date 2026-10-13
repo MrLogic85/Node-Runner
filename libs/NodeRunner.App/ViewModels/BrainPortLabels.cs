@@ -22,14 +22,16 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
         var servoIds = creature.Servos.Select(servo => servo.Id).ToHashSet();
         var touchSensorIds = creature.TouchSensors.Select(touch => touch.Id).ToHashSet();
         var velocityMotorIds = creature.VelocityMotors.Select(motor => motor.Id).ToHashSet();
+        var angleSensorIds = creature.AngleSensors.Select(angleSensor => angleSensor.Id).ToHashSet();
         UiText Label(BrainPort port)
         {
-            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, port.PartId);
+            var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, port.PartId);
             return sensorKinds.TryGetValue(port.PartId, out var kind)
                 ? Reading(kind, port.Channel, name)
                 : servoIds.Contains(port.PartId) ? ServoChannel(port.Channel, name)
                 : touchSensorIds.Contains(port.PartId) ? TouchChannel(port.Channel, name)
                 : velocityMotorIds.Contains(port.PartId) ? VelocityMotorChannel(port.Channel, name)
+                : angleSensorIds.Contains(port.PartId) ? AngleSensorChannel(port.Channel, name)
                 : PistonChannel(port.Channel, name);
         }
 
@@ -84,5 +86,13 @@ public sealed record BrainPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList
         BrainPorts.VelocityMotorSpeedChannel => UiText.Format("{0}:\u00A0speed", name),
         BrainPorts.VelocityMotorStrengthChannel => UiText.Format("{0}:\u00A0strength", name),
         _ => throw new InvalidOperationException($"No label for Velocity motor channel {channel}."),
+    };
+
+    private static UiText AngleSensorChannel(string channel, UiText name) => channel switch
+    {
+        BrainPorts.AngleSensorAngleSinChannel => UiText.Format("{0}:\u00A0angle sin", name),
+        BrainPorts.AngleSensorAngleCosChannel => UiText.Format("{0}:\u00A0angle cos", name),
+        BrainPorts.AngleSensorSpeedChannel => UiText.Format("{0}:\u00A0speed", name),
+        _ => throw new InvalidOperationException($"No label for Angle sensor channel {channel}."),
     };
 }

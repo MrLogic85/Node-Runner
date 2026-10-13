@@ -28,6 +28,9 @@ public sealed class BrainPortDisplayTests
     [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
     [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Output, "speed", PortRange.MinusOneToOne, "speed")]
     [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
+    [InlineData(PartSettingsKind.AngleSensor, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
+    [InlineData(PartSettingsKind.AngleSensor, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
+    [InlineData(PartSettingsKind.AngleSensor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
     public void EveryPort_HasItsRangeAndShortLabel(PartSettingsKind kind, PortDirection direction, string channel, PortRange range, string label)
     {
         var port = new BrainPort(1, channel, direction, direction == PortDirection.Input ? PortSignal.Reading : PortSignal.Position);
@@ -48,7 +51,7 @@ public sealed class BrainPortDisplayTests
             Should.NotThrow(() => BrainPortDisplay.ShortLabel(kind, port));
         }
 
-        layout.Inputs.Count.ShouldBe(16);
+        layout.Inputs.Count.ShouldBe(19);
         layout.Outputs.Count.ShouldBe(6);
     }
 
@@ -92,6 +95,7 @@ public sealed class BrainPortDisplayTests
         PortedCreature.Piston => PartSettingsKind.Piston,
         PortedCreature.Touch => PartSettingsKind.Touch,
         PortedCreature.VelocityMotor => PartSettingsKind.VelocityMotor,
+        PortedCreature.AngleSensor => PartSettingsKind.AngleSensor,
         _ => throw new ArgumentOutOfRangeException(nameof(partId)),
     };
 }

@@ -83,6 +83,9 @@ file owns how Godot realises it.
     which must never read heavier than the joint. A Locked Brake is a
     second Godot joint instead, as no Godot angular joint can brake;
     `Creature.Links.cs` (WeldSides) says how, and when it stays friction.
+15. **An Angle sensor only reads its `MotorSides`.** An `AngleSensorJoint`
+    reads the angle and speed between its sides as a Motor does (#1204),
+    and never applies torque or adds a joint.
 
 ## What lives here
 
@@ -96,9 +99,10 @@ file owns how Godot realises it.
 - `TouchSensor.cs` — a Touch sensor: how near its joint body is to the ground
 - `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is
   one `RayCast2D` child per ray, aimed and sized by `CameraRays`)
-- `MotorSides.cs` — a joint motor's or Brake's two sides: angle, speed, inertia, torque
+- `MotorSides.cs` — a joint motor's, Brake's or Angle sensor's two sides: angle, speed, inertia, torque
 - `ServoJoint.cs`, `VelocityMotorJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
 - `BrakeJoint.cs` — a Brake's friction on its sides
+- `AngleSensorJoint.cs` — an Angle sensor's reading of its sides
 - `*Visual.cs` — rendering only: Training's adapters over the shared part
   visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds
   `IShadowVisual`

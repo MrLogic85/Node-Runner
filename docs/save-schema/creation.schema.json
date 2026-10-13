@@ -489,6 +489,46 @@
             "additionalProperties": false
           }
         },
+        "angleSensors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nodeId": {
+                "type": "integer"
+              },
+              "fixedLinkId": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "targetLinkId": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "id",
+              "nodeId"
+            ],
+            "additionalProperties": false
+          }
+        },
         "nextPartId": {
           "type": "integer"
         }
@@ -505,6 +545,7 @@
         "rubbers",
         "velocityMotors",
         "brakes",
+        "angleSensors",
         "nextPartId"
       ],
       "additionalProperties": false

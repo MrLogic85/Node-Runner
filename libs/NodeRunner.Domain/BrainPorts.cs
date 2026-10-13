@@ -78,6 +78,15 @@ public static class BrainPorts
     /// <summary>A Velocity motor's strength output key: the share of its Strength to use.</summary>
     public const string VelocityMotorStrengthChannel = "strength";
 
+    /// <summary>An Angle sensor's angle sine input key (#1204): sin of the angle between its sides, as a Velocity motor reads it.</summary>
+    public const string AngleSensorAngleSinChannel = "angleSin";
+
+    /// <summary>An Angle sensor's angle cosine input key (#1204): cos of the angle between its sides.</summary>
+    public const string AngleSensorAngleCosChannel = "angleCos";
+
+    /// <summary>An Angle sensor's angular speed input key (#1204), on its own fixed scale (<c>NodeRunner.Mechanics.AngleSensor</c>).</summary>
+    public const string AngleSensorSpeedChannel = "speed";
+
     public static BrainPortLayout Of(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
@@ -91,6 +100,11 @@ public static class BrainPorts
         foreach (var touch in creature.TouchSensors)
         {
             blocks.Add((touch.Id, [TouchInput(touch.Id)]));
+        }
+
+        foreach (var angleSensor in creature.AngleSensors)
+        {
+            blocks.Add((angleSensor.Id, [.. AngleSensorInputs(angleSensor.Id)]));
         }
 
         foreach (var piston in creature.Pistons)
@@ -133,6 +147,14 @@ public static class BrainPorts
 
     /// <summary>A Touch sensor's one input port.</summary>
     public static BrainPort TouchInput(int touchSensorId) => BrainPort.Input(touchSensorId, TouchChannel);
+
+    /// <summary>An Angle sensor's input ports, angle sine, angle cosine, then speed. It has no outputs.</summary>
+    public static IEnumerable<BrainPort> AngleSensorInputs(int angleSensorId) =>
+    [
+        BrainPort.Input(angleSensorId, AngleSensorAngleSinChannel),
+        BrainPort.Input(angleSensorId, AngleSensorAngleCosChannel),
+        BrainPort.Input(angleSensorId, AngleSensorSpeedChannel),
+    ];
 
     /// <summary>A Piston's input ports, length then speed.</summary>
     public static IEnumerable<BrainPort> PistonInputs(int pistonId) =>

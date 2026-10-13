@@ -168,6 +168,29 @@ public sealed class BrainPortsTests
         ]);
     }
 
+    // Inputs only, in this order: it applies no force, so it has no outputs (#1204).
+    [Fact]
+    public void Of_GivesAnAngleSensorAngleSinAngleCosAndSpeedInputs_AndNoOutputs_InPartIdOrder()
+    {
+        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))];
+        BeamDef[] beams = [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)];
+        var without = new CreatureDef(nodes, beams, [], [new ServoDef(6, 2, 4)], [], [], [], [], [], [], [], [], nextPartId: 9);
+        var with = new CreatureDef(nodes, beams, [], [new ServoDef(6, 2, 4)], [], [], [], [], [], [], [], [new AngleSensorDef(7, 1, 4, 5)], nextPartId: 9);
+
+        var layout = BrainPorts.Of(with);
+
+        layout.Inputs.ShouldBe(
+        [
+            BrainPort.Input(6, "angle"),
+            BrainPort.Input(6, "speed"),
+            BrainPort.Input(7, "angleSin"),
+            BrainPort.Input(7, "angleCos"),
+            BrainPort.Input(7, "speed"),
+        ]);
+        BrainPorts.AngleSensorInputs(7).ShouldBe([BrainPort.Input(7, "angleSin"), BrainPort.Input(7, "angleCos"), BrainPort.Input(7, "speed")]);
+        layout.Outputs.ShouldBe(BrainPorts.Of(without).Outputs);
+    }
+
     [Fact]
     public void Of_GivesAWheelNoPorts()
     {
