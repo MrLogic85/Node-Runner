@@ -60,6 +60,7 @@ public partial class Creature : Node2D
     private BrakeJoint[] _brakes = [];
     private BrakeVisual[] _brakeVisuals = [];
     private AngleSensorJoint[] _angleSensors = [];
+    private AngleSensorVisual[] _angleSensorVisuals = [];
     private WheelVisual[] _wheelVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
@@ -411,6 +412,11 @@ public partial class Creature : Node2D
             visual.IsShadow = _isShadow;
         }
 
+        foreach (var visual in _angleSensorVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
         foreach (var visual in _pistonVisuals)
         {
             visual.IsShadow = _isShadow;
@@ -566,8 +572,7 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
-            // An Angle sensor's joint is drawn as a plain one until its picture (#1205).
-            var hasMotor = definition.MotorsAndBrakes.Any(part => part.NodeId == definition.Nodes[i].Id && part.Kind != CreatureElementKind.AngleSensor);
+            var hasMotor = definition.MotorsAndBrakes.Any(part => part.NodeId == definition.Nodes[i].Id);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
             var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);

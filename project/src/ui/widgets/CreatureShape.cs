@@ -24,8 +24,8 @@ public sealed record CreatureShape(
     public IReadOnlyList<IJointMotorDef> JointMotors => [.. Servos, .. VelocityMotors];
 
     /// <summary>
-    /// The joint motors, then the Brakes (#1041): the slot parts drawn in place of their joint's ring. An
-    /// Angle sensor shares the slot (#1204) but is left out until its picture (#1205), so its joint draws plain.
+    /// The joint motors, then the Brakes (#1041), then the Angle sensors (#1204, #1205): the slot parts drawn
+    /// in place of their joint's ring, as <see cref="CreatureDef.MotorsAndBrakes"/>.
     /// </summary>
-    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => [.. JointMotors, .. Brakes];
+    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => [.. JointMotors, .. Brakes, .. AngleSensors];
 }

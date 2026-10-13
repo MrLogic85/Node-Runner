@@ -421,7 +421,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>The Brakes (#1039, #1041).</summary>
     public IReadOnlyList<BrakeDef> Brakes => _builder.Brakes;
 
-    /// <summary>The Angle sensors (#1204). Build cannot place, draw or set one up yet (#1205, #1206).</summary>
+    /// <summary>The Angle sensors (#1204). Build draws one (#1205) but cannot place or set one up yet (#1206).</summary>
     public IReadOnlyList<AngleSensorDef> AngleSensors => _builder.AngleSensors;
 
     public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;

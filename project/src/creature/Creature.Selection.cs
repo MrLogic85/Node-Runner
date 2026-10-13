@@ -130,7 +130,7 @@ public partial class Creature
             CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(selection.Id)].GlobalPosition,
             CreatureElementKind.TouchSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
             CreatureElementKind.Rubber => _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(selection.Id)].NodeId)].GlobalPosition,
-            CreatureElementKind.AngleSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.AngleSensors[Definition.AngleSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
+            CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(selection.Id)].GlobalPosition,
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
         };
 
@@ -148,7 +148,7 @@ public partial class Creature
     // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
     private void ApplySelection()
     {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_velocityMotorVisuals).Concat(_brakeVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
+        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_velocityMotorVisuals).Concat(_brakeVisuals).Concat(_angleSensorVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
         {
             visual.Selected = false;
         }
@@ -178,13 +178,6 @@ public partial class Creature
                 continue;
             }
 
-            // An Angle sensor is drawn as its plain joint until its picture (#1205), so the joint shows its mark.
-            if (part.Kind == CreatureElementKind.AngleSensor)
-            {
-                _nodeVisuals[Definition!.NodeIndexOf(Definition.AngleSensors[Definition.AngleSensorIndexOf(part.Id)].NodeId)].Selected = true;
-                continue;
-            }
-
             // A Wheel's joint draws its mark with the hub, over the links (#1045).
             if (part.Kind == CreatureElementKind.Wheel)
             {
@@ -205,6 +198,7 @@ public partial class Creature
             CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(part.Id)],
             CreatureElementKind.VelocityMotor => _velocityMotorVisuals[Definition!.VelocityMotorIndexOf(part.Id)],
             CreatureElementKind.Brake => _brakeVisuals[Definition!.BrakeIndexOf(part.Id)],
+            CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(part.Id)],
             CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
             CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],
             _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
@@ -241,6 +235,12 @@ public partial class Creature
         {
             var id = definition.Brakes[i].NodeId;
             _brakeVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
+        }
+
+        for (var i = 0; i < _angleSensorVisuals.Length; i++)
+        {
+            var id = definition.AngleSensors[i].NodeId;
+            _angleSensorVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
         }
 
         for (var i = 0; i < _wheelVisuals.Length; i++)

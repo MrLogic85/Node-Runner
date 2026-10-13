@@ -13,7 +13,7 @@ public enum UiIconId
     PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartCamera, PartNode, PartPiston,
     PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing, Distance, TopSpeed, Elevation,
     MapFlat, MapHills, MapStairs, PartAccelerometer, ChevronLeft, Sort, Parts, Undo, Redo, PartPulse, PartTouch, BrainMark,
-    Share, Paste, PartRubber
+    Share, Paste, PartRubber, PartAngleSensor
 }
 
 /// <summary>The only permitted display sizes for canonical icons.</summary>
@@ -225,6 +225,7 @@ public static class UiIcons
         UiIconId.PartPulse => Part("pulse"),
         UiIconId.PartTouch => Part("touch"),
         UiIconId.PartRubber => Part("rubber"),
+        UiIconId.PartAngleSensor => Part("angle_sensor"),
         UiIconId.BrainMark => Mark("brain"),
         UiIconId.Share => Icon("share"),
         UiIconId.Paste => Icon("paste"),

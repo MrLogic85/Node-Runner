@@ -2758,6 +2758,26 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
+[node name="AngleSensor" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(112, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/AngleSensor" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 73
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/AngleSensor"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "part_angle_sensor"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
 [node name="Touch" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
 custom_minimum_size = Vector2(112, 0)

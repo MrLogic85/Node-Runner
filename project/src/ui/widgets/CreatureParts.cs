@@ -9,7 +9,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// A creature shown still, made of the same part visuals Training draws (#769, #770): one
-/// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="VelocityMotorPart"/>, <see cref="BrakePart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
+/// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="VelocityMotorPart"/>, <see cref="BrakePart"/>, <see cref="AngleSensorPart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
 /// <see cref="SpringPart"/> and <see cref="SensorPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
 /// its <see cref="CreatureLayers"/> layer. Its points are creature units; its owner places it and
 /// hands it what to show after every change. Build's <see cref="BuildCanvas"/> shows its edits
@@ -21,6 +21,7 @@ public partial class CreatureParts : Node2D
     private readonly Dictionary<int, ServoPart> _servos = [];
     private readonly Dictionary<int, VelocityMotorPart> _velocityMotors = [];
     private readonly Dictionary<int, BrakePart> _brakes = [];
+    private readonly Dictionary<int, AngleSensorPart> _angleSensors = [];
     private readonly Dictionary<int, WheelPart> _wheels = [];
     private readonly Dictionary<int, BeamPart> _beams = [];
     private readonly Dictionary<int, PistonPart> _pistons = [];
@@ -59,6 +60,7 @@ public partial class CreatureParts : Node2D
         ShowServos(shape, nodes, marks);
         ShowVelocityMotors(shape, nodes, marks);
         ShowBrakes(shape, nodes, marks);
+        ShowAngleSensors(shape, nodes, marks);
         ShowWheels(shape, nodes, marks);
         ShowBeams(shape, nodes, marks);
         ShowPistons(shape, nodes, marks);
@@ -78,8 +80,7 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = (marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.MotorsAndBrakes, shape.Wheels, shape.TouchSensors, shape.Rubbers))
-                || AngleSensorSelectedAt(shape, marks, node.Id);
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.MotorsAndBrakes, shape.Wheels, shape.TouchSensors, shape.Rubbers);
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasMotor(shape, marks, node.Id);
             part.ShowsHub = HasWheelAndNoServo(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
@@ -96,10 +97,6 @@ public partial class CreatureParts : Node2D
         }
     }
 
-    // An Angle sensor is drawn as its plain joint until its picture (#1205), so the joint shows its mark.
-    private static bool AngleSensorSelectedAt(CreatureShape shape, CreatureMarks marks, int nodeId) =>
-        shape.AngleSensors.Any(angleSensor => angleSensor.NodeId == nodeId && marks.Selected.AngleSensors.Contains(angleSensor.Id));
-
     // A joint's radius as drawn, with a previewed motor or Wheel, so a cushion sits round it.
     private static double ShownRadius(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         Math.Max(
@@ -115,7 +112,7 @@ public partial class CreatureParts : Node2D
     private static bool HasWheelAndNoServo(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         HasWheel(shape, marks, nodeId) && !HasMotor(shape, marks, nodeId);
 
-    // A Servo, Velocity motor (#454) or Brake (#1041), placed or previewed, stands in for its joint's ring.
+    // A Servo, Velocity motor (#454), Brake (#1041) or Angle sensor (#1205), placed or previewed, stands in for its joint's ring.
     private static bool HasMotor(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         shape.MotorsAndBrakes.Any(motor => motor.NodeId == nodeId) || PreviewsMotor(marks, nodeId) || marks.PreviewNodeOf(BuildPart.Brake) == nodeId;
 
@@ -250,6 +247,27 @@ public partial class CreatureParts : Node2D
         part.HasTarget = TrySide(shape, nodes, nodeId, targetLinkId, out _, out var targetAngle);
         part.FixedAngle = fixedAngle;
         part.TargetAngle = targetAngle;
+    }
+
+    // Its tray preview, with the Build panel, comes with #1206.
+    private void ShowAngleSensors(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
+    {
+        Prune(_angleSensors, shape.AngleSensors.Select(angleSensor => angleSensor.Id));
+        foreach (var angleSensor in shape.AngleSensors)
+        {
+            var part = PartFor(_angleSensors, angleSensor.Id);
+            part.Position = ToGodot(nodes[angleSensor.NodeId].Position);
+            part.Selected = marks.Selected.AngleSensors.Contains(angleSensor.Id);
+            part.Visible = true;
+            part.Simplified = false;
+            part.ArcRadius = AngleSensorGeometry.ArcRadius(
+                rubber: shape.Rubbers.Any(rubber => rubber.NodeId == angleSensor.NodeId) || marks.PreviewNodeOf(BuildPart.Rubber) == angleSensor.NodeId,
+                touch: shape.TouchSensors.Any(touch => touch.NodeId == angleSensor.NodeId) || marks.PreviewNodeOf(BuildPart.TouchSensor) == angleSensor.NodeId);
+            part.HasFixed = TrySide(shape, nodes, angleSensor.NodeId, angleSensor.FixedLinkId, out _, out var fixedAngle);
+            part.HasTarget = TrySide(shape, nodes, angleSensor.NodeId, angleSensor.TargetLinkId, out _, out var targetAngle);
+            part.FixedAngle = fixedAngle;
+            part.TargetAngle = targetAngle;
+        }
     }
 
     private static void ShowServoPart(
@@ -487,6 +505,13 @@ public partial class CreatureParts : Node2D
             part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
         }
 
+        var angleSensorNodes = shape.AngleSensors.ToDictionary(angleSensor => angleSensor.Id, angleSensor => angleSensor.NodeId);
+        foreach (var (id, part) in _angleSensors)
+        {
+            var nodeId = angleSensorNodes[id];
+            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
+        }
+
         var wheelNodes = shape.Wheels.ToDictionary(wheel => wheel.Id, wheel => wheel.NodeId);
         foreach (var (id, part) in _wheels)
         {
@@ -606,5 +631,4 @@ public partial class CreatureParts : Node2D
 
     private static double NodeRadius(CreatureShape shape, int nodeId) =>
         CreatureDef.JointRadius(nodeId, shape.JointMotors, shape.Wheels);
-
 }
