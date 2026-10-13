@@ -47,7 +47,7 @@ public sealed class ShareDictionaryTests
     public void TheCurrentVersion_HasAShareDictionary()
     {
         var version = FileCreationRepository.Format.CurrentVersion;
-        var path = Path.Combine(FindRepositoryRoot(), "libs", "NodeRunner.App", "Repositories", "ShareDictionaries", CreationShareCode.DictionaryName(version));
+        var path = Path.Combine(TestRepository.Root(), "libs", "NodeRunner.App", "Repositories", "ShareDictionaries", CreationShareCode.DictionaryName(version));
         if (Environment.GetEnvironmentVariable(_updateVariable) == "1" && !File.Exists(path))
         {
             File.WriteAllBytes(path, CreationShareCode.MakeDictionary(Template(), Sample()));
@@ -219,18 +219,5 @@ public sealed class ShareDictionaryTests
         builder.SetParameter(builder.AddBrake(frontFoot), PartParameterId.BrakeStrength, 1200000);
         builder.Rename(builder.AddAngleSensor(tail), "Tail");
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "NodeRunner.slnx")))
-            {
-                return directory.FullName;
-            }
-        }
-
-        throw new DirectoryNotFoundException("Could not find NodeRunner.slnx.");
     }
 }

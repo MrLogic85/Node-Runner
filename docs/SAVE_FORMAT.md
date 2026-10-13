@@ -194,12 +194,34 @@ sensors now measure from the hub (`docs/CREATURE_MODEL.md` → Node, Sensor).
 4. For `creation.json`, add the new version's share dictionary: run the App
    tests with `NODE_RUNNER_UPDATE_SHARE_DICTIONARY=1`, then again to build
    it in (see "Share code").
+5. Rewrite the pins (see "Pinned saves").
 
 The real files 0.13.0 wrote are checked in as fixtures in
 `tests/NodeRunner.App.Tests/Repositories/SaveExamples/0.13.0/` (the Walker
 example, untrained and trained, and `progression.json`), and
 `CreationVersioningTests` and `ProgressionVersioningTests` load them.
 They are never rewritten in place.
+
+### Pinned saves
+
+`EveryPartPinTests` builds one creature that holds every part kind (both
+Sensor kinds, Cameras with 1, 3 and 5 rays, a free and a Locked Brake, and so
+on). It pins three things about that creature in
+`tests/NodeRunner.App.Tests/Repositories/Pins/` (#1219):
+
+- `every-part.creation.json`: its `creation.json`, byte for byte apart from
+  line endings;
+- `every-part.ports.txt`: its brain ports (`BrainPorts.Of`) in order, each with
+  its direction, part id, channel, signal and `BrainPortLabels` text;
+- `every-part.share-code.txt`: its share code, which must read back as the
+  same build.
+
+A refactor must leave all three unchanged. A failing pin names the first line
+that differs. When the change is deliberate (a saved shape, a port, a label
+or a new part kind, which the test asks to be added to the creature), rewrite
+the pins with
+`NODE_RUNNER_UPDATE_PINS=1 dotnet test tests/NodeRunner.App.Tests --filter EveryPartPinTests`.
+Commit the new pins in the same PR, so the review shows what changed.
 
 ## Share code
 

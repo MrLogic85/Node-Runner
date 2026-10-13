@@ -1,0 +1,254 @@
+{
+  "formatVersion": 13,
+  "id": "5b0e2f4c-8a3d-4e61-9c7b-1d2e3f405162",
+  "name": "Every part",
+  "creature": {
+    "nodes": [
+      {
+        "id": 1,
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "name": "Hip"
+      },
+      {
+        "id": 2,
+        "position": {
+          "x": 200,
+          "y": 0
+        },
+        "name": null
+      },
+      {
+        "id": 3,
+        "position": {
+          "x": 400,
+          "y": 0
+        },
+        "name": null
+      },
+      {
+        "id": 4,
+        "position": {
+          "x": 600,
+          "y": 0
+        },
+        "name": null
+      },
+      {
+        "id": 5,
+        "position": {
+          "x": 100,
+          "y": -200
+        },
+        "name": null
+      },
+      {
+        "id": 6,
+        "position": {
+          "x": 300,
+          "y": -200
+        },
+        "name": null
+      },
+      {
+        "id": 7,
+        "position": {
+          "x": 500,
+          "y": -200
+        },
+        "name": null
+      }
+    ],
+    "beams": [
+      {
+        "id": 8,
+        "nodeA": 1,
+        "nodeB": 2,
+        "name": "Thigh"
+      },
+      {
+        "id": 9,
+        "nodeA": 2,
+        "nodeB": 3,
+        "name": null
+      },
+      {
+        "id": 10,
+        "nodeA": 3,
+        "nodeB": 4,
+        "name": null
+      },
+      {
+        "id": 11,
+        "nodeA": 1,
+        "nodeB": 5,
+        "name": null
+      },
+      {
+        "id": 12,
+        "nodeA": 5,
+        "nodeB": 2,
+        "name": null
+      },
+      {
+        "id": 13,
+        "nodeA": 2,
+        "nodeB": 6,
+        "name": null
+      },
+      {
+        "id": 14,
+        "nodeA": 6,
+        "nodeB": 3,
+        "name": null
+      }
+    ],
+    "sensors": [
+      {
+        "id": 17,
+        "beamId": 8,
+        "kind": "accelerometer",
+        "name": null,
+        "aim": null,
+        "rays": null,
+        "spread": null,
+        "range": null
+      },
+      {
+        "id": 18,
+        "beamId": 9,
+        "kind": "camera",
+        "name": "Eye",
+        "aim": 0,
+        "rays": 1,
+        "spread": 1.5707963267948966,
+        "range": 220
+      },
+      {
+        "id": 19,
+        "beamId": 10,
+        "kind": "camera",
+        "name": null,
+        "aim": -0.5,
+        "rays": 3,
+        "spread": 1.5707963267948966,
+        "range": 220
+      },
+      {
+        "id": 20,
+        "beamId": 13,
+        "kind": "camera",
+        "name": null,
+        "aim": 0.5,
+        "rays": 5,
+        "spread": 0.5,
+        "range": 300
+      }
+    ],
+    "servos": [
+      {
+        "id": 21,
+        "nodeId": 1,
+        "fixedLinkId": 8,
+        "targetLinkId": 11,
+        "name": null,
+        "strength": 600000,
+        "range": 2,
+        "start": 0.25,
+        "maxSpeed": 3,
+        "riseTime": 0.1
+      }
+    ],
+    "pistons": [
+      {
+        "id": 15,
+        "nodeA": 3,
+        "nodeB": 7,
+        "name": null,
+        "strength": 20000,
+        "stroke": 1,
+        "start": 0.25,
+        "maxSpeed": 150,
+        "riseTime": 0.1
+      }
+    ],
+    "springs": [
+      {
+        "id": 16,
+        "nodeA": 7,
+        "nodeB": 4,
+        "name": null,
+        "stiffness": 800,
+        "damping": 20,
+        "stroke": 0.5,
+        "coilLength": 0.5
+      }
+    ],
+    "wheels": [
+      {
+        "id": 23,
+        "nodeId": 4,
+        "name": null,
+        "radius": 60
+      }
+    ],
+    "touchSensors": [
+      {
+        "id": 27,
+        "nodeId": 1,
+        "name": null
+      }
+    ],
+    "rubbers": [
+      {
+        "id": 28,
+        "nodeId": 6,
+        "name": null
+      }
+    ],
+    "velocityMotors": [
+      {
+        "id": 22,
+        "nodeId": 2,
+        "fixedLinkId": 8,
+        "targetLinkId": 9,
+        "name": null,
+        "strength": 300000,
+        "maxSpeed": 3.5,
+        "riseTime": 0.3
+      }
+    ],
+    "brakes": [
+      {
+        "id": 24,
+        "nodeId": 4,
+        "fixedLinkId": 10,
+        "targetLinkId": 23,
+        "name": null,
+        "strength": 1500000
+      },
+      {
+        "id": 25,
+        "nodeId": 5,
+        "fixedLinkId": 11,
+        "targetLinkId": 12,
+        "name": null,
+        "strength": "Infinity"
+      }
+    ],
+    "angleSensors": [
+      {
+        "id": 26,
+        "nodeId": 3,
+        "fixedLinkId": 9,
+        "targetLinkId": 10,
+        "name": null
+      }
+    ],
+    "nextPartId": 29
+  },
+  "training": null,
+  "trainSettings": null
+}
