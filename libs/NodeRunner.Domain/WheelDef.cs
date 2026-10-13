@@ -6,7 +6,7 @@ namespace NodeRunner.Domain;
 /// it (#1118, #454), and a Brake can hold it (#1039). Its <see cref="Radius"/> sets how big it is drawn and collides, and what it weighs
 /// (<c>NodeRunner.Mechanics.Wheel.Mass</c>). See docs/CREATURE_MODEL.md → "Wheel".
 /// </summary>
-public sealed record WheelDef
+public sealed record WheelDef : IJointPartDef
 {
     /// <summary>The smallest <see cref="Radius"/>: 0.4 m at 100 world units per metre.</summary>
     public const double MinRadius = 40;
@@ -45,6 +45,8 @@ public sealed record WheelDef
     public int NodeId { get; }
 
     public string? Name { get; }
+
+    PartKind IPartDef.PartKind => PartKind.Wheel;
 
     /// <summary>Its drawn and collision radius, in world units: its joint's radius while it is there.</summary>
     public double Radius { get; }

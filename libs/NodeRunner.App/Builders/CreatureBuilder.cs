@@ -113,6 +113,9 @@ public sealed partial class CreatureBuilder
 
     public IReadOnlyList<RubberDef> Rubbers => _rubbers;
 
+    /// <summary>Every part on a joint's slots (#1221): the <see cref="HingeParts"/>, Wheels, Touch sensors and Rubbers.</summary>
+    public IReadOnlyList<IJointPartDef> JointParts => [.. HingeParts, .. _wheels, .. _touchSensors, .. _rubbers];
+
     public int NextPartId => _nextPartId;
 
     /// <summary>Adds a node at <paramref name="position"/> on <see cref="OnWholeUnits"/> and returns its id.</summary>

@@ -514,7 +514,7 @@ fold.
     id is reused. Generation, latest and best always come from the saved
     training.
 - **Order** comes from `BrainPorts.Of`: ports sorted by part id, then in the
-  order the part declares them. It depends only on ids, so moving,
+  order the part declares them (its kind's entry in `PartKinds`). It depends only on ids, so moving,
   resizing or adding a part never reorders the other ports.
 
 ## Editing identity rules

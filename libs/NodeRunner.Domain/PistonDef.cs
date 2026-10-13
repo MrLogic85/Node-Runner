@@ -10,7 +10,7 @@ namespace NodeRunner.Domain;
 /// <see cref="Strength"/> it uses
 /// (<c>Piston</c> in NodeRunner.Mechanics). See docs/CREATURE_MODEL.md.
 /// </summary>
-public sealed record PistonDef
+public sealed record PistonDef : IPartDef
 {
     /// <summary>A new Piston's <see cref="Strength"/>: 150 N at 100 world units per metre.</summary>
     public const double DefaultStrength = 15000;
@@ -104,6 +104,8 @@ public sealed record PistonDef
     public int NodeB { get; }
 
     public string? Name { get; }
+
+    PartKind IPartDef.PartKind => PartKind.Piston;
 
     /// <summary>The most force the Piston can push or pull with, in world units (mass × units/s²).</summary>
     public double Strength { get; }

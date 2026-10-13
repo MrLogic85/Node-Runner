@@ -80,7 +80,7 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.HingeParts, shape.Wheels, shape.TouchSensors, shape.Rubbers);
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointParts);
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasHingePart(shape, marks, node.Id);
             part.ShowsHub = HasWheelAndNoHingePart(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);

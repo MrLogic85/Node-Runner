@@ -9,7 +9,7 @@ namespace NodeRunner.Domain;
 /// against that stop (#835). See
 /// <c>Spring</c> in NodeRunner.Mechanics and docs/CREATURE_MODEL.md.
 /// </summary>
-public sealed record SpringDef
+public sealed record SpringDef : IPartDef
 {
     /// <summary>A new Spring's <see cref="Stiffness"/>: 400 N/m at 100 world units per metre.</summary>
     public const double DefaultStiffness = 400;
@@ -109,6 +109,8 @@ public sealed record SpringDef
     public int NodeB { get; }
 
     public string? Name { get; }
+
+    PartKind IPartDef.PartKind => PartKind.Spring;
 
     /// <summary>How hard it pulls back per unit stretched or squeezed, in world force units per world unit (N/m).</summary>
     public double Stiffness { get; }

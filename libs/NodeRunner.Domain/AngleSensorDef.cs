@@ -55,7 +55,7 @@ public sealed record AngleSensorDef : IHingePartDef
 
     public string? Name { get; }
 
-    CreatureElementKind IHingePartDef.Kind => CreatureElementKind.AngleSensor;
+    PartKind IPartDef.PartKind => PartKind.AngleSensor;
 
     public AngleSensorDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name);
 

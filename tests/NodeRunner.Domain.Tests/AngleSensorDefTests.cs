@@ -79,8 +79,8 @@ public sealed class AngleSensorDefTests
             rubbers: [new RubberDef(9, 1)]);
 
         creature.AngleSensors.ShouldHaveSingleItem().NodeId.ShouldBe(1);
-        CreatureDef.JointParts(1, creature.HingeParts, creature.Wheels, creature.TouchSensors, creature.Rubbers).Select(part => part.Kind)
-            .ShouldBe([CreatureElementKind.AngleSensor, CreatureElementKind.Wheel, CreatureElementKind.Rubber, CreatureElementKind.TouchSensor], ignoreOrder: true);
+        creature.JointPartsAt(1).Select(part => part.Kind)
+            .ShouldBe([CreatureElementKind.AngleSensor, CreatureElementKind.Wheel, CreatureElementKind.Rubber, CreatureElementKind.TouchSensor]);
     }
 
     // It is no joint motor: it has inputs only, no torque path, and its joint keeps a plain joint's collider (#1204).
@@ -108,8 +108,8 @@ public sealed class AngleSensorDefTests
     [Fact]
     public void HasJointPart_CountsAnAngleSensor()
     {
-        CreatureDef.HasJointPart(1, [new AngleSensorDef(2, 1)], [], [], []).ShouldBeTrue();
-        CreatureDef.HasJointPart(3, [new AngleSensorDef(2, 1)], [], [], []).ShouldBeFalse();
+        CreatureDef.HasJointPart(1, [new AngleSensorDef(2, 1)]).ShouldBeTrue();
+        CreatureDef.HasJointPart(3, [new AngleSensorDef(2, 1)]).ShouldBeFalse();
     }
 
     [Fact]

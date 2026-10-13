@@ -49,7 +49,7 @@ public sealed partial class BuildViewModel
             foreach (var (joint, linksBefore) in partJoints)
             {
                 if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0
-                    && !CreatureDef.HasJointPart(joint, _builder.HingeParts, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers))
+                    && !CreatureDef.HasJointPart(joint, _builder.JointParts))
                 {
                     _builder.RemoveNode(joint);
                 }

@@ -7,7 +7,7 @@ namespace NodeRunner.Domain;
 /// and a Wheel, adds no radius and has no settings. Its one input is <see cref="BrainPorts.TouchChannel"/>. See
 /// docs/CREATURE_MODEL.md → "Touch sensor".
 /// </summary>
-public sealed record TouchSensorDef
+public sealed record TouchSensorDef : IJointPartDef
 {
     /// <summary>
     /// How far its cushion reaches outside its joint's drawn edge, in world units (#1044, #1045):
@@ -37,6 +37,8 @@ public sealed record TouchSensorDef
     public int NodeId { get; }
 
     public string? Name { get; }
+
+    PartKind IPartDef.PartKind => PartKind.TouchSensor;
 
     public TouchSensorDef WithName(string? name) => new(Id, NodeId, name);
 }
