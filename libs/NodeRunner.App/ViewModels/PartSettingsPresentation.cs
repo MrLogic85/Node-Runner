@@ -55,23 +55,7 @@ public sealed record PartSettingsPresentation(
     /// <summary>The <see cref="Settings"/> in the Advanced section, which is left out when there are none.</summary>
     public IReadOnlyList<ParameterSlider> AdvancedSettings => [.. Settings.Where(setting => setting.Advanced)];
 
-    public UiText Title => Kind switch
-    {
-        PartSettingsKind.Node => UiText.Plain("Joint"),
-        PartSettingsKind.Beam => UiText.Plain("Beam"),
-        PartSettingsKind.Accelerometer => UiText.Plain("Accelerometer"),
-        PartSettingsKind.Camera => UiText.Plain("Camera"),
-        PartSettingsKind.Servo => UiText.Plain("Servo"),
-        PartSettingsKind.Piston => UiText.Plain("Piston"),
-        PartSettingsKind.Spring => UiText.Plain("Spring"),
-        PartSettingsKind.Wheel => UiText.Plain("Wheel"),
-        PartSettingsKind.Touch => UiText.Plain("Touch sensor"),
-        PartSettingsKind.Rubber => UiText.Plain("Rubber"),
-        PartSettingsKind.VelocityMotor => UiText.Plain("Motor"),
-        PartSettingsKind.Brake => UiText.Plain("Brake"),
-        PartSettingsKind.AngleSensor => UiText.Plain("Angle sensor"),
-        _ => throw new ArgumentOutOfRangeException(nameof(Kind), Kind, "Unknown part kind."),
-    };
+    public UiText Title => PartKindDisplays.Of(Kind).Title;
 }
 
 /// <summary>One "On this joint" tab (#1044): the part it selects and the kind whose glyph it shows.</summary>

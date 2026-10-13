@@ -145,7 +145,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
             [UiText.Format("{0} is missing a side. Pick its Fixed and Target parts or delete it.",
-                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, 6))]);
+                PartNames.Display(creature.Parts, 6))]);
     }
 
     // A Brake takes its sides by the Servo's rules (#1039), so one with a deleted side cannot train either.
@@ -207,7 +207,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
             [UiText.Format("{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it.",
-                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, 6))]);
+                PartNames.Display(creature.Parts, 6))]);
     }
 
     [Fact]

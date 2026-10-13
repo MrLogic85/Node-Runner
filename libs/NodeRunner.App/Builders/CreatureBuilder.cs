@@ -116,6 +116,9 @@ public sealed partial class CreatureBuilder
     /// <summary>Every part on a joint's slots (#1221): the <see cref="HingeParts"/>, Wheels, Touch sensors and Rubbers.</summary>
     public IReadOnlyList<IJointPartDef> JointParts => [.. HingeParts, .. _wheels, .. _touchSensors, .. _rubbers];
 
+    /// <summary>Every part (#1223), each kind in its list order: what <see cref="Build"/> builds the creature from.</summary>
+    public IReadOnlyList<IPartDef> Parts => [.. _nodes, .. _beams, .. _sensors, .. _pistons, .. _springs, .. JointParts];
+
     public int NextPartId => _nextPartId;
 
     /// <summary>Adds a node at <paramref name="position"/> on <see cref="OnWholeUnits"/> and returns its id.</summary>
@@ -998,7 +1001,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new([.. _nodes, .. _beams, .. _sensors, .. _pistons, .. _springs, .. JointParts], _nextPartId);
+    public CreatureDef Build() => new(Parts, _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<UiText> errors)

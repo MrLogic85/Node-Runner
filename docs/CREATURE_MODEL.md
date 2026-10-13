@@ -448,13 +448,14 @@ fold.
   channels as ports, `BrainPort(partId, channel, direction, signal)`. The
   channel is a machine key that never changes; display names are separate.
   An input carries a reading; an output names the physical signal it drives
-  (#535). The player sees each port as its part's name and a label
-  (`BrainPortLabels`); an output's label is the quantity it sets, so the
-  Piston's position output reads **length** like its input (#869). The
-  Training part callout's port bars (#1064) also show each port with a
-  short label, such as "speed", and the range its value spans, −1…1 or
-  0…1, both from `BrainPortDisplay`; a new port must add an entry there,
-  or selecting its part throws.
+  (#535). The player sees each port as its part's name and a label; an
+  output's label is the quantity it sets, so the Piston's position output
+  reads **length** like its input (#869). The Training part callout's port
+  bars (#1064) also show each port with a short label, such as "speed", and
+  the range its value spans, −1…1 or 0…1. All three come from the port's
+  entry in its kind's `PartKindDisplays` row (#1223), with the kind's title
+  and default name; a new port must add an entry there, or showing its
+  part throws.
   - **Accelerometer:** inputs `along`, `across`.
   - **Camera:** one input per ray from left to right, then `hit` (#1032,
     #578): `centre`, `hit` for one ray; `left1`, `centre`, `right1`, `hit`
