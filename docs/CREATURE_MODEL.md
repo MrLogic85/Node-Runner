@@ -373,11 +373,13 @@ fold.
 - **Travel** (#870: a real cylinder; #835, #1086: from the joints' hubs): it
   moves the gap between its joints' hubs, `Travel.HubRadii` short of its
   length whatever sits on its joints.
-  A cylinder is at most as long as the shortest gap, so the gap can at most
-  double. The drawn gap sits Start position of the way from the shortest to
-  the longest (`Piston.ShortestLength`, `Piston.LongestLength`). Example: two
-  plain joints drawn 1 m apart leave a 0.7 m gap; with Stroke 100%, Start
-  0% gives 1…1.7 m, 50% 0.77…1.23 m and 100% 0.65…1 m.
+  It is a three-part telescope (#1208): its stage and rod each slide out at
+  most the shortest gap, so Stroke runs up to 200% and the gap can at most
+  triple (#1211). The drawn gap sits Start position of the way from the
+  shortest to the longest (`Piston.ShortestLength`, `Piston.LongestLength`).
+  Example: two plain joints drawn 1 m apart leave a 0.7 m gap; with Stroke
+  100%, Start 0% gives 1…1.7 m, 50% 0.77…1.23 m and 100% 0.65…1 m; with
+  Stroke 200%, 1…2.4 m, 0.65…1.35 m and 0.53…1 m.
 - **Force** (`Piston.NextForce`, #801): it chases the length its position
   output asks for, slowing as it arrives, with at most the strength
   output's share of its Strength. The force builds over Rise time from the
@@ -425,7 +427,9 @@ fold.
   the further out (`Spring.ShortestLength`, `Spring.LongestLength`,
   `Spring.RestLength`). Example: two plain joints drawn 1 m apart (a 0.7 m
   gap) with Stroke 100%: Coil length 0% gives 1…1.7 m resting at 0.65 m,
-  50% 0.83…1.35 m and 100% 0.65…1 m resting at 1.35 m. Changing either
+  50% 0.83…1.35 m and 100% 0.65…1 m resting at 1.35 m; with Stroke 200%,
+  0% gives 1…2.4 m resting at 0.65 m, 50% 0.77…1.7 m and 100% 0.53…1 m
+  resting at 1.35 m. Changing either
   setting never moves a node.
 - **End stops** are hard and capped, as a Piston's (#701, #1115). **A preload stays inside the
   stop** (#835): as on a real preloaded spring, its nodes feel nothing until

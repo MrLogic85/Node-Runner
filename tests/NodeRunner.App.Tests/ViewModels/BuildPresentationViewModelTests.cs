@@ -580,7 +580,7 @@ public sealed class BuildPresentationViewModelTests
         strength.ValuesDiffer.ShouldBeTrue();
         strength.Low.ShouldBe(PartParameters.Strength.Slider!.Range.Position(100));
         strength.High.ShouldBe(PartParameters.Strength.Slider!.Range.Position(250));
-        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, UiText.Plain("Stroke"), UiText.Format("{0}%", new FixedNumber(30, 0)), 2.0 / 9, 2.0 / 9, 5.0 / 90));
+        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, UiText.Plain("Stroke"), UiText.Format("{0}%", new FixedNumber(30, 0)), 20.0 / 190, 20.0 / 190, 5.0 / 190));
     }
 
     [Fact]

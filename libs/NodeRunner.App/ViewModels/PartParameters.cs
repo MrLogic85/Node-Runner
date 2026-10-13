@@ -176,7 +176,7 @@ public static class PartParameters
         PartParameterId.BrakeStrength, MultiEditable: true, new(UiText.Plain("Strength"), UiText.Plain("How hard it holds the joint still. Locked holds it fully."), new(20, _lockedBrakeStep, 20), 0, "{0} N·m", "{0}–{1} N·m", BrakeNewtonMetres, BrakeTorque, new TopStep(UiText.Plain("Locked"), "{0} N·m–Locked")), Advanced: false);
 
     public static PartParameter Stroke { get; } = new(
-        PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), UiText.Plain("How far it moves in and out"), new(10, 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);
+        PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), UiText.Plain("How far it moves in and out"), new(10, PistonDef.MaxStroke * 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);
 
     public static PartParameter Range { get; } = new(
         PartParameterId.Range, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can turn"), new(20, 360, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians), Advanced: false);

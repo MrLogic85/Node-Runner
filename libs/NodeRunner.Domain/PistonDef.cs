@@ -4,9 +4,10 @@ namespace NodeRunner.Domain;
 /// A Piston (#451): a powered link between two nodes that pushes them apart or pulls them together
 /// along the line between them. It is not a beam: it does not hold its length, so it adds no
 /// rigidity. Its length as built is the distance between its nodes in the drawing. Like a real
-/// cylinder, the gap between its joints' hubs grows from its shortest by <see cref="Stroke"/> of
-/// that, so it can at most double (#835); <see cref="Start"/> says where in that travel the drawn
-/// length sits (#870). The brain sets where it goes and how much of <see cref="Strength"/> it uses
+/// three-part telescope (#1208), the gap between its joints' hubs grows from its shortest by
+/// <see cref="Stroke"/> of that, so it can at most triple (#835, #1211); <see cref="Start"/> says
+/// where in that travel the drawn length sits (#870). The brain sets where it goes and how much of
+/// <see cref="Strength"/> it uses
 /// (<c>Piston</c> in NodeRunner.Mechanics). See docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed record PistonDef
@@ -16,6 +17,9 @@ public sealed record PistonDef
 
     /// <summary>A new Piston's <see cref="Stroke"/>: the gap between its joints' hubs grows by half its shortest.</summary>
     public const double DefaultStroke = 0.5;
+
+    /// <summary>The longest <see cref="Stroke"/>: the gap between its joints' hubs triples (#1211).</summary>
+    public const double MaxStroke = 2;
 
     /// <summary>A new Piston's <see cref="Start"/>: drawn halfway between its shortest and longest length.</summary>
     public const double DefaultStart = 0.5;
@@ -62,9 +66,9 @@ public sealed record PistonDef
             throw new ArgumentOutOfRangeException(nameof(strength), "Piston strength must be finite and positive.");
         }
 
-        if (!double.IsFinite(stroke) || stroke <= 0 || stroke > 1)
+        if (!double.IsFinite(stroke) || stroke <= 0 || stroke > MaxStroke)
         {
-            throw new ArgumentOutOfRangeException(nameof(stroke), "Piston stroke must be a share of its shortest length above 0 and at most 1.");
+            throw new ArgumentOutOfRangeException(nameof(stroke), $"Piston stroke must be a share of its shortest length above 0 and at most {MaxStroke}.");
         }
 
         if (!double.IsFinite(start) || start < 0 || start > 1)
@@ -104,7 +108,7 @@ public sealed record PistonDef
     /// <summary>The most force the Piston can push or pull with, in world units (mass × units/s²).</summary>
     public double Strength { get; }
 
-    /// <summary>How much the gap between its joints' hubs can grow, as a share of its shortest: 1 doubles it (#835).</summary>
+    /// <summary>How much the gap between its joints' hubs can grow, as a share of its shortest: 1 doubles it, <see cref="MaxStroke"/> triples it (#835, #1211).</summary>
     public double Stroke { get; }
 
     /// <summary>Where its drawn length sits in its travel: 0 is its shortest length, 1 its longest.</summary>

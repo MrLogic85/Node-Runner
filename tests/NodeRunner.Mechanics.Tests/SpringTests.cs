@@ -54,17 +54,34 @@ public sealed class SpringTests
         Spring.RestLength(spring, _built, 120).ShouldBe(_built);
     }
 
-    // A real cylinder is at most as long as the shortest gap between the hubs, so the gap can at most double (#870, #1086).
+    // A real telescope's stage and rod are each at most as long as the shortest gap between the hubs,
+    // so the gap can at most triple (#870, #1086, #1211).
     [Theory]
     [InlineData(0.1, 0.5)]
-    [InlineData(1, 0)]
-    [InlineData(1, 1)]
-    public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastItsTravel(double stroke, double coilLength)
+    [InlineData(2, 0)]
+    [InlineData(2, 1)]
+    public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastHalfItsTravel(double stroke, double coilLength)
     {
         var spring = new SpringDef(1, 2, 3, stroke: stroke, coilLength: coilLength);
         var radii = Travel.HubRadii;
 
-        (Spring.ShortestLength(spring, _built, radii) - radii).ShouldBeGreaterThanOrEqualTo(Spring.TravelLength(spring, _built, radii));
+        (Spring.ShortestLength(spring, _built, radii) - radii).ShouldBeGreaterThanOrEqualTo((Spring.TravelLength(spring, _built, radii) / 2) - 1e-9);
+    }
+
+    // Two plain joints drawn 1 m apart, Stroke 200%: a gap of 70, so drawn at its longest a travel of
+    // 70 − 70/3 and Coil length spans 35 + that + 35. At 0.5 it rests as drawn a quarter of the way along.
+    [Theory]
+    [InlineData(0, 100, 240, 65)]
+    [InlineData(0.5, 30 + (70 / 1.5), 30 + (210 / 1.5), 100)]
+    [InlineData(1, 30 + (70.0 / 3), 100, 135)]
+    public void AtStroke200_ItRestsAndStopsWhereItsCoilLengthSays(double coilLength, double shortest, double longest, double rest)
+    {
+        var spring = new SpringDef(1, 2, 3, stroke: SpringDef.MaxStroke, coilLength: coilLength);
+        var radii = Travel.HubRadii;
+
+        Spring.ShortestLength(spring, _built, radii).ShouldBe(shortest, tolerance: 1e-9);
+        Spring.LongestLength(spring, _built, radii).ShouldBe(longest, tolerance: 1e-9);
+        Spring.RestLength(spring, _built, radii).ShouldBe(rest, tolerance: 1e-9);
     }
 
     // Stroke 20%: a travel of 20 on its shortest stop and 100/6 on its longest, so the rest length still

@@ -26,6 +26,9 @@ public sealed record SpringDef
     /// <summary>A new Spring's <see cref="Stroke"/>: the gap between its joints' hubs can be squeezed to half its longest.</summary>
     public const double DefaultStroke = 1;
 
+    /// <summary>The longest <see cref="Stroke"/>, as a Piston's (#1211).</summary>
+    public const double MaxStroke = PistonDef.MaxStroke;
+
     /// <summary>
     /// A new Spring's <see cref="CoilLength"/>: at its <see cref="DefaultStroke"/>, its travel is half its
     /// drawn gap between its joints' hubs, so its rest length is on its longest stop two thirds of the way along, drawn
@@ -79,9 +82,9 @@ public sealed record SpringDef
             throw new ArgumentOutOfRangeException(nameof(damping), "Spring damping must be finite and not negative.");
         }
 
-        if (!double.IsFinite(stroke) || stroke <= 0 || stroke > 1)
+        if (!double.IsFinite(stroke) || stroke <= 0 || stroke > MaxStroke)
         {
-            throw new ArgumentOutOfRangeException(nameof(stroke), "Spring stroke must be above 0 and at most 1.");
+            throw new ArgumentOutOfRangeException(nameof(stroke), $"Spring stroke must be above 0 and at most {MaxStroke}.");
         }
 
         if (!double.IsFinite(coilLength) || coilLength < MinCoilLength || coilLength > MaxCoilLength)
@@ -120,7 +123,7 @@ public sealed record SpringDef
     /// <summary>
     /// Its travel, as a Piston's of this Stroke drawn where its rest length is, kept within its stops
     /// (#974): drawn gap × s / (1 + at·s), at 0 on its shortest stop and 1 on its longest, the gap being
-    /// between its joints' hubs (#835). Above 0 and at most 1.
+    /// between its joints' hubs (#835). Above 0 and at most <see cref="MaxStroke"/>.
     /// </summary>
     public double Stroke { get; }
 

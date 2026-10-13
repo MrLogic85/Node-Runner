@@ -206,7 +206,14 @@ the seats; with no room between the seats there is no coil.
   width at 2000 N/m; a stiffer Spring gets fewer, thicker turns.
 - At rest length the turns stack solid over a third of the seat-to-seat
   span, at least 3, and past 2 m grow only with the square root of the span.
-  Preload shows as more or less coil.
+  Preload shows as more or less coil. They are never more than fit wire to
+  wire, with no gap, between the seats at the Spring's shortest length, so
+  a long Stroke squeezes them without overlapping, down to the 3-turn
+  minimum (#1211). With no gap the cap binds less, so a 1 m Spring at
+  Stroke 200% still shows more turns at a longer Coil length; where it
+  binds, as on a short Spring or one with a motor on its joint, a longer
+  Coil length can show fewer. Both spans are between the seats as drawn,
+  so a Servo's housing leaves fewer turns.
 - Turns spread and bunch as the Spring moves; their number never changes.
 - Passive: `detail`, no `accent`. All `danger` when too short.
 

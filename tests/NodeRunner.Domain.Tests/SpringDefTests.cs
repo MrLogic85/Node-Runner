@@ -27,13 +27,20 @@ public sealed class SpringDefTests
     [Theory]
     [InlineData(0, 1)]
     [InlineData(-0.1, 1)]
-    [InlineData(1.01, 1)]
+    [InlineData(2.01, 1)]
     [InlineData(double.NaN, 1)]
     [InlineData(1, -0.01)]
     [InlineData(1, 1.01)]
     [InlineData(1, double.NaN)]
     public void Constructor_WithAnOutOfRangeTravel_Throws(double stroke, double coilLength) =>
         Should.Throw<ArgumentOutOfRangeException>(() => new SpringDef(5, 1, 2, stroke: stroke, coilLength: coilLength));
+
+    [Theory]
+    [InlineData(0.1)]
+    [InlineData(1)]
+    [InlineData(SpringDef.MaxStroke)]
+    public void Constructor_AcceptsAStrokeAcrossItsWholeRange(double stroke) =>
+        new SpringDef(5, 1, 2, stroke: stroke).Stroke.ShouldBe(stroke);
 
     [Theory]
     [InlineData(0)]
