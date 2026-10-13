@@ -7,7 +7,8 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// An Angle sensor (#1205): a plain joint's ring and inner ring in <c>accent</c> on an opaque
 /// <c>panel</c> disc, standing in for its joint's ring or a Wheel's hub, and round it an <c>accent</c>
-/// arc from the Fixed side's direction to the Target side's, the shortest way (<see cref="AngleSensorGeometry"/>).
+/// arc between the Fixed side's direction and the Target side's that fills and empties with each
+/// <see cref="Turn"/> (<see cref="AngleSensorGeometry"/>).
 /// Both draw over the links, the arc with a knock-out edge (<c>docs/WORLD_VISUALS.md</c> → Angle sensor).
 /// A sensor missing a side draws its ring in <c>danger</c> with the "!" badge and no arc.
 /// Selected, it draws a halo outside the arc.
@@ -19,6 +20,7 @@ public partial class AngleSensorPart : PartVisual
     private float _fixedAngle;
     private float _targetAngle;
     private float _arcRadius = (float)AngleSensorDef.ArcRadius(rubber: false, touch: false);
+    private int? _turn;
     private bool _hasFixed = true;
     private bool _hasTarget = true;
     private bool _simplified;
@@ -50,6 +52,16 @@ public partial class AngleSensorPart : PartVisual
         set => Change(ref _arcRadius, value);
     }
 
+    /// <summary>
+    /// The turn the sides are on, which picks the arc's way round (<see cref="AngleSensorGeometry.Sweep"/>);
+    /// null at rest (<see cref="AngleSensorGeometry.RestTurn"/>), as Build and thumbnails draw it.
+    /// </summary>
+    public int? Turn
+    {
+        get => _turn;
+        set => Change(ref _turn, value);
+    }
+
     public bool HasFixed
     {
         get => _hasFixed;
@@ -69,8 +81,8 @@ public partial class AngleSensorPart : PartVisual
         set => Change(ref _simplified, value);
     }
 
-    /// <summary>The arc's centre line in the part's frame: a single point with the sides in line, none with a side missing.</summary>
-    public Vector2[] Arc => _arc ??= AngleSensorGeometry.ArcPoints(ArcRadius, HasFixed ? FixedAngle : null, HasTarget ? TargetAngle : null);
+    /// <summary>The arc's centre line in the part's frame (<see cref="AngleSensorGeometry.ArcPoints"/>).</summary>
+    public Vector2[] Arc => _arc ??= AngleSensorGeometry.ArcPoints(ArcRadius, HasFixed ? FixedAngle : null, HasTarget ? TargetAngle : null, Turn);
 
     /// <summary>A sensor missing a side cannot train, so it draws in danger with the badge and no arc (#1111).</summary>
     private bool Missing => !HasFixed || !HasTarget;
