@@ -35,7 +35,7 @@ public sealed class BuildStackedPartsTests
         var (build, _) = Stacked();
 
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldBeNull();
-        build.PlacementNote!.Text.ShouldBe(UiText.Plain("One Servo, Motor or Brake per joint"));
+        build.PlacementNote!.Text.ShouldBe(UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint"));
         build.PlacePart(BuildPart.Wheel, _middleJoint).ShouldBeNull();
         build.PlacementNote!.Text.ShouldBe(UiText.Plain("One wheel per joint"));
         build.Servos.Count.ShouldBe(1);

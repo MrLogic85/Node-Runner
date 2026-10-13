@@ -17,7 +17,7 @@ public sealed class PartTrayTests
         PartTray.Groups().Select(group => group.Rows.Select(row => row.Name).ToArray()).ShouldBe(
         [
             Plain("Servo", "Stepper", "Motor", "Brake", "Wheel", "Rubber"),
-            Plain("Accelerometer", "Camera", "Touch sensor", "Pulse"),
+            Plain("Accelerometer", "Camera", "Touch sensor", "Angle sensor", "Pulse"),
             Plain("Battery", "Generator", "Fuel tank"),
         ]);
     }
@@ -40,12 +40,13 @@ public sealed class PartTrayTests
     }
 
     [Theory]
-    [InlineData(BuildPart.Servo, "Turns its joint to a target angle and holds it there.", "Tap a joint to place it. A joint holds one Servo, Motor or Brake.")]
-    [InlineData(BuildPart.VelocityMotor, "Turns one side round and round. The brain picks how fast and which way.", "Tap a joint to place it. A joint holds one Servo, Motor or Brake.")]
+    [InlineData(BuildPart.Servo, "Turns its joint to a target angle and holds it there.", "Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor.")]
+    [InlineData(BuildPart.VelocityMotor, "Turns one side round and round. The brain picks how fast and which way.", "Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor.")]
     [InlineData(BuildPart.Wheel, "Rolls freely on the ground. Add a Motor or Servo to power it.", "Tap a joint to place it. A joint holds one wheel.")]
     [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
-    [InlineData(BuildPart.TouchSensor, "Feels how near its joint is to the ground.", "Tap a joint to place it. A joint holds one sensor.")]
+    [InlineData(BuildPart.TouchSensor, "Feels how near its joint is to the ground.", "Tap a joint to place it. A joint holds one Touch sensor.")]
     [InlineData(BuildPart.Rubber, "Makes its joint grip the ground.", "Tap a joint to place it. A joint holds one rubber.")]
+    [InlineData(BuildPart.AngleSensor, "Tells the brain the angle between its two sides, and how fast it turns.", "Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor.")]
     public void Create_WithAPickedPart_SelectsItsRow_AndSaysUnderItWhatItDoesAndWhereItGoes(BuildPart part, string info, string placement)
     {
         var tray = PartTray.Create(part);
@@ -103,7 +104,7 @@ public sealed class PartTrayTests
     }
 
     [Fact]
-    public void SensorsTab_HasTheAccelerometerCameraAndTouchSensorAvailable_AndPulseComingLater()
+    public void SensorsTab_HasTheAccelerometerCameraTouchAndAngleSensorAvailable_AndPulseComingLater()
     {
         var sensors = PartTray.Groups()[1].Rows;
 
@@ -112,6 +113,7 @@ public sealed class PartTrayTests
                 (BuildPart.Accelerometer, PartTrayRowState.Available),
                 (BuildPart.Camera, PartTrayRowState.Available),
                 (BuildPart.TouchSensor, PartTrayRowState.Available),
+                (BuildPart.AngleSensor, PartTrayRowState.Available),
                 (BuildPart.Pulse, PartTrayRowState.ComingLater),
             ]);
     }
@@ -121,7 +123,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.Servo and not BuildPart.VelocityMotor and not BuildPart.Brake and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.AngleSensor and not BuildPart.Servo and not BuildPart.VelocityMotor and not BuildPart.Brake and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable);
     }
 
@@ -138,6 +140,7 @@ public sealed class PartTrayTests
             (BuildPart.Accelerometer, null),
             (BuildPart.Camera, null),
             (BuildPart.TouchSensor, null),
+            (BuildPart.AngleSensor, null),
             (BuildPart.Pulse, "0.14.4"),
             (BuildPart.Battery, "0.18.0"),
             (BuildPart.Generator, "0.18.0"),

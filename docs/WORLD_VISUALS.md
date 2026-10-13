@@ -162,6 +162,13 @@ cue for speed. An Angle sensor missing a side, as on a loose joint (#1140),
 draws its ring in `danger` with the Servo's "!" badge and no arc.
 Thumbnails draw it as in Build, badge included.
 
+In Build, no link or placing ring round its joint covers the arc (#1206):
+a link's rings (Build canvas → Picked link and Link drag line) and a
+placing ring, taking or refused (→ Placing a part), sit on its selection
+halo (Selection marks) whenever they would lie inside it, counting an
+Angle sensor, Rubber or Touch sensor being placed on that joint
+(`BuildViewModel.RingRadiusAt`).
+
 ### Piston
 
 A telescoping rod from joint A to joint B. The cylinder starts at the edge
@@ -342,13 +349,15 @@ above every shadow.
   where joints can go, so the Training arena has none (#668).
 - **Link drag line (#920):** dashed `halo` over no joint, solid `halo` once
   it will attach, dashed `danger` with a crossed `danger` ring where the
-  joint would refuse. It is drawn over the creature and is all the feedback:
+  joint would refuse; its joint rings are clear of an Angle sensor's arc
+  (Angle sensor). It is drawn over the creature and is all the feedback:
   a finger often covers the target. A link that will replace another
   (#849, #1176) outlines it with two dashed `line-strong` lines over the
   creature, at that link's selection offset and from hub to hub.
 - **Picked link (#1057):** while a link is picked, each joint a drag draws
   it from has a dashed `halo` ring at `JointHalo` (12 dashes, the selection
-  ring's width), over the creature. It is dashed, as the drag line is
+  ring's width), over the creature, clear of an Angle sensor's arc (Angle
+  sensor). It is dashed, as the drag line is
   before it will attach, so it never reads as the solid selection ring.
   Selected joints are left unmarked, and so is a selected joint motor's joint,
   which still draws a link but has its own outline there. No ring is
@@ -359,11 +368,13 @@ above every shadow.
   taken beams dashed `danger`, and its picture where it would land. A
   dragged joint part rings the joints that take it `halo` and the joints
   that refuse it dashed `danger` (slot rules: `docs/BUILD_MODE.md`), each ring at the size the part will have there
-  (`PlacingTargets.JointRingOf`): a joint motor's or Brake's edge, a new Wheel, a
+  (`PlacingTargets.JointRingOf`): a joint motor's, Brake's or Angle sensor's edge, a new Wheel, a
   Rubber's skin, or a Touch sensor's cushion round the joint's largest
-  part. A dragged Wheel, Rubber or Touch sensor also shows itself on a free
-  joint it would land on, a Rubber as its skin and a Touch sensor as its
-  cushion. A picked part (#1016) marks the same free and taken targets
+  part; a refused joint's ring is round its own edge. Either is clear of an
+  Angle sensor's arc (Angle sensor). Every dragged joint part also shows
+  itself on a free joint it would land on: a Servo, Motor, Brake or Angle
+  sensor selected, with the sides it would take, a Wheel, a Rubber as its
+  skin and a Touch sensor as its cushion. A picked part (#1016) marks the same free and taken targets
   from the moment it is picked, so a tap can find them. The targets that
   take it rise over the other parts (Draw layers). A joint part's ring is
   also where a tap or drop lands (`docs/BUILD_MODE.md` → Parts tray).

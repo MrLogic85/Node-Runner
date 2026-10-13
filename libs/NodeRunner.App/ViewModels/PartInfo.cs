@@ -26,5 +26,7 @@ public static class PartInfo
 
     public static UiText Touch { get; } = UiText.Plain("Feels how near its joint is to the ground.");
 
+    public static UiText AngleSensor { get; } = UiText.Plain("Tells the brain the angle between its two sides, and how fast it turns.");
+
     public static UiText Rubber { get; } = UiText.Plain("Makes its joint grip the ground.");
 }

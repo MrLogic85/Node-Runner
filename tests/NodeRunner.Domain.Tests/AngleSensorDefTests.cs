@@ -132,4 +132,33 @@ public sealed class AngleSensorDefTests
         TouchSensorDef[]? touchSensors = null,
         RubberDef[]? rubbers = null) =>
         new(_nodes, _beams, [], servos ?? [], [], [], wheels ?? [], touchSensors ?? [], rubbers ?? [], motors ?? [], brakes ?? [], angleSensors, nextPartId: 10);
+
+    [Theory]
+    [InlineData(false, false, 19)]
+    [InlineData(true, false, 22)]
+    [InlineData(false, true, 24)]
+    [InlineData(true, true, 24)]
+    public void ArcRadius_LiesAGapOutsideTheJointsOutermostPart(bool rubber, bool touch, double radius)
+    {
+        AngleSensorDef.ArcRadius(rubber, touch).ShouldBe(radius);
+    }
+
+    [Fact]
+    public void ArcRadiusAt_LooksForARubberAndATouchSensorOnItsJoint()
+    {
+        AngleSensorDef.ArcRadiusAt(2, rubberNodes: [1, 2], touchSensorNodes: [3]).ShouldBe(22);
+        AngleSensorDef.ArcRadiusAt(3, rubberNodes: [1, 2], touchSensorNodes: [3]).ShouldBe(24);
+        AngleSensorDef.ArcRadiusAt(4, rubberNodes: [1, 2], touchSensorNodes: [3]).ShouldBe(19);
+    }
+
+    [Fact]
+    public void Halo_LiesAGapOutsideTheArc_MarkedRoundItsOuterEdgeAsAJointsHalo()
+    {
+        var bare = AngleSensorDef.ArcRadius(rubber: false, touch: false);
+
+        AngleSensorDef.MarkRadius(bare).ShouldBe(21);
+        AngleSensorDef.HaloRadius(bare).ShouldBe(24);
+        AngleSensorDef.HaloRadius(AngleSensorDef.ArcRadius(rubber: false, touch: true)).ShouldBe(29);
+        (AngleSensorDef.HaloRadius(bare) - (AngleSensorDef.HaloWidth / 2)).ShouldBe(bare + (AngleSensorDef.ArcWidth / 2) + SelectionMarks.Gap);
+    }
 }

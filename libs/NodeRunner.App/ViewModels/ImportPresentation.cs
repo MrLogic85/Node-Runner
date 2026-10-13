@@ -89,8 +89,7 @@ public sealed record ImportPresentation(
         _ => (UiText.Plain("This code is damaged"), UiText.Plain("Part of it is missing or changed. Ask for the code again.")),
     };
 
-    // One row per kind of part the creature has; the screen's authored rows set the order. The Angle
-    // sensor has no row until its glyph and Build placement (#1206).
+    // One row per kind of part the creature has; the screen's authored rows set the order.
     private static ImportPartRow[] PartsOf(CreatureDef creature) =>
     [
         .. new ImportPartRow[]
@@ -100,6 +99,7 @@ public sealed record ImportPresentation(
             new(PartSettingsKind.Accelerometer, creature.Sensors.Count(sensor => sensor.Kind == SensorKind.Accelerometer)),
             new(PartSettingsKind.Camera, creature.Sensors.Count(sensor => sensor.Kind == SensorKind.Camera)),
             new(PartSettingsKind.Touch, creature.TouchSensors.Count),
+            new(PartSettingsKind.AngleSensor, creature.AngleSensors.Count),
             new(PartSettingsKind.Servo, creature.Servos.Count),
             new(PartSettingsKind.VelocityMotor, creature.VelocityMotors.Count),
             new(PartSettingsKind.Brake, creature.Brakes.Count),

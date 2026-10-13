@@ -766,7 +766,7 @@ public sealed class BuildPlacementTests
 
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldNotBeNull();
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldBeNull();
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One Servo, Motor or Brake per joint")));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint")));
     }
 
     [Fact]

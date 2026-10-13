@@ -18,7 +18,7 @@ public partial class AngleSensorPart : PartVisual
 
     private float _fixedAngle;
     private float _targetAngle;
-    private float _arcRadius = AngleSensorGeometry.ArcRadius(rubber: false, touch: false);
+    private float _arcRadius = (float)AngleSensorDef.ArcRadius(rubber: false, touch: false);
     private bool _hasFixed = true;
     private bool _hasTarget = true;
     private bool _simplified;
@@ -43,7 +43,7 @@ public partial class AngleSensorPart : PartVisual
         set => Change(ref _targetAngle, value);
     }
 
-    /// <summary>The arc's centre line, outside the joint's outermost part (<see cref="AngleSensorGeometry.ArcRadius"/>).</summary>
+    /// <summary>The arc's centre line, outside the joint's outermost part (<see cref="AngleSensorDef.ArcRadius"/>).</summary>
     public float ArcRadius
     {
         get => _arcRadius;
@@ -99,7 +99,7 @@ public partial class AngleSensorPart : PartVisual
 
         if (Selected)
         {
-            pen.Ring(Vector2.Zero, AngleSensorGeometry.HaloRadius(ArcRadius), Theme.SelectionGlow, Theme.SelectionRingWidth, _haloSegments);
+            pen.Ring(Vector2.Zero, (float)AngleSensorDef.HaloRadius(ArcRadius), Theme.SelectionGlow, (float)AngleSensorDef.HaloWidth, _haloSegments);
         }
 
         if (Missing)

@@ -47,7 +47,11 @@ public sealed class CreatureBuilderAngleSensorTests
 
         builder.AddBrake(far);
         Should.Throw<ArgumentException>(() => builder.AddAngleSensor(far));
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.AddAngleSensor(999));
+        Should.Throw<ArgumentException>(() => builder.AddAngleSensor(999)).Message.ShouldBe(CreatureBuilder.AngleSensorsGoOnAJointReason.Message);
+        builder.CanAddAngleSensor(999, out var offJoint).ShouldBeFalse();
+        offJoint.ShouldBe(CreatureBuilder.AngleSensorsGoOnAJointReason);
+        builder.CanAddAngleSensor(far, out var taken).ShouldBeFalse();
+        taken.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
     }
 
     [Fact]

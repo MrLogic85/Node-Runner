@@ -12,7 +12,8 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
     /// refuses a delete that would change its model: one that takes a part with brain ports, also by
-    /// cascade (a joint's Piston, motor or Touch sensor, a beam's sensor), or clears a motor's Fixed or Target link,
+    /// cascade (a joint's Piston, motor, Touch sensor or Angle sensor, a beam's sensor), or clears a motor's or an
+    /// Angle sensor's Fixed or Target link,
     /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel,
     /// a Rubber and a Brake have no ports, so they can go, and so can a Brake's side (#1041).
     /// </summary>
@@ -62,8 +63,8 @@ public sealed partial class BuildViewModel
     }
 
     // On a locked Creation, a note on each part that makes the delete change the model, in id order
-    // within each kind: each part with brain ports it removes, and each kept motor whose Fixed or
-    // Target link it clears. It tries the delete on a copy of the body, so every cascade counts
+    // within each kind: each part with brain ports it removes, and each kept motor or Angle sensor
+    // whose Fixed or Target link it clears. It tries the delete on a copy of the body, so every cascade counts
     // exactly as the delete does it. Empty when the delete may go ahead.
     private List<CanvasNote> DeleteRefusalNotes()
     {
@@ -105,6 +106,15 @@ public sealed partial class BuildViewModel
             }
         }
 
+        var keptAngleSensors = after.AngleSensors.Select(MotorLinks).ToHashSet();
+        foreach (var angleSensor in before.AngleSensors)
+        {
+            if (!keptAngleSensors.Contains(MotorLinks(angleSensor)))
+            {
+                AddNote(CreatureElementKind.AngleSensor, angleSensor.Id);
+            }
+        }
+
         var keptPistons = after.Pistons.Select(piston => piston.Id).ToHashSet();
         foreach (var piston in before.Pistons)
         {
@@ -126,7 +136,7 @@ public sealed partial class BuildViewModel
 
         return notes;
 
-        static (int, int?, int?) MotorLinks(IJointMotorDef motor) => (motor.Id, motor.FixedLinkId, motor.TargetLinkId);
+        static (int, int?, int?) MotorLinks(IMotorOrBrakeDef motor) => (motor.Id, motor.FixedLinkId, motor.TargetLinkId);
         void AddNote(CreatureElementKind kind, int id) =>
             notes.Add(new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), _wouldChangeModelNote));
     }

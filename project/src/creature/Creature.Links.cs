@@ -105,9 +105,10 @@ public partial class Creature
             var angleSensor = definition.AngleSensors[i];
             _angleSensors[i] = new AngleSensorJoint(angleSensor, MotorSidesFor(definition, angleSensor));
             var sides = _angleSensors[i].Sides;
-            var arcRadius = AngleSensorGeometry.ArcRadius(
-                rubber: definition.Rubbers.Any(rubber => rubber.NodeId == angleSensor.NodeId),
-                touch: definition.TouchSensors.Any(touch => touch.NodeId == angleSensor.NodeId));
+            var arcRadius = (float)AngleSensorDef.ArcRadiusAt(
+                angleSensor.NodeId,
+                definition.Rubbers.Select(rubber => rubber.NodeId),
+                definition.TouchSensors.Select(touch => touch.NodeId));
             var knockout = CreateKnockout(Vector2.Zero, Vector2.Zero, AngleSensorGeometry.ArcWidth / 2);
             knockout.Position = sides.JointLocalPosition;
             var visual = new AngleSensorVisual

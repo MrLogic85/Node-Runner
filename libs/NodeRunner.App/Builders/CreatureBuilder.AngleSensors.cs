@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -6,16 +7,38 @@ namespace NodeRunner.App.Builders;
 /// <summary>
 /// The Angle sensors (#1204): joint sensors that fill a joint's motor-or-brake slot and take their
 /// sides by the Servo's rules (#1118). They have inputs only and apply no force, so they are not
-/// joint motors. Placing them in Build is #1206.
+/// joint motors. Build places them as it does a Brake (#1206).
 /// </summary>
 public sealed partial class CreatureBuilder
 {
+    /// <summary>Why an Angle sensor dropped on anything but a joint is refused (#1206).</summary>
+    public static UiText AngleSensorsGoOnAJointReason { get; } = UiText.Plain("Angle sensors go on a joint");
+
     /// <summary>Why an Angle sensor cannot read yet: it needs two sides at its joint (#1118).</summary>
     public static UiText AngleSensorNeedsTwoSidesReason { get; } = UiText.Plain("An Angle sensor needs two links, or a link and a Wheel");
 
     private readonly List<AngleSensorDef> _angleSensors = [];
 
     public IReadOnlyList<AngleSensorDef> AngleSensors => _angleSensors;
+
+    /// <summary>Whether an Angle sensor can sit on this node; if not, <paramref name="reason"/> says why.</summary>
+    public bool CanAddAngleSensor(int nodeId, [NotNullWhen(false)] out UiText? reason)
+    {
+        if (!HasNode(nodeId))
+        {
+            reason = AngleSensorsGoOnAJointReason;
+            return false;
+        }
+
+        if (HasMotorOrBrake(nodeId))
+        {
+            reason = OneMotorOrBrakePerJointReason;
+            return false;
+        }
+
+        reason = null;
+        return true;
+    }
 
     /// <summary>Adds an Angle sensor with its sides picked as a new Servo's are (<see cref="JointMotor.DefaultSides"/>).</summary>
     public int AddAngleSensor(int nodeId)
@@ -27,10 +50,9 @@ public sealed partial class CreatureBuilder
     /// <summary>Adds an Angle sensor with the given Fixed and Target sides, each at the joint or empty.</summary>
     public int AddAngleSensor(int nodeId, int? fixedLinkId, int? targetLinkId)
     {
-        NodeIndexOf(nodeId);
-        if (HasMotorOrBrake(nodeId))
+        if (!CanAddAngleSensor(nodeId, out var reason))
         {
-            throw new ArgumentException(OneMotorOrBrakePerJointReason.Message);
+            throw new ArgumentException(reason.Message);
         }
 
         foreach (var linkId in new[] { fixedLinkId, targetLinkId }.OfType<int>())

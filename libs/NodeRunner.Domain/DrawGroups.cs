@@ -123,7 +123,9 @@ public sealed class DrawGroups
     /// (#1086), under a ring, hub or motor. A Wheel is hit only at its hub (#1086); its tyre and its
     /// see-through middle are left to a tap's last fallback, <see cref="WheelDiscAt"/>. Parts rank by <see cref="Rank"/>, the <paramref name="raised"/> ones on
     /// the selected surface. A motor (a Servo or Velocity motor), Brake or Wheel is hit as itself; a Brake is drawn at a
-    /// plain joint's size in place of the ring or the Wheel's hub, so it is hit there instead of them. Null off every part. Joint positions
+    /// plain joint's size in place of the ring or the Wheel's hub, so it is hit there instead of them. An Angle sensor's
+    /// ring is drawn there too, but it is hit as its joint, or its Wheel, which callers take for the joint's parts; its arc
+    /// adds no tap area. Null off every part. Joint positions
     /// come from <c>nodeAt</c>, so a moving creature is hit where it is drawn now.
     /// </summary>
     public CreatureElementSelection? PartAt(

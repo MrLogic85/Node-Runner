@@ -27,6 +27,7 @@ list; move one only with a new issue.
 | `SensorDef.DefaultAim` | A new Camera's aim, filled in by `CreatureDef` at construction | #622 |
 | `SensorPicture` | Where a sensor's picture sits and senses from, and the area a tap on it hits, shared by the sim, Build and Training | #576, #1086 |
 | `SelectionMarks` | The selection gap, a joint's halo and touch reach, shared by Build's gestures and the drawing in Build and Training | #710 |
+| `AngleSensorDef.ArcRadius`, `ArcRadiusAt`, `MarkRadius`, `HaloRadius` | Where an Angle sensor's arc and halo sit, shared by its drawing and Build's link and placing rings, which clear the arc | #1206 |
 | `MapGround` | A map's ground height at x, part of `MapDef` and read by the arena | #443 |
 | `DrawGroups`, `DrawSlot`, `RaisedParts` | The creature's draw order and the parts a selection raises, shared by the drawing and the touches in Build and Training | #1107 |
 

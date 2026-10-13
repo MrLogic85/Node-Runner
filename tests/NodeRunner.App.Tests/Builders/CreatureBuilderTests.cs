@@ -649,7 +649,7 @@ public sealed class CreatureBuilderTests
 
         notAJoint.ShouldBe(UiText.Plain("Wheels go on a joint"));
         secondWheel.ShouldBe(UiText.Plain("One wheel per joint"));
-        secondServo.ShouldBe(UiText.Plain("One Servo, Motor or Brake per joint"));
+        secondServo.ShouldBe(UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint"));
         Should.Throw<ArgumentException>(() => builder.AddWheel(joint));
     }
 
@@ -737,7 +737,7 @@ public sealed class CreatureBuilderTests
         builder.CanAddTouchSensor(joint, out var second).ShouldBeFalse();
         builder.CanAddTouchSensor(builder.Beams[0].Id, out var notAJoint).ShouldBeFalse();
 
-        second.ShouldBe(UiText.Plain("One sensor per joint"));
+        second.ShouldBe(UiText.Plain("One Touch sensor per joint"));
         notAJoint.ShouldBe(UiText.Plain("Touch sensors go on a joint"));
         Should.Throw<ArgumentException>(() => builder.AddTouchSensor(joint));
     }
