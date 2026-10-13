@@ -25,7 +25,7 @@ public sealed class NewCreationWorkflow : INewCreationWorkflow
     public CreationDef Create(Func<UiText, string> inPlayerLanguage)
     {
         ArgumentNullException.ThrowIfNull(inPlayerLanguage);
-        var creation = new CreationDef(_newId(), inPlayerLanguage(UntitledName), new CreatureDef([], [], [], nextPartId: 1));
+        var creation = new CreationDef(_newId(), inPlayerLanguage(UntitledName), new CreatureDef([], nextPartId: 1));
         _repository.Save(creation);
         return creation;
     }

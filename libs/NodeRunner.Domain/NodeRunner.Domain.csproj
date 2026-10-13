@@ -4,4 +4,11 @@
     <RootNamespace>NodeRunner.Domain</RootNamespace>
     <AssemblyName>NodeRunner.Domain</AssemblyName>
   </PropertyGroup>
+
+  <!-- The per-kind CreatureDef constructors are for tests: see AGENTS.md → Rules. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="NodeRunner.Domain.Tests" />
+    <InternalsVisibleTo Include="NodeRunner.Mechanics.Tests" />
+    <InternalsVisibleTo Include="NodeRunner.App.Tests" />
+  </ItemGroup>
 </Project>

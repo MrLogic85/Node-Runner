@@ -619,13 +619,9 @@ public partial class CreatureParts : Node2D
         }
 
         var nodeIds = beams.SelectMany(beam => new[] { beam.NodeA, beam.NodeB }).ToHashSet();
-        var beamIds = beams.Select(beam => beam.Id).ToHashSet();
         try
         {
-            return new CreatureDef(
-                shape.Nodes.Where(node => nodeIds.Contains(node.Id)).ToArray(),
-                beams,
-                []);
+            return new CreatureDef([.. shape.Nodes.Where(node => nodeIds.Contains(node.Id)), .. beams]);
         }
         catch (ArgumentException)
         {

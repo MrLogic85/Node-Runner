@@ -998,7 +998,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
-    public CreatureDef Build() => new(_nodes, _beams, _sensors, _servos, _pistons, _springs, _wheels, _touchSensors, _rubbers, _velocityMotors, _brakes, _angleSensors, _nextPartId);
+    public CreatureDef Build() => new([.. _nodes, .. _beams, .. _sensors, .. _pistons, .. _springs, .. JointParts], _nextPartId);
 
     /// <summary>The current drawing if it can be simulated, else the player-facing problems that stop it.</summary>
     public bool TryBuild(out CreatureDef? creature, out IReadOnlyList<UiText> errors)

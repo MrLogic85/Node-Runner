@@ -208,7 +208,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private void Restore(CreatureDef body, PartSet? reselect)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
-        _builder = new CreatureBuilder(new CreatureDef(body.Nodes, body.Beams, body.Sensors, body.Servos, body.Pistons, body.Springs, body.Wheels, body.TouchSensors, body.Rubbers, body.VelocityMotors, body.Brakes, body.AngleSensors, nextPartId));
+        _builder = new CreatureBuilder(new CreatureDef(body.Parts, nextPartId));
         if (reselect is not null)
         {
             ClearSelectionSets();
