@@ -64,11 +64,11 @@ msgstr ""
 msgid "A spring must connect two different joints."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Accel {0}"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Accelerometer"
 msgstr ""
@@ -123,7 +123,7 @@ msgstr ""
 msgid "An example error. Toggle Visible to preview."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Angle sensor"
 msgstr ""
@@ -136,7 +136,7 @@ msgstr ""
 msgid "Angle sensors go on a joint"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Angle {0}"
 msgstr ""
 
@@ -149,11 +149,11 @@ msgid "Battery"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Beam"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Beam {0}"
 msgstr ""
 
@@ -189,12 +189,12 @@ msgstr ""
 msgid "BrainFocus · Decides"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Brake"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Brake {0}"
 msgstr ""
 
@@ -210,12 +210,12 @@ msgstr ""
 msgid "Build"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Camera"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Camera {0}"
 msgstr ""
 
@@ -506,12 +506,12 @@ msgid "Its rays see how near the ground is. Drag the round handle to aim it."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Joint"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Joint {0}"
 msgstr ""
 
@@ -581,12 +581,12 @@ msgstr ""
 msgid "More maps come in a later version."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Motor"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Motor {0}"
 msgstr ""
 
@@ -747,11 +747,11 @@ msgid "Pick a Target part"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Piston"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Piston {0}"
 msgstr ""
 
@@ -823,7 +823,7 @@ msgstr ""
 msgid "Rotate"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Rubber"
 msgstr ""
@@ -832,7 +832,7 @@ msgstr ""
 msgid "Rubber goes on a joint"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Rubber {0}"
 msgstr ""
 
@@ -887,12 +887,12 @@ msgstr ""
 msgid "Sensors"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Servo"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Servo {0}"
 msgstr ""
 
@@ -952,11 +952,11 @@ msgid "Spread"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Spring"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Spring {0}"
 msgstr ""
 
@@ -1175,7 +1175,7 @@ msgstr ""
 msgid "Too short"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Touch sensor"
 msgstr ""
@@ -1188,7 +1188,7 @@ msgstr ""
 msgid "Touch sensors go on a joint"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Touch {0}"
 msgstr ""
 
@@ -1282,12 +1282,12 @@ msgstr ""
 msgid "Weight"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Wheel"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartNames.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "Wheel {0}"
 msgstr ""
 
@@ -1327,59 +1327,59 @@ msgstr ""
 msgid "Your latest edits could not be saved."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "across"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "along"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "angle"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "angle cos"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "angle sin"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "centre"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "far left"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "far right"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "hit"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "left"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "length"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "right"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "speed"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "strength"
 msgstr ""
 
@@ -1388,7 +1388,7 @@ msgstr ""
 msgid "swaps"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortDisplay.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "touch"
 msgstr ""
 
@@ -1584,63 +1584,63 @@ msgstr[1] ""
 msgid "{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: across"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: along"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: angle"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: angle cos"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: angle sin"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: centre"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: far left"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: far right"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: hit"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: left"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: length"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: right"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: speed"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: strength"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainPortLabels.cs
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: touch"
 msgstr ""
 

@@ -3,7 +3,7 @@ using NodeRunner.ML;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>One creature with every part kind that has brain ports, a Wheel, a Rubber and a Brake, and a direct brain that fits it.</summary>
+/// <summary>One creature with every part kind, and a direct brain that fits it.</summary>
 internal static class PortedCreature
 {
     public const int Accelerometer = 8;
