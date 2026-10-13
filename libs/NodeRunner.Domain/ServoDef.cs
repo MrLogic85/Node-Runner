@@ -132,8 +132,12 @@ public sealed record ServoDef : IJointMotorDef
     public ServoDef WithSettings(double strength, double range, double start, double maxSpeed, double riseTime) =>
         new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength, range, start, maxSpeed, riseTime);
 
-    public ServoDef WithLinks(int? fixedLinkId, int? targetLinkId, int newId) =>
-        new(newId, NodeId, fixedLinkId, targetLinkId, Name, Strength, Range, Start, MaxSpeed, RiseTime);
+    /// <summary>
+    /// The Servo with new sides. It keeps its id, and so its brain ports and training, through every
+    /// side change (<c>docs/CREATURE_MODEL.md</c> → "Editing identity rules").
+    /// </summary>
+    public ServoDef WithLinks(int? fixedLinkId, int? targetLinkId) =>
+        new(Id, NodeId, fixedLinkId, targetLinkId, Name, Strength, Range, Start, MaxSpeed, RiseTime);
 
     private static double Degrees(double value) => value * Math.PI / 180;
 }

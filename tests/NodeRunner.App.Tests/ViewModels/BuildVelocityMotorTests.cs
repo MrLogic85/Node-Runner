@@ -69,8 +69,10 @@ public sealed class BuildVelocityMotorTests
 
         build.CanPlacePart(BuildPart.VelocityMotor, _endJoint, out var reason).ShouldBeFalse();
         reason.ShouldBe(BuildViewModel.LockedReason);
-        build.SetMotorLink(6, fixedRole: true, linkId: 5).ShouldBeNull();
-        build.VelocityMotors.Single().Id.ShouldBe(6);
+        build.SetMotorLink(6, fixedRole: true, linkId: 5);
+
+        build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(6, 2, fixedLinkId: 4, targetLinkId: 5));
+        build.CanUndo.ShouldBeFalse();
         new BuildPresentationViewModel(build).SinglePart!.Pickers!.ShouldAllBe(picker => picker.IsLocked);
     }
 
@@ -86,7 +88,6 @@ public sealed class BuildVelocityMotorTests
         part.Kind.ShouldBe(PartSettingsKind.VelocityMotor);
         part.Title.ShouldBe(UiText.Plain("Motor"));
         part.Note.ShouldBe(PartInfo.VelocityMotor);
-        part.JointId.ShouldBe(2);
         part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorStrength]);
         part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorMaxSpeed, PartParameterId.RiseTime]);
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.IsLocked)).ShouldBe(
@@ -97,19 +98,23 @@ public sealed class BuildVelocityMotorTests
     }
 
     [Fact]
-    public void SetMotorLink_OnAVelocityMotor_SwapsItsSides_ReselectsItsNewId_AndUndoes()
+    public void SetMotorLink_OnAVelocityMotor_SwapsItsSides_AndKeepsItsIdAndSelection_ThroughUndoAndRedo()
     {
         var build = new BuildViewModel();
         build.Load(WithAMotor());
         build.SelectOnly(CreatureElementKind.VelocityMotor, 6);
 
-        var swapped = build.SetMotorLink(6, fixedRole: true, linkId: 5).ShouldNotBeNull();
+        build.SetMotorLink(6, fixedRole: true, linkId: 5);
 
-        swapped.ShouldNotBe(6);
-        build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(swapped, 2, fixedLinkId: 5, targetLinkId: 4));
-        build.SingleSelectedVelocityMotorId.ShouldBe(swapped);
+        build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(6, 2, fixedLinkId: 5, targetLinkId: 4));
+        build.SingleSelectedVelocityMotorId.ShouldBe(6);
+        build.Snapshot().NextPartId.ShouldBe(7);
         build.Undo();
-        build.VelocityMotors.Single().Id.ShouldBe(6);
+        build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(6, 2, fixedLinkId: 4, targetLinkId: 5));
+        build.SingleSelectedVelocityMotorId.ShouldBe(6);
+        build.Redo();
+        build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(6, 2, fixedLinkId: 5, targetLinkId: 4));
+        build.SingleSelectedVelocityMotorId.ShouldBe(6);
     }
 
     [Fact]

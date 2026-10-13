@@ -492,9 +492,11 @@ public sealed class CreatureBuilderTests
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void ALinkReplacingAServosBeam_TakesItsRole_UnderANewServoId(bool replaceFixed)
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public void ALinkReplacingAServosBeam_TakesItsRole_AndKeepsTheServosId(bool replaceFixed, bool piston)
     {
         var builder = PairBuilder();
         var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
@@ -503,14 +505,38 @@ public sealed class CreatureBuilderTests
         var second = builder.AddBeam(a, c);
         var servo = builder.AddServo(a);
         builder.Servos.Single().ShouldBe(new ServoDef(servo, a, first, second));
+        var (from, to) = replaceFixed ? (a, b) : (c, a);
 
-        var spring = replaceFixed ? builder.AddSpring(a, b) : builder.AddSpring(c, a);
+        var link = piston ? builder.AddPiston(from, to) : builder.AddSpring(from, to);
 
-        var moved = builder.Servos.Single();
-        moved.Id.ShouldNotBe(servo);
-        moved.Id.ShouldBeGreaterThan(spring);
-        moved.NodeId.ShouldBe(a);
-        (moved.FixedLinkId, moved.TargetLinkId).ShouldBe(replaceFixed ? (spring, second) : (first, spring));
+        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, replaceFixed ? link : first, replaceFixed ? second : link));
+        builder.NextPartId.ShouldBe(link + 1);
+    }
+
+    // Every link change keeps the Servo's id, and so its brain ports and training (#1177).
+    [Fact]
+    public void SetServoLink_KeepsItsId_ThroughEveryLinkChange()
+    {
+        var builder = PairBuilder();
+        var a = builder.Nodes[0].Id;
+        var first = builder.Beams[0].Id;
+        var second = builder.AddBeam(a, builder.AddNode(new Vector2D(0, 90)));
+        var third = builder.AddBeam(a, builder.AddNode(new Vector2D(-90, 0)));
+        var servo = builder.AddServo(a);
+        var wheel = builder.AddWheel(a);
+        builder.RemoveBeam(first);
+        var nextPartId = builder.NextPartId;
+
+        builder.SetServoLink(servo, fixedRole: true, third);
+        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, third, second));
+        builder.SetServoLink(servo, fixedRole: false, wheel);
+        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, third, wheel));
+        builder.SetServoLink(servo, fixedRole: true, wheel);
+        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, wheel, third));
+        builder.SetServoLink(servo, fixedRole: false, second);
+        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, wheel, second));
+
+        builder.NextPartId.ShouldBe(nextPartId);
     }
 
     [Fact]

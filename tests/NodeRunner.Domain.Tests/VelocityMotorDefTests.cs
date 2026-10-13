@@ -24,11 +24,11 @@ public sealed class VelocityMotorDefTests
     }
 
     [Fact]
-    public void WithLinks_GivesItANewId_AndKeepsItsSettings()
+    public void WithLinks_KeepsItsIdAndSettings()
     {
         var motor = new VelocityMotorDef(6, 1, 4, 5, "Drive", strength: 1000, maxSpeed: 3, riseTime: 0.5);
 
-        motor.WithLinks(5, 4, 9).ShouldBe(new VelocityMotorDef(9, 1, 5, 4, "Drive", strength: 1000, maxSpeed: 3, riseTime: 0.5));
+        motor.WithLinks(5, null).ShouldBe(new VelocityMotorDef(6, 1, 5, null, "Drive", strength: 1000, maxSpeed: 3, riseTime: 0.5));
     }
 
     [Fact]

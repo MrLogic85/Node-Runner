@@ -362,7 +362,7 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
-    public void SetMotorLink_WithMixedLinks_SwapsRolesAndGivesFreshId()
+    public void SetMotorLink_WithMixedLinks_SwapsRoles_AndKeepsTheServosIdAndSelection()
     {
         var build = PistonAndSpring();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
@@ -370,16 +370,16 @@ public sealed class BuildPlacementTests
 
         presentation.Pickers![0].Options.Select(option => option.Name).ShouldBe([UiText.Format("Piston {0}", 1), UiText.Format("Spring {0}", 1)]);
 
-        var newId = build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
+        build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
 
-        newId.ShouldBe(7);
         build.Servos.Select(servo => (servo.Id, servo.FixedLinkId, servo.TargetLinkId))
-            .ShouldBe([(7, 5, 4)]);
-        build.SingleSelectedServoId.ShouldBe(7);
+            .ShouldBe([(servoId, 5, 4)]);
+        build.SingleSelectedServoId.ShouldBe(servoId);
+        build.Snapshot().NextPartId.ShouldBe(servoId + 1);
     }
 
     [Fact]
-    public void SetMotorLink_AsFirstUndoStep_PresentationNeverSeesOldServoId()
+    public void SetMotorLink_AsFirstUndoStep_ShowsTheSameServo()
     {
         var build = PistonAndSpring();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
@@ -389,19 +389,19 @@ public sealed class BuildPlacementTests
         var shownIds = new List<int?>();
         presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
 
-        var newId = build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
+        build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
 
         build.CanUndo.ShouldBeTrue();
         shownIds.ShouldNotBeEmpty();
-        shownIds.ShouldAllBe(id => id == newId);
+        shownIds.ShouldAllBe(id => id == servoId);
     }
 
     [Fact]
-    public void UndoAndRedo_OfServoLinkChange_KeepTheServoSelected()
+    public void UndoAndRedo_OfServoLinkChange_KeepTheServosIdAndSelection()
     {
         var build = PistonAndSpring();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
-        var newId = build.SetMotorLink(servoId, fixedRole: true, linkId: 5)!.Value;
+        build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
         var presentation = new BuildPresentationViewModel(build);
         var shownIds = new List<int?>();
         presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
@@ -409,13 +409,14 @@ public sealed class BuildPlacementTests
         build.Undo();
 
         build.SingleSelectedServoId.ShouldBe(servoId);
-        build.Servos.Single().FixedLinkId.ShouldBe(4);
+        build.Servos.Select(servo => (servo.Id, servo.FixedLinkId)).ShouldBe([(servoId, 4)]);
 
         build.Redo();
 
-        build.SingleSelectedServoId.ShouldBe(newId);
+        build.SingleSelectedServoId.ShouldBe(servoId);
+        build.Servos.Select(servo => (servo.Id, servo.FixedLinkId)).ShouldBe([(servoId, 5)]);
         shownIds.ShouldNotBeEmpty();
-        shownIds.ShouldAllBe(id => id == servoId || id == newId);
+        shownIds.ShouldAllBe(id => id == servoId);
     }
 
     [Fact]
@@ -461,22 +462,21 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
-    public void ServoPanel_KeepsItsPanelId_ThroughLinkChangeUndoAndRedo()
+    public void ServoPanel_ShowsTheSameServo_ThroughLinkChangeUndoAndRedo()
     {
         var build = PistonAndSpring();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
         var presentation = new BuildPresentationViewModel(build);
-        var panelId = presentation.SinglePart!.PanelId;
 
         build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
-        presentation.SinglePart!.PanelId.ShouldBe(panelId);
+        presentation.SinglePart!.Id.ShouldBe(servoId);
         build.Undo();
-        presentation.SinglePart!.PanelId.ShouldBe(panelId);
+        presentation.SinglePart!.Id.ShouldBe(servoId);
         build.Redo();
-        presentation.SinglePart!.PanelId.ShouldBe(panelId);
+        presentation.SinglePart!.Id.ShouldBe(servoId);
 
         build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 4 } });
-        presentation.SinglePart!.PanelId.ShouldBe(4);
+        presentation.SinglePart!.Id.ShouldBe(4);
     }
 
     [Fact]
@@ -644,8 +644,7 @@ public sealed class BuildPlacementTests
         var build = ThreeBeams();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
         build.SetMotorLink(servoId, fixedRole: true, linkId: 6);
-        var picked = build.Servos.Single().Id;
-        build.SetMotorLink(picked, fixedRole: false, linkId: 7);
+        build.SetMotorLink(servoId, fixedRole: false, linkId: 7);
         build.Servos.Select(servo => (servo.FixedLinkId, servo.TargetLinkId)).ShouldBe([(6, 7)]);
 
         var pickers = new BuildPresentationViewModel(build).SinglePart!.Pickers!;
@@ -678,7 +677,7 @@ public sealed class BuildPlacementTests
             [(6, ServoLinkRole.Target, null), (7, ServoLinkRole.None, null)]);
     }
 
-    // Picking a link gives the Servo a new id (#911); its Play-tap note stays until both roles are set (#1006).
+    // A Servo's Play-tap note stays through a link pick until both roles are set (#1006).
     [Fact]
     public void AServosPlayTapNote_StaysThroughALinkPick_UntilBothRolesAreSet()
     {
@@ -696,13 +695,12 @@ public sealed class BuildPlacementTests
         build.DeleteSelectedParts();
         build.ShowTrainingBlockers();
 
-        var picked = build.SetMotorLink(servoId, fixedRole: false, linkId: 7)!.Value;
+        build.SetMotorLink(servoId, fixedRole: false, linkId: 7);
 
-        picked.ShouldNotBe(servoId);
         ServoNotes().ShouldHaveSingleItem().ShouldBe(
-            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, picked), UiText.Plain("Pick a Fixed link")));
+            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, servoId), UiText.Plain("Pick a Fixed link")));
 
-        build.SetMotorLink(picked, fixedRole: true, linkId: 6);
+        build.SetMotorLink(servoId, fixedRole: true, linkId: 6);
 
         ServoNotes().ShouldBeEmpty();
 
@@ -811,8 +809,29 @@ public sealed class BuildPlacementTests
         build.CanvasNotes().ShouldHaveSingleItem().Target.Id.ShouldBe(servoId);
     }
 
+    // A Play-tap mark belongs to the flagged Servo's id, not its joint: a new Servo on the same joint is unmarked.
     [Fact]
-    public void ALinkReplacingASelectedServosBeam_KeepsTheServoSelected_AndUndoesInOneStep()
+    public void AServosPlayTapMark_DoesNotPassToANewServoOnTheSameJoint_AndReturnsWithAnUndo()
+    {
+        var build = TwoBeams();
+        var servoId = build.PlacePart(BuildPart.Servo, _firstJoint)!.Value;
+        build.ShowTrainingBlockers();
+        build.ReplaceSelection(PartSet.None with { Servos = new HashSet<int> { servoId } });
+        build.DeleteSelectedParts();
+
+        var newServoId = build.PlacePart(BuildPart.Servo, _firstJoint)!.Value;
+
+        newServoId.ShouldNotBe(servoId);
+        CreatureReadiness.IsMissingALink(build.Servos.Single()).ShouldBeTrue();
+        build.CanvasNotes().ShouldBeEmpty();
+        build.Undo();
+        build.Undo();
+        build.Servos.Single().Id.ShouldBe(servoId);
+        build.CanvasNotes().ShouldHaveSingleItem().Target.ShouldBe(new CreatureElementSelection(CreatureElementKind.Servo, servoId));
+    }
+
+    [Fact]
+    public void ALinkReplacingASelectedServosBeam_KeepsTheServosIdAndSelection_AndUndoesInOneStep()
     {
         var build = TwoBeams();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
@@ -826,11 +845,10 @@ public sealed class BuildPlacementTests
 
         build.CanUndo.ShouldBeTrue();
         build.Beams.Select(beam => beam.Id).ShouldBe([5]);
-        var moved = build.Servos.Single();
-        (moved.FixedLinkId, moved.TargetLinkId).ShouldBe((piston, 5));
-        build.SingleSelectedServoId.ShouldBe(moved.Id);
+        build.Servos.Select(servo => (servo.Id, servo.FixedLinkId, servo.TargetLinkId)).ShouldBe([(servoId, piston, 5)]);
+        build.SingleSelectedServoId.ShouldBe(servoId);
         shownIds.ShouldNotBeEmpty();
-        shownIds.ShouldAllBe(id => id == moved.Id);
+        shownIds.ShouldAllBe(id => id == servoId);
 
         build.Undo();
 
@@ -841,7 +859,8 @@ public sealed class BuildPlacementTests
 
         build.Redo();
 
-        build.SingleSelectedServoId.ShouldBe(moved.Id);
+        build.Servos.Select(servo => (servo.Id, servo.FixedLinkId)).ShouldBe([(servoId, piston)]);
+        build.SingleSelectedServoId.ShouldBe(servoId);
     }
 
     [Fact]

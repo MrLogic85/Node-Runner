@@ -85,7 +85,6 @@ public sealed class BuildPresentationViewModel
                     canDelete,
                     PanelSliders(),
                     MotorPickers(servo, CreatureBuilder.ServoNeedsTwoSidesReason),
-                    servo.NodeId,
                     OnThisJoint: OnThisJoint(servo.NodeId));
             }
 
@@ -103,7 +102,6 @@ public sealed class BuildPresentationViewModel
                     canDelete,
                     PanelSliders(),
                     MotorPickers(motor, CreatureBuilder.VelocityMotorNeedsTwoSidesReason),
-                    motor.NodeId,
                     OnThisJoint: OnThisJoint(motor.NodeId));
             }
 
@@ -121,7 +119,6 @@ public sealed class BuildPresentationViewModel
                     canDelete,
                     PanelSliders(),
                     MotorPickers(brake, CreatureBuilder.BrakeNeedsTwoSidesReason),
-                    brake.NodeId,
                     OnThisJoint: OnThisJoint(brake.NodeId));
             }
 
@@ -441,8 +438,7 @@ public sealed class BuildPresentationViewModel
     private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];
 
     // The Fixed and Target pickers of a joint's motor-or-brake slot, the Servo's, Velocity motor's (#454)
-    // and Brake's (#1041) alike. A Brake has no ports: its sides change no model, so a locked Creation
-    // changes them too and a trained one does not learn again.
+    // and Brake's (#1041) alike. A Brake has no ports, so a locked Creation changes its sides too.
     private IReadOnlyList<PartPickerPresentation> MotorPickers(IMotorOrBrakeDef motor, UiText needsTwoSidesReason)
     {
         var keptLocked = _build.IsLocked && motor is IJointMotorDef;
@@ -452,7 +448,6 @@ public sealed class BuildPresentationViewModel
             .. _build.LinksAt(motor.NodeId).OrderBy(link => link.Id).Select(link => (link.Id, link.Kind)),
             .. _build.Wheels.Where(wheel => wheel.NodeId == motor.NodeId).Select(wheel => (wheel.Id, CreatureElementKind.Wheel)),
         ];
-        var trainedNote = !_build.IsLocked && _build.TrainingGeneration is not null && motor is IJointMotorDef ? UiText.Plain("Changing these makes it learn again.") : null;
         var twoLinksNote = _build.ServoNeedsTwoSides(motor.NodeId) ? needsTwoSidesReason : null;
 
         // Picking the other role's link swaps the two only when both are set; with one empty, it just moves.
@@ -472,7 +467,7 @@ public sealed class BuildPresentationViewModel
                 [.. links.Select(Option)],
                 chosen ? selected : null,
                 keptLocked,
-                keptLocked ? null : chosen ? trainedNote : twoLinksNote,
+                keptLocked || chosen ? null : twoLinksNote,
                 chosen ? null : placeholder);
 
             PartPickerOption Option((int Id, CreatureElementKind Kind) link)

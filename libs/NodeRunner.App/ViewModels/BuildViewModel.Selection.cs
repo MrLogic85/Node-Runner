@@ -209,35 +209,25 @@ public sealed partial class BuildViewModel
 
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
 
-    // The joints of the selected motors, Servos and Velocity motors.
-    private List<int> SelectedMotorJoints() =>
-    [
-        .. _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId),
-        .. _builder.VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).Select(motor => motor.NodeId),
-    ];
-
     // The joints under the selected joint parts, motors, Brakes, Wheels, Rubbers and Touch sensors.
     // Each joint once, though several parts of a stack can be selected (#1044).
     private HashSet<int> SelectedJointPartJoints() =>
     [
-        .. SelectedMotorJoints(),
+        .. _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId),
+        .. _builder.VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).Select(motor => motor.NodeId),
         .. _builder.Brakes.Where(brake => _selectedBrakeIds.Contains(brake.Id)).Select(brake => brake.NodeId),
         .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId),
         .. _builder.Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).Select(rubber => rubber.NodeId),
         .. _builder.TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).Select(touch => touch.NodeId),
     ];
 
-    // Drops the ids the body no longer has. Changing a motor's links gives it a new id (#911, #849),
-    // so the motor now on each of motorJoints, the joints of the motors selected before, stays selected.
-    private void PruneSelection(List<int> motorJoints)
+    // Drops the ids the body no longer has.
+    private void PruneSelection()
     {
         foreach (var kind in Enum.GetValues<CreatureElementKind>())
         {
             SelectedSet(kind).RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
         }
-
-        _selectedServoIds.UnionWith(_builder.Servos.Where(servo => motorJoints.Contains(servo.NodeId)).Select(servo => servo.Id));
-        _selectedVelocityMotorIds.UnionWith(_builder.VelocityMotors.Where(motor => motorJoints.Contains(motor.NodeId)).Select(motor => motor.Id));
     }
 
     // A joint part stands in for its joint (#973), also when Undo or Redo brings one back under a kept joint selection.

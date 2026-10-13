@@ -71,8 +71,7 @@ motor), Build treats every kind alike.
   empty. Renaming the creation, Unlock, Reset training, Copy creation and
   Delete creation are not steps and cannot be undone.
   - Undo keeps the selected parts that still exist; undoing a delete
-    selects the deleted parts again and Redo of it clears them (#878). A
-    selected joint motor stays selected when Undo or Redo swaps its links (#911).
+    selects the deleted parts again and Redo of it clears them (#878).
     An undone delete gets its trained weights back
     (`docs/CREATURE_MODEL.md` → "Build refits the brain it opened with").
   - Each edit has an owner, the canvas or a slider, so one never closes or
@@ -171,8 +170,8 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   - A Piston or Spring dropped on a pair a beam joins replaces that beam
     (#849), unless a sensor sits on it or the creation is locked, which
     shows "A beam already joins these joints"; while dragging, the beam is
-    outlined. A joint motor that held the beam holds the new link in the same
-    role, under a new id. One Undo brings the beam back. A Beam never
+    outlined. A joint motor or Brake that held the beam holds the new link in
+    the same role. One Undo brings the beam back. A Beam never
     replaces a link.
 - **Parts:** with nothing selected, the panel shows the Parts tray; drag a
   part from it onto the creature, or tap it and then tap where it goes
@@ -358,9 +357,8 @@ back, selected (#866, #878). Structure is read-only here: a beam's length
 is drawn, not a number. A part's note is its `PartInfo` line, the same as
 its row in the Links list; `BuildPresentationViewModel.SinglePart` owns the
 rows and copy. The panel scrolls back to the top when it shows another
-part, tool or selection count; a joint motor whose links a picker, Undo or Redo
-changed is still the same part, so the panel keeps its place
-(`PartSettingsPresentation.PanelId`, #910).
+part, tool or selection count, but keeps its place when a picker, Undo or
+Redo changes the part it shows (#910).
 
 **On this joint (#1044).** When the selected part's joint holds two or more
 parts, a small "On this joint" label and a strip of glyph tabs sit between

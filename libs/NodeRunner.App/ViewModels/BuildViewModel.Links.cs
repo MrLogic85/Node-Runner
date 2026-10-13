@@ -75,7 +75,6 @@ public sealed partial class BuildViewModel
 
         var linkId = _history.Change(() =>
         {
-            var motorJoints = SelectedMotorJoints();
             var id = link switch
             {
                 BuildLink.Beam => _builder.AddBeam(nodeIdA, nodeIdB),
@@ -83,9 +82,8 @@ public sealed partial class BuildViewModel
                 _ => _builder.AddSpring(nodeIdA, nodeIdB),
             };
 
-            // Within the step, like a motor link change: its Undo row refresh must not find a replaced
-            // beam (#849), or the old id of a motor that held it, still selected.
-            PruneSelection(motorJoints);
+            // Within the step: its Undo row refresh must not find a replaced beam (#849) still selected.
+            PruneSelection();
 
             return id;
         });

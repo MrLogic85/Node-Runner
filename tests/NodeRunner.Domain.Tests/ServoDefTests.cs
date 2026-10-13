@@ -15,6 +15,14 @@ public sealed class ServoDefTests
     }
 
     [Fact]
+    public void WithLinks_KeepsItsIdAndSettings()
+    {
+        var servo = new ServoDef(6, 1, 4, 5, "Elbow", strength: 1000, range: Math.PI / 2, start: 0.25, maxSpeed: 3, riseTime: 0.5);
+
+        servo.WithLinks(5, null).ShouldBe(new ServoDef(6, 1, 5, null, "Elbow", strength: 1000, range: Math.PI / 2, start: 0.25, maxSpeed: 3, riseTime: 0.5));
+    }
+
+    [Fact]
     public void CreatureDef_AllowsMissingServoLinks_ButRejectsWrongNodeOrSecondServo()
     {
         var nodes = new[] { new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0)), new NodeDef(3, new Vector2D(0, 1)) };

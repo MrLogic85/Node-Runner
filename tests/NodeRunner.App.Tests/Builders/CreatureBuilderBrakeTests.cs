@@ -158,7 +158,6 @@ public sealed class CreatureBuilderBrakeTests
         full.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
     }
 
-    // A Brake has no ports, so a new side keeps its id (#1041).
     [Fact]
     public void SetBrakeLink_PickingTheOtherRolesLink_SwapsTheSides_AndKeepsTheId()
     {
@@ -166,7 +165,7 @@ public sealed class CreatureBuilderBrakeTests
         var brake = builder.AddBrake(joint);
         builder.SetParameter(brake, PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
 
-        builder.SetBrakeLink(brake, fixedRole: true, second).ShouldBe(brake);
+        builder.SetBrakeLink(brake, fixedRole: true, second);
 
         builder.Brakes.Single().ShouldBe(new BrakeDef(brake, joint, second, first, strength: BrakeDef.LockedStrength));
         Should.Throw<ArgumentException>(() => builder.SetBrakeLink(brake, fixedRole: true, linkId: 999));

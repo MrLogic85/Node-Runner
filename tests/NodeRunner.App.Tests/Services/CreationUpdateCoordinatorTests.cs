@@ -168,6 +168,33 @@ public sealed class CreationUpdateCoordinatorTests
         build.IsLocked.ShouldBeTrue();
     }
 
+    // A link change keeps the motor's id, so its brain ports keep their weights and biases (#1177).
+    [Theory]
+    [InlineData(CreatureElementKind.Servo)]
+    [InlineData(CreatureElementKind.VelocityMotor)]
+    public void ApplyEdit_AfterAMotorLosesItsLinkAndPicksAnother_KeepsEveryWeight(CreatureElementKind kind)
+    {
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = Trained(MotorCreature(kind));
+        repository.Save(creation);
+        var brain = creation.Training!.Brain;
+        brain.Neurons.ShouldContain(neuron => neuron.PartId == 9);
+        var build = new BuildViewModel();
+        build.LoadCreation(creation);
+        build.Unlock();
+        build.SelectOnly(CreatureElementKind.Beam, 5);
+        build.DeleteSelectedParts();
+        build.SelectOnly(kind, 9);
+        build.SetMotorLink(9, fixedRole: true, linkId: 7);
+
+        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!;
+
+        updated.Creature.JointMotors.Select(motor => (motor.Id, motor.FixedLinkId, motor.TargetLinkId)).ShouldBe([(9, 7, 6)]);
+        updated.Training!.Brain.Neurons.ShouldBe(brain.Neurons, ignoreOrder: true);
+        updated.Training.Brain.Connections.ShouldBe(brain.Connections, ignoreOrder: true);
+    }
+
     [Fact]
     public void ApplyEdit_Rebuild_KeepsMatchedPorts_AndTheTrainingRecords()
     {
@@ -409,6 +436,21 @@ public sealed class CreationUpdateCoordinatorTests
         [],
         withSecondPiston ? [new PistonDef(10, 1, 2), new PistonDef(11, 2, 3)] : [new PistonDef(10, 1, 2)],
         nextPartId: 12);
+
+    // Motor 9 of kind on joint 2 turns beam 6 against beam 5; beam 7 is a spare link at joint 2 and beam 8 keeps joint 1 attached.
+    private static CreatureDef MotorCreature(CreatureElementKind kind) => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(100, 100))],
+        [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 2, 4), new BeamDef(8, 1, 4)],
+        [],
+        kind == CreatureElementKind.Servo ? [new ServoDef(9, 2, 5, 6)] : [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        kind == CreatureElementKind.VelocityMotor ? [new VelocityMotorDef(9, 2, 5, 6)] : [],
+        [],
+        nextPartId: 10);
 
     // Piston 10 and a Camera with the given rays on beam 4.
     private static CreatureDef CameraCreature(int rays) => new(
