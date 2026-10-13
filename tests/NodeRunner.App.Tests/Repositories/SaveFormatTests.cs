@@ -195,6 +195,24 @@ public sealed class SaveFormatTests : IDisposable
         repository.Get(creation.Id).ShouldNotBeNull().Creature.Sensors.ShouldBe([camera]);
     }
 
+    [Fact]
+    public void Repository_KeepsAStrokeOf200Percent()
+    {
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        var piston = new PistonDef(3, 1, 2, stroke: PistonDef.MaxStroke, start: 0);
+        var spring = new SpringDef(4, 2, 5, stroke: SpringDef.MaxStroke, coilLength: 1);
+        var creation = new CreationDef(
+            Guid.NewGuid(),
+            "Reacher",
+            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(5, new Vector2D(2, 2))], [], [], [piston], [spring], nextPartId: 6));
+
+        repository.Save(creation);
+
+        var loaded = repository.Get(creation.Id).ShouldNotBeNull().Creature;
+        loaded.Pistons.ShouldBe([piston]);
+        loaded.Springs.ShouldBe([spring]);
+    }
+
     private static CreationDef ExampleCreation() =>
         new(
             _exampleId,

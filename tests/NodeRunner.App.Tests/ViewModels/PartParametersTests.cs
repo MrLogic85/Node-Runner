@@ -40,6 +40,17 @@ public sealed class PartParametersTests
         PartParameters.SliderOver(PartParameterId.RiseTime, [piston.RiseTime]).Readout.ShouldBe(UiText.Format("{0} s", new FixedNumber(0.2, 1)));
     }
 
+    // #1211: the three-part telescope lets the gap triple.
+    [Fact]
+    public void Stroke_RunsFromTenToTwoHundredPercent_InStepsOfFive()
+    {
+        PartParameters.Stroke.Slider!.Range.ShouldBe(new SettingRange(10, 200, 5));
+        PartParameters.SliderOver(PartParameterId.Stroke, [PistonDef.MaxStroke])
+            .ShouldBe(new ParameterSlider(PartParameterId.Stroke, UiText.Plain("Stroke"), UiText.Format("{0}%", new FixedNumber(200, 0)), 1, 1, 5.0 / 190));
+        PartParameters.SliderOver(PartParameterId.Stroke, [0.3, SpringDef.MaxStroke]).Readout
+            .ShouldBe(UiText.Format("{0}–{1}%", new FixedNumber(30, 0), new FixedNumber(200, 0)));
+    }
+
     [Fact]
     public void RiseTime_SnapsToItsFourStops_EvenlySpacedAlongTheSlider()
     {
@@ -117,8 +128,8 @@ public sealed class PartParametersTests
         PartParameters.ValueAt(PartParameterId.Strength, 0).ShouldBe(2000);
         PartParameters.ValueAt(PartParameterId.Strength, 1).ShouldBe(40000);
         PartParameters.ValueAt(PartParameterId.Stroke, 0).ShouldBe(0.1);
-        PartParameters.ValueAt(PartParameterId.Stroke, 0.51).ShouldBe(0.55);
-        PartParameters.ValueAt(PartParameterId.Stroke, 1).ShouldBe(1);
+        PartParameters.ValueAt(PartParameterId.Stroke, 0.51).ShouldBe(1.05);
+        PartParameters.ValueAt(PartParameterId.Stroke, 1).ShouldBe(PistonDef.MaxStroke);
         PartParameters.ValueAt(PartParameterId.MaxSpeed, 0.5).ShouldBe(230, tolerance: 1e-9);
     }
 

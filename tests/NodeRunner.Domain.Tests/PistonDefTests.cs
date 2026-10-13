@@ -17,7 +17,7 @@ public sealed class PistonDefTests
     [InlineData(0, 0.3, 0.5, 200, 0.2)]
     [InlineData(double.NaN, 0.3, 0.5, 200, 0.2)]
     [InlineData(15000, 0, 0.5, 200, 0.2)]
-    [InlineData(15000, 1.01, 0.5, 200, 0.2)]
+    [InlineData(15000, 2.01, 0.5, 200, 0.2)]
     [InlineData(15000, double.NaN, 0.5, 200, 0.2)]
     [InlineData(15000, 0.3, -0.01, 200, 0.2)]
     [InlineData(15000, 0.3, 1.01, 200, 0.2)]
@@ -31,7 +31,7 @@ public sealed class PistonDefTests
 
     [Theory]
     [InlineData(1, 0)]
-    [InlineData(1, 1)]
+    [InlineData(PistonDef.MaxStroke, 1)]
     [InlineData(0.1, 0.5)]
     public void Constructor_AcceptsTheWholeStrokeAndEitherEndAsItsStart(double stroke, double start)
     {

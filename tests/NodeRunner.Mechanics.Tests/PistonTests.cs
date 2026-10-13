@@ -45,19 +45,36 @@ public sealed class PistonTests
         Piston.LongestLength(_piston, _built, 120).ShouldBe(_built);
     }
 
-    // A real cylinder is at most as long as the shortest gap between the hubs, so the gap can at most double (#870, #1086).
+    // A real telescope's stage and rod are each at most as long as the shortest gap between the hubs,
+    // so the gap can at most triple (#870, #1086, #1211).
     [Theory]
     [InlineData(0.1, 0)]
-    [InlineData(1, 0)]
-    [InlineData(1, 1)]
+    [InlineData(2, 0)]
+    [InlineData(2, 1)]
     [InlineData(0.5, 0.5)]
-    public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastItsTravel(double stroke, double start)
+    public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastHalfItsTravel(double stroke, double start)
     {
         var piston = new PistonDef(1, 2, 3, stroke: stroke, start: start);
         var radii = Travel.HubRadii;
 
         var shortest = Piston.ShortestLength(piston, _built, radii);
-        (shortest - radii).ShouldBeGreaterThanOrEqualTo(Piston.LongestLength(piston, _built, radii) - shortest - 1e-9);
+        (shortest - radii).ShouldBeGreaterThanOrEqualTo(((Piston.LongestLength(piston, _built, radii) - shortest) / 2) - 1e-9);
+    }
+
+    // The example in #1211: two plain joints drawn 1 m apart leave a gap of 70, which Stroke 200% triples.
+    [Theory]
+    [InlineData(0, 100, 240)]
+    [InlineData(0.5, 65, 135)]
+    [InlineData(1, 30 + (70.0 / 3), 100)]
+    public void AtStroke200_TheGapBetweenItsJointsHubs_Triples(double start, double shortest, double longest)
+    {
+        var piston = new PistonDef(1, 2, 3, stroke: PistonDef.MaxStroke, start: start);
+        var radii = Travel.HubRadii;
+
+        Piston.ShortestLength(piston, _built, radii).ShouldBe(shortest, tolerance: 1e-9);
+        Piston.LongestLength(piston, _built, radii).ShouldBe(longest, tolerance: 1e-9);
+        Piston.LengthInput(piston, _built, radii, shortest).ShouldBe(0, tolerance: 1e-12);
+        Piston.LengthInput(piston, _built, radii, longest).ShouldBe(1, tolerance: 1e-12);
     }
 
     [Fact]

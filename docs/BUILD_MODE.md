@@ -396,7 +396,7 @@ like a joint motor's link pickers, then a closed Advanced section with the rest,
 is none, then the part's note. The section stays open or closed across selections
 until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
 
-- **Piston:** Max strength (20–400 N, step 10), Stroke (10–100%, step 5),
+- **Piston:** Max strength (20–400 N, step 10), Stroke (10–200%, step 5, #1211),
   Start position (0–100%, step 5, #870), Max speed (0.5–4.0 m/s, step 0.1)
   and Rise time (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider so
   the short ones are as easy to pick, #801).

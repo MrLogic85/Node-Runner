@@ -103,13 +103,14 @@ public static class SpringDrawing
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, hub, b, hub) ?? (a, b);
         pen.Line(rodStart, rodEnd, line, theme.BeamWidth * _rodPerBeam);
 
-        var telescope = TelescopeGeometry.Place(TelescopeGeometry.Spring, a.DistanceTo(b), shortest, longest, coveredA, coveredB);
+        var length = a.DistanceTo(b);
+        var telescope = TelescopeGeometry.Place(TelescopeGeometry.Spring, length, shortest, longest, coveredA, coveredB);
+        var span = SeatSpan(length, coveredA, coveredB);
         var seatA = a + (along * (coveredA + _lead));
-        var seatB = a + (along * (telescope.Cap - _lead));
-        var span = (seatB - seatA).Dot(along);
+        var seatB = seatA + (along * span);
         var radius = theme.BeamWidth * _coilRadiusPerBeam;
         var wire = Wire(stiffness);
-        var turns = CoilTurns(SeatSpan(rest), wire);
+        var turns = CoilTurns(SeatSpan(rest, coveredA, coveredB), SeatSpan(shortest, coveredA, coveredB), wire);
         var segments = HalfTurnSegments(radius * pen.Scale);
         var hasCoil = span > _minSpan;
 
@@ -177,18 +178,27 @@ public static class SpringDrawing
     /// a third of <paramref name="restSpan"/>, seat to seat at the Spring's rest length, and at least
     /// <see cref="MinTurns"/>. Past <see cref="LongSpan"/> they grow only with the square root of
     /// the span, so a long coil does not turn into a grey band of hundreds, yet still gains turns
-    /// with its Coil length, as there is no most (#835). They never depend on its current length, so
-    /// they hold still as it moves.
+    /// with its Coil length, as there is no most (#835). They are never more than fit wire to wire,
+    /// with no gap, over <paramref name="shortestSpan"/>, seat to seat at its shortest length, so they
+    /// do not overlap when it is squeezed, unless that is fewer than <see cref="MinTurns"/>. With no
+    /// gap the cap binds less, so a plain 1 m Spring at Stroke 200% still gains turns with its Coil
+    /// length; where it binds, as on a short Spring or one with a motor on its joint, a longer Coil
+    /// length can show fewer turns (#1211). They never depend
+    /// on its current length, so they hold still as it moves.
     /// </summary>
-    public static int CoilTurns(float restSpan, float wire)
+    public static int CoilTurns(float restSpan, float shortestSpan, float wire)
     {
         var span = restSpan <= LongSpan ? restSpan : LongSpan * MathF.Sqrt(restSpan / LongSpan);
-        return Math.Max((int)(span / _freePerSolid / (wire + _solidGap)), MinTurns);
+        var pitch = wire + _solidGap;
+        return Math.Max(Math.Min((int)(span / _freePerSolid / pitch), (int)(shortestSpan / wire)), MinTurns);
     }
 
-    /// <summary>The distance from seat to seat at a <paramref name="length"/>, centre to centre: a lead outside each hub (#1086).</summary>
-    public static float SeatSpan(float length) =>
-        length - (2 * (JointDrawing.HubRadius + _lead));
+    /// <summary>
+    /// The distance from seat to seat at a <paramref name="length"/>, centre to centre: a lead outside
+    /// what covers each end (<see cref="ServoGeometry.LinkCover"/>); <see cref="Draw"/> places the seats by it (#1086, #1211).
+    /// </summary>
+    public static float SeatSpan(float length, float coveredA, float coveredB) =>
+        length - coveredA - coveredB - (2 * _lead);
 
     /// <summary>
     /// The segments in each half turn of a coil <paramref name="radiusPixels"/> wide on screen:
