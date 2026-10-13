@@ -13,7 +13,7 @@ public sealed record PartCalloutPort(BrainPort Port, UiText Label, PortRange Ran
 /// so the callout never runs the brain. See docs/WORLD_VISUALS.md → "Part callout".
 /// </summary>
 public sealed record PartCalloutPresentation(
-    PartSettingsKind Kind,
+    PartKind Kind,
     UiText Name,
     bool ShowsGlyph,
     IReadOnlyList<PartCalloutPort> Inputs,
@@ -42,12 +42,12 @@ public sealed record PartCalloutPresentation(
         ArgumentNullException.ThrowIfNull(values);
 
         var name = PartNames.Display(creature.Parts, selection.Id);
-        var kind = KindOf(creature, selection);
+        var kind = (creature.FindPart(selection.Id) ?? throw new ArgumentException($"Part {selection.Id} is not on the creature.", nameof(selection))).PartKind;
         switch (kind)
         {
-            case PartSettingsKind.Node or PartSettingsKind.Beam or PartSettingsKind.Spring:
+            case PartKind.Node or PartKind.Beam or PartKind.Spring:
                 return new PartCalloutPresentation(kind, name, ShowsGlyph: false, [], [], null);
-            case PartSettingsKind.Wheel or PartSettingsKind.Rubber or PartSettingsKind.Brake:
+            case PartKind.Wheel or PartKind.Rubber or PartKind.Brake:
                 return new PartCalloutPresentation(kind, name, ShowsGlyph: true, [], [], _noBrainPorts);
         }
 
@@ -59,22 +59,4 @@ public sealed record PartCalloutPresentation(
         return new PartCalloutPresentation(kind, name, ShowsGlyph: true, Of(PortDirection.Input), Of(PortDirection.Output), null);
     }
 
-    private static PartSettingsKind KindOf(CreatureDef creature, CreatureElementSelection selection) => selection.Kind switch
-    {
-        CreatureElementKind.Node => PartSettingsKind.Node,
-        CreatureElementKind.Beam => PartSettingsKind.Beam,
-        CreatureElementKind.Sensor => creature.Sensors.Single(sensor => sensor.Id == selection.Id).Kind == SensorKind.Accelerometer
-            ? PartSettingsKind.Accelerometer
-            : PartSettingsKind.Camera,
-        CreatureElementKind.Servo => PartSettingsKind.Servo,
-        CreatureElementKind.Piston => PartSettingsKind.Piston,
-        CreatureElementKind.Spring => PartSettingsKind.Spring,
-        CreatureElementKind.Wheel => PartSettingsKind.Wheel,
-        CreatureElementKind.TouchSensor => PartSettingsKind.Touch,
-        CreatureElementKind.Rubber => PartSettingsKind.Rubber,
-        CreatureElementKind.VelocityMotor => PartSettingsKind.VelocityMotor,
-        CreatureElementKind.Brake => PartSettingsKind.Brake,
-        CreatureElementKind.AngleSensor => PartSettingsKind.AngleSensor,
-        _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Unknown part kind."),
-    };
 }

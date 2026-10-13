@@ -17,7 +17,7 @@ public enum ImportState
 }
 
 /// <summary>One kind of part in the previewed build, and how many it has.</summary>
-public sealed record ImportPartRow(PartSettingsKind Kind, int Count);
+public sealed record ImportPartRow(PartKind Kind, int Count);
 
 /// <summary>
 /// The Import screen (#899) for the last paste: the build, the name its Name field starts with and
@@ -92,21 +92,8 @@ public sealed record ImportPresentation(
     // One row per kind of part the creature has; the screen's authored rows set the order.
     private static ImportPartRow[] PartsOf(CreatureDef creature) =>
     [
-        .. new ImportPartRow[]
-        {
-            new(PartSettingsKind.Node, creature.Nodes.Count),
-            new(PartSettingsKind.Beam, creature.Beams.Count),
-            new(PartSettingsKind.Accelerometer, creature.Sensors.Count(sensor => sensor.Kind == SensorKind.Accelerometer)),
-            new(PartSettingsKind.Camera, creature.Sensors.Count(sensor => sensor.Kind == SensorKind.Camera)),
-            new(PartSettingsKind.Touch, creature.TouchSensors.Count),
-            new(PartSettingsKind.AngleSensor, creature.AngleSensors.Count),
-            new(PartSettingsKind.Servo, creature.Servos.Count),
-            new(PartSettingsKind.VelocityMotor, creature.VelocityMotors.Count),
-            new(PartSettingsKind.Brake, creature.Brakes.Count),
-            new(PartSettingsKind.Piston, creature.Pistons.Count),
-            new(PartSettingsKind.Spring, creature.Springs.Count),
-            new(PartSettingsKind.Wheel, creature.Wheels.Count),
-            new(PartSettingsKind.Rubber, creature.Rubbers.Count),
-        }.Where(row => row.Count > 0),
+        .. creature.Parts
+            .GroupBy(part => part.PartKind)
+            .Select(kind => new ImportPartRow(kind.Key, kind.Count())),
     ];
 }

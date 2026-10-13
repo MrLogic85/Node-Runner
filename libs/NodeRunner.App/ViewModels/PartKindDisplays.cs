@@ -10,7 +10,6 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed record PartKindDisplay(
     PartKind Kind,
-    PartSettingsKind SettingsKind,
     UiText Title,
     Func<int, UiText> DefaultName,
     IReadOnlyList<PortDisplay> Ports)
@@ -41,14 +40,14 @@ public static class PartKindDisplays
 
     public static IReadOnlyList<PartKindDisplay> All { get; } =
     [
-        new(PartKind.Node, PartSettingsKind.Node, UiText.Plain("Joint"), number => UiText.Format("Joint {0}", number), []),
-        new(PartKind.Beam, PartSettingsKind.Beam, UiText.Plain("Beam"), number => UiText.Format("Beam {0}", number), []),
-        new(PartKind.Accelerometer, PartSettingsKind.Accelerometer, UiText.Plain("Accelerometer"), number => UiText.Format("Accel {0}", number),
+        new(PartKind.Node, UiText.Plain("Joint"), number => UiText.Format("Joint {0}", number), []),
+        new(PartKind.Beam, UiText.Plain("Beam"), number => UiText.Format("Beam {0}", number), []),
+        new(PartKind.Accelerometer, UiText.Plain("Accelerometer"), number => UiText.Format("Accel {0}", number),
         [
             In("along", name => UiText.Format("{0}:\u00A0along", name), UiText.Plain("along"), _signed),
             In("across", name => UiText.Format("{0}:\u00A0across", name), UiText.Plain("across"), _signed),
         ]),
-        new(PartKind.Camera, PartSettingsKind.Camera, UiText.Plain("Camera"), number => UiText.Format("Camera {0}", number),
+        new(PartKind.Camera, UiText.Plain("Camera"), number => UiText.Format("Camera {0}", number),
         [
             In("left2", name => UiText.Format("{0}:\u00A0far left", name), UiText.Plain("far left"), _unsigned),
             In("left1", name => UiText.Format("{0}:\u00A0left", name), UiText.Plain("left"), _unsigned),
@@ -57,14 +56,14 @@ public static class PartKindDisplays
             In("right2", name => UiText.Format("{0}:\u00A0far right", name), UiText.Plain("far right"), _unsigned),
             In(BrainPorts.CameraHitChannel, name => UiText.Format("{0}:\u00A0hit", name), UiText.Plain("hit"), _unsigned),
         ]),
-        new(PartKind.Servo, PartSettingsKind.Servo, UiText.Plain("Servo"), number => UiText.Format("Servo {0}", number),
+        new(PartKind.Servo, UiText.Plain("Servo"), number => UiText.Format("Servo {0}", number),
         [
             In(BrainPorts.ServoAngleChannel, name => UiText.Format("{0}:\u00A0angle", name), UiText.Plain("angle"), _signed),
             In(BrainPorts.ServoSpeedChannel, name => UiText.Format("{0}:\u00A0speed", name), UiText.Plain("speed"), _signed),
             Out(BrainPorts.ServoAngleOutputChannel, name => UiText.Format("{0}:\u00A0angle", name), UiText.Plain("angle"), _signed),
             Out(BrainPorts.ServoStrengthChannel, name => UiText.Format("{0}:\u00A0strength", name), UiText.Plain("strength"), _unsigned),
         ]),
-        new(PartKind.Piston, PartSettingsKind.Piston, UiText.Plain("Piston"), number => UiText.Format("Piston {0}", number),
+        new(PartKind.Piston, UiText.Plain("Piston"), number => UiText.Format("Piston {0}", number),
         [
             In(BrainPorts.PistonLengthChannel, name => UiText.Format("{0}:\u00A0length", name), UiText.Plain("length"), _unsigned),
             In(BrainPorts.PistonSpeedChannel, name => UiText.Format("{0}:\u00A0speed", name), UiText.Plain("speed"), _signed),
@@ -73,14 +72,14 @@ public static class PartKindDisplays
             Out(BrainPorts.PistonPositionChannel, name => UiText.Format("{0}:\u00A0length", name), UiText.Plain("length"), _unsigned),
             Out(BrainPorts.PistonStrengthChannel, name => UiText.Format("{0}:\u00A0strength", name), UiText.Plain("strength"), _unsigned),
         ]),
-        new(PartKind.Spring, PartSettingsKind.Spring, UiText.Plain("Spring"), number => UiText.Format("Spring {0}", number), []),
-        new(PartKind.Wheel, PartSettingsKind.Wheel, UiText.Plain("Wheel"), number => UiText.Format("Wheel {0}", number), []),
-        new(PartKind.TouchSensor, PartSettingsKind.Touch, UiText.Plain("Touch sensor"), number => UiText.Format("Touch {0}", number),
+        new(PartKind.Spring, UiText.Plain("Spring"), number => UiText.Format("Spring {0}", number), []),
+        new(PartKind.Wheel, UiText.Plain("Wheel"), number => UiText.Format("Wheel {0}", number), []),
+        new(PartKind.TouchSensor, UiText.Plain("Touch sensor"), number => UiText.Format("Touch {0}", number),
         [
             In(BrainPorts.TouchChannel, name => UiText.Format("{0}:\u00A0touch", name), UiText.Plain("touch"), _unsigned),
         ]),
-        new(PartKind.Rubber, PartSettingsKind.Rubber, UiText.Plain("Rubber"), number => UiText.Format("Rubber {0}", number), []),
-        new(PartKind.VelocityMotor, PartSettingsKind.VelocityMotor, UiText.Plain("Motor"), number => UiText.Format("Motor {0}", number),
+        new(PartKind.Rubber, UiText.Plain("Rubber"), number => UiText.Format("Rubber {0}", number), []),
+        new(PartKind.VelocityMotor, UiText.Plain("Motor"), number => UiText.Format("Motor {0}", number),
         [
             In(BrainPorts.VelocityMotorAngleSinChannel, name => UiText.Format("{0}:\u00A0angle sin", name), UiText.Plain("angle sin"), _signed),
             In(BrainPorts.VelocityMotorAngleCosChannel, name => UiText.Format("{0}:\u00A0angle cos", name), UiText.Plain("angle cos"), _signed),
@@ -88,8 +87,8 @@ public static class PartKindDisplays
             Out(BrainPorts.VelocityMotorSpeedOutputChannel, name => UiText.Format("{0}:\u00A0speed", name), UiText.Plain("speed"), _signed),
             Out(BrainPorts.VelocityMotorStrengthChannel, name => UiText.Format("{0}:\u00A0strength", name), UiText.Plain("strength"), _unsigned),
         ]),
-        new(PartKind.Brake, PartSettingsKind.Brake, UiText.Plain("Brake"), number => UiText.Format("Brake {0}", number), []),
-        new(PartKind.AngleSensor, PartSettingsKind.AngleSensor, UiText.Plain("Angle sensor"), number => UiText.Format("Angle {0}", number),
+        new(PartKind.Brake, UiText.Plain("Brake"), number => UiText.Format("Brake {0}", number), []),
+        new(PartKind.AngleSensor, UiText.Plain("Angle sensor"), number => UiText.Format("Angle {0}", number),
         [
             In(BrainPorts.AngleSensorAngleSinChannel, name => UiText.Format("{0}:\u00A0angle sin", name), UiText.Plain("angle sin"), _signed),
             In(BrainPorts.AngleSensorAngleCosChannel, name => UiText.Format("{0}:\u00A0angle cos", name), UiText.Plain("angle cos"), _signed),
@@ -97,11 +96,7 @@ public static class PartKindDisplays
         ]),
     ];
 
-    private static readonly Dictionary<PartSettingsKind, PartKindDisplay> _bySettingsKind = All.ToDictionary(entry => entry.SettingsKind);
-
     public static PartKindDisplay Of(PartKind kind) => All[(int)kind];
-
-    public static PartKindDisplay Of(PartSettingsKind kind) => _bySettingsKind[kind];
 
     private static PortDisplay In(string channel, Func<UiText, UiText> label, UiText shortLabel, PortRange range) =>
         new(PortDirection.Input, channel, label, shortLabel, range);

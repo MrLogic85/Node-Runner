@@ -6,32 +6,32 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class BrainPortDisplayTests
 {
     [Theory]
-    [InlineData(PartSettingsKind.Accelerometer, PortDirection.Input, "along", PortRange.MinusOneToOne, "along")]
-    [InlineData(PartSettingsKind.Accelerometer, PortDirection.Input, "across", PortRange.MinusOneToOne, "across")]
-    [InlineData(PartSettingsKind.Camera, PortDirection.Input, "left2", PortRange.ZeroToOne, "far left")]
-    [InlineData(PartSettingsKind.Camera, PortDirection.Input, "left1", PortRange.ZeroToOne, "left")]
-    [InlineData(PartSettingsKind.Camera, PortDirection.Input, "centre", PortRange.ZeroToOne, "centre")]
-    [InlineData(PartSettingsKind.Camera, PortDirection.Input, "right1", PortRange.ZeroToOne, "right")]
-    [InlineData(PartSettingsKind.Camera, PortDirection.Input, "right2", PortRange.ZeroToOne, "far right")]
-    [InlineData(PartSettingsKind.Camera, PortDirection.Input, "hit", PortRange.ZeroToOne, "hit")]
-    [InlineData(PartSettingsKind.Piston, PortDirection.Input, "length", PortRange.ZeroToOne, "length")]
-    [InlineData(PartSettingsKind.Piston, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
-    [InlineData(PartSettingsKind.Piston, PortDirection.Output, "position", PortRange.ZeroToOne, "length")]
-    [InlineData(PartSettingsKind.Piston, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
-    [InlineData(PartSettingsKind.Servo, PortDirection.Input, "angle", PortRange.MinusOneToOne, "angle")]
-    [InlineData(PartSettingsKind.Servo, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
-    [InlineData(PartSettingsKind.Servo, PortDirection.Output, "angle", PortRange.MinusOneToOne, "angle")]
-    [InlineData(PartSettingsKind.Servo, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
-    [InlineData(PartSettingsKind.Touch, PortDirection.Input, "touch", PortRange.ZeroToOne, "touch")]
-    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
-    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
-    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
-    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Output, "speed", PortRange.MinusOneToOne, "speed")]
-    [InlineData(PartSettingsKind.VelocityMotor, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
-    [InlineData(PartSettingsKind.AngleSensor, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
-    [InlineData(PartSettingsKind.AngleSensor, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
-    [InlineData(PartSettingsKind.AngleSensor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
-    public void EveryPort_HasItsRangeAndShortLabel(PartSettingsKind kind, PortDirection direction, string channel, PortRange range, string label)
+    [InlineData(PartKind.Accelerometer, PortDirection.Input, "along", PortRange.MinusOneToOne, "along")]
+    [InlineData(PartKind.Accelerometer, PortDirection.Input, "across", PortRange.MinusOneToOne, "across")]
+    [InlineData(PartKind.Camera, PortDirection.Input, "left2", PortRange.ZeroToOne, "far left")]
+    [InlineData(PartKind.Camera, PortDirection.Input, "left1", PortRange.ZeroToOne, "left")]
+    [InlineData(PartKind.Camera, PortDirection.Input, "centre", PortRange.ZeroToOne, "centre")]
+    [InlineData(PartKind.Camera, PortDirection.Input, "right1", PortRange.ZeroToOne, "right")]
+    [InlineData(PartKind.Camera, PortDirection.Input, "right2", PortRange.ZeroToOne, "far right")]
+    [InlineData(PartKind.Camera, PortDirection.Input, "hit", PortRange.ZeroToOne, "hit")]
+    [InlineData(PartKind.Piston, PortDirection.Input, "length", PortRange.ZeroToOne, "length")]
+    [InlineData(PartKind.Piston, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
+    [InlineData(PartKind.Piston, PortDirection.Output, "position", PortRange.ZeroToOne, "length")]
+    [InlineData(PartKind.Piston, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
+    [InlineData(PartKind.Servo, PortDirection.Input, "angle", PortRange.MinusOneToOne, "angle")]
+    [InlineData(PartKind.Servo, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
+    [InlineData(PartKind.Servo, PortDirection.Output, "angle", PortRange.MinusOneToOne, "angle")]
+    [InlineData(PartKind.Servo, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
+    [InlineData(PartKind.TouchSensor, PortDirection.Input, "touch", PortRange.ZeroToOne, "touch")]
+    [InlineData(PartKind.VelocityMotor, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
+    [InlineData(PartKind.VelocityMotor, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
+    [InlineData(PartKind.VelocityMotor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
+    [InlineData(PartKind.VelocityMotor, PortDirection.Output, "speed", PortRange.MinusOneToOne, "speed")]
+    [InlineData(PartKind.VelocityMotor, PortDirection.Output, "strength", PortRange.ZeroToOne, "strength")]
+    [InlineData(PartKind.AngleSensor, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
+    [InlineData(PartKind.AngleSensor, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
+    [InlineData(PartKind.AngleSensor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
+    public void EveryPort_HasItsRangeAndShortLabel(PartKind kind, PortDirection direction, string channel, PortRange range, string label)
     {
         var port = new BrainPort(1, channel, direction, direction == PortDirection.Input ? PortSignal.Reading : PortSignal.Position);
 
@@ -72,14 +72,14 @@ public sealed class BrainPortDisplayTests
     {
         var target = BrainPorts.PistonOutputs(1).First();
 
-        BrainPortDisplay.Range(PartSettingsKind.Piston, target).ShouldBe(BrainPortDisplay.Range(PartSettingsKind.Piston, BrainPort.Input(1, BrainPorts.PistonLengthChannel)));
+        BrainPortDisplay.Range(PartKind.Piston, target).ShouldBe(BrainPortDisplay.Range(PartKind.Piston, BrainPort.Input(1, BrainPorts.PistonLengthChannel)));
     }
 
     [Theory]
-    [InlineData(PartSettingsKind.Wheel, PortDirection.Input, "spin")]
-    [InlineData(PartSettingsKind.Servo, PortDirection.Input, "torque")]
-    [InlineData(PartSettingsKind.Accelerometer, PortDirection.Output, "along")]
-    public void AnUnknownPort_Throws(PartSettingsKind kind, PortDirection direction, string channel)
+    [InlineData(PartKind.Wheel, PortDirection.Input, "spin")]
+    [InlineData(PartKind.Servo, PortDirection.Input, "torque")]
+    [InlineData(PartKind.Accelerometer, PortDirection.Output, "along")]
+    public void AnUnknownPort_Throws(PartKind kind, PortDirection direction, string channel)
     {
         var port = new BrainPort(1, channel, direction, direction == PortDirection.Input ? PortSignal.Reading : PortSignal.Position);
 
@@ -87,15 +87,15 @@ public sealed class BrainPortDisplayTests
         Should.Throw<InvalidOperationException>(() => BrainPortDisplay.ShortLabel(kind, port));
     }
 
-    private static PartSettingsKind KindOf(int partId) => partId switch
+    private static PartKind KindOf(int partId) => partId switch
     {
-        PortedCreature.Accelerometer => PartSettingsKind.Accelerometer,
-        PortedCreature.Camera => PartSettingsKind.Camera,
-        PortedCreature.Servo => PartSettingsKind.Servo,
-        PortedCreature.Piston => PartSettingsKind.Piston,
-        PortedCreature.Touch => PartSettingsKind.Touch,
-        PortedCreature.VelocityMotor => PartSettingsKind.VelocityMotor,
-        PortedCreature.AngleSensor => PartSettingsKind.AngleSensor,
+        PortedCreature.Accelerometer => PartKind.Accelerometer,
+        PortedCreature.Camera => PartKind.Camera,
+        PortedCreature.Servo => PartKind.Servo,
+        PortedCreature.Piston => PartKind.Piston,
+        PortedCreature.Touch => PartKind.TouchSensor,
+        PortedCreature.VelocityMotor => PartKind.VelocityMotor,
+        PortedCreature.AngleSensor => PartKind.AngleSensor,
         _ => throw new ArgumentOutOfRangeException(nameof(partId)),
     };
 }

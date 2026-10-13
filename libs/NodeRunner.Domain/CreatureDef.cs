@@ -375,16 +375,14 @@ public sealed record CreatureDef
     /// The joint parts on joint <paramref name="nodeId"/> among <paramref name="parts"/> that are selected in its place,
     /// in <see cref="JointSlot"/> order. Empty on a bare joint.
     /// </summary>
-    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<IPartDef> parts)
+    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<IPartDef> parts) =>
+        [.. JointPartDefs(nodeId, parts).Select(CreatureElementSelection.Of)];
+
+    /// <summary>The parts behind <see cref="JointParts(int, IEnumerable{IPartDef})"/>, in the same order.</summary>
+    public static IReadOnlyList<IJointPartDef> JointPartDefs(int nodeId, IEnumerable<IPartDef> parts)
     {
         ArgumentNullException.ThrowIfNull(parts);
-        return
-        [
-            .. parts.OfType<IJointPartDef>()
-                .Where(part => part.NodeId == nodeId)
-                .OrderBy(PartKinds.SlotOf)
-                .Select(CreatureElementSelection.Of),
-        ];
+        return [.. parts.OfType<IJointPartDef>().Where(part => part.NodeId == nodeId).OrderBy(PartKinds.SlotOf)];
     }
 
     /// <summary>A node's covered radius: see the static <see cref="CoveredRadius(int, IEnumerable{IJointMotorDef})"/>.</summary>

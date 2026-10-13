@@ -79,7 +79,7 @@ public sealed class BuildVelocityMotorTests
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.Kind.ShouldBe(PartSettingsKind.VelocityMotor);
+        part.Kind.ShouldBe(PartKind.VelocityMotor);
         part.Title.ShouldBe(UiText.Plain("Motor"));
         part.Note.ShouldBe(PartInfo.VelocityMotor);
         part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorStrength, PartParameterId.MotorMaxSpeed]);

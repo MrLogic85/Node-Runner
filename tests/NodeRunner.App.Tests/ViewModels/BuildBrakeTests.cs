@@ -90,7 +90,7 @@ public sealed class BuildBrakeTests
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.Kind.ShouldBe(PartSettingsKind.Brake);
+        part.Kind.ShouldBe(PartKind.Brake);
         part.Title.ShouldBe(UiText.Plain("Brake"));
         part.Note.ShouldBe(PartInfo.Brake);
         part.BasicSettings.Select(slider => (slider.Id, slider.Readout, slider.Locked)).ShouldBe([(PartParameterId.BrakeStrength, UiText.Format("{0} N·m", new FixedNumber(200, 0)), false)]);
@@ -225,8 +225,8 @@ public sealed class BuildBrakeTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
         var pickers = part.Pickers!;
         part.OnThisJoint!.Select(tab => (tab.Kind, tab.Part)).ShouldBe([
-            (PartSettingsKind.Brake, new CreatureElementSelection(CreatureElementKind.Brake, brakeId)),
-            (PartSettingsKind.Wheel, new CreatureElementSelection(CreatureElementKind.Wheel, wheel)),
+            (PartKind.Brake, new CreatureElementSelection(CreatureElementKind.Brake, brakeId)),
+            (PartKind.Wheel, new CreatureElementSelection(CreatureElementKind.Wheel, wheel)),
         ]);
 
         pickers[1].Options.Select(option => (option.LinkId, option.Kind)).ShouldContain((wheel, CreatureElementKind.Wheel));

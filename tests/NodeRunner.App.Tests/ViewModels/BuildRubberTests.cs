@@ -151,10 +151,10 @@ public sealed class BuildRubberTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.OnThisJoint!.ShouldBe([
-            new JointPartTab(PartSettingsKind.Servo, _servo),
-            new JointPartTab(PartSettingsKind.Wheel, _wheel),
-            new JointPartTab(PartSettingsKind.Rubber, _rubber),
-            new JointPartTab(PartSettingsKind.Touch, _touch)]);
+            new JointPartTab(PartKind.Servo, _servo),
+            new JointPartTab(PartKind.Wheel, _wheel),
+            new JointPartTab(PartKind.Rubber, _rubber),
+            new JointPartTab(PartKind.TouchSensor, _touch)]);
         part.OnThisJointIndex.ShouldBe(2);
     }
 
@@ -167,7 +167,7 @@ public sealed class BuildRubberTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.Id.ShouldBe(id);
-        part.Kind.ShouldBe(PartSettingsKind.Rubber);
+        part.Kind.ShouldBe(PartKind.Rubber);
         part.Name.ShouldBe(UiText.Format("Rubber {0}", 1));
         part.Note.ShouldBe(PartInfo.Rubber);
         part.Settings.ShouldBeEmpty();

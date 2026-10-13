@@ -419,6 +419,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>What fills each joint's hinge-part slot: the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
     public IReadOnlyList<IHingePartDef> HingeParts => _builder.HingeParts;
 
+    /// <summary>Every part that sits on a joint: the <see cref="HingeParts"/>, then the Wheels, Touch sensors and Rubbers.</summary>
+    public IReadOnlyList<IJointPartDef> JointParts => _builder.JointParts;
+
     /// <summary>The Brakes (#1039, #1041).</summary>
     public IReadOnlyList<BrakeDef> Brakes => _builder.Brakes;
 
@@ -1032,7 +1035,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint (#973): a tap, drag
     /// or box selects them, never the joint on its own.
     /// </summary>
-    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.JointParts);
+    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, JointParts);
 
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
 

@@ -229,7 +229,7 @@ public sealed class BuildPresentationViewModelTests
 
         part.ShouldBe(new PartSettingsPresentation(
             101,
-            PartSettingsKind.Beam,
+            PartKind.Beam,
             UiText.Format("Beam {0}", 1),
             UiText.Format("Beam {0}", 1),
             UiText.Plain("Between"),
@@ -241,9 +241,9 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Theory]
-    [InlineData(SensorKind.Accelerometer, PartSettingsKind.Accelerometer, "Accel", "Measures its beam's acceleration.")]
-    [InlineData(SensorKind.Camera, PartSettingsKind.Camera, "Camera", "Its rays see how near the ground is. Drag the round handle to aim it.")]
-    public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartSettingsKind partKind, string name, string note)
+    [InlineData(SensorKind.Accelerometer, PartKind.Accelerometer, "Accel", "Measures its beam's acceleration.")]
+    [InlineData(SensorKind.Camera, PartKind.Camera, "Camera", "Its rays see how near the ground is. Drag the round handle to aim it.")]
+    public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartKind partKind, string name, string note)
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -374,7 +374,7 @@ public sealed class BuildPresentationViewModelTests
 
         part.ShouldBe(new PartSettingsPresentation(
             2,
-            PartSettingsKind.Node,
+            PartKind.Node,
             UiText.AsWritten("Knee"),
             UiText.Format("Joint {0}", 2),
             null,
@@ -415,7 +415,7 @@ public sealed class BuildPresentationViewModelTests
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.Kind.ShouldBe(PartSettingsKind.Spring);
+        part.Kind.ShouldBe(PartKind.Spring);
         part.Note.ShouldBe(PartInfo.Spring);
         part.Settings.Select(slider => slider.Readout).ShouldBe(
         [

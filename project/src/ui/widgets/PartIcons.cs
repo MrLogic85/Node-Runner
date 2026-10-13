@@ -1,4 +1,4 @@
-using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Widgets;
@@ -9,21 +9,21 @@ namespace NodeRunner.Ui.Widgets;
 /// </summary>
 public static class PartIcons
 {
-    public static UiIconId For(PartSettingsKind kind) => kind switch
+    public static UiIconId For(PartKind kind) => kind switch
     {
-        PartSettingsKind.Node => UiIconId.Joint,
-        PartSettingsKind.Beam => UiIconId.Beam,
-        PartSettingsKind.Accelerometer => UiIconId.PartAccelerometer,
-        PartSettingsKind.Camera => UiIconId.PartCamera,
-        PartSettingsKind.Servo => UiIconId.PartServo,
-        PartSettingsKind.Piston => UiIconId.PartPiston,
-        PartSettingsKind.Spring => UiIconId.PartSpring,
-        PartSettingsKind.Wheel => UiIconId.PartWheel,
-        PartSettingsKind.Touch => UiIconId.PartTouch,
-        PartSettingsKind.Rubber => UiIconId.PartRubber,
-        PartSettingsKind.VelocityMotor => UiIconId.PartVelocity,
-        PartSettingsKind.Brake => UiIconId.PartBrake,
-        PartSettingsKind.AngleSensor => UiIconId.PartAngleSensor,
+        PartKind.Node => UiIconId.Joint,
+        PartKind.Beam => UiIconId.Beam,
+        PartKind.Accelerometer => UiIconId.PartAccelerometer,
+        PartKind.Camera => UiIconId.PartCamera,
+        PartKind.Servo => UiIconId.PartServo,
+        PartKind.Piston => UiIconId.PartPiston,
+        PartKind.Spring => UiIconId.PartSpring,
+        PartKind.Wheel => UiIconId.PartWheel,
+        PartKind.TouchSensor => UiIconId.PartTouch,
+        PartKind.Rubber => UiIconId.PartRubber,
+        PartKind.VelocityMotor => UiIconId.PartVelocity,
+        PartKind.Brake => UiIconId.PartBrake,
+        PartKind.AngleSensor => UiIconId.PartAngleSensor,
         _ => UiIconId.None,
     };
 }

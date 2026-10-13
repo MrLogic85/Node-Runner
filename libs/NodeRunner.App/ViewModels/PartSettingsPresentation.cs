@@ -2,24 +2,6 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>Which kind of part the Part settings panel shows; the screen picks its glyph from this.</summary>
-public enum PartSettingsKind
-{
-    Node,
-    Beam,
-    Accelerometer,
-    Camera,
-    Servo,
-    Piston,
-    Spring,
-    Wheel,
-    Touch,
-    Rubber,
-    VelocityMotor,
-    Brake,
-    AngleSensor,
-}
-
 /// <summary>
 /// The Part settings panel for one selected part (#343): its Name first, then what it is joined to,
 /// a short note, and Delete, dimmed while <see cref="CanDelete"/> is false (#896). Structure is read-only here; it is drawn
@@ -34,7 +16,7 @@ public enum PartSettingsKind
 /// </summary>
 public sealed record PartSettingsPresentation(
     int Id,
-    PartSettingsKind Kind,
+    PartKind Kind,
     UiText Name,
     UiText DefaultName,
     UiText? ConnectionsLabel,
@@ -59,7 +41,7 @@ public sealed record PartSettingsPresentation(
 }
 
 /// <summary>One "On this joint" tab (#1044): the part it selects and the kind whose glyph it shows.</summary>
-public sealed record JointPartTab(PartSettingsKind Kind, CreatureElementSelection Part);
+public sealed record JointPartTab(PartKind Kind, CreatureElementSelection Part);
 
 /// <summary>A read-only row in the Part settings panel: a label and the value it reads, like "Weight" and "1.2 kg".</summary>
 public sealed record PartReadout(UiText Label, UiText Value);

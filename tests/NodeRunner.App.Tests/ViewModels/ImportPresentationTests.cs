@@ -31,10 +31,10 @@ public sealed class ImportPresentationTests
         preview.Build.ShouldBe(build);
         preview.Name.ShouldBe("Walker");
         preview.Parts.ShouldBe([
-            new ImportPartRow(PartSettingsKind.Node, walker.Nodes.Count),
-            new ImportPartRow(PartSettingsKind.Beam, walker.Beams.Count),
-            new ImportPartRow(PartSettingsKind.Accelerometer, 1),
-            new ImportPartRow(PartSettingsKind.Piston, walker.Pistons.Count),
+            new ImportPartRow(PartKind.Node, walker.Nodes.Count),
+            new ImportPartRow(PartKind.Beam, walker.Beams.Count),
+            new ImportPartRow(PartKind.Accelerometer, 1),
+            new ImportPartRow(PartKind.Piston, walker.Pistons.Count),
         ]);
         preview.CanAdd.ShouldBeTrue();
         preview.UpdatedNote.ShouldBeNull();
@@ -71,19 +71,19 @@ public sealed class ImportPresentationTests
         var preview = ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "All", creature), null), []);
 
         preview.Parts.Select(row => (row.Kind, row.Count)).ShouldBe([
-            (PartSettingsKind.Node, 4),
-            (PartSettingsKind.Beam, 2),
-            (PartSettingsKind.Accelerometer, 1),
-            (PartSettingsKind.Camera, 1),
-            (PartSettingsKind.Servo, 1),
-            (PartSettingsKind.VelocityMotor, 1),
-            (PartSettingsKind.Piston, 1),
-            (PartSettingsKind.Spring, 1),
-            (PartSettingsKind.Wheel, 1),
-            (PartSettingsKind.Touch, 1),
-            (PartSettingsKind.Rubber, 1),
-            (PartSettingsKind.Brake, 1),
-            (PartSettingsKind.AngleSensor, 1),
+            (PartKind.Node, 4),
+            (PartKind.Beam, 2),
+            (PartKind.Accelerometer, 1),
+            (PartKind.Camera, 1),
+            (PartKind.Servo, 1),
+            (PartKind.VelocityMotor, 1),
+            (PartKind.Piston, 1),
+            (PartKind.Spring, 1),
+            (PartKind.Wheel, 1),
+            (PartKind.TouchSensor, 1),
+            (PartKind.Rubber, 1),
+            (PartKind.Brake, 1),
+            (PartKind.AngleSensor, 1),
         ], ignoreOrder: true);
     }
 

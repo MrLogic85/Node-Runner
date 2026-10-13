@@ -16,8 +16,8 @@ public enum PortRange
 public static class BrainPortDisplay
 {
     /// <summary>The range <paramref name="port"/>'s value spans, on a part of <paramref name="kind"/>.</summary>
-    public static PortRange Range(PartSettingsKind kind, BrainPort port) => PartKindDisplays.Of(kind).Port(port).Range;
+    public static PortRange Range(PartKind kind, BrainPort port) => PartKindDisplays.Of(kind).Port(port).Range;
 
     /// <summary>What <paramref name="port"/> is called beside its bar, on a part of <paramref name="kind"/>.</summary>
-    public static UiText ShortLabel(PartSettingsKind kind, BrainPort port) => PartKindDisplays.Of(kind).Port(port).ShortLabel;
+    public static UiText ShortLabel(PartKind kind, BrainPort port) => PartKindDisplays.Of(kind).Port(port).ShortLabel;
 }

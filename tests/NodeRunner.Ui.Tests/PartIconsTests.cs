@@ -1,4 +1,4 @@
-using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
 
@@ -10,7 +10,7 @@ public sealed class PartIconsTests
     [Fact]
     public void EveryPartKind_HasItsOwnGlyph()
     {
-        var icons = Enum.GetValues<PartSettingsKind>().Select(PartIcons.For).ToList();
+        var icons = Enum.GetValues<PartKind>().Select(PartIcons.For).ToList();
 
         icons.ShouldNotContain(UiIconId.None);
         icons.ShouldBeUnique();

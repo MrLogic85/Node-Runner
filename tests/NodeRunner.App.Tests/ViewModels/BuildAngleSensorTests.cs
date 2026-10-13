@@ -250,7 +250,7 @@ public sealed class BuildAngleSensorTests
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.Kind.ShouldBe(PartSettingsKind.AngleSensor);
+        part.Kind.ShouldBe(PartKind.AngleSensor);
         part.Title.ShouldBe(UiText.Plain("Angle sensor"));
         part.Name.ShouldBe(UiText.Format("Angle {0}", 1));
         part.Note.ShouldBe(UiText.Plain("Tells the brain the angle between its two sides, and how fast it turns."));
@@ -289,8 +289,8 @@ public sealed class BuildAngleSensorTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.OnThisJoint!.Select(tab => (tab.Kind, tab.Part)).ShouldBe([
-            (PartSettingsKind.AngleSensor, new CreatureElementSelection(CreatureElementKind.AngleSensor, angleSensor)),
-            (PartSettingsKind.Wheel, new CreatureElementSelection(CreatureElementKind.Wheel, wheel)),
+            (PartKind.AngleSensor, new CreatureElementSelection(CreatureElementKind.AngleSensor, angleSensor)),
+            (PartKind.Wheel, new CreatureElementSelection(CreatureElementKind.Wheel, wheel)),
         ]);
         part.Pickers![1].LinkIdAt(part.Pickers[1].SelectedIndex!.Value).ShouldBe(wheel);
     }
@@ -460,7 +460,7 @@ public sealed class BuildAngleSensorTests
 
         var callout = PartCalloutPresentation.For(creature, new CreatureElementSelection(CreatureElementKind.AngleSensor, id), values);
 
-        callout.Kind.ShouldBe(PartSettingsKind.AngleSensor);
+        callout.Kind.ShouldBe(PartKind.AngleSensor);
         callout.Inputs.Select(port => (port.Label, port.Range, port.Value)).ShouldBe([
             (UiText.Plain("angle sin"), PortRange.MinusOneToOne, 0.5),
             (UiText.Plain("angle cos"), PortRange.MinusOneToOne, -0.5),
