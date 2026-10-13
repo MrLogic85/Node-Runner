@@ -97,8 +97,8 @@ public sealed class BuildBrakeTests
         part.AdvancedSettings.ShouldBeEmpty();
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.Note)).ShouldBe(
         [
-            (UiText.Plain("Fixed link"), 0, null),
-            (UiText.Plain("Target link"), 1, null),
+            (UiText.Plain("Fixed part"), 0, null),
+            (UiText.Plain("Target part"), 1, null),
         ]);
         part.OnThisJoint.ShouldBeNull();
     }
@@ -270,11 +270,11 @@ public sealed class BuildBrakeTests
         build.DeleteSelectedParts();
         build.ShowTrainingBlockers();
 
-        build.CanvasNotes().Single(note => note.Target.Id == brakeId).Text.ShouldBe(UiText.Plain("Pick a Fixed link"));
+        build.CanvasNotes().Single(note => note.Target.Id == brakeId).Text.ShouldBe(UiText.Plain("Pick a Fixed part"));
         build.SelectOnly(CreatureElementKind.Brake, brakeId);
         var picker = new BuildPresentationViewModel(build).SinglePart!.Pickers![0];
         picker.SelectedIndex.ShouldBeNull();
-        picker.Placeholder.ShouldBe(UiText.Plain("Pick a Fixed link"));
+        picker.Placeholder.ShouldBe(UiText.Plain("Pick a Fixed part"));
     }
 
     [Fact]

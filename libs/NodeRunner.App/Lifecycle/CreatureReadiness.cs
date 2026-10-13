@@ -95,7 +95,7 @@ public static class CreatureReadiness
                 var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, part.Id);
                 problems.Add(!JointMotor.HasTwoSides(creature.LinksAt(part.NodeId), creature.WheelAt(part.NodeId) is not null)
                     ? UiText.Format("{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it.", name)
-                    : UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.", name));
+                    : UiText.Format("{0} is missing a side. Pick its Fixed and Target parts or delete it.", name));
             }
         }
 

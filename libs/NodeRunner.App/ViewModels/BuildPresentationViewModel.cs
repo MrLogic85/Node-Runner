@@ -419,7 +419,7 @@ public sealed class BuildPresentationViewModel
 
         var missingALink = _build.MotorsAndBrakes.Count(CreatureReadiness.IsMissingALink);
         return missingALink > 0
-            ? UiText.Counted("{0} part missing a link", "{0} parts missing a link", missingALink)
+            ? UiText.Counted("{0} part missing a side", "{0} parts missing a side", missingALink)
             : errors[0];
 
         bool IsTooShort(CreatureElementKind kind, int nodeA, int nodeB) =>
@@ -471,8 +471,8 @@ public sealed class BuildPresentationViewModel
         var bothSet = motor.FixedLinkId is not null && motor.TargetLinkId is not null;
         return
         [
-            Picker(UiText.Plain("Fixed link"), motor.FixedLinkId, UiText.Plain("Pick a Fixed link"), ServoLinkRole.Target),
-            Picker(UiText.Plain("Target link"), motor.TargetLinkId, UiText.Plain("Pick a Target link"), ServoLinkRole.Fixed),
+            Picker(UiText.Plain("Fixed part"), motor.FixedLinkId, UiText.Plain("Pick a Fixed part"), ServoLinkRole.Target),
+            Picker(UiText.Plain("Target part"), motor.TargetLinkId, UiText.Plain("Pick a Target part"), ServoLinkRole.Fixed),
         ];
 
         PartPickerPresentation Picker(UiText label, int? selectedLinkId, UiText placeholder, ServoLinkRole otherRole)

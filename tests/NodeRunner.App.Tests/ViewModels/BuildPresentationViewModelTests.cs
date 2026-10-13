@@ -131,11 +131,11 @@ public sealed class BuildPresentationViewModelTests
     public void PartPickerPresentation_LinkAt_ReturnsNothingOutsideTheOptions()
     {
         var picker = new PartPickerPresentation(
-            UiText.Plain("Fixed link"),
+            UiText.Plain("Fixed part"),
             [new PartPickerOption(4, UiText.Format("Beam {0}", 1), CreatureElementKind.Beam, ServoLinkRole.None)],
             SelectedIndex: null,
             Note: null,
-            UiText.Plain("Pick a Fixed link"));
+            UiText.Plain("Pick a Fixed part"));
 
         picker.LinkIdAt(0).ShouldBe(4);
         picker.LinkIdAt(-1).ShouldBeNull();
@@ -791,7 +791,7 @@ public sealed class BuildPresentationViewModelTests
         var readiness = new BuildPresentationViewModel(build).Readiness;
 
         readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 1));
+        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a side", "{0} parts missing a side", 1));
     }
 
     [Fact]
@@ -815,7 +815,7 @@ public sealed class BuildPresentationViewModelTests
         var readiness = new BuildPresentationViewModel(build).Readiness;
 
         readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 2));
+        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a side", "{0} parts missing a side", 2));
     }
 
     [Fact]
@@ -839,7 +839,7 @@ public sealed class BuildPresentationViewModelTests
         var readiness = new BuildPresentationViewModel(build).Readiness;
 
         readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 2));
+        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a side", "{0} parts missing a side", 2));
     }
 
     // A loaded one, from a share code say, is counted by readiness, and its panel asks for the side.
@@ -864,9 +864,9 @@ public sealed class BuildPresentationViewModelTests
         build.SelectOnly(CreatureElementKind.AngleSensor, 7);
         var presentation = new BuildPresentationViewModel(build);
 
-        presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 1));
+        presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} part missing a side", "{0} parts missing a side", 1));
         build.SingleSelectedAngleSensorId.ShouldBe(7);
-        presentation.SinglePart!.Pickers!.Select(picker => (picker.SelectedIndex, picker.Placeholder)).ShouldBe([(0, null), (null, UiText.Plain("Pick a Target link"))]);
+        presentation.SinglePart!.Pickers!.Select(picker => (picker.SelectedIndex, picker.Placeholder)).ShouldBe([(0, null), (null, UiText.Plain("Pick a Target part"))]);
     }
 
     [Theory]

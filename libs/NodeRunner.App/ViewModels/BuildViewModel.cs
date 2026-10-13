@@ -477,9 +477,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
                 ? NeedsTwoSidesReason(motor.Kind)
                 : (motor.FixedLinkId is null, motor.TargetLinkId is null) switch
                 {
-                    (true, true) => UiText.Plain("Pick Fixed and Target links"),
-                    (true, false) => UiText.Plain("Pick a Fixed link"),
-                    _ => UiText.Plain("Pick a Target link"),
+                    (true, true) => UiText.Plain("Pick Fixed and Target parts"),
+                    (true, false) => UiText.Plain("Pick a Fixed part"),
+                    _ => UiText.Plain("Pick a Target part"),
                 };
             notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(motor.Kind, motor.Id), text));
         }

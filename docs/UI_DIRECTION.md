@@ -237,11 +237,11 @@ When the list runs past the screen, the player scrolls the side panel,
 also by dragging on the list, and the list follows its row; a drag never
 picks an option. Other following menus, such as the toolbar's overflow,
 open upward when there is no room below.
-Unlike the reference, which tints every option in the Servo's Fixed-link
-picker `detail` and every option in its Target-link picker `accent`, only
-the current Fixed link (`detail`) and Target link (`accent`) are tinted, in
-both lists, to match the canvas bands. A link with no role keeps its
-structure colour, `line-strong`; `muted` would make a link that can be
+Unlike the reference, which tints every option in the Servo's Fixed part
+picker `detail` and every option in its Target part picker `accent`, only
+the current Fixed part (`detail`) and Target part (`accent`) are tinted, in
+both lists, to match the canvas bands. An option with no role keeps its
+structure colour, `line-strong`; `muted` would make an option that can be
 picked look disabled (#1130).
 
 ### Shell: toolbar, button bar, side panel
