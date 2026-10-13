@@ -37,7 +37,8 @@ understanding of the project before starting to work.
    are free, and stop any emulator you start (`docs/MANUAL_TESTING.md` →
    "Android checks").
 6. **Record work and decisions on GitHub.** File new work, bugs and
-   decisions as issues per `docs/ISSUES.md` → "Creating an issue", and
+   decisions as issues, including improvements spotted along the way, per
+   `docs/ISSUES.md` → "Creating an issue", and
    review broad, risky or ambiguous issues before implementing them
    (`docs/ISSUES.md` → "Reviewing an issue").
 

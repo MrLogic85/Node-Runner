@@ -40,6 +40,12 @@ scope (`gh auth refresh -h github.com -s project`).
 
 ## Creating an issue
 
+File an issue as soon as you spot a problem or improvement outside the
+current task: a bug, a code smell, duplication or a missing abstraction.
+Do it right away, while the evidence is at hand, and tell the human its
+number. A remark in a reply, PR or review is not enough. The issue is
+worked on separately, not folded into the current change.
+
 Automation only sets Status **Needs review**. Whoever creates the issue
 sets, in the same step:
 

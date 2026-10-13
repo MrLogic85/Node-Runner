@@ -34,7 +34,9 @@ not apply:
       fail on warnings in `project/`
 - [ ] New logic in `libs/NodeRunner.{Domain,Mechanics,ML}/` has unit tests
 - [ ] Review agents (`CODEREVIEW.md`) ran on the final diff, and every new
-      finding is fixed or dismissed with a written reason. UI-touching
+      finding is fixed or dismissed with a written reason. Each
+      preexisting finding has an issue (`docs/ISSUES.md` → "Creating an
+      issue"). UI-touching
       changes (screens, controls, layout, theme) include "Visual & UX
       design", run by `design-lead` (`.github/agents/design-lead.agent.md`);
       its "insufficient evidence" result blocks until live app access,
