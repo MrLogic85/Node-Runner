@@ -13,7 +13,7 @@ public partial class BrakeVisual : BrakePart, IShadowVisual
     /// <summary>A shadow's Brake is its outer ring and its disc's ring, neither turning.</summary>
     public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
 
-    public required MotorSides Sides { get; init; }
+    public required HingePartSides Sides { get; init; }
 
     public bool IsShadow
     {

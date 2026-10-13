@@ -23,8 +23,8 @@ public sealed partial class CreatureBuilder
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
-    /// <summary>Why a motor or brake, a Servo, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one (#1044).</summary>
-    public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint");
+    /// <summary>Why a hinge part, a Servo, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one (#1044).</summary>
+    public static UiText OneHingePartPerJointReason { get; } = UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint");
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
     public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");
@@ -293,7 +293,7 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    // The new link takes the replaced one's place (#849, #1176) and its motor and Brake roles. A replaced
+    // The new link takes the replaced one's place (#849, #1176) and its hinge-part roles. A replaced
     // beam never carries a sensor (ReplacedLinkReason).
     private void ReplaceLink(int? replacedId, int linkId)
     {
@@ -308,7 +308,7 @@ public sealed partial class CreatureBuilder
         ReplaceSides(id, linkId);
     }
 
-    // Each motor and Brake with linkId as a side gets newLinkId there instead, or no side when it is null; each
+    // Each hinge part with linkId as a side gets newLinkId there instead, or no side when it is null; each
     // keeps its id (ServoDef.WithLinks).
     private void ReplaceSides(int linkId, int? newLinkId)
     {
@@ -319,7 +319,7 @@ public sealed partial class CreatureBuilder
     }
 
     private static void ReplaceSide<T>(List<T> parts, int linkId, int? newLinkId, Func<T, int?, int?, T> withSides)
-        where T : IMotorOrBrakeDef
+        where T : IHingePartDef
     {
         for (var i = 0; i < parts.Count; i++)
         {
@@ -560,7 +560,7 @@ public sealed partial class CreatureBuilder
         return SensorDef.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
 
-    /// <summary>Removes a Piston by id, leaving any motor or Brake that used it incomplete until the player picks another link.</summary>
+    /// <summary>Removes a Piston by id, leaving any hinge part that used it incomplete until the player picks another link.</summary>
     public void RemovePiston(int pistonId)
     {
         _pistons.RemoveAt(PistonIndexOf(pistonId));
@@ -570,14 +570,14 @@ public sealed partial class CreatureBuilder
     /// <summary>Removes a Servo by id.</summary>
     public void RemoveServo(int servoId) => _servos.RemoveAt(ServoIndexOf(servoId));
 
-    /// <summary>Removes a Wheel by id, leaving any motor or Brake that used it incomplete until the player picks another side (#1118).</summary>
+    /// <summary>Removes a Wheel by id, leaving any hinge part that used it incomplete until the player picks another side (#1118).</summary>
     public void RemoveWheel(int wheelId)
     {
         _wheels.RemoveAt(WheelIndexOf(wheelId));
         ClearSides(wheelId);
     }
 
-    /// <summary>Removes a Spring by id, leaving any motor or Brake that used it incomplete until the player picks another link.</summary>
+    /// <summary>Removes a Spring by id, leaving any hinge part that used it incomplete until the player picks another link.</summary>
     public void RemoveSpring(int springId)
     {
         _springs.RemoveAt(SpringIndexOf(springId));
@@ -593,7 +593,7 @@ public sealed partial class CreatureBuilder
         ClearSides(beamId);
     }
 
-    // A deleted link or Wheel leaves each motor and Brake that used it as a side without that side (#1118).
+    // A deleted link or Wheel leaves each hinge part that used it as a side without that side (#1118).
     private void ClearSides(int linkId) => ReplaceSides(linkId, null);
 
     /// <summary>Whether a Servo can sit on this node; if not, <paramref name="reason"/> says why.</summary>
@@ -605,9 +605,9 @@ public sealed partial class CreatureBuilder
             return false;
         }
 
-        if (HasMotorOrBrake(nodeId))
+        if (HasHingePart(nodeId))
         {
-            reason = OneMotorOrBrakePerJointReason;
+            reason = OneHingePartPerJointReason;
             return false;
         }
 
@@ -617,7 +617,7 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Whether a Wheel can sit on this node (#129); if not, <paramref name="reason"/> says why. A
-    /// joint holds one Wheel next to its motor or brake (#1044).
+    /// joint holds one Wheel next to its hinge part (#1044).
     /// </summary>
     public bool CanAddWheel(int nodeId, [NotNullWhen(false)] out UiText? reason)
     {
@@ -780,9 +780,9 @@ public sealed partial class CreatureBuilder
     public void SetServoLink(int servoId, bool fixedRole, int linkId) =>
         SetSide(_servos, ServoIndexOf(servoId), fixedRole, linkId, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink));
 
-    // Gives parts[index], a motor or Brake, linkId as its fixed or target side.
+    // Gives parts[index], a hinge part, linkId as its fixed or target side.
     private void SetSide<T>(List<T> parts, int index, bool fixedRole, int linkId, Func<T, int?, int?, T> withSides)
-        where T : IMotorOrBrakeDef
+        where T : IHingePartDef
     {
         var part = parts[index];
         ValidateServoSide(linkId, part.NodeId);
@@ -790,17 +790,17 @@ public sealed partial class CreatureBuilder
         parts[index] = withSides(part, fixedLink, targetLink);
     }
 
-    // A motor's or Brake's sides once linkId takes the fixed or target role; picking the other role swaps them.
-    private static (int? Fixed, int? Target) PickSide(IMotorOrBrakeDef motor, bool fixedRole, int linkId)
+    // A hinge part's sides once linkId takes the fixed or target role; picking the other role swaps them.
+    private static (int? Fixed, int? Target) PickSide(IHingePartDef part, bool fixedRole, int linkId)
     {
-        int? fixedLink = motor.FixedLinkId;
-        int? targetLink = motor.TargetLinkId;
+        int? fixedLink = part.FixedLinkId;
+        int? targetLink = part.TargetLinkId;
         if (fixedRole)
         {
             fixedLink = linkId;
             if (targetLink == linkId)
             {
-                targetLink = motor.FixedLinkId;
+                targetLink = part.FixedLinkId;
             }
         }
         else
@@ -808,7 +808,7 @@ public sealed partial class CreatureBuilder
             targetLink = linkId;
             if (fixedLink == linkId)
             {
-                fixedLink = motor.TargetLinkId;
+                fixedLink = part.TargetLinkId;
             }
         }
 

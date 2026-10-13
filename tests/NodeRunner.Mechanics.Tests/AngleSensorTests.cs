@@ -7,9 +7,9 @@ public sealed class AngleSensorTests
     [Fact]
     public void AngleInputs_WithTargetAQuarterTurnCounterClockwiseFromFixed_AreOneAndZero()
     {
-        var fixedSide = MotorSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
+        var fixedSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
         // Creature coordinates are y-down, so counter-clockwise on screen is up, toward negative y.
-        var targetSide = MotorSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(0, -10));
+        var targetSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(0, -10));
 
         var (sin, cos) = AngleSensor.AngleInputs(targetSide - fixedSide);
 
@@ -20,8 +20,8 @@ public sealed class AngleSensorTests
     [Fact]
     public void AngleInputs_WithTargetOppositeFixed_AreZeroAndMinusOne()
     {
-        var fixedSide = MotorSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
-        var targetSide = MotorSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(-10, 0));
+        var fixedSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
+        var targetSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(-10, 0));
 
         var (sin, cos) = AngleSensor.AngleInputs(targetSide - fixedSide);
 
@@ -46,9 +46,9 @@ public sealed class AngleSensorTests
     public void Readings_WithFixedRightAndTheTargetWheelTurnedAQuarterTurnCounterClockwise_AreOneZeroAndAPositiveSpeed()
     {
         // Godot's body rotation is clockwise-positive on screen, so −π/2 is a quarter turn counter-clockwise.
-        var fixedSide = MotorSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
-        var wheel = MotorSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
-        var wheelSpeed = MotorSideGeometry.WheelAngularSpeed(bodyAngularVelocity: -1);
+        var fixedSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
+        var wheel = HingePartSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
+        var wheelSpeed = HingePartSideGeometry.WheelAngularSpeed(bodyAngularVelocity: -1);
         const double fixedSpeed = 0;
 
         var (sin, cos) = AngleSensor.AngleInputs(wheel - fixedSide);
@@ -62,9 +62,9 @@ public sealed class AngleSensorTests
     [Fact]
     public void Readings_WithFixedAndTargetSwapped_ReverseTheirSign()
     {
-        var link = MotorSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
-        var wheel = MotorSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
-        var wheelSpeed = MotorSideGeometry.WheelAngularSpeed(bodyAngularVelocity: -1);
+        var link = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
+        var wheel = HingePartSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
+        var wheelSpeed = HingePartSideGeometry.WheelAngularSpeed(bodyAngularVelocity: -1);
         const double linkSpeed = 0;
 
         var (sin, _) = AngleSensor.AngleInputs(link - wheel);

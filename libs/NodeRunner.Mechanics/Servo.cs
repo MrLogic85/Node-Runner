@@ -9,7 +9,7 @@ namespace NodeRunner.Mechanics;
 /// the other joint. The brain sees −1 at the lower end, 0 as built and
 /// +1 at the upper end, and drives an angle target plus a strength share. The motor chases a
 /// wanted speed towards that angle with <see cref="MotorLoop"/>, so it can hold a load up to its
-/// strength. It measures and turns its sides with <see cref="MotorSideGeometry"/>, as a Velocity
+/// strength. It measures and turns its sides with <see cref="HingePartSideGeometry"/>, as a Velocity
 /// motor (#454) does.
 /// </summary>
 public static class Servo

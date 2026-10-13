@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>Parts stacked on one joint (#1044): a Wheel plus one motor or brake, placed, selected, tabbed, deleted and copied.</summary>
+/// <summary>Parts stacked on one joint (#1044): a Wheel plus one hinge part, placed, selected, tabbed, deleted and copied.</summary>
 public sealed class BuildStackedPartsTests
 {
     private const int _servoId = 6;

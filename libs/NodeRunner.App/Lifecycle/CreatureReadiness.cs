@@ -88,7 +88,7 @@ public static class CreatureReadiness
             AddLengthProblem(creature, CreatureElementKind.Beam, beam.NodeA, beam.NodeB, problems);
         }
 
-        foreach (var part in creature.MotorsAndBrakes)
+        foreach (var part in creature.HingeParts)
         {
             if (IsMissingALink(part))
             {
@@ -113,7 +113,7 @@ public static class CreatureReadiness
     }
 
     /// <summary>A motor, Brake or Angle sensor without both its Fixed and Target side, a link or its Wheel (#1118), cannot train.</summary>
-    public static bool IsMissingALink(IMotorOrBrakeDef part)
+    public static bool IsMissingALink(IHingePartDef part)
     {
         ArgumentNullException.ThrowIfNull(part);
         return part.FixedLinkId is null || part.TargetLinkId is null;

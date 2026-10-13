@@ -28,8 +28,8 @@ public partial class Creature
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
                 var nodeId = Definition!.Nodes[nodeIndex].Id;
-                selection = Definition.MotorsAndBrakes.FirstOrDefault(motor => motor.NodeId == nodeId) is { } motor
-                    ? new CreatureElementSelection(motor.Kind, motor.Id)
+                selection = Definition.HingeParts.FirstOrDefault(part => part.NodeId == nodeId) is { } hingePart
+                    ? new CreatureElementSelection(hingePart.Kind, hingePart.Id)
                     : Definition.Wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId) is { } wheel
                         ? new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)
                         : new CreatureElementSelection(CreatureElementKind.Node, nodeId);
@@ -104,7 +104,7 @@ public partial class Creature
         return groups.PartAt(
             ToDomain(globalPosition),
             nodeId => ToDomain(_nodeVisuals[definition.NodeIndexOf(nodeId)].GlobalPosition),
-            definition.MotorsAndBrakes,
+            definition.HingeParts,
             definition.Wheels,
             definition.Sensors,
             _raised);
@@ -212,7 +212,7 @@ public partial class Creature
             return;
         }
 
-        _raised = groups.Raised(selection, definition.MotorsAndBrakes, definition.Wheels, definition.TouchSensors, definition.Rubbers);
+        _raised = groups.Raised(selection, definition.HingeParts, definition.Wheels, definition.TouchSensors, definition.Rubbers);
         for (var i = 0; i < _nodeVisuals.Length; i++)
         {
             var id = definition.Nodes[i].Id;

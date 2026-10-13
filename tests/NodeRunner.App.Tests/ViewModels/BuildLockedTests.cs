@@ -310,12 +310,12 @@ public sealed class BuildLockedTests
     [InlineData(30, true, 12, 12, 10)]
     [InlineData(30, false, 10, 12, 10)]
     [InlineData(65, true, 64, 64, 63)]
-    public void SetMotorLink_PicksOrSwapsAMotorsSide_AndUndoes(int motorId, bool fixedRole, int linkId, int fixedAfter, int targetAfter)
+    public void SetHingePartLink_PicksOrSwapsAMotorsSide_AndUndoes(int motorId, bool fixedRole, int linkId, int fixedAfter, int targetAfter)
     {
         var build = Locked();
         var before = build.Snapshot();
 
-        build.SetMotorLink(motorId, fixedRole, linkId);
+        build.SetHingePartLink(motorId, fixedRole, linkId);
 
         build.Snapshot().JointMotors.Single(motor => motor.Id == motorId).ShouldSatisfyAllConditions(
             motor => motor.FixedLinkId.ShouldBe(fixedAfter),
@@ -326,11 +326,11 @@ public sealed class BuildLockedTests
     }
 
     [Fact]
-    public void SetMotorLink_IntoAServosEmptyRole_MovesItsOtherLink()
+    public void SetHingePartLink_IntoAServosEmptyRole_MovesItsOtherLink()
     {
         var build = Locked(new ServoDef(30, 2, fixedLinkId: 10));
 
-        build.SetMotorLink(30, fixedRole: false, linkId: 10);
+        build.SetHingePartLink(30, fixedRole: false, linkId: 10);
 
         build.Servos.Single().ShouldBe(new ServoDef(30, 2, targetLinkId: 10));
     }

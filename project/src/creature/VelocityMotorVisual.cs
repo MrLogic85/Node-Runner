@@ -13,7 +13,7 @@ public partial class VelocityMotorVisual : VelocityMotorPart, IShadowVisual
     /// <summary>A shadow's motor is its outer ring and a circle round the coils, neither turning.</summary>
     public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
 
-    public required MotorSides Sides { get; init; }
+    public required HingePartSides Sides { get; init; }
 
     public bool IsShadow
     {

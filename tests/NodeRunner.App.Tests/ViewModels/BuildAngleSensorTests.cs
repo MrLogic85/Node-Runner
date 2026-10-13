@@ -6,7 +6,7 @@ using NodeRunner.ML;
 namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
-/// The Angle sensor in Build (#1206): placed on a joint from the tray in its motor-or-brake slot,
+/// The Angle sensor in Build (#1206): placed on a joint from the tray in its hinge-part slot,
 /// set up with the Motor's pickers, copied, deleted and stacked as the other joint parts are, and
 /// kept by a locked Creation as a part with brain ports.
 /// </summary>
@@ -144,7 +144,7 @@ public sealed class BuildAngleSensorTests
         build.PlacePart(second, _middleJoint).ShouldBeNull();
 
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint")));
-        build.MotorsAndBrakes.ShouldHaveSingleItem();
+        build.HingeParts.ShouldHaveSingleItem();
         build.PlacingTargetsOf(second, movingSensorId: null).RefusedJoints.ShouldContain(2);
     }
 
@@ -271,7 +271,7 @@ public sealed class BuildAngleSensorTests
         build.Load(WithAnAngleSensor());
         build.SelectOnly(CreatureElementKind.AngleSensor, _angleSensorId);
 
-        build.SetMotorLink(_angleSensorId, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(_angleSensorId, fixedRole: true, linkId: 5);
 
         build.AngleSensors.Single().ShouldBe(new AngleSensorDef(_angleSensorId, 2, fixedLinkId: 5, targetLinkId: 4));
         new BuildPresentationViewModel(build).SinglePart!.Pickers!.Select(picker => picker.SelectedIndex).ShouldBe([1, 0]);
@@ -441,7 +441,7 @@ public sealed class BuildAngleSensorTests
 
         new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBeFalse();
         build.RenamePart(_angleSensorId, "Knee", shownDefault: null);
-        build.SetMotorLink(_angleSensorId, fixedRole: false, linkId: 4);
+        build.SetHingePartLink(_angleSensorId, fixedRole: false, linkId: 4);
 
         build.AngleSensors.Single().ShouldBe(new AngleSensorDef(_angleSensorId, 2, fixedLinkId: 5, targetLinkId: 4, name: "Knee"));
         build.IsLocked.ShouldBeTrue();

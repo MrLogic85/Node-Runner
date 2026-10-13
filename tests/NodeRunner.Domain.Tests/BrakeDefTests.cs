@@ -88,13 +88,13 @@ public sealed class BrakeDefTests
         Should.Throw<ArgumentException>(() => Creature([new BrakeDef(6, 1, 4, 99)]));
     }
 
-    // A joint holds one Servo, Velocity motor or Brake (#1044).
+    // A joint holds one hinge part: a Servo, Velocity motor, Brake or Angle sensor (#1044).
     [Fact]
-    public void CreatureDef_SharesTheJointsMotorOrBrakeSlot_WithAServoAMotorAndAnotherBrake()
+    public void CreatureDef_SharesTheJointsHingePartSlot_WithAServoAMotorAndAnotherBrake()
     {
-        Should.Throw<ArgumentException>(() => Creature([new BrakeDef(6, 1, 4, 5)], servos: [new ServoDef(7, 1, 5, 4)])).Message.ShouldContain("motor or brake");
-        Should.Throw<ArgumentException>(() => Creature([new BrakeDef(6, 1, 4, 5)], motors: [new VelocityMotorDef(7, 1, 5, 4)])).Message.ShouldContain("motor or brake");
-        Should.Throw<ArgumentException>(() => Creature([new BrakeDef(6, 1, 4, 5), new BrakeDef(7, 1, 5, 4)])).Message.ShouldContain("motor or brake");
+        Should.Throw<ArgumentException>(() => Creature([new BrakeDef(6, 1, 4, 5)], servos: [new ServoDef(7, 1, 5, 4)])).Message.ShouldContain("hinge part");
+        Should.Throw<ArgumentException>(() => Creature([new BrakeDef(6, 1, 4, 5)], motors: [new VelocityMotorDef(7, 1, 5, 4)])).Message.ShouldContain("hinge part");
+        Should.Throw<ArgumentException>(() => Creature([new BrakeDef(6, 1, 4, 5), new BrakeDef(7, 1, 5, 4)])).Message.ShouldContain("hinge part");
 
         var apart = Creature([new BrakeDef(6, 1, 4, 5)], servos: [new ServoDef(7, 2, 4)], wheels: [new WheelDef(8, 1)]);
         apart.Brakes.ShouldHaveSingleItem().NodeId.ShouldBe(1);
@@ -116,11 +116,11 @@ public sealed class BrakeDefTests
     }
 
     [Fact]
-    public void MotorsAndBrakes_ListsTheJointMotors_ThenTheBrakes()
+    public void HingeParts_ListsTheJointMotors_ThenTheBrakes()
     {
         var creature = Creature([new BrakeDef(6, 1, 4, 5)], servos: [new ServoDef(7, 2, 4)], motors: [new VelocityMotorDef(8, 3)]);
 
-        creature.MotorsAndBrakes.Select(part => (part.Kind, part.Id)).ShouldBe([(CreatureElementKind.Servo, 7), (CreatureElementKind.VelocityMotor, 8), (CreatureElementKind.Brake, 6)]);
+        creature.HingeParts.Select(part => (part.Kind, part.Id)).ShouldBe([(CreatureElementKind.Servo, 7), (CreatureElementKind.VelocityMotor, 8), (CreatureElementKind.Brake, 6)]);
     }
 
     [Fact]

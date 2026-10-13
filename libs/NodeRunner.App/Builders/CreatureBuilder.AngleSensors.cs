@@ -5,7 +5,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Builders;
 
 /// <summary>
-/// The Angle sensors (#1204): joint sensors that fill a joint's motor-or-brake slot and take their
+/// The Angle sensors (#1204): joint sensors that fill a joint's hinge-part slot and take their
 /// sides by the Servo's rules (#1118). They have inputs only and apply no force, so they are not
 /// joint motors. Build places them as it does a Brake (#1206).
 /// </summary>
@@ -30,9 +30,9 @@ public sealed partial class CreatureBuilder
             return false;
         }
 
-        if (HasMotorOrBrake(nodeId))
+        if (HasHingePart(nodeId))
         {
-            reason = OneMotorOrBrakePerJointReason;
+            reason = OneHingePartPerJointReason;
             return false;
         }
 

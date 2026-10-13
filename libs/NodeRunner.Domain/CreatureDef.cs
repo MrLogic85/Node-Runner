@@ -160,13 +160,13 @@ public sealed record CreatureDef
 
         var beamIds = beams.Select(beam => beam.Id).ToHashSet();
         var links = LinkRef.All(beams, pistons, springs).ToArray();
-        // A joint holds one part per slot (#1044): one motor or brake (a Servo, a Velocity motor, a Brake or an Angle sensor) and one Wheel.
-        var jointsWithMotor = new HashSet<int>();
-        foreach (var part in servos.Concat<IMotorOrBrakeDef>(velocityMotors).Concat(brakes).Concat(angleSensors))
+        // A joint holds one part per slot (#1044): one hinge part (a Servo, a Velocity motor, a Brake or an Angle sensor) and one Wheel.
+        var jointsWithHingePart = new HashSet<int>();
+        foreach (var part in servos.Concat<IHingePartDef>(velocityMotors).Concat(brakes).Concat(angleSensors))
         {
-            ValidateJointPart(part.NodeId, nodeIds, jointsWithMotor, "motor or brake");
-            ValidateMotorSide(part.FixedLinkId, part.NodeId, links, wheels);
-            ValidateMotorSide(part.TargetLinkId, part.NodeId, links, wheels);
+            ValidateJointPart(part.NodeId, nodeIds, jointsWithHingePart, "hinge part");
+            ValidateHingePartSide(part.FixedLinkId, part.NodeId, links, wheels);
+            ValidateHingePartSide(part.TargetLinkId, part.NodeId, links, wheels);
         }
 
         var jointsWithWheel = new HashSet<int>();
@@ -212,7 +212,7 @@ public sealed record CreatureDef
         _brakes = Array.AsReadOnly(brakes.ToArray());
         _angleSensors = Array.AsReadOnly(angleSensors.ToArray());
         JointMotors = Array.AsReadOnly(_servos.Concat<IJointMotorDef>(_velocityMotors).ToArray());
-        MotorsAndBrakes = Array.AsReadOnly(JointMotors.Concat<IMotorOrBrakeDef>(_brakes).Concat(_angleSensors).ToArray());
+        HingeParts = Array.AsReadOnly(JointMotors.Concat<IHingePartDef>(_brakes).Concat(_angleSensors).ToArray());
         NextPartId = resolvedNextPartId;
         _nodeIndexById = BuildIndex(_nodes, node => node.Id);
         _beamIndexById = BuildIndex(_beams, beam => beam.Id);
@@ -263,14 +263,14 @@ public sealed record CreatureDef
 
     /// <summary>
     /// Every joint motor, the Servos then the Velocity motors. With the <see cref="Brakes"/> and <see cref="AngleSensors"/>, they fill
-    /// the joints' motor-or-brake slots (#1044).
+    /// the joints' hinge-part slots (#1044).
     /// </summary>
     [JsonIgnore]
     public IReadOnlyList<IJointMotorDef> JointMotors { get; }
 
-    /// <summary>What fills the joints' motor-or-brake slots (#1044): the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
+    /// <summary>What fills the joints' hinge-part slots (#1044): the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
     [JsonIgnore]
-    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes { get; }
+    public IReadOnlyList<IHingePartDef> HingeParts { get; }
 
     /// <summary>
     /// Every part: nodes, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers, Velocity motors, Brakes and Angle sensors. A new kind of part counts here too,
@@ -338,15 +338,15 @@ public sealed record CreatureDef
     /// drawn (#1044): its joint motor, Brake (#1041) or Angle sensor (#1204), then its Wheel, its Rubber (#1142) and its Touch sensor (#1045).
     /// Empty on a bare joint.
     /// </summary>
-    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<IMotorOrBrakeDef> motorsAndBrakes, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors, IEnumerable<RubberDef> rubbers)
+    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<IHingePartDef> hingeParts, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors, IEnumerable<RubberDef> rubbers)
     {
-        ArgumentNullException.ThrowIfNull(motorsAndBrakes);
+        ArgumentNullException.ThrowIfNull(hingeParts);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(touchSensors);
         ArgumentNullException.ThrowIfNull(rubbers);
         return
         [
-            .. motorsAndBrakes.Where(part => part.NodeId == nodeId).Select(part => new CreatureElementSelection(part.Kind, part.Id)),
+            .. hingeParts.Where(part => part.NodeId == nodeId).Select(part => new CreatureElementSelection(part.Kind, part.Id)),
             .. wheels.Where(wheel => wheel.NodeId == nodeId).Select(wheel => new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)),
             .. rubbers.Where(rubber => rubber.NodeId == nodeId).Select(rubber => new CreatureElementSelection(CreatureElementKind.Rubber, rubber.Id)),
             .. touchSensors.Where(touch => touch.NodeId == nodeId).Select(touch => new CreatureElementSelection(CreatureElementKind.TouchSensor, touch.Id)),
@@ -375,13 +375,13 @@ public sealed record CreatureDef
     /// Whether the joint <paramref name="nodeId"/> holds a joint part among these: a motor, Brake (#1039) or Angle sensor (#1204), Wheel
     /// (#129), Touch sensor (#1045) or Rubber (#1142).
     /// </summary>
-    public static bool HasJointPart(int nodeId, IEnumerable<IMotorOrBrakeDef> motorsAndBrakes, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors, IEnumerable<RubberDef> rubbers)
+    public static bool HasJointPart(int nodeId, IEnumerable<IHingePartDef> hingeParts, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors, IEnumerable<RubberDef> rubbers)
     {
-        ArgumentNullException.ThrowIfNull(motorsAndBrakes);
+        ArgumentNullException.ThrowIfNull(hingeParts);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(touchSensors);
         ArgumentNullException.ThrowIfNull(rubbers);
-        return motorsAndBrakes.Any(part => part.NodeId == nodeId) || wheels.Any(wheel => wheel.NodeId == nodeId)
+        return hingeParts.Any(part => part.NodeId == nodeId) || wheels.Any(wheel => wheel.NodeId == nodeId)
             || touchSensors.Any(touch => touch.NodeId == nodeId) || rubbers.Any(rubber => rubber.NodeId == nodeId);
     }
 
@@ -449,7 +449,7 @@ public sealed record CreatureDef
     }
 
     // A motor's or Brake's side is a link touching its joint, or the Wheel on it (#1118).
-    private static void ValidateMotorSide(int? linkId, int nodeId, IReadOnlyList<LinkRef> links, IReadOnlyList<WheelDef> wheels)
+    private static void ValidateHingePartSide(int? linkId, int nodeId, IReadOnlyList<LinkRef> links, IReadOnlyList<WheelDef> wheels)
     {
         if (linkId is null)
         {
@@ -458,7 +458,7 @@ public sealed record CreatureDef
 
         if (!links.Any(link => link.Id == linkId.Value && link.Touches(nodeId)) && !wheels.Any(wheel => wheel.Id == linkId.Value && wheel.NodeId == nodeId))
         {
-            throw new ArgumentException($"Link id {linkId.Value} must touch node id {nodeId}, or be its Wheel, for that motor or brake.");
+            throw new ArgumentException($"Link id {linkId.Value} must touch node id {nodeId}, or be its Wheel, for that hinge part.");
         }
     }
 

@@ -115,7 +115,7 @@ public sealed class AngleSensorGeometryTests
     }
 
     // The port bars show the sine and cosine of the brain's angle, the Target link's direction minus the Fixed
-    // link's, counter-clockwise (MotorSideGeometry); the arc must span that same angle on screen.
+    // link's, counter-clockwise (HingePartSideGeometry); the arc must span that same angle on screen.
     [Theory]
     [InlineData(0, -10)]
     [InlineData(0, 10)]
@@ -125,7 +125,7 @@ public sealed class AngleSensorGeometryTests
         var joint = new Vector2D(0, 0);
         var fixedFar = new Vector2D(10, 0);
         var targetFar = new Vector2D(targetX, targetY);
-        var brainAngle = MotorSideGeometry.LinkAngle(joint, targetFar) - MotorSideGeometry.LinkAngle(joint, fixedFar);
+        var brainAngle = HingePartSideGeometry.LinkAngle(joint, targetFar) - HingePartSideGeometry.LinkAngle(joint, fixedFar);
         var (sin, cos) = AngleSensor.AngleInputs(brainAngle);
 
         var angle = AngleSensorGeometry.Angle(ScreenRotation(fixedFar), ScreenRotation(targetFar));
@@ -143,7 +143,7 @@ public sealed class AngleSensorGeometryTests
     [InlineData(0.8f)]
     public void AWheelSide_StartsOnItsFirstTube(float wheelBodyRotation)
     {
-        var wheelSide = (float)-MotorSideGeometry.WheelAngle(wheelBodyRotation);
+        var wheelSide = (float)-HingePartSideGeometry.WheelAngle(wheelBodyRotation);
 
         ShouldBeNear(
             AngleSensorGeometry.ArcPoints(_bare, wheelSide, 2f)[0],
@@ -169,6 +169,6 @@ public sealed class AngleSensorGeometryTests
         }
     }
 
-    // A side's Godot rotation, as MotorSides.FixedRotation gives it: the model's angle negated.
-    private static float ScreenRotation(Vector2D far) => (float)-MotorSideGeometry.LinkAngle(new Vector2D(0, 0), far);
+    // A side's Godot rotation, as HingePartSides.FixedRotation gives it: the model's angle negated.
+    private static float ScreenRotation(Vector2D far) => (float)-HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), far);
 }

@@ -35,7 +35,7 @@ list; move one only with a new issue.
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
   `ServoDef`, `VelocityMotorDef`, `BrakeDef`, `AngleSensorDef`, `PistonDef`, `SpringDef`, `WheelDef`, `TouchSensorDef`, `RubberDef`, `LinkRef` — anatomy
-- `IMotorOrBrakeDef` — what fills a joint's motor-or-brake slot, a joint motor, a Brake or an Angle sensor: its sides
+- `IHingePartDef` — what fills a joint's hinge-part slot, a joint motor, a Brake or an Angle sensor: its sides
 - `IJointMotorDef`, `JointMotor` — what a Servo and a Velocity motor share: kind, sides and radius
 - `CreatureElementKind`, `CreatureElementSelection` — what is selected
 - `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout` — brain ports

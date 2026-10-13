@@ -9,7 +9,7 @@ namespace NodeRunner.Ui.Widgets;
 /// <summary>
 /// Build canvas marks for joint parts: the link bands of a selected Servo, Velocity motor (#454),
 /// Brake (#1041) or Angle sensor (#1205), a Wheel side's under its tyre (#1118). The bands name the sides,
-/// so a Brake's or Angle sensor's are a motor's.
+/// so every hinge part's are drawn alike.
 /// </summary>
 public static class BuildServoDrawing
 {
@@ -19,23 +19,23 @@ public static class BuildServoDrawing
 
     public static void DrawSelectedBands(CanvasItem canvas, BuildViewModel viewModel, VisualTheme theme, Transform2D viewTransform)
     {
-        IMotorOrBrakeDef? motor = viewModel.SingleSelectedServoId is { } servoId ? viewModel.Servos[viewModel.ServoIndexOf(servoId)]
+        IHingePartDef? part = viewModel.SingleSelectedServoId is { } servoId ? viewModel.Servos[viewModel.ServoIndexOf(servoId)]
             : viewModel.SingleSelectedVelocityMotorId is { } motorId ? viewModel.VelocityMotors[viewModel.VelocityMotorIndexOf(motorId)]
             : viewModel.SingleSelectedBrakeId is { } brakeId ? viewModel.Brakes[viewModel.BrakeIndexOf(brakeId)]
             : viewModel.SingleSelectedAngleSensorId is { } angleSensorId ? viewModel.AngleSensors[viewModel.AngleSensorIndexOf(angleSensorId)]
             : null;
-        if (motor is null)
+        if (part is null)
         {
             return;
         }
 
         using var pen = UiPixelPen.Begin(canvas, viewTransform);
-        if (motor.FixedLinkId is { } fixedLink)
+        if (part.FixedLinkId is { } fixedLink)
         {
             DrawLinkBand(pen, viewModel, theme, fixedLink, fixedMark: true);
         }
 
-        if (motor.TargetLinkId is { } targetLink)
+        if (part.TargetLinkId is { } targetLink)
         {
             DrawLinkBand(pen, viewModel, theme, targetLink, fixedMark: false);
         }
@@ -80,7 +80,7 @@ public static class BuildServoDrawing
         CreatureElementKind.Beam => _servoBeamBandHalfWidth,
         CreatureElementKind.Piston => _servoPistonBandHalfWidth,
         CreatureElementKind.Spring => _servoSpringBandHalfWidth,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a motor link kind."),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a hinge-part link kind."),
     };
 
     private static Vector2 ToGodot(Vector2D position) => new((float)position.X, (float)position.Y);

@@ -69,12 +69,12 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   beam.
 - **Angle sensor** — A sensor on a joint (#1204) that tells the brain the
   angle between its Fixed and Target sides, as a sine and a cosine, and how
-  fast it changes (`AngleSensorDef`). It takes a joint motor's slot but
+  fast it changes (`AngleSensorDef`). It takes its joint's hinge-part slot but
   applies no force. See: `docs/CREATURE_MODEL.md` → "Angle sensor".
 - **Beam** — A rigid, fixed-length connection between two joints.
 - **Brake** — A passive joint part (#1039) with a Fixed and a Target side
   and a Strength, the most torque it resists their turning with (#1040). A
-  Locked Brake's Strength is endless; that is not a Locked Creation. It takes a joint motor's slot but has no ports. See:
+  Locked Brake's Strength is endless; that is not a Locked Creation. It takes its joint's hinge-part slot but has no ports. See:
   `docs/CREATURE_MODEL.md` → "Brake".
 - **Camera** — A sensor: 1, 3 or 5 rays around its aim that read how near
   the ground is within its range, and whether any sees it. One input per
@@ -84,21 +84,25 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Creature element selection** — A selected joint, beam, sensor or link: a
   `CreatureElementKind` plus the part's stable id (#220). A selection holds
   any mix of them as a `PartSet` (#704), in every tool (#803).
-- **Fixed / Target** — The two sides a joint motor, Brake or Angle sensor uses: Fixed is
+- **Fixed / Target** — The two sides a hinge part uses: Fixed is
   the reference, and Target turns against it, driven by a joint motor or
   resisted by a Brake, or read by an Angle sensor. Each is a link, or the Wheel on its joint as a one-sided link
   (#1118). See: `docs/CREATURE_MODEL.md` → "Servo".
+- **Hinge part** — What fills a joint's hinge-part slot, one per joint: a
+  Servo, Motor, Brake or Angle sensor, each with a Fixed and a Target side
+  (`IHingePartDef`, `CreatureDef.HingeParts`). See: `docs/CREATURE_MODEL.md`
+  → Node → One part per slot.
 - **Hub** — The `NodeDef.HubRadius` circle at every joint's centre where
   links end and a Piston's or Spring's travel is measured from, whatever
   sits on the joint (#1086). See: `docs/CREATURE_MODEL.md` → Node.
 - **Joint** — A point where links meet and can turn; in code a node
-  (`NodeDef`). A plain joint is passive (#450); a joint motor, Brake or Angle sensor, a Wheel, a Rubber and a
+  (`NodeDef`). A plain joint is passive (#450); a hinge part, a Wheel, a Rubber and a
   Touch sensor can each sit on it, one of each. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
   their joint".
 - **Joint motor** — A powered joint part with a Fixed and a Target side: a
   Servo or a Motor (`IJointMotorDef`, `JointMotor`). See:
   `docs/CREATURE_MODEL.md` → "Servo" and "Motor (Velocity motor in code)".
-- **Link** — A joint-to-joint connection a joint motor, Brake or Angle sensor may use as Fixed or Target:
+- **Link** — A joint-to-joint connection a hinge part may use as Fixed or Target:
   Beam, Piston or Spring. The Links tool lists them all, Beam included. Say
   Links for the group and Beam for a beam (#913).
 - **Model input / Model output** — One slot of the brain's input or output

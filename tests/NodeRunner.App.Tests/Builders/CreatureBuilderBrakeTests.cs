@@ -30,18 +30,18 @@ public sealed class CreatureBuilderBrakeTests
         builder.Brakes.Single().ShouldBe(new BrakeDef(brake, joint, beam, wheel));
     }
 
-    // A joint holds one Servo, Motor or Brake (#1044).
+    // A joint holds one hinge part: a Servo, Motor, Brake or Angle sensor (#1044).
     [Fact]
-    public void ABrake_SharesItsJointsMotorOrBrakeSlot_WithAServoAMotorAndAnotherBrake()
+    public void ABrake_SharesItsJointsHingePartSlot_WithAServoAMotorAndAnotherBrake()
     {
         var builder = Joint(out var joint, out var far, out _, out _);
         builder.AddBrake(joint);
 
         builder.CanAddServo(joint, out var servoReason).ShouldBeFalse();
-        servoReason.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+        servoReason.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
         builder.CanAddVelocityMotor(joint, out var motorReason).ShouldBeFalse();
-        motorReason.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
-        Should.Throw<ArgumentException>(() => builder.AddBrake(joint)).Message.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason.Message);
+        motorReason.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
+        Should.Throw<ArgumentException>(() => builder.AddBrake(joint)).Message.ShouldBe(CreatureBuilder.OneHingePartPerJointReason.Message);
 
         builder.AddServo(far);
         Should.Throw<ArgumentException>(() => builder.AddBrake(far));
@@ -155,7 +155,7 @@ public sealed class CreatureBuilderBrakeTests
         free.ShouldBeNull();
         builder.AddVelocityMotor(joint);
         builder.CanAddBrake(joint, out var full).ShouldBeFalse();
-        full.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+        full.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
     }
 
     [Fact]

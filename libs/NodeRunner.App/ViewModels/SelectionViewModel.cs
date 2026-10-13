@@ -48,7 +48,7 @@ public sealed class SelectionViewModel : INotifyPropertyChanged
             CreatureElementKind.AngleSensor => creature.AngleSensors.FirstOrDefault(angleSensor => angleSensor.Id == tapped.Id)?.NodeId,
             _ => null,
         };
-        var stacked = nodeId is { } node ? CreatureDef.JointParts(node, creature.MotorsAndBrakes, creature.Wheels, creature.TouchSensors, creature.Rubbers) : [];
+        var stacked = nodeId is { } node ? CreatureDef.JointParts(node, creature.HingeParts, creature.Wheels, creature.TouchSensors, creature.Rubbers) : [];
         SelectedParts = stacked.Count > 0 ? stacked : [tapped];
     }
 

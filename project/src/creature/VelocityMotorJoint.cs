@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Velocity motor (#454) between the two <see cref="MotorSides"/> at its joint: it drives the
+/// A Velocity motor (#454) between the two <see cref="HingePartSides"/> at its joint: it drives the
 /// Target's speed against the Fixed side toward the brain's speed, round and round with no end
 /// stops. At zero strength it pushes nothing, so the joint turns freely.
 /// </summary>
@@ -11,7 +11,7 @@ public sealed class VelocityMotorJoint
 {
     private Mechanics.MotorState _motor;
 
-    public VelocityMotorJoint(VelocityMotorDef definition, MotorSides sides)
+    public VelocityMotorJoint(VelocityMotorDef definition, HingePartSides sides)
     {
         Definition = definition;
         Sides = sides;
@@ -19,7 +19,7 @@ public sealed class VelocityMotorJoint
 
     public VelocityMotorDef Definition { get; }
 
-    public MotorSides Sides { get; }
+    public HingePartSides Sides { get; }
 
     /// <summary>The angle between the sides as its sine and cosine (#1207), which never jump across a whole turn.</summary>
     public (double Sin, double Cos) AngleInputs => Mechanics.VelocityMotor.AngleInputs(Sides.ContinuousAngle);

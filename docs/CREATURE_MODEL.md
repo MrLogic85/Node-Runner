@@ -58,7 +58,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   or Spring's travel measures from hub to hub, `NodeDef.HubRadius` (15)
   from each joint's centre, whatever sits on the joint.
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
-  Servo, Motor, Brake or Angle sensor (#1204), one Rubber (#1142) and one Touch sensor
+  hinge part (a Servo, Motor, Brake or Angle sensor, #1204), one Rubber (#1142) and one Touch sensor
   (#1043), so a Servo can drive the links of a Wheel's joint while the
   Wheel turns freely between them, or drive the Wheel itself (see Servo),
   and a Rubber and a Touch sensor may share its joint with both.
@@ -208,7 +208,7 @@ fold.
 - `ServoDef`; Mechanics: `Servo`. Fixed and Target may be Beams, Pistons or
   Springs, or the Wheel on the Servo's joint (#1118): to a joint motor the Wheel
   is a one-sided link, its angle that of a mark on its tyre, pointing right
-  on screen as built (`MotorSideGeometry.WheelAngle`), so the same
+  on screen as built (`HingePartSideGeometry.WheelAngle`), so the same
   link ids name it and saves need no change. Everywhere else the Wheel
   stays a joint part: it counts toward no link rule. A Servo
   needs two sides, two links or a link and the Wheel
@@ -243,7 +243,7 @@ fold.
   (#454), saved under `velocityMotors`; Mechanics: `VelocityMotor`. Its sides follow
   the Servo's rules: a Beam, Piston, Spring or its joint's Wheel, two
   different ones, either missing after a deletion (`JointMotor`). It takes
-  the joint's slot for a Servo, Motor, Brake or Angle sensor (see Node → One part per slot).
+  the joint's hinge-part slot (see Node → One part per slot).
 - **Angle:** the angle between its sides (#1207): the Target side's
   direction minus the Fixed side's, counter-clockwise positive, measured as
   a Servo's sides are. Unlike a Servo's, it is not taken from the built
@@ -264,7 +264,7 @@ fold.
   each other, up to its Strength (#456). It has no brain ports and draws no power.
 - `BrakeDef` (#1039), saved under `brakes`: it is saved, loaded, validated,
   shared and simulated (#1040), and placed in Build (#1041). Its
-  sides and slot are a Servo's (see Servo, and Node → One part per slot),
+  sides and hinge-part slot are a Servo's (see Servo, and Node → One part per slot),
   so one with a missing side blocks training like a Servo. Unlike a joint
   motor it has no ports; Editing identity rules says what that means for
   its id.
@@ -291,7 +291,7 @@ fold.
   two of its sides, links or its Wheel, and how fast it is changing,
   without moving them.
 - `AngleSensorDef` (#1204), saved under `angleSensors`; Mechanics:
-  `AngleSensor`. Its sides and slot are a Servo's (see Servo, and Node →
+  `AngleSensor`. Its sides and hinge-part slot are a Servo's (see Servo, and Node →
   One part per slot), so one with a missing side blocks training like a
   Servo, and a new one takes the same default sides. It is not a joint
   motor: it has no settings and no torque, and applies no force, so a

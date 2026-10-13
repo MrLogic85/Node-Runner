@@ -22,7 +22,7 @@ UI around the world is in `docs/UI_DIRECTION.md`. Drawing code rules are in
 
 ## Parts
 
-Every part in a joint's motor-or-brake slot (`docs/CREATURE_MODEL.md` →
+Every part in a joint's hinge-part slot (`docs/CREATURE_MODEL.md` →
 Node → One part per slot), a *joint motor* (`docs/GLOSSARY.md` → Joint
 motor), Brake or Angle sensor, stands in for its joint's ring in the same
 place. A rule that names only joint motors means Servos and Velocity motors

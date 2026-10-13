@@ -635,7 +635,7 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void JointParts_TakeOnePerSlot_AWheelAndAMotorOrBrake()
+    public void JointParts_TakeOnePerSlot_AWheelAndAHingePart()
     {
         var builder = PairBuilder();
         var joint = builder.Nodes[0].Id;

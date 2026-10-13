@@ -59,14 +59,14 @@ public sealed class AngleSensorDefTests
 
     // A joint holds one Servo, Motor, Brake or Angle sensor (#1044).
     [Fact]
-    public void CreatureDef_SharesTheJointsMotorOrBrakeSlot_WithAServoAMotorABrakeAndAnotherAngleSensor()
+    public void CreatureDef_SharesTheJointsHingePartSlot_WithAServoAMotorABrakeAndAnotherAngleSensor()
     {
         AngleSensorDef[] sensor = [new AngleSensorDef(6, 1, 4, 5)];
 
-        Should.Throw<ArgumentException>(() => Creature(sensor, servos: [new ServoDef(7, 1, 5, 4)])).Message.ShouldContain("motor or brake");
-        Should.Throw<ArgumentException>(() => Creature(sensor, motors: [new VelocityMotorDef(7, 1, 5, 4)])).Message.ShouldContain("motor or brake");
-        Should.Throw<ArgumentException>(() => Creature(sensor, brakes: [new BrakeDef(7, 1, 5, 4)])).Message.ShouldContain("motor or brake");
-        Should.Throw<ArgumentException>(() => Creature([.. sensor, new AngleSensorDef(7, 1, 5, 4)])).Message.ShouldContain("motor or brake");
+        Should.Throw<ArgumentException>(() => Creature(sensor, servos: [new ServoDef(7, 1, 5, 4)])).Message.ShouldContain("hinge part");
+        Should.Throw<ArgumentException>(() => Creature(sensor, motors: [new VelocityMotorDef(7, 1, 5, 4)])).Message.ShouldContain("hinge part");
+        Should.Throw<ArgumentException>(() => Creature(sensor, brakes: [new BrakeDef(7, 1, 5, 4)])).Message.ShouldContain("hinge part");
+        Should.Throw<ArgumentException>(() => Creature([.. sensor, new AngleSensorDef(7, 1, 5, 4)])).Message.ShouldContain("hinge part");
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class AngleSensorDefTests
             rubbers: [new RubberDef(9, 1)]);
 
         creature.AngleSensors.ShouldHaveSingleItem().NodeId.ShouldBe(1);
-        CreatureDef.JointParts(1, creature.MotorsAndBrakes, creature.Wheels, creature.TouchSensors, creature.Rubbers).Select(part => part.Kind)
+        CreatureDef.JointParts(1, creature.HingeParts, creature.Wheels, creature.TouchSensors, creature.Rubbers).Select(part => part.Kind)
             .ShouldBe([CreatureElementKind.AngleSensor, CreatureElementKind.Wheel, CreatureElementKind.Rubber, CreatureElementKind.TouchSensor], ignoreOrder: true);
     }
 
@@ -98,11 +98,11 @@ public sealed class AngleSensorDefTests
     }
 
     [Fact]
-    public void MotorsAndBrakes_ListsTheJointMotors_TheBrakes_ThenTheAngleSensors()
+    public void HingeParts_ListsTheJointMotors_TheBrakes_ThenTheAngleSensors()
     {
         var creature = Creature([new AngleSensorDef(6, 1, 4, 5)], servos: [new ServoDef(7, 2, 4)], brakes: [new BrakeDef(8, 3, 5)]);
 
-        creature.MotorsAndBrakes.Select(part => (part.Kind, part.Id)).ShouldBe([(CreatureElementKind.Servo, 7), (CreatureElementKind.Brake, 8), (CreatureElementKind.AngleSensor, 6)]);
+        creature.HingeParts.Select(part => (part.Kind, part.Id)).ShouldBe([(CreatureElementKind.Servo, 7), (CreatureElementKind.Brake, 8), (CreatureElementKind.AngleSensor, 6)]);
     }
 
     [Fact]

@@ -14,7 +14,7 @@ public partial class Creature
         for (var i = 0; i < definition.Servos.Count; i++)
         {
             var servo = definition.Servos[i];
-            _servos[i] = new ServoJoint(servo, MotorSidesFor(definition, servo));
+            _servos[i] = new ServoJoint(servo, HingePartSidesFor(definition, servo));
             var sides = _servos[i].Sides;
             var visual = new ServoVisual
             {
@@ -43,7 +43,7 @@ public partial class Creature
         for (var i = 0; i < definition.VelocityMotors.Count; i++)
         {
             var motor = definition.VelocityMotors[i];
-            _velocityMotors[i] = new VelocityMotorJoint(motor, MotorSidesFor(definition, motor));
+            _velocityMotors[i] = new VelocityMotorJoint(motor, HingePartSidesFor(definition, motor));
             var sides = _velocityMotors[i].Sides;
             var visual = new VelocityMotorVisual
             {
@@ -70,7 +70,7 @@ public partial class Creature
         for (var i = 0; i < definition.Brakes.Count; i++)
         {
             var brake = definition.Brakes[i];
-            var sides = MotorSidesFor(definition, brake);
+            var sides = HingePartSidesFor(definition, brake);
             if (!brake.Locked || !WeldSides(definition, brake))
             {
                 brakes.Add(new BrakeJoint(brake, sides));
@@ -103,7 +103,7 @@ public partial class Creature
         for (var i = 0; i < definition.AngleSensors.Count; i++)
         {
             var angleSensor = definition.AngleSensors[i];
-            _angleSensors[i] = new AngleSensorJoint(angleSensor, MotorSidesFor(definition, angleSensor));
+            _angleSensors[i] = new AngleSensorJoint(angleSensor, HingePartSidesFor(definition, angleSensor));
             var sides = _angleSensors[i].Sides;
             var arcRadius = (float)AngleSensorDef.ArcRadiusAt(
                 angleSensor.NodeId,
@@ -235,20 +235,20 @@ public partial class Creature
         };
     }
 
-    private MotorSides MotorSidesFor(CreatureDef definition, IMotorOrBrakeDef motor) => new(
-        MotorSideFor(definition, motor.NodeId, motor.FixedLinkId!.Value),
-        MotorSideFor(definition, motor.NodeId, motor.TargetLinkId!.Value));
+    private HingePartSides HingePartSidesFor(CreatureDef definition, IHingePartDef part) => new(
+        HingePartSideFor(definition, part.NodeId, part.FixedLinkId!.Value),
+        HingePartSideFor(definition, part.NodeId, part.TargetLinkId!.Value));
 
-    private MotorSide MotorSideFor(CreatureDef definition, int motorNodeId, int linkId)
+    private HingePartSide HingePartSideFor(CreatureDef definition, int partNodeId, int linkId)
     {
-        var joint = _nodeBodies[definition.NodeIndexOf(motorNodeId)];
+        var joint = _nodeBodies[definition.NodeIndexOf(partNodeId)];
         if (definition.IsWheel(linkId))
         {
-            return new MotorWheelSide(joint);
+            return new HingePartWheelSide(joint);
         }
 
         var link = definition.Link(linkId);
-        return new MotorLinkSide(joint, _nodeBodies[definition.NodeIndexOf(link.FarNodeFrom(motorNodeId))]);
+        return new HingePartLinkSide(joint, _nodeBodies[definition.NodeIndexOf(link.FarNodeFrom(partNodeId))]);
     }
 
     private static float MotorHousingReach(CreatureDef definition, IJointMotorDef motor)

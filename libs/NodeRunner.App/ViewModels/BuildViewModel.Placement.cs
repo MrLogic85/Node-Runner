@@ -13,7 +13,7 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
     /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet, and joint
-    /// parts on a joint whose slot for them is free: one Wheel, one motor or brake or Angle sensor (#1206), one Touch sensor (#1044) and one Rubber (#1142).
+    /// parts on a joint whose slot for them is free: one Wheel, one hinge part (#1206), one Touch sensor (#1044) and one Rubber (#1142).
     /// </summary>
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {

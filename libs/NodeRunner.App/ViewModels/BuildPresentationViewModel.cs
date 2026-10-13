@@ -84,7 +84,7 @@ public sealed class BuildPresentationViewModel
                     PartInfo.Servo,
                     canDelete,
                     PanelSliders(),
-                    MotorPickers(servo, CreatureBuilder.ServoNeedsTwoSidesReason),
+                    SidePickers(servo, CreatureBuilder.ServoNeedsTwoSidesReason),
                     OnThisJoint: OnThisJoint(servo.NodeId));
             }
 
@@ -101,7 +101,7 @@ public sealed class BuildPresentationViewModel
                     PartInfo.VelocityMotor,
                     canDelete,
                     PanelSliders(),
-                    MotorPickers(motor, CreatureBuilder.VelocityMotorNeedsTwoSidesReason),
+                    SidePickers(motor, CreatureBuilder.VelocityMotorNeedsTwoSidesReason),
                     OnThisJoint: OnThisJoint(motor.NodeId));
             }
 
@@ -118,7 +118,7 @@ public sealed class BuildPresentationViewModel
                     PartInfo.Brake,
                     canDelete,
                     PanelSliders(),
-                    MotorPickers(brake, CreatureBuilder.BrakeNeedsTwoSidesReason),
+                    SidePickers(brake, CreatureBuilder.BrakeNeedsTwoSidesReason),
                     OnThisJoint: OnThisJoint(brake.NodeId));
             }
 
@@ -135,7 +135,7 @@ public sealed class BuildPresentationViewModel
                     PartInfo.AngleSensor,
                     canDelete,
                     PanelSliders(),
-                    MotorPickers(angleSensor, CreatureBuilder.AngleSensorNeedsTwoSidesReason),
+                    SidePickers(angleSensor, CreatureBuilder.AngleSensorNeedsTwoSidesReason),
                     OnThisJoint: OnThisJoint(angleSensor.NodeId));
             }
 
@@ -417,7 +417,7 @@ public sealed class BuildPresentationViewModel
             return UiText.Counted("{0} link has zero length", "{0} links have zero length", zeroLength);
         }
 
-        var missingALink = _build.MotorsAndBrakes.Count(CreatureReadiness.IsMissingALink);
+        var missingALink = _build.HingeParts.Count(CreatureReadiness.IsMissingALink);
         return missingALink > 0
             ? UiText.Counted("{0} part missing a side", "{0} parts missing a side", missingALink)
             : errors[0];
@@ -455,24 +455,24 @@ public sealed class BuildPresentationViewModel
 
     private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];
 
-    // The Fixed and Target pickers of a joint's motor-or-brake slot, the Servo's, Velocity motor's (#454),
+    // The Fixed and Target pickers of a joint's hinge-part slot, the Servo's, Velocity motor's (#454),
     // Brake's (#1041) and Angle sensor's (#1206) alike, also on a locked Creation (#1179).
-    private IReadOnlyList<PartPickerPresentation> MotorPickers(IMotorOrBrakeDef motor, UiText needsTwoSidesReason)
+    private IReadOnlyList<PartPickerPresentation> SidePickers(IHingePartDef part, UiText needsTwoSidesReason)
     {
         // A Wheel on the joint is a one-sided link, listed after the links (#1118).
         (int Id, CreatureElementKind Kind)[] links =
         [
-            .. _build.LinksAt(motor.NodeId).OrderBy(link => link.Id).Select(link => (link.Id, link.Kind)),
-            .. _build.Wheels.Where(wheel => wheel.NodeId == motor.NodeId).Select(wheel => (wheel.Id, CreatureElementKind.Wheel)),
+            .. _build.LinksAt(part.NodeId).OrderBy(link => link.Id).Select(link => (link.Id, link.Kind)),
+            .. _build.Wheels.Where(wheel => wheel.NodeId == part.NodeId).Select(wheel => (wheel.Id, CreatureElementKind.Wheel)),
         ];
-        var twoLinksNote = _build.ServoNeedsTwoSides(motor.NodeId) ? needsTwoSidesReason : null;
+        var twoLinksNote = _build.ServoNeedsTwoSides(part.NodeId) ? needsTwoSidesReason : null;
 
         // Picking the other role's link swaps the two only when both are set; with one empty, it just moves.
-        var bothSet = motor.FixedLinkId is not null && motor.TargetLinkId is not null;
+        var bothSet = part.FixedLinkId is not null && part.TargetLinkId is not null;
         return
         [
-            Picker(UiText.Plain("Fixed part"), motor.FixedLinkId, UiText.Plain("Pick a Fixed part"), ServoLinkRole.Target),
-            Picker(UiText.Plain("Target part"), motor.TargetLinkId, UiText.Plain("Pick a Target part"), ServoLinkRole.Fixed),
+            Picker(UiText.Plain("Fixed part"), part.FixedLinkId, UiText.Plain("Pick a Fixed part"), ServoLinkRole.Target),
+            Picker(UiText.Plain("Target part"), part.TargetLinkId, UiText.Plain("Pick a Target part"), ServoLinkRole.Fixed),
         ];
 
         PartPickerPresentation Picker(UiText label, int? selectedLinkId, UiText placeholder, ServoLinkRole otherRole)
@@ -488,8 +488,8 @@ public sealed class BuildPresentationViewModel
 
             PartPickerOption Option((int Id, CreatureElementKind Kind) link)
             {
-                var role = link.Id == motor.FixedLinkId ? ServoLinkRole.Fixed
-                    : link.Id == motor.TargetLinkId ? ServoLinkRole.Target
+                var role = link.Id == part.FixedLinkId ? ServoLinkRole.Fixed
+                    : link.Id == part.TargetLinkId ? ServoLinkRole.Target
                     : ServoLinkRole.None;
                 return new PartPickerOption(
                     link.Id,

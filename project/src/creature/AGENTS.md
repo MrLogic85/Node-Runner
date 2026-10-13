@@ -36,18 +36,18 @@ file owns how Godot realises it.
    which gave way (#835). Behaviour: `docs/CREATURE_MODEL.md` → Spring.
 6. **Servos and Velocity motors.** A joint motor (`ServoJoint`, or
    `VelocityMotorJoint`, #454) measures and drives its two sides through one
-   `MotorSides`, so both motors share it. Each side is a `MotorSide`: a link
-   (`MotorLinkSide`) gets equal-and-opposite force couples
-   (`MotorSideGeometry.CoupleForTorque`) on the joint body and the link's far body; the
-   joint's Wheel (`MotorWheelSide`, #1118) gets a plain body torque on the
-   Wheel body, with the signs of `MotorSideGeometry.WheelAngle`/`WheelBodyTorque` and
+   `HingePartSides`, as every hinge part does. Each side is a `HingePartSide`: a link
+   (`HingePartLinkSide`) gets equal-and-opposite force couples
+   (`HingePartSideGeometry.CoupleForTorque`) on the joint body and the link's far body; the
+   joint's Wheel (`HingePartWheelSide`, #1118) gets a plain body torque on the
+   Wheel body, with the signs of `HingePartSideGeometry.WheelAngle`/`WheelBodyTorque` and
    the Wheel's own inertia. A Servo adds a soft end-stop torque outside its
    range; a Velocity motor has no stops, and at zero strength no torque.
    No Godot angular joint: Pistons and Springs slide on a groove, and force
    couples work for every link kind without link-kind branches. The lever arm is clamped to
-   `MotorSideGeometry.MinimumLeverArm` so a compressed Spring cannot make unbounded
+   `HingePartSideGeometry.MinimumLeverArm` so a compressed Spring cannot make unbounded
    force. Motor and stop are integrated explicitly, so the gains are scaled
-   to the live inertia (`MotorSideGeometry.LinkInertia` or the Wheel's, `Servo.StableEndStopGains`) to
+   to the live inertia (`HingePartSideGeometry.LinkInertia` or the Wheel's, `Servo.StableEndStopGains`) to
    stay stable; the holding part is not capped, so a Servo holds a load up
    to its strength.
 7. **Accelerometer.** `AccelerometerSensor` differences the velocity where
@@ -77,13 +77,13 @@ file owns how Godot realises it.
 13. **A Rubber is its joint body's material, nothing new.** Give that body
     a Rough `PhysicsMaterial` at `Rubber.Friction`; add no body, shape or
     collider (`Creature.Rubbers.cs` says how, #1142).
-14. **A Brake is friction on its `MotorSides`, or a weld when Locked.** A
+14. **A Brake is friction on its `HingePartSides`, or a weld when Locked.** A
     `BrakeJoint` turns its sides (rule 6) by `Mechanics.Brake`'s torque
-    every tick, brain or not (#1040), using `MotorSides.BrakeInertia`,
+    every tick, brain or not (#1040), using `HingePartSides.BrakeInertia`,
     which must never read heavier than the joint. A Locked Brake is a
     second Godot joint instead, as no Godot angular joint can brake;
     `Creature.Links.cs` (WeldSides) says how, and when it stays friction.
-15. **An Angle sensor only reads its `MotorSides`.** An `AngleSensorJoint`
+15. **An Angle sensor only reads its `HingePartSides`.** An `AngleSensorJoint`
     reads the angle and speed between its sides as a Motor does (#1204),
     and never applies torque or adds a joint.
 
@@ -99,11 +99,11 @@ file owns how Godot realises it.
 - `TouchSensor.cs` — a Touch sensor: how near its joint body is to the ground
 - `AccelerometerSensor.cs`, `CameraSensor.cs` — the sensors (a camera is
   one `RayCast2D` child per ray, aimed and sized by `CameraRays`)
-- `MotorSides.cs` — a joint motor's, Brake's or Angle sensor's two sides: angle, speed, inertia, torque
+- `HingePartSides.cs` — a hinge part's two sides: angle, speed, inertia, torque
 - `ServoJoint.cs`, `VelocityMotorJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
 - `BrakeJoint.cs` — a Brake's friction on its sides
 - `AngleSensorJoint.cs` — an Angle sensor's reading of its sides
-  (`AngleSensorVisual.cs` draws its arc from the same `MotorSides`, #1205)
+  (`AngleSensorVisual.cs` draws its arc from the same `HingePartSides`, #1205)
 - `*Visual.cs` — rendering only: Training's adapters over the shared part
   visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds
   `IShadowVisual`

@@ -4,7 +4,7 @@ namespace NodeRunner.Domain;
 /// A Velocity motor (#454): a powered joint part on one node that turns its Target side against
 /// its Fixed side at the speed the brain chooses, with no end stops. Its sides follow the Servo's
 /// rules (#1118): a link at the joint or the joint's Wheel, not both the same, either null once
-/// that part is deleted. It shares the joint's motor-or-brake slot with a Servo, a Brake and an Angle sensor (#1044); see
+/// that part is deleted. It shares the joint's hinge-part slot with a Servo, a Brake and an Angle sensor (#1044); see
 /// <see cref="JointMotor"/>. Players know it as the Motor.
 /// </summary>
 public sealed record VelocityMotorDef : IJointMotorDef
@@ -102,7 +102,7 @@ public sealed record VelocityMotorDef : IJointMotorDef
     /// <summary>How long, in seconds, its torque takes to build up to the strength the brain chose.</summary>
     public double RiseTime { get; }
 
-    CreatureElementKind IMotorOrBrakeDef.Kind => CreatureElementKind.VelocityMotor;
+    CreatureElementKind IHingePartDef.Kind => CreatureElementKind.VelocityMotor;
 
     public VelocityMotorDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, MaxSpeed, RiseTime);
 

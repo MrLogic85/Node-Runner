@@ -7,7 +7,7 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// An Angle sensor's picture (#1205): a ring that stands in for its joint's, at a plain joint's size,
 /// and an arc round it from the Fixed side's direction to the Target side's, over the shortest angle.
-/// Angles are Godot rotations, clockwise on screen, as the sides' are (<c>MotorSides.FixedRotation</c>);
+/// Angles are Godot rotations, clockwise on screen, as the sides' are (<c>HingePartSides.FixedRotation</c>);
 /// the brain's angle (<see cref="Mechanics.AngleSensor"/>) is counter-clockwise on screen, so it is
 /// the Fixed rotation minus the Target rotation.
 /// </summary>

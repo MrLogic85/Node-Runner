@@ -75,7 +75,7 @@ public sealed class DrawGroups
     /// </summary>
     public RaisedParts Raised(
         IEnumerable<CreatureElementSelection> selected,
-        IEnumerable<IMotorOrBrakeDef> motorsAndBrakes,
+        IEnumerable<IHingePartDef> hingeParts,
         IEnumerable<WheelDef> wheels,
         IEnumerable<TouchSensorDef> touchSensors,
         IEnumerable<RubberDef> rubbers,
@@ -83,12 +83,12 @@ public sealed class DrawGroups
         IEnumerable<int>? targetJoints = null)
     {
         ArgumentNullException.ThrowIfNull(selected);
-        ArgumentNullException.ThrowIfNull(motorsAndBrakes);
+        ArgumentNullException.ThrowIfNull(hingeParts);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(touchSensors);
         ArgumentNullException.ThrowIfNull(rubbers);
         var parts = selected.ToArray();
-        var motorNodes = motorsAndBrakes.ToDictionary(part => (part.Kind, part.Id), part => part.NodeId);
+        var hingePartNodes = hingeParts.ToDictionary(part => (part.Kind, part.Id), part => part.NodeId);
         var wheelNodes = wheels.ToDictionary(wheel => wheel.Id, wheel => wheel.NodeId);
         var touchNodes = touchSensors.ToDictionary(touch => touch.Id, touch => touch.NodeId);
         var rubberNodes = rubbers.ToDictionary(rubber => rubber.Id, rubber => rubber.NodeId);
@@ -96,7 +96,7 @@ public sealed class DrawGroups
             .Select(part => part.Kind switch
             {
                 CreatureElementKind.Node => part.Id,
-                CreatureElementKind.Servo or CreatureElementKind.VelocityMotor or CreatureElementKind.Brake or CreatureElementKind.AngleSensor => motorNodes.GetValueOrDefault((part.Kind, part.Id), -1),
+                CreatureElementKind.Servo or CreatureElementKind.VelocityMotor or CreatureElementKind.Brake or CreatureElementKind.AngleSensor => hingePartNodes.GetValueOrDefault((part.Kind, part.Id), -1),
                 CreatureElementKind.Wheel => wheelNodes.GetValueOrDefault(part.Id, -1),
                 CreatureElementKind.TouchSensor => touchNodes.GetValueOrDefault(part.Id, -1),
                 CreatureElementKind.Rubber => rubberNodes.GetValueOrDefault(part.Id, -1),
@@ -117,7 +117,7 @@ public sealed class DrawGroups
 
     /// <summary>
     /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees,
-    /// in Build and Training alike: a joint's ring, motor or Brake (#1041), or a Wheel's hub, each out to its halo
+    /// in Build and Training alike: a joint's ring, hinge part (#1041), or a Wheel's hub, each out to its halo
     /// (<see cref="SelectionMarks.JointHalo"/>); a sensor's picture; or a link within its drawn body
     /// (<see cref="SelectionMarks.LinkBody"/>), outside its ends' hubs, since it is drawn hub to hub
     /// (#1086), under a ring, hub or motor. A Wheel is hit only at its hub (#1086); its tyre and its
@@ -131,24 +131,24 @@ public sealed class DrawGroups
     public CreatureElementSelection? PartAt(
         Vector2D position,
         Func<int, Vector2D> nodeAt,
-        IReadOnlyCollection<IMotorOrBrakeDef> motorsAndBrakes,
+        IReadOnlyCollection<IHingePartDef> hingeParts,
         IReadOnlyCollection<WheelDef> wheels,
         IEnumerable<SensorDef> sensors,
         RaisedParts raised)
     {
         ArgumentNullException.ThrowIfNull(nodeAt);
-        ArgumentNullException.ThrowIfNull(motorsAndBrakes);
+        ArgumentNullException.ThrowIfNull(hingeParts);
         ArgumentNullException.ThrowIfNull(wheels);
         ArgumentNullException.ThrowIfNull(sensors);
         ArgumentNullException.ThrowIfNull(raised);
-        var motors = motorsAndBrakes.OfType<IJointMotorDef>().ToArray();
+        var motors = hingeParts.OfType<IJointMotorDef>().ToArray();
         CreatureElementSelection? top = null;
         var topRank = -1;
 
         foreach (var nodeId in _nodes)
         {
             var distance = Math.Sqrt(DistanceSquared(nodeAt(nodeId), position));
-            var slot = motorsAndBrakes.FirstOrDefault(part => part.NodeId == nodeId);
+            var slot = hingeParts.FirstOrDefault(part => part.NodeId == nodeId);
             var motor = slot as IJointMotorDef;
             var wheel = wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId);
             var lifted = raised.Joints.Contains(nodeId);

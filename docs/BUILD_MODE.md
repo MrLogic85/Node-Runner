@@ -171,7 +171,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   - Any link dropped on a pair a link of another kind joins replaces it
     (#849, #1176), with its own default settings; while dragging, the
     replaced link is outlined. A beam with a sensor on it is never
-    replaced. A joint motor or Brake that held the old link holds the new
+    replaced. A hinge part that held the old link holds the new
     one in the same role (`docs/CREATURE_MODEL.md` → "Editing identity
     rules" says it keeps its id). One Undo brings the
     old link back with its id and settings. On a locked creation, a Beam
@@ -212,7 +212,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   Tapping or dragging that joint selects the Servo; dragging moves the
   joint with it.
 - **Motor (#454):** placed from Parts → Moving parts on any joint
-  exactly like a Servo, in its joint's slot for a joint motor or brake
+  exactly like a Servo, in its joint's hinge-part slot
   (`docs/CREATURE_MODEL.md` → Node → One part per slot). A beam, sensor or
   link refuses with "Motors go on a joint"; its sides, missing
   roles and notes follow the Servo's, with "A Motor needs two

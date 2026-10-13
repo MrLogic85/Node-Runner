@@ -57,7 +57,7 @@ public sealed class BuildVelocityMotorTests
 
         build.CanPlacePart(second, _middleJoint, out var reason).ShouldBeFalse();
 
-        reason.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+        reason.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
     }
 
     [Fact]
@@ -92,13 +92,13 @@ public sealed class BuildVelocityMotorTests
     }
 
     [Fact]
-    public void SetMotorLink_OnAVelocityMotor_SwapsItsSides_AndKeepsItsIdAndSelection_ThroughUndoAndRedo()
+    public void SetHingePartLink_OnAVelocityMotor_SwapsItsSides_AndKeepsItsIdAndSelection_ThroughUndoAndRedo()
     {
         var build = new BuildViewModel();
         build.Load(WithAMotor());
         build.SelectOnly(CreatureElementKind.VelocityMotor, 6);
 
-        build.SetMotorLink(6, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(6, fixedRole: true, linkId: 5);
 
         build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(6, 2, fixedLinkId: 5, targetLinkId: 4));
         build.SingleSelectedVelocityMotorId.ShouldBe(6);

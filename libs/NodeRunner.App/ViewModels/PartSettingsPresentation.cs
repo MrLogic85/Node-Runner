@@ -80,7 +80,7 @@ public sealed record JointPartTab(PartSettingsKind Kind, CreatureElementSelectio
 /// <summary>A read-only row in the Part settings panel: a label and the value it reads, like "Weight" and "1.2 kg".</summary>
 public sealed record PartReadout(UiText Label, UiText Value);
 
-/// <summary>The role a link has on its motor or Brake today: a Servo's, a Velocity motor's or a Brake's.</summary>
+/// <summary>The role a link has on its hinge part today, a Servo's, a Velocity motor's, a Brake's or an Angle sensor's.</summary>
 public enum ServoLinkRole
 {
     None,

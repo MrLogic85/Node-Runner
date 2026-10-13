@@ -50,7 +50,7 @@ public sealed class VelocityMotorDefTests
     {
         var error = Should.Throw<ArgumentException>(() => Creature([new VelocityMotorDef(6, 1, 4, 5)], servos: [new ServoDef(7, 1, 5, 4)]));
 
-        error.Message.ShouldContain("motor or brake");
+        error.Message.ShouldContain("hinge part");
     }
 
     [Fact]

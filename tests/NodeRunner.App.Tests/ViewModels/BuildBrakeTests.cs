@@ -59,7 +59,7 @@ public sealed class BuildBrakeTests
     [InlineData(BuildPart.Brake, BuildPart.Servo)]
     [InlineData(BuildPart.Brake, BuildPart.VelocityMotor)]
     [InlineData(BuildPart.Brake, BuildPart.Brake)]
-    public void AJointHoldsOneServoMotorOrBrake(BuildPart first, BuildPart second)
+    public void AJointHoldsOneHingePart(BuildPart first, BuildPart second)
     {
         var build = TwoBeams();
         build.PlacePart(first, _middleJoint);
@@ -200,13 +200,13 @@ public sealed class BuildBrakeTests
     }
 
     [Fact]
-    public void SetMotorLink_OnABrake_SwapsItsSides_KeepsItsId_AndUndoes()
+    public void SetHingePartLink_OnABrake_SwapsItsSides_KeepsItsId_AndUndoes()
     {
         var build = new BuildViewModel();
         build.Load(WithABrake());
         build.SelectOnly(CreatureElementKind.Brake, 6);
 
-        build.SetMotorLink(6, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(6, fixedRole: true, linkId: 5);
 
         build.Brakes.Single().ShouldBe(new BrakeDef(6, 2, fixedLinkId: 5, targetLinkId: 4));
         build.SingleSelectedBrakeId.ShouldBe(6);
@@ -231,7 +231,7 @@ public sealed class BuildBrakeTests
 
         pickers[1].Options.Select(option => (option.LinkId, option.Kind)).ShouldContain((wheel, CreatureElementKind.Wheel));
         pickers[1].LinkIdAt(pickers[1].SelectedIndex!.Value).ShouldBe(wheel);
-        build.SetMotorLink(brakeId, fixedRole: true, linkId: wheel);
+        build.SetHingePartLink(brakeId, fixedRole: true, linkId: wheel);
         build.Brakes.Single().ShouldBe(new BrakeDef(brakeId, 1, fixedLinkId: wheel, targetLinkId: 4));
     }
 
@@ -389,7 +389,7 @@ public sealed class BuildBrakeTests
         build.SelectOnly(CreatureElementKind.Brake, 6);
 
         new BuildPresentationViewModel(build).SinglePart!.BasicSettings.Single().Locked.ShouldBeFalse();
-        build.SetMotorLink(6, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(6, fixedRole: true, linkId: 5);
         build.SetParameter(PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
         build.Brakes.Single().ShouldBe(new BrakeDef(6, 2, fixedLinkId: 5, targetLinkId: 4, strength: BrakeDef.LockedStrength));
 

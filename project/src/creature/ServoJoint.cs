@@ -3,14 +3,14 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Servo (#452) between the two <see cref="MotorSides"/> at its joint: it drives the Target
+/// A Servo (#452) between the two <see cref="HingePartSides"/> at its joint: it drives the Target
 /// toward the brain's angle, with a soft stop outside its range.
 /// </summary>
 public sealed class ServoJoint
 {
     private Mechanics.MotorState _motor;
 
-    public ServoJoint(ServoDef definition, MotorSides sides)
+    public ServoJoint(ServoDef definition, HingePartSides sides)
     {
         Definition = definition;
         Sides = sides;
@@ -18,7 +18,7 @@ public sealed class ServoJoint
 
     public ServoDef Definition { get; }
 
-    public MotorSides Sides { get; }
+    public HingePartSides Sides { get; }
 
     public double AngleInput => Mechanics.Servo.AngleInput(Sides.ContinuousAngle, Definition, Sides.BuiltAngle);
 

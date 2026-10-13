@@ -181,7 +181,7 @@ public partial class Creature : Node2D
     public void BuildFrom(CreatureDef definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
-        if (definition.MotorsAndBrakes.FirstOrDefault(part => part.FixedLinkId is null || part.TargetLinkId is null) is { } incomplete)
+        if (definition.HingeParts.FirstOrDefault(part => part.FixedLinkId is null || part.TargetLinkId is null) is { } incomplete)
         {
             throw new InvalidOperationException($"{incomplete.Kind} {incomplete.Id} must have two sides before the creature is built for simulation.");
         }
@@ -572,7 +572,7 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
-            var hasMotor = definition.MotorsAndBrakes.Any(part => part.NodeId == definition.Nodes[i].Id);
+            var hasHingePart = definition.HingeParts.Any(part => part.NodeId == definition.Nodes[i].Id);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
             var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);
@@ -582,8 +582,8 @@ public partial class Creature : Node2D
                 Name = $"Node{i}Visual",
                 Theme = Theme,
                 Radius = radius,
-                ShowsRing = !hasWheel && !hasMotor,
-                ShowsHub = hasWheel && !hasMotor,
+                ShowsRing = !hasWheel && !hasHingePart,
+                ShowsHub = hasWheel && !hasHingePart,
                 Cushion = hasTouch,
                 Skin = hasRubber,
             };

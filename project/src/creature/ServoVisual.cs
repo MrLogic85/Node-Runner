@@ -7,7 +7,7 @@ public partial class ServoVisual : ServoPart, IShadowVisual
 {
     public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
 
-    public required MotorSides Sides { get; init; }
+    public required HingePartSides Sides { get; init; }
 
     public bool IsShadow
     {
