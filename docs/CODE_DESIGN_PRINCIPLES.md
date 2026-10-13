@@ -35,8 +35,8 @@ an option.
   data it needs (values, keys, counts) and let Godot do the work. Logic
   Godot does not offer, such as the ML engine and the domain rules, stays
   ours.
-- When existing code turns out to duplicate a Godot feature, file an issue
-  to replace it.
+- Existing code that duplicates a Godot feature should be replaced by it
+  (`docs/ISSUES.md` → "Creating an issue").
 
 ## 3. The ML engine is engine-agnostic
 
