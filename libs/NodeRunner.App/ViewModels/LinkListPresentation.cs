@@ -58,7 +58,7 @@ public static class BuildLinkList
             ? PartTray.ComingIn(row.Name, row.Version!)
             : throw new ArgumentOutOfRangeException(nameof(link), link, "Only a locked link has a version.");
 
-    /// <summary>Whether drawing <paramref name="link"/> adds brain ports, so a locked creation refuses it (#896).</summary>
+    /// <summary>Whether <paramref name="link"/> has brain ports, so a locked creation neither draws nor replaces it (#896, #1176).</summary>
     public static bool HasBrainPorts(BuildLink link) => link == BuildLink.Piston;
 
     public static UiText HelpText { get; } = UiText.Plain("Tap a link to pick it.");

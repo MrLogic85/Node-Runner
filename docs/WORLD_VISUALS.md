@@ -257,7 +257,7 @@ selected ones, which draw alike (#1107). Each surface draws from the bottom
 up: its parts, then the joints joined to no link; the selected surface
 starts with a selected joint motor's or Brake's bands (Selection marks). On top
 of both go the overlays (camera rays, link travel marks, the link drag and
-sensor move lines, the picked link's start rings, the beam a link drag
+sensor move lines, the picked link's start rings, the link a link drag
 replaces, the selection frame). Training's knock-out outline and the rigid
 hatch sit under both surfaces.
 
@@ -294,9 +294,9 @@ above every shadow.
 - **Link drag line (#920):** dashed `halo` over no joint, solid `halo` once
   it will attach, dashed `danger` with a crossed `danger` ring where the
   joint would refuse. It is drawn over the creature and is all the feedback:
-  a finger often covers the target. A Piston or Spring that will replace a
-  beam (#849) outlines it with two dashed `line-strong` lines over the
-  creature.
+  a finger often covers the target. A link that will replace another
+  (#849, #1176) outlines it with two dashed `line-strong` lines over the
+  creature, at that link's selection offset and from hub to hub.
 - **Picked link (#1057):** while a link is picked, each joint a drag draws
   it from has a dashed `halo` ring at `JointHalo` (12 dashes, the selection
   ring's width), over the creature. It is dashed, as the drag line is

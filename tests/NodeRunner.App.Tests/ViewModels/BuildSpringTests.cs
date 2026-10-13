@@ -22,15 +22,28 @@ public sealed class BuildSpringTests
     }
 
     [Fact]
-    public void Drag_OntoAPairAPistonJoins_PlacesNothing_AndSaysWhyThere()
+    public void Drag_OntoAPairASpringJoins_PlacesNothing_AndSaysWhyThere()
+    {
+        var (build, gestures) = ThreeLooseJoints();
+        build.ConnectLink(BuildLink.Spring, 1, 2).ShouldNotBeNull();
+
+        Drag(gestures, new Vector2D(100, 0), new Vector2D(0, 0));
+
+        build.Springs.Count.ShouldBe(1);
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 1), CreatureBuilder.SpringJoinsTheseNodesReason));
+    }
+
+    [Fact]
+    public void Drag_OntoAPairAPistonJoins_ReplacesIt()
     {
         var (build, gestures) = ThreeLooseJoints();
         build.ConnectLink(BuildLink.Piston, 1, 2).ShouldNotBeNull();
 
         Drag(gestures, new Vector2D(0, 0), new Vector2D(100, 0));
 
-        build.Springs.ShouldBeEmpty();
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 2), CreatureBuilder.PistonJoinsTheseNodesReason));
+        build.Pistons.ShouldBeEmpty();
+        build.Springs.Single().NodeB.ShouldBe(2);
+        build.PlacementNote.ShouldBeNull();
     }
 
     [Fact]

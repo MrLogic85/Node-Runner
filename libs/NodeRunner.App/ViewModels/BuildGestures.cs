@@ -168,8 +168,8 @@ public sealed class BuildGestures
     /// <summary>The joint under a link drag that would refuse it (#451, #877), such as one a beam already joins to the start.</summary>
     public int? RefusedTargetNodeId { get; private set; }
 
-    /// <summary>The beam a Piston or Spring drag would replace if released now (#849).</summary>
-    public int? ReplacedBeamId { get; private set; }
+    /// <summary>The link of another kind a link drag would replace if released now (#849, #1176).</summary>
+    public int? ReplacedLinkId { get; private set; }
 
     /// <summary>The sensor a drag is moving to another beam (#806).</summary>
     public int? MovingSensorId { get; private set; }
@@ -497,7 +497,7 @@ public sealed class BuildGestures
             var refused = target is { } end && !_build.CanConnectLink(_drawnLink, start, end, out _, out replaced);
             BeamTargetNodeId = refused ? null : target;
             RefusedTargetNodeId = refused ? target : null;
-            ReplacedBeamId = replaced;
+            ReplacedLinkId = replaced;
 
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -910,7 +910,7 @@ public sealed class BuildGestures
         BeamEnd = null;
         BeamTargetNodeId = null;
         RefusedTargetNodeId = null;
-        ReplacedBeamId = null;
+        ReplacedLinkId = null;
         MovingSensorId = null;
         SensorDropTarget = null;
         SensorDragEnd = null;

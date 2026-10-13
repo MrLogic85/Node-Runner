@@ -53,10 +53,10 @@ public sealed partial class CreatureBuilder
     /// <summary>Why another beam cannot join two nodes a beam already holds rigid (#877); a Piston or Spring replaces it instead (#849).</summary>
     public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these joints");
 
-    /// <summary>Why a beam or another link cannot join two nodes a Piston already links.</summary>
+    /// <summary>Why another Piston cannot join two nodes a Piston already links; a Beam or Spring replaces it instead (#1176).</summary>
     public static UiText PistonJoinsTheseNodesReason { get; } = UiText.Plain("These joints already have a piston");
 
-    /// <summary>Why a beam or another link cannot join two nodes a Spring already links (#453).</summary>
+    /// <summary>Why another Spring cannot join two nodes a Spring already links (#453); a Beam or Piston replaces it instead (#1176).</summary>
     public static UiText SpringJoinsTheseNodesReason { get; } = UiText.Plain("These joints already have a spring");
 
     /// <summary>Why a Piston or Spring cannot replace the beam between two nodes (#849): the sensor on it is never deleted silently.</summary>
@@ -168,9 +168,8 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Adds a beam between two distinct, existing nodes and returns its
-    /// id. Throws if either node id is invalid, the nodes are the
-    /// same, or a beam or link between them already exists.
+    /// Adds a beam between two distinct, existing nodes, in place of a Piston or Spring there (#1176), and
+    /// returns its id; see <see cref="CanAddBeam"/>. Throws if either node id is invalid or the pair is refused.
     /// </summary>
     public int AddBeam(int nodeIdA, int nodeIdB)
     {
@@ -181,14 +180,16 @@ public sealed partial class CreatureBuilder
             throw new ArgumentException(reason.Message);
         }
 
+        var replaced = LinkBetween(nodeIdA, nodeIdB);
         var id = AllocatePartId();
         _beams.Add(new BeamDef(id, nodeIdA, nodeIdB));
+        ReplaceLink(replaced, id);
         return id;
     }
 
     /// <summary>
     /// Whether <see cref="AddBeam"/> would accept this pair (#877): two distinct, existing nodes
-    /// with no beam and no link yet; if not, <paramref name="reason"/> says why.
+    /// with no beam yet; a Piston or Spring there is replaced (#1176). If not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddBeam(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
@@ -198,14 +199,14 @@ public sealed partial class CreatureBuilder
             return false;
         }
 
-        reason = BeamBlockedReason(nodeIdA, nodeIdB);
+        reason = BeamBetween(nodeIdA, nodeIdB) is not null ? BeamJoinsTheseNodesReason : null;
         return reason is null;
     }
 
     /// <summary>
     /// Whether <see cref="AddPiston"/> would accept this pair (#451): two distinct, existing nodes
-    /// with no link yet. A beam between them is replaced (#849), unless a sensor sits on it; if
-    /// not, <paramref name="reason"/> says why.
+    /// with no Piston yet. A beam or Spring there is replaced (#849, #1176), unless a sensor sits on the
+    /// beam; if not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddPiston(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
@@ -215,14 +216,14 @@ public sealed partial class CreatureBuilder
             return false;
         }
 
-        reason = MovingLinkBlockedReason(nodeIdA, nodeIdB);
+        reason = PistonBetween(nodeIdA, nodeIdB) is not null ? PistonJoinsTheseNodesReason : ReplacedLinkReason(nodeIdA, nodeIdB);
         return reason is null;
     }
 
     /// <summary>
-    /// Whether <see cref="AddSpring"/> would accept this pair (#453): the same rules as a Piston's,
-    /// two distinct, existing nodes with no link between them, replacing a beam without a sensor; if not,
-    /// <paramref name="reason"/> says why.
+    /// Whether <see cref="AddSpring"/> would accept this pair (#453): two distinct, existing nodes with
+    /// no Spring yet. A beam or Piston there is replaced (#849, #1176), unless a sensor sits on the beam;
+    /// if not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddSpring(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
@@ -232,31 +233,31 @@ public sealed partial class CreatureBuilder
             return false;
         }
 
-        reason = MovingLinkBlockedReason(nodeIdA, nodeIdB);
+        reason = SpringBetween(nodeIdA, nodeIdB) is not null ? SpringJoinsTheseNodesReason : ReplacedLinkReason(nodeIdA, nodeIdB);
         return reason is null;
     }
 
-    // A beam refuses a pair that already has a beam or a link; a Piston or Spring goes through MovingLinkBlockedReason.
-    private UiText? BeamBlockedReason(int nodeIdA, int nodeIdB) =>
-        BeamBetween(nodeIdA, nodeIdB) is not null ? BeamJoinsTheseNodesReason : LinkReason(nodeIdA, nodeIdB);
+    // A link of another kind on the pair is replaced (#849, #1176), but never a sensor's beam.
+    private UiText? ReplacedLinkReason(int nodeIdA, int nodeIdB) =>
+        BeamBetween(nodeIdA, nodeIdB) is { } beamId && _sensors.Any(sensor => sensor.BeamId == beamId) ? SensorSitsOnThisBeamReason : null;
 
-    // A Piston or Spring takes a beam's place instead (#849), but never a sensor's beam.
-    private UiText? MovingLinkBlockedReason(int nodeIdA, int nodeIdB) =>
-        BeamBetween(nodeIdA, nodeIdB) is { } beamId
-            ? _sensors.Any(sensor => sensor.BeamId == beamId) ? SensorSitsOnThisBeamReason : null
-            : LinkReason(nodeIdA, nodeIdB);
+    /// <summary>
+    /// The Beam, Piston or Spring joining two nodes, or null. A pair has at most one, and a link of
+    /// another kind placed there replaces it (#849, #1176).
+    /// </summary>
+    public int? LinkBetween(int nodeIdA, int nodeIdB) =>
+        BeamBetween(nodeIdA, nodeIdB) ?? PistonBetween(nodeIdA, nodeIdB) ?? SpringBetween(nodeIdA, nodeIdB);
 
-    /// <summary>The beam joining two nodes, or null; a Piston or Spring placed there replaces it (#849).</summary>
-    public int? BeamBetween(int nodeIdA, int nodeIdB) =>
+    private int? BeamBetween(int nodeIdA, int nodeIdB) =>
         _beams.FirstOrDefault(beam => IsSamePair(beam, nodeIdA, nodeIdB))?.Id;
 
-    // Why the link already between these nodes stops another part; null when there is none.
-    private UiText? LinkReason(int nodeIdA, int nodeIdB) =>
-        _pistons.Any(piston => IsSamePair(piston.NodeA, piston.NodeB, nodeIdA, nodeIdB)) ? PistonJoinsTheseNodesReason
-        : _springs.Any(spring => IsSamePair(spring.NodeA, spring.NodeB, nodeIdA, nodeIdB)) ? SpringJoinsTheseNodesReason
-        : null;
+    private int? PistonBetween(int nodeIdA, int nodeIdB) =>
+        _pistons.FirstOrDefault(piston => IsSamePair(piston.NodeA, piston.NodeB, nodeIdA, nodeIdB))?.Id;
 
-    /// <summary>Adds a Piston between two nodes with the default settings, in place of a beam there (#849), and returns its id; see <see cref="CanAddPiston"/>.</summary>
+    private int? SpringBetween(int nodeIdA, int nodeIdB) =>
+        _springs.FirstOrDefault(spring => IsSamePair(spring.NodeA, spring.NodeB, nodeIdA, nodeIdB))?.Id;
+
+    /// <summary>Adds a Piston between two nodes with the default settings, in place of a beam or Spring there (#849, #1176), and returns its id; see <see cref="CanAddPiston"/>.</summary>
     public int AddPiston(int nodeIdA, int nodeIdB)
     {
         ValidateNodeId(nodeIdA);
@@ -266,13 +267,14 @@ public sealed partial class CreatureBuilder
             throw new ArgumentException(reason.Message);
         }
 
+        var replaced = LinkBetween(nodeIdA, nodeIdB);
         var id = AllocatePartId();
         _pistons.Add(new PistonDef(id, nodeIdA, nodeIdB));
-        ReplaceBeamWith(nodeIdA, nodeIdB, id);
+        ReplaceLink(replaced, id);
         return id;
     }
 
-    /// <summary>Adds a Spring between two nodes with the default settings, in place of a beam there (#849), and returns its id; see <see cref="CanAddSpring"/>.</summary>
+    /// <summary>Adds a Spring between two nodes with the default settings, in place of a beam or Piston there (#849, #1176), and returns its id; see <see cref="CanAddSpring"/>.</summary>
     public int AddSpring(int nodeIdA, int nodeIdB)
     {
         ValidateNodeId(nodeIdA);
@@ -282,22 +284,26 @@ public sealed partial class CreatureBuilder
             throw new ArgumentException(reason.Message);
         }
 
+        var replaced = LinkBetween(nodeIdA, nodeIdB);
         var id = AllocatePartId();
         _springs.Add(new SpringDef(id, nodeIdA, nodeIdB));
-        ReplaceBeamWith(nodeIdA, nodeIdB, id);
+        ReplaceLink(replaced, id);
         return id;
     }
 
-    // The new link takes the beam's place (#849) and its motor and Brake roles.
-    private void ReplaceBeamWith(int nodeIdA, int nodeIdB, int linkId)
+    // The new link takes the replaced one's place (#849, #1176) and its motor and Brake roles. A replaced
+    // beam never carries a sensor (ReplacedLinkReason).
+    private void ReplaceLink(int? replacedId, int linkId)
     {
-        if (BeamBetween(nodeIdA, nodeIdB) is not { } beamId)
+        if (replacedId is not { } id)
         {
             return;
         }
 
-        _beams.RemoveAt(BeamIndexOf(beamId));
-        ReplaceSides(beamId, linkId);
+        _beams.RemoveAll(beam => beam.Id == id);
+        _pistons.RemoveAll(piston => piston.Id == id);
+        _springs.RemoveAll(spring => spring.Id == id);
+        ReplaceSides(id, linkId);
     }
 
     // Each motor and Brake with linkId as a side gets newLinkId there instead, or no side when it is null; each

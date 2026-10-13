@@ -214,17 +214,36 @@ public sealed class BuildLockedTests
     }
 
     [Fact]
-    public void ConnectLink_ASpringThatWouldReplaceABeam_IsRefused_NamingTheBeam()
+    public void ConnectLink_ABeamAndASpring_ReplaceEachOther_AndTheServoKeepsItsRole()
+    {
+        // No brain ports change: the Servo holding the beam keeps its id (#1176, #1177).
+        var build = Locked();
+
+        build.CanConnectLink(BuildLink.Spring, 2, 1, out _, out var replaced).ShouldBeTrue();
+        replaced.ShouldBe(10);
+        var spring = build.ConnectLink(BuildLink.Spring, 2, 1)!.Value;
+        var beam = build.ConnectLink(BuildLink.Beam, 4, 1)!.Value;
+
+        build.Beams.ShouldNotContain(link => link.Id == 10);
+        build.Beams.ShouldContain(link => link.Id == beam);
+        build.Springs.Select(link => link.Id).ShouldBe([50, spring], ignoreOrder: true);
+        build.Servos.Single().ShouldBe(new ServoDef(30, 2, spring, 12));
+    }
+
+    [Fact]
+    public void ConnectLink_ThatWouldRemoveAPiston_IsRefused()
     {
         var build = Locked();
 
-        build.CanConnectLink(BuildLink.Spring, 3, 5, out var reason, out var replaced).ShouldBeFalse();
-        reason.ShouldBe(UiText.Plain("A beam already joins these joints"));
-        replaced.ShouldBeNull();
-        build.ConnectLink(BuildLink.Spring, 3, 5).ShouldBeNull();
+        foreach (var link in new[] { BuildLink.Beam, BuildLink.Spring })
+        {
+            build.CanConnectLink(link, 3, 4, out var reason, out var replaced).ShouldBeFalse();
+            reason.ShouldBe(BuildViewModel.LockedReason);
+            replaced.ShouldBeNull();
+            build.ConnectLink(link, 4, 3).ShouldBeNull();
+        }
 
-        build.Beams.ShouldContain(beam => beam.Id == 13);
-        build.Springs.Count.ShouldBe(2);
+        build.Pistons.Count.ShouldBe(2);
     }
 
     [Fact]

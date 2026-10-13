@@ -136,11 +136,12 @@ public static class SpringDrawing
 
         if (selected)
         {
-            // The seats are its widest part; the gap is measured from their ends.
-            var offset = seatHalf + (float)SelectionMarks.Gap;
-            SelectionDrawing.DrawLink(canvas, pen.ToPixels, pen.Scale, theme, a, b, radiusA, radiusB, haloA, haloB, offset);
+            SelectionDrawing.DrawLink(canvas, pen.ToPixels, pen.Scale, theme, a, b, radiusA, radiusB, haloA, haloB, SelectionOffset(theme));
         }
     }
+
+    /// <summary>The selection outline's distance from the axis: the seats are its widest part, and the gap is measured from their ends.</summary>
+    public static float SelectionOffset(VisualTheme theme) => SeatHalf(theme) + (float)SelectionMarks.Gap;
 
     /// <summary>A seat plate's half width, the Spring's widest part; its stroke ticks are as wide (#835).</summary>
     public static float SeatHalf(VisualTheme theme)
