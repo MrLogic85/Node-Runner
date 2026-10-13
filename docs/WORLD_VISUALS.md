@@ -142,27 +142,39 @@ are in `AngleSensorGeometry`):
   each end on its side's centre line, over the links, with a knock-out
   edge that parts it from the links it crosses, a Piston's cylinder or a
   beam in its angle, and rims its round ends where they lie on the two
-  sides' links. It shows the angle
-  the brain reads (`docs/CREATURE_MODEL.md` → Angle sensor → Reading) and
-  spans the shortest way, 0–180°: up to and at 180° it runs
-  counter-clockwise on screen from the Fixed side, past it clockwise, so it
-  flips sides at 180° with no hysteresis. With the sides in line its ends
-  meet in a dot 2 across.
+  sides' links. Its ends show the angle the brain reads
+  (`docs/CREATURE_MODEL.md` → Angle sensor → Reading); which part of the
+  ring it covers shows how the sides got there (#1243). Counting the angle
+  on across whole turns, counter-clockwise on screen, on an even turn it
+  runs counter-clockwise from the Fixed side to the Target side, so it
+  fills, and on an odd turn counter-clockwise from the Target side to the
+  Fixed side, so it empties. With the sides in line its ends meet in a dot
+  2 across on an even turn and close a full ring on an odd one.
 
 The arc's centre line is `AngleSensorDef.ArcGap` (7: `SelectionMarks.Gap`
 plus 4) plus half its width outside the joint's outermost part: 23 on a
 bare joint, 26 with a Rubber's skin, 28 with a Touch sensor's cushion,
 never on it. The extra 4 lengthens the arc between two close sides (#1230);
 below about 10° the arc is still only a short mark, which is accepted: a
-player adds an Angle sensor to a joint that moves. A Wheel changes
+player adds an Angle sensor to a joint that moves. Likewise an almost full
+ring's gap below about 10° may close to the links' width. A Wheel changes
 nothing, so on its joint the arc runs over the tyre's inside and tubes. A
 Wheel side points along the Wheel's tube 0, its built rightward direction,
 turning with the Wheel (#1118). The arc is only drawn: it adds no collider
 and no tap area.
 
-Training draws it from the sides' live directions, Build at rest. It has no
-cue for speed. An Angle sensor missing a side, as on a loose joint (#1140),
-draws its ring in `danger` with the Servo's "!" badge and no arc.
+At rest, in Build, thumbnails and each trial's first frame, the angle is
+0 to under a full turn, so the arc always runs counter-clockwise from the
+Fixed side: a Target side just clockwise of it draws an almost full ring,
+and swapping Fixed and Target draws the rest of the ring, so the part shows
+which side is Target (#1231). Dragging a node across the Fixed side in
+Build switches between the dot and an almost full ring. Training follows
+the sides' live directions and counts their turns from the built pose,
+starting again with every trial, every physics tick however many a frame
+runs (`HingePartSides.ContinuousAngle`). There the arc changes way round
+only as a dot or a full ring, so it never jumps. It has no cue for speed.
+An Angle sensor missing a side, as on a loose joint (#1140), draws its
+ring in `danger` with the Servo's "!" badge and no arc.
 Thumbnails draw it as in Build, badge included.
 
 In Build, no link or placing ring round its joint covers the arc (#1206):

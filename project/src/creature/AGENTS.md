@@ -104,6 +104,8 @@ file owns how Godot realises it.
 - `BrakeJoint.cs` — a Brake's friction on its sides
 - `AngleSensorJoint.cs` — an Angle sensor's reading of its sides
   (`AngleSensorVisual.cs` draws its arc from the same `HingePartSides`, #1205)
+- `AngleSensorTurn.cs` — the turn Training's Angle sensor arc is on, from
+  `HingePartSides.ContinuousAngle`, a physics tick behind the bodies (#1243)
 - `*Visual.cs` — rendering only: Training's adapters over the shared part
   visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds
   `IShadowVisual`

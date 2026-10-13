@@ -134,6 +134,12 @@ public partial class Creature : Node2D
             brake.Hold(delta);
         }
 
+        // Its arc counts the turns too (AngleSensorVisual), brain or not.
+        foreach (var angleSensor in _angleSensors)
+        {
+            angleSensor.Sides.UpdatePhysicsState();
+        }
+
         if (Brain is null)
         {
             return;
@@ -147,11 +153,6 @@ public partial class Creature : Node2D
         foreach (var motor in _velocityMotors)
         {
             motor.Sides.UpdatePhysicsState();
-        }
-
-        foreach (var angleSensor in _angleSensors)
-        {
-            angleSensor.Sides.UpdatePhysicsState();
         }
 
         ReadSensors(_sensorValues, delta);
