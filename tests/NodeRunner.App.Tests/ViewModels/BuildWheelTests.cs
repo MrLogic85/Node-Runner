@@ -446,9 +446,9 @@ public sealed class BuildWheelTests
 
         CreatureReadiness.Problems(build.Snapshot()).ShouldBeEmpty();
 
-        // #1086: a link counts hub to hub, so even the biggest Wheels on both ends leave it long enough.
+        // #1086, #1212: a Wheel lies under its links, so even the biggest Wheels on both ends leave it long enough.
         build.SetParameter(PartParameterId.WheelRadius, WheelDef.MaxRadius);
-        CreatureReadiness.IsTooShort(build.Snapshot(), 1, 2).ShouldBeFalse();
+        CreatureReadiness.IsTooShort(build.Snapshot(), CreatureElementKind.Beam, 1, 2).ShouldBeFalse();
         CreatureReadiness.Problems(build.Snapshot()).ShouldBeEmpty();
     }
 

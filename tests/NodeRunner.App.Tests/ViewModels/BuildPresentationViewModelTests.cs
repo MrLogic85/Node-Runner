@@ -442,6 +442,24 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void Readiness_CountsABeamTooShort_OnceAMotorOnItsJointCoversMoreOfIt()
+    {
+        // #1212: 60 units is long enough between plain joints (56) but not with a Servo on one (68).
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200))],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 1, 3)],
+            []));
+        var presentation = new BuildPresentationViewModel(build);
+        var tooShort = UiText.Counted("{0} beam too short", "{0} beams too short", 1);
+        presentation.Readiness.Text.ShouldNotBe(tooShort);
+
+        build.PlacePart(BuildPart.Servo, new CreatureElementSelection(CreatureElementKind.Node, 1)).ShouldNotBeNull();
+
+        presentation.Readiness.Text.ShouldBe(tooShort);
+    }
+
+    [Fact]
     public void LockedCreation_PartSettingsDimDelete_WhenItTakesASensorAlong()
     {
         var build = new BuildViewModel();

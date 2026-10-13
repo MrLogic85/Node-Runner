@@ -533,7 +533,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
         void AddTooShortNote(CreatureElementKind kind, int id, int nodeA, int nodeB)
         {
-            if (CreatureReadiness.IsTooShort(Nodes[NodeIndexOf(nodeA)], Nodes[NodeIndexOf(nodeB)]))
+            if (CreatureReadiness.IsTooShort(kind, Nodes[NodeIndexOf(nodeA)], Nodes[NodeIndexOf(nodeB)], JointMotors))
             {
                 notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Too short")));
             }

@@ -78,16 +78,56 @@ public sealed class CreatureReadinessTests
     }
 
     [Theory]
-    [InlineData(81.9, false)]
-    [InlineData(82, true)]
-    public void Problems_WithABeamShorterThanTheMinimumGap_SaysItIsTooShort(double length, bool fits)
+    [InlineData(CreatureElementKind.Beam, 0, 55.9, false)]
+    [InlineData(CreatureElementKind.Beam, 0, 56, true)]
+    [InlineData(CreatureElementKind.Beam, 1, 67.9, false)]
+    [InlineData(CreatureElementKind.Beam, 1, 68, true)]
+    [InlineData(CreatureElementKind.Beam, 2, 79.9, false)]
+    [InlineData(CreatureElementKind.Beam, 2, 80, true)]
+    [InlineData(CreatureElementKind.Piston, 0, 55.9, false)]
+    [InlineData(CreatureElementKind.Piston, 0, 56, true)]
+    [InlineData(CreatureElementKind.Piston, 1, 67.9, false)]
+    [InlineData(CreatureElementKind.Piston, 1, 68, true)]
+    [InlineData(CreatureElementKind.Piston, 2, 79.9, false)]
+    [InlineData(CreatureElementKind.Piston, 2, 80, true)]
+    [InlineData(CreatureElementKind.Spring, 0, 55.9, false)]
+    [InlineData(CreatureElementKind.Spring, 0, 56, true)]
+    [InlineData(CreatureElementKind.Spring, 1, 67.9, false)]
+    [InlineData(CreatureElementKind.Spring, 1, 68, true)]
+    [InlineData(CreatureElementKind.Spring, 2, 79.9, false)]
+    [InlineData(CreatureElementKind.Spring, 2, 80, true)]
+    public void Problems_WithALinkShorterThanItsMinimum_SaysItIsTooShort(CreatureElementKind kind, int motors, double length, bool fits)
     {
-        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, length))], [new BeamDef(101, 1, 2)], []);
+        // #1212: 26 free units between what covers each end, a hub (15) or a joint motor (27).
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, length))],
+            kind == CreatureElementKind.Beam ? [new BeamDef(101, 1, 2)] : [],
+            [],
+            motors >= 1 ? [new ServoDef(201, 1)] : [],
+            kind == CreatureElementKind.Piston ? [new PistonDef(301, 1, 2)] : [],
+            kind == CreatureElementKind.Spring ? [new SpringDef(401, 1, 2)] : [],
+            [],
+            [],
+            [],
+            motors == 2 ? [new VelocityMotorDef(501, 2)] : [],
+            [],
+            nextPartId: 502);
+        var tooShort = kind switch
+        {
+            CreatureElementKind.Piston => UiText.Format("The piston between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2),
+            CreatureElementKind.Spring => UiText.Format("The spring between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2),
+            _ => UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2),
+        };
 
-        CreatureReadiness.IsTooShort(creature, 1, 2).ShouldBe(!fits);
-        CreatureReadiness.Problems(creature).ShouldBe(fits
-            ? []
-            : [UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2)]);
+        CreatureReadiness.IsTooShort(creature, kind, 1, 2).ShouldBe(!fits);
+        if (fits)
+        {
+            CreatureReadiness.Problems(creature).ShouldNotContain(tooShort);
+        }
+        else
+        {
+            CreatureReadiness.Problems(creature).ShouldContain(tooShort);
+        }
     }
 
     [Fact]
@@ -187,31 +227,40 @@ public sealed class CreatureReadinessTests
     }
 
     [Fact]
-    public void IsTooShort_CountsHubToHub()
+    public void IsTooShort_IgnoresWheelsBrakesTouchSensorsAndRubbers()
     {
-        var gap = CreatureReadiness.MinimumBeamGap + (2 * NodeDef.HubRadius);
+        // #1212: only a joint motor covers a link's end beyond the hub; a Wheel lies under its links (#1086).
+        var creature = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(56, 0)), new NodeDef(3, new Vector2D(0, 120)), new NodeDef(4, new Vector2D(56, 120))],
+            [new BeamDef(5, 1, 2), new BeamDef(6, 3, 4)],
+            [],
+            [],
+            [],
+            [],
+            [new WheelDef(7, 1, radius: WheelDef.MaxRadius)],
+            [new TouchSensorDef(8, 2)],
+            [new RubberDef(9, 3)],
+            [],
+            [new BrakeDef(10, 4)],
+            nextPartId: 11);
 
-        CreatureReadiness.IsTooShort(new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(gap - 1, 0))).ShouldBeTrue();
-        CreatureReadiness.IsTooShort(new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(gap, 0))).ShouldBeFalse();
+        CreatureReadiness.IsTooShort(creature, CreatureElementKind.Beam, 1, 2).ShouldBeFalse();
+        CreatureReadiness.IsTooShort(creature, CreatureElementKind.Beam, 3, 4).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(CreatureElementKind.Beam, 15, 15, 56)]
+    [InlineData(CreatureElementKind.Piston, 27, 15, 68)]
+    [InlineData(CreatureElementKind.Spring, 27, 27, 80)]
+    public void MinimumLength_AddsTheGapToWhatCoversEachEnd(CreatureElementKind kind, double coveredA, double coveredB, double minimum)
+    {
+        CreatureReadiness.MinimumLength(kind, coveredA, coveredB).ShouldBe(minimum);
     }
 
     [Fact]
-    public void IsTooShort_IgnoresAServoOrWheelOnTheJoint()
+    public void MinimumLength_RejectsAPartThatIsNotALink()
     {
-        // #1086: a link counts hub to hub whatever sits on its joints.
-        var gap = CreatureReadiness.MinimumBeamGap + (2 * NodeDef.HubRadius);
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(gap, 0)), new NodeDef(3, new Vector2D(0, 120)), new NodeDef(4, new Vector2D(gap, 120))],
-            [new BeamDef(5, 1, 2), new BeamDef(6, 1, 3), new BeamDef(7, 2, 4)],
-            [],
-            [new ServoDef(8, 1, 5, 6)],
-            [],
-            [],
-            [new WheelDef(9, 2, radius: WheelDef.MaxRadius)],
-            nextPartId: 10);
-
-        CreatureReadiness.IsTooShort(creature, 1, 2).ShouldBeFalse();
-        CreatureReadiness.Problems(creature).ShouldNotContain(UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", 1, 2));
+        Should.Throw<ArgumentOutOfRangeException>(() => CreatureReadiness.MinimumLength(CreatureElementKind.Sensor, 15, 15));
     }
 
     [Fact]

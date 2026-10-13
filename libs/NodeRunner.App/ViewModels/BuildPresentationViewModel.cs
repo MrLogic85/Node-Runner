@@ -379,9 +379,9 @@ public sealed class BuildPresentationViewModel
         }
 
         // Build's canvas names each short beam with a callout (#593), so the chip only counts them.
-        var tooShort = _build.Beams.Count(beam => IsTooShort(beam.NodeA, beam.NodeB));
-        var tooShortPistons = _build.Pistons.Count(piston => IsTooShort(piston.NodeA, piston.NodeB));
-        var tooShortSprings = _build.Springs.Count(spring => IsTooShort(spring.NodeA, spring.NodeB));
+        var tooShort = _build.Beams.Count(beam => IsTooShort(CreatureElementKind.Beam, beam.NodeA, beam.NodeB));
+        var tooShortPistons = _build.Pistons.Count(piston => IsTooShort(CreatureElementKind.Piston, piston.NodeA, piston.NodeB));
+        var tooShortSprings = _build.Springs.Count(spring => IsTooShort(CreatureElementKind.Spring, spring.NodeA, spring.NodeB));
         if ((tooShort, tooShortPistons, tooShortSprings) != (0, 0, 0))
         {
             return (tooShort, tooShortPistons, tooShortSprings) switch
@@ -405,8 +405,8 @@ public sealed class BuildPresentationViewModel
             ? UiText.Counted("{0} part missing a link", "{0} parts missing a link", missingALink)
             : errors[0];
 
-        bool IsTooShort(int nodeA, int nodeB) =>
-            CreatureReadiness.IsTooShort(NodeById(nodeA), NodeById(nodeB));
+        bool IsTooShort(CreatureElementKind kind, int nodeA, int nodeB) =>
+            CreatureReadiness.IsTooShort(kind, NodeById(nodeA), NodeById(nodeB), _build.JointMotors);
 
         bool IsZeroLength(int nodeA, int nodeB) => NodeById(nodeA).Position == NodeById(nodeB).Position;
     }

@@ -11,27 +11,40 @@ namespace NodeRunner.App.Lifecycle;
 public static class CreatureReadiness
 {
     /// <summary>
-    /// The least free length between a link's two hubs (#593, #622, #1086): room for the largest
-    /// sensor picture with a 4-unit gap on each side. What sits on a joint does not count, so a
-    /// Servo may cover the ends of a large picture near this length.
+    /// The least free length a link leaves between what is drawn over its two ends (#593, #1212):
+    /// half the room the Camera's picture once needed, which the owner found far too long. A large
+    /// picture centred in it reaches under the hub or motor at each end (#1086).
     /// </summary>
-    public const double MinimumBeamGap = SensorPicture.LargestSize + (2 * _sensorGap);
+    public const double MinimumLinkGap = 26;
 
-    private const double _sensorGap = 4;
+    /// <summary>
+    /// The shortest a link of <paramref name="kind"/> can be, centre to centre, between joints whose
+    /// <see cref="CreatureDef.CoveredRadius(int, IEnumerable{IJointMotorDef})"/> are
+    /// <paramref name="coveredA"/> and <paramref name="coveredB"/> (#1212): <see cref="MinimumLinkGap"/>
+    /// plus what each joint covers, plus what the link type adds.
+    /// </summary>
+    public static double MinimumLength(CreatureElementKind kind, double coveredA, double coveredB) =>
+        coveredA + coveredB + MinimumLinkGap + kind switch
+        {
+            CreatureElementKind.Beam or CreatureElementKind.Piston or CreatureElementKind.Spring => 0,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a link."),
+        };
 
-    /// <summary>True when the non-zero beam or link between two nodes leaves less than <see cref="MinimumBeamGap"/> between their hubs.</summary>
-    public static bool IsTooShort(NodeDef a, NodeDef b)
+    /// <summary>True when the non-zero link of <paramref name="kind"/> between two nodes is shorter than its <see cref="MinimumLength"/>, given the creature's joint motors.</summary>
+    public static bool IsTooShort(CreatureElementKind kind, NodeDef a, NodeDef b, IEnumerable<IJointMotorDef> jointMotors)
     {
         ArgumentNullException.ThrowIfNull(a);
         ArgumentNullException.ThrowIfNull(b);
-        return a.Position != b.Position && FreeLength(a.Position, b.Position) < MinimumBeamGap;
+        ArgumentNullException.ThrowIfNull(jointMotors);
+        return a.Position != b.Position
+            && Length(a.Position, b.Position) < MinimumLength(kind, CreatureDef.CoveredRadius(a.Id, jointMotors), CreatureDef.CoveredRadius(b.Id, jointMotors));
     }
 
-    /// <summary>True when the link between these two of the creature's nodes leaves less than <see cref="MinimumBeamGap"/> between their hubs.</summary>
-    public static bool IsTooShort(CreatureDef creature, int nodeA, int nodeB)
+    /// <summary>True when the link of <paramref name="kind"/> between these two of the creature's nodes is shorter than its <see cref="MinimumLength"/>.</summary>
+    public static bool IsTooShort(CreatureDef creature, CreatureElementKind kind, int nodeA, int nodeB)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        return IsTooShort(creature.Nodes[creature.NodeIndexOf(nodeA)], creature.Nodes[creature.NodeIndexOf(nodeB)]);
+        return IsTooShort(kind, creature.Nodes[creature.NodeIndexOf(nodeA)], creature.Nodes[creature.NodeIndexOf(nodeB)], creature.JointMotors);
     }
 
     /// <summary>Why the creature cannot be simulated yet; empty when it can.</summary>
@@ -170,7 +183,7 @@ public static class CreatureReadiness
                 _ => UiText.Format("The beam between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
             });
         }
-        else if (IsTooShort(creature, nodeA, nodeB))
+        else if (IsTooShort(creature, kind, nodeA, nodeB))
         {
             problems.Add(kind switch
             {
@@ -187,10 +200,10 @@ public static class CreatureReadiness
     /// </summary>
     public static bool CanTrain(CreatureDef creature) => Problems(creature).Count == 0;
 
-    private static double FreeLength(Vector2D a, Vector2D b)
+    private static double Length(Vector2D a, Vector2D b)
     {
         var dx = b.X - a.X;
         var dy = b.Y - a.Y;
-        return Math.Sqrt((dx * dx) + (dy * dy)) - (2 * NodeDef.HubRadius);
+        return Math.Sqrt((dx * dx) + (dy * dy));
     }
 }
