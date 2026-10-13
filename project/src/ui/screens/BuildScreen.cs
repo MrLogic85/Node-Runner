@@ -826,7 +826,7 @@ public partial class BuildScreen : Control
                 disabled: false,
                 UiTextTranslation.Source(presentation.Note)?.Invoke() ?? string.Empty,
                 UiTextTranslation.Source(presentation.Placeholder)?.Invoke() ?? string.Empty);
-            picker.State = presentation.IsLocked ? UiPicker.PickerState.Locked : UiPicker.PickerState.Collapsed;
+            picker.State = UiPicker.PickerState.Collapsed;
             if (fixedRole)
             {
                 _fixedPicker = presentation;

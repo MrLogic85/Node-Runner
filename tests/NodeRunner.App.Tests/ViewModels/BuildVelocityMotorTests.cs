@@ -61,19 +61,13 @@ public sealed class BuildVelocityMotorTests
     }
 
     [Fact]
-    public void Locked_PlacingAndRelinking_AreRefused_AndThePickersAreLocked()
+    public void Locked_PlacingIsRefused()
     {
         var build = new BuildViewModel();
         build.Load(WithAMotor(), locked: true);
-        build.SelectOnly(CreatureElementKind.VelocityMotor, 6);
 
         build.CanPlacePart(BuildPart.VelocityMotor, _endJoint, out var reason).ShouldBeFalse();
         reason.ShouldBe(BuildViewModel.LockedReason);
-        build.SetMotorLink(6, fixedRole: true, linkId: 5);
-
-        build.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(6, 2, fixedLinkId: 4, targetLinkId: 5));
-        build.CanUndo.ShouldBeFalse();
-        new BuildPresentationViewModel(build).SinglePart!.Pickers!.ShouldAllBe(picker => picker.IsLocked);
     }
 
     [Fact]
@@ -90,10 +84,10 @@ public sealed class BuildVelocityMotorTests
         part.Note.ShouldBe(PartInfo.VelocityMotor);
         part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorStrength, PartParameterId.MotorMaxSpeed]);
         part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.RiseTime]);
-        part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.IsLocked)).ShouldBe(
+        part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex)).ShouldBe(
         [
-            (UiText.Plain("Fixed link"), 0, false),
-            (UiText.Plain("Target link"), 1, false),
+            (UiText.Plain("Fixed link"), 0),
+            (UiText.Plain("Target link"), 1),
         ]);
     }
 

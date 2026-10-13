@@ -29,7 +29,8 @@ motor), Build treats every kind alike.
 - **Locked Build.** A locked creation (`CreationLock`) opens in Joint like
   any other, and `BuildViewModel` refuses on its own what changes the model
   (#638, #896). Joints, beams, Springs, Wheels, Rubbers and Brakes have no brain ports, so
-  they can be added, copied and deleted, and a Brake's sides changed (#1041); joints move, sensors move to another beam (#806),
+  they can be added, copied and deleted. A joint motor's or Brake's sides change
+  from its pickers (#1041, #1179), since a motor keeps its id and ports through them (#1177); joints move, sensors move to another beam (#806),
   cameras aim, the selection handles all work (scaling changes only beam
   lengths), parameters change, except a Camera's Rays (#578), and parts can
   be renamed. A part with ports (a sensor, Touch sensor, Piston or joint motor) can be neither

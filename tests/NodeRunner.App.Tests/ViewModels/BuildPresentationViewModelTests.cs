@@ -134,7 +134,6 @@ public sealed class BuildPresentationViewModelTests
             UiText.Plain("Fixed link"),
             [new PartPickerOption(4, UiText.Format("Beam {0}", 1), CreatureElementKind.Beam, ServoLinkRole.None)],
             SelectedIndex: null,
-            IsLocked: false,
             Note: null,
             UiText.Plain("Pick a Fixed link"));
 
