@@ -11,6 +11,8 @@ public sealed partial class UiLabel : Label
     private UiTokens.Color _textColor = UiTokens.Color.Ink;
     private Func<string>? _textSource;
     private AutoTranslateModeEnum _authoredTranslateMode;
+    private Label? _baselineOf;
+    private readonly UiUnsavedState _unsaved = new("custom_minimum_size", "size_flags_vertical", "vertical_alignment");
 
     [Export]
     public UiTokens.Typography TextStyle
@@ -73,19 +75,76 @@ public sealed partial class UiLabel : Label
         }
     }
 
+    /// <summary>
+    /// A label beside this one whose baseline this one stands on (#1232). Containers align boxes,
+    /// not baselines, so this label starts at the top of its row, as tall as the other label's top
+    /// margin and ascent plus its own descent and bottom margin, and draws its text at the bottom.
+    /// The other label must start at the row's top with its text at the top, as a Label does by
+    /// default, and come before this one in the tree, so a theme change reaches it first. While set
+    /// the label owns its minimum size, vertical size flags and vertical alignment; clearing it
+    /// hands them back at their defaults.
+    /// </summary>
+    [Export]
+    public Label? BaselineOf
+    {
+        get => _baselineOf;
+        set
+        {
+            if (_baselineOf is not null && value is null)
+            {
+                CustomMinimumSize = Vector2.Zero;
+                SizeFlagsVertical = SizeFlags.Fill;
+                VerticalAlignment = VerticalAlignment.Top;
+            }
+
+            _baselineOf = value;
+            ApplyBaseline();
+        }
+    }
+
     public override void _EnterTree() => RequestReady();
 
     // A label with auto-translation off gets no translation notice when it enters the tree, so a
     // label that missed a language change while outside the tree asks its source here too.
     public override void _Notification(int what)
     {
+        if (_baselineOf is not null && _unsaved.Handle(this, what, ApplyBaseline))
+        {
+            return;
+        }
+
+        if (what == NotificationThemeChanged)
+        {
+            ApplyBaseline();
+        }
+
         if (_textSource is not null && (what == NotificationTranslationChanged || what == NotificationEnterTree))
         {
             Text = _textSource();
         }
     }
 
-    public override void _Ready() => ApplyStyle();
+    public override void _Ready()
+    {
+        ApplyStyle();
+        ApplyBaseline();
+    }
+
+    private void ApplyBaseline()
+    {
+        if (_baselineOf is null || !IsInstanceValid(_baselineOf) || !IsInsideTree())
+        {
+            return;
+        }
+
+        SizeFlagsVertical = SizeFlags.ShrinkBegin;
+        VerticalAlignment = VerticalAlignment.Bottom;
+        var above = _baselineOf.GetThemeStylebox("normal").GetMargin(Side.Top)
+            + _baselineOf.GetThemeFont("font").GetAscent(_baselineOf.GetThemeFontSize("font_size"));
+        var below = GetThemeFont("font").GetDescent(GetThemeFontSize("font_size"))
+            + GetThemeStylebox("normal").GetMargin(Side.Bottom);
+        CustomMinimumSize = new Vector2(0, above + below);
+    }
 
     // Both values are theme-independent names; the inherited Theme resolves the font and color.
     private void ApplyStyle()

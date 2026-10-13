@@ -193,12 +193,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Node"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Node" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Beam" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -219,12 +219,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Beam"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Beam" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Accelerometer" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -245,12 +245,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Accelerometer"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Accelerometer" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Camera" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -271,12 +271,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Camera"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Camera" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="TouchSensor" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -297,12 +297,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/TouchSensor"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/TouchSensor" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="AngleSensor" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -323,12 +323,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/AngleSensor"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/AngleSensor" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Servo" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -349,12 +349,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Servo"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Servo" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="VelocityMotor" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -375,12 +375,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/VelocityMotor"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/VelocityMotor" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Brake" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -401,12 +401,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Brake"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Brake" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Piston" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -427,12 +427,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Piston"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Piston" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Spring" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -453,12 +453,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Spring"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Spring" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Wheel" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -479,12 +479,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Wheel"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Wheel" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Rubber" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows"]
 visible = false
@@ -505,12 +505,12 @@ text_overrun_behavior = 3
 script = ExtResource("4_label")
 TextStyle = 4
 
-[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Rubber"]
+[node name="Count" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn/PartRows/Rubber" node_paths=PackedStringArray("BaselineOf")]
 layout_mode = 2
 horizontal_alignment = 2
-vertical_alignment = 1
 script = ExtResource("4_label")
 TextStyle = 16
+BaselineOf = NodePath("../Label")
 
 [node name="Untrained" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/InfoScroll/InfoColumn"]
 layout_mode = 2

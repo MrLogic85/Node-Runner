@@ -159,7 +159,9 @@ entry (#315). The entries that are not a component of their own (#306):
   hairline, each its own glyph, text and lines (#1066); their look is in
   `docs/WORLD_VISUALS.md` → "Port bars" and "Part callout".
 - **`c_fact_row`** is an authored row of a `UiIcon` and two `UiLabel`s,
-  as on Import (#899).
+  as on Import (#899). The trailing count's `BaselineOf` names the label
+  before it, so the two stand on one baseline in their different fonts
+  (#1232).
 - **`c_field_line`** is `UiTextField`'s one line: its error, or else its
   muted `FactSource` (#1061).
 - **`c_panel_head`** is dropped; a side panel's header is `UiSidePanel`'s
