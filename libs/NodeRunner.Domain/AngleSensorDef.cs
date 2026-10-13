@@ -69,15 +69,21 @@ public sealed record AngleSensorDef : IMotorOrBrakeDef
     public const double HaloWidth = 2;
 
     /// <summary>
+    /// The space between the joint's outermost part and its arc's inner edge. See docs/WORLD_VISUALS.md →
+    /// "Angle sensor".
+    /// </summary>
+    public const double ArcGap = SelectionMarks.Gap + 4;
+
+    /// <summary>
     /// Its arc's centre line (#1205), shared by its picture and the Build rings that clear it (#1206):
-    /// <see cref="SelectionMarks.Gap"/> outside the joint's outermost part, a Touch sensor's cushion over a
+    /// <see cref="ArcGap"/> outside the joint's outermost part, a Touch sensor's cushion over a
     /// Rubber's skin over its ring, a plain joint's. A Wheel on the joint changes nothing, so on its joint
     /// the arc lies over the tyre's inside and tubes. See docs/WORLD_VISUALS.md → "Angle sensor".
     /// </summary>
     public static double ArcRadius(bool rubber, bool touch) =>
         NodeDef.PlainJointRadius
         + (touch ? TouchSensorDef.Cushion : rubber ? RubberDef.Skin : 0)
-        + SelectionMarks.Gap
+        + ArcGap
         + (ArcWidth / 2);
 
     /// <summary>
@@ -98,6 +104,6 @@ public sealed record AngleSensorDef : IMotorOrBrakeDef
     /// </summary>
     public static double MarkRadius(double arcRadius) => arcRadius + (ArcWidth / 2) + (HaloWidth / 2);
 
-    /// <summary>Its selection halo's centre line round an arc at <paramref name="arcRadius"/>: 24 on a bare joint.</summary>
+    /// <summary>Its selection halo's centre line round an arc at <paramref name="arcRadius"/>: 28 on a bare joint.</summary>
     public static double HaloRadius(double arcRadius) => SelectionMarks.JointHalo(MarkRadius(arcRadius));
 }

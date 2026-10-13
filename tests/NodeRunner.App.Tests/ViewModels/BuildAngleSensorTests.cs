@@ -59,7 +59,7 @@ public sealed class BuildAngleSensorTests
         build.PickedPart.ShouldBe(BuildPart.AngleSensor);
     }
 
-    // A ring marks a joint at its JointHalo; past an arc it sits on the sensor's halo, 24 on a bare joint.
+    // A ring marks a joint at its JointHalo; past an arc it sits on the sensor's halo, 28 on a bare joint.
     [Fact]
     public void PlacingAnAngleSensor_RingsEachJointThatTakesIt_OutsideTheArcItWouldDraw()
     {
@@ -67,7 +67,7 @@ public sealed class BuildAngleSensorTests
 
         var targets = build.PlacingTargetsOf(BuildPart.AngleSensor, movingSensorId: null);
 
-        SelectionMarks.JointHalo(targets.JointRingOf(2)).ShouldBe(24);
+        SelectionMarks.JointHalo(targets.JointRingOf(2)).ShouldBe(28);
         SelectionMarks.JointHalo(build.PlacingTargetsOf(BuildPart.Brake, movingSensorId: null).JointRingOf(2)).ShouldBe(NodeDef.HubRadius + SelectionMarks.Gap);
     }
 
@@ -83,13 +83,13 @@ public sealed class BuildAngleSensorTests
         var targets = build.PlacingTargetsOf(placing, movingSensorId: null);
 
         targets.RefusedJoints.ShouldContain(2);
-        SelectionMarks.JointHalo(targets.RefusedRingOf(2)).ShouldBe(24);
+        SelectionMarks.JointHalo(targets.RefusedRingOf(2)).ShouldBe(28);
     }
 
     // A placed Rubber or Touch sensor moves the arc out, so the ring that previews it moves with it.
     [Theory]
-    [InlineData(BuildPart.Rubber, 27)]
-    [InlineData(BuildPart.TouchSensor, 29)]
+    [InlineData(BuildPart.Rubber, 31)]
+    [InlineData(BuildPart.TouchSensor, 33)]
     [InlineData(BuildPart.Wheel, 43)]
     public void ATakingRing_OnAnAngleSensorsJoint_ClearsTheArcThePartWouldLeave(BuildPart placing, double ring)
     {
@@ -109,7 +109,7 @@ public sealed class BuildAngleSensorTests
         var build = new BuildViewModel();
         build.Load(WithAnAngleSensor());
 
-        SelectionMarks.JointHalo(build.RingRadiusAt(2, build.NodeRadius(2))).ShouldBe(24);
+        SelectionMarks.JointHalo(build.RingRadiusAt(2, build.NodeRadius(2))).ShouldBe(28);
         build.RingRadiusAt(1, build.NodeRadius(1)).ShouldBe(NodeDef.PlainJointRadius);
     }
 

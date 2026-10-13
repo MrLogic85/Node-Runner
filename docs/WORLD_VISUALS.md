@@ -149,9 +149,12 @@ are in `AngleSensorGeometry`):
   flips sides at 180° with no hysteresis. With the sides in line its ends
   meet in a dot 2 across.
 
-The arc's centre line is `SelectionMarks.Gap` (3) plus half its width
-outside the joint's outermost part: 19 on a bare joint, 22 with a Rubber's
-skin, 24 with a Touch sensor's cushion, never on it. A Wheel changes
+The arc's centre line is `AngleSensorDef.ArcGap` (7: `SelectionMarks.Gap`
+plus 4) plus half its width outside the joint's outermost part: 23 on a
+bare joint, 26 with a Rubber's skin, 28 with a Touch sensor's cushion,
+never on it. The extra 4 lengthens the arc between two close sides (#1230);
+below about 10° the arc is still only a short mark, which is accepted: a
+player adds an Angle sensor to a joint that moves. A Wheel changes
 nothing, so on its joint the arc runs over the tyre's inside and tubes. A
 Wheel side points along the Wheel's tube 0, its built rightward direction,
 turning with the Wheel (#1118). The arc is only drawn: it adds no collider
@@ -322,9 +325,8 @@ outside its arc, the others inside the cushion.
   Servo's Fixed and Target bands in their colours (`docs/UI_DIRECTION.md`
   → Reference token mapping deviations → `detail`).
 - **Angle sensor:** a 2-wide `halo` ring a Gap outside the arc's outer
-  edge (centre line at the arc's radius + 5, 24 on a bare joint), with the
-  Servo's Fixed and Target bands; its ring and arc stay `accent`. A Touch
-  sensor's mark on the same joint may overlap the arc.
+  edge (centre line at the arc's radius + 5, 28 on a bare joint), with the
+  Servo's Fixed and Target bands; its ring and arc stay `accent`.
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
   ticks, as wide as a Piston's cylinder or a Spring's seats,
   joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
