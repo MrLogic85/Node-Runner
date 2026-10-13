@@ -76,7 +76,7 @@ public sealed class BuildPresentationViewModel
                 var servo = ServoById(servoId);
                 return new PartSettingsPresentation(
                     servoId,
-                    PartSettingsKind.Servo,
+                    PartKind.Servo,
                     _build.PartDisplayName(servoId),
                     _build.DefaultPartName(servoId),
                     null,
@@ -93,7 +93,7 @@ public sealed class BuildPresentationViewModel
                 var motor = _build.VelocityMotors[_build.VelocityMotorIndexOf(velocityMotorId)];
                 return new PartSettingsPresentation(
                     velocityMotorId,
-                    PartSettingsKind.VelocityMotor,
+                    PartKind.VelocityMotor,
                     _build.PartDisplayName(velocityMotorId),
                     _build.DefaultPartName(velocityMotorId),
                     null,
@@ -110,7 +110,7 @@ public sealed class BuildPresentationViewModel
                 var brake = _build.Brakes[_build.BrakeIndexOf(brakeId)];
                 return new PartSettingsPresentation(
                     brakeId,
-                    PartSettingsKind.Brake,
+                    PartKind.Brake,
                     _build.PartDisplayName(brakeId),
                     _build.DefaultPartName(brakeId),
                     null,
@@ -127,7 +127,7 @@ public sealed class BuildPresentationViewModel
                 var angleSensor = _build.AngleSensors[_build.AngleSensorIndexOf(angleSensorId)];
                 return new PartSettingsPresentation(
                     angleSensorId,
-                    PartSettingsKind.AngleSensor,
+                    PartKind.AngleSensor,
                     _build.PartDisplayName(angleSensorId),
                     _build.DefaultPartName(angleSensorId),
                     null,
@@ -143,7 +143,7 @@ public sealed class BuildPresentationViewModel
             {
                 return new PartSettingsPresentation(
                     pistonId,
-                    PartSettingsKind.Piston,
+                    PartKind.Piston,
                     _build.PartDisplayName(pistonId),
                     _build.DefaultPartName(pistonId),
                     null,
@@ -158,7 +158,7 @@ public sealed class BuildPresentationViewModel
                 var wheel = _build.Wheels[_build.WheelIndexOf(wheelId)];
                 return new PartSettingsPresentation(
                     wheelId,
-                    PartSettingsKind.Wheel,
+                    PartKind.Wheel,
                     _build.PartDisplayName(wheelId),
                     _build.DefaultPartName(wheelId),
                     null,
@@ -175,7 +175,7 @@ public sealed class BuildPresentationViewModel
                 var touch = _build.TouchSensors[_build.TouchSensorIndexOf(touchId)];
                 return new PartSettingsPresentation(
                     touchId,
-                    PartSettingsKind.Touch,
+                    PartKind.TouchSensor,
                     _build.PartDisplayName(touchId),
                     _build.DefaultPartName(touchId),
                     null,
@@ -191,7 +191,7 @@ public sealed class BuildPresentationViewModel
                 var rubber = _build.Rubbers[_build.RubberIndexOf(rubberId)];
                 return new PartSettingsPresentation(
                     rubberId,
-                    PartSettingsKind.Rubber,
+                    PartKind.Rubber,
                     _build.PartDisplayName(rubberId),
                     _build.DefaultPartName(rubberId),
                     null,
@@ -206,7 +206,7 @@ public sealed class BuildPresentationViewModel
             {
                 return new PartSettingsPresentation(
                     springId,
-                    PartSettingsKind.Spring,
+                    PartKind.Spring,
                     _build.PartDisplayName(springId),
                     _build.DefaultPartName(springId),
                     null,
@@ -221,7 +221,7 @@ public sealed class BuildPresentationViewModel
                 var sensor = SensorById(sensorId);
                 return new PartSettingsPresentation(
                     sensorId,
-                    sensor.Kind == SensorKind.Accelerometer ? PartSettingsKind.Accelerometer : PartSettingsKind.Camera,
+                    ((IPartDef)sensor).PartKind,
                     _build.PartDisplayName(sensorId),
                     _build.DefaultPartName(sensorId),
                     UiText.Plain("On"),
@@ -236,7 +236,7 @@ public sealed class BuildPresentationViewModel
                 var beam = BeamById(beamId);
                 return new PartSettingsPresentation(
                     beamId,
-                    PartSettingsKind.Beam,
+                    PartKind.Beam,
                     _build.PartDisplayName(beamId),
                     _build.DefaultPartName(beamId),
                     UiText.Plain("Between"),
@@ -250,7 +250,7 @@ public sealed class BuildPresentationViewModel
             {
                 return new PartSettingsPresentation(
                     nodeId,
-                    PartSettingsKind.Node,
+                    PartKind.Node,
                     _build.PartDisplayName(nodeId),
                     _build.DefaultPartName(nodeId),
                     null,
@@ -437,20 +437,8 @@ public sealed class BuildPresentationViewModel
     // The "On this joint" tabs, top → down, for a joint with two or more parts (#1044).
     private IReadOnlyList<JointPartTab>? OnThisJoint(int nodeId)
     {
-        var parts = _build.JointPartsAt(nodeId);
-        return parts.Count < 2 ? null : [.. parts.Select(part => new JointPartTab(
-            part.Kind switch
-            {
-                CreatureElementKind.Wheel => PartSettingsKind.Wheel,
-                CreatureElementKind.Servo => PartSettingsKind.Servo,
-                CreatureElementKind.VelocityMotor => PartSettingsKind.VelocityMotor,
-                CreatureElementKind.Brake => PartSettingsKind.Brake,
-                CreatureElementKind.AngleSensor => PartSettingsKind.AngleSensor,
-                CreatureElementKind.Rubber => PartSettingsKind.Rubber,
-                CreatureElementKind.TouchSensor => PartSettingsKind.Touch,
-                _ => throw new InvalidOperationException($"{part.Kind} is not a joint part."),
-            },
-            part))];
+        var parts = CreatureDef.JointPartDefs(nodeId, _build.JointParts);
+        return parts.Count < 2 ? null : [.. parts.Select(part => new JointPartTab(part.PartKind, CreatureElementSelection.Of(part)))];
     }
 
     private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];

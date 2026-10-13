@@ -212,7 +212,7 @@ public sealed class BuildStackedPartsTests
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.OnThisJoint!.ShouldBe([new JointPartTab(PartSettingsKind.Servo, _servo), new JointPartTab(PartSettingsKind.Wheel, _wheel)]);
+        part.OnThisJoint!.ShouldBe([new JointPartTab(PartKind.Servo, _servo), new JointPartTab(PartKind.Wheel, _wheel)]);
         part.OnThisJointIndex.ShouldBe(1);
     }
 
@@ -227,7 +227,7 @@ public sealed class BuildStackedPartsTests
         build.ReplaceSelection(PartSet.Of(servoPanel.OnThisJoint![1].Part));
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
-        part.Kind.ShouldBe(PartSettingsKind.Wheel);
+        part.Kind.ShouldBe(PartKind.Wheel);
         part.OnThisJoint.ShouldBe(servoPanel.OnThisJoint);
         part.OnThisJointIndex.ShouldBe(1);
     }

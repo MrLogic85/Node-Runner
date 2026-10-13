@@ -156,9 +156,9 @@ public sealed class BuildTouchSensorTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.OnThisJoint!.ShouldBe([
-            new JointPartTab(PartSettingsKind.Servo, _servo),
-            new JointPartTab(PartSettingsKind.Wheel, _wheel),
-            new JointPartTab(PartSettingsKind.Touch, _touch)]);
+            new JointPartTab(PartKind.Servo, _servo),
+            new JointPartTab(PartKind.Wheel, _wheel),
+            new JointPartTab(PartKind.TouchSensor, _touch)]);
         part.OnThisJointIndex.ShouldBe(2);
     }
 
@@ -171,7 +171,7 @@ public sealed class BuildTouchSensorTests
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
         part.Id.ShouldBe(id);
-        part.Kind.ShouldBe(PartSettingsKind.Touch);
+        part.Kind.ShouldBe(PartKind.TouchSensor);
         part.Name.ShouldBe(UiText.Format("Touch {0}", 1));
         part.Note.ShouldBe(PartInfo.Touch);
         part.Settings.ShouldBeEmpty();

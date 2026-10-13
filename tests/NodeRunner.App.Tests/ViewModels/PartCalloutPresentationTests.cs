@@ -18,7 +18,7 @@ public sealed class PartCalloutPresentationTests
 
         var callout = For(CreatureElementKind.Servo, PortedCreature.Servo, values);
 
-        callout.Kind.ShouldBe(PartSettingsKind.Servo);
+        callout.Kind.ShouldBe(PartKind.Servo);
         callout.Name.ShouldBe(UiText.AsWritten("Hip"));
         callout.ShowsGlyph.ShouldBeTrue();
         callout.Note.ShouldBeNull();
@@ -37,12 +37,13 @@ public sealed class PartCalloutPresentationTests
     }
 
     [Theory]
-    [InlineData(CreatureElementKind.Sensor, PortedCreature.Accelerometer, PartSettingsKind.Accelerometer, 2, 0)]
-    [InlineData(CreatureElementKind.Sensor, PortedCreature.Camera, PartSettingsKind.Camera, 6, 0)]
-    [InlineData(CreatureElementKind.Piston, PortedCreature.Piston, PartSettingsKind.Piston, 2, 2)]
-    [InlineData(CreatureElementKind.VelocityMotor, PortedCreature.VelocityMotor, PartSettingsKind.VelocityMotor, 3, 2)]
-    [InlineData(CreatureElementKind.AngleSensor, PortedCreature.AngleSensor, PartSettingsKind.AngleSensor, 3, 0)]
-    public void APartWithBrainPorts_ShowsEachOfThem(CreatureElementKind element, int id, PartSettingsKind kind, int inputs, int outputs)
+    [InlineData(CreatureElementKind.Sensor, PortedCreature.Accelerometer, PartKind.Accelerometer, 2, 0)]
+    [InlineData(CreatureElementKind.Sensor, PortedCreature.Camera, PartKind.Camera, 6, 0)]
+    [InlineData(CreatureElementKind.Piston, PortedCreature.Piston, PartKind.Piston, 2, 2)]
+    [InlineData(CreatureElementKind.VelocityMotor, PortedCreature.VelocityMotor, PartKind.VelocityMotor, 3, 2)]
+    [InlineData(CreatureElementKind.AngleSensor, PortedCreature.AngleSensor, PartKind.AngleSensor, 3, 0)]
+    [InlineData(CreatureElementKind.TouchSensor, PortedCreature.Touch, PartKind.TouchSensor, 1, 0)]
+    public void APartWithBrainPorts_ShowsEachOfThem(CreatureElementKind element, int id, PartKind kind, int inputs, int outputs)
     {
         var callout = For(element, id, Live());
 
@@ -54,10 +55,10 @@ public sealed class PartCalloutPresentationTests
     }
 
     [Theory]
-    [InlineData(CreatureElementKind.Wheel, PortedCreature.Wheel, PartSettingsKind.Wheel)]
-    [InlineData(CreatureElementKind.Rubber, PortedCreature.Rubber, PartSettingsKind.Rubber)]
-    [InlineData(CreatureElementKind.Brake, PortedCreature.Brake, PartSettingsKind.Brake)]
-    public void AWheelRubberOrBrake_SaysItHasNoBrainPorts(CreatureElementKind element, int id, PartSettingsKind kind)
+    [InlineData(CreatureElementKind.Wheel, PortedCreature.Wheel, PartKind.Wheel)]
+    [InlineData(CreatureElementKind.Rubber, PortedCreature.Rubber, PartKind.Rubber)]
+    [InlineData(CreatureElementKind.Brake, PortedCreature.Brake, PartKind.Brake)]
+    public void AWheelRubberOrBrake_SaysItHasNoBrainPorts(CreatureElementKind element, int id, PartKind kind)
     {
         var callout = For(element, id, Live());
 

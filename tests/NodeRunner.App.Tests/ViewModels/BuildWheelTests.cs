@@ -399,7 +399,7 @@ public sealed class BuildWheelTests
 
         var part = new BuildPresentationViewModel(build).SinglePart!;
 
-        part.Kind.ShouldBe(PartSettingsKind.Wheel);
+        part.Kind.ShouldBe(PartKind.Wheel);
         part.Title.ShouldBe(UiText.Plain("Wheel"));
         part.DefaultName.ShouldBe(UiText.Format("Wheel {0}", 1));
         part.Note.ShouldBe(UiText.Plain("Rolls freely on the ground. Add a Motor or Servo to power it."));

@@ -12,7 +12,7 @@ public sealed class TrainingScreenCalloutSectionTests
     public void CalloutSection_ShowsInputsInAccentThenOutputsInOutput()
     {
         var servo = new PartCalloutPresentation(
-            PartSettingsKind.Servo,
+            PartKind.Servo,
             UiText.AsWritten("Knee"),
             ShowsGlyph: true,
             [
@@ -40,7 +40,7 @@ public sealed class TrainingScreenCalloutSectionTests
     public void CalloutSection_ForAPartWithOnlyInputs_HasNoOutputLine()
     {
         var camera = new PartCalloutPresentation(
-            PartSettingsKind.Camera,
+            PartKind.Camera,
             UiText.AsWritten("Eye"),
             ShowsGlyph: true,
             [new PartCalloutPort(BrainPort.Input(1, "hit"), UiText.Plain("hit"), PortRange.ZeroToOne, 1)],
@@ -57,7 +57,7 @@ public sealed class TrainingScreenCalloutSectionTests
     [Fact]
     public void CalloutSection_ForAWheel_IsOneMutedNote()
     {
-        var wheel = new PartCalloutPresentation(PartSettingsKind.Wheel, UiText.AsWritten("Wheel"), ShowsGlyph: true, [], [], UiText.Plain("No brain ports"));
+        var wheel = new PartCalloutPresentation(PartKind.Wheel, UiText.AsWritten("Wheel"), ShowsGlyph: true, [], [], UiText.Plain("No brain ports"));
 
         var line = Lines(wheel)!.ShouldHaveSingleItem();
 
@@ -70,7 +70,7 @@ public sealed class TrainingScreenCalloutSectionTests
     [Fact]
     public void CalloutSection_ForANameOnlyPart_HasNoLines()
     {
-        var beam = new PartCalloutPresentation(PartSettingsKind.Beam, UiText.AsWritten("Shin"), ShowsGlyph: false, [], [], null);
+        var beam = new PartCalloutPresentation(PartKind.Beam, UiText.AsWritten("Shin"), ShowsGlyph: false, [], [], null);
 
         Lines(beam).ShouldBeNull();
     }
@@ -78,8 +78,8 @@ public sealed class TrainingScreenCalloutSectionTests
     [Fact]
     public void CalloutSection_ShowsTheGlyphAndName_OrTheNameAlone()
     {
-        var wheel = new PartCalloutPresentation(PartSettingsKind.Wheel, UiText.AsWritten("Rear"), ShowsGlyph: true, [], [], UiText.Plain("No brain ports"));
-        var beam = new PartCalloutPresentation(PartSettingsKind.Beam, UiText.AsWritten("Shin"), ShowsGlyph: false, [], [], null);
+        var wheel = new PartCalloutPresentation(PartKind.Wheel, UiText.AsWritten("Rear"), ShowsGlyph: true, [], [], UiText.Plain("No brain ports"));
+        var beam = new PartCalloutPresentation(PartKind.Beam, UiText.AsWritten("Shin"), ShowsGlyph: false, [], [], null);
 
         var wheelSection = Section(wheel, "Rear");
         var beamSection = Section(beam, "Shin");

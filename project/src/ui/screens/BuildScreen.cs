@@ -17,7 +17,7 @@ public partial class BuildScreen : Control
     private BuildViewModel? _build;
     private BuildPresentationViewModel? _presentation;
     private int? _renamingPartId;
-    private (int Selected, PartSettingsKind? Kind, int? PartId, ToolPanelMode Mode, bool Locked)? _sidePanelShows;
+    private (int Selected, PartKind? Kind, int? PartId, ToolPanelMode Mode, bool Locked)? _sidePanelShows;
     private BuildReadinessPresentation? _readinessShows;
     private string? _renamingDefaultName;
     private bool _subscribedToPresentation;

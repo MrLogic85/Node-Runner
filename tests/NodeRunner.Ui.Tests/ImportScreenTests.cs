@@ -1,4 +1,4 @@
-using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 
 namespace NodeRunner.Ui.Tests;
 
@@ -10,5 +10,5 @@ public sealed class ImportScreenTests
         SceneNodes.InScene("screens/ImportScreen.tscn")
             .Where(node => node.Parent?.EndsWith("/PartRows", StringComparison.Ordinal) == true)
             .Select(node => node.Name)
-            .ShouldBe(Enum.GetNames<PartSettingsKind>(), ignoreOrder: true);
+            .ShouldBe(Enum.GetNames<PartKind>(), ignoreOrder: true);
 }

@@ -16,36 +16,22 @@ public sealed class PartKindDisplaysTests
         }
     }
 
-    [Fact]
-    public void EverySettingsKind_HasExactlyOneEntry()
-    {
-        PartKindDisplays.All.Select(display => display.SettingsKind).ShouldBe(Enum.GetValues<PartSettingsKind>(), ignoreOrder: true);
-
-        foreach (var display in PartKindDisplays.All)
-        {
-            PartKindDisplays.Of(display.SettingsKind).ShouldBeSameAs(display);
-        }
-    }
-
     [Theory]
-    [InlineData(PartKind.Node, PartSettingsKind.Node, "Joint")]
-    [InlineData(PartKind.Beam, PartSettingsKind.Beam, "Beam")]
-    [InlineData(PartKind.Accelerometer, PartSettingsKind.Accelerometer, "Accelerometer")]
-    [InlineData(PartKind.Camera, PartSettingsKind.Camera, "Camera")]
-    [InlineData(PartKind.Servo, PartSettingsKind.Servo, "Servo")]
-    [InlineData(PartKind.Piston, PartSettingsKind.Piston, "Piston")]
-    [InlineData(PartKind.Spring, PartSettingsKind.Spring, "Spring")]
-    [InlineData(PartKind.Wheel, PartSettingsKind.Wheel, "Wheel")]
-    [InlineData(PartKind.TouchSensor, PartSettingsKind.Touch, "Touch sensor")]
-    [InlineData(PartKind.Rubber, PartSettingsKind.Rubber, "Rubber")]
-    [InlineData(PartKind.VelocityMotor, PartSettingsKind.VelocityMotor, "Motor")]
-    [InlineData(PartKind.Brake, PartSettingsKind.Brake, "Brake")]
-    [InlineData(PartKind.AngleSensor, PartSettingsKind.AngleSensor, "Angle sensor")]
-    public void EachKind_HasItsSettingsKindAndTitle(PartKind kind, PartSettingsKind settingsKind, string title)
-    {
-        PartKindDisplays.Of(kind).SettingsKind.ShouldBe(settingsKind);
-        PartKindDisplays.Of(settingsKind).Title.ShouldBe(UiText.Plain(title));
-    }
+    [InlineData(PartKind.Node, "Joint")]
+    [InlineData(PartKind.Beam, "Beam")]
+    [InlineData(PartKind.Accelerometer, "Accelerometer")]
+    [InlineData(PartKind.Camera, "Camera")]
+    [InlineData(PartKind.Servo, "Servo")]
+    [InlineData(PartKind.Piston, "Piston")]
+    [InlineData(PartKind.Spring, "Spring")]
+    [InlineData(PartKind.Wheel, "Wheel")]
+    [InlineData(PartKind.TouchSensor, "Touch sensor")]
+    [InlineData(PartKind.Rubber, "Rubber")]
+    [InlineData(PartKind.VelocityMotor, "Motor")]
+    [InlineData(PartKind.Brake, "Brake")]
+    [InlineData(PartKind.AngleSensor, "Angle sensor")]
+    public void EachKind_HasItsTitle(PartKind kind, string title) =>
+        PartKindDisplays.Of(kind).Title.ShouldBe(UiText.Plain(title));
 
     // The port checks here and in BrainPortDisplayTests see only the kinds this creature holds.
     [Fact]
