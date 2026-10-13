@@ -482,4 +482,39 @@ public sealed class CreatureDefTests
             touchSensors: [], rubbers: [], velocityMotors: [], brakes: [new(2, 1)], angleSensors: [new(3, 1)], nextPartId: 4))
             .Message.ShouldBe("Node id 1 already has a hinge part; a joint holds at most one.");
     }
+
+    // Production builds a creature from one list of parts (#1222), in any order.
+    [Fact]
+    public void Constructor_FromOnePartList_SortsThePartsByKind_EachKindKeepingItsOrder()
+    {
+        var every = EveryPartKind.Creature;
+        IPartDef[] shuffled = [.. every.Parts.Reverse()];
+
+        var creature = new CreatureDef(shuffled, every.NextPartId);
+
+        creature.Parts.ShouldBe(every.Parts.GroupBy(part => part.GetType()).SelectMany(kind => kind.Reverse()));
+        creature.NextPartId.ShouldBe(every.NextPartId);
+        new CreatureDef([new NodeDef(2, new Vector2D(0, 0)), new NodeDef(1, new Vector2D(1, 0))]).NextPartId.ShouldBe(3);
+    }
+
+    [Fact]
+    public void Constructor_FromOnePartList_RefusesAPartItCannotSave()
+    {
+        Should.Throw<ArgumentException>(() => new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new StrayPartDef(2)]))
+            .Message.ShouldStartWith("A creature cannot hold a StrayPartDef");
+    }
+
+    [Fact]
+    public void Constructor_FromOnePartList_RefusesNull()
+    {
+        Should.Throw<ArgumentException>(() => new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), null!]));
+        Should.Throw<ArgumentNullException>(() => new CreatureDef(null!, 1));
+    }
+
+    private sealed record StrayPartDef(int Id) : IPartDef
+    {
+        public string? Name => null;
+
+        public PartKind PartKind => PartKind.Node;
+    }
 }

@@ -58,6 +58,6 @@ public static class CreationExamples
             new PistonDef(10, 1, 4, stroke: _walkerStroke),
         };
 
-        return new CreatureDef(nodes, beams, sensors, pistons, nextPartId: 11);
+        return new CreatureDef([.. nodes, .. beams, .. sensors, .. pistons], nextPartId: 11);
     }
 }

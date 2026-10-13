@@ -10,6 +10,9 @@ invariants.
   validates, so bad data never survives construction; logic lives in the
   layers above.
 - **Part physics goes in `libs/NodeRunner.Mechanics`** (#596).
+- **Build a `CreatureDef` from one list of parts** (#1222). Its per-kind
+  constructors are `internal`, for tests and JSON only, so a new part kind
+  changes no production caller.
 - **Serialisable with `System.Text.Json` without custom converters.** Saved
   records are the save shape: changing one follows `docs/SAVE_FORMAT.md`.
 
