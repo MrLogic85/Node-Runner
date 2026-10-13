@@ -3,12 +3,12 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// How every joint motor, a Servo (#452) or a Velocity motor (#454), a Brake (#1040) and an Angle sensor (#1204) measure
-/// and turn their two sides. A link side's direction runs from the motor's joint to the link's other joint, and it
+/// How every hinge part, a Servo (#452), a Velocity motor (#454), a Brake (#1040) or an Angle sensor (#1204), measures
+/// and turns its two sides. A link side's direction runs from the hinge part's joint to the link's other joint, and it
 /// turns by an equal and opposite force couple; a Wheel side (#1118) is a one-sided link that
 /// points along its own turn, as a mark on its tyre would, and turns by a body torque.
 /// </summary>
-public static class MotorSideGeometry
+public static class HingePartSideGeometry
 {
     private const double _minimumInertia = 1e-6;
     public const double MinimumLeverArm = NodeDef.PlainJointRadius;

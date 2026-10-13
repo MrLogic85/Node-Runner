@@ -49,7 +49,7 @@ public sealed partial class BuildViewModel
             foreach (var (joint, linksBefore) in partJoints)
             {
                 if (linksBefore > 0 && Exists(new CreatureElementSelection(CreatureElementKind.Node, joint)) && _builder.LinksAt(joint).Count == 0
-                    && !CreatureDef.HasJointPart(joint, _builder.MotorsAndBrakes, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers))
+                    && !CreatureDef.HasJointPart(joint, _builder.HingeParts, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers))
                 {
                     _builder.RemoveNode(joint);
                 }
@@ -136,7 +136,7 @@ public sealed partial class BuildViewModel
 
         return notes;
 
-        static (int, int?, int?) MotorLinks(IMotorOrBrakeDef motor) => (motor.Id, motor.FixedLinkId, motor.TargetLinkId);
+        static (int, int?, int?) MotorLinks(IHingePartDef motor) => (motor.Id, motor.FixedLinkId, motor.TargetLinkId);
         void AddNote(CreatureElementKind kind, int id) =>
             notes.Add(new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), _wouldChangeModelNote));
     }

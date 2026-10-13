@@ -84,12 +84,12 @@ public sealed class BuildServoWheelTests
     }
 
     [Fact]
-    public void SetMotorLink_ToTheWheel_SwapsWithTheOtherRole_KeepsItsId_AndUndoes()
+    public void SetHingePartLink_ToTheWheel_SwapsWithTheOtherRole_KeepsItsId_AndUndoes()
     {
         var (build, wheel) = WheelOnTheEndJoint();
         var servoId = build.PlacePart(BuildPart.Servo, _endJoint)!.Value;
 
-        build.SetMotorLink(servoId, fixedRole: true, linkId: wheel);
+        build.SetHingePartLink(servoId, fixedRole: true, linkId: wheel);
 
         build.Servos.Single().ShouldBe(new ServoDef(servoId, 1, wheel, 4));
         build.Undo();
@@ -97,13 +97,13 @@ public sealed class BuildServoWheelTests
     }
 
     [Fact]
-    public void SetMotorLink_ToAnotherJointsWheel_Throws()
+    public void SetHingePartLink_ToAnotherJointsWheel_Throws()
     {
         var (build, _) = WheelOnTheEndJoint();
         var other = build.PlacePart(BuildPart.Wheel, _middleJoint)!.Value;
         var servoId = build.PlacePart(BuildPart.Servo, _endJoint)!.Value;
 
-        Should.Throw<ArgumentException>(() => build.SetMotorLink(servoId, fixedRole: false, linkId: other));
+        Should.Throw<ArgumentException>(() => build.SetHingePartLink(servoId, fixedRole: false, linkId: other));
     }
 
     [Fact]

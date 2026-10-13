@@ -416,8 +416,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Every joint motor: the Servos, then the Velocity motors.</summary>
     public IReadOnlyList<IJointMotorDef> JointMotors => _builder.JointMotors;
 
-    /// <summary>What fills each joint's motor-or-brake slot: the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
-    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => _builder.MotorsAndBrakes;
+    /// <summary>What fills each joint's hinge-part slot: the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
+    public IReadOnlyList<IHingePartDef> HingeParts => _builder.HingeParts;
 
     /// <summary>The Brakes (#1039, #1041).</summary>
     public IReadOnlyList<BrakeDef> Brakes => _builder.Brakes;
@@ -437,7 +437,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
-    /// dropped part was refused (#376), each loose joint and Servo, Motor or Brake missing a link
+    /// dropped part was refused (#376), each loose joint and hinge part missing a side
     /// <see cref="ShowTrainingBlockers"/> pointed at (#844, #1006), each separate piece's joint nearest
     /// another piece (#930) and each part a dimmed Copy or a locked Delete pointed at (#937, #987), then each beam or link too
     /// short to train (#593). Listed most important first:
@@ -471,17 +471,17 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             AddTooShortNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
         }
 
-        foreach (var motor in MotorsAndBrakes.Where(motor => _shownBlockers.Contains(new CreatureElementSelection(motor.Kind, motor.Id)) && CreatureReadiness.IsMissingALink(motor)))
+        foreach (var part in HingeParts.Where(part => _shownBlockers.Contains(new CreatureElementSelection(part.Kind, part.Id)) && CreatureReadiness.IsMissingALink(part)))
         {
-            var text = ServoNeedsTwoSides(motor.NodeId)
-                ? NeedsTwoSidesReason(motor.Kind)
-                : (motor.FixedLinkId is null, motor.TargetLinkId is null) switch
+            var text = ServoNeedsTwoSides(part.NodeId)
+                ? NeedsTwoSidesReason(part.Kind)
+                : (part.FixedLinkId is null, part.TargetLinkId is null) switch
                 {
                     (true, true) => UiText.Plain("Pick Fixed and Target parts"),
                     (true, false) => UiText.Plain("Pick a Fixed part"),
                     _ => UiText.Plain("Pick a Target part"),
                 };
-            notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(motor.Kind, motor.Id), text));
+            notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(part.Kind, part.Id), text));
         }
 
         foreach (var piston in Pistons)
@@ -596,7 +596,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// without a motor, Brake (#1041) or Wheel. Those show the error in their own <c>danger</c> look (#1140); a Touch
     /// sensor's cushion and a Rubber's skin (#1142) have none, so they do not count.
     /// </summary>
-    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, MotorsAndBrakes, _builder.Wheels, touchSensors: [], rubbers: []);
+    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, HingeParts, _builder.Wheels, touchSensors: [], rubbers: []);
 
     /// <summary>Why a Servo, Motor, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work (#1118).</summary>
     public static UiText NeedsTwoSidesReason(CreatureElementKind kind) => kind switch
@@ -614,7 +614,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// Answers a tap on the dimmed play button (#844): every joint loose now gets a "Not connected"
     /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed, and so does every
-    /// piece until the creation is one piece (#930) and every Servo, Motor or Brake missing a link until it has
+    /// piece until the creation is one piece (#930) and every hinge part missing a side until it has
     /// both (#1006); the next canvas touch hides them all (<see cref="DismissTapNotes"/>). Too-short
     /// parts already have theirs. A blocker that appears later waits for the next tap.
     /// </summary>
@@ -623,7 +623,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _showPieces = Pieces().Count > 1;
         _shownBlockers.Clear();
         _shownBlockers.UnionWith(Nodes.Where(node => IsLoose(node.Id)).Select(node => new CreatureElementSelection(CreatureElementKind.Node, node.Id)));
-        _shownBlockers.UnionWith(MotorsAndBrakes.Where(CreatureReadiness.IsMissingALink).Select(motor => new CreatureElementSelection(motor.Kind, motor.Id)));
+        _shownBlockers.UnionWith(HingeParts.Where(CreatureReadiness.IsMissingALink).Select(part => new CreatureElementSelection(part.Kind, part.Id)));
 
         OnPropertyChanged(nameof(CanvasNotes));
     }
@@ -789,7 +789,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
     {
         var groups = DrawGroups();
-        var hit = groups.PartAt(position, nodeId => NodeById(nodeId).Position, _builder.MotorsAndBrakes, _builder.Wheels, _builder.Sensors, RaisedIn(groups, Selection, targets));
+        var hit = groups.PartAt(position, nodeId => NodeById(nodeId).Position, _builder.HingeParts, _builder.Wheels, _builder.Sensors, RaisedIn(groups, Selection, targets));
         return hit?.Kind switch
         {
             CreatureElementKind.Servo => new CreatureElementSelection(CreatureElementKind.Node, _builder.Servos[_builder.ServoIndexOf(hit.Id)].NodeId),
@@ -826,7 +826,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             parts = parts.Append(new CreatureElementSelection(CreatureElementKind.Sensor, moving));
         }
 
-        return groups.Raised(parts, MotorsAndBrakes, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, targets.Beams, targets.Joints);
+        return groups.Raised(parts, HingeParts, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, targets.Beams, targets.Joints);
     }
 
     private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));
@@ -1031,39 +1031,39 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint (#973): a tap, drag
     /// or box selects them, never the joint on its own.
     /// </summary>
-    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, MotorsAndBrakes, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers);
+    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, HingeParts, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers);
 
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
 
     public LinkRef Link(int linkId) => _builder.Link(linkId);
 
     /// <summary>
-    /// Gives the Servo, Velocity motor, Brake or Angle sensor <paramref name="motorId"/> a new Fixed or Target side,
+    /// Gives the Servo, Velocity motor, Brake or Angle sensor <paramref name="partId"/> a new Fixed or Target side,
     /// from its panel's pickers; it keeps its id (#1177). Its ports do not depend on its sides, so a locked
     /// Creation changes them too (#1041, #1179).
     /// </summary>
-    public void SetMotorLink(int motorId, bool fixedRole, int linkId)
+    public void SetHingePartLink(int partId, bool fixedRole, int linkId)
     {
-        var isBrake = _builder.Brakes.Any(brake => brake.Id == motorId);
-        var isAngleSensor = _builder.AngleSensors.Any(angleSensor => angleSensor.Id == motorId);
-        var isServo = _builder.Servos.Any(servo => servo.Id == motorId);
+        var isBrake = _builder.Brakes.Any(brake => brake.Id == partId);
+        var isAngleSensor = _builder.AngleSensors.Any(angleSensor => angleSensor.Id == partId);
+        var isServo = _builder.Servos.Any(servo => servo.Id == partId);
         _history.Change(() =>
         {
             if (isBrake)
             {
-                _builder.SetBrakeLink(motorId, fixedRole, linkId);
+                _builder.SetBrakeLink(partId, fixedRole, linkId);
             }
             else if (isAngleSensor)
             {
-                _builder.SetAngleSensorLink(motorId, fixedRole, linkId);
+                _builder.SetAngleSensorLink(partId, fixedRole, linkId);
             }
             else if (isServo)
             {
-                _builder.SetServoLink(motorId, fixedRole, linkId);
+                _builder.SetServoLink(partId, fixedRole, linkId);
             }
             else
             {
-                _builder.SetVelocityMotorLink(motorId, fixedRole, linkId);
+                _builder.SetVelocityMotorLink(partId, fixedRole, linkId);
             }
         });
         RaiseAnatomyChanged();

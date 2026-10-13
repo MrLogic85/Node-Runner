@@ -15,9 +15,9 @@ public sealed class CreatureBuilderVelocityMotorTests
         builder.AddServo(other);
 
         builder.CanAddServo(joint, out var servoReason).ShouldBeFalse();
-        servoReason.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+        servoReason.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
         builder.CanAddVelocityMotor(other, out var motorReason).ShouldBeFalse();
-        motorReason.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+        motorReason.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
         builder.CanAddVelocityMotor(joint, out _).ShouldBeFalse();
     }
 

@@ -4,19 +4,19 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A joint motor's two sides (<see cref="IJointMotorDef"/>, a Servo or a Velocity motor, #454),
-/// or a Brake's (#1040): links, whose angle is the direction to their far joint body and which
+/// A hinge part's two sides (<see cref="IHingePartDef"/>): a Servo's, a Velocity motor's (#454), a Brake's (#1040)
+/// or an Angle sensor's (#1204). They are links, whose angle is the direction to their far joint body and which
 /// turn by a force couple, or the joint's Wheel, a one-sided link that turns with its body (#1118). It measures the
 /// Target's angle and speed against the Fixed side's, unwrapped across turns, and turns them
 /// apart by an equal and opposite torque.
 /// </summary>
-public sealed class MotorSides
+public sealed class HingePartSides
 {
-    private readonly MotorSide _fixed;
-    private readonly MotorSide _target;
+    private readonly HingePartSide _fixed;
+    private readonly HingePartSide _target;
     private double _lastRelativeAngle;
 
-    public MotorSides(MotorSide fixedSide, MotorSide targetSide)
+    public HingePartSides(HingePartSide fixedSide, HingePartSide targetSide)
     {
         _fixed = fixedSide;
         _target = targetSide;
@@ -51,10 +51,10 @@ public sealed class MotorSides
 
     /// <summary>
     /// What a Brake's torque turns (#1040): <see cref="EffectiveInertia"/>, but two links share their
-    /// joint's mass (<see cref="Mechanics.MotorSideGeometry.SharedJointInertia"/>), so it never reads
+    /// joint's mass (<see cref="Mechanics.HingePartSideGeometry.SharedJointInertia"/>), so it never reads
     /// heavier than the joint is. A Brake reading it heavier would chatter.
     /// </summary>
-    public double BrakeInertia => _fixed is MotorLinkSide fixedLink && _target is MotorLinkSide targetLink
+    public double BrakeInertia => _fixed is HingePartLinkSide fixedLink && _target is HingePartLinkSide targetLink
         ? fixedLink.SharedInertia(targetLink)
         : EffectiveInertia;
 
@@ -74,7 +74,7 @@ public sealed class MotorSides
     public void UpdatePhysicsState()
     {
         var current = RelativeAngle;
-        ContinuousAngle = Mechanics.MotorSideGeometry.UnwrapAngle(ContinuousAngle, _lastRelativeAngle, current);
+        ContinuousAngle = Mechanics.HingePartSideGeometry.UnwrapAngle(ContinuousAngle, _lastRelativeAngle, current);
         _lastRelativeAngle = current;
     }
 
@@ -87,9 +87,9 @@ public sealed class MotorSides
 }
 
 /// <summary>What a motor holds or turns at its joint: a link or the joint's Wheel (#1118).</summary>
-public abstract class MotorSide
+public abstract class HingePartSide
 {
-    protected MotorSide(RigidBody2D jointBody) => JointBody = jointBody;
+    protected HingePartSide(RigidBody2D jointBody) => JointBody = jointBody;
 
     public RigidBody2D JointBody { get; }
 
@@ -108,26 +108,26 @@ public abstract class MotorSide
 }
 
 /// <summary>A link side: its direction runs from the joint body to the link's far joint body.</summary>
-public sealed class MotorLinkSide(RigidBody2D jointBody, RigidBody2D farBody) : MotorSide(jointBody)
+public sealed class HingePartLinkSide(RigidBody2D jointBody, RigidBody2D farBody) : HingePartSide(jointBody)
 {
     private readonly RigidBody2D _farBody = farBody;
 
-    public override double Angle => Mechanics.MotorSideGeometry.LinkAngle(ToVector(JointBody.GlobalPosition), ToVector(_farBody.GlobalPosition));
+    public override double Angle => Mechanics.HingePartSideGeometry.LinkAngle(ToVector(JointBody.GlobalPosition), ToVector(_farBody.GlobalPosition));
 
-    public override double AngularSpeed => Mechanics.MotorSideGeometry.LinkAngularSpeed(
+    public override double AngularSpeed => Mechanics.HingePartSideGeometry.LinkAngularSpeed(
         ToVector(JointBody.GlobalPosition),
         ToVector(_farBody.GlobalPosition),
         ToVector(JointBody.LinearVelocity),
         ToVector(_farBody.LinearVelocity));
 
-    public override double EffectiveInertia => Mechanics.MotorSideGeometry.LinkInertia(
+    public override double EffectiveInertia => Mechanics.HingePartSideGeometry.LinkInertia(
         ToVector(JointBody.GlobalPosition),
         ToVector(_farBody.GlobalPosition),
         JointBody.Mass,
         _farBody.Mass);
 
-    /// <summary>This side and <paramref name="target"/> turned apart at their shared joint (<see cref="MotorSides.BrakeInertia"/>).</summary>
-    public double SharedInertia(MotorLinkSide target) => Mechanics.MotorSideGeometry.SharedJointInertia(
+    /// <summary>This side and <paramref name="target"/> turned apart at their shared joint (<see cref="HingePartSides.BrakeInertia"/>).</summary>
+    public double SharedInertia(HingePartLinkSide target) => Mechanics.HingePartSideGeometry.SharedJointInertia(
         ToVector(JointBody.GlobalPosition),
         ToVector(_farBody.GlobalPosition),
         ToVector(target._farBody.GlobalPosition),
@@ -137,7 +137,7 @@ public sealed class MotorLinkSide(RigidBody2D jointBody, RigidBody2D farBody) : 
 
     public override void ApplyTorque(double torque)
     {
-        var couple = Mechanics.MotorSideGeometry.CoupleForTorque(ToVector(JointBody.GlobalPosition), ToVector(_farBody.GlobalPosition), torque);
+        var couple = Mechanics.HingePartSideGeometry.CoupleForTorque(ToVector(JointBody.GlobalPosition), ToVector(_farBody.GlobalPosition), torque);
         JointBody.ApplyCentralForce(ToGodot(couple.ForceOnJoint));
         _farBody.ApplyCentralForce(ToGodot(couple.ForceOnFar));
     }
@@ -147,13 +147,13 @@ public sealed class MotorLinkSide(RigidBody2D jointBody, RigidBody2D farBody) : 
 /// The joint's Wheel as a side (#1118): a one-sided link pointing along its own turn. The Wheel is
 /// the joint body set free to turn (Creature.Wheels), so it turns by a plain torque on that body.
 /// </summary>
-public sealed class MotorWheelSide(RigidBody2D wheelBody) : MotorSide(wheelBody)
+public sealed class HingePartWheelSide(RigidBody2D wheelBody) : HingePartSide(wheelBody)
 {
-    public override double Angle => Mechanics.MotorSideGeometry.WheelAngle(JointBody.GlobalRotation);
+    public override double Angle => Mechanics.HingePartSideGeometry.WheelAngle(JointBody.GlobalRotation);
 
-    public override double AngularSpeed => Mechanics.MotorSideGeometry.WheelAngularSpeed(JointBody.AngularVelocity);
+    public override double AngularSpeed => Mechanics.HingePartSideGeometry.WheelAngularSpeed(JointBody.AngularVelocity);
 
     public override double EffectiveInertia => JointBody.Inertia;
 
-    public override void ApplyTorque(double torque) => JointBody.ApplyTorque((float)Mechanics.MotorSideGeometry.WheelBodyTorque(torque));
+    public override void ApplyTorque(double torque) => JointBody.ApplyTorque((float)Mechanics.HingePartSideGeometry.WheelBodyTorque(torque));
 }

@@ -29,8 +29,8 @@ public sealed class VelocityMotorTests
     public void AngleInputs_ReadAWheelTargetAQuarterTurnCounterClockwise_AsOneAndZero()
     {
         // Fixed points right; the Wheel's body is turned a quarter turn counter-clockwise on screen, y-down.
-        var fixedSide = MotorSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
-        var wheel = MotorSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
+        var fixedSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
+        var wheel = HingePartSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
 
         var (sin, cos) = VelocityMotor.AngleInputs(wheel - fixedSide);
 

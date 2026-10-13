@@ -13,7 +13,7 @@ public partial class AngleSensorVisual : AngleSensorPart, IShadowVisual
     /// <summary>A shadow's Angle sensor is a plain shadow joint, as shadows draw no sensors.</summary>
     public static ShadowDrawing AsShadow => ShadowDrawing.Simplified;
 
-    public required MotorSides Sides { get; init; }
+    public required HingePartSides Sides { get; init; }
 
     /// <summary>The knock-out along the arc, a sibling under the whole creature.</summary>
     public required KnockoutPart Knockout { get; init; }

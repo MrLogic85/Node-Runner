@@ -27,7 +27,7 @@ Build and tests reuse so they show and check exactly the same thing (#596).
   with, and the speed input both give the brain
 - `Brake`, `BrakeState` — a Brake's friction torque, capped at its Strength
 - `AngleSensor` — an Angle sensor's angle and speed inputs, on its own speed scale
-- `MotorSideGeometry`, `MotorCouple` — how both motors, the Brake and the Angle sensor measure
+- `HingePartSideGeometry`, `MotorCouple` — how both motors, the Brake and the Angle sensor measure
   and turn their sides: a link's angle, speed, inertia and force couple, two
   links' shared-joint inertia, a Wheel side's signs, and the unwrapped angle
 - `Piston` — a Piston's travel, inputs, target length and force

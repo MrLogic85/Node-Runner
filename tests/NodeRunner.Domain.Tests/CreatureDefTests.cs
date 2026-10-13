@@ -420,7 +420,7 @@ public sealed class CreatureDefTests
         CreatureDef.JointParts(4, servos, wheels, touchSensors, rubbers).ShouldBeEmpty();
     }
 
-    // A Brake sits in its joint's motor-or-brake slot, at the top of the stack (#1041).
+    // A Brake sits in its joint's hinge-part slot, at the top of the stack (#1041).
     [Fact]
     public void JointParts_ListsTheJointsBrakeFirst()
     {
@@ -439,7 +439,7 @@ public sealed class CreatureDefTests
         CreatureDef.HasJointPart(3, [], [], [], [new RubberDef(2, 1)]).ShouldBeFalse();
     }
 
-    // A Brake fills its joint's motor-or-brake slot (#1039), so its joint is not bare.
+    // A Brake fills its joint's hinge-part slot (#1039), so its joint is not bare.
     [Fact]
     public void HasJointPart_CountsABrake()
     {

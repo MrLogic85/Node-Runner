@@ -187,7 +187,7 @@ public sealed class CreationUpdateCoordinatorTests
         build.SelectOnly(CreatureElementKind.Beam, 5);
         build.DeleteSelectedParts();
         build.SelectOnly(kind, 9);
-        build.SetMotorLink(9, fixedRole: true, linkId: 7);
+        build.SetHingePartLink(9, fixedRole: true, linkId: 7);
 
         var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!;
 
@@ -210,7 +210,7 @@ public sealed class CreationUpdateCoordinatorTests
         build.LoadCreation(creation);
         build.SelectOnly(kind, 9);
 
-        build.SetMotorLink(9, fixedRole: false, linkId: 7);
+        build.SetHingePartLink(9, fixedRole: false, linkId: 7);
 
         build.IsLocked.ShouldBeTrue();
         var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!;

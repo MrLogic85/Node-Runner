@@ -5,7 +5,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Builders;
 
 /// <summary>
-/// The Brakes (#1039): passive joint parts that fill a joint's motor-or-brake slot and take their
+/// The Brakes (#1039): passive joint parts that fill a joint's hinge-part slot and take their
 /// sides by the Servo's rules (#1118). They have no brain ports, so they are not joint motors.
 /// </summary>
 public sealed partial class CreatureBuilder
@@ -22,8 +22,8 @@ public sealed partial class CreatureBuilder
 
     public IReadOnlyList<BrakeDef> Brakes => _brakes;
 
-    /// <summary>What fills the joints' motor-or-brake slots, as <see cref="CreatureDef.MotorsAndBrakes"/> lists them.</summary>
-    public IReadOnlyList<IMotorOrBrakeDef> MotorsAndBrakes => [.. JointMotors, .. _brakes, .. _angleSensors];
+    /// <summary>What fills the joints' hinge-part slots, as <see cref="CreatureDef.HingeParts"/> lists them.</summary>
+    public IReadOnlyList<IHingePartDef> HingeParts => [.. JointMotors, .. _brakes, .. _angleSensors];
 
     /// <summary>Whether a Brake can sit on this node; if not, <paramref name="reason"/> says why.</summary>
     public bool CanAddBrake(int nodeId, [NotNullWhen(false)] out UiText? reason)
@@ -34,9 +34,9 @@ public sealed partial class CreatureBuilder
             return false;
         }
 
-        if (HasMotorOrBrake(nodeId))
+        if (HasHingePart(nodeId))
         {
-            reason = OneMotorOrBrakePerJointReason;
+            reason = OneHingePartPerJointReason;
             return false;
         }
 

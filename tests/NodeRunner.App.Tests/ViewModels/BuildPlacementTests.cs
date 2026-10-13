@@ -362,7 +362,7 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
-    public void SetMotorLink_WithMixedLinks_SwapsRoles_AndKeepsTheServosIdAndSelection()
+    public void SetHingePartLink_WithMixedLinks_SwapsRoles_AndKeepsTheServosIdAndSelection()
     {
         var build = PistonAndSpring();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
@@ -370,7 +370,7 @@ public sealed class BuildPlacementTests
 
         presentation.Pickers![0].Options.Select(option => option.Name).ShouldBe([UiText.Format("Piston {0}", 1), UiText.Format("Spring {0}", 1)]);
 
-        build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(servoId, fixedRole: true, linkId: 5);
 
         build.Servos.Select(servo => (servo.Id, servo.FixedLinkId, servo.TargetLinkId))
             .ShouldBe([(servoId, 5, 4)]);
@@ -379,7 +379,7 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
-    public void SetMotorLink_AsFirstUndoStep_ShowsTheSameServo()
+    public void SetHingePartLink_AsFirstUndoStep_ShowsTheSameServo()
     {
         var build = PistonAndSpring();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
@@ -389,7 +389,7 @@ public sealed class BuildPlacementTests
         var shownIds = new List<int?>();
         presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
 
-        build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(servoId, fixedRole: true, linkId: 5);
 
         build.CanUndo.ShouldBeTrue();
         shownIds.ShouldNotBeEmpty();
@@ -401,7 +401,7 @@ public sealed class BuildPlacementTests
     {
         var build = PistonAndSpring();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
-        build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(servoId, fixedRole: true, linkId: 5);
         var presentation = new BuildPresentationViewModel(build);
         var shownIds = new List<int?>();
         presentation.PresentationChanged += (_, _) => shownIds.Add(presentation.SinglePart?.Id);
@@ -438,7 +438,7 @@ public sealed class BuildPlacementTests
     {
         var build = PistonAndSpring();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
-        build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(servoId, fixedRole: true, linkId: 5);
         build.ReplaceSelection(PartSet.None);
 
         build.Undo();
@@ -468,7 +468,7 @@ public sealed class BuildPlacementTests
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
         var presentation = new BuildPresentationViewModel(build);
 
-        build.SetMotorLink(servoId, fixedRole: true, linkId: 5);
+        build.SetHingePartLink(servoId, fixedRole: true, linkId: 5);
         presentation.SinglePart!.Id.ShouldBe(servoId);
         build.Undo();
         presentation.SinglePart!.Id.ShouldBe(servoId);
@@ -480,7 +480,7 @@ public sealed class BuildPlacementTests
     }
 
     [Fact]
-    public void SetMotorLink_PickerOrder_UsesLowestIdsAcrossLinkKinds()
+    public void SetHingePartLink_PickerOrder_UsesLowestIdsAcrossLinkKinds()
     {
         var build = PistonWithLowerIdThanBeam();
         build.PlacePart(BuildPart.Servo, _middleJoint).ShouldNotBeNull();
@@ -668,8 +668,8 @@ public sealed class BuildPlacementTests
     {
         var build = ThreeBeams();
         var servoId = build.PlacePart(BuildPart.Servo, _middleJoint)!.Value;
-        build.SetMotorLink(servoId, fixedRole: true, linkId: 6);
-        build.SetMotorLink(servoId, fixedRole: false, linkId: 7);
+        build.SetHingePartLink(servoId, fixedRole: true, linkId: 6);
+        build.SetHingePartLink(servoId, fixedRole: false, linkId: 7);
         build.Servos.Select(servo => (servo.FixedLinkId, servo.TargetLinkId)).ShouldBe([(6, 7)]);
 
         var pickers = new BuildPresentationViewModel(build).SinglePart!.Pickers!;
@@ -720,12 +720,12 @@ public sealed class BuildPlacementTests
         build.DeleteSelectedParts();
         build.ShowTrainingBlockers();
 
-        build.SetMotorLink(servoId, fixedRole: false, linkId: 7);
+        build.SetHingePartLink(servoId, fixedRole: false, linkId: 7);
 
         ServoNotes().ShouldHaveSingleItem().ShouldBe(
             new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Servo, servoId), UiText.Plain("Pick a Fixed part")));
 
-        build.SetMotorLink(servoId, fixedRole: true, linkId: 6);
+        build.SetHingePartLink(servoId, fixedRole: true, linkId: 6);
 
         ServoNotes().ShouldBeEmpty();
 

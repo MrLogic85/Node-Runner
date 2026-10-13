@@ -25,7 +25,7 @@ public static class Brake
     /// about as far, since the brake still holds against the load for that step. It is read while
     /// slipping too, so the brake grips as soon as the load is within its Strength. The loop stays
     /// steady while the inertia given is at most about a third heavier than the joint's, and chatters
-    /// past that, so give a lower bound (Creature's MotorSides.BrakeInertia); a lighter one only
+    /// past that, so give a lower bound (Creature's HingePartSides.BrakeInertia); a lighter one only
     /// makes the joint give more, and swing back a little, before it holds. Each Brake reads its own
     /// joint alone, so Brakes on a shared link also read each other's torque as load; in Godot a
     /// straight chain of them only jitters by a fraction of a degree (#1040).

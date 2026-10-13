@@ -5,7 +5,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Builders;
 
 /// <summary>
-/// The Velocity motors (#454): joint motors that share a joint's motor-or-brake slot with a Servo and a Brake
+/// The Velocity motors (#454): joint motors that share a joint's hinge-part slot with a Servo and a Brake
 /// and take their sides by the Servo's rules (#1118).
 /// </summary>
 public sealed partial class CreatureBuilder
@@ -34,9 +34,9 @@ public sealed partial class CreatureBuilder
             return false;
         }
 
-        if (HasMotorOrBrake(nodeId))
+        if (HasHingePart(nodeId))
         {
-            reason = OneMotorOrBrakePerJointReason;
+            reason = OneHingePartPerJointReason;
             return false;
         }
 
@@ -90,8 +90,8 @@ public sealed partial class CreatureBuilder
         return index;
     }
 
-    // Whether the joint's motor-or-brake slot is taken (#1044).
-    private bool HasMotorOrBrake(int nodeId) => MotorsAndBrakes.Any(part => part.NodeId == nodeId);
+    // Whether the joint's hinge-part slot is taken (#1044).
+    private bool HasHingePart(int nodeId) => HingeParts.Any(part => part.NodeId == nodeId);
 
     private double VelocityMotorParameterValue(int velocityMotorId, PartParameterId parameter)
     {

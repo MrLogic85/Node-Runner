@@ -32,18 +32,18 @@ public sealed class CreatureBuilderAngleSensorTests
 
     // A joint holds one Servo, Motor, Brake or Angle sensor (#1044).
     [Fact]
-    public void AnAngleSensor_SharesItsJointsMotorOrBrakeSlot_WithAServoAMotorABrakeAndAnotherAngleSensor()
+    public void AnAngleSensor_SharesItsJointsHingePartSlot_WithAServoAMotorABrakeAndAnotherAngleSensor()
     {
         var builder = Joint(out var joint, out var far, out _, out _);
         builder.AddAngleSensor(joint);
 
         builder.CanAddServo(joint, out var servoReason).ShouldBeFalse();
-        servoReason.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+        servoReason.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
         builder.CanAddVelocityMotor(joint, out var motorReason).ShouldBeFalse();
-        motorReason.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+        motorReason.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
         builder.CanAddBrake(joint, out var brakeReason).ShouldBeFalse();
-        brakeReason.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
-        Should.Throw<ArgumentException>(() => builder.AddAngleSensor(joint)).Message.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason.Message);
+        brakeReason.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
+        Should.Throw<ArgumentException>(() => builder.AddAngleSensor(joint)).Message.ShouldBe(CreatureBuilder.OneHingePartPerJointReason.Message);
 
         builder.AddBrake(far);
         Should.Throw<ArgumentException>(() => builder.AddAngleSensor(far));
@@ -51,7 +51,7 @@ public sealed class CreatureBuilderAngleSensorTests
         builder.CanAddAngleSensor(999, out var offJoint).ShouldBeFalse();
         offJoint.ShouldBe(CreatureBuilder.AngleSensorsGoOnAJointReason);
         builder.CanAddAngleSensor(far, out var taken).ShouldBeFalse();
-        taken.ShouldBe(CreatureBuilder.OneMotorOrBrakePerJointReason);
+        taken.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
     }
 
     [Fact]

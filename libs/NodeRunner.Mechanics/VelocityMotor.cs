@@ -5,7 +5,7 @@ namespace NodeRunner.Mechanics;
 /// <summary>
 /// The brain conventions and torque of a <see cref="VelocityMotorDef"/> (#454). Its angle is the
 /// one between its sides (#1207): the target side's direction minus the fixed side's, a Wheel side
-/// read from a mark on its tyre, both measured with <see cref="MotorSideGeometry"/>. It has no end stops and can
+/// read from a mark on its tyre, both measured with <see cref="HingePartSideGeometry"/>. It has no end stops and can
 /// turn round and round, so the brain sees the angle as its sine and cosine, which never jump. The
 /// brain drives a speed and a strength share, and the motor chases that speed with
 /// <see cref="MotorLoop"/>, so it can keep a speed against a load up to its strength.

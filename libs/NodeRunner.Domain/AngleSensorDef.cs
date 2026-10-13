@@ -3,11 +3,11 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// An Angle sensor (#1201, #1204): a joint sensor on one node that tells the brain the angle between
 /// its Fixed and Target sides and how fast it changes (<c>NodeRunner.Mechanics.AngleSensor</c>). It fills
-/// the joint's motor-or-brake slot and takes its sides by the Servo's rules (<see cref="IMotorOrBrakeDef"/>),
+/// the joint's hinge-part slot and takes its sides by the Servo's rules (<see cref="IHingePartDef"/>),
 /// but it is no joint motor: it has inputs only and applies no force, so it is not in
 /// <see cref="CreatureDef.JointMotors"/>. It has no settings. See docs/CREATURE_MODEL.md → "Angle sensor".
 /// </summary>
-public sealed record AngleSensorDef : IMotorOrBrakeDef
+public sealed record AngleSensorDef : IHingePartDef
 {
     public AngleSensorDef(int id, int nodeId, int? fixedLinkId = null, int? targetLinkId = null, string? name = null)
     {
@@ -55,7 +55,7 @@ public sealed record AngleSensorDef : IMotorOrBrakeDef
 
     public string? Name { get; }
 
-    CreatureElementKind IMotorOrBrakeDef.Kind => CreatureElementKind.AngleSensor;
+    CreatureElementKind IHingePartDef.Kind => CreatureElementKind.AngleSensor;
 
     public AngleSensorDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name);
 

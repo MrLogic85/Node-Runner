@@ -80,9 +80,9 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.MotorsAndBrakes, shape.Wheels, shape.TouchSensors, shape.Rubbers);
-            part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasMotor(shape, marks, node.Id);
-            part.ShowsHub = HasWheelAndNoServo(shape, marks, node.Id);
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.HingeParts, shape.Wheels, shape.TouchSensors, shape.Rubbers);
+            part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasHingePart(shape, marks, node.Id);
+            part.ShowsHub = HasWheelAndNoHingePart(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
             part.Cushion = touch is not null || marks.PreviewNodeOf(BuildPart.TouchSensor) == node.Id;
             part.TouchSelected = touch is not null && marks.Selected.TouchSensors.Contains(touch.Id);
@@ -112,13 +112,13 @@ public partial class CreatureParts : Node2D
     private static bool HasWheel(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         shape.Wheels.Any(wheel => wheel.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.Wheel) == nodeId;
 
-    // A Wheel's hub is drawn by its joint, over the links (#1086); a motor, placed or previewed, covers it.
-    private static bool HasWheelAndNoServo(CreatureShape shape, CreatureMarks marks, int nodeId) =>
-        HasWheel(shape, marks, nodeId) && !HasMotor(shape, marks, nodeId);
+    // A Wheel's hub is drawn by its joint, over the links (#1086); a hinge part, placed or previewed, covers it.
+    private static bool HasWheelAndNoHingePart(CreatureShape shape, CreatureMarks marks, int nodeId) =>
+        HasWheel(shape, marks, nodeId) && !HasHingePart(shape, marks, nodeId);
 
     // A Servo, Velocity motor (#454), Brake (#1041) or Angle sensor (#1205), placed or previewed, stands in for its joint's ring.
-    private static bool HasMotor(CreatureShape shape, CreatureMarks marks, int nodeId) =>
-        shape.MotorsAndBrakes.Any(motor => motor.NodeId == nodeId) || PreviewsMotor(marks, nodeId) || marks.PreviewNodeOf(BuildPart.Brake) == nodeId || marks.PreviewNodeOf(BuildPart.AngleSensor) == nodeId;
+    private static bool HasHingePart(CreatureShape shape, CreatureMarks marks, int nodeId) =>
+        shape.HingeParts.Any(part => part.NodeId == nodeId) || PreviewsMotor(marks, nodeId) || marks.PreviewNodeOf(BuildPart.Brake) == nodeId || marks.PreviewNodeOf(BuildPart.AngleSensor) == nodeId;
 
     private static bool PreviewsMotor(CreatureMarks marks, int nodeId) =>
         marks.PreviewNodeOf(BuildPart.Servo) == nodeId || marks.PreviewNodeOf(BuildPart.VelocityMotor) == nodeId;
