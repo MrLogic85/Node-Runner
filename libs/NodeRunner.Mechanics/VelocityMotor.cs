@@ -3,21 +3,17 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The brain conventions and torque of a <see cref="VelocityMotorDef"/> (#454). Its angle is a
-/// Servo's: the target side's direction minus the fixed side's, a Wheel side read from a mark on its
-/// tyre, both measured with <see cref="MotorSideGeometry"/>. It has no end stops and can
+/// The brain conventions and torque of a <see cref="VelocityMotorDef"/> (#454). Its angle is the
+/// one between its sides (#1207): the target side's direction minus the fixed side's, a Wheel side
+/// read from a mark on its tyre, both measured with <see cref="MotorSideGeometry"/>. It has no end stops and can
 /// turn round and round, so the brain sees the angle as its sine and cosine, which never jump. The
 /// brain drives a speed and a strength share, and the motor chases that speed with
 /// <see cref="MotorLoop"/>, so it can keep a speed against a load up to its strength.
 /// </summary>
 public static class VelocityMotor
 {
-    /// <summary>The angle inputs: the sine and cosine of the turn from <paramref name="builtAngle"/>, (0, 1) as built.</summary>
-    public static (double Sin, double Cos) AngleInputs(double angle, double builtAngle = 0)
-    {
-        var delta = angle - builtAngle;
-        return (Math.Sin(delta), Math.Cos(delta));
-    }
+    /// <summary>The angle inputs (#1207): the sine and cosine of the angle between the sides, so (1, 0) with Target a quarter turn counter-clockwise from Fixed.</summary>
+    public static (double Sin, double Cos) AngleInputs(double angle) => (Math.Sin(angle), Math.Cos(angle));
 
     /// <summary>The speed a speed output asks for, in radians per second: −1…1 of Max speed, counter-clockwise positive.</summary>
     public static double WantedSpeed(double output, VelocityMotorDef motor)

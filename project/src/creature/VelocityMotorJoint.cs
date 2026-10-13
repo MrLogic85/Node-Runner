@@ -21,8 +21,8 @@ public sealed class VelocityMotorJoint
 
     public MotorSides Sides { get; }
 
-    /// <summary>The turn from the built angle as its sine and cosine, which never jump across a whole turn.</summary>
-    public (double Sin, double Cos) AngleInputs => Mechanics.VelocityMotor.AngleInputs(Sides.ContinuousAngle, Sides.BuiltAngle);
+    /// <summary>The angle between the sides as its sine and cosine (#1207), which never jump across a whole turn.</summary>
+    public (double Sin, double Cos) AngleInputs => Mechanics.VelocityMotor.AngleInputs(Sides.ContinuousAngle);
 
     public double SpeedInput => Mechanics.MotorLoop.SpeedInput(Sides.Speed, Definition.MaxSpeed);
 
