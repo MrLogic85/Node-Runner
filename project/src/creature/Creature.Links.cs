@@ -93,6 +93,11 @@ public partial class Creature
         _brakes = [.. brakes];
     }
 
+    // An Angle sensor (#1204) reads its sides as a Velocity motor does and never turns them, so it adds
+    // no joint and no torque. Drawn as a plain joint until its picture (#1205).
+    private void CreateAngleSensors(CreatureDef definition) =>
+        _angleSensors = [.. definition.AngleSensors.Select(angleSensor => new AngleSensorJoint(angleSensor, MotorSidesFor(definition, angleSensor)))];
+
     // A Locked Brake welds its two sides' bodies with a second joint away from the joint's own pin:
     // two joints hold two bodies rigidly, inside Godot's solver, so no load can turn the joint. A
     // friction torque lags a step behind the load it holds, so even an endless one gives a little

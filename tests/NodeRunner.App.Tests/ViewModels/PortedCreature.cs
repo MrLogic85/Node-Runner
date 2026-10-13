@@ -16,6 +16,7 @@ internal static class PortedCreature
     public const int Rubber = 15;
     public const int VelocityMotor = 16;
     public const int Brake = 17;
+    public const int AngleSensor = 18;
 
     public static CreatureDef Def { get; } = new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(4, new Vector2D(0, 2))],
@@ -29,7 +30,8 @@ internal static class PortedCreature
         [new RubberDef(Rubber, 3)],
         [new VelocityMotorDef(VelocityMotor, 2, 5, 6, "Drive")],
         [new BrakeDef(Brake, 3, 6, Wheel)],
-        nextPartId: 18);
+        [new AngleSensorDef(AngleSensor, 4, 7, Spring, "Knee")],
+        nextPartId: 19);
 
     public static BrainPortLayout Layout { get; } = BrainPorts.Of(Def);
 

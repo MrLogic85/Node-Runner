@@ -23,6 +23,9 @@ public static class PartIcons
         PartSettingsKind.Rubber => UiIconId.PartRubber,
         PartSettingsKind.VelocityMotor => UiIconId.PartVelocity,
         PartSettingsKind.Brake => UiIconId.PartBrake,
+
+        // Its glyph comes with its tray icon (#1206).
+        PartSettingsKind.AngleSensor => UiIconId.None,
         _ => UiIconId.None,
     };
 }

@@ -41,7 +41,7 @@ public sealed record PartCalloutPresentation(
         ArgumentNullException.ThrowIfNull(selection);
         ArgumentNullException.ThrowIfNull(values);
 
-        var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, selection.Id);
+        var name = PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, selection.Id);
         var kind = KindOf(creature, selection);
         switch (kind)
         {
@@ -74,6 +74,7 @@ public sealed record PartCalloutPresentation(
         CreatureElementKind.Rubber => PartSettingsKind.Rubber,
         CreatureElementKind.VelocityMotor => PartSettingsKind.VelocityMotor,
         CreatureElementKind.Brake => PartSettingsKind.Brake,
+        CreatureElementKind.AngleSensor => PartSettingsKind.AngleSensor,
         _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Unknown part kind."),
     };
 }

@@ -10,12 +10,12 @@ types, and no rules that differ by how a part happens to be simulated. How
 Godot realises each part is in `project/src/creature/AGENTS.md` and the code
 comments there.
 
-## Parts: Node, Beam, Sensor, Servo, Motor, Brake, Piston, Spring, Wheel, Rubber, Touch sensor
+## Parts: Node, Beam, Sensor, Servo, Motor, Brake, Angle sensor, Piston, Spring, Wheel, Rubber, Touch sensor
 
 A creature is built from two structural parts (Node, Beam), sensor parts
 that sit on beams (the Accelerometer and the Camera), joint parts (the
 Servo and the Motor, which turn their joint, the Brake, which resists
-that, the Wheel, which rolls, the Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
+that, the Angle sensor, which feels it, the Wheel, which rolls, the Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
 parts with brain ports move the body. "What senses" (sensors) and "what
@@ -24,8 +24,8 @@ thinks" (the brain) stay separate; this is the most important rule here:
 
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
 so it sits on a beam, or on a joint, a body of its own (Touch sensor); a
-part acting between two beams or on the ground around a joint sits on that
-joint (Servo, Motor, Brake, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
+part acting or sensing between two beams, or on the ground around a joint, sits on that
+joint (Servo, Motor, Brake, Angle sensor, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
 one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
@@ -59,7 +59,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   sits on the joint: the minimum link length and a Piston's or Spring's
   travel.
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
-  joint motor or brake (a Servo, a Motor or a Brake), one Rubber (#1142) and one Touch sensor
+  Servo, Motor, Brake or Angle sensor (#1204), one Rubber (#1142) and one Touch sensor
   (#1043), so a Servo can drive the links of a Wheel's joint while the
   Wheel turns freely between them, or drive the Wheel itself (see Servo),
   and a Rubber and a Touch sensor may share its joint with both.
@@ -236,7 +236,7 @@ fold.
   (#454), saved under `velocityMotors`; Mechanics: `VelocityMotor`. Its sides follow
   the Servo's rules: a Beam, Piston, Spring or its joint's Wheel, two
   different ones, either missing after a deletion (`JointMotor`). It takes
-  the joint's slot for a joint motor or brake (see Node → One part per slot).
+  the joint's slot for a Servo, Motor, Brake or Angle sensor (see Node → One part per slot).
 - **Angle:** the angle between its sides (#1207): the Target side's
   direction minus the Fixed side's, counter-clockwise positive, measured as
   a Servo's sides are. Unlike a Servo's, it is not taken from the built
@@ -278,6 +278,24 @@ fold.
   joint, it holds as endless friction instead, which gives a little under a
   sudden heavy push.
 
+### Angle sensor
+
+- **Beginner:** A sensor on a joint that tells the brain the angle between
+  two of its sides, links or its Wheel, and how fast it is changing,
+  without moving them.
+- `AngleSensorDef` (#1204), saved under `angleSensors`; Mechanics:
+  `AngleSensor`. Its sides and slot are a Servo's (see Servo, and Node →
+  One part per slot), so one with a missing side blocks training like a
+  Servo, and a new one takes the same default sides. It is not a joint
+  motor: it has no settings and no torque, and applies no force, so a
+  creature moves the same with or without it.
+- **Reading:** inputs `angleSin` and `angleCos`, the sine and cosine of
+  the angle between its sides, measured as a Motor's (see Motor → Angle,
+  #1207), and `speed`, `tanh(ω / 2π rad/s)`, counter-clockwise positive.
+  Its speed scale, 60 rpm (`AngleSensor.SpeedScale`), is its own: it
+  does not follow any Motor's Max speed, so retuning a Motor never changes
+  what a trained brain reads.
+
 ### Wheel
 
 - **Beginner:** A wheel on a joint. It turns freely there and rolls on the
@@ -295,7 +313,7 @@ fold.
 - **Weight** (Mechanics: `Wheel.Mass`): 3 kg per metre of Radius, 1.2 kg
   at 0.4 m, added to its joint. Derived, never saved.
 - **Driving it:** a joint motor on its joint may name it as
-  Fixed or Target (#1118, see Servo), and so may a Brake.
+  Fixed or Target (#1118, see Servo), and so may a Brake or an Angle sensor.
 
 ### Rubber
 
@@ -443,7 +461,10 @@ fold.
     and `speed` (as a Servo's); outputs `speed` (Velocity,
     −1…1 of Max speed, counter-clockwise positive) and `strength`.
   - **Touch sensor (#1043):** input `touch` (Touch sensor → Reading).
-  - Nodes, beams, plain joints, Springs and Wheels declare none.
+  - **Angle sensor (#1204):** inputs `angleSin`, `angleCos` and `speed`
+    (Angle sensor → Reading); no outputs.
+  - Nodes, beams, plain joints, Springs, Wheels, Brakes and Rubbers declare
+    none.
 - **Output conventions (#535, `PortSignals`):** the signal fixes the
   output's activation and how a new output starts.
   - **Velocity** (#454) and **position** use `tanh`: −1…1, where 0 means
@@ -471,7 +492,7 @@ fold.
     match by part id, channel and direction: a kept port keeps its weights
     and bias, a new port starts almost passive, and a removed part's
     neurons and connections are dropped. Moving nodes, changing settings or
-    changing a joint motor's links keeps every port, except a Camera's Rays,
+    changing a joint motor's or Angle sensor's sides keeps every port, except a Camera's Rays,
     which add or remove its outer rays' ports while the rays it keeps keep
     their weights (#578).
   - **Build refits the brain it opened with (#689):** every save in one
@@ -496,11 +517,11 @@ fold.
   their ids.
 - Saving, loading, moving, renaming, rebuilding a body and copying a whole
   Creation keep part ids and the counter.
-- A joint motor or Brake keeps its id through every change of its Fixed or
+- A joint motor, Brake or Angle sensor keeps its id through every change of its Fixed or
   Target side: filling an empty one, picking another link or the Wheel,
   swapping the two, or any link replacing the link it held (#1176, #1177).
-  A motor's ports may change meaning or sign, but the brain keeps their
-  weights and adapts through training.
+  A motor's or Angle sensor's ports may change meaning or sign, but the
+  brain keeps their weights and adapts through training.
 - Parts refer to each other by id. Code that needs an array position uses
   `CreatureDef`'s id-to-index lookups at the boundary.
 

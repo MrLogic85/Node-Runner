@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
@@ -103,7 +104,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
             [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.",
-                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, 6))]);
+                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, 6))]);
     }
 
     // A Brake takes its sides by the Servo's rules (#1039), so one with a deleted side cannot train either.
@@ -128,6 +129,29 @@ public sealed class CreatureReadinessTests
             [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.", UiText.Format("Brake {0}", 1))]);
     }
 
+    // An Angle sensor takes its sides by the Servo's rules (#1204): one with a deleted side cannot train until it is replaced.
+    [Fact]
+    public void Problems_WithAnAngleSensorMissingASide_SaysItIsMissingALink_UntilItIsReplaced()
+    {
+        var builder = new CreatureBuilder();
+        var joint = builder.AddNode(new Vector2D(0, 0));
+        var far = builder.AddNode(new Vector2D(120, 0));
+        var top = builder.AddNode(new Vector2D(0, 120));
+        var first = builder.AddBeam(joint, far);
+        builder.AddBeam(joint, top);
+        builder.AddBeam(far, top);
+        var third = builder.AddBeam(joint, builder.AddNode(new Vector2D(-120, 0)));
+        var sensor = builder.AddAngleSensor(joint);
+        CreatureReadiness.Problems(builder.Build()).ShouldBeEmpty();
+
+        builder.RemoveBeam(first);
+
+        CreatureReadiness.Problems(builder.Build()).ShouldBe(
+            [UiText.Format("{0} is missing a link. Pick its Fixed and Target links or delete it.", UiText.Format("Angle {0}", 1))]);
+        builder.SetAngleSensorLink(sensor, fixedRole: true, third);
+        CreatureReadiness.Problems(builder.Build()).ShouldBeEmpty();
+    }
+
     [Fact]
     public void Problems_WithAServoOnAOneLinkJoint_AsksForAnotherLink()
     {
@@ -142,7 +166,7 @@ public sealed class CreatureReadinessTests
 
         CreatureReadiness.Problems(creature).ShouldBe(
             [UiText.Format("{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it.",
-                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, 6))]);
+                PartNames.Display(creature.Nodes, creature.Beams, creature.Sensors, creature.Servos, creature.Pistons, creature.Springs, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, 6))]);
     }
 
     [Fact]

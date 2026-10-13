@@ -2,7 +2,7 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// What every joint motor, a Servo or a Velocity motor (<see cref="IJointMotorDef"/>), shares. A
-/// <see cref="BrakeDef"/> takes its sides by the same rules (#1039).
+/// <see cref="BrakeDef"/> (#1039) and an <see cref="AngleSensorDef"/> (#1204) take their sides by the same rules.
 /// </summary>
 public static class JointMotor
 {

@@ -871,7 +871,8 @@ public sealed class BuildGestures
             _build.TouchSensors.Where(touch => Inside(NodeById(touch.NodeId).Position)).Select(touch => touch.Id).ToHashSet(),
             _build.Rubbers.Where(rubber => Inside(NodeById(rubber.NodeId).Position)).Select(rubber => rubber.Id).ToHashSet(),
             _build.VelocityMotors.Where(motor => Inside(NodeById(motor.NodeId).Position)).Select(motor => motor.Id).ToHashSet(),
-            _build.Brakes.Where(brake => Inside(NodeById(brake.NodeId).Position)).Select(brake => brake.Id).ToHashSet());
+            _build.Brakes.Where(brake => Inside(NodeById(brake.NodeId).Position)).Select(brake => brake.Id).ToHashSet(),
+            _build.AngleSensors.Where(angleSensor => Inside(NodeById(angleSensor.NodeId).Position)).Select(angleSensor => angleSensor.Id).ToHashSet());
     }
 
     private double HitDistance(double viewDistance) => viewDistance / View.Zoom;

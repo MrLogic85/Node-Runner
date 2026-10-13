@@ -118,6 +118,30 @@ public sealed class CreationShareCodeTests
         build.Creature.IsWheel(build.Creature.Brakes[1].TargetLinkId!.Value).ShouldBeTrue();
     }
 
+    [Fact]
+    public void Code_RoundTripsAnAngleSensor_WithTwoLinks_AWheelSide_OrAMissingSide()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
+        builder.Rename(builder.AddAngleSensor(joints[0]), "Knee");
+        var wheel = builder.AddWheel(joints[1]);
+        builder.AddAngleSensor(joints[1], wheel, builder.LinksAt(joints[1])[0].Id);
+        builder.AddAngleSensor(joints[2], builder.LinksAt(joints[2])[0].Id, targetLinkId: null);
+        builder.AddAngleSensor(joints[3], fixedLinkId: null, builder.LinksAt(joints[3])[0].Id);
+        var sensed = walker.WithCreature(builder.Build(), training: null);
+
+        var build = CreationShareCode.Read(CreationShareCode.Create(sensed)).Build.ShouldNotBeNull();
+
+        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(sensed).Creature));
+        var sensors = build.Creature.AngleSensors;
+        sensors.Count.ShouldBe(4);
+        sensors[0].Name.ShouldBe("Knee");
+        build.Creature.IsWheel(sensors[1].FixedLinkId!.Value).ShouldBeTrue();
+        sensors[2].TargetLinkId.ShouldBeNull();
+        sensors[3].FixedLinkId.ShouldBeNull();
+    }
+
     // Build's Brake slider is 20–400 N·m (200000–4000000 world units) or Locked (#1039), so only a code changed by hand holds another.
     [Theory]
     [InlineData(200000.0, null)]
@@ -262,6 +286,7 @@ public sealed class CreationShareCodeTests
         builder.AddRubber(nodes[3]);
         builder.AddVelocityMotor(nodes[3]);
         builder.SetParameter(builder.AddBrake(nodes[2]), PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
+        builder.AddAngleSensor(nodes[0]);
         builder.RemoveNode(builder.AddNode(new Vector2D(300, 300)));
         builder.RemoveBeam(beams[3]);
         builder.AddBeam(nodes[3], nodes[4]);
@@ -355,6 +380,7 @@ public sealed class CreationShareCodeTests
     [InlineData(9)]
     [InlineData(10)]
     [InlineData(11)]
+    [InlineData(12)]
     public void Read_AnOlderVersionsCode_WithAWheel_StillReads(int version)
     {
         var read = CreationShareCode.Read(CreationShareCode.Pack(version, Encoding.UTF8.GetBytes(SampleLine(version).ToJsonString())));
@@ -365,7 +391,8 @@ public sealed class CreationShareCodeTests
         creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(60);
         creature.Rubbers.Count.ShouldBe(version < 10 ? 0 : 2);
         creature.VelocityMotors.Count.ShouldBe(version < 11 ? 0 : 1);
-        creature.Brakes.ShouldBeEmpty();
+        creature.Brakes.Count.ShouldBe(version < 12 ? 0 : 2);
+        creature.AngleSensors.ShouldBeEmpty();
     }
 
     [Fact]
@@ -615,7 +642,8 @@ public sealed class CreationShareCodeTests
             .Concat(creature.TouchSensors.Select(part => part.Id))
             .Concat(creature.Rubbers.Select(part => part.Id))
             .Concat(creature.VelocityMotors.Select(part => part.Id))
-            .Concat(creature.Brakes.Select(part => part.Id));
+            .Concat(creature.Brakes.Select(part => part.Id))
+            .Concat(creature.AngleSensors.Select(part => part.Id));
 
     // creature with every part id, and every reference to one, swapped through ids.
     private static CreatureDef Renumbered(CreatureDef creature, Dictionary<int, int> ids)

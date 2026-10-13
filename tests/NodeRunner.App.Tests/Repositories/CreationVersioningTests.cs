@@ -48,6 +48,7 @@ public sealed class CreationVersioningTests : IDisposable
         expected["creature"]!.AsObject()["rubbers"] = new JsonArray();
         expected["creature"]!.AsObject()["velocityMotors"] = new JsonArray();
         expected["creature"]!.AsObject()["brakes"] = new JsonArray();
+        expected["creature"]!.AsObject()["angleSensors"] = new JsonArray();
         foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
         {
             piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
@@ -453,6 +454,59 @@ public sealed class CreationVersioningTests : IDisposable
         creature.VelocityMotors.ShouldHaveSingleItem().MaxSpeed.ShouldBe(3);
     }
 
+    // #1204: a creature saved before Angle sensors has none.
+    [Fact]
+    public void AVersion12Save_GetsNoAngleSensors_AndIsWrittenBackInTheCurrentVersion()
+    {
+        var path = WriteCreation(Version12Walker().ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.AngleSensors.ShouldBeEmpty();
+
+        var written = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
+        written["creature"]!["angleSensors"]!.AsArray().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AVersion12Save_WithoutACreature_IsSkipped()
+    {
+        var file = Version12Walker();
+        file.Remove("creature");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ASaveInTheCurrentVersion_WithoutAngleSensors_IsSkipped()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file["creature"]!.AsObject().Remove("angleSensors");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AnAngleSensor_WithTwoLinks_AWheelSide_OrAMissingSide_SurvivesASaveAndALoad()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
+        var named = builder.AddAngleSensor(joints[0]);
+        builder.Rename(named, "Knee");
+        var wheel = builder.AddWheel(joints[1]);
+        builder.AddAngleSensor(joints[1], builder.LinksAt(joints[1])[0].Id, wheel);
+        builder.AddAngleSensor(joints[2], fixedLinkId: null, builder.LinksAt(joints[2])[0].Id);
+        var creature = builder.Build();
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        repository.Save(walker.WithCreature(creature, training: null));
+
+        repository.Get(walker.Id)!.Creature.AngleSensors.ShouldBe(creature.AngleSensors);
+        creature.AngleSensors.Select(sensor => (sensor.Name, sensor.TargetLinkId == wheel, sensor.FixedLinkId is null))
+            .ShouldBe([("Knee", false, false), (null, true, false), (null, false, true)]);
+    }
+
     // #1039: a creature saved before Brakes has none.
     [Fact]
     public void AVersion11Save_GetsNoBrakes_AndIsWrittenBackInTheCurrentVersion()
@@ -746,6 +800,7 @@ public sealed class CreationVersioningTests : IDisposable
         file["creature"]!.AsObject()["rubbers"] = new JsonArray();
         file["creature"]!.AsObject()["velocityMotors"] = new JsonArray();
         file["creature"]!.AsObject()["brakes"] = new JsonArray();
+        file["creature"]!.AsObject()["angleSensors"] = new JsonArray();
     }
 
     private static CreationDef LoadFixture013(string name) =>
@@ -773,10 +828,19 @@ public sealed class CreationVersioningTests : IDisposable
         return JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(wheels, walker.Training)))!.AsObject();
     }
 
+    // The 0.13.0 walker as version 12 wrote it, before Angle sensors (#1204).
+    private static JsonObject Version12Walker()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file[_versionField] = 12;
+        file["creature"]!.AsObject().Remove("angleSensors");
+        return file;
+    }
+
     // The 0.13.0 walker as version 11 wrote it, before Brakes (#1039).
     private static JsonObject Version11Walker()
     {
-        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        var file = Version12Walker();
         file[_versionField] = 11;
         file["creature"]!.AsObject().Remove("brakes");
         return file;

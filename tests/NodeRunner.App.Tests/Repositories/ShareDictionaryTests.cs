@@ -37,6 +37,10 @@ public sealed class ShareDictionaryTests
     // It must read for good, so version 11's dictionary never changes.
     private const string _rollerInVersion11 = "NR11.g-evoPycHCLzF7hBgy1fGMBaO1gkIVJAJVhyhQkoS2AGLVIJZ4QnCMxxV-Mm6CFgCvI0ACeIRoA";
 
+    // Three joints, two beams and a Brake, coded in version 12 before #1204 added Angle sensors.
+    // It must read for good, so version 12's dictionary never changes.
+    private const string _benderInVersion12 = "NR12.g2d3p9S8FCKzO7gBhy2bGsBad1gkIVJAJVgyqQkoh2IGjhnu9ogJug9NQb4BAFDjhSs";
+
     public static TheoryData<int> Versions() => new(Enumerable.Range(_firstVersion, FileCreationRepository.Format.CurrentVersion - _firstVersion + 1));
 
     [Fact]
@@ -137,6 +141,20 @@ public sealed class ShareDictionaryTests
         read.UpdatedFrom.ShouldBe(11);
     }
 
+    [Fact]
+    public void ACodeFromVersion12_StillReads_WithoutAngleSensors()
+    {
+        var read = CreationShareCode.Read(_benderInVersion12);
+
+        var build = read.Build.ShouldNotBeNull();
+        build.Name.ShouldBe("Bender");
+        var creature = build.Creature;
+        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0), new Vector2D(0, 100)]);
+        creature.Brakes.ShouldBe([new BrakeDef(6, 1, 4, 5)]);
+        creature.AngleSensors.ShouldBeEmpty();
+        read.UpdatedFrom.ShouldBe(12);
+    }
+
     // A walker with every kind of part at its settings as Build adds it and named as a new creation
     // is (NewCreationWorkflow.UntitledName), so a code leaves out what it didn't change.
     private static CreationDef Template()
@@ -154,7 +172,7 @@ public sealed class ShareDictionaryTests
         builder.AddPiston(back, frontFoot);
         builder.AddSpring(front, backFoot);
         builder.AddServo(back);
-        builder.AddServo(front);
+        builder.AddAngleSensor(front);
         builder.AddWheel(frontFoot);
         builder.AddTouchSensor(backFoot);
         builder.AddRubber(backFoot);
@@ -199,6 +217,7 @@ public sealed class ShareDictionaryTests
         builder.SetParameter(velocityMotor, PartParameterId.MotorMaxSpeed, 4);
         builder.SetParameter(builder.AddBrake(backFoot, backLeg, wheel), PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
         builder.SetParameter(builder.AddBrake(frontFoot), PartParameterId.BrakeStrength, 1200000);
+        builder.Rename(builder.AddAngleSensor(tail), "Tail");
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 

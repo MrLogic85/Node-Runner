@@ -42,7 +42,7 @@ public partial class CreatureParts : Node2D
     public void Show(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes), CreatureMarks.None);
+        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors), CreatureMarks.None);
     }
 
     /// <summary>
@@ -78,7 +78,8 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.MotorsAndBrakes, shape.Wheels, shape.TouchSensors, shape.Rubbers);
+            part.Selected = (marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.MotorsAndBrakes, shape.Wheels, shape.TouchSensors, shape.Rubbers))
+                || AngleSensorSelectedAt(shape, marks, node.Id);
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasMotor(shape, marks, node.Id);
             part.ShowsHub = HasWheelAndNoServo(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
@@ -94,6 +95,10 @@ public partial class CreatureParts : Node2D
             part.PlacingRadius = (float)(takes ? marks.Placing.JointRingOf(node.Id) : NodeRadius(shape, node.Id));
         }
     }
+
+    // An Angle sensor is drawn as its plain joint until its picture (#1205), so the joint shows its mark.
+    private static bool AngleSensorSelectedAt(CreatureShape shape, CreatureMarks marks, int nodeId) =>
+        shape.AngleSensors.Any(angleSensor => angleSensor.NodeId == nodeId && marks.Selected.AngleSensors.Contains(angleSensor.Id));
 
     // A joint's radius as drawn, with a previewed motor or Wheel, so a cushion sits round it.
     private static double ShownRadius(CreatureShape shape, CreatureMarks marks, int nodeId) =>
