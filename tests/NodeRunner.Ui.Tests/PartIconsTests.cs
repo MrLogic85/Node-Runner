@@ -10,8 +10,7 @@ public sealed class PartIconsTests
     [Fact]
     public void EveryPartKind_HasItsOwnGlyph()
     {
-        // The Angle sensor's glyph comes with its tray icon (#1206).
-        var icons = Enum.GetValues<PartSettingsKind>().Where(kind => kind != PartSettingsKind.AngleSensor).Select(PartIcons.For).ToList();
+        var icons = Enum.GetValues<PartSettingsKind>().Select(PartIcons.For).ToList();
 
         icons.ShouldNotContain(UiIconId.None);
         icons.ShouldBeUnique();

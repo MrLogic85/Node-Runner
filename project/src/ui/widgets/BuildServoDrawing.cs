@@ -7,8 +7,9 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// Build canvas marks for joint parts: the link bands of a selected Servo, Velocity motor (#454) or
-/// Brake (#1041), a Wheel side's under its tyre (#1118). The bands name the sides, so a Brake's are a motor's.
+/// Build canvas marks for joint parts: the link bands of a selected Servo, Velocity motor (#454),
+/// Brake (#1041) or Angle sensor (#1205), a Wheel side's under its tyre (#1118). The bands name the sides,
+/// so a Brake's or Angle sensor's are a motor's.
 /// </summary>
 public static class BuildServoDrawing
 {
@@ -21,6 +22,7 @@ public static class BuildServoDrawing
         IMotorOrBrakeDef? motor = viewModel.SingleSelectedServoId is { } servoId ? viewModel.Servos[viewModel.ServoIndexOf(servoId)]
             : viewModel.SingleSelectedVelocityMotorId is { } motorId ? viewModel.VelocityMotors[viewModel.VelocityMotorIndexOf(motorId)]
             : viewModel.SingleSelectedBrakeId is { } brakeId ? viewModel.Brakes[viewModel.BrakeIndexOf(brakeId)]
+            : viewModel.SingleSelectedAngleSensorId is { } angleSensorId ? viewModel.AngleSensors[viewModel.AngleSensorIndexOf(angleSensorId)]
             : null;
         if (motor is null)
         {

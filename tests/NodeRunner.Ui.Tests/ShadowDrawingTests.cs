@@ -29,6 +29,7 @@ public sealed class ShadowDrawingTests
         AsShadow<WheelVisual>().ShouldBe(ShadowDrawing.Simplified);
         AsShadow<VelocityMotorVisual>().ShouldBe(ShadowDrawing.Simplified);
         AsShadow<BrakeVisual>().ShouldBe(ShadowDrawing.Simplified);
+        AsShadow<AngleSensorVisual>().ShouldBe(ShadowDrawing.Simplified);
     }
 
     private static ShadowDrawing AsShadow<T>()

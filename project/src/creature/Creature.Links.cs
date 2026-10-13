@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
-// Builds the links between body parts: Servos, Velocity motors and Brakes on joints, Pistons with their end stops, and Springs.
+// Builds the links between body parts: Servos, Velocity motors, Brakes and Angle sensors on joints, Pistons with their end stops, and Springs.
 public partial class Creature
 {
     private void CreateServos(CreatureDef definition)
@@ -94,9 +94,39 @@ public partial class Creature
     }
 
     // An Angle sensor (#1204) reads its sides as a Velocity motor does and never turns them, so it adds
-    // no joint and no torque. Drawn as a plain joint until its picture (#1205).
-    private void CreateAngleSensors(CreatureDef definition) =>
-        _angleSensors = [.. definition.AngleSensors.Select(angleSensor => new AngleSensorJoint(angleSensor, MotorSidesFor(definition, angleSensor)))];
+    // no joint and no torque. Its arc (#1205) sits outside its joint's Rubber skin or Touch sensor's cushion,
+    // with its knock-out under the whole creature.
+    private void CreateAngleSensors(CreatureDef definition)
+    {
+        _angleSensors = new AngleSensorJoint[definition.AngleSensors.Count];
+        _angleSensorVisuals = new AngleSensorVisual[definition.AngleSensors.Count];
+        for (var i = 0; i < definition.AngleSensors.Count; i++)
+        {
+            var angleSensor = definition.AngleSensors[i];
+            _angleSensors[i] = new AngleSensorJoint(angleSensor, MotorSidesFor(definition, angleSensor));
+            var sides = _angleSensors[i].Sides;
+            var arcRadius = AngleSensorGeometry.ArcRadius(
+                rubber: definition.Rubbers.Any(rubber => rubber.NodeId == angleSensor.NodeId),
+                touch: definition.TouchSensors.Any(touch => touch.NodeId == angleSensor.NodeId));
+            var knockout = CreateKnockout(Vector2.Zero, Vector2.Zero, AngleSensorGeometry.ArcWidth / 2);
+            knockout.Position = sides.JointLocalPosition;
+            var visual = new AngleSensorVisual
+            {
+                Name = $"AngleSensor{i}Visual",
+                Theme = Theme,
+                Sides = sides,
+                Knockout = knockout,
+                ArcRadius = arcRadius,
+                Position = sides.JointLocalPosition,
+                FixedAngle = (float)sides.FixedRotation,
+                TargetAngle = (float)sides.TargetRotation,
+            };
+            knockout.Path = visual.Arc;
+            AddChild(knockout);
+            AddChild(visual);
+            _angleSensorVisuals[i] = visual;
+        }
+    }
 
     // A Locked Brake welds its two sides' bodies with a second joint away from the joint's own pin:
     // two joints hold two bodies rigidly, inside Godot's solver, so no load can turn the joint. A

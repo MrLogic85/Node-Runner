@@ -17,12 +17,16 @@ UI around the world is in `docs/UI_DIRECTION.md`. Drawing code rules are in
 - Beams are 6 wide (`UiSize.Widget.CreatureBeamWidth`); part outlines are
   `stroke-signal`. A stroke width may show a setting (#835): it starts at a
   hairline and its drawing names its maximum.
+- A thin mark drawn over links may carry a `background` `stroke-hair`
+  knock-out edge each side, so it parts from what it crosses (#1205).
 
 ## Parts
 
-Every *joint motor* (`docs/GLOSSARY.md` → Joint motor) stands in for its
-joint's ring in the same place, so a rule that says joint motor draws alike
-for each.
+Every part in a joint's motor-or-brake slot (`docs/CREATURE_MODEL.md` →
+Node → One part per slot), a *joint motor* (`docs/GLOSSARY.md` → Joint
+motor), Brake or Angle sensor, stands in for its joint's ring in the same
+place. A rule that names only joint motors means Servos and Velocity motors
+alike.
 
 ### Joint
 
@@ -31,7 +35,7 @@ outer edge is `NodeDef.PlainJointRadius`, a `stroke-hair` inner ring at 0.55
 of that radius, and an `alpha_soft` tint (`line-strong`, `halo` when
 selected, `danger` when loose) on an opaque `background` disc. A bare loose
 joint shows a `danger` ring and cross instead of the inner ring. A joint motor,
-Brake or Wheel on a loose joint shows the error in its own `danger` look instead, with
+Brake, Angle sensor or Wheel on a loose joint shows the error in its own `danger` look instead, with
 no ring or cross over it (#1140). A Touch sensor's cushion and a Rubber's
 skin have no `danger` look, so a loose joint with only those keeps the ring
 and cross.
@@ -40,7 +44,7 @@ Every link (beam, Piston, Spring) runs from hub to hub (#1086): it stops flat
 `NodeDef.HubRadius` (a plain joint's radius) from each joint's centre,
 whatever sits on the joint. Its drawing ends under the middle of the ring
 or hub ring there, so it runs over a Wheel's face and under a ring, hub,
-joint motor or Brake.
+joint motor, Brake or Angle sensor.
 
 ### Beam and rigid triangle
 
@@ -122,6 +126,41 @@ is solid, with no hand: one piece. It has no other live cue.
 A Brake missing a side draws in `danger` with the Servo's "!" badge, as a
 Motor does.
 
+### Angle sensor
+
+A ring and an arc (#1205), drawn by one part (`AngleSensorPart`; the angles
+are in `AngleSensorGeometry`):
+
+- the ring, standing in for the joint's ring or a Wheel's hub (no axle
+  dot), as a Brake does: an opaque `panel` disc on a `background` disc
+  with a plain joint's ring (outer edge `NodeDef.PlainJointRadius`,
+  `stroke-signal`) and inner ring, both `accent`. The `accent` ring tells it
+  from a plain joint, even at 0° and in thumbnails;
+- the arc, a plain `accent` `stroke-signal` line with round ends, no
+  arrowhead or tick, from the Fixed side's direction to the Target side's,
+  each end on its side's centre line, over the links, with a knock-out
+  edge that parts it from the links it crosses, a Piston's cylinder or a
+  beam in its angle, and rims its round ends where they lie on the two
+  sides' links. It shows the angle
+  the brain reads (`docs/CREATURE_MODEL.md` → Angle sensor → Reading) and
+  spans the shortest way, 0–180°: up to and at 180° it runs
+  counter-clockwise on screen from the Fixed side, past it clockwise, so it
+  flips sides at 180° with no hysteresis. With the sides in line its ends
+  meet in a dot 2 across.
+
+The arc's centre line is `SelectionMarks.Gap` (3) plus half its width
+outside the joint's outermost part: 19 on a bare joint, 22 with a Rubber's
+skin, 24 with a Touch sensor's cushion, never on it. A Wheel changes
+nothing, so on its joint the arc runs over the tyre's inside and tubes. A
+Wheel side points along the Wheel's tube 0, its built rightward direction,
+turning with the Wheel (#1118). The arc is only drawn: it adds no collider
+and no tap area.
+
+Training draws it from the sides' live directions, Build at rest. It has no
+cue for speed. An Angle sensor missing a side, as on a loose joint (#1140),
+draws its ring in `danger` with the Servo's "!" badge and no arc.
+Thumbnails draw it as in Build, badge included.
+
 ### Piston
 
 A telescoping rod from joint A to joint B. The cylinder starts at the edge
@@ -159,7 +198,7 @@ every theme, with no tint:
   apart, each a 26° arc 3.75 units inside the edge, `stroke-signal` with
   round ends. They turn with the wheel in Training and sit at rotation 0 in
   Build. Their number stays the same at every Radius;
-- the hub, while no joint motor sits on the joint: an opaque `background` disc
+- the hub, while no joint motor, Brake or Angle sensor sits on the joint: an opaque `background` disc
   the size of a plain joint with a `detail` `stroke-signal` ring and a
   2.6-unit axle dot. The joint draws it where its ring would go, over the
   links (Draw layers), so links end under it like under a ring and only the
@@ -174,9 +213,10 @@ A skin around its joint (#1142): a solid `detail` band 3 units wide
 (`RubberDef.Skin`) just outside the joint's largest drawn radius R, the
 tyre on a Wheel's joint, so a Wheel with a Rubber reads as a thicker tyre.
 It draws on its joint after a Touch sensor's cushion, so it covers the
-cushion's inner part, and under the ring, hub or joint motor, which may
-cover part of it. The skin is only drawn (`docs/CREATURE_MODEL.md` →
-Rubber → Size). Thumbnails draw it; shadows do not.
+cushion's inner part, and under the ring, hub, joint motor, Brake or Angle
+sensor, which may cover part of it. Off a Wheel's joint, an Angle
+sensor's arc goes round it (Angle sensor). The skin is only drawn
+(`docs/CREATURE_MODEL.md` → Rubber → Size). Thumbnails draw it; shadows do not.
 
 ### Touch sensor
 
@@ -185,8 +225,9 @@ just outside the joint's largest drawn radius R, the tyre on a Wheel's
 joint. Its colour is the brain's reading
 (`docs/CREATURE_MODEL.md` → Touch sensor → Reading): `accent` at
 `alpha_soft` at 0 and in Build, solid `accent` at 1, blended between. It
-draws first on its joint, under the ring, hub or joint motor,
-which may cover part of it. It is drawn only
+draws first on its joint, under the ring, hub, joint motor, Brake or
+Angle sensor, which may cover part of it. Off a Wheel's joint, an Angle
+sensor's arc goes round it (Angle sensor). It is drawn only
 (`docs/CREATURE_MODEL.md` → Touch sensor → Size). Thumbnails draw it at
 rest.
 
@@ -210,7 +251,8 @@ where `docs/CREATURE_MODEL.md` → Sensor puts it (#1086).
 
 Every mark sits `SelectionMarks.Gap` (3) outside its own part's drawn edge
 (#710) and is drawn over it, so no part's mark moves for another part on the
-same joint: a Touch sensor's sits outside its cushion, the others inside it.
+same joint: a Touch sensor's sits outside its cushion and an Angle sensor's
+outside its arc, the others inside the cushion.
 
 - **Joint:** an unfilled 2-wide `halo` ring.
 - **Beam or link:** two 2-wide `halo` lines, one on each side, stopping at
@@ -239,6 +281,10 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
 - **Brake:** a 2-wide `halo` ring round it, like a joint's, with the
   Servo's Fixed and Target bands in their colours (`docs/UI_DIRECTION.md`
   → Reference token mapping deviations → `detail`).
+- **Angle sensor:** a 2-wide `halo` ring a Gap outside the arc's outer
+  edge (centre line at the arc's radius + 5, 24 on a bare joint), with the
+  Servo's Fixed and Target bands; its ring and arc stay `accent`. A Touch
+  sensor's mark on the same joint may overlap the arc.
 - **Link travel (#704, #835, #931):** stops are `halo` `stroke-signal`
   ticks, as wide as a Piston's cylinder or a Spring's seats,
   joined by a dashed line; a Spring's rest length is a 3-unit `halo` ring.
@@ -255,7 +301,7 @@ same joint: a Touch sensor's sits outside its cushion, the others inside it.
 A creature draws on two surfaces, the unselected parts and over them the
 selected ones, which draw alike (#1107). Each surface draws from the bottom
 up: its parts, then the joints joined to no link; the selected surface
-starts with a selected joint motor's or Brake's bands (Selection marks). On top
+starts with a selected joint motor's, Brake's or Angle sensor's bands (Selection marks). On top
 of both go the overlays (camera rays, link travel marks, the link drag and
 sensor move lines, the picked link's start rings, the link a link drag
 replaces, the selection frame). Training's knock-out outline and the rigid
@@ -266,10 +312,12 @@ Training and never changes while the creature moves (`DrawGroups`). The link
 whose lower end sits highest on screen draws first, so what is lower is
 nearer; ties keep link id order. Within a group: a Wheel (with its joint's
 first link), the link, its sensor, then a joint's Touch cushion, Rubber skin, ring,
-Wheel hub, joint motor or Brake (with its joint's last link). So a link covers a Wheel's face and a ring
-or hub covers its link's end. Joint motors, Brakes, joints, hubs and tyre bands are
-filled, so nothing shows through them; a Wheel's face inside the tyre is
-see-through.
+Wheel hub, joint motor, Brake or Angle sensor (with its joint's last
+link). So a link covers a Wheel's face and a ring or hub covers its link's
+end. An Angle sensor's arc draws with its ring, after its joint's links,
+skin and cushion, so it lies over the links and a Wheel's tubes. Joint
+motors, Brakes, Angle sensors, joints, hubs and tyre bands are filled, so
+nothing shows through them; a Wheel's face inside the tyre is see-through.
 
 The selected surface takes a selected joint or joint part with its links
 and their ends, a selected link with its ends, every link whose ends both
@@ -400,7 +448,9 @@ and their overlaps readable.
   `stroke-signal` wider than each beam and joint, so it stands clear. On a
   Touch sensor's joint it runs past the cushion, to R + 7, so the cushion
   cuts the ground line where it rests on it; on a Rubber's joint without
-  one it runs past the skin the same way (#1142).
+  one it runs past the skin the same way (#1142). It also runs along an
+  Angle sensor's arc, as along a beam, so the arc never merges into the
+  ground line (#1205).
 - The leader is not marked: the lead changes too often (#387).
 
 How each part draws as a shadow (the rule is `project/src/creature/AGENTS.md`
@@ -412,6 +462,8 @@ rule 10):
 - **Motor:** its outer ring and a circle round the coils; no
   magnets, and it does not turn.
 - **Brake:** its outer ring and its disc's ring; it does not turn.
+- **Angle sensor:** a plain shadow joint, its outer ring only: shadows
+  draw no sensors.
 - **Wheel:** the plain circle at its Radius: no tubes or line, and its
   joint's outer ring at the hub, like any shadow joint.
 - **Beam:** its line.

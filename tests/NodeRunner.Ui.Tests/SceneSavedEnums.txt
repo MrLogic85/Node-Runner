@@ -58,6 +58,7 @@ NodeRunner.Ui.Lib.UiIconId.Move=20
 NodeRunner.Ui.Lib.UiIconId.Mute=21
 NodeRunner.Ui.Lib.UiIconId.None=-1
 NodeRunner.Ui.Lib.UiIconId.PartAccelerometer=61
+NodeRunner.Ui.Lib.UiIconId.PartAngleSensor=73
 NodeRunner.Ui.Lib.UiIconId.PartBattery=40
 NodeRunner.Ui.Lib.UiIconId.PartBeam=41
 NodeRunner.Ui.Lib.UiIconId.PartBrake=42

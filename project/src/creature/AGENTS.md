@@ -103,6 +103,7 @@ file owns how Godot realises it.
 - `ServoJoint.cs`, `VelocityMotorJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
 - `BrakeJoint.cs` — a Brake's friction on its sides
 - `AngleSensorJoint.cs` — an Angle sensor's reading of its sides
+  (`AngleSensorVisual.cs` draws its arc from the same `MotorSides`, #1205)
 - `*Visual.cs` — rendering only: Training's adapters over the shared part
   visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds
   `IShadowVisual`

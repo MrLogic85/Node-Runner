@@ -13,8 +13,10 @@ namespace NodeRunner.Theme;
 /// </summary>
 public static class JointDrawing
 {
+    /// <summary>The inner ring's radius as a share of the joint's.</summary>
+    public const float InnerRingPerRadius = 0.55f;
+
     private const int _ringSegments = 48;
-    private const float _innerRingPerRadius = 0.55f;
 
     /// <summary>
     /// The joint at <paramref name="center"/> with <paramref name="radius"/>, tinted for its
@@ -50,7 +52,7 @@ public static class JointDrawing
 
         if (!simplified && look != JointLook.Loose)
         {
-            canvas.DrawArc(at, radius * _innerRingPerRadius * scale, 0, Mathf.Tau, _ringSegments, theme.Beam, theme.JointInnerRingWidth * scale, antialiased: true);
+            canvas.DrawArc(at, radius * InnerRingPerRadius * scale, 0, Mathf.Tau, _ringSegments, theme.Beam, theme.JointInnerRingWidth * scale, antialiased: true);
         }
 
         canvas.DrawSetTransformMatrix(drawTransform);
