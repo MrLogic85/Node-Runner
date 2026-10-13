@@ -640,12 +640,11 @@ public partial class Creature : Node2D
             var b = ToGodot(definition.Nodes[triangle.NodeB].Position);
             var c = ToGodot(definition.Nodes[triangle.NodeC].Position);
             var toBeam = _beamBodies[beamIndex].Transform.AffineInverse();
-            var jointRadius = ToGodotFloat(definition.NodeRadius(definition.Nodes[triangle.NodeA].Id), nameof(JointMotor.Radius));
             var visual = new RigidHatchVisual
             {
                 Name = $"Hatch{hatches.Count}",
                 Theme = Theme,
-                Lines = TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, jointRadius)
+                Lines = TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing)
                     .SelectMany(line => new[] { toBeam * line.Start, toBeam * line.End })
                     .ToArray(),
                 Triangles = [toBeam * a, toBeam * b, toBeam * c],
