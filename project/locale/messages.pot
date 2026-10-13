@@ -124,7 +124,16 @@ msgid "An example error. Toggle Visible to preview."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartSettingsPresentation.cs
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Angle sensor"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Angle sensors"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.AngleSensors.cs
+msgid "Angle sensors go on a joint"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartNames.cs
@@ -669,7 +678,11 @@ msgid "On this joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "One Servo, Motor or Brake per joint"
+msgid "One Servo, Motor, Brake or Angle sensor per joint"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
+msgid "One Touch sensor per joint"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -682,10 +695,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "One sensor per beam"
-msgstr ""
-
-#: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "One sensor per joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -1026,15 +1035,15 @@ msgid "Tap a beam to place it. A beam holds one sensor."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a joint to place it. A joint holds one Servo, Motor or Brake."
+msgid "Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Tap a joint to place it. A joint holds one Touch sensor."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Tap a joint to place it. A joint holds one rubber."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a joint to place it. A joint holds one sensor."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
@@ -1065,6 +1074,10 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Target link"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Tells the brain the angle between its two sides, and how fast it turns."
 msgstr ""
 
 #: project/src/hosts/BuildHost.cs

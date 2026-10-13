@@ -66,7 +66,7 @@ public sealed class BuildBrakeTests
 
         build.CanPlacePart(second, _middleJoint, out var reason).ShouldBeFalse();
 
-        reason.ShouldBe(UiText.Plain("One Servo, Motor or Brake per joint"));
+        reason.ShouldBe(UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint"));
     }
 
     [Fact]

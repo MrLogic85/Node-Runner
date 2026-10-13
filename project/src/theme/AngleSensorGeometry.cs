@@ -16,16 +16,11 @@ public static class AngleSensorGeometry
     /// <summary>The ring's outer edge: a plain joint's, which it stands in for.</summary>
     public const float Radius = (float)NodeDef.PlainJointRadius;
 
-    /// <summary>The arc's width, <c>stroke-signal</c>, which is also the dot it draws at 0°.</summary>
-    public const float ArcWidth = UiSize.Stroke.Signal;
+    /// <summary>The arc's width, <c>stroke-signal</c>, which is also the dot it draws at 0° (<see cref="AngleSensorDef.ArcWidth"/>).</summary>
+    public const float ArcWidth = (float)AngleSensorDef.ArcWidth;
 
     /// <summary>The arc's <c>background</c> knock-out edge on each side, <c>stroke-hair</c>.</summary>
     public const float KnockoutWidth = UiSize.Stroke.Hair;
-
-    /// <summary>The selection halo's width, <c>stroke-signal</c>.</summary>
-    public const float HaloWidth = UiSize.Stroke.Signal;
-
-    private const float _gap = (float)SelectionMarks.Gap;
     private const int _segmentsPerTurn = 64;
 
     // Below this sweep the arc's ends are closer than a hundredth of a unit, so it draws as the dot.
@@ -34,20 +29,6 @@ public static class AngleSensorGeometry
     // The sides' rotations are rounded separately, so a straight limb can read a few ulps past half a
     // turn; within this it still counts as exactly half a turn and runs counter-clockwise.
     private const float _halfTurnSlack = 0.00001f;
-
-    /// <summary>
-    /// The arc's centre line: <see cref="SelectionMarks.Gap"/> outside the joint's outermost part, a
-    /// Touch sensor's cushion over a Rubber's skin over the ring. A Wheel on the joint changes nothing,
-    /// so on its joint the arc lies over the tyre's inside and tubes.
-    /// </summary>
-    public static float ArcRadius(bool rubber, bool touch) =>
-        Radius
-        + (touch ? (float)TouchSensorDef.Cushion : rubber ? (float)RubberDef.Skin : 0)
-        + _gap
-        + (ArcWidth / 2);
-
-    /// <summary>The selection halo's centre line, <see cref="SelectionMarks.Gap"/> outside the arc's outer edge.</summary>
-    public static float HaloRadius(float arcRadius) => arcRadius + (ArcWidth / 2) + _gap + (HaloWidth / 2);
 
     /// <summary>
     /// The angle the brain reads, the Target side's direction minus the Fixed side's, counter-clockwise

@@ -29,8 +29,7 @@ public partial class BuildCanvas
                 continue;
             }
 
-            var radius = (float)SelectionMarks.JointHalo(_viewModel.NodeRadius(node.Id));
-            pen.DashedRing(ToGodot(node.Position), radius, _ringDashes, _ringDashSegments, Theme.SelectionGlow, Stroke(Theme.SelectionRingWidth));
+            pen.DashedRing(ToGodot(node.Position), LinkRingRadius(node.Id), _ringDashes, _ringDashSegments, Theme.SelectionGlow, Stroke(Theme.SelectionRingWidth));
         }
     }
 
@@ -111,15 +110,18 @@ public partial class BuildCanvas
             if (nodeId is { } id)
             {
                 var node = NodeById(id);
-                pen.Ring(ToGodot(node.Position), (float)SelectionMarks.JointHalo(_viewModel.NodeRadius(node.Id)), Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth));
+                pen.Ring(ToGodot(node.Position), LinkRingRadius(node.Id), Theme.SelectionGlow, Stroke(Theme.MotorSignalWidth));
             }
         }
 
         if (_gestures.RefusedTargetNodeId is { } refused)
         {
             var node = NodeById(refused);
-            var radius = (float)SelectionMarks.JointHalo(_viewModel.NodeRadius(node.Id));
-            pen.DashedRing(ToGodot(node.Position), radius, _ringDashes, _ringDashSegments, Theme.Danger, Stroke(Theme.MotorSignalWidth));
+            pen.DashedRing(ToGodot(node.Position), LinkRingRadius(node.Id), _ringDashes, _ringDashSegments, Theme.Danger, Stroke(Theme.MotorSignalWidth));
         }
     }
+
+    // A link's rings sit at the joint's JointHalo, clear of an Angle sensor's arc (#1206).
+    private float LinkRingRadius(int nodeId) =>
+        (float)SelectionMarks.JointHalo(_viewModel!.RingRadiusAt(nodeId, _viewModel.NodeRadius(nodeId)));
 }

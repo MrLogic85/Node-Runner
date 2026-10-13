@@ -134,7 +134,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// True for a locked Creation (#896): it refuses every edit that would change its model, adding or
     /// deleting a part with brain ports or clearing a Servo's link. Joints, beams, Springs and Wheels
-    /// have no ports, so they can still be added and deleted, unless a delete takes a joint's Touch sensor. A Rubber has none either (#1142).
+    /// have no ports, so they can still be added and deleted, unless a delete takes a joint's Touch sensor. A Rubber (#1142)
+    /// and a Brake (#1041) have none either.
     /// </summary>
     public bool IsLocked => _locked;
 
@@ -421,7 +422,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>The Brakes (#1039, #1041).</summary>
     public IReadOnlyList<BrakeDef> Brakes => _builder.Brakes;
 
-    /// <summary>The Angle sensors (#1204). Build draws one (#1205) but cannot place or set one up yet (#1206).</summary>
+    /// <summary>The Angle sensors (#1204, #1206).</summary>
     public IReadOnlyList<AngleSensorDef> AngleSensors => _builder.AngleSensors;
 
     public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;
@@ -782,7 +783,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees
     /// (<see cref="DrawGroups.PartAt"/>), with the selection and the <paramref name="targets"/> on
-    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A motor, Brake (#1041) or Wheel
+    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A motor, Brake (#1041), Angle sensor (#1206) or Wheel
     /// is hit as its joint; a Touch sensor (#1045) and a Rubber (#1142) add no tap area. Null off every part.
     /// </summary>
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)

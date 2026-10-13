@@ -842,10 +842,9 @@ public sealed class BuildPresentationViewModelTests
         readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 2));
     }
 
-    // The Angle sensor's panel is #1206's: until then a loaded one (from a share code, say) is counted
-    // by readiness and selected without a panel, never throwing.
+    // A loaded one, from a share code say, is counted by readiness, and its panel asks for the side.
     [Fact]
-    public void ALoadedAngleSensorMissingALink_IsCountedInReadiness_AndSelectsWithoutAPanel()
+    public void ALoadedAngleSensorMissingALink_IsCountedInReadiness_AndItsPanelAsksForTheSide()
     {
         var build = new BuildViewModel();
         build.Load(new CreatureDef(
@@ -867,7 +866,7 @@ public sealed class BuildPresentationViewModelTests
 
         presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} part missing a link", "{0} parts missing a link", 1));
         build.SingleSelectedAngleSensorId.ShouldBe(7);
-        presentation.SinglePart.ShouldBeNull();
+        presentation.SinglePart!.Pickers!.Select(picker => (picker.SelectedIndex, picker.Placeholder)).ShouldBe([(0, null), (null, UiText.Plain("Pick a Target link"))]);
     }
 
     [Theory]

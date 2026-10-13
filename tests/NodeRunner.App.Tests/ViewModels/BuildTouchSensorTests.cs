@@ -42,7 +42,7 @@ public sealed class BuildTouchSensorTests
 
         build.PlacePart(BuildPart.TouchSensor, _middleJoint).ShouldNotBeNull();
         build.PlacePart(BuildPart.TouchSensor, _middleJoint).ShouldBeNull();
-        build.PlacementNote!.Text.ShouldBe(UiText.Plain("One sensor per joint"));
+        build.PlacementNote!.Text.ShouldBe(UiText.Plain("One Touch sensor per joint"));
         build.TouchSensors.Count.ShouldBe(1);
     }
 

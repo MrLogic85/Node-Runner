@@ -2,6 +2,7 @@ using Godot;
 using NodeRunner.Domain;
 using NodeRunner.Mechanics;
 using NodeRunner.Theme;
+using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
@@ -12,7 +13,7 @@ public sealed class AngleSensorGeometryTests
     private const float _quarter = Mathf.Pi / 2;
     private const float _justUnder = 1e-3f;
 
-    private static readonly float _bare = AngleSensorGeometry.ArcRadius(rubber: false, touch: false);
+    private static readonly float _bare = (float)AngleSensorDef.ArcRadius(rubber: false, touch: false);
 
     [Fact]
     public void Ring_StandsInForAPlainJoint()
@@ -82,6 +83,15 @@ public sealed class AngleSensorGeometryTests
         AngleSensorGeometry.ArcWidth.ShouldBe(2);
     }
 
+    // The Domain sets the widths the arc and halo are drawn with, so Build's rings can clear the arc (#1206);
+    // they stay the stroke-signal token, as every other selection ring (VisualTheme.SelectionRingWidth).
+    [Fact]
+    public void ArcAndHalo_AreDrawnStrokeSignalWide()
+    {
+        AngleSensorGeometry.ArcWidth.ShouldBe(UiSize.Stroke.Signal);
+        AngleSensorDef.HaloWidth.ShouldBe(UiSize.Stroke.Signal);
+    }
+
     [Theory]
     [InlineData(0.4f, 1.9f)]
     [InlineData(-0.7f, 2.6f)]
@@ -125,23 +135,6 @@ public sealed class AngleSensorGeometryTests
         ShouldBeNear(
             AngleSensorGeometry.ArcPoints(_bare, ScreenRotation(fixedFar), ScreenRotation(targetFar))[^1],
             new Vector2((float)targetX, (float)targetY).Normalized() * _bare);
-    }
-
-    [Theory]
-    [InlineData(false, false, 19)]
-    [InlineData(true, false, 22)]
-    [InlineData(false, true, 24)]
-    [InlineData(true, true, 24)]
-    public void ArcRadius_LiesAGapOutsideTheJointsOutermostPart(bool rubber, bool touch, float radius)
-    {
-        AngleSensorGeometry.ArcRadius(rubber, touch).ShouldBe(radius);
-    }
-
-    [Fact]
-    public void Halo_LiesAGapOutsideTheArc()
-    {
-        AngleSensorGeometry.HaloRadius(_bare).ShouldBe(24);
-        AngleSensorGeometry.HaloRadius(AngleSensorGeometry.ArcRadius(rubber: false, touch: true)).ShouldBe(29);
     }
 
     // A Wheel side's direction is its tube 0 (#1118), which turns with the Wheel's body.

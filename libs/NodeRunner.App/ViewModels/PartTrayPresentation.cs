@@ -12,6 +12,7 @@ public enum BuildPart
     Wheel,
     Rubber,
     TouchSensor,
+    AngleSensor,
     Accelerometer,
     Camera,
     Pulse,
@@ -112,6 +113,7 @@ public static class PartTray
         BuildPart.Camera => PartInfo.Camera,
         BuildPart.TouchSensor => PartInfo.Touch,
         BuildPart.Rubber => PartInfo.Rubber,
+        BuildPart.AngleSensor => PartInfo.AngleSensor,
         _ => null,
     };
 
@@ -120,9 +122,9 @@ public static class PartTray
     {
         _ when SensorKindOf(part) is not null => UiText.Plain("Tap a beam to place it. A beam holds one sensor."),
         BuildPart.Wheel => UiText.Plain("Tap a joint to place it. A joint holds one wheel."),
-        BuildPart.TouchSensor => UiText.Plain("Tap a joint to place it. A joint holds one sensor."),
+        BuildPart.TouchSensor => UiText.Plain("Tap a joint to place it. A joint holds one Touch sensor."),
         BuildPart.Rubber => UiText.Plain("Tap a joint to place it. A joint holds one rubber."),
-        _ => UiText.Plain("Tap a joint to place it. A joint holds one Servo, Motor or Brake."),
+        _ => UiText.Plain("Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor."),
     };
 
     /// <summary>
@@ -147,19 +149,20 @@ public static class PartTray
         _ => null,
     };
 
-    /// <summary>Whether a tray part goes on a joint (a Servo, a Velocity motor, #454, a Brake, #1041, a Wheel, #129, a Touch sensor, #1045, or a Rubber, #1142) rather than on a beam.</summary>
-    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.VelocityMotor or BuildPart.Brake or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber;
+    /// <summary>Whether a tray part goes on a joint (a Servo, a Velocity motor, #454, a Brake, #1041, a Wheel, #129, a Touch sensor, #1045, a Rubber, #1142, or an Angle sensor, #1206) rather than on a beam.</summary>
+    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.VelocityMotor or BuildPart.Brake or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber or BuildPart.AngleSensor;
 
     /// <summary>
     /// The radius of the joint part <paramref name="placing"/> as placed on a joint drawn
     /// <paramref name="jointRadius"/> wide, round which the canvas marks that joint while it is
-    /// placed (#1055); see <see cref="IsJointPart"/>. A Brake (#1041) is drawn at a hub's size; a Touch
-    /// sensor's cushion (#1045) and a Rubber's skin (#1142) go round the joint's largest part.
+    /// placed (#1055); see <see cref="IsJointPart"/>. A Brake (#1041) and an Angle sensor's ring (#1205) are drawn at a hub's size; a Touch
+    /// sensor's cushion (#1045) and a Rubber's skin (#1142) go round the joint's largest part. An Angle sensor's
+    /// arc lies further out, so its joint's ring moves past it (<see cref="BuildViewModel.RingRadiusAt"/>).
     /// </summary>
     public static double PlacingRingRadius(BuildPart placing, double jointRadius) => placing switch
     {
         BuildPart.Servo or BuildPart.VelocityMotor => JointMotor.Radius,
-        BuildPart.Brake => NodeDef.HubRadius,
+        BuildPart.Brake or BuildPart.AngleSensor => NodeDef.HubRadius,
         BuildPart.Wheel => WheelDef.DefaultRadius,
         BuildPart.TouchSensor => jointRadius + TouchSensorDef.Cushion,
         BuildPart.Rubber => jointRadius + RubberDef.Skin,
@@ -182,6 +185,7 @@ public static class PartTray
             Available(BuildPart.Accelerometer, UiText.Plain("Accelerometer")),
             Available(BuildPart.Camera, UiText.Plain("Camera")),
             Available(BuildPart.TouchSensor, UiText.Plain("Touch sensor")),
+            Available(BuildPart.AngleSensor, UiText.Plain("Angle sensor")),
             Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.4"),
         ]),
         new(UiText.Plain("Blocks"),

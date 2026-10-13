@@ -24,7 +24,7 @@ public sealed partial class CreatureBuilder
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
     /// <summary>Why a motor or brake, a Servo, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one (#1044).</summary>
-    public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One Servo, Motor or Brake per joint");
+    public static UiText OneMotorOrBrakePerJointReason { get; } = UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint");
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
     public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");
@@ -36,7 +36,7 @@ public sealed partial class CreatureBuilder
     public static UiText WheelsGoOnAJointReason { get; } = UiText.Plain("Wheels go on a joint");
 
     /// <summary>Why a Touch sensor cannot be added to a node that already has one (#1043).</summary>
-    public static UiText OneSensorPerJointReason { get; } = UiText.Plain("One sensor per joint");
+    public static UiText OneSensorPerJointReason { get; } = UiText.Plain("One Touch sensor per joint");
 
     /// <summary>Why a Touch sensor dropped on anything but a joint is refused (#1043).</summary>
     public static UiText TouchSensorsGoOnAJointReason { get; } = UiText.Plain("Touch sensors go on a joint");

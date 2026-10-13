@@ -122,6 +122,23 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(brake.NodeId));
             }
 
+            if (_build.SingleSelectedAngleSensorId is { } angleSensorId)
+            {
+                var angleSensor = _build.AngleSensors[_build.AngleSensorIndexOf(angleSensorId)];
+                return new PartSettingsPresentation(
+                    angleSensorId,
+                    PartSettingsKind.AngleSensor,
+                    _build.PartDisplayName(angleSensorId),
+                    _build.DefaultPartName(angleSensorId),
+                    null,
+                    null,
+                    PartInfo.AngleSensor,
+                    canDelete,
+                    PanelSliders(),
+                    MotorPickers(angleSensor, CreatureBuilder.AngleSensorNeedsTwoSidesReason),
+                    OnThisJoint: OnThisJoint(angleSensor.NodeId));
+            }
+
             if (_build.SingleSelectedPistonId is { } pistonId)
             {
                 return new PartSettingsPresentation(
@@ -438,8 +455,8 @@ public sealed class BuildPresentationViewModel
 
     private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];
 
-    // The Fixed and Target pickers of a joint's motor-or-brake slot, the Servo's, Velocity motor's (#454)
-    // and Brake's (#1041) alike, also on a locked Creation (#1179).
+    // The Fixed and Target pickers of a joint's motor-or-brake slot, the Servo's, Velocity motor's (#454),
+    // Brake's (#1041) and Angle sensor's (#1206) alike, also on a locked Creation (#1179).
     private IReadOnlyList<PartPickerPresentation> MotorPickers(IMotorOrBrakeDef motor, UiText needsTwoSidesReason)
     {
         // A Wheel on the joint is a one-sided link, listed after the links (#1118).

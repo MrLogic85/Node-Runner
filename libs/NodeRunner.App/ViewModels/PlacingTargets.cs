@@ -20,13 +20,23 @@ public sealed record PlacingTargets(IReadOnlySet<int> Beams, IReadOnlySet<int> J
 
     /// <summary>
     /// The radius each joint is ringed round while a joint part is placed
-    /// (<see cref="PartTray.PlacingRingRadius"/>); empty otherwise.
+    /// (<see cref="PartTray.PlacingRingRadius"/>, clear of an Angle sensor's arc: <see cref="BuildViewModel.RingRadiusAt"/>); empty otherwise.
     /// </summary>
     public IReadOnlyDictionary<int, double> JointRings { get; init; } = new Dictionary<int, double>();
+
+    /// <summary>
+    /// The radius each of the <see cref="RefusedJoints"/> draws its dashed ring round: its own, clear of an
+    /// Angle sensor's arc (<see cref="BuildViewModel.RingRadiusAt"/>). A touch still lands on it within
+    /// <see cref="JointRingOf"/>.
+    /// </summary>
+    public IReadOnlyDictionary<int, double> RefusedJointRings { get; init; } = new Dictionary<int, double>();
 
     /// <summary>
     /// The radius joint <paramref name="nodeId"/> is ringed round while a joint part is placed: the
     /// ring the canvas draws there and where a tap or drop lands on it (#1055).
     /// </summary>
     public double JointRingOf(int nodeId) => JointRings[nodeId];
+
+    /// <summary>The radius refused joint <paramref name="nodeId"/> draws its dashed ring round (<see cref="RefusedJointRings"/>).</summary>
+    public double RefusedRingOf(int nodeId) => RefusedJointRings[nodeId];
 }

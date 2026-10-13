@@ -61,4 +61,43 @@ public sealed record AngleSensorDef : IMotorOrBrakeDef
 
     /// <summary>The sensor with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
     public AngleSensorDef WithLinks(int? fixedLinkId, int? targetLinkId) => new(Id, NodeId, fixedLinkId, targetLinkId, Name);
+
+    /// <summary>The width of its arc, in canvas units: <c>stroke-signal</c>, which its picture draws it with (#1205).</summary>
+    public const double ArcWidth = 2;
+
+    /// <summary>The width of its selection halo, <c>stroke-signal</c>, as <see cref="ArcWidth"/>.</summary>
+    public const double HaloWidth = 2;
+
+    /// <summary>
+    /// Its arc's centre line (#1205), shared by its picture and the Build rings that clear it (#1206):
+    /// <see cref="SelectionMarks.Gap"/> outside the joint's outermost part, a Touch sensor's cushion over a
+    /// Rubber's skin over its ring, a plain joint's. A Wheel on the joint changes nothing, so on its joint
+    /// the arc lies over the tyre's inside and tubes. See docs/WORLD_VISUALS.md → "Angle sensor".
+    /// </summary>
+    public static double ArcRadius(bool rubber, bool touch) =>
+        NodeDef.PlainJointRadius
+        + (touch ? TouchSensorDef.Cushion : rubber ? RubberDef.Skin : 0)
+        + SelectionMarks.Gap
+        + (ArcWidth / 2);
+
+    /// <summary>
+    /// <see cref="ArcRadius(bool, bool)"/> on joint <paramref name="nodeId"/>, given the joints that hold a
+    /// Rubber (<paramref name="rubberNodes"/>) and a Touch sensor (<paramref name="touchSensorNodes"/>).
+    /// </summary>
+    public static double ArcRadiusAt(int nodeId, IEnumerable<int> rubberNodes, IEnumerable<int> touchSensorNodes)
+    {
+        ArgumentNullException.ThrowIfNull(rubberNodes);
+        ArgumentNullException.ThrowIfNull(touchSensorNodes);
+        return ArcRadius(rubber: rubberNodes.Contains(nodeId), touch: touchSensorNodes.Contains(nodeId));
+    }
+
+    /// <summary>
+    /// The radius its selection halo is marked round, as a joint's halo is round its edge
+    /// (<see cref="SelectionMarks.JointHalo"/>): the arc's outer edge plus half the halo's width, so the
+    /// halo's inner edge lies a <see cref="SelectionMarks.Gap"/> outside the arc.
+    /// </summary>
+    public static double MarkRadius(double arcRadius) => arcRadius + (ArcWidth / 2) + (HaloWidth / 2);
+
+    /// <summary>Its selection halo's centre line round an arc at <paramref name="arcRadius"/>: 24 on a bare joint.</summary>
+    public static double HaloRadius(double arcRadius) => SelectionMarks.JointHalo(MarkRadius(arcRadius));
 }
