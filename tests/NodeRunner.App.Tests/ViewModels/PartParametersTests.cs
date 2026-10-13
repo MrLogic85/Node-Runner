@@ -9,14 +9,13 @@ public sealed class PartParametersTests
     [Fact]
     public void EverySetting_IsBasicOrAdvanced_AsDesigned()
     {
-        // #903, #989: tuning values sit under Advanced; the rest are basic.
+        // #903, #989, #1189: the split docs/BUILD_MODE.md → "Parameters" owns.
         PartParameterId[] advanced =
         [
             PartParameterId.StartPosition,
             PartParameterId.ServoStartPosition,
             PartParameterId.MaxSpeed,
             PartParameterId.AngularMaxSpeed,
-            PartParameterId.MotorMaxSpeed,
             PartParameterId.RiseTime,
             PartParameterId.Damping,
             PartParameterId.CoilLength,

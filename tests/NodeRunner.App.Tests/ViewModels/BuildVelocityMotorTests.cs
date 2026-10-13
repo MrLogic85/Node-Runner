@@ -88,8 +88,8 @@ public sealed class BuildVelocityMotorTests
         part.Kind.ShouldBe(PartSettingsKind.VelocityMotor);
         part.Title.ShouldBe(UiText.Plain("Motor"));
         part.Note.ShouldBe(PartInfo.VelocityMotor);
-        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorStrength]);
-        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorMaxSpeed, PartParameterId.RiseTime]);
+        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorStrength, PartParameterId.MotorMaxSpeed]);
+        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.RiseTime]);
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.IsLocked)).ShouldBe(
         [
             (UiText.Plain("Fixed link"), 0, false),
@@ -169,6 +169,63 @@ public sealed class BuildVelocityMotorTests
             nextPartId: 6));
         return build;
     }
+
+    // Several Motors share one basic Max speed slider (#1189).
+    [Fact]
+    public void SelectedMotors_ShareABasicMaxSpeed()
+    {
+        var build = new BuildViewModel();
+        build.Load(MixedMotors());
+        build.ReplaceSelection(PartSet.None with { VelocityMotors = new HashSet<int> { 8, 9 } });
+
+        var selection = new BuildPresentationViewModel(build).Selection!;
+
+        selection.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MotorStrength, PartParameterId.MotorMaxSpeed]);
+        selection.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.RiseTime]);
+    }
+
+    [Fact]
+    public void SettingMaxSpeed_OnSeveralMotors_SetsEachOfThem()
+    {
+        var build = new BuildViewModel();
+        build.Load(MixedMotors());
+        build.ReplaceSelection(PartSet.None with { VelocityMotors = new HashSet<int> { 8, 9 } });
+
+        build.SetParameter(PartParameterId.MotorMaxSpeed, 2.0);
+
+        build.VelocityMotors.Select(motor => motor.MaxSpeed).ShouldBe([2.0, 2.0]);
+    }
+
+    // A Servo's and a Piston's Max speed are other settings, so a Motor shares none with them (#1189).
+    [Theory]
+    [InlineData(CreatureElementKind.Servo, 10)]
+    [InlineData(CreatureElementKind.Piston, 11)]
+    public void AMotorSelectedWithAServoOrPiston_ShowsNoMaxSpeed(CreatureElementKind other, int otherId)
+    {
+        var build = new BuildViewModel();
+        build.Load(MixedMotors());
+        build.ReplaceSelection(PartSet.None with { VelocityMotors = new HashSet<int> { 8 } });
+        build.ToggleSelected(new CreatureElementSelection(other, otherId));
+
+        var selection = new BuildPresentationViewModel(build).Selection!;
+
+        selection.Settings.Select(slider => slider.Id).ShouldBe([PartParameterId.RiseTime]);
+    }
+
+    // Motors 8 and 9 on joints 2 and 3, Servo 10 on joint 4 and Piston 11 from joint 1 to 5.
+    private static CreatureDef MixedMotors() => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(300, 0)), new NodeDef(5, new Vector2D(0, 100))],
+        [new BeamDef(6, 1, 2), new BeamDef(7, 2, 3), new BeamDef(12, 3, 4), new BeamDef(13, 4, 1)],
+        [],
+        [new ServoDef(10, 4, fixedLinkId: 12, targetLinkId: 13)],
+        [new PistonDef(11, 1, 5)],
+        [],
+        [],
+        [],
+        [],
+        [new VelocityMotorDef(8, 2, fixedLinkId: 6, targetLinkId: 7), new VelocityMotorDef(9, 3, fixedLinkId: 7, targetLinkId: 12, maxSpeed: 3)],
+        [],
+        nextPartId: 14);
 
     private static CreatureDef WithAMotor() => new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],

@@ -194,7 +194,7 @@ public static class PartParameters
         PartParameterId.AngularMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(5, 120, 5), 0, "{0} rpm", "{0}–{1} rpm", Rpm, RpmToRadiansPerSecond), Advanced: true);
 
     public static PartParameter MotorMaxSpeed { get; } = new(
-        PartParameterId.MotorMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(10, 240, 10), 0, "{0} rpm", "{0}–{1} rpm", Rpm, RpmToRadiansPerSecond), Advanced: true);
+        PartParameterId.MotorMaxSpeed, MultiEditable: true, new(UiText.Plain("Max speed"), UiText.Plain("How fast it's allowed to move"), new(10, 240, 10), 0, "{0} rpm", "{0}–{1} rpm", Rpm, RpmToRadiansPerSecond), Advanced: false);
 
     public static PartParameter RiseTime { get; } = new(
         PartParameterId.RiseTime, MultiEditable: true, new(UiText.Plain("Rise time"), UiText.Plain("How quickly it reaches full force"), SettingRange.Of(0.1, 0.2, 0.5, 1), 1, "{0} s", "{0}–{1} s", value => value, value => value), Advanced: true);
