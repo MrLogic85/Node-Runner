@@ -438,10 +438,9 @@ public sealed class BuildPresentationViewModel
     private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];
 
     // The Fixed and Target pickers of a joint's motor-or-brake slot, the Servo's, Velocity motor's (#454)
-    // and Brake's (#1041) alike. A Brake has no ports, so a locked Creation changes its sides too.
+    // and Brake's (#1041) alike, also on a locked Creation (#1179).
     private IReadOnlyList<PartPickerPresentation> MotorPickers(IMotorOrBrakeDef motor, UiText needsTwoSidesReason)
     {
-        var keptLocked = _build.IsLocked && motor is IJointMotorDef;
         // A Wheel on the joint is a one-sided link, listed after the links (#1118).
         (int Id, CreatureElementKind Kind)[] links =
         [
@@ -466,8 +465,7 @@ public sealed class BuildPresentationViewModel
                 label,
                 [.. links.Select(Option)],
                 chosen ? selected : null,
-                keptLocked,
-                keptLocked || chosen ? null : twoLinksNote,
+                chosen ? null : twoLinksNote,
                 chosen ? null : placeholder);
 
             PartPickerOption Option((int Id, CreatureElementKind Kind) link)

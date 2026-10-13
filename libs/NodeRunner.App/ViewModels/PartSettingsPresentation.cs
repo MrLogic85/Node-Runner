@@ -100,7 +100,6 @@ public sealed record PartPickerPresentation(
     UiText Label,
     IReadOnlyList<PartPickerOption> Options,
     int? SelectedIndex,
-    bool IsLocked,
     UiText? Note,
     UiText? Placeholder = null)
 {

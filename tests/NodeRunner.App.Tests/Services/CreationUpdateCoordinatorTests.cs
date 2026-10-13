@@ -1,3 +1,4 @@
+using NodeRunner.App.Lifecycle;
 using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
 using NodeRunner.App.Tests.ViewModels;
@@ -193,6 +194,31 @@ public sealed class CreationUpdateCoordinatorTests
         updated.Creature.JointMotors.Select(motor => (motor.Id, motor.FixedLinkId, motor.TargetLinkId)).ShouldBe([(9, 7, 6)]);
         updated.Training!.Brain.Neurons.ShouldBe(brain.Neurons, ignoreOrder: true);
         updated.Training.Brain.Connections.ShouldBe(brain.Connections, ignoreOrder: true);
+    }
+
+    // A locked Creation changes a motor's sides without unlocking, and stays locked and trained (#1179).
+    [Theory]
+    [InlineData(CreatureElementKind.Servo)]
+    [InlineData(CreatureElementKind.VelocityMotor)]
+    public void ApplyEdit_AfterALockedMotorPicksAnotherLink_KeepsTheTrainingAndTheLock(CreatureElementKind kind)
+    {
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = Trained(MotorCreature(kind));
+        repository.Save(creation);
+        var build = new BuildViewModel();
+        build.LoadCreation(creation);
+        build.SelectOnly(kind, 9);
+
+        build.SetMotorLink(9, fixedRole: false, linkId: 7);
+
+        build.IsLocked.ShouldBeTrue();
+        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!;
+        updated.Creature.JointMotors.Select(motor => (motor.Id, motor.FixedLinkId, motor.TargetLinkId)).ShouldBe([(9, 5, 7)]);
+        CreationLock.IsLocked(updated).ShouldBeTrue();
+        updated.Training!.Generation.ShouldBe(creation.Training!.Generation);
+        updated.Training.Brain.Neurons.ShouldBe(creation.Training.Brain.Neurons, ignoreOrder: true);
+        updated.Training.Brain.Connections.ShouldBe(creation.Training.Brain.Connections, ignoreOrder: true);
     }
 
     [Fact]

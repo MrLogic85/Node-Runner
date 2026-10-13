@@ -1030,17 +1030,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Gives the Servo, Velocity motor or Brake <paramref name="motorId"/> a new Fixed or Target side,
-    /// from its panel's pickers; it keeps its id. A locked Creation keeps its motors' sides (#896),
-    /// but a Brake has no ports, so a locked Creation changes its sides too (#1041).
+    /// from its panel's pickers; it keeps its id (#1177). Its ports do not depend on its sides, so a locked
+    /// Creation changes them too (#1041, #1179).
     /// </summary>
     public void SetMotorLink(int motorId, bool fixedRole, int linkId)
     {
         var isBrake = _builder.Brakes.Any(brake => brake.Id == motorId);
-        if (_locked && !isBrake)
-        {
-            return;
-        }
-
         var isServo = _builder.Servos.Any(servo => servo.Id == motorId);
         _history.Change(() =>
         {

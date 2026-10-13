@@ -95,10 +95,10 @@ public sealed class BuildBrakeTests
         part.Note.ShouldBe(PartInfo.Brake);
         part.BasicSettings.Select(slider => (slider.Id, slider.Readout, slider.Locked)).ShouldBe([(PartParameterId.BrakeStrength, UiText.Format("{0} N·m", new FixedNumber(200, 0)), false)]);
         part.AdvancedSettings.ShouldBeEmpty();
-        part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.IsLocked, picker.Note)).ShouldBe(
+        part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.Note)).ShouldBe(
         [
-            (UiText.Plain("Fixed link"), 0, false, null),
-            (UiText.Plain("Target link"), 1, false, null),
+            (UiText.Plain("Fixed link"), 0, null),
+            (UiText.Plain("Target link"), 1, null),
         ]);
         part.OnThisJoint.ShouldBeNull();
     }
@@ -388,7 +388,6 @@ public sealed class BuildBrakeTests
         build.Load(WithABrake(), locked: true);
         build.SelectOnly(CreatureElementKind.Brake, 6);
 
-        new BuildPresentationViewModel(build).SinglePart!.Pickers!.ShouldAllBe(picker => !picker.IsLocked);
         new BuildPresentationViewModel(build).SinglePart!.BasicSettings.Single().Locked.ShouldBeFalse();
         build.SetMotorLink(6, fixedRole: true, linkId: 5);
         build.SetParameter(PartParameterId.BrakeStrength, BrakeDef.LockedStrength);

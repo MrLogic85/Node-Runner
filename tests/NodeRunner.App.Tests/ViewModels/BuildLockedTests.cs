@@ -1,3 +1,4 @@
+using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 
@@ -274,7 +275,7 @@ public sealed class BuildLockedTests
     // 8; a sensor sits on beam 14, from 8 to 9. Beams 11 and 13 and Springs 50 and 51 have nothing
     // on them, so deleting joint 2 takes only the Servo and its own links, and joint 7 only Piston 41.
     // Apart from them, a Velocity motor at joint 61 turns beam 64 (to joint 62) against beam 63 (to 60).
-    private static BuildViewModel Locked()
+    private static BuildViewModel Locked(ServoDef? servo = null)
     {
         var build = new BuildViewModel();
         build.Load(
@@ -290,7 +291,7 @@ public sealed class BuildLockedTests
                     new BeamDef(63, 60, 61), new BeamDef(64, 61, 62),
                 ],
                 [new SensorDef(20, 14, SensorKind.Accelerometer)],
-                [new ServoDef(30, 2, 10, 12)],
+                [servo ?? new ServoDef(30, 2, 10, 12)],
                 [new PistonDef(40, 3, 4), new PistonDef(41, 7, 8)],
                 [new SpringDef(50, 5, 6), new SpringDef(51, 1, 4)],
                 [],
@@ -301,6 +302,56 @@ public sealed class BuildLockedTests
                 nextPartId: 66),
             locked: true);
         return build;
+    }
+
+    // A Servo or Velocity motor's ports do not depend on its sides, which keep its id (#1177, #1179).
+    [Theory]
+    [InlineData(30, true, 11, 11, 12)]
+    [InlineData(30, true, 12, 12, 10)]
+    [InlineData(30, false, 10, 12, 10)]
+    [InlineData(65, true, 64, 64, 63)]
+    public void SetMotorLink_PicksOrSwapsAMotorsSide_AndUndoes(int motorId, bool fixedRole, int linkId, int fixedAfter, int targetAfter)
+    {
+        var build = Locked();
+        var before = build.Snapshot();
+
+        build.SetMotorLink(motorId, fixedRole, linkId);
+
+        build.Snapshot().JointMotors.Single(motor => motor.Id == motorId).ShouldSatisfyAllConditions(
+            motor => motor.FixedLinkId.ShouldBe(fixedAfter),
+            motor => motor.TargetLinkId.ShouldBe(targetAfter));
+        build.IsLocked.ShouldBeTrue();
+        build.Undo();
+        build.Snapshot().ShouldBeEquivalentTo(before);
+    }
+
+    [Fact]
+    public void SetMotorLink_IntoAServosEmptyRole_MovesItsOtherLink()
+    {
+        var build = Locked(new ServoDef(30, 2, fixedLinkId: 10));
+
+        build.SetMotorLink(30, fixedRole: false, linkId: 10);
+
+        build.Servos.Single().ShouldBe(new ServoDef(30, 2, targetLinkId: 10));
+    }
+
+    // Joint 9 has only beam 14, so its Servo's empty Target picker notes it needs two links.
+    [Theory]
+    [InlineData(2, 10, 12)]
+    [InlineData(2, 10, null)]
+    [InlineData(9, 14, null)]
+    public void ServoPickers_MatchAnUnlockedCreations(int nodeId, int fixedLinkId, int? targetLinkId)
+    {
+        var servo = new ServoDef(30, nodeId, fixedLinkId, targetLinkId);
+        var locked = Locked(servo);
+        var unlocked = Locked(servo);
+        unlocked.Unlock();
+        locked.SelectOnly(CreatureElementKind.Servo, 30);
+        unlocked.SelectOnly(CreatureElementKind.Servo, 30);
+
+        var pickers = new BuildPresentationViewModel(locked).SinglePart!.Pickers!;
+        pickers.ShouldBeEquivalentTo(new BuildPresentationViewModel(unlocked).SinglePart!.Pickers);
+        pickers[1].Note.ShouldBe(nodeId == 9 ? CreatureBuilder.ServoNeedsTwoSidesReason : null);
     }
 
     private static CanvasNote WouldChangeModel(CreatureElementKind kind, int id) =>
