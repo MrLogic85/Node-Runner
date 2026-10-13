@@ -15,4 +15,19 @@ public static class ServoGeometry
         var free = Math.Sqrt((dx * dx) + (dy * dy)) - coveredRadius(link.NodeA) - coveredRadius(link.NodeB);
         return ServoPart.HousingReachFor((float)free, sensorLength);
     }
+
+    /// <summary>
+    /// What covers a Piston's or Spring's <paramref name="link"/> at its <paramref name="nodeId"/> end
+    /// (#1210): the joint's <paramref name="coveredRadius"/>, plus the housing's reach when a Servo
+    /// there holds the link as its Fixed side, since the housing is drawn over it. No sensor sits on
+    /// a Piston or Spring.
+    /// </summary>
+    public static float LinkCover(IReadOnlyList<NodeDef> nodes, Func<int, double> coveredRadius, IEnumerable<ServoDef> servos, LinkRef link, int nodeId)
+    {
+        ArgumentNullException.ThrowIfNull(coveredRadius);
+        var housing = servos.Any(servo => servo.NodeId == nodeId && servo.FixedLinkId == link.Id)
+            ? HousingReach(nodes, coveredRadius, link, sensorLength: 0)
+            : 0;
+        return (float)coveredRadius(nodeId) + housing;
+    }
 }

@@ -64,8 +64,8 @@ A housing, a range dial and a horn (#452, #577):
 
 - the joint's `accent` ring;
 - a `panel` housing box with an `accent` outline on the Fixed link, at most
-  8 units past the ring, drawn over a Piston's cylinder as over any link
-  (#925), and shortened to a 3-unit stub when a sensor or a short link needs
+  8 units past the ring, drawn over any link (#925); a Piston's or Spring's
+  telescope starts past it (#1210). It is shortened to a 3-unit stub when a sensor or a short link needs
   the room, so the Fixed link always shows. On a beam near its minimum
   length the ring and stub may cover a sensor picture's ends (#1086,
   #1212);
@@ -164,18 +164,43 @@ Thumbnails draw it as in Build, badge included.
 
 ### Piston
 
-A telescoping rod from joint A to joint B. The cylinder starts at the edge
-of the joint motor or hub on the first joint and is as long as the travel, so a
-shorter Stroke gives a shorter cylinder (#835). The cap sits at the edge of
-the joint motor or hub on the second joint (#1086).
+A three-part telescope from joint A to joint B (#1210): an outer cylinder at
+joint A, a middle stage and an `accent` rod 3 wide, running hub to hub. Both
+tubes are an `accent` outline (`stroke-signal`) on `panel`, the cylinder half 7
+wide and the stage half 4.5. They draw rod, stage, cylinder, then the cap, a
+bar 10 across the rod at the edge of what covers joint B (#1086).
+
+`TelescopeGeometry` places the parts; all lengths run from joint A's centre:
+
+- **Cover:** each tube starts at the edge of what covers joint A, and the cap
+  sits at the edge of what covers joint B: the joint motor's ring or the hub,
+  plus the Servo's housing when the link is that Servo's Fixed link
+  (`ServoGeometry.LinkCover`).
+- **Sizes:** the cylinder reaches half the travel past joint A's hub, since
+  the travel is on the gap between the hubs (#870, #835, #1086), so a cover
+  past the hub hides part of it. The stage and the rod each slide out up to
+  half the travel, sharing the movement evenly. The sizes come from
+  the shortest length only, so as the Piston moves only the stage and the rod
+  move, and nothing shrinks.
+- **Smallest parts:** a 6 cylinder, a 5 stage lip and 5 of rod, so at Stroke
+  10% it still reads as three parts. When the shortest length leaves less
+  room, the cylinder gets shorter first; with less than all three, the three
+  shrink in proportion.
+- **Ends:** no tube or cap draws past joint B's cover; the rod still runs on
+  under it. A tube that would end at or before its start is left out. Past
+  the stops in Training the rod takes up the difference.
 
 ### Spring
 
-A coilover (#807): a thin `line-strong` rod, a seat plate just outside the
-joint motor or hub on each joint (#1086), and a `panel` damper body as long as the
-travel. A helix winds round
-the body, `detail` front strokes over it (#1059) and `line-strong` back
-strokes under it, all with round ends.
+A coilover (#807): a seat plate, half 10, just outside what covers each
+joint (#1086), and the Piston's three-part telescope (#1210), placed by the same
+rule but passive and narrower, to fit inside the coil: a `line-strong` rod 3
+wide, and `line-strong` outlines on `panel`, the cylinder half 5 and the stage
+half 3. Its smallest parts are a 9 cylinder, a 5 stage lip and 7 of rod, so
+they show past the seats. A helix winds round the telescope, `detail` front
+strokes over it (#1059) and `line-strong` back strokes under it, all with
+round ends. It draws rod, back strokes, stage, cylinder, front strokes, then
+the seats; with no room between the seats there is no coil.
 
 - The wire grows with Stiffness, from a hairline at 50 N/m to a beam's
   width at 2000 N/m; a stiffer Spring gets fewer, thicker turns.

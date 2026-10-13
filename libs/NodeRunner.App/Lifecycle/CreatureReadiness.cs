@@ -18,15 +18,23 @@ public static class CreatureReadiness
     public const double MinimumLinkGap = 26;
 
     /// <summary>
+    /// What a Piston or Spring adds to <see cref="MinimumLength"/> (#1210), so its three-part
+    /// telescope shows past a Servo's housing at each end. The owner chose it.
+    /// </summary>
+    public const double TelescopeExtra = 16;
+
+    /// <summary>
     /// The shortest a link of <paramref name="kind"/> can be, centre to centre, between joints whose
     /// <see cref="CreatureDef.CoveredRadius(int, IEnumerable{IJointMotorDef})"/> are
     /// <paramref name="coveredA"/> and <paramref name="coveredB"/> (#1212): <see cref="MinimumLinkGap"/>
-    /// plus what each joint covers, plus what the link type adds.
+    /// plus what each joint covers, plus what the link type adds: nothing for a beam,
+    /// <see cref="TelescopeExtra"/> for a Piston or Spring.
     /// </summary>
     public static double MinimumLength(CreatureElementKind kind, double coveredA, double coveredB) =>
         coveredA + coveredB + MinimumLinkGap + kind switch
         {
-            CreatureElementKind.Beam or CreatureElementKind.Piston or CreatureElementKind.Spring => 0,
+            CreatureElementKind.Beam => 0,
+            CreatureElementKind.Piston or CreatureElementKind.Spring => TelescopeExtra,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a link."),
         };
 

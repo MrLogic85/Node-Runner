@@ -460,6 +460,21 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Fact]
+    public void Readiness_CountsAPistonTooShort_WhereABeamWouldFit()
+    {
+        // #1210: a Piston's telescope needs 16 units more than a Beam, 72 between plain joints.
+        var build = new BuildViewModel();
+        build.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200))],
+            [new BeamDef(5, 1, 3), new BeamDef(6, 2, 3)],
+            [],
+            [new PistonDef(7, 1, 2)],
+            nextPartId: 8));
+
+        new BuildPresentationViewModel(build).Readiness.Text.ShouldBe(UiText.Counted("{0} piston too short", "{0} pistons too short", 1));
+    }
+
+    [Fact]
     public void LockedCreation_PartSettingsDimDelete_WhenItTakesASensorAlong()
     {
         var build = new BuildViewModel();

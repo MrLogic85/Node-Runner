@@ -355,6 +355,10 @@ public partial class CreatureParts : Node2D
     private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, LinkRef link) =>
         ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => CreatureDef.CoveredRadius(nodeId, shape.JointMotors), link, SensorLength(shape, link));
 
+    // A Servo's housing is drawn over its Fixed link, so a Piston's or Spring's telescope starts past it (#1210).
+    private static float LinkCover(CreatureShape shape, Dictionary<int, NodeDef> nodes, LinkRef link, int nodeId) =>
+        ServoGeometry.LinkCover(nodes.Values.ToArray(), id => CreatureDef.CoveredRadius(id, shape.JointMotors), shape.Servos, link, nodeId);
+
     private static float SensorLength(CreatureShape shape, LinkRef link) =>
         link.Kind == CreatureElementKind.Beam && shape.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
 
@@ -397,9 +401,11 @@ public partial class CreatureParts : Node2D
             part.B = ToGodot(nodeB.Position);
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
-            part.CoveredA = (float)CreatureDef.CoveredRadius(nodeA.Id, shape.JointMotors);
-            part.CoveredB = (float)CreatureDef.CoveredRadius(nodeB.Id, shape.JointMotors);
-            part.Travel = (float)(Piston.LongestLength(piston, built, Travel.HubRadii) - Piston.ShortestLength(piston, built, Travel.HubRadii));
+            var link = new LinkRef(piston.Id, piston.NodeA, piston.NodeB, CreatureElementKind.Piston);
+            part.CoveredA = LinkCover(shape, nodes, link, nodeA.Id);
+            part.CoveredB = LinkCover(shape, nodes, link, nodeB.Id);
+            part.Shortest = (float)Piston.ShortestLength(piston, built, Travel.HubRadii);
+            part.Longest = (float)Piston.LongestLength(piston, built, Travel.HubRadii);
             part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Piston, nodeA, nodeB, shape.JointMotors);
             part.HaloA = selected.Nodes.Contains(piston.NodeA);
             part.HaloB = selected.Nodes.Contains(piston.NodeB);
@@ -418,13 +424,15 @@ public partial class CreatureParts : Node2D
             var part = PartFor(_springs, spring.Id);
             part.A = ToGodot(nodeA.Position);
             part.B = ToGodot(nodeB.Position);
-            part.Travel = (float)(Spring.LongestLength(spring, built, Travel.HubRadii) - Spring.ShortestLength(spring, built, Travel.HubRadii));
+            part.Shortest = (float)Spring.ShortestLength(spring, built, Travel.HubRadii);
+            part.Longest = (float)Spring.LongestLength(spring, built, Travel.HubRadii);
             part.Rest = (float)Spring.RestLength(spring, built, Travel.HubRadii);
             part.Stiffness = spring.Stiffness;
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
-            part.CoveredA = (float)CreatureDef.CoveredRadius(nodeA.Id, shape.JointMotors);
-            part.CoveredB = (float)CreatureDef.CoveredRadius(nodeB.Id, shape.JointMotors);
+            var link = new LinkRef(spring.Id, spring.NodeA, spring.NodeB, CreatureElementKind.Spring);
+            part.CoveredA = LinkCover(shape, nodes, link, nodeA.Id);
+            part.CoveredB = LinkCover(shape, nodes, link, nodeB.Id);
             part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Spring, nodeA, nodeB, shape.JointMotors);
             part.HaloA = selected.Nodes.Contains(spring.NodeA);
             part.HaloB = selected.Nodes.Contains(spring.NodeB);

@@ -87,14 +87,16 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Weight:** every beam weighs the same, whatever its length (#794); a
   Piston or Spring weighs one and a half beams, its cylinder included
   (#731).
-- **Minimum length (#593, #1212):** a link must leave
+- **Minimum length (#593, #1212, #1210):** a link must leave
   `CreatureReadiness.MinimumLinkGap` (26) free between what is drawn over
   its two ends (`CreatureDef.CoveredRadius`): a joint motor's ring (27), or
   else the hub (15). A Wheel, Brake, Touch sensor or Rubber adds nothing; a
   Wheel lies under its links. The link type may add more
-  (`CreatureReadiness.MinimumLength`); a beam, Piston and Spring add
-  nothing. So a link is at least 56 long centre to centre between plain
-  joints, 68 with a joint motor on one end and 80 with one on each. The
+  (`CreatureReadiness.MinimumLength`): a beam adds nothing, and a Piston or
+  Spring adds `CreatureReadiness.TelescopeExtra` (16) for its telescope
+  (`docs/WORLD_VISUALS.md` → Piston). So a beam is at least 56 long centre to
+  centre between plain joints, 68 with a joint motor on one end and 80 with
+  one on each, and a Piston or Spring 72, 84 and 96. The
   owner halved the free gap, which had room for the whole Camera picture
   (#622, #1212); the picture is centred in the gap and reaches about 9
   units under each end (#1086). A Servo's Fixed-link housing stub may take
@@ -398,7 +400,7 @@ fold.
   150 N Piston holds 3 × (150 + 23.5) = 520 N.
 - **Not a beam:** it adds no rigidity but counts as attached for the degree
   rules. Two nodes hold at most one link (Piston or Spring).
-- **Minimum length:** a link's, as a beam's (#1212).
+- **Minimum length:** a link's (Beam → Minimum length, #1212, #1210).
 
 ### Spring
 
@@ -434,7 +436,7 @@ fold.
 - **Not a beam:** the same as a Piston.
 - **Stiffness range** 50–2000 N/m: firm at the top without making the
   lightest pair of nodes unstable at Training's fixed step (#787).
-- **Minimum length:** a link's, as a beam's (#1212).
+- **Minimum length:** a link's (Beam → Minimum length, #1212, #1210).
 
 ## Sensor–model contract
 
