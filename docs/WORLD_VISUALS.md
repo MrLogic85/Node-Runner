@@ -62,8 +62,9 @@ A housing, a range dial and a horn (#452, #577):
 - a `panel` housing box with an `accent` outline on the Fixed link, at most
   8 units past the ring, drawn over a Piston's cylinder as over any link
   (#925), and shortened to a 3-unit stub when a sensor or a short link needs
-  the room, so the Fixed link always shows. On a beam near the minimum
-  length the ring and stub may cover a sensor picture's ends (#1086);
+  the room, so the Fixed link always shows. On a beam near its minimum
+  length the ring and stub may cover a sensor picture's ends (#1086,
+  #1212);
 - the range, a `panel` band with an `accent` outline inside the ring from
   end stop to end stop, turning with the Fixed link. At 360° the stops meet
   and an `accent` line across the band marks them (#922);

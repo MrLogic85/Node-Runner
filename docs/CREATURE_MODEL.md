@@ -53,11 +53,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   `JointMotor.Radius` (27) or a Wheel's Radius (`CreatureDef.NodeRadius`). Collision and bounds use it.
   A Rubber or a Touch sensor adds none. Taps, sensors and links do not use it (#1086):
   a joint is tapped at its hub or
-  joint motor, and a sensor sits by what covers its beam's ends
-  (`CreatureDef.CoveredRadius`). Every link measures from
-  hub to hub, `NodeDef.HubRadius` (15) from each joint's centre, whatever
-  sits on the joint: the minimum link length and a Piston's or Spring's
-  travel.
+  joint motor, and a sensor and a link's minimum length go by what covers
+  its ends (`CreatureDef.CoveredRadius`; Beam → Minimum length). A Piston's
+  or Spring's travel measures from hub to hub, `NodeDef.HubRadius` (15)
+  from each joint's centre, whatever sits on the joint.
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
   Servo, Motor, Brake or Angle sensor (#1204), one Rubber (#1142) and one Touch sensor
   (#1043), so a Servo can drive the links of a Wheel's joint while the
@@ -88,13 +87,19 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Weight:** every beam weighs the same, whatever its length (#794); a
   Piston or Spring weighs one and a half beams, its cylinder included
   (#731).
-- **Minimum length (#593):** a beam must leave
-  `CreatureReadiness.MinimumBeamGap` (52) free between its two hubs (#1086),
-  whatever sits on its joints: room for the largest sensor picture, the
-  Camera's, with a 4-unit gap on each side (#622). A joint motor covers more than
-  the hub, so on a beam near that length it may cover the ends of a large
-  picture (owner, #1086). A shorter beam can be drawn and saved, but it
-  blocks training until its joints move apart.
+- **Minimum length (#593, #1212):** a link must leave
+  `CreatureReadiness.MinimumLinkGap` (26) free between what is drawn over
+  its two ends (`CreatureDef.CoveredRadius`): a joint motor's ring (27), or
+  else the hub (15). A Wheel, Brake, Touch sensor or Rubber adds nothing; a
+  Wheel lies under its links. The link type may add more
+  (`CreatureReadiness.MinimumLength`); a beam, Piston and Spring add
+  nothing. So a link is at least 56 long centre to centre between plain
+  joints, 68 with a joint motor on one end and 80 with one on each. The
+  owner halved the free gap, which had room for the whole Camera picture
+  (#622, #1212); the picture is centred in the gap and reaches about 9
+  units under each end (#1086). A Servo's Fixed-link housing stub may take
+  part of the gap (`docs/WORLD_VISUALS.md` → Servo). A shorter link can be
+  drawn and saved, but it blocks training until its joints move apart.
 
 ### Sensor
 
@@ -393,7 +398,7 @@ fold.
   150 N Piston holds 3 × (150 + 23.5) = 520 N.
 - **Not a beam:** it adds no rigidity but counts as attached for the degree
   rules. Two nodes hold at most one link (Piston or Spring).
-- **Minimum length:** the same as a beam's.
+- **Minimum length:** a link's, as a beam's (#1212).
 
 ### Spring
 
@@ -429,7 +434,7 @@ fold.
 - **Not a beam:** the same as a Piston.
 - **Stiffness range** 50–2000 N/m: firm at the top without making the
   lightest pair of nodes unstable at Training's fixed step (#787).
-- **Minimum length:** the same as a beam's.
+- **Minimum length:** a link's, as a beam's (#1212).
 
 ## Sensor–model contract
 

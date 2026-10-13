@@ -15,9 +15,6 @@ public static class SensorPicture
     /// <summary>The Camera picture's side, in canvas units: twice the first size so it reads on a phone (#622).</summary>
     public const double CameraSize = 44;
 
-    /// <summary>The largest picture's side; every beam leaves room for it between its hubs (#593, #1086), since any sensor can go on any beam; a motor may cover its ends.</summary>
-    public const double LargestSize = CameraSize;
-
     /// <summary>The picture's side for <paramref name="kind"/>, in canvas units.</summary>
     public static double SizeOf(SensorKind kind) => kind switch
     {

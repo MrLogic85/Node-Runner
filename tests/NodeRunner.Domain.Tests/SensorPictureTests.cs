@@ -61,13 +61,4 @@ public sealed class SensorPictureTests
     {
         SensorPicture.SizeOf(SensorKind.Camera).ShouldBeGreaterThan(1.8 * SensorPicture.SizeOf(SensorKind.Accelerometer));
     }
-
-    [Fact]
-    public void LargestSize_CoversEveryKind()
-    {
-        foreach (var kind in Enum.GetValues<SensorKind>())
-        {
-            SensorPicture.SizeOf(kind).ShouldBeLessThanOrEqualTo(SensorPicture.LargestSize);
-        }
-    }
 }

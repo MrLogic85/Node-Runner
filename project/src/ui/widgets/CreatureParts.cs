@@ -355,8 +355,8 @@ public partial class CreatureParts : Node2D
             part.B = ToGodot(nodeB.Position);
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
-            // A beam too short for training (#593) is drawn in danger until its joints move apart.
-            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
+            // A beam too short for training (#593, #1212) is drawn in danger until its joints move apart.
+            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Beam, nodeA, nodeB, shape.JointMotors);
             part.HaloA = selected.Nodes.Contains(beam.NodeA);
             part.HaloB = selected.Nodes.Contains(beam.NodeB);
             part.Selected = selected.Beams.Contains(beam.Id);
@@ -382,7 +382,7 @@ public partial class CreatureParts : Node2D
             part.CoveredA = (float)CreatureDef.CoveredRadius(nodeA.Id, shape.JointMotors);
             part.CoveredB = (float)CreatureDef.CoveredRadius(nodeB.Id, shape.JointMotors);
             part.Travel = (float)(Piston.LongestLength(piston, built, Travel.HubRadii) - Piston.ShortestLength(piston, built, Travel.HubRadii));
-            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
+            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Piston, nodeA, nodeB, shape.JointMotors);
             part.HaloA = selected.Nodes.Contains(piston.NodeA);
             part.HaloB = selected.Nodes.Contains(piston.NodeB);
             part.Selected = selected.Pistons.Contains(piston.Id);
@@ -407,7 +407,7 @@ public partial class CreatureParts : Node2D
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
             part.CoveredA = (float)CreatureDef.CoveredRadius(nodeA.Id, shape.JointMotors);
             part.CoveredB = (float)CreatureDef.CoveredRadius(nodeB.Id, shape.JointMotors);
-            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(nodeA, nodeB);
+            part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Spring, nodeA, nodeB, shape.JointMotors);
             part.HaloA = selected.Nodes.Contains(spring.NodeA);
             part.HaloB = selected.Nodes.Contains(spring.NodeB);
             part.Selected = selected.Springs.Contains(spring.Id);

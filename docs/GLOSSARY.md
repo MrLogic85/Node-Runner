@@ -89,8 +89,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   resisted by a Brake, or read by an Angle sensor. Each is a link, or the Wheel on its joint as a one-sided link
   (#1118). See: `docs/CREATURE_MODEL.md` → "Servo".
 - **Hub** — The `NodeDef.HubRadius` circle at every joint's centre where
-  links end and are measured from, whatever sits on the joint (#1086). See:
-  `docs/CREATURE_MODEL.md` → Node.
+  links end and a Piston's or Spring's travel is measured from, whatever
+  sits on the joint (#1086). See: `docs/CREATURE_MODEL.md` → Node.
 - **Joint** — A point where links meet and can turn; in code a node
   (`NodeDef`). A plain joint is passive (#450); a joint motor, Brake or Angle sensor, a Wheel, a Rubber and a
   Touch sensor can each sit on it, one of each. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
