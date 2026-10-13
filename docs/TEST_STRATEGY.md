@@ -78,12 +78,14 @@ action is checked on device.
 
 ## Physics setup guards
 
-How creature bodies behave is checked by hand, but a body setting that is
-known to break them is guarded in `NodeRunner.Ui.Tests` from source:
+How creature bodies behave is checked by hand, but a body or project setting
+that is known to break them is guarded in `NodeRunner.Ui.Tests` from
+source or `project.godot`:
 
 | Concern | Tests | Rule owner |
 |---|---|---|
 | Creature bodies run without CCD | `CreatureCcdGuardTests` | `project/src/creature/AGENTS.md` rule 3 |
+| The 2D solver runs at least 24 iterations | `SolverIterationsGuardTests` | `project/src/creature/AGENTS.md` rule 3 |
 
 ## What we do NOT test
 

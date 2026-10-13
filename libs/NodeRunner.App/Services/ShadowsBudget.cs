@@ -27,7 +27,9 @@ public sealed record ShadowsBudget
 {
     // Measured on a Galaxy S23 on Flat (2026-10-05): a 29-part creature ran 100 shadows in real time
     // at about 35 fps, and a 47-part one fell to 0.8x speed at 100. A mid-range phone is about 2-3x
-    // slower, so a 30-part creature gets 32 before stutter and 64 before slow motion.
+    // slower, so a 30-part creature gets 32 before stutter and 64 before slow motion. That was at 16
+    // solver iterations; 24 (#1245) cost about 5 % more per physics tick on a Galaxy S25, well inside
+    // the margin.
     public const int ReferenceParts = 30;
     public const int ReferenceSmoothLimit = 32;
     public const int ReferenceSevereLimit = 64;

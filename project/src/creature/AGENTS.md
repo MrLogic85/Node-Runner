@@ -12,7 +12,13 @@ file owns how Godot realises it.
    become a physical thing that reacts to forces and drives its parts.
 3. **Bodies and joints.** Each node and each beam is its own `RigidBody2D`
    (`CanSleep = false`), and a `PinJoint2D` pins every beam to its two
-   nodes, so beams are rigid by geometry, not springs. Only nodes collide (a
+   nodes, so beams are rigid by geometry, not springs. Those pins hold only
+   as well as the solver converges: `project.godot` sets
+   `physics/2d/solver/solver_iterations=24`, as Godot's default 16 let a
+   creature of 19 nodes and 37 beams stretch its beams up to 26 % and turn
+   rigid triangles inside out; at 24 they stretch at most about 4 %, for
+   about 5 % more time per physics tick on a phone (#1229, #1245). Long
+   trusses still bend (#1229). Only nodes collide (a
    circle each); beams and links have no collider. No body uses continuous
    collision detection (#1171): the ground is an endless half-plane that a
    node cannot tunnel through, and Godot's ray CCD sets a fast body's

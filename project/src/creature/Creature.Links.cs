@@ -387,7 +387,9 @@ public partial class Creature
 
         // Godot's damped spring (godot_joints_2d.cpp, checked in 4.7) damps on every second solver
         // iteration, not once per step, so it would damp several times harder than its coefficient.
-        // Dividing by the passes makes it damp as its coefficient asks (measured headless at 16 iterations).
+        // Dividing by the passes makes it damp as its coefficient asks: measured headless at 16 and 32
+        // iterations, which bracket the project's 24, a two-node Spring's decay matched coefficients 1–10
+        // within 6 % (#1245).
         var dampingPasses = (ProjectSettings.GetSetting("physics/2d/solver/solver_iterations").AsInt32() + 1) / 2;
         for (var i = 0; i < _springVisuals.Length; i++)
         {

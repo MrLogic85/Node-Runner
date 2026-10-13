@@ -200,6 +200,10 @@ every such triangle, and Build and Training show them (#627). A larger
 truss is a composition of triangles; a bare quadrilateral stays free to
 fold.
 
+A triangle is only as rigid as the joints that pin its beams to their
+nodes; how the simulation keeps them from giving way under load is in
+`project/src/creature/AGENTS.md` → Bodies and joints.
+
 ### Servo
 
 - **Beginner:** A joint motor that turns to the angle the brain picks. It holds one link as Fixed and turns
