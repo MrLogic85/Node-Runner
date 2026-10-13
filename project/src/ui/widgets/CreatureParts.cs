@@ -527,7 +527,7 @@ public partial class CreatureParts : Node2D
             var b = ToGodot(creature.Nodes[triangle.NodeB].Position);
             var c = ToGodot(creature.Nodes[triangle.NodeC].Position);
             corners.AddRange([a, b, c]);
-            foreach (var (start, end) in TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing, (float)NodeRadius(shape, creature.Nodes[triangle.NodeA].Id)))
+            foreach (var (start, end) in TriangleHatch.Lines(a, b, c, Theme.RigidHatchSpacing))
             {
                 lines.Add(start);
                 lines.Add(end);
