@@ -11,12 +11,29 @@ public sealed class VelocityMotorTests
     // Heavy enough that the push part always asks for more than the rise time allows.
     private const double _heavy = 1e9;
 
-    [Fact]
-    public void AngleInputs_AreZeroAndOneAsBuilt_AndTurnWithTheAngle()
+    [Theory]
+    [InlineData(0, 0, 1)]
+    [InlineData(Math.PI / 2, 1, 0)]
+    [InlineData(Math.PI, 0, -1)]
+    [InlineData(-Math.PI / 2, -1, 0)]
+    [InlineData((2 * Math.PI) + (Math.PI / 2), 1, 0)]
+    public void AngleInputs_ReadTheAngleBetweenTheSides(double angle, double sin, double cos)
     {
-        VelocityMotor.AngleInputs(0.7, builtAngle: 0.7).ShouldBe((0, 1));
+        var inputs = VelocityMotor.AngleInputs(angle);
 
-        var (sin, cos) = VelocityMotor.AngleInputs(0.7 + (Math.PI / 2), builtAngle: 0.7);
+        inputs.Sin.ShouldBe(sin, tolerance: 1e-12);
+        inputs.Cos.ShouldBe(cos, tolerance: 1e-12);
+    }
+
+    [Fact]
+    public void AngleInputs_ReadAWheelTargetAQuarterTurnCounterClockwise_AsOneAndZero()
+    {
+        // Fixed points right; the Wheel's body is turned a quarter turn counter-clockwise on screen, y-down.
+        var fixedSide = MotorSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
+        var wheel = MotorSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
+
+        var (sin, cos) = VelocityMotor.AngleInputs(wheel - fixedSide);
+
         sin.ShouldBe(1, tolerance: 1e-12);
         cos.ShouldBe(0, tolerance: 1e-12);
     }

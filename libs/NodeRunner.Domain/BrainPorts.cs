@@ -63,10 +63,10 @@ public static class BrainPorts
     /// <summary>A Servo's strength output key: the share of its Strength to use.</summary>
     public const string ServoStrengthChannel = "strength";
 
-    /// <summary>A Velocity motor's angle sine input key (#454): sin of its turn from the built angle, smooth across a whole turn.</summary>
+    /// <summary>A Velocity motor's angle sine input key (#454): sin of the angle between its sides (#1207), smooth across a whole turn.</summary>
     public const string VelocityMotorAngleSinChannel = "angleSin";
 
-    /// <summary>A Velocity motor's angle cosine input key (#454): cos of its turn from the built angle.</summary>
+    /// <summary>A Velocity motor's angle cosine input key (#454): cos of the angle between its sides (#1207).</summary>
     public const string VelocityMotorAngleCosChannel = "angleCos";
 
     /// <summary>A Velocity motor's angular speed input key.</summary>

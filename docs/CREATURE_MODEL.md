@@ -200,7 +200,8 @@ fold.
   its joint's Wheel too, as if the Wheel were a link.
 - `ServoDef`; Mechanics: `Servo`. Fixed and Target may be Beams, Pistons or
   Springs, or the Wheel on the Servo's joint (#1118): to a joint motor the Wheel
-  is a one-sided link, its angle that of a mark on its tyre, so the same
+  is a one-sided link, its angle that of a mark on its tyre, pointing right
+  on screen as built (`MotorSideGeometry.WheelAngle`), so the same
   link ids name it and saves need no change. Everywhere else the Wheel
   stays a joint part: it counts toward no link rule. A Servo
   needs two sides, two links or a link and the Wheel
@@ -236,8 +237,11 @@ fold.
   the Servo's rules: a Beam, Piston, Spring or its joint's Wheel, two
   different ones, either missing after a deletion (`JointMotor`). It takes
   the joint's slot for a joint motor or brake (see Node → One part per slot).
-- **Angle:** a Servo's, the Target side's direction minus the Fixed
-  side's, relative to the built pose. It has no Range and no end stops.
+- **Angle:** the angle between its sides (#1207): the Target side's
+  direction minus the Fixed side's, counter-clockwise positive, measured as
+  a Servo's sides are. Unlike a Servo's, it is not taken from the built
+  pose, so a Motor reads where Target points from Fixed all the way round.
+  It has no Range and no end stops.
 - **Torque:** the Servo's loop (`MotorLoop`), with the wanted speed set
   straight from the brain: the speed output times Max speed
   (`VelocityMotor.NextMotor`). It keeps that speed against a load up to the
@@ -434,8 +438,9 @@ fold.
     and `speed` (`tanh(ω / maxSpeed)`, counter-clockwise positive); outputs
     `angle` and `strength`.
   - **Motor (#454):** inputs `angleSin` and `angleCos` (the sine
-    and cosine of its angle from the built pose, 0 and 1 as built, so a full
-    turn never jumps) and `speed` (as a Servo's); outputs `speed` (Velocity,
+    and cosine of the angle between its sides, #1207, so a full turn never
+    jumps; Target a quarter turn counter-clockwise from Fixed reads 1 and 0)
+    and `speed` (as a Servo's); outputs `speed` (Velocity,
     −1…1 of Max speed, counter-clockwise positive) and `strength`.
   - **Touch sensor (#1043):** input `touch` (Touch sensor → Reading).
   - Nodes, beams, plain joints, Springs and Wheels declare none.
