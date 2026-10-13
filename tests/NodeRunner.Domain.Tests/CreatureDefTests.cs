@@ -398,33 +398,35 @@ public sealed class CreatureDefTests
         creature.Sensors[0].ShouldBe(new SensorDef(4, 3, SensorKind.Accelerometer));
     }
 
+    // The order comes from the slots, not from where each part is in the list (#1221).
     [Fact]
     public void JointParts_ListsTheJointsServoThenWheelThenRubberThenTouchSensorAndNoOtherJoints()
     {
-        ServoDef[] servos = [new ServoDef(6, 2, 4, 5), new ServoDef(7, 1, 4, 5)];
-        WheelDef[] wheels = [new WheelDef(8, 1), new WheelDef(9, 3)];
-        TouchSensorDef[] touchSensors = [new TouchSensorDef(10, 1), new TouchSensorDef(11, 5)];
-        RubberDef[] rubbers = [new RubberDef(12, 1), new RubberDef(13, 3)];
+        IPartDef[] parts =
+        [
+            new TouchSensorDef(10, 1), new TouchSensorDef(11, 5), new RubberDef(12, 1), new RubberDef(13, 3),
+            new WheelDef(8, 1), new WheelDef(9, 3), new ServoDef(6, 2, 4, 5), new ServoDef(7, 1, 4, 5), new NodeDef(1, new Vector2D(0, 0)),
+        ];
 
-        CreatureDef.JointParts(1, servos, wheels, touchSensors, rubbers).ShouldBe([
+        CreatureDef.JointParts(1, parts).ShouldBe([
             new CreatureElementSelection(CreatureElementKind.Servo, 7),
             new CreatureElementSelection(CreatureElementKind.Wheel, 8),
             new CreatureElementSelection(CreatureElementKind.Rubber, 12),
             new CreatureElementSelection(CreatureElementKind.TouchSensor, 10),
         ]);
-        CreatureDef.JointParts(3, servos, wheels, touchSensors, rubbers).ShouldBe([
+        CreatureDef.JointParts(3, parts).ShouldBe([
             new CreatureElementSelection(CreatureElementKind.Wheel, 9),
             new CreatureElementSelection(CreatureElementKind.Rubber, 13),
         ]);
-        CreatureDef.JointParts(5, servos, wheels, touchSensors, rubbers).ShouldBe([new CreatureElementSelection(CreatureElementKind.TouchSensor, 11)]);
-        CreatureDef.JointParts(4, servos, wheels, touchSensors, rubbers).ShouldBeEmpty();
+        CreatureDef.JointParts(5, parts).ShouldBe([new CreatureElementSelection(CreatureElementKind.TouchSensor, 11)]);
+        CreatureDef.JointParts(4, parts).ShouldBeEmpty();
     }
 
     // A Brake sits in its joint's hinge-part slot, at the top of the stack (#1041).
     [Fact]
     public void JointParts_ListsTheJointsBrakeFirst()
     {
-        CreatureDef.JointParts(1, [new BrakeDef(6, 1), new BrakeDef(7, 2)], [new WheelDef(8, 1)], [], []).ShouldBe([
+        CreatureDef.JointParts(1, [new WheelDef(8, 1), new BrakeDef(6, 1), new BrakeDef(7, 2)]).ShouldBe([
             new CreatureElementSelection(CreatureElementKind.Brake, 6),
             new CreatureElementSelection(CreatureElementKind.Wheel, 8),
         ]);
@@ -433,17 +435,51 @@ public sealed class CreatureDefTests
     [Fact]
     public void HasJointPart_CountsATouchSensorAndARubber()
     {
-        CreatureDef.HasJointPart(1, [], [], [new TouchSensorDef(2, 1)], []).ShouldBeTrue();
-        CreatureDef.HasJointPart(3, [], [], [new TouchSensorDef(2, 1)], []).ShouldBeFalse();
-        CreatureDef.HasJointPart(1, [], [], [], [new RubberDef(2, 1)]).ShouldBeTrue();
-        CreatureDef.HasJointPart(3, [], [], [], [new RubberDef(2, 1)]).ShouldBeFalse();
+        CreatureDef.HasJointPart(1, [new TouchSensorDef(2, 1)]).ShouldBeTrue();
+        CreatureDef.HasJointPart(3, [new TouchSensorDef(2, 1)]).ShouldBeFalse();
+        CreatureDef.HasJointPart(1, [new RubberDef(2, 1)]).ShouldBeTrue();
+        CreatureDef.HasJointPart(3, [new RubberDef(2, 1)]).ShouldBeFalse();
     }
 
     // A Brake fills its joint's hinge-part slot (#1039), so its joint is not bare.
     [Fact]
     public void HasJointPart_CountsABrake()
     {
-        CreatureDef.HasJointPart(1, [new BrakeDef(2, 1)], [], [], []).ShouldBeTrue();
-        CreatureDef.HasJointPart(3, [new BrakeDef(2, 1)], [], [], []).ShouldBeFalse();
+        CreatureDef.HasJointPart(1, [new BrakeDef(2, 1)]).ShouldBeTrue();
+        CreatureDef.HasJointPart(3, [new BrakeDef(2, 1)]).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Parts_HoldOnePartOfEveryKind_WithASlotExactlyWhenOnAJoint()
+    {
+        EveryPartKind.Creature.Parts.Select(part => part.PartKind).Distinct().ShouldBe(Enum.GetValues<PartKind>(), ignoreOrder: true);
+        EveryPartKind.Creature.PartCount.ShouldBe(EveryPartKind.Creature.Parts.Count);
+        foreach (var part in EveryPartKind.Creature.Parts)
+        {
+            (PartKinds.Of(part.PartKind).Slot is not null).ShouldBe(part is IJointPartDef, $"{part.PartKind}");
+        }
+
+        EveryPartKind.Creature.HingeParts.ShouldAllBe(part => PartKinds.SlotOf(part) == JointSlot.HingePart);
+    }
+
+    [Fact]
+    public void FindPart_FindsEachPartById_OrNothing()
+    {
+        foreach (var part in EveryPartKind.Creature.Parts)
+        {
+            EveryPartKind.Creature.FindPart(part.Id).ShouldBeSameAs(part);
+        }
+
+        EveryPartKind.Creature.FindPart(18).ShouldBeNull();
+        ((SensorDef)EveryPartKind.Creature.FindPart(8)!).Aim.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ASecondPartInAJointSlot_IsRefused_NamingTheSlot()
+    {
+        Should.Throw<ArgumentException>(() => new CreatureDef(
+            nodes: [new(1, new Vector2D(0, 0))], beams: [], sensors: [], servos: [], pistons: [], springs: [], wheels: [],
+            touchSensors: [], rubbers: [], velocityMotors: [], brakes: [new(2, 1)], angleSensors: [new(3, 1)], nextPartId: 4))
+            .Message.ShouldBe("Node id 1 already has a hinge part; a joint holds at most one.");
     }
 }

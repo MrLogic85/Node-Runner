@@ -6,7 +6,7 @@ namespace NodeRunner.Domain;
 /// <see cref="Rays"/>, <see cref="Spread"/> and <see cref="Range"/> (#578). See
 /// docs/CREATURE_MODEL.md.
 /// </summary>
-public sealed record SensorDef
+public sealed record SensorDef : IPartDef
 {
     /// <summary>A new Camera's <see cref="Rays"/>.</summary>
     public const int DefaultRays = 3;
@@ -87,6 +87,8 @@ public sealed record SensorDef
     public SensorKind Kind { get; }
 
     public string? Name { get; }
+
+    PartKind IPartDef.PartKind => PartKinds.Of(Kind).Kind;
 
     /// <summary>
     /// A Camera's aim (#594): the angle of its centre ray from its beam's direction, in radians

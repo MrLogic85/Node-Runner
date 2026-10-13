@@ -22,6 +22,7 @@ list; move one only with a new issue.
 
 | Type | Why it is here | Issue |
 |---|---|---|
+| `PartKinds`, `PartKindInfo` | Each part kind once: what selects it, its sensor variant, its joint slot and its brain ports; read by `CreatureDef`'s slot check and `BrainPorts`, both in Domain, so code walks the kinds instead of listing them | #1221 |
 | `BrainPorts` | Every part's brain ports, their order and channel keys, shared by the sim, Build and ML | #534 |
 | `PortSignals` | Each output's activation and passive start: the brain's half of the port contract (ML) | #535 |
 | `SensorDef.DefaultAim` | A new Camera's aim, filled in by `CreatureDef` at construction | #622 |
@@ -35,6 +36,7 @@ list; move one only with a new issue.
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
   `ServoDef`, `VelocityMotorDef`, `BrakeDef`, `AngleSensorDef`, `PistonDef`, `SpringDef`, `WheelDef`, `TouchSensorDef`, `RubberDef`, `LinkRef` — anatomy
+- `IPartDef`, `IJointPartDef`, `PartKind`, `JointSlot` — what every part shares: id, name and kind, and for a part on a joint its node and slot (`CreatureDef.Parts`)
 - `IHingePartDef` — what fills a joint's hinge-part slot, a joint motor, a Brake or an Angle sensor: its sides
 - `IJointMotorDef`, `JointMotor` — what a Servo and a Velocity motor share: kind, sides and radius
 - `CreatureElementKind`, `CreatureElementSelection` — what is selected

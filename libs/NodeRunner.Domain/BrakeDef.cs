@@ -85,7 +85,7 @@ public sealed record BrakeDef : IHingePartDef
     [JsonIgnore]
     public bool Locked => double.IsPositiveInfinity(Strength);
 
-    CreatureElementKind IHingePartDef.Kind => CreatureElementKind.Brake;
+    PartKind IPartDef.PartKind => PartKind.Brake;
 
     public BrakeDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength);
 

@@ -1,8 +1,8 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// Collects the brain ports every part of a creature declares (#534) and puts them in runtime
-/// order: by part id, then in the order the part declares them. The order depends only on ids, so
+/// Collects the brain ports every part of a creature declares (#534), as <see cref="PartKinds"/> gives each kind's,
+/// and puts them in runtime order: by part id, then in the order the part declares them. The order depends only on ids, so
 /// moving or resizing parts, or adding one, never reorders the others. Joints and Springs are
 /// passive and declare no ports (#450, #453). Stateless. See docs/CREATURE_MODEL.md.
 /// </summary>
@@ -91,40 +91,9 @@ public static class BrainPorts
     {
         ArgumentNullException.ThrowIfNull(creature);
 
-        var blocks = new List<(int PartId, BrainPort[] Ports)>();
-        foreach (var sensor in creature.Sensors)
-        {
-            blocks.Add((sensor.Id, SensorPorts(sensor).ToArray()));
-        }
-
-        foreach (var touch in creature.TouchSensors)
-        {
-            blocks.Add((touch.Id, [TouchInput(touch.Id)]));
-        }
-
-        foreach (var angleSensor in creature.AngleSensors)
-        {
-            blocks.Add((angleSensor.Id, [.. AngleSensorInputs(angleSensor.Id)]));
-        }
-
-        foreach (var piston in creature.Pistons)
-        {
-            blocks.Add((piston.Id, [.. PistonInputs(piston.Id), .. PistonOutputs(piston.Id)]));
-        }
-
-        foreach (var servo in creature.Servos)
-        {
-            blocks.Add((servo.Id, [.. ServoInputs(servo.Id), .. ServoOutputs(servo.Id)]));
-        }
-
-        foreach (var motor in creature.VelocityMotors)
-        {
-            blocks.Add((motor.Id, [.. VelocityMotorInputs(motor.Id), .. VelocityMotorOutputs(motor.Id)]));
-        }
-
-        var ports = blocks
-            .OrderBy(block => block.PartId)
-            .SelectMany(block => block.Ports)
+        var ports = creature.Parts
+            .OrderBy(part => part.Id)
+            .SelectMany(part => PartKinds.Of(part.PartKind).Ports(part))
             .ToArray();
         return new BrainPortLayout(
             ports.Where(port => port.Direction == PortDirection.Input).ToArray(),

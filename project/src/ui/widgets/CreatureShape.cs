@@ -28,4 +28,7 @@ public sealed record CreatureShape(
     /// in place of their joint's ring, as <see cref="CreatureDef.HingeParts"/>.
     /// </summary>
     public IReadOnlyList<IHingePartDef> HingeParts => [.. JointMotors, .. Brakes, .. AngleSensors];
+
+    /// <summary>Every part on a joint's slots (#1221): the <see cref="HingeParts"/>, Wheels, Touch sensors and Rubbers.</summary>
+    public IReadOnlyList<IJointPartDef> JointParts => [.. HingeParts, .. Wheels, .. TouchSensors, .. Rubbers];
 }

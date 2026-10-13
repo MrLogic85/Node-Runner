@@ -5,7 +5,7 @@ namespace NodeRunner.Domain;
 /// length; beams turn freely at the nodes they share unless a closed triangle
 /// locks them (see <c>RigidTriangles</c> in NodeRunner.Mechanics). See docs/CREATURE_MODEL.md.
 /// </summary>
-public sealed record BeamDef
+public sealed record BeamDef : IPartDef
 {
     public BeamDef(int id, int nodeA, int nodeB, string? name = null)
     {
@@ -42,4 +42,6 @@ public sealed record BeamDef
     public int NodeB { get; }
 
     public string? Name { get; }
+
+    PartKind IPartDef.PartKind => PartKind.Beam;
 }

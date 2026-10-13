@@ -5,7 +5,7 @@ namespace NodeRunner.Domain;
 /// more <see cref="BeamDef"/>s meet; it has no motion of its own beyond what
 /// the beams attached to it do. See docs/CREATURE_MODEL.md.
 /// </summary>
-public sealed record NodeDef
+public sealed record NodeDef : IPartDef
 {
     /// <summary>
     /// A plain joint's radius (#626): it is drawn and collides at this size, unless a joint part
@@ -38,4 +38,6 @@ public sealed record NodeDef
     public Vector2D Position { get; }
 
     public string? Name { get; }
+
+    PartKind IPartDef.PartKind => PartKind.Node;
 }

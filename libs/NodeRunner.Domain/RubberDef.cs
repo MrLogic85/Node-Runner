@@ -6,7 +6,7 @@ namespace NodeRunner.Domain;
 /// and a Touch sensor, adds no radius, weight or brain ports, and has no settings. See
 /// docs/CREATURE_MODEL.md → "Rubber".
 /// </summary>
-public sealed record RubberDef
+public sealed record RubberDef : IJointPartDef
 {
     /// <summary>How far its skin reaches outside its joint's drawn edge, in world units (#1142). It adds no collider and no tap area.</summary>
     public const double Skin = 3;
@@ -33,6 +33,8 @@ public sealed record RubberDef
     public int NodeId { get; }
 
     public string? Name { get; }
+
+    PartKind IPartDef.PartKind => PartKind.Rubber;
 
     public RubberDef WithName(string? name) => new(Id, NodeId, name);
 }

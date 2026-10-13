@@ -25,6 +25,7 @@ public sealed record CreatureDef
     private readonly ReadOnlyCollection<VelocityMotorDef> _velocityMotors;
     private readonly ReadOnlyCollection<BrakeDef> _brakes;
     private readonly ReadOnlyCollection<AngleSensorDef> _angleSensors;
+    private readonly Dictionary<int, IPartDef> _partById;
     private readonly Dictionary<int, int> _nodeIndexById;
     private readonly Dictionary<int, int> _beamIndexById;
     private readonly Dictionary<int, int> _sensorIndexById;
@@ -108,25 +109,15 @@ public sealed record CreatureDef
         ArgumentNullException.ThrowIfNull(velocityMotors);
         ArgumentNullException.ThrowIfNull(brakes);
         ArgumentNullException.ThrowIfNull(angleSensors);
-        if (nodes.Contains(null!) || beams.Contains(null!) || sensors.Contains(null!) || servos.Contains(null!) || pistons.Contains(null!) || springs.Contains(null!) || wheels.Contains(null!) || touchSensors.Contains(null!) || rubbers.Contains(null!) || velocityMotors.Contains(null!) || brakes.Contains(null!) || angleSensors.Contains(null!))
+        IPartDef[] parts = [.. nodes, .. beams, .. sensors, .. servos, .. pistons, .. springs, .. wheels, .. touchSensors, .. rubbers, .. velocityMotors, .. brakes, .. angleSensors];
+        if (parts.Contains(null!))
         {
             throw new ArgumentException("A creature's part lists cannot contain null.");
         }
 
         var maxId = 0;
         var ids = new HashSet<int>();
-        ValidatePartIds(nodes.Select(node => node.Id), ids, ref maxId);
-        ValidatePartIds(beams.Select(beam => beam.Id), ids, ref maxId);
-        ValidatePartIds(sensors.Select(sensor => sensor.Id), ids, ref maxId);
-        ValidatePartIds(servos.Select(servo => servo.Id), ids, ref maxId);
-        ValidatePartIds(pistons.Select(piston => piston.Id), ids, ref maxId);
-        ValidatePartIds(springs.Select(spring => spring.Id), ids, ref maxId);
-        ValidatePartIds(wheels.Select(wheel => wheel.Id), ids, ref maxId);
-        ValidatePartIds(touchSensors.Select(touch => touch.Id), ids, ref maxId);
-        ValidatePartIds(rubbers.Select(rubber => rubber.Id), ids, ref maxId);
-        ValidatePartIds(velocityMotors.Select(motor => motor.Id), ids, ref maxId);
-        ValidatePartIds(brakes.Select(brake => brake.Id), ids, ref maxId);
-        ValidatePartIds(angleSensors.Select(angleSensor => angleSensor.Id), ids, ref maxId);
+        ValidatePartIds(parts.Select(part => part.Id), ids, ref maxId);
 
         var resolvedNextPartId = nextPartId ?? maxId + 1;
         if (resolvedNextPartId <= 0)
@@ -160,33 +151,16 @@ public sealed record CreatureDef
 
         var beamIds = beams.Select(beam => beam.Id).ToHashSet();
         var links = LinkRef.All(beams, pistons, springs).ToArray();
-        // A joint holds one part per slot (#1044): one hinge part (a Servo, a Velocity motor, a Brake or an Angle sensor) and one Wheel.
-        var jointsWithHingePart = new HashSet<int>();
-        foreach (var part in servos.Concat<IHingePartDef>(velocityMotors).Concat(brakes).Concat(angleSensors))
+        // A joint holds one part per slot (#1044).
+        var filledSlots = new HashSet<(int NodeId, JointSlot Slot)>();
+        foreach (var part in parts.OfType<IJointPartDef>())
         {
-            ValidateJointPart(part.NodeId, nodeIds, jointsWithHingePart, "hinge part");
-            ValidateHingePartSide(part.FixedLinkId, part.NodeId, links, wheels);
-            ValidateHingePartSide(part.TargetLinkId, part.NodeId, links, wheels);
-        }
-
-        var jointsWithWheel = new HashSet<int>();
-        foreach (var wheel in wheels)
-        {
-            ValidateJointPart(wheel.NodeId, nodeIds, jointsWithWheel, "Wheel");
-        }
-
-        // A Touch sensor has its own joint-part slot, one per joint, next to a Servo and a Wheel (#1045).
-        var jointsWithTouch = new HashSet<int>();
-        foreach (var touch in touchSensors)
-        {
-            ValidateJointPart(touch.NodeId, nodeIds, jointsWithTouch, "Touch sensor");
-        }
-
-        // A Rubber has its own joint-part slot too, one per joint (#1142).
-        var jointsWithRubber = new HashSet<int>();
-        foreach (var rubber in rubbers)
-        {
-            ValidateJointPart(rubber.NodeId, nodeIds, jointsWithRubber, "Rubber");
+            ValidateJointPart(part, nodeIds, filledSlots);
+            if (part is IHingePartDef hingePart)
+            {
+                ValidateHingePartSide(hingePart.FixedLinkId, part.NodeId, links, wheels);
+                ValidateHingePartSide(hingePart.TargetLinkId, part.NodeId, links, wheels);
+            }
         }
 
         var beamsWithSensor = new HashSet<int>();
@@ -213,6 +187,8 @@ public sealed record CreatureDef
         _angleSensors = Array.AsReadOnly(angleSensors.ToArray());
         JointMotors = Array.AsReadOnly(_servos.Concat<IJointMotorDef>(_velocityMotors).ToArray());
         HingeParts = Array.AsReadOnly(JointMotors.Concat<IHingePartDef>(_brakes).Concat(_angleSensors).ToArray());
+        Parts = Array.AsReadOnly<IPartDef>([.. _nodes, .. _beams, .. _sensors, .. _servos, .. _pistons, .. _springs, .. _wheels, .. _touchSensors, .. _rubbers, .. _velocityMotors, .. _brakes, .. _angleSensors]);
+        _partById = Parts.ToDictionary(part => part.Id);
         NextPartId = resolvedNextPartId;
         _nodeIndexById = BuildIndex(_nodes, node => node.Id);
         _beamIndexById = BuildIndex(_beams, beam => beam.Id);
@@ -273,13 +249,27 @@ public sealed record CreatureDef
     public IReadOnlyList<IHingePartDef> HingeParts { get; }
 
     /// <summary>
-    /// Every part: nodes, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers, Velocity motors, Brakes and Angle sensors. A new kind of part counts here too,
-    /// since what scales with the creature's size reads it (#318).
+    /// Every part (#1221), list by list: nodes, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers,
+    /// Velocity motors, Brakes and Angle sensors. Ids are unique across them.
     /// </summary>
     [JsonIgnore]
-    public int PartCount => _nodes.Count + _beams.Count + _sensors.Count + _servos.Count + _pistons.Count + _springs.Count + _wheels.Count + _touchSensors.Count + _rubbers.Count + _velocityMotors.Count + _brakes.Count + _angleSensors.Count;
+    public IReadOnlyList<IPartDef> Parts { get; }
+
+    /// <summary>How many <see cref="Parts"/> there are, which what scales with the creature's size reads (#318).</summary>
+    [JsonIgnore]
+    public int PartCount => Parts.Count;
 
     public int NextPartId { get; }
+
+    /// <summary>The part with <paramref name="partId"/>, of whatever kind (#1221), or null if there is none.</summary>
+    public IPartDef? FindPart(int partId) => _partById.GetValueOrDefault(partId);
+
+    /// <summary>The joint parts on joint <paramref name="nodeId"/>: see the static <see cref="JointParts"/>.</summary>
+    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId)
+    {
+        NodeIndexOf(nodeId);
+        return JointParts(nodeId, Parts);
+    }
 
     public int NodeIndexOf(int nodeId) => IndexOf(_nodeIndexById, nodeId, "Node id must point to an existing node.");
 
@@ -334,22 +324,18 @@ public sealed record CreatureDef
     }
 
     /// <summary>
-    /// The joint parts on joint <paramref name="nodeId"/> among these that are selected in its place, top → down as
-    /// drawn (#1044): its joint motor, Brake (#1041) or Angle sensor (#1204), then its Wheel, its Rubber (#1142) and its Touch sensor (#1045).
-    /// Empty on a bare joint.
+    /// The joint parts on joint <paramref name="nodeId"/> among <paramref name="parts"/> that are selected in its place,
+    /// in <see cref="JointSlot"/> order. Empty on a bare joint.
     /// </summary>
-    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<IHingePartDef> hingeParts, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors, IEnumerable<RubberDef> rubbers)
+    public static IReadOnlyList<CreatureElementSelection> JointParts(int nodeId, IEnumerable<IPartDef> parts)
     {
-        ArgumentNullException.ThrowIfNull(hingeParts);
-        ArgumentNullException.ThrowIfNull(wheels);
-        ArgumentNullException.ThrowIfNull(touchSensors);
-        ArgumentNullException.ThrowIfNull(rubbers);
+        ArgumentNullException.ThrowIfNull(parts);
         return
         [
-            .. hingeParts.Where(part => part.NodeId == nodeId).Select(part => new CreatureElementSelection(part.Kind, part.Id)),
-            .. wheels.Where(wheel => wheel.NodeId == nodeId).Select(wheel => new CreatureElementSelection(CreatureElementKind.Wheel, wheel.Id)),
-            .. rubbers.Where(rubber => rubber.NodeId == nodeId).Select(rubber => new CreatureElementSelection(CreatureElementKind.Rubber, rubber.Id)),
-            .. touchSensors.Where(touch => touch.NodeId == nodeId).Select(touch => new CreatureElementSelection(CreatureElementKind.TouchSensor, touch.Id)),
+            .. parts.OfType<IJointPartDef>()
+                .Where(part => part.NodeId == nodeId)
+                .OrderBy(PartKinds.SlotOf)
+                .Select(CreatureElementSelection.Of),
         ];
     }
 
@@ -371,18 +357,11 @@ public sealed record CreatureDef
         return motors.Any(motor => motor.NodeId == nodeId) ? JointMotor.Radius : NodeDef.HubRadius;
     }
 
-    /// <summary>
-    /// Whether the joint <paramref name="nodeId"/> holds a joint part among these: a motor, Brake (#1039) or Angle sensor (#1204), Wheel
-    /// (#129), Touch sensor (#1045) or Rubber (#1142).
-    /// </summary>
-    public static bool HasJointPart(int nodeId, IEnumerable<IHingePartDef> hingeParts, IEnumerable<WheelDef> wheels, IEnumerable<TouchSensorDef> touchSensors, IEnumerable<RubberDef> rubbers)
+    /// <summary>Whether the joint <paramref name="nodeId"/> holds a joint part among <paramref name="parts"/>, in any slot (#1044).</summary>
+    public static bool HasJointPart(int nodeId, IEnumerable<IPartDef> parts)
     {
-        ArgumentNullException.ThrowIfNull(hingeParts);
-        ArgumentNullException.ThrowIfNull(wheels);
-        ArgumentNullException.ThrowIfNull(touchSensors);
-        ArgumentNullException.ThrowIfNull(rubbers);
-        return hingeParts.Any(part => part.NodeId == nodeId) || wheels.Any(wheel => wheel.NodeId == nodeId)
-            || touchSensors.Any(touch => touch.NodeId == nodeId) || rubbers.Any(rubber => rubber.NodeId == nodeId);
+        ArgumentNullException.ThrowIfNull(parts);
+        return parts.OfType<IJointPartDef>().Any(part => part.NodeId == nodeId);
     }
 
     /// <summary>The beam, Piston or Spring with <paramref name="linkId"/>.</summary>
@@ -431,12 +410,21 @@ public sealed record CreatureDef
         }
     }
 
-    private static void ValidateJointPart(int nodeId, HashSet<int> nodeIds, HashSet<int> jointsInSlot, string slot)
+    private static void ValidateJointPart(IJointPartDef part, HashSet<int> nodeIds, HashSet<(int NodeId, JointSlot Slot)> filledSlots)
     {
-        ValidateNodeId(nodeId, nodeIds);
-        if (!jointsInSlot.Add(nodeId))
+        ValidateNodeId(part.NodeId, nodeIds);
+        var slot = PartKinds.SlotOf(part);
+        if (!filledSlots.Add((part.NodeId, slot)))
         {
-            throw new ArgumentException($"Node id {nodeId} already has a {slot}; a joint holds at most one.");
+            var slotName = slot switch
+            {
+                JointSlot.HingePart => "hinge part",
+                JointSlot.Wheel => "Wheel",
+                JointSlot.Rubber => "Rubber",
+                JointSlot.TouchSensor => "Touch sensor",
+                _ => throw new ArgumentOutOfRangeException(nameof(part), slot, "Unknown joint slot."),
+            };
+            throw new ArgumentException($"Node id {part.NodeId} already has a {slotName}; a joint holds at most one.");
         }
     }
 
@@ -448,7 +436,7 @@ public sealed record CreatureDef
         }
     }
 
-    // A motor's or Brake's side is a link touching its joint, or the Wheel on it (#1118).
+    // A hinge part's side is a link touching its joint, or the Wheel on it (#1118).
     private static void ValidateHingePartSide(int? linkId, int nodeId, IReadOnlyList<LinkRef> links, IReadOnlyList<WheelDef> wheels)
     {
         if (linkId is null)

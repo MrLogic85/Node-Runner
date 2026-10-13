@@ -62,8 +62,8 @@ public sealed class VelocityMotorDefTests
         creature.PartCount.ShouldBe(7);
         creature.NodeRadius(1).ShouldBe(JointMotor.Radius);
         creature.CoveredRadius(1).ShouldBe(JointMotor.Radius);
-        CreatureDef.JointParts(1, creature.JointMotors, [], [], []).ShouldBe([new CreatureElementSelection(CreatureElementKind.VelocityMotor, 7)]);
-        CreatureDef.HasJointPart(1, creature.JointMotors, [], [], []).ShouldBeTrue();
+        creature.JointPartsAt(1).ShouldBe([new CreatureElementSelection(CreatureElementKind.VelocityMotor, 7)]);
+        CreatureDef.HasJointPart(1, creature.Parts).ShouldBeTrue();
     }
 
     private static CreatureDef Creature(VelocityMotorDef[] motors, ServoDef[]? servos = null, WheelDef[]? wheels = null) =>

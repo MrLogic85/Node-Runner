@@ -36,19 +36,13 @@ public sealed class SelectionViewModel : INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(creature);
         ArgumentNullException.ThrowIfNull(tapped);
-        var nodeId = tapped.Kind switch
+        var nodeId = creature.FindPart(tapped.Id) switch
         {
-            CreatureElementKind.Node => tapped.Id,
-            CreatureElementKind.Servo => creature.Servos.FirstOrDefault(servo => servo.Id == tapped.Id)?.NodeId,
-            CreatureElementKind.Wheel => creature.Wheels.FirstOrDefault(wheel => wheel.Id == tapped.Id)?.NodeId,
-            CreatureElementKind.TouchSensor => creature.TouchSensors.FirstOrDefault(touch => touch.Id == tapped.Id)?.NodeId,
-            CreatureElementKind.Rubber => creature.Rubbers.FirstOrDefault(rubber => rubber.Id == tapped.Id)?.NodeId,
-            CreatureElementKind.VelocityMotor => creature.VelocityMotors.FirstOrDefault(motor => motor.Id == tapped.Id)?.NodeId,
-            CreatureElementKind.Brake => creature.Brakes.FirstOrDefault(brake => brake.Id == tapped.Id)?.NodeId,
-            CreatureElementKind.AngleSensor => creature.AngleSensors.FirstOrDefault(angleSensor => angleSensor.Id == tapped.Id)?.NodeId,
-            _ => null,
+            NodeDef node => node.Id,
+            IJointPartDef jointPart => jointPart.NodeId,
+            _ => (int?)null,
         };
-        var stacked = nodeId is { } node ? CreatureDef.JointParts(node, creature.HingeParts, creature.Wheels, creature.TouchSensors, creature.Rubbers) : [];
+        var stacked = nodeId is { } joint ? creature.JointPartsAt(joint) : [];
         SelectedParts = stacked.Count > 0 ? stacked : [tapped];
     }
 

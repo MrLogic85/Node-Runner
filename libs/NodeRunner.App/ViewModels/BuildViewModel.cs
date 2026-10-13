@@ -593,10 +593,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Whether joint <paramref name="nodeId"/> draws the loose mark (ring and cross): a loose joint
-    /// without a motor, Brake (#1041) or Wheel. Those show the error in their own <c>danger</c> look (#1140); a Touch
+    /// without a hinge part or Wheel. Those show the error in their own <c>danger</c> look (#1140); a Touch
     /// sensor's cushion and a Rubber's skin (#1142) have none, so they do not count.
     /// </summary>
-    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId) && !CreatureDef.HasJointPart(nodeId, HingeParts, _builder.Wheels, touchSensors: [], rubbers: []);
+    public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId)
+        && !CreatureDef.HasJointPart(nodeId, _builder.JointParts.Where(part => PartKinds.SlotOf(part) is JointSlot.HingePart or JointSlot.Wheel));
 
     /// <summary>Why a Servo, Motor, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work (#1118).</summary>
     public static UiText NeedsTwoSidesReason(CreatureElementKind kind) => kind switch
@@ -1031,7 +1032,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint (#973): a tap, drag
     /// or box selects them, never the joint on its own.
     /// </summary>
-    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, HingeParts, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers);
+    public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, _builder.JointParts);
 
     public IReadOnlyList<LinkRef> LinksAt(int nodeId) => _builder.LinksAt(nodeId);
 
