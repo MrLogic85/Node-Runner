@@ -12,7 +12,8 @@ public partial class PistonPart : PartVisual
     private float _radiusB;
     private float _coveredA = JointDrawing.HubRadius;
     private float _coveredB = JointDrawing.HubRadius;
-    private float _travel;
+    private float _shortest;
+    private float _longest;
     private bool _danger;
     private bool _haloA;
     private bool _haloB;
@@ -48,7 +49,7 @@ public partial class PistonPart : PartVisual
         set => Change(ref _radiusB, value);
     }
 
-    /// <summary>How far what is drawn over joint A reaches (<see cref="CreatureDef.CoveredRadius(int)"/>), where its parts start.</summary>
+    /// <summary>How far what is drawn over joint A reaches (<see cref="ServoGeometry.LinkCover"/>), where its parts start.</summary>
     public float CoveredA
     {
         get => _coveredA;
@@ -62,11 +63,18 @@ public partial class PistonPart : PartVisual
         set => Change(ref _coveredB, value);
     }
 
-    /// <summary>Its travel, longest length less shortest, which sets its cylinder's length.</summary>
-    public float Travel
+    /// <summary>Its shortest length, centre to centre, which sets its telescope's sizes (#1210).</summary>
+    public float Shortest
     {
-        get => _travel;
-        set => Change(ref _travel, value);
+        get => _shortest;
+        set => Change(ref _shortest, value);
+    }
+
+    /// <summary>Its longest length, centre to centre: its telescope is fully out there (#1210).</summary>
+    public float Longest
+    {
+        get => _longest;
+        set => Change(ref _longest, value);
     }
 
     /// <summary>Too short to train (#593): drawn in <c>danger</c> instead of <c>accent</c>.</summary>
@@ -91,5 +99,5 @@ public partial class PistonPart : PartVisual
     }
 
     public override void _Draw() =>
-        PistonDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, CoveredA, CoveredB, Travel, Danger ? Theme.Danger : Theme.MotorAccent, Selected, HaloA, HaloB);
+        PistonDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, CoveredA, CoveredB, Shortest, Longest, Danger ? Theme.Danger : Theme.MotorAccent, Selected, HaloA, HaloB);
 }

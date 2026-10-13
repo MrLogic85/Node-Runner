@@ -6,11 +6,10 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// Draws a Piston between two joints (#451), shared by Build's canvas and the creature in
-/// Training: a thin <c>accent</c> rod from hub to hub (#1086), a cylinder at its first joint and a
-/// cap at its second. The cylinder reaches as far past joint A's hub as its travel, which is on the
-/// gap between the hubs (#870, #835, #1086), so a shorter Stroke gives a shorter cylinder; the rod
-/// runs on to joint B. Cylinder and cap start at the edge of what covers their joint, a Servo or
-/// the hub, so a Servo never hides them. Selected, it gets the beam's two <c>halo</c> lines,
+/// Training, as a three-part telescope (#1210): a thin <c>accent</c> rod from hub to hub (#1086),
+/// a middle stage and an outer cylinder at its first joint, and a cap at its second.
+/// <c>docs/WORLD_VISUALS.md</c> → "Piston" owns its look, and <see cref="TelescopeGeometry"/>
+/// places the parts. Selected, it gets the beam's two <c>halo</c> lines,
 /// which stop at the joints' hubs or join a selected joint's halo (#710). Its stroke ticks are
 /// drawn apart, by <see cref="DrawStroke"/>, so a view can put them over the joints. Drawn in window
 /// pixels (<see cref="UiPixelSpace"/>) so it stays crisp at any zoom; <c>drawTransform</c> is the
@@ -21,12 +20,12 @@ public static class PistonDrawing
     private const float _line = UiSize.Stroke.Signal;
     private const float _rodPerBeam = 0.5f;
     private const float _cylinderPerBeam = 7f / 3f;
+    private const float _stageHalfPerBeam = 0.75f;
     private const float _cylinderRadius = 2;
     private const float _capLength = 10;
 
     private const float _hairline = 1;
     private const float _dash = 6;
-    private const float _minCylinder = 4;
     private const int _cornerSegments = 3;
 
     private const float _restRadius = 3;
@@ -39,9 +38,10 @@ public static class PistonDrawing
     /// <param name="b">Joint B's centre, where the rod ends in its cap.</param>
     /// <param name="radiusA">Joint A's drawn radius, whose halo the selection lines join; the rod starts at its hub (#1086).</param>
     /// <param name="radiusB">Joint B's drawn radius.</param>
-    /// <param name="coveredA">How far what is drawn over joint A reaches, its hub or a Servo; the cylinder starts there.</param>
+    /// <param name="coveredA">How far what is drawn over joint A reaches (<see cref="ServoGeometry.LinkCover"/>); the cylinder starts there.</param>
     /// <param name="coveredB">How far what is drawn over joint B reaches; the cap sits there.</param>
-    /// <param name="travel">The Piston's travel: its longest length less its shortest.</param>
+    /// <param name="shortest">The Piston's shortest length, centre to centre, which sets its parts' sizes.</param>
+    /// <param name="longest">The Piston's longest length, centre to centre.</param>
     /// <param name="line">The rod, cylinder and cap colour: <c>accent</c>, or <c>danger</c> while too short.</param>
     /// <param name="selected">Whether to draw the selection halo.</param>
     /// <param name="haloA">Whether joint A is selected too, so the selection lines end on its halo ring.</param>
@@ -56,7 +56,8 @@ public static class PistonDrawing
         float radiusB,
         float coveredA,
         float coveredB,
-        float travel,
+        float shortest,
+        float longest,
         Color line,
         bool selected,
         bool haloA = false,
@@ -74,22 +75,25 @@ public static class PistonDrawing
         var along = (b - a).Normalized();
         var across = along.Orthogonal();
         var cylinderHalf = CylinderHalf(theme);
+        var telescope = TelescopeGeometry.Place(TelescopeGeometry.Piston, a.DistanceTo(b), shortest, longest, coveredA, coveredB);
 
         // Like a beam, the rod runs hub to hub (#1086), or, when they meet, centre to centre.
         const float hub = JointDrawing.HubRadius;
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, hub, b, hub) ?? (a, b);
         canvas.DrawLine(toPixels * rodStart, toPixels * rodEnd, line, theme.BeamWidth * _rodPerBeam * scale, antialiased: true);
 
-        // The travel is on the gap between the hubs (#835, #1086), so at its shortest joint B's hub
-        // meets the cylinder's end at most; it never runs past joint B's hub. It starts at the edge of
-        // what covers joint A, so a Servo there never hides it.
-        var cylinderStart = a + (along * coveredA);
-        var cylinderEnd = Math.Min(hub + Math.Max(travel, _minCylinder), a.DistanceTo(b) - hub);
-        var cylinder = Cylinder(cylinderStart, a + (along * Math.Max(cylinderEnd, coveredA + _minCylinder)), along, across, cylinderHalf);
-        canvas.DrawColoredPolygon([.. cylinder.Select(point => toPixels * point)], theme.SensorFill);
-        canvas.DrawPolyline([.. cylinder.Append(cylinder[0]).Select(point => toPixels * point)], line, _line * scale, antialiased: true);
+        // The stage runs from under the cylinder, so only its mouth end shows (#1210).
+        if (telescope.HasStage)
+        {
+            DrawTube(canvas, toPixels, scale, theme, Cylinder(a + (along * telescope.Start), a + (along * telescope.StageEnd), along, across, theme.BeamWidth * _stageHalfPerBeam), line);
+        }
 
-        var cap = b - (along * coveredB);
+        if (telescope.HasCylinder)
+        {
+            DrawTube(canvas, toPixels, scale, theme, Cylinder(a + (along * telescope.Start), a + (along * telescope.CylinderEnd), along, across, cylinderHalf), line);
+        }
+
+        var cap = a + (along * telescope.Cap);
         canvas.DrawLine(toPixels * (cap + (across * (_capLength / 2))), toPixels * (cap - (across * (_capLength / 2))), line, _line * scale, antialiased: true);
 
         if (selected)
@@ -98,6 +102,12 @@ public static class PistonDrawing
         }
 
         canvas.DrawSetTransformMatrix(drawTransform);
+    }
+
+    private static void DrawTube(CanvasItem canvas, Transform2D toPixels, float scale, VisualTheme theme, Vector2[] tube, Color line)
+    {
+        canvas.DrawColoredPolygon([.. tube.Select(point => toPixels * point)], theme.SensorFill);
+        canvas.DrawPolyline([.. tube.Append(tube[0]).Select(point => toPixels * point)], line, _line * scale, antialiased: true);
     }
 
     /// <summary>

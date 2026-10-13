@@ -12,7 +12,8 @@ public partial class SpringPart : PartVisual
     private float _radiusB;
     private float _coveredA = JointDrawing.HubRadius;
     private float _coveredB = JointDrawing.HubRadius;
-    private float _travel;
+    private float _shortest;
+    private float _longest;
     private float _rest;
     private double _stiffness = SpringDef.DefaultStiffness;
     private bool _danger;
@@ -48,7 +49,7 @@ public partial class SpringPart : PartVisual
         set => Change(ref _radiusB, value);
     }
 
-    /// <summary>How far what is drawn over joint A reaches (<see cref="CreatureDef.CoveredRadius(int)"/>), where its parts start.</summary>
+    /// <summary>How far what is drawn over joint A reaches (<see cref="ServoGeometry.LinkCover"/>), where its parts start.</summary>
     public float CoveredA
     {
         get => _coveredA;
@@ -62,11 +63,18 @@ public partial class SpringPart : PartVisual
         set => Change(ref _coveredB, value);
     }
 
-    /// <summary>Its travel, longest length less shortest, which sets its damper body's length (#835).</summary>
-    public float Travel
+    /// <summary>Its shortest length, centre to centre, which sets its telescope's sizes (#1210).</summary>
+    public float Shortest
     {
-        get => _travel;
-        set => Change(ref _travel, value);
+        get => _shortest;
+        set => Change(ref _shortest, value);
+    }
+
+    /// <summary>Its longest length, centre to centre: its telescope is fully out there (#1210).</summary>
+    public float Longest
+    {
+        get => _longest;
+        set => Change(ref _longest, value);
     }
 
     /// <summary>Its rest length, centre to centre, which sets its coil's turns (#835).</summary>
@@ -105,5 +113,5 @@ public partial class SpringPart : PartVisual
     }
 
     public override void _Draw() =>
-        SpringDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, CoveredA, CoveredB, Travel, Rest, Stiffness, Danger, Selected, HaloA, HaloB);
+        SpringDrawing.Draw(this, Transform2D.Identity, Theme, A, B, RadiusA, RadiusB, CoveredA, CoveredB, Shortest, Longest, Rest, Stiffness, Danger, Selected, HaloA, HaloB);
 }

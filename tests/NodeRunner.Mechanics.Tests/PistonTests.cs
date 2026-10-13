@@ -45,7 +45,7 @@ public sealed class PistonTests
         Piston.LongestLength(_piston, _built, 120).ShouldBe(_built);
     }
 
-    // So a cylinder from joint A's hub as long as its travel never reaches past joint B's hub (#1086).
+    // A real cylinder is at most as long as the shortest gap between the hubs, so the gap can at most double (#870, #1086).
     [Theory]
     [InlineData(0.1, 0)]
     [InlineData(1, 0)]

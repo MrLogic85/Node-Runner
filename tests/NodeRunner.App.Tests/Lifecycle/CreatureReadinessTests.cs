@@ -84,21 +84,22 @@ public sealed class CreatureReadinessTests
     [InlineData(CreatureElementKind.Beam, 1, 68, true)]
     [InlineData(CreatureElementKind.Beam, 2, 79.9, false)]
     [InlineData(CreatureElementKind.Beam, 2, 80, true)]
-    [InlineData(CreatureElementKind.Piston, 0, 55.9, false)]
-    [InlineData(CreatureElementKind.Piston, 0, 56, true)]
-    [InlineData(CreatureElementKind.Piston, 1, 67.9, false)]
-    [InlineData(CreatureElementKind.Piston, 1, 68, true)]
-    [InlineData(CreatureElementKind.Piston, 2, 79.9, false)]
-    [InlineData(CreatureElementKind.Piston, 2, 80, true)]
-    [InlineData(CreatureElementKind.Spring, 0, 55.9, false)]
-    [InlineData(CreatureElementKind.Spring, 0, 56, true)]
-    [InlineData(CreatureElementKind.Spring, 1, 67.9, false)]
-    [InlineData(CreatureElementKind.Spring, 1, 68, true)]
-    [InlineData(CreatureElementKind.Spring, 2, 79.9, false)]
-    [InlineData(CreatureElementKind.Spring, 2, 80, true)]
+    [InlineData(CreatureElementKind.Piston, 0, 71.9, false)]
+    [InlineData(CreatureElementKind.Piston, 0, 72, true)]
+    [InlineData(CreatureElementKind.Piston, 1, 83.9, false)]
+    [InlineData(CreatureElementKind.Piston, 1, 84, true)]
+    [InlineData(CreatureElementKind.Piston, 2, 95.9, false)]
+    [InlineData(CreatureElementKind.Piston, 2, 96, true)]
+    [InlineData(CreatureElementKind.Spring, 0, 71.9, false)]
+    [InlineData(CreatureElementKind.Spring, 0, 72, true)]
+    [InlineData(CreatureElementKind.Spring, 1, 83.9, false)]
+    [InlineData(CreatureElementKind.Spring, 1, 84, true)]
+    [InlineData(CreatureElementKind.Spring, 2, 95.9, false)]
+    [InlineData(CreatureElementKind.Spring, 2, 96, true)]
     public void Problems_WithALinkShorterThanItsMinimum_SaysItIsTooShort(CreatureElementKind kind, int motors, double length, bool fits)
     {
-        // #1212: 26 free units between what covers each end, a hub (15) or a joint motor (27).
+        // #1212: 26 free units between what covers each end, a hub (15) or a joint motor (27), and
+        // 16 more for a Piston's or Spring's telescope (#1210).
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, length))],
             kind == CreatureElementKind.Beam ? [new BeamDef(101, 1, 2)] : [],
@@ -250,9 +251,15 @@ public sealed class CreatureReadinessTests
 
     [Theory]
     [InlineData(CreatureElementKind.Beam, 15, 15, 56)]
-    [InlineData(CreatureElementKind.Piston, 27, 15, 68)]
-    [InlineData(CreatureElementKind.Spring, 27, 27, 80)]
-    public void MinimumLength_AddsTheGapToWhatCoversEachEnd(CreatureElementKind kind, double coveredA, double coveredB, double minimum)
+    [InlineData(CreatureElementKind.Beam, 27, 15, 68)]
+    [InlineData(CreatureElementKind.Beam, 27, 27, 80)]
+    [InlineData(CreatureElementKind.Piston, 15, 15, 72)]
+    [InlineData(CreatureElementKind.Piston, 27, 15, 84)]
+    [InlineData(CreatureElementKind.Piston, 27, 27, 96)]
+    [InlineData(CreatureElementKind.Spring, 15, 15, 72)]
+    [InlineData(CreatureElementKind.Spring, 27, 15, 84)]
+    [InlineData(CreatureElementKind.Spring, 27, 27, 96)]
+    public void MinimumLength_AddsTheGapAndTheLinkTypesExtraToWhatCoversEachEnd(CreatureElementKind kind, double coveredA, double coveredB, double minimum)
     {
         CreatureReadiness.MinimumLength(kind, coveredA, coveredB).ShouldBe(minimum);
     }

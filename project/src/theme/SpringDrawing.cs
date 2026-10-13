@@ -7,9 +7,9 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// Draws a Spring between two joints (#453) as a coilover (#807), shared by Build's canvas, the
 /// creature in Training and the thumbnails; <c>docs/WORLD_VISUALS.md</c> → "Spring" owns its look.
-/// Each side of the helix is one call of the same wire (#835). The body, like a Piston's cylinder,
-/// reaches as far past joint A's hub as the Spring's travel, on the gap between the hubs (#835,
-/// #1086); body and seats start at the edge of what covers their joint, so a Servo never hides them.
+/// Each side of the helix is one call of the same wire (#835). The damper inside the coil is a
+/// three-part telescope like a Piston's (#1210), narrower and in <c>line-strong</c>, placed by
+/// <see cref="TelescopeGeometry"/>.
 /// Drawn through <see cref="UiPixelPen"/>, so it stays crisp at any zoom.
 /// </summary>
 public static class SpringDrawing
@@ -30,7 +30,8 @@ public static class SpringDrawing
     private const float _rodPerBeam = 0.5f;
     private const float _coilRadiusPerBeam = 4f / 3f;
     private const float _seatHalfPerBeam = 5f / 3f;
-    private const float _bodyHalfPerBeam = 0.75f;
+    private const float _cylinderHalfPerBeam = 5f / 6f;
+    private const float _stageHalfPerBeam = 0.5f;
 
     // The coil's front strokes bow this far towards joint B, so the turns read as a helix seen from the side.
     private const float _tilt = 4;
@@ -46,7 +47,6 @@ public static class SpringDrawing
     // Two turns stacked solid sit this much more than the wire apart, as the front strokes bow.
     private const float _solidGap = 2;
     private const float _minSpan = 4;
-    private const float _minBodyLength = 6;
 
     /// <param name="canvas">The CanvasItem drawing it, inside its draw call.</param>
     /// <param name="drawTransform">The canvas's draw transform, for <see cref="UiPixelPen"/>.</param>
@@ -55,9 +55,10 @@ public static class SpringDrawing
     /// <param name="b">Joint B's centre.</param>
     /// <param name="radiusA">Joint A's drawn radius, whose halo the selection lines join; the rod starts at its hub (#1086).</param>
     /// <param name="radiusB">Joint B's drawn radius.</param>
-    /// <param name="coveredA">How far what is drawn over joint A reaches, its hub or a Servo; the body and seat start there.</param>
+    /// <param name="coveredA">How far what is drawn over joint A reaches (<see cref="ServoGeometry.LinkCover"/>); the cylinder and seat start there.</param>
     /// <param name="coveredB">How far what is drawn over joint B reaches; its seat sits a short lead outside.</param>
-    /// <param name="travel">The Spring's travel, its longest length less its shortest, which sets the damper body's length.</param>
+    /// <param name="shortest">The Spring's shortest length, centre to centre, which sets its telescope's sizes.</param>
+    /// <param name="longest">The Spring's longest length, centre to centre.</param>
     /// <param name="rest">The Spring's rest length, centre to centre, which sets the coil's turns.</param>
     /// <param name="stiffness">The Spring's Stiffness, in N/m, which sets the coil's wire.</param>
     /// <param name="danger">Whether it is too short, and drawn in <c>danger</c>.</param>
@@ -74,7 +75,8 @@ public static class SpringDrawing
         float radiusB,
         float coveredA,
         float coveredB,
-        float travel,
+        float shortest,
+        float longest,
         float rest,
         double stiffness,
         bool danger,
@@ -101,31 +103,35 @@ public static class SpringDrawing
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, hub, b, hub) ?? (a, b);
         pen.Line(rodStart, rodEnd, line, theme.BeamWidth * _rodPerBeam);
 
+        var telescope = TelescopeGeometry.Place(TelescopeGeometry.Spring, a.DistanceTo(b), shortest, longest, coveredA, coveredB);
         var seatA = a + (along * (coveredA + _lead));
-        var seatB = b - (along * (coveredB + _lead));
+        var seatB = a + (along * (telescope.Cap - _lead));
         var span = (seatB - seatA).Dot(along);
-        if (span > _minSpan)
+        var radius = theme.BeamWidth * _coilRadiusPerBeam;
+        var wire = Wire(stiffness);
+        var turns = CoilTurns(SeatSpan(rest), wire);
+        var segments = HalfTurnSegments(radius * pen.Scale);
+        var hasCoil = span > _minSpan;
+
+        // The back strokes are the same wire, so each turn reads as one coil.
+        if (hasCoil)
         {
-            var radius = theme.BeamWidth * _coilRadiusPerBeam;
-            var wire = Wire(stiffness);
-            var turns = CoilTurns(SeatSpan(rest), wire);
-            var segments = HalfTurnSegments(radius * pen.Scale);
-
-            // The back strokes are the same wire, so each turn reads as one coil.
             pen.Strokes(Helix(seatA, seatB, across, turns, radius, segments, front: false), line, wire);
+        }
 
-            // The travel is on the gap between the hubs (#835, #1086), so at its shortest joint B's hub
-            // meets the body's end at most. It starts under seat A, at the edge of what covers joint A,
-            // and a short one still shows past seat A.
-            var end = Math.Min(Math.Max(hub + travel, coveredA + _lead + _minBodyLength), a.DistanceTo(b) - hub);
-            if (end - coveredA > _lead)
-            {
-                var edgeA = a + (along * coveredA);
-                var body = PistonDrawing.Cylinder(edgeA, a + (along * end), along, across, theme.BeamWidth * _bodyHalfPerBeam);
-                pen.Polygon(body, theme.SensorFill);
-                pen.Polyline([.. body, body[0]], line, _line);
-            }
+        // The stage runs from under the cylinder, so only its mouth end shows (#1210).
+        if (telescope.HasStage)
+        {
+            DrawTube(pen, theme, PistonDrawing.Cylinder(a + (along * telescope.Start), a + (along * telescope.StageEnd), along, across, theme.BeamWidth * _stageHalfPerBeam), line);
+        }
 
+        if (telescope.HasCylinder)
+        {
+            DrawTube(pen, theme, PistonDrawing.Cylinder(a + (along * telescope.Start), a + (along * telescope.CylinderEnd), along, across, theme.BeamWidth * _cylinderHalfPerBeam), line);
+        }
+
+        if (hasCoil)
+        {
             pen.Strokes(Helix(seatA, seatB, across, turns, radius, segments, front: true), coil, wire);
 
             foreach (var seat in new[] { seatA, seatB })
@@ -138,6 +144,12 @@ public static class SpringDrawing
         {
             SelectionDrawing.DrawLink(canvas, pen.ToPixels, pen.Scale, theme, a, b, radiusA, radiusB, haloA, haloB, SelectionOffset(theme));
         }
+    }
+
+    private static void DrawTube(UiPixelPen pen, VisualTheme theme, Vector2[] tube, Color line)
+    {
+        pen.Polygon(tube, theme.SensorFill);
+        pen.Polyline([.. tube, tube[0]], line, _line);
     }
 
     /// <summary>The selection outline's distance from the axis: the seats are its widest part, and the gap is measured from their ends.</summary>

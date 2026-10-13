@@ -262,6 +262,10 @@ public partial class Creature
         return ServoGeometry.HousingReach(definition.Nodes, definition.CoveredRadius, link, SensorLength(definition, link));
     }
 
+    // A Servo's housing is drawn over its Fixed link, so a Piston's or Spring's telescope starts past it (#1210).
+    private static float LinkCover(CreatureDef definition, LinkRef link, int nodeId) =>
+        ServoGeometry.LinkCover(definition.Nodes, definition.CoveredRadius, definition.Servos, link, nodeId);
+
     private static float SensorLength(CreatureDef definition, LinkRef link) =>
         link.Kind == CreatureElementKind.Beam && definition.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
 
@@ -293,9 +297,10 @@ public partial class Creature
                 Link = _pistons[i],
                 RadiusA = ToGodotFloat(definition.NodeRadius(piston.NodeA), nameof(JointMotor.Radius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(piston.NodeB), nameof(JointMotor.Radius)),
-                CoveredA = ToGodotFloat(definition.CoveredRadius(piston.NodeA), nameof(JointMotor.Radius)),
-                CoveredB = ToGodotFloat(definition.CoveredRadius(piston.NodeB), nameof(JointMotor.Radius)),
-                Travel = (float)(_pistons[i].LongestLength - _pistons[i].ShortestLength),
+                CoveredA = LinkCover(definition, definition.Link(piston.Id), piston.NodeA),
+                CoveredB = LinkCover(definition, definition.Link(piston.Id), piston.NodeB),
+                Shortest = (float)_pistons[i].ShortestLength,
+                Longest = (float)_pistons[i].LongestLength,
             };
             AddChild(visual);
             _pistonVisuals[i] = visual;
@@ -418,9 +423,10 @@ public partial class Creature
                 NodeB = nodeB,
                 RadiusA = ToGodotFloat(definition.NodeRadius(spring.NodeA), nameof(JointMotor.Radius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(spring.NodeB), nameof(JointMotor.Radius)),
-                CoveredA = ToGodotFloat(definition.CoveredRadius(spring.NodeA), nameof(JointMotor.Radius)),
-                CoveredB = ToGodotFloat(definition.CoveredRadius(spring.NodeB), nameof(JointMotor.Radius)),
-                Travel = (float)(longest - shortest),
+                CoveredA = LinkCover(definition, definition.Link(spring.Id), spring.NodeA),
+                CoveredB = LinkCover(definition, definition.Link(spring.Id), spring.NodeB),
+                Shortest = (float)shortest,
+                Longest = (float)longest,
                 Rest = joint.RestLength,
                 Stiffness = spring.Stiffness,
             };

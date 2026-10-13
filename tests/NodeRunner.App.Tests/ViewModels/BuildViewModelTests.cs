@@ -1219,6 +1219,22 @@ public sealed class BuildViewModelTests
     }
 
     [Fact]
+    public void CanvasNotes_MarkAPistonTooShort_WhereABeamWouldFit()
+    {
+        // #1210: a Piston's telescope needs 16 units more than a Beam, 72 between plain joints.
+        var viewModel = new BuildViewModel();
+        viewModel.Load(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200))],
+            [new BeamDef(5, 1, 3), new BeamDef(6, 2, 3)],
+            [],
+            [new PistonDef(7, 1, 2)],
+            nextPartId: 8));
+
+        viewModel.CanvasNotes().ShouldBe(
+            [new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Piston, 7), UiText.Plain("Too short"))]);
+    }
+
+    [Fact]
     public void ShowTrainingBlockers_NotesEachLooseJoint_UntilItIsJoined()
     {
         var viewModel = new BuildViewModel();
