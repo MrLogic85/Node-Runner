@@ -417,7 +417,7 @@ public partial class BuildCanvas : Node2D
     }
 
     /// <summary>
-    /// What goes over the whole creature: the picked link's start rings, the beam a link drag replaces, the aimed
+    /// What goes over the whole creature: the picked link's start rings, the link a link drag replaces, the aimed
     /// camera's rays, warnings, the beam drag's rings and the selection frame.
     /// </summary>
     private void DrawOverlay(CanvasItem canvas)
@@ -427,7 +427,7 @@ public partial class BuildCanvas : Node2D
             return;
         }
 
-        DrawReplacedBeam(canvas);
+        DrawReplacedLink(canvas);
         DrawLinkStarts(canvas);
         DrawSelectedCameraRays(canvas);
         DrawSelectedTravels(canvas);

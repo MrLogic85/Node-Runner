@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>The link drag's drawing (#920, #849): the joints it can start from, its line, its end rings and the beam it replaces.</summary>
+/// <summary>The link drag's drawing (#920, #849): the joints it can start from, its line, its end rings and the link it replaces.</summary>
 public partial class BuildCanvas
 {
     // The Links tool's dashed rings, a refused target's (#451) and a link start's (#1057): this many dashes, each this many segments.
@@ -57,29 +57,45 @@ public partial class BuildCanvas
         DrawDragLine(pen, lineStart, lineEnd, refused is not null ? DragLine.Refused : target is not null ? DragLine.Attaches : DragLine.Free, arrow: false);
     }
 
-    // A Piston or Spring dropped now replaces the beam on its pair (#849): a dashed outline at the
-    // selection's offset says so. It goes under the creature like a selected beam's lines, so a
-    // Servo's clamp, which holds the new link too, stays on top.
-    private void DrawReplacedBeam(CanvasItem canvas)
+    // A link dropped now replaces the link of another kind on its pair (#849, #1176): a dashed outline at
+    // that link's selection offset, from hub to hub over the creature, says so.
+    private void DrawReplacedLink(CanvasItem canvas)
     {
-        if (_viewModel is null || _gestures?.ReplacedBeamId is not { } beamId)
+        if (_viewModel is null || _gestures?.ReplacedLinkId is not { } linkId || ReplacedLinkLine(linkId) is not var (nodeA, nodeB, offset))
         {
             return;
         }
 
-        var beam = _viewModel.Beams[_viewModel.BeamIndexOf(beamId)];
-        var a = NodeById(beam.NodeA);
-        var b = NodeById(beam.NodeB);
+        var a = NodeById(nodeA);
+        var b = NodeById(nodeB);
         if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(a.Position), JointDrawing.HubRadius, ToGodot(b.Position), JointDrawing.HubRadius) is not (var start, var end))
         {
             return;
         }
 
         using var pen = ViewPen(canvas);
-        var across = (end - start).Normalized().Orthogonal() * Theme.SelectedBeamOffset;
+        var across = (end - start).Normalized().Orthogonal() * offset;
         var width = Stroke(Theme.SelectedBeamLineWidth);
         pen.DashedLine(start + across, end + across, Theme.Beam, width, _dragLineDash);
         pen.DashedLine(start - across, end - across, Theme.Beam, width, _dragLineDash);
+    }
+
+    // The replaced link's joints and its selection outline's distance from its axis.
+    private (int NodeA, int NodeB, float Offset)? ReplacedLinkLine(int linkId)
+    {
+        if (_viewModel!.Beams.FirstOrDefault(beam => beam.Id == linkId) is { } beam)
+        {
+            return (beam.NodeA, beam.NodeB, Theme.SelectedBeamOffset);
+        }
+
+        if (_viewModel.Pistons.FirstOrDefault(piston => piston.Id == linkId) is { } piston)
+        {
+            return (piston.NodeA, piston.NodeB, PistonDrawing.SelectionOffset(Theme));
+        }
+
+        return _viewModel.Springs.FirstOrDefault(spring => spring.Id == linkId) is { } spring
+            ? (spring.NodeA, spring.NodeB, SpringDrawing.SelectionOffset(Theme))
+            : null;
     }
 
     private void DrawBeamEndRings(CanvasItem canvas)

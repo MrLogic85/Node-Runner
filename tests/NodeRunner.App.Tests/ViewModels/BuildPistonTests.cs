@@ -45,10 +45,10 @@ public sealed class BuildPistonTests
         gestures.Drag(new Vector2D(98, 2));
         gestures.BeamTargetNodeId.ShouldBe(2);
         gestures.RefusedTargetNodeId.ShouldBeNull();
-        gestures.ReplacedBeamId.ShouldBe(beam);
+        gestures.ReplacedLinkId.ShouldBe(beam);
         gestures.Release(new Vector2D(98, 2));
 
-        gestures.ReplacedBeamId.ShouldBeNull();
+        gestures.ReplacedLinkId.ShouldBeNull();
         build.Beams.ShouldBeEmpty();
         build.Pistons.Single().NodeA.ShouldBe(1);
         build.Pistons.Single().NodeB.ShouldBe(2);
@@ -65,7 +65,7 @@ public sealed class BuildPistonTests
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(98, 2));
         gestures.RefusedTargetNodeId.ShouldBe(2);
-        gestures.ReplacedBeamId.ShouldBeNull();
+        gestures.ReplacedLinkId.ShouldBeNull();
         gestures.Release(new Vector2D(98, 2));
 
         build.Pistons.ShouldBeEmpty();
@@ -82,7 +82,7 @@ public sealed class BuildPistonTests
         gestures.Drag(new Vector2D(98, 2));
 
         gestures.BeamTargetNodeId.ShouldBe(2);
-        gestures.ReplacedBeamId.ShouldBeNull();
+        gestures.ReplacedLinkId.ShouldBeNull();
     }
 
     [Fact]
@@ -130,13 +130,22 @@ public sealed class BuildPistonTests
     }
 
     [Fact]
-    public void ABeam_BetweenTwoNodesAPistonJoins_IsRefused()
+    public void ABeam_OnAPistonsPair_ReplacesIt_AndOneUndoBringsItBackWithItsSettings()
     {
         var (build, _) = ThreeLooseJoints();
-        build.ConnectLink(BuildLink.Piston, 1, 2);
+        var piston = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
+        build.SelectOnly(CreatureElementKind.Piston, piston);
+        build.SetParameter(PartParameterId.Strength, 20000);
+        var tuned = build.Pistons.Single();
 
-        build.ConnectLink(BuildLink.Beam, 1, 2);
+        var beam = build.ConnectLink(BuildLink.Beam, 2, 1);
 
+        build.Pistons.ShouldBeEmpty();
+        build.Beams.Single().Id.ShouldBe(beam!.Value);
+
+        build.Undo();
+
+        build.Pistons.ShouldBe([tuned]);
         build.Beams.ShouldBeEmpty();
     }
 

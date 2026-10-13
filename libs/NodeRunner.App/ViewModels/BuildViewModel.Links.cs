@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using NodeRunner.App.Builders;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
@@ -18,14 +17,14 @@ public sealed partial class BuildViewModel
         CanConnectLink(link, nodeIdA, nodeIdB, out reason, out _);
 
     /// <summary>
-    /// <see cref="CanConnectLink(BuildLink, int, int, out UiText?)"/>, and the beam the link would
-    /// replace (#849): a Piston or Spring takes the place of a beam on its pair. A locked Creation
-    /// draws a Beam or a Spring, but neither a Piston, whose ports would change the model, nor a
-    /// link that replaces a beam (#896).
+    /// <see cref="CanConnectLink(BuildLink, int, int, out UiText?)"/>, and the link of another kind it
+    /// would replace on its pair (#849, #1176). A locked Creation neither gains nor loses a link with
+    /// brain ports, which would change the model (#896); a Beam and a Spring may replace each other, since a motor
+    /// holding the link keeps its id (#1177).
     /// </summary>
-    public bool CanConnectLink(BuildLink link, int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason, out int? replacedBeamId)
+    public bool CanConnectLink(BuildLink link, int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason, out int? replacedLinkId)
     {
-        replacedBeamId = null;
+        replacedLinkId = null;
         if (_locked && BuildLinkList.HasBrainPorts(link))
         {
             reason = LockedReason;
@@ -39,25 +38,29 @@ public sealed partial class BuildViewModel
             BuildLink.Spring => _builder.CanAddSpring(nodeIdA, nodeIdB, out reason),
             _ => throw new ArgumentOutOfRangeException(nameof(link), "Only a Beam, a Piston or a Spring is drawn between two joints."),
         };
-        if (can && link != BuildLink.Beam)
+        if (can)
         {
-            replacedBeamId = _builder.BeamBetween(nodeIdA, nodeIdB);
+            replacedLinkId = _builder.LinkBetween(nodeIdA, nodeIdB);
         }
 
-        // Replacing a beam changes the model, so a locked Creation refuses it as before #849.
-        if (can && _locked && replacedBeamId is not null)
+        if (_locked && replacedLinkId is { } replaced && BuildLinkList.HasBrainPorts(KindOf(replaced)))
         {
-            replacedBeamId = null;
-            reason = CreatureBuilder.BeamJoinsTheseNodesReason;
+            replacedLinkId = null;
+            reason = LockedReason;
             return false;
         }
 
         return can;
     }
 
+    private BuildLink KindOf(int linkId) =>
+        _builder.Pistons.Any(piston => piston.Id == linkId) ? BuildLink.Piston
+        : _builder.Springs.Any(spring => spring.Id == linkId) ? BuildLink.Spring
+        : BuildLink.Beam;
+
     /// <summary>
     /// Places <paramref name="link"/>, a Beam, a Piston (#451) or a Spring (#453), between two nodes and
-    /// returns its id; a Piston or Spring replaces a beam there (#849). A refused pair changes nothing and shows why as <see cref="PlacementNote"/>
+    /// returns its id; it replaces a link of another kind there (#849, #1176). A refused pair changes nothing and shows why as <see cref="PlacementNote"/>
     /// at <paramref name="nodeIdB"/>, the joint the drag ended on.
     /// </summary>
     public int? ConnectLink(BuildLink link, int nodeIdA, int nodeIdB)
@@ -82,7 +85,7 @@ public sealed partial class BuildViewModel
                 _ => _builder.AddSpring(nodeIdA, nodeIdB),
             };
 
-            // Within the step: its Undo row refresh must not find a replaced beam (#849) still selected.
+            // Within the step: its Undo row refresh must not find a replaced link (#849) still selected.
             PruneSelection();
 
             return id;

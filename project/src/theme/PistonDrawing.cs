@@ -113,8 +113,8 @@ public static class PistonDrawing
         return theme.BeamWidth * _cylinderPerBeam / 2;
     }
 
-    // The selection outline's distance from the axis, a gap past the cylinder outline's outer edge.
-    private static float SelectionOffset(VisualTheme theme) => TickHalf(theme) + (float)SelectionMarks.Gap;
+    /// <summary>The selection outline's distance from the axis, a gap past the cylinder outline's outer edge.</summary>
+    public static float SelectionOffset(VisualTheme theme) => TickHalf(theme) + (float)SelectionMarks.Gap;
 
     /// <summary>
     /// A Piston's stroke (#704): <c>halo</c> ticks at its shortest and longest length from joint A's

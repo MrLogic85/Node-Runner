@@ -17,7 +17,7 @@ public partial class BuildCanvas
     // it fills its ring as the cross does.
     private const float _arrowReach = 1.4f;
 
-    // The dash of a free or refused drag line, and of the outline round a beam a link will replace (#849).
+    // The dash of a free or refused drag line, and of the outline round a link another will replace (#849, #1176).
     private const float _dragLineDash = 8;
 
     private enum DragLine

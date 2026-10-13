@@ -700,18 +700,21 @@ public class BuildGesturesTests
     }
 
     [Fact]
-    public void Beam_OntoAJointAPistonJoins_SaysWhyThere()
+    public void Beam_OntoAJointAPistonJoins_OutlinesThePiston_AndReplacesItOnRelease()
     {
         var (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
-        build.ConnectLink(BuildLink.Piston, 1, 2);
+        var piston = build.ConnectLink(BuildLink.Piston, 1, 2);
 
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(100, 0));
-        gestures.RefusedTargetNodeId.ShouldBe(2);
+        gestures.BeamTargetNodeId.ShouldBe(2);
+        gestures.ReplacedLinkId.ShouldBe(piston);
         gestures.Release(new Vector2D(100, 0));
 
-        build.Beams.ShouldBeEmpty();
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, 2), CreatureBuilder.PistonJoinsTheseNodesReason));
+        gestures.ReplacedLinkId.ShouldBeNull();
+        build.Pistons.ShouldBeEmpty();
+        build.Beams.Single().NodeB.ShouldBe(2);
+        build.PlacementNote.ShouldBeNull();
     }
 
     [Fact]

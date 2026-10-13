@@ -259,7 +259,7 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void ALink_OnAPairThatHasOne_IsRefusedWithWhy()
+    public void ALink_OnAPairTheSameKindJoins_IsRefusedWithWhy()
     {
         var builder = PairBuilder();
         var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
@@ -268,15 +268,13 @@ public sealed class CreatureBuilderTests
         builder.AddSpring(a, c);
         builder.AddPiston(b, d);
 
+        builder.CanAddBeam(b, a, out var onBeam).ShouldBeFalse();
+        onBeam.ShouldBe(CreatureBuilder.BeamJoinsTheseNodesReason);
         builder.CanAddSpring(c, a, out var onSpring).ShouldBeFalse();
         onSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
-        builder.CanAddPiston(a, c, out var pistonOnSpring).ShouldBeFalse();
-        pistonOnSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
-        builder.CanAddSpring(b, d, out var onPiston).ShouldBeFalse();
+        builder.CanAddPiston(d, b, out var onPiston).ShouldBeFalse();
         onPiston.ShouldBe(CreatureBuilder.PistonJoinsTheseNodesReason);
-        builder.CanAddBeam(a, c, out var beamOnSpring).ShouldBeFalse();
-        beamOnSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
-        Should.Throw<ArgumentException>(() => builder.AddBeam(a, c));
+        Should.Throw<ArgumentException>(() => builder.AddSpring(a, c));
         builder.CanAddSpring(a, a, out _).ShouldBeFalse();
         builder.CanAddSpring(c, d, out _).ShouldBeTrue();
     }
@@ -453,28 +451,6 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void APistonOrSpring_OnABeamsPair_ReplacesTheBeam()
-    {
-        var pistonBuilder = PairBuilder();
-        var (a, b) = (pistonBuilder.Nodes[0].Id, pistonBuilder.Nodes[1].Id);
-        pistonBuilder.BeamBetween(b, a).ShouldBe(pistonBuilder.Beams[0].Id);
-        pistonBuilder.CanAddPiston(a, b, out var reason).ShouldBeTrue();
-        reason.ShouldBeNull();
-
-        var piston = pistonBuilder.AddPiston(b, a);
-
-        pistonBuilder.Beams.ShouldBeEmpty();
-        pistonBuilder.Pistons.ShouldBe([new PistonDef(piston, b, a)]);
-        pistonBuilder.BeamBetween(a, b).ShouldBeNull();
-
-        var springBuilder = PairBuilder();
-        var spring = springBuilder.AddSpring(a, b);
-
-        springBuilder.Beams.ShouldBeEmpty();
-        springBuilder.Springs.Single().Id.ShouldBe(spring);
-    }
-
-    [Fact]
     public void APistonOrSpring_OnASensorsBeam_IsRefusedWithWhy()
     {
         var builder = PairBuilder();
@@ -491,26 +467,48 @@ public sealed class CreatureBuilderTests
         builder.Beams.Count.ShouldBe(1);
     }
 
+    // Any link replaces a link of another kind on its pair (#849, #1176), with its default settings, and a
+    // Servo holding the old one holds the new one in the same role under the same id (#1177).
     [Theory]
-    [InlineData(true, false)]
-    [InlineData(false, false)]
-    [InlineData(true, true)]
-    [InlineData(false, true)]
-    public void ALinkReplacingAServosBeam_TakesItsRole_AndKeepsTheServosId(bool replaceFixed, bool piston)
+    [InlineData(BuildLink.Beam, BuildLink.Piston, true)]
+    [InlineData(BuildLink.Beam, BuildLink.Piston, false)]
+    [InlineData(BuildLink.Beam, BuildLink.Spring, true)]
+    [InlineData(BuildLink.Beam, BuildLink.Spring, false)]
+    [InlineData(BuildLink.Piston, BuildLink.Beam, true)]
+    [InlineData(BuildLink.Piston, BuildLink.Beam, false)]
+    [InlineData(BuildLink.Piston, BuildLink.Spring, true)]
+    [InlineData(BuildLink.Piston, BuildLink.Spring, false)]
+    [InlineData(BuildLink.Spring, BuildLink.Beam, true)]
+    [InlineData(BuildLink.Spring, BuildLink.Beam, false)]
+    [InlineData(BuildLink.Spring, BuildLink.Piston, true)]
+    [InlineData(BuildLink.Spring, BuildLink.Piston, false)]
+    public void ALink_OnAPairAnotherKindJoins_ReplacesIt_AndTakesItsServoRole(BuildLink old, BuildLink drawn, bool replaceFixed)
     {
-        var builder = PairBuilder();
-        var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
+        var builder = new CreatureBuilder();
+        var a = builder.AddNode(new Vector2D(0, 0));
+        var b = builder.AddNode(new Vector2D(90, 0));
         var c = builder.AddNode(new Vector2D(0, 90));
-        var first = builder.Beams[0].Id;
-        var second = builder.AddBeam(a, c);
-        var servo = builder.AddServo(a);
-        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, first, second));
-        var (from, to) = replaceFixed ? (a, b) : (c, a);
+        var fixedLink = AddLink(builder, replaceFixed ? old : BuildLink.Beam, a, b);
+        var targetLink = AddLink(builder, replaceFixed ? BuildLink.Beam : old, a, c);
+        var servo = builder.AddServo(a, fixedLink, targetLink);
+        var (from, to) = replaceFixed ? (b, a) : (c, a);
+        var replaced = replaceFixed ? fixedLink : targetLink;
 
-        var link = piston ? builder.AddPiston(from, to) : builder.AddSpring(from, to);
+        var link = AddLink(builder, drawn, from, to);
 
-        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, replaceFixed ? link : first, replaceFixed ? second : link));
+        LinkIds(builder).ShouldBe(replaceFixed ? [targetLink, link] : [fixedLink, link], ignoreOrder: true);
+        LinkIds(builder).ShouldNotContain(replaced);
+        builder.LinkBetween(to, from).ShouldBe(link);
+        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, replaceFixed ? link : fixedLink, replaceFixed ? targetLink : link));
         builder.NextPartId.ShouldBe(link + 1);
+        if (drawn == BuildLink.Piston)
+        {
+            builder.Pistons.Single().ShouldBe(new PistonDef(link, from, to));
+        }
+        else if (drawn == BuildLink.Spring)
+        {
+            builder.Springs.Single().ShouldBe(new SpringDef(link, from, to));
+        }
     }
 
     // Every link change keeps the Servo's id, and so its brain ports and training (#1177).
@@ -855,6 +853,16 @@ public sealed class CreatureBuilderTests
         builder.Rubbers.ShouldBe(creature.Rubbers);
         builder.Build().Rubbers.ShouldBe(creature.Rubbers);
     }
+
+    private static int AddLink(CreatureBuilder builder, BuildLink link, int nodeIdA, int nodeIdB) => link switch
+    {
+        BuildLink.Beam => builder.AddBeam(nodeIdA, nodeIdB),
+        BuildLink.Piston => builder.AddPiston(nodeIdA, nodeIdB),
+        _ => builder.AddSpring(nodeIdA, nodeIdB),
+    };
+
+    private static IEnumerable<int> LinkIds(CreatureBuilder builder) =>
+        [.. builder.Beams.Select(beam => beam.Id), .. builder.Pistons.Select(piston => piston.Id), .. builder.Springs.Select(spring => spring.Id)];
 
     private static CreatureBuilder PairBuilder()
     {

@@ -493,7 +493,7 @@ fold.
   Creation keep part ids and the counter.
 - A joint motor or Brake keeps its id through every change of its Fixed or
   Target side: filling an empty one, picking another link or the Wheel,
-  swapping the two, or a Piston or Spring replacing the beam it held (#1177).
+  swapping the two, or any link replacing the link it held (#1176, #1177).
   A motor's ports may change meaning or sign, but the brain keeps their
   weights and adapts through training.
 - Parts refer to each other by id. Code that needs an array position uses

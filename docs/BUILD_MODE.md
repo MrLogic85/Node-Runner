@@ -167,12 +167,15 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
     reason at the joint (`BuildViewModel.CanConnectLink`): "A beam already
     joins these joints", "These joints already have a piston", "These
     joints already have a spring", or "A sensor sits on this beam".
-  - A Piston or Spring dropped on a pair a beam joins replaces that beam
-    (#849), unless a sensor sits on it or the creation is locked, which
-    shows "A beam already joins these joints"; while dragging, the beam is
-    outlined. A joint motor or Brake that held the beam holds the new link in
-    the same role. One Undo brings the beam back. A Beam never
-    replaces a link.
+  - Any link dropped on a pair a link of another kind joins replaces it
+    (#849, #1176), with its own default settings; while dragging, the
+    replaced link is outlined. A beam with a sensor on it is never
+    replaced. A joint motor or Brake that held the old link holds the new
+    one in the same role (`docs/CREATURE_MODEL.md` → "Editing identity
+    rules" says it keeps its id). One Undo brings the
+    old link back with its id and settings. On a locked creation, a Beam
+    and a Spring may replace each other, but nothing replaces a Piston:
+    that drop shows the locked reason.
 - **Parts:** with nothing selected, the panel shows the Parts tray; drag a
   part from it onto the creature, or tap it and then tap where it goes
   (see Parts tray). Parts never adds a joint.
