@@ -41,6 +41,7 @@ understanding of the project before starting to work.
    `docs/ISSUES.md` → "Creating an issue", and
    review broad, risky or ambiguous issues before implementing them
    (`docs/ISSUES.md` → "Reviewing an issue").
+   Don't be afraid to suggest large refactors when they would benefit the code.
 
 ## Repository map
 
