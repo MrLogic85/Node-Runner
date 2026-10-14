@@ -88,7 +88,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `velocityMotors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, maxSpeed, riseTime }` | Motors (#454): a Servo's sides and units, without `range` or `start`. One per node (`docs/CREATURE_MODEL.md` → Node → One part per slot). |
 | `brakes[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength }` | Brakes (#1039): a Servo's sides and slot, no ports. `strength` in world torque units (N·m × 10⁴), above 0, or `"Infinity"` when Locked. |
 | `angleSensors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name }` | Angle sensors (#1204): a Servo's sides and slot, three inputs, no settings. |
-| `steppers[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, holdStrength, stepsPerTurn, maxFrequency }` | Steppers (#1036): a Servo's sides and slot. `strength` and `holdStrength` in world torque units (N·m × 10⁴), above 0; `stepsPerTurn` a whole number 2–24; `maxFrequency` steps per second, above 0. |
+| `steppers[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, stepsPerTurn, maxFrequency }` | Steppers (#1036): a Servo's sides and slot. `strength` in world torque units (N·m × 10⁴), above 0; `stepsPerTurn` a whole number 2–24; `maxFrequency` steps per second, above 0. |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training` (meaning of latest and best: `docs/TRAINING_LOOP.md` → "Latest

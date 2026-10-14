@@ -120,33 +120,28 @@ public sealed class CreatureBuilderStepperTests
 
     // Steps per turn is a whole number of notches, so a slider's value rounds to one.
     [Fact]
-    public void AStepper_HasItsFourSettings_AndStepsPerTurn_RoundsToAWholeNotch()
+    public void AStepper_HasItsThreeSettings_AndStepsPerTurn_RoundsToAWholeNotch()
     {
         var builder = Joint(out var joint, out _, out _, out _);
         var stepper = builder.AddStepper(joint);
 
-        builder.ParametersOf(stepper).ShouldBe([PartParameterId.ServoStrength, PartParameterId.HoldStrength, PartParameterId.StepsPerTurn, PartParameterId.MaxFrequency]);
+        builder.ParametersOf(stepper).ShouldBe([PartParameterId.ServoStrength, PartParameterId.StepsPerTurn, PartParameterId.MaxFrequency]);
         builder.PartIdsWithSettings.ShouldContain(stepper);
         builder.SetParameter(stepper, PartParameterId.ServoStrength, 300000);
-        builder.SetParameter(stepper, PartParameterId.HoldStrength, 200000);
         builder.SetParameter(stepper, PartParameterId.StepsPerTurn, 11.6);
         builder.SetParameter(stepper, PartParameterId.MaxFrequency, 1.5);
 
-        builder.Steppers.Single().ShouldBe(new StepperDef(stepper, joint, builder.Steppers[0].FixedLinkId, builder.Steppers[0].TargetLinkId, null, 300000, 200000, 12, 1.5));
+        builder.Steppers.Single().ShouldBe(new StepperDef(stepper, joint, builder.Steppers[0].FixedLinkId, builder.Steppers[0].TargetLinkId, null, 300000, 12, 1.5));
         builder.ParameterValue(stepper, PartParameterId.StepsPerTurn).ShouldBe(12);
         builder.IsWithinBuildLimits().ShouldBeTrue();
     }
 
-    // Build's sliders: Max and Hold strength 5–200 N·m (50000–2000000 world units), Max frequency 0.2–5 Hz.
+    // Build's sliders: Max strength 5–200 N·m (50000–2000000 world units), Max frequency 0.2–5 Hz.
     [Theory]
     [InlineData(PartParameterId.ServoStrength, 50000.0, true)]
     [InlineData(PartParameterId.ServoStrength, 2000000.0, true)]
     [InlineData(PartParameterId.ServoStrength, 49999.0, false)]
     [InlineData(PartParameterId.ServoStrength, 2000001.0, false)]
-    [InlineData(PartParameterId.HoldStrength, 50000.0, true)]
-    [InlineData(PartParameterId.HoldStrength, 2000000.0, true)]
-    [InlineData(PartParameterId.HoldStrength, 49999.0, false)]
-    [InlineData(PartParameterId.HoldStrength, 2000001.0, false)]
     [InlineData(PartParameterId.StepsPerTurn, 2.0, true)]
     [InlineData(PartParameterId.StepsPerTurn, 24.0, true)]
     [InlineData(PartParameterId.MaxFrequency, 0.2, true)]

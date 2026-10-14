@@ -255,7 +255,6 @@
         "targetLinkId": 16,
         "name": null,
         "strength": 400000,
-        "holdStrength": 300000,
         "stepsPerTurn": 12,
         "maxFrequency": 1.5
       }

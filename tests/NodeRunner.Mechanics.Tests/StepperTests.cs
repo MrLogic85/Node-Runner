@@ -6,7 +6,8 @@ public sealed class StepperTests
 {
     private const double _step = 1.0 / 60;
     private const double _inertia = 2000;
-    private static readonly StepperDef _stepper = new(id: 1, nodeId: 1);
+    private static readonly StepperDef _stepper = new(id: 1, nodeId: 1, strength: 500000);
+    private static readonly double _lockTolerance = Stepper.LockDistance * 2 * Math.PI / 8;
     private static readonly double _spacing = 2 * Math.PI / _stepper.StepsPerTurn;
 
     [Fact]
@@ -47,8 +48,73 @@ public sealed class StepperTests
         joint.Releases.ShouldBe(1);
         joint.State.Notch.ShouldBe(notch);
         joint.State.Releasing.ShouldBeFalse();
-        joint.Angle.ShouldBe(notch * _spacing, tolerance: 1e-6);
-        joint.Speed.ShouldBe(0, tolerance: 1e-4);
+        joint.State.Locked.ShouldBeTrue();
+        joint.Angle.ShouldBe(notch * _spacing, tolerance: _lockTolerance);
+        joint.Speed.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(1, 0)]
+    [InlineData(-1, 0)]
+    [InlineData(0.3, 0)]
+    [InlineData(1, 0.3)]
+    [InlineData(1, -0.3)]
+    public void AStep_LandsOnItsNotchLikeAClockTick_WithoutOvershooting(double power, double loadShare)
+    {
+        // Full torque, then braking just in time: the step stops at the notch instead of swinging past it.
+        var joint = JointAboutToRelease();
+        var way = Math.Sign(power);
+        var furthest = 0.0;
+
+        joint.RunUntil(
+            () =>
+            {
+                furthest = Math.Max(furthest, way * joint.Angle);
+                return joint.Releases == 1 && !joint.State.Releasing;
+            },
+            SlowFrequency,
+            power,
+            load: way * loadShare * _stepper.Strength);
+        var stepTicks = joint.Ticks;
+        for (var tick = 0; tick < 60; tick++)
+        {
+            joint.Run(seconds: _step, SlowFrequency, power, load: way * loadShare * _stepper.Strength);
+            furthest = Math.Max(furthest, way * joint.Angle);
+        }
+
+        furthest.ShouldBeLessThanOrEqualTo(_spacing * (1 + Stepper.LockDistance));
+        joint.State.Notch.ShouldBe(way);
+        joint.State.Locked.ShouldBeTrue();
+        joint.Angle.ShouldBe(way * _spacing, tolerance: _lockTolerance);
+        if (power == 1 && loadShare == 0)
+        {
+            stepTicks.ShouldBeLessThan(30);
+        }
+    }
+
+    [Theory]
+    [InlineData(1, 4, 0, true)]
+    [InlineData(-1, 4, 0, true)]
+    [InlineData(1, 16, 0, true)]
+    [InlineData(1, 8, 0.3, true)]
+    [InlineData(0.5, 16, 0.6, true)]
+    [InlineData(1, 16, 0, false)]
+    [InlineData(1, 8, 0.3, false)]
+    public void OnAJointHeavierThanItReads_AStepStillCountsOnce(double power, double heavier, double loadShare, bool welded)
+    {
+        // A foot on the ground makes the joint far heavier than the Stepper reads, so it brakes too late,
+        // but it locks the joint where it passes the notch, so the overshoot is still one step.
+        var joint = new Joint(new StepperState(0.1, 0.99, 0, false, 1, 0, null), realInertia: heavier * _inertia, welded: welded);
+        var way = Math.Sign(power);
+
+        // Without a weld it holds as endless friction, which rings a while on a joint this heavy.
+        joint.Run(seconds: welded ? 1.5 : 8, SlowFrequency, power, load: way * loadShare * _stepper.Strength);
+
+        joint.Releases.ShouldBe(1);
+        joint.State.Notch.ShouldBe(way);
+        joint.State.Locked.ShouldBeTrue();
+        (way * joint.Angle).ShouldBeInRange(_spacing * (1 - Stepper.LockDistance), 1.5 * _spacing);
+        joint.Speed.ShouldBe(0, tolerance: 1e-6);
     }
 
     [Fact]
@@ -60,7 +126,7 @@ public sealed class StepperTests
         joint.Run(seconds: 1.5, frequencyOutput: SlowFrequency, powerOutput: -0.5, load: 0);
 
         joint.State.Notch.ShouldBe(1);
-        joint.Angle.ShouldBe(_spacing, tolerance: 1e-6);
+        joint.Angle.ShouldBe(_spacing, tolerance: _lockTolerance);
     }
 
     [Fact]
@@ -77,91 +143,72 @@ public sealed class StepperTests
         cos.ShouldBe(Math.Cos(2 * _spacing), tolerance: 0.05);
     }
 
-    [Theory]
-    [InlineData(0.5)]
-    [InlineData(-0.9)]
-    public void WithoutABrain_ItHoldsItsNotch_AgainstALoadWithinHoldStrength(double share)
+    [Fact]
+    public void ItLocksItsBuiltNotch_OnItsFirstStep_AndGivesNoTorqueThere()
     {
         var joint = new Joint();
 
-        joint.Run(seconds: 5, frequencyOutput: 0, powerOutput: 0, load: share * _stepper.HoldStrength);
+        joint.Run(seconds: _step, frequencyOutput: 0, powerOutput: 0, load: 0);
 
+        joint.State.Locked.ShouldBeTrue();
         joint.State.Notch.ShouldBe(0);
-        joint.Angle.ShouldBe(0, tolerance: 1e-6);
-        joint.State.Torque.ShouldBe(-share * _stepper.HoldStrength, tolerance: 1);
-    }
-
-    [Theory]
-    [InlineData(0.99)]
-    [InlineData(-0.99)]
-    public void ALoadGrowingToJustWithinHoldStrength_IsHeldAtItsNotch(double share)
-    {
-        var joint = new Joint();
-        for (var tick = 1; tick <= 120; tick++)
-        {
-            joint.Run(seconds: _step, frequencyOutput: 0, powerOutput: 0, load: share * _stepper.HoldStrength * tick / 120);
-        }
-
-        joint.Run(seconds: 10, frequencyOutput: 0, powerOutput: 0, load: share * _stepper.HoldStrength);
-
-        joint.State.Notch.ShouldBe(0);
-        joint.Angle.ShouldBe(0, tolerance: 1e-6);
-        joint.Speed.ShouldBe(0, tolerance: 1e-6);
-    }
-
-    [Theory]
-    [InlineData(0.92)]
-    [InlineData(0.95)]
-    [InlineData(0.99)]
-    [InlineData(-0.99)]
-    public void ASuddenLoadJustWithinHoldStrength_MaySlipAFewNotches_ButComesToRestAtOne(double share)
-    {
-        // The hold feels a load a step late, as a Brake does, so a sudden one near its limit carries the
-        // joint on until the little strength left over stops it.
-        var joint = new Joint();
-
-        joint.Run(seconds: 10, frequencyOutput: 0, powerOutput: 0, load: share * _stepper.HoldStrength);
-
-        joint.Speed.ShouldBe(0, tolerance: 1e-6);
-        joint.Angle.ShouldBe(joint.State.Notch * _spacing, tolerance: 1e-6);
-        Math.Abs(joint.State.Notch).ShouldBeLessThanOrEqualTo(6);
+        joint.State.Torque.ShouldBe(0);
     }
 
     [Fact]
-    public void ALastingLoadPastHoldStrength_SlipsOnThroughNotches_BrakedByTheFullHold()
+    public void WithoutABrain_ItStaysLockedAtItsNotch_AndLeavesTheHoldToTheWeld()
     {
+        // Against a load the weld holds: Godot's, so the phone test plan checks it.
         var joint = new Joint();
 
-        joint.Run(seconds: 1, frequencyOutput: 0, powerOutput: 0, load: 1.5 * _stepper.HoldStrength);
-        var before = joint.Speed;
-        joint.Run(seconds: _step, frequencyOutput: 0, powerOutput: 0, load: 1.5 * _stepper.HoldStrength);
+        joint.Run(seconds: 5, frequencyOutput: 0, powerOutput: 0, load: 0);
 
-        joint.State.Torque.ShouldBe(-_stepper.HoldStrength);
-        (joint.Speed - before).ShouldBe(0.5 * _stepper.HoldStrength * _step / _inertia, tolerance: 1e-9);
-        joint.State.Notch.ShouldBeGreaterThan(_stepper.StepsPerTurn);
+        joint.State.Notch.ShouldBe(0);
+        joint.State.Locked.ShouldBeTrue();
+        joint.State.Torque.ShouldBe(0);
     }
 
     [Theory]
-    [InlineData(1.54, 2)]
-    [InlineData(1.3, 1)]
-    public void AnOverloadEasedBetweenNotches_IsCaughtAtTheNotchNearestTheJoint(double easedAt, int caught)
+    [InlineData(0.5, 1)]
+    [InlineData(-20, 1)]
+    [InlineData(0.5, 16)]
+    [InlineData(-20, 16)]
+    public void WhereItCannotBeWelded_ItHoldsItsNotch_AsEndlessFriction(double share, double heavier)
     {
-        var joint = new Joint();
-        var overload = 1.02 * _stepper.HoldStrength;
-        joint.RunUntil(() => joint.Angle >= easedAt * _spacing, frequencyOutput: 0, powerOutput: 0, overload);
+        var joint = new Joint(welded: false, realInertia: heavier * _inertia);
 
-        joint.Run(seconds: 3, frequencyOutput: 0, powerOutput: 0, load: 0.5 * _stepper.HoldStrength);
+        // A friction torque lags a step behind its load, so a sudden one turns it a little before it holds.
+        joint.Run(seconds: 5, frequencyOutput: 0, powerOutput: 0, load: share * _stepper.Strength);
+        var held = joint.Angle;
+        joint.Run(seconds: 5, frequencyOutput: 0, powerOutput: 0, load: share * _stepper.Strength);
 
-        joint.State.Notch.ShouldBe(caught);
-        joint.Angle.ShouldBe(caught * _spacing, tolerance: 1e-6);
+        joint.State.Notch.ShouldBe(0);
+        joint.State.Locked.ShouldBeTrue();
+        joint.Angle.ShouldBe(held, tolerance: 1e-3);
         joint.Speed.ShouldBe(0, tolerance: 1e-6);
+        joint.State.Torque.ShouldBe(-share * _stepper.Strength, tolerance: 1);
+    }
+
+    [Theory]
+    [InlineData(0.4, 0)]
+    [InlineData(0.6, 1)]
+    [InlineData(-1.7, -2)]
+    public void AJointLeftBetweenNotches_IsPulledToTheNearest_AndLockedThere(double at, int nearest)
+    {
+        var joint = new Joint(new StepperState(0, 0, 0, false, 1, 0, null), angle: at * _spacing);
+
+        joint.Run(seconds: 2, frequencyOutput: 0, powerOutput: 0, load: 0.1 * _stepper.Strength);
+
+        joint.State.Notch.ShouldBe(nearest);
+        joint.State.Locked.ShouldBeTrue();
+        joint.Angle.ShouldBe(nearest * _spacing, tolerance: _lockTolerance);
     }
 
     [Fact]
     public void AtPowerZero_ItLetsGo_AndCatchesTheNearestNotch()
     {
         var joint = JointAboutToRelease();
-        var load = 0.005 * _stepper.HoldStrength;
+        var load = 0.005 * _stepper.Strength;
 
         joint.Run(seconds: 0.25, frequencyOutput: SlowFrequency, powerOutput: 0, load);
         var drifted = joint.Angle;
@@ -171,7 +218,8 @@ public sealed class StepperTests
         drifted.ShouldBeGreaterThan(0);
         pushed.ShouldBe(0);
         joint.State.Notch.ShouldBe(0);
-        joint.Angle.ShouldBe(0, tolerance: 1e-6);
+        joint.State.Locked.ShouldBeTrue();
+        joint.Angle.ShouldBe(0, tolerance: _lockTolerance);
     }
 
     [Fact]
@@ -182,31 +230,53 @@ public sealed class StepperTests
         joint.Run(seconds: 2, frequencyOutput: SlowFrequency, powerOutput: 0.05, load: -0.04 * _stepper.Strength);
 
         joint.State.Notch.ShouldBe(0);
-        joint.Angle.ShouldBe(0, tolerance: 1e-6);
+        joint.Angle.ShouldBe(0, tolerance: _lockTolerance);
     }
 
     [Fact]
-    public void ALoadStrongerThanThePush_CarriesItBackOneNotch()
+    public void ALoadStrongerThanThePush_CarriesItBackOneNotch_AndItLocksWhereItPassesIt()
     {
         var joint = JointAboutToRelease();
 
         joint.Run(seconds: 2, frequencyOutput: SlowFrequency, powerOutput: 0.1, load: -0.2 * _stepper.Strength);
 
         joint.State.Notch.ShouldBe(-1);
-        joint.Angle.ShouldBe(-_spacing, tolerance: 1e-6);
+        joint.State.Locked.ShouldBeTrue();
+        joint.Angle.ShouldBeInRange(-1.1 * _spacing, -_spacing + _lockTolerance);
     }
 
     [Fact]
     public void AReleaseCutShortByTheNext_CatchesTheNearestNotch_AndTheNextStepsOnFromIt()
     {
         // At 4 Hz a release has a quarter second: this push gets the joint past halfway, not all the way.
-        var stepper = new StepperDef(id: 1, nodeId: 1, maxFrequency: 4);
+        var stepper = new StepperDef(id: 1, nodeId: 1, strength: _stepper.Strength, maxFrequency: 4);
         var joint = new Joint(new StepperState(stepper.MaxFrequency, 0.999, 0, false, 1, 0, null), stepper);
 
         joint.RunUntil(() => joint.Releases == 2, frequencyOutput: 1, powerOutput: 0.07, load: 0);
 
         joint.NotchAtLastRelease.ShouldBe(1);
-        joint.Angle.ShouldBeInRange(0.5 * _spacing, _spacing);
+        joint.State.Direction.ShouldBe(1);
+        joint.Angle.ShouldBeInRange(0.5 * _spacing, _spacing * (1 - Stepper.LockDistance));
+    }
+
+    [Fact]
+    public void AReleaseTimingOutPastHalfway_PullsOnToTheNearestNotch_NeverBack()
+    {
+        var joint = JointAboutToRelease();
+        var load = -0.08 * _stepper.Strength;
+        joint.RunUntil(() => joint.Releases == 1, SlowFrequency, powerOutput: 0.1, load);
+
+        joint.RunUntil(() => !joint.State.Releasing, SlowFrequency, powerOutput: 0.1, load);
+        var timedOutAt = joint.Angle;
+        var notch = joint.State.Notch;
+        var torque = joint.State.Torque;
+        joint.Run(seconds: 1, SlowFrequency, powerOutput: 0.1, load);
+
+        timedOutAt.ShouldBeInRange(0.5 * _spacing, _spacing * (1 - Stepper.LockDistance));
+        notch.ShouldBe(1);
+        torque.ShouldBeGreaterThan(-_stepper.Strength / 2);
+        joint.State.Notch.ShouldBe(1);
+        joint.State.Locked.ShouldBeTrue();
     }
 
     [Fact]
@@ -234,8 +304,8 @@ public sealed class StepperTests
         var first = new Joint();
         var second = new Joint();
 
-        first.Run(seconds: 3, frequencyOutput: 0.7, powerOutput: -0.6, load: 0.1 * _stepper.HoldStrength);
-        second.Run(seconds: 3, frequencyOutput: 0.7, powerOutput: -0.6, load: 0.1 * _stepper.HoldStrength);
+        first.Run(seconds: 3, frequencyOutput: 0.7, powerOutput: -0.6, load: 0.1 * _stepper.Strength);
+        second.Run(seconds: 3, frequencyOutput: 0.7, powerOutput: -0.6, load: 0.1 * _stepper.Strength);
 
         second.State.ShouldBe(first.State);
         second.Angle.ShouldBe(first.Angle);
@@ -250,14 +320,18 @@ public sealed class StepperTests
 
     private static Joint JointAboutToRelease() => new(new StepperState(0.1, 0.999, 0, false, 1, 0, null));
 
-    /// <summary>A turning joint with a fixed inertia, stepped as Godot steps a body.</summary>
-    private sealed class Joint(StepperState state = default, StepperDef? stepper = null)
+    /// <summary>
+    /// A turning joint with a fixed inertia, stepped as Godot steps a body. The Stepper reads its inertia
+    /// as <c>_inertia</c>; <c>realInertia</c> is what it really turns. Unless <c>welded</c> is false it
+    /// is rigid while the Stepper is locked, as Godot's weld makes it.
+    /// </summary>
+    private sealed class Joint(StepperState state = default, StepperDef? stepper = null, double realInertia = _inertia, double angle = 0, bool welded = true)
     {
         private readonly StepperDef _def = stepper ?? _stepper;
 
         public StepperState State { get; private set; } = state;
 
-        public double Angle { get; private set; }
+        public double Angle { get; private set; } = angle;
 
         public double Speed { get; private set; }
 
@@ -287,14 +361,14 @@ public sealed class StepperTests
 
         private void Tick(double frequencyOutput, double powerOutput, double load)
         {
-            State = Stepper.Next(_def, Angle, Speed, frequencyOutput, powerOutput, State, _step, _inertia);
+            State = Stepper.Next(_def, Angle, Speed, frequencyOutput, powerOutput, State, _step, _inertia, welded);
             if (State.Releasing && State.ReleaseTime == 0)
             {
                 Releases++;
                 NotchAtLastRelease = State.Notch;
             }
 
-            Speed += (State.Torque + load) / _inertia * _step;
+            Speed = State.Locked && welded ? 0 : Speed + ((State.Torque + load) / realInertia * _step);
             Angle += Speed * _step;
             Ticks++;
         }

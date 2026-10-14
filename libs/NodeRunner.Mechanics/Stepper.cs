@@ -3,24 +3,32 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// How a <see cref="StepperDef"/> steps (#1037). It holds its joint at a notch, one of
-/// <see cref="StepperDef.StepsPerTurn"/> evenly spaced angles counted from the built angle. At its
-/// running frequency it lets go: it pushes with |Power| × Max strength toward the neighbouring notch in
-/// Power's direction and catches the first notch it reaches. The hold then stops the turning and pulls
-/// the joint onto the notch, all within Hold strength; a joint too fast or a load too strong for that
-/// slips on and catches the notch nearest where it stops. Its angle is the one between its sides, as a
-/// <see cref="VelocityMotor"/>'s, and the brain sees it the same way, as a sine and cosine.
+/// How a <see cref="StepperDef"/> steps (#1037), like a clock. It holds its joint locked at a notch,
+/// one of <see cref="StepperDef.StepsPerTurn"/> evenly spaced angles counted from the built angle. At
+/// its running frequency it unlocks and drives the joint to the neighbouring notch in Power's direction
+/// with at most |Power| × Max strength: full torque, then braking just in time to arrive still. It has
+/// no top speed. It locks the joint the moment it is close enough to the notch, or where it is if it has
+/// already passed it: an overshoot still counts one step. A release that times out between notches pulls
+/// the joint with Max strength to the nearest notch and locks it as it gets there; one cut short by the
+/// next steps on from that nearest notch. Locked, the host welds the joint rigid
+/// (<see cref="StepperState.Locked"/>); where it can't, <see cref="StepperState.Torque"/> holds it as
+/// endless friction, as a Locked Brake's does. Its
+/// angle is the one between its sides, as a <see cref="VelocityMotor"/>'s, and the brain sees it the
+/// same way, as a sine and cosine.
 /// </summary>
 public static class Stepper
 {
     /// <summary>How long the running frequency takes to follow the Frequency output, in seconds: a time constant.</summary>
     public const double FrequencyTimeConstant = 1;
 
-    /// <summary>The longest a release lasts, in seconds, before it catches the nearest notch.</summary>
+    /// <summary>The longest a release lasts, in seconds, before it heads for the nearest notch.</summary>
     public const double MaxReleaseTime = 0.5;
 
-    /// <summary>How fast the hold pulls the joint onto its notch: the wanted speed per radian off it, per second.</summary>
+    /// <summary>How fast it pulls an unlocked joint onto its notch: the wanted speed per radian off it, per second.</summary>
     public const double HoldApproachRate = 10;
+
+    /// <summary>How close to a notch it locks the joint, as a share of the notch spacing.</summary>
+    public const double LockDistance = 0.02;
 
     /// <summary>The angle inputs: the sine and cosine of the angle between the sides, as a Velocity motor's.</summary>
     public static (double Sin, double Cos) AngleInputs(double angle) => VelocityMotor.AngleInputs(angle);
@@ -44,7 +52,8 @@ public static class Stepper
     /// from the built angle, counted on across whole turns; <paramref name="speed"/> its turning speed.
     /// <paramref name="frequencyOutput"/> is the brain's Frequency output (0…1 of Max frequency) and
     /// <paramref name="powerOutput"/> its Power output (−1…1 of Max strength). With no brain, pass 0
-    /// for both: the Stepper then only holds its notch.
+    /// for both: the Stepper then only holds its notch. <paramref name="welded"/> is whether the host
+    /// welds the joint while <see cref="StepperState.Locked"/>; if not, the Stepper holds it by torque.
     /// </summary>
     public static StepperState Next(
         StepperDef stepper,
@@ -54,7 +63,8 @@ public static class Stepper
         double powerOutput,
         StepperState previous,
         double step,
-        double effectiveInertia)
+        double effectiveInertia,
+        bool welded = true)
     {
         ArgumentNullException.ThrowIfNull(stepper);
         MotorLoop.RequirePositive(step, nameof(step), "Step");
@@ -68,34 +78,35 @@ public static class Stepper
 
         var notch = previous.Notch;
         var releasing = previous.Releasing;
+        var locked = previous.Locked;
         var direction = previous.Direction;
         var releaseTime = previous.ReleaseTime + step;
 
-        if (releasing)
+        if (releasing && Passed(notch + direction, position, direction))
         {
-            // It catches a notch the tick it would pass it, so a fast joint isn't pushed a tick too far.
-            var ahead = position + (speed * step / NotchSpacing(stepper));
-            if (direction * (ahead - (notch + direction)) >= 0)
-            {
-                (notch, releasing) = (notch + direction, false);
-            }
-            else if (direction * (ahead - (notch - direction)) <= 0)
-            {
-                (notch, releasing) = (notch - direction, false);
-            }
-            else if (due || releaseTime > MaxReleaseTime - (step / 2))
-            {
-                (notch, releasing) = (NearestNotch(position), false);
-            }
+            (notch, releasing, locked) = (notch + direction, false, true);
         }
-        else
+        else if (releasing && Passed(notch - direction, position, -direction))
         {
+            (notch, releasing, locked) = (notch - direction, false, true);
+        }
+        else if (releasing && (due || releaseTime > MaxReleaseTime - (step / 2)))
+        {
+            releasing = false;
+        }
+
+        // A release that ends short heads for the nearest notch at once, so the next one steps on from it.
+        if (!releasing && !locked)
+        {
+            // It catches the joint on the step it crosses its notch, not a swing later.
+            var before = position - (speed * step / NotchSpacing(stepper));
             notch = NearestNotch(position);
+            locked = Math.Abs(position - notch) <= LockDistance || Math.Sign(position - notch) != Math.Sign(before - notch);
         }
 
         if (due)
         {
-            releasing = true;
+            (releasing, locked) = (true, false);
             direction = powerOutput < 0 ? -1 : 1;
             releaseTime = 0;
         }
@@ -104,38 +115,48 @@ public static class Stepper
             releaseTime = 0;
         }
 
-        var torque = releasing
-            ? direction * Math.Abs(Math.Clamp(powerOutput, -1, 1)) * stepper.Strength
-            : Hold(notch, angle, speed, stepper, previous.Last, step, effectiveInertia);
-        return new StepperState(frequency, phase, notch, releasing, direction, releaseTime, new BrakeState(torque, speed));
+        // A release drives as fast as it can still stop by the notch, at most covering what is left in a step.
+        var torque = releasing ? Approach(NotchAngle(notch + direction, stepper), angle, speed, Math.Abs(Math.Clamp(powerOutput, -1, 1)) * stepper.Strength, 1 / step, previous.Last, step, effectiveInertia)
+            : locked && welded ? 0
+            : locked ? Brake.Next(speed, double.PositiveInfinity, previous.Last, step, effectiveInertia).Torque
+            : Approach(NotchAngle(notch, stepper), angle, speed, stepper.Strength, HoldApproachRate, previous.Last, step, effectiveInertia);
+        return new StepperState(frequency, phase, notch, releasing, direction, releaseTime, new BrakeState(torque, speed), locked);
     }
 
     private static double NotchSpacing(StepperDef stepper) => 2 * Math.PI / stepper.StepsPerTurn;
 
-    // A held joint pushed more than half a notch off its notch has slipped on: it holds the nearest notch,
-    // so it catches the one it is heading for, and a joint still slipping keeps catching the next.
+    // Whether a joint turning the given way is close enough to the notch to lock it, or past it.
+    private static bool Passed(int notch, double position, int way) => (position - notch) * way >= -LockDistance;
+
+    // A joint carried more than half a notch off its notch has slipped on: it heads for the one it is nearer.
     private static int NearestNotch(double position) => (int)Math.Round(position, MidpointRounding.AwayFromZero);
 
-    // It pulls toward the notch no faster than what Hold strength has left over the load can stop
-    // within the distance left, so near its limit it never lets the load run the joint past the notch.
-    private static double Hold(int notch, double angle, double speed, StepperDef stepper, BrakeState? last, double step, double effectiveInertia)
+    // It turns the joint toward the target at up to rate per radian off it, but no faster than what
+    // strength has left over the load can stop within the distance left, braking step by step, so it
+    // arrives without passing it.
+    private static double Approach(double target, double angle, double speed, double strength, double rate, BrakeState? last, double step, double effectiveInertia)
     {
-        var offset = NotchAngle(notch, stepper) - angle;
+        var offset = target - angle;
         var toward = Math.Sign(offset);
         var load = Brake.Load(speed, last, step, effectiveInertia);
-        var spare = Math.Max(stepper.HoldStrength - (toward * load), 0) / effectiveInertia;
-        var wantedSpeed = toward * Math.Min(HoldApproachRate * Math.Abs(offset), Math.Sqrt(2 * spare * Math.Abs(offset)));
-        return Brake.Toward(wantedSpeed, speed, stepper.HoldStrength, last, step, effectiveInertia).Torque;
+
+        // It never counts on a load to help it brake: on a joint heavier than it reads, that "load" is only the
+        // inertia it missed, and it would brake too late.
+        var slowing = Math.Max(strength - Math.Max(toward * load, 0), 0) / effectiveInertia * step;
+        var stoppable = slowing > 0 ? slowing * (Math.Sqrt(0.25 + (2 * Math.Abs(offset) / (slowing * step))) - 0.5) : 0;
+        var wantedSpeed = toward * Math.Min(rate * Math.Abs(offset), stoppable);
+        return Brake.Toward(wantedSpeed, speed, strength, last, step, effectiveInertia).Torque;
     }
 }
 
 /// <summary>
-/// What a <see cref="Stepper"/> carries between physics ticks. <see cref="Frequency"/> is its running
+/// What a <see cref="Stepper"/> carries between physics steps. <see cref="Frequency"/> is its running
 /// frequency in steps a second, <see cref="Phase"/> how far it is to its next release (0…1),
 /// <see cref="Notch"/> the notch it holds or last held, counted from the built angle, and, while it
 /// <see cref="Releasing"/>, <see cref="Direction"/> the way it steps (±1) and <see cref="ReleaseTime"/>
 /// how long it has pushed. <see cref="Last"/> is the torque it turned with and the speed it read, which
-/// the hold reads the load from. The default state is a trial's start: at the built notch, still.
+/// it reads the load from. <see cref="Locked"/> is whether it holds the joint locked at its notch. The
+/// default state is a trial's start: at the built notch, still, and about to lock.
 /// </summary>
 public readonly record struct StepperState(
     double Frequency,
@@ -144,8 +165,13 @@ public readonly record struct StepperState(
     bool Releasing,
     int Direction,
     double ReleaseTime,
-    BrakeState? Last)
+    BrakeState? Last,
+    bool Locked = false)
 {
-    /// <summary>The torque to turn the Target with this tick, counter-clockwise positive.</summary>
+    /// <summary>
+    /// The torque to turn the Target with this step, counter-clockwise positive: none while
+    /// <see cref="Locked"/> and welded, and a Locked Brake's endless friction, holding the joint where it
+    /// stopped, while locked on a joint the host can't weld.
+    /// </summary>
     public double Torque => Last?.Torque ?? 0;
 }

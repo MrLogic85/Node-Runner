@@ -5,16 +5,23 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// A Stepper (#1037) between the two <see cref="HingePartSides"/> at its joint: it holds the Target at
 /// a notch against the Fixed side and, at the brain's frequency, steps it to the next notch in the
-/// brain's direction (<see cref="Mechanics.Stepper"/>). It holds every tick, with or without a brain.
+/// brain's direction (<see cref="Mechanics.Stepper"/>). It holds every tick, with or without a brain:
+/// while locked it welds the sides as they stand, and lets the weld go as it steps on. Where no weld
+/// fits, when both sides slide, it holds by torque instead.
 /// </summary>
 public sealed class StepperJoint
 {
+    private readonly HingeWeld? _weld;
     private Mechanics.StepperState _state;
 
-    public StepperJoint(StepperDef definition, HingePartSides sides)
+    /// <param name="definition">The Stepper's settings.</param>
+    /// <param name="sides">The two sides it steps.</param>
+    /// <param name="weld">Welds the sides as they stand, or null where no weld fits.</param>
+    public StepperJoint(StepperDef definition, HingePartSides sides, HingeWeld? weld)
     {
         Definition = definition;
         Sides = sides;
+        _weld = weld;
     }
 
     public StepperDef Definition { get; }
@@ -40,7 +47,20 @@ public sealed class StepperJoint
             powerOutput,
             _state,
             step,
-            Sides.BrakeInertia);
+            Sides.BrakeInertia,
+            welded: _weld is not null);
+        if (_weld is not null && _state.Locked != _weld.Welded)
+        {
+            if (_state.Locked)
+            {
+                _weld.Weld();
+            }
+            else
+            {
+                _weld.Release();
+            }
+        }
+
         Sides.ApplyTorque(_state.Torque);
     }
 

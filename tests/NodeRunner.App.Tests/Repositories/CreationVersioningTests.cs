@@ -496,7 +496,7 @@ public sealed class CreationVersioningTests : IDisposable
         var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
         var named = builder.AddStepper(joints[0]);
         builder.Rename(named, "Ratchet");
-        builder.SetParameter(named, PartParameterId.HoldStrength, 300000);
+        builder.SetParameter(named, PartParameterId.ServoStrength, 300000);
         builder.SetParameter(named, PartParameterId.StepsPerTurn, 12);
         builder.SetParameter(named, PartParameterId.MaxFrequency, 1.5);
         var wheel = builder.AddWheel(joints[1]);
@@ -509,7 +509,7 @@ public sealed class CreationVersioningTests : IDisposable
         repository.Get(walker.Id)!.Creature.Steppers.ShouldBe(creature.Steppers);
         creature.Steppers.Select(stepper => (stepper.Name, stepper.TargetLinkId == wheel, stepper.FixedLinkId is null))
             .ShouldBe([("Ratchet", false, false), (null, true, false), (null, false, true)]);
-        creature.Steppers[0].HoldStrength.ShouldBe(300000);
+        creature.Steppers[0].Strength.ShouldBe(300000);
         creature.Steppers[0].StepsPerTurn.ShouldBe(12);
         creature.Steppers[0].MaxFrequency.ShouldBe(1.5);
     }

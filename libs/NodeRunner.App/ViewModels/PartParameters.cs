@@ -156,8 +156,8 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 /// (#129); a Camera's aim is turned on the canvas (#594), and its Rays snap to 1, 3 or 5,
 /// its Spread is in degrees and its Range in m (#578). A Servo's and a Motor's (a Velocity motor's)
 /// Max strength is in N·m and Max speed in rpm, each on its own range (#454). A Brake's Strength is in
-/// N·m, and its top step is Locked (#1041). A Stepper's Max strength is the Servo's setting, its Hold strength is in N·m,
-/// and its Max frequency in steps a second, shown as Hz (#1036, #1038).
+/// N·m, and its top step is Locked (#1041). A Stepper's Max strength is the Servo's setting and
+/// its Max frequency in steps a second, shown as Hz (#1036, #1038).
 /// </summary>
 public static class PartParameters
 {
@@ -175,9 +175,6 @@ public static class PartParameters
     // 20–400 N·m in steps of 20, and one step more that reads Locked: an infinite Strength (#1041).
     public static PartParameter BrakeStrength { get; } = new(
         PartParameterId.BrakeStrength, MultiEditable: true, new(UiText.Plain("Strength"), UiText.Plain("How hard it holds the joint still. Locked holds it fully."), new(20, _lockedBrakeStep, 20), 0, "{0} N·m", "{0}–{1} N·m", BrakeNewtonMetres, BrakeTorque, new TopStep(UiText.Plain("Locked"), "{0} N·m–Locked")), Advanced: false);
-
-    public static PartParameter HoldStrength { get; } = new(
-        PartParameterId.HoldStrength, MultiEditable: true, new(UiText.Plain("Hold strength"), UiText.Plain("How hard it holds each notch"), new(5, 200, 5), 0, "{0} N·m", "{0}–{1} N·m", NewtonMetres, ToWorldTorque), Advanced: false);
 
     public static PartParameter StepsPerTurn { get; } = new(
         PartParameterId.StepsPerTurn, MultiEditable: true, new(UiText.Plain("Steps per turn"), UiText.Plain("How many notches make a full turn"), new(StepperDef.MinStepsPerTurn, StepperDef.MaxStepsPerTurn, 1), 0, "{0}", "{0}–{1}", value => value, value => value), Advanced: false);
@@ -261,7 +258,6 @@ public static class PartParameters
         PartParameterId.MotorStrength => MotorStrength,
         PartParameterId.MotorMaxSpeed => MotorMaxSpeed,
         PartParameterId.BrakeStrength => BrakeStrength,
-        PartParameterId.HoldStrength => HoldStrength,
         PartParameterId.StepsPerTurn => StepsPerTurn,
         PartParameterId.MaxFrequency => MaxFrequency,
         _ => throw new ArgumentOutOfRangeException(nameof(id)),

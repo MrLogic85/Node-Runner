@@ -15,7 +15,7 @@ public sealed class StepperDefTests
         var stepper = new StepperDef(6, 1);
 
         (stepper.Name, stepper.FixedLinkId, stepper.TargetLinkId).ShouldBe((null, null, null));
-        (stepper.Strength, stepper.HoldStrength, stepper.StepsPerTurn, stepper.MaxFrequency).ShouldBe((500000, 500000, 8, 2));
+        (stepper.Strength, stepper.StepsPerTurn, stepper.MaxFrequency).ShouldBe((1500000, 8, 2));
     }
 
     [Theory]
@@ -35,17 +35,16 @@ public sealed class StepperDefTests
     }
 
     [Theory]
-    [InlineData(0, 1, 8, 2)]
-    [InlineData(double.PositiveInfinity, 1, 8, 2)]
-    [InlineData(1, -1, 8, 2)]
-    [InlineData(1, double.NaN, 8, 2)]
-    [InlineData(1, 1, 1, 2)]
-    [InlineData(1, 1, 25, 2)]
-    [InlineData(1, 1, 8, 0)]
-    [InlineData(1, 1, 8, double.PositiveInfinity)]
-    public void Constructor_WithASettingOffItsRange_Throws(double strength, double holdStrength, int stepsPerTurn, double maxFrequency)
+    [InlineData(0, 8, 2)]
+    [InlineData(double.PositiveInfinity, 8, 2)]
+    [InlineData(double.NaN, 8, 2)]
+    [InlineData(1, 1, 2)]
+    [InlineData(1, 25, 2)]
+    [InlineData(1, 8, 0)]
+    [InlineData(1, 8, double.PositiveInfinity)]
+    public void Constructor_WithASettingOffItsRange_Throws(double strength, int stepsPerTurn, double maxFrequency)
     {
-        Should.Throw<ArgumentOutOfRangeException>(() => new StepperDef(6, 1, strength: strength, holdStrength: holdStrength, stepsPerTurn: stepsPerTurn, maxFrequency: maxFrequency));
+        Should.Throw<ArgumentOutOfRangeException>(() => new StepperDef(6, 1, strength: strength, stepsPerTurn: stepsPerTurn, maxFrequency: maxFrequency));
     }
 
     [Theory]
@@ -59,11 +58,11 @@ public sealed class StepperDefTests
     [Fact]
     public void WithName_WithSettings_AndWithLinks_KeepItsIdAndTheRest()
     {
-        var stepper = new StepperDef(6, 1, 4, 5, "Ratchet", 300000, 200000, 12, 1.5);
+        var stepper = new StepperDef(6, 1, 4, 5, "Ratchet", 300000, 12, 1.5);
 
-        stepper.WithName("Clock").ShouldBe(new StepperDef(6, 1, 4, 5, "Clock", 300000, 200000, 12, 1.5));
-        stepper.WithSettings(100000, 400000, 4, 3).ShouldBe(new StepperDef(6, 1, 4, 5, "Ratchet", 100000, 400000, 4, 3));
-        stepper.WithLinks(5, null).ShouldBe(new StepperDef(6, 1, 5, null, "Ratchet", 300000, 200000, 12, 1.5));
+        stepper.WithName("Clock").ShouldBe(new StepperDef(6, 1, 4, 5, "Clock", 300000, 12, 1.5));
+        stepper.WithSettings(100000, 4, 3).ShouldBe(new StepperDef(6, 1, 4, 5, "Ratchet", 100000, 4, 3));
+        stepper.WithLinks(5, null).ShouldBe(new StepperDef(6, 1, 5, null, "Ratchet", 300000, 12, 1.5));
     }
 
     [Fact]
@@ -120,7 +119,7 @@ public sealed class StepperDefTests
     [Fact]
     public void JsonRoundTrip_PreservesSteppers()
     {
-        var original = Creature([new StepperDef(6, 1, 4, 7, "Ratchet", 300000, 200000, 12, 1.5), new StepperDef(8, 2, null, 4)], wheels: [new WheelDef(7, 1)]);
+        var original = Creature([new StepperDef(6, 1, 4, 7, "Ratchet", 300000, 12, 1.5), new StepperDef(8, 2, null, 4)], wheels: [new WheelDef(7, 1)]);
 
         var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
 

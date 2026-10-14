@@ -273,41 +273,40 @@ nodes; how the simulation keeps them from giving way under load is in
   Node → One part per slot). It is saved, loaded, shared and has brain
   ports, and steps in the simulation (#1037); placing it in Build comes
   with #1038. `docs/WORLD_VISUALS.md` → Parts says how it is drawn.
-- **Settings:** **Max strength** (torque while stepping, N·m), **Hold
-  strength** (the torque its notch holds against, N·m, as a Brake's
-  Strength), **Steps per turn** (notches in a full turn, 2–24) and **Max
-  frequency** (the most steps each second); their slider ranges are in
-  `docs/BUILD_MODE.md` → Parameters. Its ports are in Sensor–model
-  contract.
+- **Settings:** **Max strength** (torque while stepping, N·m), **Steps
+  per turn** (notches in a full turn, 2–24) and **Max frequency** (the
+  most steps each second); their slider ranges are in `docs/BUILD_MODE.md`
+  → Parameters. Its ports are in Sensor–model contract.
 - **Notches:** Steps per turn evenly spaced angles between its sides,
-  counted from the built angle, so a trial starts held at a notch. Its
+  counted from the built angle, so a trial starts locked at a notch. Its
   angle is measured as a Motor's and counts on across whole turns.
 - **Frequency:** its running frequency follows the Frequency output with
   a time constant of 1 s, so a brain can't jerk it, and its frequency
   input reads it. At that rate it lets go, at most once a physics step.
-- **Release:** each time it lets go it picks the neighbouring notch in
-  Power's direction and pushes toward it with |Power| × Max strength, with
-  no hold; Power changing sign mid-release doesn't turn it round. There
-  is no dead zone: at Power 0 it still lets go, and the joint turns
-  freely. The release ends on reaching that notch, or the one behind if a
-  load stronger than the push carries it back. If it reaches neither
-  within 0.5 s or before the next release is due, it catches the nearest
-  notch, so a push too weak doesn't count a step. It catches a notch on
-  the physics step it would pass it, so the push never carries the joint a
-  step beyond.
-- **Hold:** between releases it holds its notch with at most Hold
-  strength, brain or not (`Mechanics.Stepper`). As a Brake it stops the
-  turning and holds against everything else on the joint, feeling the push
-  a step late, and it also pulls the joint onto the exact notch angle,
-  closing about 10 rad/s per radian off it, but never faster than the
-  strength the load leaves it can stop by the notch. A sudden load near
-  Hold strength therefore turns the joint on before it holds, as a Brake's
-  does, further the nearer the load is to Hold strength and the lighter
-  the joint. A joint too fast to stop, or
-  pushed by more than Hold strength, slips on, through several notches
-  while the push lasts. It always holds the notch nearest the joint: once
-  the push is within Hold strength, a joint past halfway to the next notch
-  goes on to it, and one short of halfway is pulled back.
+- **Release:** each time it lets go it unlocks, picks the neighbouring
+  notch in Power's direction and drives the joint there with at most
+  |Power| × Max strength, like a clock's tick: full torque, then braking
+  just in time, tick by tick, to arrive still. It has no top speed; Max
+  strength alone sets how quick a step is (a new Stepper steps a light
+  joint in a few physics steps). Power changing sign mid-release doesn't
+  turn it round. There is no dead zone: at Power 0 it still lets go, and
+  the joint turns freely. The release ends, and the Stepper locks, once
+  the joint is within 2 % of a notch spacing of that notch, or has passed
+  it, or the one behind if a load stronger than the push carries it back.
+  It never measures how heavy the joint is, so on a joint heavier than it
+  reads (a foot on the ground) it brakes late; it then locks where the
+  joint passed the notch, a little past it, and the overshoot still
+  counts one step. The next step drives to the exact notch angle, so the
+  error never adds up. If it reaches neither notch within 0.5 s, it pulls
+  the joint with Max strength to the nearest notch, so a push too weak
+  doesn't count a step, and locks it there. If the next release comes due
+  first, that nearest notch counts as reached and the next step goes on
+  from it.
+- **Lock:** between releases it holds the joint locked, brain or not
+  (`Mechanics.Stepper`): Godot welds its sides rigid as they stand, as a
+  Locked Brake's (`Creature.Links.cs`, `Welder`), so no load turns it.
+  Where no weld fits it holds as endless friction instead, as a Locked
+  Brake does then (see Brake).
 
 ### Brake
 

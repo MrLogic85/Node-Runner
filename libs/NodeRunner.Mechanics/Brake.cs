@@ -7,7 +7,8 @@ namespace NodeRunner.Mechanics;
 /// Strength the joint grips and stays put; past it the joint slips, braked by the full Strength.
 /// It has no preferred angle: it holds wherever the joint stopped. Godot welds a Locked Brake's
 /// sides instead, unless no Godot joint can, and then it comes here with an infinite Strength
-/// (project/src/creature/Creature.Links.cs, WeldSides).
+/// (project/src/creature/Creature.Links.cs, Welder). A <see cref="Stepper"/> (#1037) drives and
+/// holds its joint with the same loop (<see cref="Toward"/>), so a change here changes it too.
 /// </summary>
 public static class Brake
 {
@@ -42,8 +43,8 @@ public static class Brake
 
     /// <summary>
     /// As <see cref="Next"/>, but it takes the turning to <paramref name="wantedSpeed"/> instead of to
-    /// a stop, with at most <paramref name="strength"/>, which may be 0. A Stepper (#1037) holds its
-    /// notch with it.
+    /// a stop, with at most <paramref name="strength"/>, which may be 0. A Stepper (#1037) steps its
+    /// joint and pulls it onto a notch with it.
     /// </summary>
     internal static BrakeState Toward(double wantedSpeed, double speed, double strength, BrakeState? previous, double step, double effectiveInertia)
     {

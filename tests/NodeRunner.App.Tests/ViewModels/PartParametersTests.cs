@@ -178,14 +178,11 @@ public sealed class PartParametersTests
     }
 
     [Fact]
-    public void HoldStrength_RunsFrom5To200NewtonMetres_InStepsOf5_WithTheDefaultOnAStep()
+    public void ASteppersDefaultStrength_SitsOnAMaxStrengthStep()
     {
-        PartParameters.HoldStrength.Slider!.Range.ShouldBe(new SettingRange(5, 200, 5));
-        PartParameters.ValueAt(PartParameterId.HoldStrength, 0).ShouldBe(50000, tolerance: 1e-6);
-        PartParameters.ValueAt(PartParameterId.HoldStrength, 1).ShouldBe(2000000, tolerance: 1e-6);
-        var slider = PartParameters.SliderOver(PartParameterId.HoldStrength, [StepperDef.DefaultHoldStrength]);
-        slider.Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(50, 0)));
-        PartParameters.ValueAt(PartParameterId.HoldStrength, slider.High).ShouldBe(StepperDef.DefaultHoldStrength, tolerance: 1e-6);
+        var slider = PartParameters.SliderOver(PartParameterId.ServoStrength, [StepperDef.DefaultStrength]);
+        slider.Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(150, 0)));
+        PartParameters.ValueAt(PartParameterId.ServoStrength, slider.High).ShouldBe(StepperDef.DefaultStrength, tolerance: 1e-6);
     }
 
     [Fact]

@@ -9,11 +9,8 @@ namespace NodeRunner.Domain;
 /// </summary>
 public sealed record StepperDef : IJointMotorDef
 {
-    /// <summary>A new Stepper's <see cref="Strength"/>: 50 N·m in world torque units.</summary>
-    public const double DefaultStrength = 500000;
-
-    /// <summary>A new Stepper's <see cref="HoldStrength"/>: 50 N·m in world torque units.</summary>
-    public const double DefaultHoldStrength = 500000;
+    /// <summary>A new Stepper's <see cref="Strength"/>: 150 N·m in world torque units.</summary>
+    public const double DefaultStrength = 1500000;
 
     /// <summary>A new Stepper's <see cref="StepsPerTurn"/>.</summary>
     public const int DefaultStepsPerTurn = 8;
@@ -34,7 +31,6 @@ public sealed record StepperDef : IJointMotorDef
         int? targetLinkId = null,
         string? name = null,
         double strength = DefaultStrength,
-        double holdStrength = DefaultHoldStrength,
         int stepsPerTurn = DefaultStepsPerTurn,
         double maxFrequency = DefaultMaxFrequency)
     {
@@ -68,11 +64,6 @@ public sealed record StepperDef : IJointMotorDef
             throw new ArgumentOutOfRangeException(nameof(strength), "Stepper strength must be finite and positive.");
         }
 
-        if (!double.IsFinite(holdStrength) || holdStrength <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(holdStrength), "Stepper hold strength must be finite and positive.");
-        }
-
         if (stepsPerTurn is < MinStepsPerTurn or > MaxStepsPerTurn)
         {
             throw new ArgumentOutOfRangeException(nameof(stepsPerTurn), $"A stepper has {MinStepsPerTurn} to {MaxStepsPerTurn} steps per turn.");
@@ -89,7 +80,6 @@ public sealed record StepperDef : IJointMotorDef
         TargetLinkId = targetLinkId;
         Name = name;
         Strength = strength;
-        HoldStrength = holdStrength;
         StepsPerTurn = stepsPerTurn;
         MaxFrequency = maxFrequency;
     }
@@ -109,9 +99,6 @@ public sealed record StepperDef : IJointMotorDef
     /// <summary>Max strength: the most torque it pushes with while it steps, in world torque units.</summary>
     public double Strength { get; }
 
-    /// <summary>The most torque its notch holds against between steps, in world torque units, like a Brake's.</summary>
-    public double HoldStrength { get; }
-
     /// <summary>How many notches make a full turn.</summary>
     public int StepsPerTurn { get; }
 
@@ -120,12 +107,12 @@ public sealed record StepperDef : IJointMotorDef
 
     PartKind IPartDef.PartKind => PartKind.Stepper;
 
-    public StepperDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, HoldStrength, StepsPerTurn, MaxFrequency);
+    public StepperDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, StepsPerTurn, MaxFrequency);
 
-    public StepperDef WithSettings(double strength, double holdStrength, int stepsPerTurn, double maxFrequency) =>
-        new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength, holdStrength, stepsPerTurn, maxFrequency);
+    public StepperDef WithSettings(double strength, int stepsPerTurn, double maxFrequency) =>
+        new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength, stepsPerTurn, maxFrequency);
 
     /// <summary>The Stepper with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
     public StepperDef WithLinks(int? fixedLinkId, int? targetLinkId) =>
-        new(Id, NodeId, fixedLinkId, targetLinkId, Name, Strength, HoldStrength, StepsPerTurn, MaxFrequency);
+        new(Id, NodeId, fixedLinkId, targetLinkId, Name, Strength, StepsPerTurn, MaxFrequency);
 }
