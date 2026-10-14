@@ -57,7 +57,7 @@ public sealed class AngleSensorDefTests
         Should.Throw<ArgumentException>(() => Creature([new AngleSensorDef(6, 1, 4, 99)]));
     }
 
-    // A joint holds one Servo, Motor, Brake or Angle sensor (#1044).
+    // A joint holds one Servo, Stepper, Motor, Brake or Angle sensor (#1044).
     [Fact]
     public void CreatureDef_SharesTheJointsHingePartSlot_WithAServoAMotorABrakeAndAnotherAngleSensor()
     {

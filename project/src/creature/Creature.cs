@@ -593,8 +593,9 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
-            // A Stepper has no picture yet (#1038), so its joint keeps its ring, at the joint motor's radius.
+            // A Stepper has no picture yet (#1067), so its joint keeps its ring, at the joint motor's radius, over a Wheel's hub.
             var hasHingePart = definition.HingeParts.Any(part => part.NodeId == definition.Nodes[i].Id && part is not StepperDef);
+            var hasStepper = definition.Steppers.Any(stepper => stepper.NodeId == definition.Nodes[i].Id);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
             var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);
@@ -605,7 +606,8 @@ public partial class Creature : Node2D
                 Theme = Theme,
                 Radius = radius,
                 ShowsRing = !hasWheel && !hasHingePart,
-                ShowsHub = hasWheel && !hasHingePart,
+                ShowsHub = hasWheel && !hasHingePart && !hasStepper,
+                ShowsStepper = hasStepper,
                 Cushion = hasTouch,
                 Skin = hasRubber,
             };

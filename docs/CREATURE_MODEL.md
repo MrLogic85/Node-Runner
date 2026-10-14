@@ -271,8 +271,8 @@ nodes; how the simulation keeps them from giving way under load is in
 - `StepperDef` (#1036), saved under `steppers`. Its sides follow the
   Servo's rules and it takes the joint's hinge-part slot (see Servo, and
   Node → One part per slot). It is saved, loaded, shared and has brain
-  ports, and steps in the simulation (#1037); placing it in Build comes
-  with #1038. `docs/WORLD_VISUALS.md` → Parts says how it is drawn.
+  ports, steps in the simulation (#1037) and is placed in Build (#1038).
+  `docs/WORLD_VISUALS.md` → Parts says how it is drawn.
 - **Settings:** **Max strength** (torque while stepping, N·m), **Steps
   per turn** (notches in a full turn, 2–24) and **Max frequency** (the
   most steps each second); their slider ranges are in `docs/BUILD_MODE.md`

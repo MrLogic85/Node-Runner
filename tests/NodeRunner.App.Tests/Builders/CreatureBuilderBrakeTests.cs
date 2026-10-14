@@ -30,7 +30,7 @@ public sealed class CreatureBuilderBrakeTests
         builder.Brakes.Single().ShouldBe(new BrakeDef(brake, joint, beam, wheel));
     }
 
-    // A joint holds one hinge part: a Servo, Motor, Brake or Angle sensor (#1044).
+    // A joint holds one hinge part: a Servo, Stepper, Motor, Brake or Angle sensor (#1044).
     [Fact]
     public void ABrake_SharesItsJointsHingePartSlot_WithAServoAMotorAndAnotherBrake()
     {

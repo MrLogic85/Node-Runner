@@ -23,8 +23,8 @@ public sealed partial class CreatureBuilder
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
-    /// <summary>Why a hinge part, a Servo, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one (#1044).</summary>
-    public static UiText OneHingePartPerJointReason { get; } = UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint");
+    /// <summary>Why a hinge part, a Servo, a Stepper, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one (#1044).</summary>
+    public static UiText OneHingePartPerJointReason { get; } = UiText.Plain("One Servo, Stepper, Motor, Brake or Angle sensor per joint");
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
     public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");

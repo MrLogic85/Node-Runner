@@ -30,7 +30,7 @@ public sealed class CreatureBuilderAngleSensorTests
         builder.AngleSensors.Single().ShouldBe(new AngleSensorDef(sensor, joint, beam, wheel));
     }
 
-    // A joint holds one Servo, Motor, Brake or Angle sensor (#1044).
+    // A joint holds one Servo, Stepper, Motor, Brake or Angle sensor (#1044).
     [Fact]
     public void AnAngleSensor_SharesItsJointsHingePartSlot_WithAServoAMotorABrakeAndAnotherAngleSensor()
     {

@@ -23,6 +23,7 @@ public partial class JointPart : PartVisual
     private bool _loose;
     private bool _showsRing = true;
     private bool _showsHub;
+    private bool _showsStepper;
     private PlacingMark _placing;
     private float _placingRadius;
     private bool _cushion;
@@ -65,8 +66,18 @@ public partial class JointPart : PartVisual
     }
 
     /// <summary>
+    /// Whether a Stepper, placed or previewed, sits on it. A Stepper has no picture until #1067, so
+    /// where a Wheel stands in for its ring it still draws its ring, at <see cref="JointMotor.Radius"/>, over the Wheel's face.
+    /// </summary>
+    public bool ShowsStepper
+    {
+        get => _showsStepper;
+        set => Change(ref _showsStepper, value);
+    }
+
+    /// <summary>
     /// Whether it draws a Wheel's hub (<see cref="WheelPart.DrawHub"/>): where a Wheel, placed or
-    /// previewed, and no Servo sits on it. A shadow (<see cref="Simplified"/>) draws only its joint's outer ring at the hub.
+    /// previewed, and no Servo or Stepper sits on it. A shadow (<see cref="Simplified"/>) draws only its joint's outer ring at the hub.
     /// </summary>
     public bool ShowsHub
     {
@@ -170,13 +181,14 @@ public partial class JointPart : PartVisual
             skinPen.Ring(Vector2.Zero, Radius + ((float)RubberDef.Skin / 2), SkinSelected ? Theme.SelectionGlow : Theme.RubberSkin, (float)RubberDef.Skin, _skinSegments);
         }
 
-        if (ShowsRing)
+        if (ShowsRing || ShowsStepper)
         {
+            var ringRadius = ShowsRing ? Radius : (float)JointMotor.Radius;
             var look = Selected ? JointLook.Selected : Loose ? JointLook.Loose : JointLook.Plain;
-            JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, Radius, look, Simplified);
+            JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, ringRadius, look, Simplified);
             if (Selected)
             {
-                SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, (float)SelectionMarks.JointHalo(Radius));
+                SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, (float)SelectionMarks.JointHalo(ringRadius));
             }
         }
 

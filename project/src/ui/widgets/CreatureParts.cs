@@ -80,11 +80,13 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            // A Stepper has no picture yet (#1038), so its joint shows it selected.
+            // A Stepper has no picture yet (#1067), so its joint shows it selected, placed or previewed.
             part.Selected = (marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointParts))
-                || shape.Steppers.Any(stepper => stepper.NodeId == node.Id && marks.Selected.Steppers.Contains(stepper.Id));
+                || shape.Steppers.Any(stepper => stepper.NodeId == node.Id && marks.Selected.Steppers.Contains(stepper.Id))
+                || marks.PreviewNodeOf(BuildPart.Stepper) == node.Id;
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasHingePart(shape, marks, node.Id);
-            part.ShowsHub = HasWheelAndNoHingePart(shape, marks, node.Id);
+            part.ShowsStepper = HasStepper(shape, marks, node.Id);
+            part.ShowsHub = HasWheelAndNoHingePart(shape, marks, node.Id) && !part.ShowsStepper;
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
             part.Cushion = touch is not null || marks.PreviewNodeOf(BuildPart.TouchSensor) == node.Id;
             part.TouchSelected = touch is not null && marks.Selected.TouchSensors.Contains(touch.Id);
@@ -103,13 +105,16 @@ public partial class CreatureParts : Node2D
         }
     }
 
-    // A joint's radius as drawn, with a previewed motor or Wheel, so a cushion sits round it.
+    // A joint's radius as drawn, with a previewed motor, Stepper or Wheel, so a cushion sits round it.
     private static double ShownRadius(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         Math.Max(
             NodeRadius(shape, nodeId),
             marks.PreviewNodeOf(BuildPart.Wheel) == nodeId ? WheelDef.DefaultRadius
-            : PreviewsMotor(marks, nodeId) ? JointMotor.Radius
+            : PreviewsMotor(marks, nodeId) || marks.PreviewNodeOf(BuildPart.Stepper) == nodeId ? JointMotor.Radius
             : 0);
+
+    private static bool HasStepper(CreatureShape shape, CreatureMarks marks, int nodeId) =>
+        shape.Steppers.Any(stepper => stepper.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.Stepper) == nodeId;
 
     private static bool HasWheel(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         shape.Wheels.Any(wheel => wheel.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.Wheel) == nodeId;

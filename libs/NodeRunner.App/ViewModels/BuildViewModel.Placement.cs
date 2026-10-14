@@ -42,6 +42,17 @@ public sealed partial class BuildViewModel
             return _builder.CanAddServo(target.Id, out reason);
         }
 
+        if (part == BuildPart.Stepper)
+        {
+            if (target.Kind != CreatureElementKind.Node)
+            {
+                reason = CreatureBuilder.SteppersGoOnAJointReason;
+                return false;
+            }
+
+            return _builder.CanAddStepper(target.Id, out reason);
+        }
+
         if (part == BuildPart.VelocityMotor)
         {
             if (target.Kind != CreatureElementKind.Node)
@@ -141,6 +152,13 @@ public sealed partial class BuildViewModel
             var servoId = _history.Change(() => _builder.AddServo(target.Id));
             SelectPlaced(PartSet.None with { Servos = new HashSet<int> { servoId } }, select);
             return servoId;
+        }
+
+        if (part == BuildPart.Stepper)
+        {
+            var stepperId = _history.Change(() => _builder.AddStepper(target.Id));
+            SelectPlaced(PartSet.None with { Steppers = new HashSet<int> { stepperId } }, select);
+            return stepperId;
         }
 
         if (part == BuildPart.VelocityMotor)

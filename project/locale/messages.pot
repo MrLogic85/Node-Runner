@@ -44,6 +44,10 @@ msgstr ""
 msgid "A beam must connect two different joints."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "A motor that turns one notch at a time and holds it."
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "A piston must connect two different joints."
 msgstr ""
@@ -690,7 +694,7 @@ msgid "On this joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "One Servo, Motor, Brake or Angle sensor per joint"
+msgid "One Servo, Stepper, Motor, Brake or Angle sensor per joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -828,7 +832,7 @@ msgid "Rise time"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Rolls freely on the ground. Add a Motor or Servo to power it."
+msgid "Rolls freely on the ground. Add a Motor, Servo or Stepper to power it."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -1064,7 +1068,7 @@ msgid "Tap a beam to place it. A beam holds one sensor."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor."
+msgid "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs

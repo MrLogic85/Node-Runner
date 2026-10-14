@@ -143,7 +143,7 @@ public sealed class BuildAngleSensorTests
 
         build.PlacePart(second, _middleJoint).ShouldBeNull();
 
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One Servo, Motor, Brake or Angle sensor per joint")));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, _middleJoint, UiText.Plain("One Servo, Stepper, Motor, Brake or Angle sensor per joint")));
         build.HingeParts.ShouldHaveSingleItem();
         build.PlacingTargetsOf(second, movingSensorId: null).RefusedJoints.ShouldContain(2);
     }
