@@ -60,7 +60,7 @@ public partial class Creature
     }
 
     // A Brake (#1040) holds its sides as a Servo turns them, so it shares the Servo's sides. A Locked
-    // one is no friction but a weld (WeldSides), unless both its sides slide at the joint: then it is
+    // one is no friction but a weld (Welder), unless both its sides slide at the joint: then it is
     // friction without a limit. Each is drawn whatever holds it (#1041). Run once the Piston and Spring
     // cylinders exist, as a Locked side can be one.
     private void CreateBrakes(CreatureDef definition)
@@ -71,7 +71,11 @@ public partial class Creature
         {
             var brake = definition.Brakes[i];
             var sides = HingePartSidesFor(definition, brake);
-            if (!brake.Locked || !WeldSides(definition, brake))
+            if (brake.Locked && Welder(definition, brake, $"Brake{brake.Id}Weld") is { } weld)
+            {
+                weld.Weld();
+            }
+            else
             {
                 brakes.Add(new BrakeJoint(brake, sides));
             }
@@ -91,6 +95,15 @@ public partial class Creature
         }
 
         _brakes = [.. brakes];
+    }
+
+    // A Stepper (#1037) steps its sides as a Velocity motor turns them, and welds them at each notch
+    // as a Locked Brake does (Welder).
+    private void CreateSteppers(CreatureDef definition)
+    {
+        _steppers = definition.Steppers
+            .Select(stepper => new StepperJoint(stepper, HingePartSidesFor(definition, stepper), Welder(definition, stepper, $"Stepper{stepper.Id}Weld")))
+            .ToArray();
     }
 
     // An Angle sensor (#1204) reads its sides as a Velocity motor does and never turns them, so it adds
@@ -129,48 +142,55 @@ public partial class Creature
         }
     }
 
-    // A Locked Brake welds its two sides' bodies with a second joint away from the joint's own pin:
-    // two joints hold two bodies rigidly, inside Godot's solver, so no load can turn the joint. A
-    // friction torque lags a step behind the load it holds, so even an endless one gives a little
-    // under a sudden load. Godot's own angular limit and motor on PinJoint2D cannot hold it
-    // (godotengine/godot#91691, #87513). A Piston or Spring whose node B is the joint slides that
-    // node along its cylinder, so a pin would stop its stroke; that side's far node runs in a groove
-    // on the other side's body instead (SlideLock). When both sides slide no Godot joint locks only
-    // the angle, so it returns false and the Brake holds as endless friction.
-    private bool WeldSides(CreatureDef definition, BrakeDef brake)
+    // A Locked Brake and a Stepper at its notch weld their two sides' bodies with a second joint away
+    // from the joint's own pin: two joints hold two bodies rigidly, inside Godot's solver, so no load
+    // can turn the joint. A friction torque lags a step behind the load it holds, so even an endless
+    // one gives a little under a sudden load. Godot's own angular limit and motor on PinJoint2D cannot
+    // hold it (godotengine/godot#91691, #87513). A Piston or Spring whose node B is the joint slides
+    // that node along its cylinder, so a pin would stop its stroke; that side's far node runs in a
+    // groove on the other side's body instead (SlideLock). When both sides slide no Godot joint locks
+    // only the angle, so it returns null and the part holds as endless friction. Otherwise it adds the
+    // weld, not yet holding (HingeWeld). A side's cylinder turns as a bar (WeighCylinderAsBar) from the
+    // start, as a weld may hold it at any time and a body whose weight changed mid-trial would jolt.
+    private HingeWeld? Welder(CreatureDef definition, IHingePartDef part, string name)
     {
-        var fixedSide = brake.FixedLinkId!.Value;
-        var targetSide = brake.TargetLinkId!.Value;
-        var fixedSlides = SlidesAt(definition, brake.NodeId, fixedSide);
-        var targetSlides = SlidesAt(definition, brake.NodeId, targetSide);
+        var fixedSide = part.FixedLinkId!.Value;
+        var targetSide = part.TargetLinkId!.Value;
+        var fixedSlides = SlidesAt(definition, part.NodeId, fixedSide);
+        var targetSlides = SlidesAt(definition, part.NodeId, targetSide);
         if (fixedSlides && targetSlides)
         {
-            return false;
+            return null;
         }
 
-        var fixedBody = SideBody(definition, brake.NodeId, fixedSide);
-        var targetBody = SideBody(definition, brake.NodeId, targetSide);
-        var joint = _nodeBodies[definition.NodeIndexOf(brake.NodeId)].Position;
+        var fixedBody = SideBody(definition, part.NodeId, fixedSide);
+        var targetBody = SideBody(definition, part.NodeId, targetSide);
+        var jointBody = _nodeBodies[definition.NodeIndexOf(part.NodeId)];
         if (fixedSlides || targetSlides)
         {
             // The sliding side's cylinder is not in the lock, so only the holding side turns as a bar.
             var (holdingSide, holdingBody) = fixedSlides ? (targetSide, targetBody) : (fixedSide, fixedBody);
             WeighCylinderAsBar(definition, holdingSide, holdingBody);
             var sliding = definition.Link(fixedSlides ? fixedSide : targetSide);
-            SlideLock($"Brake{brake.Id}Weld", holdingBody, joint, _nodeBodies[definition.NodeIndexOf(sliding.NodeA)]);
-            return true;
+            var farNode = _nodeBodies[definition.NodeIndexOf(sliding.NodeA)];
+            var groove = new GrooveJoint2D { Name = name, Length = 2 * _lockGrooveReach };
+            return Unwelded(groove, holdingBody, farNode, () => SlideLock(groove, jointBody.Position, farNode.Position));
         }
 
         WeighCylinderAsBar(definition, fixedSide, fixedBody);
         WeighCylinderAsBar(definition, targetSide, targetBody);
 
         var along = definition.IsWheel(fixedSide) ? definition.Link(targetSide) : definition.Link(fixedSide);
-        var far = _nodeBodies[definition.NodeIndexOf(along.FarNodeFrom(brake.NodeId))].Position;
-        var weld = new PinJoint2D { Name = $"Brake{brake.Id}Weld", Position = (joint + far) / 2 };
-        AddChild(weld);
-        weld.NodeA = weld.GetPathTo(fixedBody);
-        weld.NodeB = weld.GetPathTo(targetBody);
-        return true;
+        var farBody = _nodeBodies[definition.NodeIndexOf(along.FarNodeFrom(part.NodeId))];
+        var pin = new PinJoint2D { Name = name };
+        return Unwelded(pin, fixedBody, targetBody, () => pin.Position = (jointBody.Position + farBody.Position) / 2);
+    }
+
+    private HingeWeld Unwelded(Joint2D joint, RigidBody2D nodeA, RigidBody2D nodeB, Action place)
+    {
+        AddChild(joint);
+        joint.NodeA = joint.GetPathTo(nodeA);
+        return new HingeWeld(joint, joint.GetPathTo(nodeB), place);
     }
 
     // Locks a sliding Piston's or Spring's angle on the other side's body: its far node (node A)
@@ -179,20 +199,12 @@ public partial class Creature
     // (CapEndStops caps only those): a capped groove would let the lock turn, as Godot caps a
     // groove's whole push, across it too. It holds the far node, not node B, as the cylinder is
     // too light to carry the lock: grooves on it gave way when a creature landed.
-    private void SlideLock(string name, RigidBody2D body, Vector2 joint, RigidBody2D farNode)
+    private static void SlideLock(GrooveJoint2D groove, Vector2 joint, Vector2 farNode)
     {
-        var toFar = farNode.Position - joint;
-        var groove = new GrooveJoint2D
-        {
-            Name = name,
-            Position = joint - (toFar.Normalized() * _lockGrooveReach),
-            Rotation = toFar.Angle() - (Mathf.Pi / 2),
-            Length = 2 * _lockGrooveReach,
-            InitialOffset = _lockGrooveReach + toFar.Length(),
-        };
-        AddChild(groove);
-        groove.NodeA = groove.GetPathTo(body);
-        groove.NodeB = groove.GetPathTo(farNode);
+        var toFar = farNode - joint;
+        groove.Position = joint - (toFar.Normalized() * _lockGrooveReach);
+        groove.Rotation = toFar.Angle() - (Mathf.Pi / 2);
+        groove.InitialOffset = _lockGrooveReach + toFar.Length();
     }
 
     // Whether a Piston or Spring slides its node B at this joint.

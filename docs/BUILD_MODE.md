@@ -425,8 +425,7 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   position, since it turns round and round. Its note: "Turns one side round
   and round. The brain picks how fast and which way."
 - **Stepper (#1036):** Max strength (the Servo's setting, so it edits
-  together with a selected Servo's), Hold strength (5–200 N·m, step 5),
-  Steps per turn (2–24, step 1) and Max frequency (0.2–5.0 Hz, step 0.1).
+  together with a selected Servo's), Steps per turn (2–24, step 1) and Max frequency (0.2–5.0 Hz, step 0.1).
   It cannot be placed yet (#1038).
 - **Brake (#1041):** Strength (20–400 N·m, step 20, then a last step that
   reads "Locked", an endless Strength; a span up to it reads "60 N·m–Locked"),

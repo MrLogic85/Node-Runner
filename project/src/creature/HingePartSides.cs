@@ -4,8 +4,8 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A hinge part's two sides (<see cref="IHingePartDef"/>): a Servo's, a Velocity motor's (#454), a Brake's (#1040)
-/// or an Angle sensor's (#1204). They are links, whose angle is the direction to their far joint body and which
+/// A hinge part's two sides (<see cref="IHingePartDef"/>): a Servo's, a Velocity motor's (#454), a Brake's (#1040),
+/// an Angle sensor's (#1204) or a Stepper's (#1037). They are links, whose angle is the direction to their far joint body and which
 /// turn by a force couple, or the joint's Wheel, a one-sided link that turns with its body (#1118). It measures the
 /// Target's angle and speed against the Fixed side's, unwrapped across turns, and turns them
 /// apart by an equal and opposite torque.

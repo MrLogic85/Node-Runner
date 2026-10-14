@@ -445,10 +445,6 @@ msgid "Hills"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "Hold strength"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How far it can see"
 msgstr ""
 
@@ -462,10 +458,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How fast it's allowed to move"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "How hard it holds each notch"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

@@ -88,10 +88,18 @@ file owns how Godot realises it.
     every tick, brain or not (#1040), using `HingePartSides.BrakeInertia`,
     which must never read heavier than the joint. A Locked Brake is a
     second Godot joint instead, as no Godot angular joint can brake;
-    `Creature.Links.cs` (WeldSides) says how, and when it stays friction.
+    `Creature.Links.cs` (Welder) says how, and when it stays friction.
 15. **An Angle sensor only reads its `HingePartSides`.** An `AngleSensorJoint`
     reads the angle and speed between its sides as a Motor does (#1204),
     and never applies torque or adds a joint.
+16. **A Stepper steps its `HingePartSides` by torque and holds them by a
+    weld.** A `StepperJoint` runs `Mechanics.Stepper` every tick, brain or
+    not (#1037), reading `HingePartSides.BrakeInertia` as a Brake does. While
+    it steps it turns its sides by torque (rule 6); while locked it welds them
+    as a Locked Brake does (`Creature.Links.cs`, Welder, which also says
+    when no weld fits) and lets the weld go as it steps on. The weld is one
+    `HingeWeld` made with the creature and switched on and off, so the tick
+    makes no node (rule 9).
 
 ## What lives here
 
@@ -108,6 +116,8 @@ file owns how Godot realises it.
 - `HingePartSides.cs` — a hinge part's two sides: angle, speed, inertia, torque
 - `ServoJoint.cs`, `VelocityMotorJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
 - `BrakeJoint.cs` — a Brake's friction on its sides
+- `StepperJoint.cs` — a Stepper's hold and steps on its sides
+- `HingeWeld.cs` — the joint that welds a Locked Brake or locked Stepper rigid
 - `AngleSensorJoint.cs` — an Angle sensor's reading of its sides
   (`AngleSensorVisual.cs` draws its arc from the same `HingePartSides`, #1205)
 - `AngleSensorTurn.cs` — the turn Training's Angle sensor arc is on, from

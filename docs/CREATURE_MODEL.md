@@ -271,14 +271,42 @@ nodes; how the simulation keeps them from giving way under load is in
 - `StepperDef` (#1036), saved under `steppers`. Its sides follow the
   Servo's rules and it takes the joint's hinge-part slot (see Servo, and
   Node → One part per slot). It is saved, loaded, shared and has brain
-  ports; stepping in the simulation comes with #1037 and placing it in
-  Build with #1038, so until then a Stepper is only data.
-- **Settings:** **Max strength** (torque while stepping, N·m), **Hold
-  strength** (the torque its notch holds against, N·m, as a Brake's
-  Strength), **Steps per turn** (notches in a full turn, 2–24) and **Max
-  frequency** (the most steps each second); their slider ranges are in
-  `docs/BUILD_MODE.md` → Parameters. Its ports are in Sensor–model
-  contract.
+  ports, and steps in the simulation (#1037); placing it in Build comes
+  with #1038. `docs/WORLD_VISUALS.md` → Parts says how it is drawn.
+- **Settings:** **Max strength** (torque while stepping, N·m), **Steps
+  per turn** (notches in a full turn, 2–24) and **Max frequency** (the
+  most steps each second); their slider ranges are in `docs/BUILD_MODE.md`
+  → Parameters. Its ports are in Sensor–model contract.
+- **Notches:** Steps per turn evenly spaced angles between its sides,
+  counted from the built angle, so a trial starts locked at a notch. Its
+  angle is measured as a Motor's and counts on across whole turns.
+- **Frequency:** its running frequency follows the Frequency output with
+  a time constant of 1 s, so a brain can't jerk it, and its frequency
+  input reads it. At that rate it lets go, at most once a physics step.
+- **Release:** each time it lets go it unlocks, picks the neighbouring
+  notch in Power's direction and drives the joint there with at most
+  |Power| × Max strength, like a clock's tick: full torque, then braking
+  just in time, tick by tick, to arrive still. It has no top speed; Max
+  strength alone sets how quick a step is (a new Stepper steps a light
+  joint in a few physics steps). Power changing sign mid-release doesn't
+  turn it round. There is no dead zone: at Power 0 it still lets go, and
+  the joint turns freely. The release ends, and the Stepper locks, once
+  the joint is within 2 % of a notch spacing of that notch, or has passed
+  it, or the one behind if a load stronger than the push carries it back.
+  It never measures how heavy the joint is, so on a joint heavier than it
+  reads (a foot on the ground) it brakes late; it then locks where the
+  joint passed the notch, a little past it, and the overshoot still
+  counts one step. The next step drives to the exact notch angle, so the
+  error never adds up. If it reaches neither notch within 0.5 s, it pulls
+  the joint with Max strength to the nearest notch, so a push too weak
+  doesn't count a step, and locks it there. If the next release comes due
+  first, that nearest notch counts as reached and the next step goes on
+  from it.
+- **Lock:** between releases it holds the joint locked, brain or not
+  (`Mechanics.Stepper`): Godot welds its sides rigid as they stand, as a
+  Locked Brake's (`Creature.Links.cs`, `Welder`), so no load turns it.
+  Where no weld fits it holds as endless friction instead, as a Locked
+  Brake does then (see Brake).
 
 ### Brake
 
