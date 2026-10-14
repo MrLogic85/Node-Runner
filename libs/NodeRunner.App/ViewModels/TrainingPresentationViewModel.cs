@@ -66,6 +66,12 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         ? UiText.Format("Best {0}", Metres.WithUnit(_bestShownDistance))
         : null;
 
+    /// <summary>
+    /// What marks a run whose distance froze at a tear (#962, #1257), such as "Crash 3.4 m": the
+    /// arena flag at that distance and the Distance stage's note.
+    /// </summary>
+    public static UiText CrashText(double distance) => UiText.Format("Crash {0}", Metres.WithUnit(distance));
+
     /// <summary>The followed shadow's 1-based number, or 0 without a training source.</summary>
     public int FollowedShadow => _source is null ? 0 : _source.FollowedShadow + 1;
 
@@ -107,7 +113,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
             : null;
 
     /// <summary>The shadow strip (#387): which shadows it shows and how full their bars are.</summary>
-    public ShadowStripView Strip => _strip.View(Shadows, _generation);
+    public ShadowStripView Strip => _strip.View(Shadows, _generation, _source?.FollowedCrashed ?? false);
 
     /// <summary>How many places the shadow strip has; the strip sets it to as many as fit (#791).</summary>
     public int StripPlaces

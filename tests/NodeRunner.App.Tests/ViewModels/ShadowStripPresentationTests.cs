@@ -54,6 +54,20 @@ public sealed class ShadowStripPresentationTests
     }
 
     [Fact]
+    public void AfterTheFollowedRunTears_OnlyItsCellIsCapped()
+    {
+        var strip = new ShadowStripPresentation();
+        ShadowStanding[] shadows =
+        [
+            new(1, 1, IsFollowed: false, IsLeader: false, IsPreviousBest: true),
+            new(2, 3, IsFollowed: true, IsLeader: true, IsPreviousBest: false),
+        ];
+
+        strip.View(shadows, 0).Cells.ShouldAllBe(cell => !cell.IsCapped);
+        strip.View(shadows, 0, followedCrashed: true).Cells.Select(cell => cell.IsCapped).ShouldBe([true, false]);
+    }
+
+    [Fact]
     public void PastEightShadows_TheFirstPageShowsTheTopSixAndASortButton()
     {
         var strip = new ShadowStripPresentation();

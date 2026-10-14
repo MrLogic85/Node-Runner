@@ -76,6 +76,9 @@ public sealed class TrialMeasurement
 
     public TrialResult Result => new(_distance, _topSpeed, _elevation, _frontDistance, _valid);
 
+    /// <summary>Whether <see cref="Freeze"/> has been called since the last <see cref="Reset"/>.</summary>
+    public bool IsFrozen => _frozen;
+
     /// <summary>Begins a new trial from the centre's and the front-most point's starting X positions.</summary>
     public void Reset(double startX, double startFrontX)
     {

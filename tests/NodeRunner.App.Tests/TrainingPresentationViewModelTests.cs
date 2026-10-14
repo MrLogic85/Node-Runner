@@ -319,6 +319,24 @@ public sealed class TrainingPresentationViewModelTests
     }
 
     [Fact]
+    public void Strip_CapsTheFollowedCell_OnceItsRunTears()
+    {
+        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 2, 3] };
+        var presentation = new TrainingPresentationViewModel(source);
+        presentation.Follow(2);
+
+        presentation.Strip.Cells.ShouldAllBe(cell => !cell.IsCapped);
+        source.FollowedCrashed = true;
+        presentation.Strip.Cells.Where(cell => cell.IsCapped).Select(cell => cell.Number).ShouldBe([2], "A tear can come in any tick.");
+    }
+
+    [Fact]
+    public void CrashText_ReadsCrashAndTheDistance()
+    {
+        TrainingPresentationViewModel.CrashText(342).ShouldBe(UiText.Format("Crash {0}", UiText.Format("{0} m", new FixedNumber(3.4, 1))));
+    }
+
+    [Fact]
     public void WithoutASource_ThereAreNoShadowsToFollow()
     {
         var presentation = new TrainingPresentationViewModel();
@@ -372,6 +390,8 @@ public sealed class TrainingPresentationViewModelTests
         public bool HasPreviousBest { get; set; }
 
         public IReadOnlyList<double> ShadowDistances { get; set; } = [];
+
+        public bool FollowedCrashed { get; set; }
 
         public RunClock? FollowedRun { get; set; }
 

@@ -6,7 +6,8 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// The Training shadow strip (#387, reference <c>GenerationStrip</c>): one <see cref="UiBarCell"/>
-/// per shadow, its bar the distance so far and the followed shadow selected. Tapping a cell follows
+/// per shadow, its bar the distance so far and the followed shadow selected, its bar capped once its
+/// distance froze at a tear (#1257). Tapping a cell follows
 /// that shadow. It has as many places as fit its width, cells keeping their size (#791). With more
 /// shadows than places it pages: a "worse" cell first and a sort or "better" cell last
 /// (<see cref="ShadowStripPresentation"/>). The scene authors the row and the two buttons; this adds
@@ -148,6 +149,7 @@ public partial class ShadowStrip : Control
             var shadow = _shown.Cells[index];
             cell.Fill = (float)shadow.Fill;
             cell.Selected = shadow.IsFollowed;
+            cell.Capped = shadow.IsCapped;
         }
 
         Trailing.Visible = _shown.Trailing != ShadowStripTrailing.None;

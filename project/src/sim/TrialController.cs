@@ -38,6 +38,9 @@ public partial class TrialController : Node
     /// <summary>What the trial in progress (or the last one) has measured so far.</summary>
     public TrialResult Measured => _measurement.Result;
 
+    /// <summary>Whether a tear has frozen what the trial in progress (or the last one) measures (#962).</summary>
+    public bool IsFrozen => _measurement.IsFrozen;
+
     /// <summary>
     /// The gap between the creature's lowest point and the ground when every trial starts, in
     /// creature units. A small fixed drop gives every trial the same start (#649); the fall counts

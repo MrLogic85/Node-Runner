@@ -44,7 +44,7 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 - `JointDrawing.cs`, `PistonDrawing.cs`, `SpringDrawing.cs`,
   `SensorDrawing.cs`, `SelectionDrawing.cs`, `TriangleHatch.cs`, `ServoGeometry.cs`,
   `TelescopeGeometry.cs`, `HubMotorGeometry.cs`, `BrakeGeometry.cs`,
-  `AngleSensorGeometry.cs`, `JointMotorDrawing.cs` — static drawing helpers
+  `AngleSensorGeometry.cs`, `JointMotorDrawing.cs`, `TearPulseDrawing.cs` — static drawing helpers
 - `PartVisual.cs` — the base of every part visual: theme, selection and
   layer, and the redraw on a new pixel scale every view that holds parts
   calls, which also redraws any child a part draws on from its `Draw` signal

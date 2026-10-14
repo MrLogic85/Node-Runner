@@ -292,6 +292,18 @@ public sealed class TrialMeasurementTests
         measurement.Result.ShouldBe(before);
     }
 
+    [Fact]
+    public void IsFrozen_FromAFreezeUntilTheNextTrial()
+    {
+        var measurement = Start(0);
+        measurement.IsFrozen.ShouldBeFalse();
+
+        measurement.Freeze(0, 0, 0);
+        measurement.IsFrozen.ShouldBeTrue();
+        measurement.Reset(0, 0);
+        measurement.IsFrozen.ShouldBeFalse("A new trial starts whole.");
+    }
+
     // At ten ticks a second a step over 1000 units is a blow-up; after a tear the next sample is checked
     // against the tear's sample, not the last.
     [Fact]

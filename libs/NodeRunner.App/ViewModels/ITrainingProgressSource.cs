@@ -32,6 +32,12 @@ public interface ITrainingProgressSource : IDisposable
     /// <summary>Every shadow's front distance so far this trial (#725), NaN for one that is not running.</summary>
     IReadOnlyList<double> ShadowDistances { get; }
 
+    /// <summary>
+    /// Whether a beam of the followed shadow has torn in its current run (#962), so its distance has
+    /// stopped counting (#1257); false when none is running.
+    /// </summary>
+    bool FollowedCrashed { get; }
+
     /// <summary>How far the followed shadow is into its run (#715); null when none is running.</summary>
     RunClock? FollowedRun { get; }
 

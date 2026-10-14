@@ -51,6 +51,7 @@ public partial class Creature : Node2D
     private float[] _nodeColliderRadii = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
+    private KnockoutVisual[] _beamKnockouts = [];
     private RigidHatchVisual[] _hatchVisuals = [];
     private SensorVisual[] _sensorVisuals = [];
     private ServoJoint[] _servos = [];
@@ -325,6 +326,11 @@ public partial class Creature : Node2D
     {
         VisibilityLayer = _isShadow ? ArenaVisibility.Shadows : ArenaVisibility.Arena;
         ZIndex = _isShadow ? ArenaLayers.Shadows : ArenaLayers.Followed;
+        foreach (var pulse in _tearPulses.Where(IsInstanceValid))
+        {
+            pulse.IsShadow = _isShadow;
+        }
+
         foreach (var visual in _knockoutVisuals)
         {
             visual.IsShadow = _isShadow;
@@ -338,6 +344,8 @@ public partial class Creature : Node2D
         foreach (var visual in _beamVisuals)
         {
             visual.IsShadow = _isShadow;
+            visual.FlashA &= !_isShadow;
+            visual.FlashB &= !_isShadow;
         }
 
         foreach (var visual in _hatchVisuals)
@@ -427,6 +435,7 @@ public partial class Creature : Node2D
         _beamBodies = new RigidBody2D[beamDefs.Count];
         _beamHalfLengths = new float[beamDefs.Count];
         _beamVisuals = new BeamVisual[beamDefs.Count];
+        _beamKnockouts = new KnockoutVisual[beamDefs.Count];
 
         for (var i = 0; i < beamDefs.Count; i++)
         {
@@ -461,9 +470,11 @@ public partial class Creature : Node2D
                 RadiusA = ToGodotFloat(definition.NodeRadius(beamDef.NodeA), nameof(JointMotor.Radius)),
                 RadiusB = ToGodotFloat(definition.NodeRadius(beamDef.NodeB), nameof(JointMotor.Radius)),
             };
-            body.AddChild(CreateKnockout(visual.A, visual.B, Theme.BeamWidth / 2));
+            var knockout = CreateKnockout(visual.A, visual.B, Theme.BeamWidth / 2);
+            body.AddChild(knockout);
             body.AddChild(visual);
             _beamVisuals[i] = visual;
+            _beamKnockouts[i] = knockout;
 
             AddChild(body);
             _beamBodies[i] = body;

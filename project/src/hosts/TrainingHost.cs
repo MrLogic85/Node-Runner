@@ -73,7 +73,9 @@ public partial class TrainingHost : Node, IRoutedScene
     private TrainingRunMode Mode => _route?.Mode ?? TrainingRunMode.Train;
 
     private ArenaRuler Ruler => GetNode<ArenaRuler>("%Ruler");
-    private ArenaBestMarker BestMarker => GetNode<ArenaBestMarker>("%BestMarker");
+    private ArenaFlagMarker BestMarker => GetNode<ArenaFlagMarker>("%BestMarker");
+
+    private ArenaFlagMarker CrashMarker => GetNode<ArenaFlagMarker>("%CrashMarker");
 
     private ArenaStartSign StartSign => GetNode<ArenaStartSign>("%StartSign");
     private ArenaShadows Shadows => GetNode<ArenaShadows>("%Shadows");
@@ -164,7 +166,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
         _signalRefreshElapsed = 0;
         _followed.ReadInputs(_brainInputs);
-        _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.MotorCount, FollowedDistance);
+        _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.MotorCount, FollowedDistance, FollowedCrashed);
+        ShowCrash();
 
         // One sample of the brain's ports per refresh, read by both BrainFocus and the part callout (#1064).
         _portValues = BrainPortValues.Sample(_followed.Ports, _followed.Brain, _brainInputs);
@@ -276,6 +279,9 @@ public partial class TrainingHost : Node, IRoutedScene
         // The markers are children of the ground, so their layers are made absolute, not added to the ground's.
         BestMarker.ZAsRelative = false;
         BestMarker.ZIndex = ArenaLayers.BestMarker;
+        CrashMarker.Theme = _theme;
+        CrashMarker.ZAsRelative = false;
+        CrashMarker.ZIndex = ArenaLayers.BestMarker;
         StartSign.Theme = _theme;
         StartSign.ZAsRelative = false;
         StartSign.ZIndex = ArenaLayers.StartSign;
@@ -317,6 +323,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
         Ruler.StartX = Ruler.ToLocal(creature.Bounds.End).X;
         BestMarker.StartX = Ruler.StartX;
+        CrashMarker.StartX = Ruler.StartX;
         StartSign.StartX = Ruler.StartX;
         Camera.GroundY = GroundTopY;
 
@@ -342,7 +349,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private void BindScreen(CreationDef? creation)
     {
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
-        Ruler.TopClear = Math.Max(ArenaBestMarker.FlagBottom, _screen.SlowMotionChipBottom);
+        KeepScaleClear(crashed: false);
         _screen.Setup(
             creation is null
                 ? TrainingHeaderPresentation.ForWalker(Mode, _map.Id)
@@ -447,6 +454,29 @@ public partial class TrainingHost : Node, IRoutedScene
     private double FollowedDistance =>
         _evolver?.FollowedTrialDistance ?? (_playback is { IsRunning: true } playback ? playback.Measured.FrontDistance : double.NaN);
 
+    // Whether the followed run's distance froze at a tear (#962).
+    private bool FollowedCrashed => _evolver?.FollowedTrialCrashed ?? _playback is { IsRunning: true, IsFrozen: true };
+
+    // The crash flag stands where the followed run's distance froze (#1257), one row under the best
+    // flag, so the height labels keep clear of that row while it shows.
+    private void ShowCrash()
+    {
+        var distance = FollowedDistance;
+        var crashed = FollowedCrashed && double.IsFinite(distance);
+        CrashMarker.Show(distance, crashed ? UiTextTranslation.Source(TrainingPresentationViewModel.CrashText(distance)) : null);
+        KeepScaleClear(crashed);
+    }
+
+    // The height labels stop above the lowest flag showing and the slow-motion chip.
+    private void KeepScaleClear(bool crashed)
+    {
+        var topClear = Math.Max((crashed ? CrashMarker : BestMarker).FlagBottom, _screen.SlowMotionChipBottom);
+        if (Ruler.TopClear != topClear)
+        {
+            Ruler.TopClear = topClear;
+        }
+    }
+
     // The selection and the camera move to the new subject: the old shadow drops the selection, the
     // new one shows it, and the camera glides over.
     private void OnFollowedShadowChanged()
@@ -540,6 +570,7 @@ public partial class TrainingHost : Node, IRoutedScene
             _followed?.SetSelectedParts(_selection.SelectedParts);
             BestMarker.Faded = _selection.SelectedParts.Count > 0 && _followed?.Definition is not null;
             StartSign.Faded = BestMarker.Faded;
+            CrashMarker.Faded = BestMarker.Faded;
             ShowPartCallout();
         }
     }

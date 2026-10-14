@@ -57,9 +57,31 @@ lines riding on one of its beams. The lines run into the corners (#1198);
 "Draw layers" says what covers them there. Where the lines would come closer than
 `TriangleHatch.MinPixelSpacing` (zoomed far out, in a thumbnail) and on
 every other shadow, the triangle gets a faint fill of the same density
-instead (#770). A triangle a tear has undone is not hatched
-(`docs/CREATURE_MODEL.md` → Rigid triangles), and a beam torn from both
-its joints is not drawn (Beam → Tearing there).
+instead (#770). A triangle a tear has undone loses its hatch
+(`docs/CREATURE_MODEL.md` → Rigid triangles; Tear below).
+
+### Tear
+
+How a beam end letting go (`docs/CREATURE_MODEL.md` → Beam → Tearing)
+looks in Simulate and Training (#1257); a shadow's tear is under Drawing
+as a shadow. It is said once, at the tear, and then the creature is left
+to show the rest:
+
+- **Torn end:** with no joint ring over it, the beam is drawn out to its
+  tip, and its knock-out outline ends flat there. On the followed creature
+  the last `BeamPart.TornEndLength` (8 units) flash `danger` for as long as
+  the pulse runs, then turn back to the beam's colour (owner, #1257: the
+  tear is said once; a broken beam or motor may get a lasting look later).
+- **Pulse:** on the followed creature a `danger` ring leaves the joint the
+  end let go of, once per joint, from R + 3 out to R + 19, fading out
+  over 0.4 s as it slows (`TearPulseVisual`). It runs on physics ticks, so
+  Pause holds it.
+- **Hatch:** on the followed creature a rigid triangle the tear undid
+  fades out over 0.2 s,
+  short enough that a folding triangle does not carry its lines out of
+  itself.
+- **Free beam:** a beam torn at both ends keeps being drawn as it falls
+  (`docs/CREATURE_MODEL.md` → Beam → Tearing).
 
 ### Servo
 
@@ -387,7 +409,7 @@ beams or joints that take it rise alone, with their `halo`, over a joint motor
 they end on or cross too. Each placing mark is drawn with its beam or joint,
 under the rod or around the ring, so a refused mark stays in its part's
 place (Build canvas → Placing a part). A touch hits what is drawn on top
-(`docs/BUILD_MODE.md` → Interactions). In Training the best marker and start
+(`docs/BUILD_MODE.md` → Interactions). In Training the best and crash markers and the start
 sign are behind the ground, the shadows above it, and the followed creature
 above every shadow.
 
@@ -456,10 +478,16 @@ above every shadow.
   `docs/TRAINING_LOOP.md` → Scales. Distance labels slide in and out under
   the view's sides, cut off by its edge like the ground (#1191). The
   height scale stops above the distance scale's band; its labels fade into
-  the band and before the slow-motion chip and best flag along the top.
-- **Best marker (#388):** a dashed marker whose flag reads "Best 4.2 m". It
-  flies left of its line where it would run past the view's right edge
-  (#886), and fades to `alpha_shadow` while a part callout shows.
+  the band and before the slow-motion chip and the lowest flag showing along the top.
+- **Best and crash markers (#388, #1257):** a dashed line up to a flag,
+  `ArenaFlagMarker`. The best marker's flag reads "Best 4.2 m" in the
+  marker ink; the crash marker's, "Crash 3.4 m" in `danger`, hangs one
+  row lower, so the two never cover each other when a replayed best
+  crashes at its best. A flag always flies right of its line and is cut
+  off at the view's right edge like the scales; it never changes side
+  (owner, #1257, replacing #886's flip). Each fades to `alpha_shadow`
+  while a part callout shows. When each shows is `docs/TRAINING_LOOP.md` →
+  Training scene.
 - **Start sign (#848):** an `ink` arrow signpost reading "Start" at 0 m,
   half a metre tall in the world, so it zooms with the creatures (#882).
 - **Part callout (#388):** each selected part of the followed shadow keeps
@@ -529,6 +557,8 @@ rule 10):
   joint's outer ring at the hub, like any shadow joint.
 - **Beam:** its line.
 - **Rigid triangle:** a faint fill instead of the hatch.
+- **Tear:** no flash and no pulse; a torn end is drawn out to its tip, and
+  an undone triangle's fill goes at once, with no fade.
 - **Links (Piston, Spring):** drawn as on the followed creature.
 - **Sensors, Touch cushions, Rubber skins and Camera rays:** not drawn.
 - **Knock-out outline:** only the followed creature has one.

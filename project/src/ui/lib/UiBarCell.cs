@@ -5,7 +5,8 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>
 /// One square cell of a bar strip (reference <c>GenerationStrip</c>): a button that shows a bar
 /// rising from its bottom, <see cref="Fill"/> of the way up, or an <see cref="IconId"/> instead.
-/// The <see cref="Selected"/> cell's bar and frame are <c>accent</c>, the rest <c>line-strong</c>. Cells sit in a row
+/// The <see cref="Selected"/> cell's bar and frame are <c>accent</c>, the rest <c>line-strong</c>. A
+/// <see cref="Capped"/> bar has stopped growing for good: a <c>danger</c> line across its top. Cells sit in a row
 /// the scene authors; Godot's <see cref="BaseButton"/> handles the press.
 /// </summary>
 [Tool]
@@ -16,6 +17,7 @@ public partial class UiBarCell : BaseButton
     private static readonly UiCorners _corners = UiCorners.Uniform(UiSize.Radius.Small);
     private float _fill;
     private bool _selected;
+    private bool _capped;
     private UiIconId _iconId = UiIconId.None;
 
     public UiBarCell() => TextureFilter = UiIcons.IconFilter;
@@ -53,6 +55,23 @@ public partial class UiBarCell : BaseButton
             }
 
             _selected = value;
+            QueueRedraw();
+        }
+    }
+
+    /// <summary>Whether the bar has stopped for good, such as a run whose distance froze at a tear (#1257).</summary>
+    [Export]
+    public bool Capped
+    {
+        get => _capped;
+        set
+        {
+            if (value == _capped)
+            {
+                return;
+            }
+
+            _capped = value;
             QueueRedraw();
         }
     }
@@ -114,14 +133,20 @@ public partial class UiBarCell : BaseButton
     {
         const float inset = UiSize.Space.S1;
         var height = (Size.Y - (2 * inset)) * _fill;
-        if (height <= 0)
+        var top = Size.Y - inset - height;
+        if (height > 0)
         {
-            return;
+            var bar = new Rect2(inset, top, Size.X - (2 * inset), height);
+            var color = UiThemeLookup.Color(this, _selected ? UiTokens.Color.Accent : UiTokens.Color.LineStrong);
+            _corners.Fill(this, bar, color.ScaleAlpha(opacity));
         }
 
-        var bar = new Rect2(inset, Size.Y - inset - height, Size.X - (2 * inset), height);
-        var color = UiThemeLookup.Color(this, _selected ? UiTokens.Color.Accent : UiTokens.Color.LineStrong);
-        _corners.Fill(this, bar, color.ScaleAlpha(opacity));
+        // An axis-aligned band, filled, so it stays crisp without a pen.
+        if (_capped)
+        {
+            var cap = new Rect2(inset, Math.Clamp(top - (UiSize.Stroke.Signal / 2f), inset, Size.Y - inset - UiSize.Stroke.Signal), Size.X - (2 * inset), UiSize.Stroke.Signal);
+            DrawRect(cap, UiThemeLookup.Color(this, UiTokens.Color.Danger).ScaleAlpha(opacity));
+        }
     }
 
     private void DrawIcon(float opacity)

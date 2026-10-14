@@ -19,7 +19,8 @@ file owns how Godot realises it.
    rigid triangles inside out; at 24 they stretch at most about 4 %, for
    about 5 % more time per physics tick on a phone (#1229, #1245). Long
    trusses still bend (#1229). Only nodes collide (a
-   circle each); beams and links have no collider. No body uses continuous
+   circle each); beams and links have no collider, until a beam is free at
+   both ends and needs one to land (rule 17). No body uses continuous
    collision detection (#1171): the ground is an endless half-plane that a
    node cannot tunnel through, and Godot's ray CCD sets a fast body's
    velocity outright, which launched rolling creatures. Revisit this when
@@ -104,7 +105,8 @@ file owns how Godot realises it.
     `PinJoint2D`'s `NodeA`/`NodeB` to an empty path: the pin stops acting
     in that tick's physics step with no kick, and every body and joint
     keeps its slot, so nothing is left pointing at a freed object (#1255).
-    A beam gone at both ends is hidden and `ProcessMode.Disabled`, and a
+    A beam gone at both ends is only marked gone, never hidden or
+    disabled: it gets a capsule collider and falls on its own (#1257). A
     Locked Brake or a Stepper going passive releases its `HingeWeld` the
     same way. What tears and what follows is `docs/CREATURE_MODEL.md` →
     Beam → Tearing; when it runs is `docs/ARCHITECTURE.md` → The tick.
@@ -119,7 +121,10 @@ file owns how Godot realises it.
   `Creature.Rubbers.cs` — builds bodies, pins, sensors, links (each with its
   end-stop cylinder), Wheels and Rubbers, and wires the brain
 - `Creature.Tears.cs` — the tear check, letting go, the main piece and the
-  creature's `TearSample` for the trial (#1256)
+  creature's `TearSample` for the trial (#1256), and the tear's look:
+  torn ends, the pulse, the hatch fade and a free beam's fall (#1257)
+- `TearPulseVisual.cs` — the `danger` ring that leaves a joint once when a
+  beam end lets go of it, on the followed creature only (#1257)
 - `Creature.Measure.cs` — the creature's centre, bounds and lowest point,
   from one read of its bodies a tick
 - `Creature.Selection.cs` — what a tap selects and each part's draw group,

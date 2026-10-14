@@ -11,7 +11,7 @@ namespace NodeRunner.Ui.Lib;
 [GlobalClass]
 public partial class UiSignpost : Container
 {
-    // The best flag's measures (ArenaBestMarker): 24 high, 8 padding each side of the text.
+    // The best flag's measures (ArenaFlagMarker): 24 high, 8 padding each side of the text.
     private const float _signHeight = UiSize.Control.ExtraSmall;
     private const float _padding = UiSize.Space.S2;
     private const float _arrowDepth = _signHeight / 2;
