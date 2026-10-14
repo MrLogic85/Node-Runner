@@ -61,6 +61,7 @@ public partial class Creature : Node2D
     private BrakeVisual[] _brakeVisuals = [];
     private AngleSensorJoint[] _angleSensors = [];
     private AngleSensorVisual[] _angleSensorVisuals = [];
+    private StepperJoint[] _steppers = [];
     private WheelVisual[] _wheelVisuals = [];
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
@@ -140,8 +141,19 @@ public partial class Creature : Node2D
             angleSensor.Sides.UpdatePhysicsState();
         }
 
+        foreach (var stepper in _steppers)
+        {
+            stepper.Sides.UpdatePhysicsState();
+        }
+
         if (Brain is null)
         {
+            // A Stepper holds its notch with or without a brain, as a Brake holds.
+            foreach (var stepper in _steppers)
+            {
+                stepper.Hold(delta);
+            }
+
             return;
         }
 
@@ -158,7 +170,8 @@ public partial class Creature : Node2D
         ReadSensors(_sensorValues, delta);
         Brain.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
 
-        // Each Servo, Velocity motor and Piston has two outputs in sim order: target or speed, then strength.
+        // Each Servo, Velocity motor and Piston has two outputs in sim order: target or speed, then strength;
+        // each Stepper, last, its frequency then its power.
         var output = 0;
         foreach (var servo in _servos)
         {
@@ -175,6 +188,12 @@ public partial class Creature : Node2D
         foreach (var piston in _pistons)
         {
             piston.Drive(_outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]], delta);
+            output += 2;
+        }
+
+        foreach (var stepper in _steppers)
+        {
+            stepper.Drive(_outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]], delta);
             output += 2;
         }
     }
@@ -219,6 +238,7 @@ public partial class Creature : Node2D
         CreateSprings(definition);
         CreateBrakes(definition);
         CreateAngleSensors(definition);
+        CreateSteppers(definition);
         CapEndStops(definition);
         _drawGroups = DrawGroups.Of(definition.Nodes, LinkRef.All(definition.Beams, definition.Pistons, definition.Springs));
         ConfigureBrainBuffers(definition);
@@ -817,8 +837,8 @@ public partial class Creature : Node2D
     // Each sensor part writes its values (Accelerometer: along, across; Camera: one per ray from
     // left to right, then hit), then each Touch sensor its touch, each Angle sensor its angle's sine and
     // cosine and its speed, each Servo its angle and speed,
-    // each Velocity motor its angle's sine and cosine and its speed, and each Piston its length and speed, into the raw buffer in sim order;
-    // they are then copied into the brain's port order (BrainPorts). A Stepper has no mechanics yet (#1037), so its inputs, last, stay 0.
+    // each Velocity motor its angle's sine and cosine and its speed, each Piston its length and speed, and each Stepper its angle's
+    // sine and cosine and its running frequency, into the raw buffer in sim order; they are then copied into the brain's port order (BrainPorts).
     private void ReadSensors(double[] values, double delta)
     {
         var index = 0;
@@ -861,6 +881,14 @@ public partial class Creature : Node2D
             _rawInputs[index++] = piston.SpeedInput;
         }
 
+        foreach (var stepper in _steppers)
+        {
+            var (sin, cos) = stepper.AngleInputs;
+            _rawInputs[index++] = sin;
+            _rawInputs[index++] = cos;
+            _rawInputs[index++] = stepper.FrequencyInput;
+        }
+
         for (var i = 0; i < _rawInputs.Length; i++)
         {
             values[_inputPortOf[i]] = _rawInputs[i];
@@ -886,7 +914,7 @@ public partial class Creature : Node2D
     }
 
     /// <summary>How many powered outputs the creature has.</summary>
-    public int MotorCount => _pistons.Length + _servos.Length + _velocityMotors.Length;
+    public int MotorCount => _pistons.Length + _servos.Length + _velocityMotors.Length + _steppers.Length;
 
     private float GetHitTolerance()
     {

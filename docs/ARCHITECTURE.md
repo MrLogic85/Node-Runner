@@ -141,15 +141,16 @@ Node Runner/
 ## The tick
 
 At 60 Hz (`_physics_process`) each Spring first sets its rest length and
-each Brake holds its joint, brain or not (`Mechanics.Brake`), then the
-creature runs four steps:
+each Brake holds its joint, brain or not (`Mechanics.Brake`). With no
+brain, each Stepper then holds its notch (`Mechanics.Stepper`) and the tick
+ends; with one, the creature runs four steps:
 
 1. **Sense:** every part writes its readings into one `double[]` in
    `BrainPorts` order (`docs/CREATURE_MODEL.md` → "Sensor–model contract").
 2. **Think:** `Brain.Forward` writes each output port's value into
    caller-owned buffers, with no per-tick allocations.
-3. **Act:** each Servo, then each Motor, then each Piston drives toward
-   its outputs;
+3. **Act:** each Servo, then each Motor, then each Piston, then each
+   Stepper drives toward its outputs;
    Mechanics computes the torque or force and the creature layer applies it
    to the bodies.
 4. **Score:** `TrialMeasurement` records the trial (`docs/TRAINING_LOOP.md`

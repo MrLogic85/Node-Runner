@@ -271,14 +271,43 @@ nodes; how the simulation keeps them from giving way under load is in
 - `StepperDef` (#1036), saved under `steppers`. Its sides follow the
   Servo's rules and it takes the joint's hinge-part slot (see Servo, and
   Node → One part per slot). It is saved, loaded, shared and has brain
-  ports; stepping in the simulation comes with #1037 and placing it in
-  Build with #1038, so until then a Stepper is only data.
+  ports, and steps in the simulation (#1037); placing it in Build comes
+  with #1038. `docs/WORLD_VISUALS.md` → Parts says how it is drawn.
 - **Settings:** **Max strength** (torque while stepping, N·m), **Hold
   strength** (the torque its notch holds against, N·m, as a Brake's
   Strength), **Steps per turn** (notches in a full turn, 2–24) and **Max
   frequency** (the most steps each second); their slider ranges are in
   `docs/BUILD_MODE.md` → Parameters. Its ports are in Sensor–model
   contract.
+- **Notches:** Steps per turn evenly spaced angles between its sides,
+  counted from the built angle, so a trial starts held at a notch. Its
+  angle is measured as a Motor's and counts on across whole turns.
+- **Frequency:** its running frequency follows the Frequency output with
+  a time constant of 1 s, so a brain can't jerk it, and its frequency
+  input reads it. At that rate it lets go, at most once a physics step.
+- **Release:** each time it lets go it picks the neighbouring notch in
+  Power's direction and pushes toward it with |Power| × Max strength, with
+  no hold; Power changing sign mid-release doesn't turn it round. There
+  is no dead zone: at Power 0 it still lets go, and the joint turns
+  freely. The release ends on reaching that notch, or the one behind if a
+  load stronger than the push carries it back. If it reaches neither
+  within 0.5 s or before the next release is due, it catches the nearest
+  notch, so a push too weak doesn't count a step. It catches a notch on
+  the physics step it would pass it, so the push never carries the joint a
+  step beyond.
+- **Hold:** between releases it holds its notch with at most Hold
+  strength, brain or not (`Mechanics.Stepper`). As a Brake it stops the
+  turning and holds against everything else on the joint, feeling the push
+  a step late, and it also pulls the joint onto the exact notch angle,
+  closing about 10 rad/s per radian off it, but never faster than the
+  strength the load leaves it can stop by the notch. A sudden load near
+  Hold strength therefore turns the joint on before it holds, as a Brake's
+  does, further the nearer the load is to Hold strength and the lighter
+  the joint. A joint too fast to stop, or
+  pushed by more than Hold strength, slips on, through several notches
+  while the push lasts. It always holds the notch nearest the joint: once
+  the push is within Hold strength, a joint past halfway to the next notch
+  goes on to it, and one short of halfway is pulled back.
 
 ### Brake
 

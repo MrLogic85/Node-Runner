@@ -32,17 +32,32 @@ public static class Brake
     /// </remarks>
     public static BrakeState Next(double speed, double strength, BrakeState? previous, double step, double effectiveInertia)
     {
-        MotorLoop.RequirePositive(effectiveInertia, nameof(effectiveInertia), "Effective inertia");
-        MotorLoop.RequirePositive(step, nameof(step), "Step");
         if (double.IsNaN(strength) || strength <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(strength), "Brake strength must be positive, or infinite when locked.");
         }
 
+        return Toward(0, speed, strength, previous, step, effectiveInertia);
+    }
+
+    /// <summary>
+    /// As <see cref="Next"/>, but it takes the turning to <paramref name="wantedSpeed"/> instead of to
+    /// a stop, with at most <paramref name="strength"/>, which may be 0. A Stepper (#1037) holds its
+    /// notch with it.
+    /// </summary>
+    internal static BrakeState Toward(double wantedSpeed, double speed, double strength, BrakeState? previous, double step, double effectiveInertia)
+    {
         var torquePerSpeed = effectiveInertia / step;
-        var load = previous is { } last ? (torquePerSpeed * (speed - last.Speed)) - last.Torque : 0;
-        var torque = Math.Clamp((-torquePerSpeed * speed) - load, -strength, strength);
+        var torque = Math.Clamp((torquePerSpeed * (wantedSpeed - speed)) - Load(speed, previous, step, effectiveInertia), -strength, strength);
         return new BrakeState(torque, speed);
+    }
+
+    /// <summary>What else turned the joint last step, read a step late from its speed and the torque given.</summary>
+    internal static double Load(double speed, BrakeState? previous, double step, double effectiveInertia)
+    {
+        MotorLoop.RequirePositive(effectiveInertia, nameof(effectiveInertia), "Effective inertia");
+        MotorLoop.RequirePositive(step, nameof(step), "Step");
+        return previous is { } last ? (effectiveInertia / step * (speed - last.Speed)) - last.Torque : 0;
     }
 }
 

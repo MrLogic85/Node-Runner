@@ -93,6 +93,14 @@ public partial class Creature
         _brakes = [.. brakes];
     }
 
+    // A Stepper (#1037) holds and steps its sides as a Velocity motor turns them.
+    private void CreateSteppers(CreatureDef definition)
+    {
+        _steppers = definition.Steppers
+            .Select(stepper => new StepperJoint(stepper, HingePartSidesFor(definition, stepper)))
+            .ToArray();
+    }
+
     // An Angle sensor (#1204) reads its sides as a Velocity motor does and never turns them, so it adds
     // no joint and no torque. Its arc (#1205) sits outside its joint's Rubber skin or Touch sensor's cushion,
     // with its knock-out under the whole creature.

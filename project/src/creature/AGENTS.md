@@ -92,6 +92,10 @@ file owns how Godot realises it.
 15. **An Angle sensor only reads its `HingePartSides`.** An `AngleSensorJoint`
     reads the angle and speed between its sides as a Motor does (#1204),
     and never applies torque or adds a joint.
+16. **A Stepper holds and steps its `HingePartSides` by torque.** A
+    `StepperJoint` turns its sides (rule 6) by `Mechanics.Stepper`'s torque
+    every tick, brain or not (#1037): with no brain it only holds its
+    notch. Its hold reads `HingePartSides.BrakeInertia`, as a Brake's does.
 
 ## What lives here
 
@@ -108,6 +112,7 @@ file owns how Godot realises it.
 - `HingePartSides.cs` — a hinge part's two sides: angle, speed, inertia, torque
 - `ServoJoint.cs`, `VelocityMotorJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
 - `BrakeJoint.cs` — a Brake's friction on its sides
+- `StepperJoint.cs` — a Stepper's hold and steps on its sides
 - `AngleSensorJoint.cs` — an Angle sensor's reading of its sides
   (`AngleSensorVisual.cs` draws its arc from the same `HingePartSides`, #1205)
 - `AngleSensorTurn.cs` — the turn Training's Angle sensor arc is on, from
