@@ -2,12 +2,12 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>The joints, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers, Velocity motors, Brakes and Angle sensors a Select selection or box holds (#704).</summary>
-public sealed record PartSet(IReadOnlySet<int> Nodes, IReadOnlySet<int> Beams, IReadOnlySet<int> Sensors, IReadOnlySet<int> Servos, IReadOnlySet<int> Pistons, IReadOnlySet<int> Springs, IReadOnlySet<int> Wheels, IReadOnlySet<int> TouchSensors, IReadOnlySet<int> Rubbers, IReadOnlySet<int> VelocityMotors, IReadOnlySet<int> Brakes, IReadOnlySet<int> AngleSensors)
+/// <summary>The joints, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers, Velocity motors, Brakes, Angle sensors and Steppers a Select selection or box holds (#704).</summary>
+public sealed record PartSet(IReadOnlySet<int> Nodes, IReadOnlySet<int> Beams, IReadOnlySet<int> Sensors, IReadOnlySet<int> Servos, IReadOnlySet<int> Pistons, IReadOnlySet<int> Springs, IReadOnlySet<int> Wheels, IReadOnlySet<int> TouchSensors, IReadOnlySet<int> Rubbers, IReadOnlySet<int> VelocityMotors, IReadOnlySet<int> Brakes, IReadOnlySet<int> AngleSensors, IReadOnlySet<int> Steppers)
 {
-    public static readonly PartSet None = new(new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>());
+    public static readonly PartSet None = new(new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>());
 
-    public int Count => Nodes.Count + Beams.Count + Sensors.Count + Servos.Count + Pistons.Count + Springs.Count + Wheels.Count + TouchSensors.Count + Rubbers.Count + VelocityMotors.Count + Brakes.Count + AngleSensors.Count;
+    public int Count => Nodes.Count + Beams.Count + Sensors.Count + Servos.Count + Pistons.Count + Springs.Count + Wheels.Count + TouchSensors.Count + Rubbers.Count + VelocityMotors.Count + Brakes.Count + AngleSensors.Count + Steppers.Count;
 
     /// <summary>Every part in the set, kind by kind.</summary>
     public IEnumerable<CreatureElementSelection> Parts =>
@@ -32,6 +32,7 @@ public sealed record PartSet(IReadOnlySet<int> Nodes, IReadOnlySet<int> Beams, I
             CreatureElementKind.VelocityMotor => None with { VelocityMotors = ids },
             CreatureElementKind.Brake => None with { Brakes = ids },
             CreatureElementKind.AngleSensor => None with { AngleSensors = ids },
+            CreatureElementKind.Stepper => None with { Steppers = ids },
             _ => throw new ArgumentOutOfRangeException(nameof(part)),
         };
     }
@@ -50,6 +51,7 @@ public sealed record PartSet(IReadOnlySet<int> Nodes, IReadOnlySet<int> Beams, I
         CreatureElementKind.VelocityMotor => VelocityMotors,
         CreatureElementKind.Brake => Brakes,
         CreatureElementKind.AngleSensor => AngleSensors,
+        CreatureElementKind.Stepper => Steppers,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 }

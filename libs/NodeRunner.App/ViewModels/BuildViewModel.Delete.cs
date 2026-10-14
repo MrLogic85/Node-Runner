@@ -106,6 +106,15 @@ public sealed partial class BuildViewModel
             }
         }
 
+        var keptSteppers = after.Steppers.Select(MotorLinks).ToHashSet();
+        foreach (var stepper in before.Steppers)
+        {
+            if (!keptSteppers.Contains(MotorLinks(stepper)))
+            {
+                AddNote(CreatureElementKind.Stepper, stepper.Id);
+            }
+        }
+
         var keptAngleSensors = after.AngleSensors.Select(MotorLinks).ToHashSet();
         foreach (var angleSensor in before.AngleSensors)
         {
@@ -162,6 +171,11 @@ public sealed partial class BuildViewModel
         foreach (var velocityMotorId in parts.VelocityMotors)
         {
             builder.RemoveVelocityMotor(velocityMotorId);
+        }
+
+        foreach (var stepperId in parts.Steppers)
+        {
+            builder.RemoveStepper(stepperId);
         }
 
         foreach (var brakeId in parts.Brakes)

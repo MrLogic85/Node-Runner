@@ -31,6 +31,11 @@ public sealed class BrainPortDisplayTests
     [InlineData(PartKind.AngleSensor, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
     [InlineData(PartKind.AngleSensor, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
     [InlineData(PartKind.AngleSensor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
+    [InlineData(PartKind.Stepper, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
+    [InlineData(PartKind.Stepper, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
+    [InlineData(PartKind.Stepper, PortDirection.Input, "frequency", PortRange.ZeroToOne, "frequency")]
+    [InlineData(PartKind.Stepper, PortDirection.Output, "frequency", PortRange.ZeroToOne, "frequency")]
+    [InlineData(PartKind.Stepper, PortDirection.Output, "power", PortRange.MinusOneToOne, "power")]
     public void EveryPort_HasItsRangeAndShortLabel(PartKind kind, PortDirection direction, string channel, PortRange range, string label)
     {
         var port = new BrainPort(1, channel, direction, direction == PortDirection.Input ? PortSignal.Reading : PortSignal.Position);
@@ -51,8 +56,8 @@ public sealed class BrainPortDisplayTests
             Should.NotThrow(() => BrainPortDisplay.ShortLabel(kind, port));
         }
 
-        layout.Inputs.Count.ShouldBe(19);
-        layout.Outputs.Count.ShouldBe(6);
+        layout.Inputs.Count.ShouldBe(22);
+        layout.Outputs.Count.ShouldBe(8);
     }
 
     // The bar draws the value as it leaves the brain, so each output's range must be its activation's.
@@ -96,6 +101,7 @@ public sealed class BrainPortDisplayTests
         PortedCreature.Touch => PartKind.TouchSensor,
         PortedCreature.VelocityMotor => PartKind.VelocityMotor,
         PortedCreature.AngleSensor => PartKind.AngleSensor,
+        PortedCreature.Stepper => PartKind.Stepper,
         _ => throw new ArgumentOutOfRangeException(nameof(partId)),
     };
 }

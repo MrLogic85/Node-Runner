@@ -529,6 +529,62 @@
             "additionalProperties": false
           }
         },
+        "steppers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "nodeId": {
+                "type": "integer"
+              },
+              "fixedLinkId": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "targetLinkId": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "default": null
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              },
+              "strength": {
+                "type": "number",
+                "default": 500000
+              },
+              "holdStrength": {
+                "type": "number",
+                "default": 500000
+              },
+              "stepsPerTurn": {
+                "type": "integer",
+                "default": 8
+              },
+              "maxFrequency": {
+                "type": "number",
+                "default": 2
+              }
+            },
+            "required": [
+              "id",
+              "nodeId"
+            ],
+            "additionalProperties": false
+          }
+        },
         "nextPartId": {
           "type": "integer"
         }
@@ -546,6 +602,7 @@
         "velocityMotors",
         "brakes",
         "angleSensors",
+        "steppers",
         "nextPartId"
       ],
       "additionalProperties": false

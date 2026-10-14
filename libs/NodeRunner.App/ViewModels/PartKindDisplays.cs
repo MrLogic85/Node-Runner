@@ -94,6 +94,14 @@ public static class PartKindDisplays
             In(BrainPorts.AngleSensorAngleCosChannel, name => UiText.Format("{0}:\u00A0angle cos", name), UiText.Plain("angle cos"), _signed),
             In(BrainPorts.AngleSensorSpeedChannel, name => UiText.Format("{0}:\u00A0speed", name), UiText.Plain("speed"), _signed),
         ]),
+        new(PartKind.Stepper, UiText.Plain("Stepper"), number => UiText.Format("Stepper {0}", number),
+        [
+            In(BrainPorts.StepperAngleSinChannel, name => UiText.Format("{0}:\u00A0angle sin", name), UiText.Plain("angle sin"), _signed),
+            In(BrainPorts.StepperAngleCosChannel, name => UiText.Format("{0}:\u00A0angle cos", name), UiText.Plain("angle cos"), _signed),
+            In(BrainPorts.StepperFrequencyChannel, name => UiText.Format("{0}:\u00A0frequency", name), UiText.Plain("frequency"), _unsigned),
+            Out(BrainPorts.StepperFrequencyOutputChannel, name => UiText.Format("{0}:\u00A0frequency", name), UiText.Plain("frequency"), _unsigned),
+            Out(BrainPorts.StepperPowerChannel, name => UiText.Format("{0}:\u00A0power", name), UiText.Plain("power"), _signed),
+        ]),
     ];
 
     public static PartKindDisplay Of(PartKind kind) => All[(int)kind];

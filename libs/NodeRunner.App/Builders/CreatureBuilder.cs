@@ -92,6 +92,7 @@ public sealed partial class CreatureBuilder
         _velocityMotors.AddRange(creature.VelocityMotors);
         _brakes.AddRange(creature.Brakes);
         _angleSensors.AddRange(creature.AngleSensors);
+        _steppers.AddRange(creature.Steppers);
         _nextPartId = creature.NextPartId;
     }
 
@@ -166,6 +167,7 @@ public sealed partial class CreatureBuilder
         _velocityMotors.RemoveAll(motor => motor.NodeId == nodeId);
         _brakes.RemoveAll(brake => brake.NodeId == nodeId);
         _angleSensors.RemoveAll(angleSensor => angleSensor.NodeId == nodeId);
+        _steppers.RemoveAll(stepper => stepper.NodeId == nodeId);
         _pistons.RemoveAll(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
         _springs.RemoveAll(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
         _nodes.RemoveAt(nodeIndex);
@@ -320,6 +322,7 @@ public sealed partial class CreatureBuilder
     {
         ReplaceSide(_servos, linkId, newLinkId, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink));
         ReplaceSide(_velocityMotors, linkId, newLinkId, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink));
+        ReplaceSide(_steppers, linkId, newLinkId, (stepper, fixedLink, targetLink) => stepper.WithLinks(fixedLink, targetLink));
         ReplaceSide(_brakes, linkId, newLinkId, (brake, fixedLink, targetLink) => brake.WithLinks(fixedLink, targetLink));
         ReplaceSide(_angleSensors, linkId, newLinkId, (angleSensor, fixedLink, targetLink) => angleSensor.WithLinks(fixedLink, targetLink));
     }
@@ -345,6 +348,7 @@ public sealed partial class CreatureBuilder
         _pistons.Any(piston => piston.Id == partId) ? _pistonParameters
         : _servos.Any(servo => servo.Id == partId) ? _servoParameters
         : _velocityMotors.Any(motor => motor.Id == partId) ? _velocityMotorParameters
+        : _steppers.Any(stepper => stepper.Id == partId) ? _stepperParameters
         : _brakes.Any(brake => brake.Id == partId) ? _brakeParameters
         : _springs.Any(spring => spring.Id == partId) ? _springParameters
         : _wheels.Any(wheel => wheel.Id == partId) ? _wheelParameters
@@ -366,6 +370,7 @@ public sealed partial class CreatureBuilder
         _sensors.Select(sensor => sensor.Id)
             .Concat(_servos.Select(servo => servo.Id))
             .Concat(_velocityMotors.Select(motor => motor.Id))
+            .Concat(_steppers.Select(stepper => stepper.Id))
             .Concat(_brakes.Select(brake => brake.Id))
             .Concat(_pistons.Select(piston => piston.Id))
             .Concat(_springs.Select(spring => spring.Id))
@@ -439,6 +444,11 @@ public sealed partial class CreatureBuilder
         if (_velocityMotors.Any(motor => motor.Id == partId))
         {
             return VelocityMotorParameterValue(partId, parameter);
+        }
+
+        if (_steppers.Any(stepper => stepper.Id == partId))
+        {
+            return StepperParameterValue(partId, parameter);
         }
 
         if (_brakes.Any(brake => brake.Id == partId))
@@ -524,6 +534,12 @@ public sealed partial class CreatureBuilder
         if (_velocityMotors.Any(motor => motor.Id == partId))
         {
             SetVelocityMotorParameter(partId, parameter, value);
+            return;
+        }
+
+        if (_steppers.Any(stepper => stepper.Id == partId))
+        {
+            SetStepperParameter(partId, parameter, value);
             return;
         }
 
@@ -992,7 +1008,7 @@ public sealed partial class CreatureBuilder
             return;
         }
 
-        if (RenameBrake(partId, name) || RenameAngleSensor(partId, name))
+        if (RenameBrake(partId, name) || RenameAngleSensor(partId, name) || RenameStepper(partId, name))
         {
             return;
         }

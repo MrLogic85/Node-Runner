@@ -9,7 +9,7 @@ public sealed class PartParametersTests
     [Fact]
     public void EverySetting_IsBasicOrAdvanced_AsDesigned()
     {
-        // #903, #989, #1189: the split docs/BUILD_MODE.md → "Parameters" owns.
+        // #903, #989, #1189, #1036: the split docs/BUILD_MODE.md → "Parameters" owns.
         PartParameterId[] advanced =
         [
             PartParameterId.StartPosition,
@@ -19,6 +19,7 @@ public sealed class PartParametersTests
             PartParameterId.RiseTime,
             PartParameterId.Damping,
             PartParameterId.CoilLength,
+            PartParameterId.MaxFrequency,
         ];
 
         foreach (var id in Enum.GetValues<PartParameterId>())
@@ -174,6 +175,41 @@ public sealed class PartParametersTests
         PartParameters.ValueAt(PartParameterId.Spread, 1).ShouldBe(Math.PI / 2, tolerance: 1e-12);
         PartParameters.SliderOver(PartParameterId.Spread, [SensorDef.DefaultSpread]).Readout.ShouldBe(UiText.Format("{0}°", new FixedNumber(90, 0)));
         PartParameters.SliderOver(PartParameterId.Spread, [SensorDef.DefaultSpread]).Step.ShouldBe(5.0 / 75, tolerance: 1e-12);
+    }
+
+    [Fact]
+    public void HoldStrength_RunsFrom5To200NewtonMetres_InStepsOf5_WithTheDefaultOnAStep()
+    {
+        PartParameters.HoldStrength.Slider!.Range.ShouldBe(new SettingRange(5, 200, 5));
+        PartParameters.ValueAt(PartParameterId.HoldStrength, 0).ShouldBe(50000, tolerance: 1e-6);
+        PartParameters.ValueAt(PartParameterId.HoldStrength, 1).ShouldBe(2000000, tolerance: 1e-6);
+        var slider = PartParameters.SliderOver(PartParameterId.HoldStrength, [StepperDef.DefaultHoldStrength]);
+        slider.Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(50, 0)));
+        PartParameters.ValueAt(PartParameterId.HoldStrength, slider.High).ShouldBe(StepperDef.DefaultHoldStrength, tolerance: 1e-6);
+    }
+
+    [Fact]
+    public void StepsPerTurn_RunsFrom2To24_InWholeSteps_WithTheDefaultOnAStep()
+    {
+        PartParameters.StepsPerTurn.Slider!.Range.ShouldBe(new SettingRange(StepperDef.MinStepsPerTurn, StepperDef.MaxStepsPerTurn, 1));
+        PartParameters.StepsPerTurn.ChangesPorts.ShouldBeFalse();
+        PartParameters.ValueAt(PartParameterId.StepsPerTurn, 0).ShouldBe(2);
+        PartParameters.ValueAt(PartParameterId.StepsPerTurn, 1).ShouldBe(24);
+        var slider = PartParameters.SliderOver(PartParameterId.StepsPerTurn, [StepperDef.DefaultStepsPerTurn]);
+        slider.Readout.ShouldBe(UiText.Format("{0}", new FixedNumber(8, 0)));
+        PartParameters.ValueAt(PartParameterId.StepsPerTurn, slider.High).ShouldBe(StepperDef.DefaultStepsPerTurn, tolerance: 1e-9);
+    }
+
+    [Fact]
+    public void MaxFrequency_RunsFrom0Point2To5Hertz_InTenths_Advanced_WithTheDefaultOnAStep()
+    {
+        PartParameters.MaxFrequency.Slider!.Range.ShouldBe(new SettingRange(0.2, 5, 0.1));
+        PartParameters.MaxFrequency.Advanced.ShouldBeTrue();
+        PartParameters.ValueAt(PartParameterId.MaxFrequency, 0).ShouldBe(0.2, tolerance: 1e-9);
+        PartParameters.ValueAt(PartParameterId.MaxFrequency, 1).ShouldBe(5, tolerance: 1e-9);
+        var slider = PartParameters.SliderOver(PartParameterId.MaxFrequency, [StepperDef.DefaultMaxFrequency]);
+        slider.Readout.ShouldBe(UiText.Format("{0} Hz", new FixedNumber(2, 1)));
+        PartParameters.ValueAt(PartParameterId.MaxFrequency, slider.High).ShouldBe(StepperDef.DefaultMaxFrequency, tolerance: 1e-9);
     }
 
     [Fact]

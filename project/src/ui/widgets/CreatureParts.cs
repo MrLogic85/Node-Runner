@@ -43,7 +43,7 @@ public partial class CreatureParts : Node2D
     public void Show(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors), CreatureMarks.None);
+        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, creature.Steppers), CreatureMarks.None);
     }
 
     /// <summary>
@@ -80,7 +80,9 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointParts);
+            // A Stepper has no picture yet (#1038), so its joint shows it selected.
+            part.Selected = (marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointParts))
+                || shape.Steppers.Any(stepper => stepper.NodeId == node.Id && marks.Selected.Steppers.Contains(stepper.Id));
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasHingePart(shape, marks, node.Id);
             part.ShowsHub = HasWheelAndNoHingePart(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);

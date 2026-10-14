@@ -172,7 +172,7 @@ public sealed class BuildViewModelTests
             new HashSet<int> { 301 },
             new HashSet<int>(),
             new HashSet<int>(),
-            new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
+            new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
 
         build.DeleteSelectedParts();
 
@@ -256,7 +256,7 @@ public sealed class BuildViewModelTests
             parts.Where(id => id is > 300 and < 400).ToHashSet(),
             parts.Where(id => id > 400).ToHashSet(),
             new HashSet<int>(),
-            new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
+            new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
 
         string.Join(',', build.EditableParameters).ShouldBe(editable);
     }

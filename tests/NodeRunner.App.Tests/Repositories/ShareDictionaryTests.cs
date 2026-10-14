@@ -41,6 +41,10 @@ public sealed class ShareDictionaryTests
     // It must read for good, so version 12's dictionary never changes.
     private const string _benderInVersion12 = "NR12.g2d3p9S8FCKzO7gBhy2bGsBad1gkIVJAJVgyqQkoh2IGjhnu9ogJug9NQb4BAFDjhSs";
 
+    // Three joints, two beams and an Angle sensor, coded in version 13 before #1036 added Steppers.
+    // It must read for good, so version 13's dictionary never changes.
+    private const string _benderInVersion13 = "NR13.gxciTql5KUQWIuA2HLbMbwBr4GGRhEgBlWDJ-iagfI_Lj2a4GyYm6F40BfkJAPybjmA";
+
     public static TheoryData<int> Versions() => new(Enumerable.Range(_firstVersion, FileCreationRepository.Format.CurrentVersion - _firstVersion + 1));
 
     [Fact]
@@ -155,6 +159,20 @@ public sealed class ShareDictionaryTests
         read.UpdatedFrom.ShouldBe(12);
     }
 
+    [Fact]
+    public void ACodeFromVersion13_StillReads_WithoutSteppers()
+    {
+        var read = CreationShareCode.Read(_benderInVersion13);
+
+        var build = read.Build.ShouldNotBeNull();
+        build.Name.ShouldBe("Bender");
+        var creature = build.Creature;
+        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0), new Vector2D(0, 100)]);
+        creature.AngleSensors.ShouldBe([new AngleSensorDef(6, 1, 4, 5)]);
+        creature.Steppers.ShouldBeEmpty();
+        read.UpdatedFrom.ShouldBe(13);
+    }
+
     // A walker with every kind of part at its settings as Build adds it and named as a new creation
     // is (NewCreationWorkflow.UntitledName), so a code leaves out what it didn't change.
     private static CreationDef Template()
@@ -178,6 +196,10 @@ public sealed class ShareDictionaryTests
         builder.AddRubber(backFoot);
         builder.AddVelocityMotor(frontFoot);
         builder.AddBrake(backFoot);
+        var belly = builder.AddNode(new Vector2D(100, 0));
+        builder.AddBeam(backFoot, belly);
+        builder.AddBeam(frontFoot, belly);
+        builder.AddStepper(belly);
         return new CreationDef(Guid.NewGuid(), "Untitled Creation", builder.Build());
     }
 
@@ -218,6 +240,12 @@ public sealed class ShareDictionaryTests
         builder.SetParameter(builder.AddBrake(backFoot, backLeg, wheel), PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
         builder.SetParameter(builder.AddBrake(frontFoot), PartParameterId.BrakeStrength, 1200000);
         builder.Rename(builder.AddAngleSensor(tail), "Tail");
+        var hip = builder.AddNode(new Vector2D(-47, -12));
+        builder.AddBeam(back, hip);
+        builder.AddBeam(hip, tail);
+        var stepper = builder.AddStepper(hip);
+        builder.SetParameter(stepper, PartParameterId.StepsPerTurn, 12);
+        builder.SetParameter(stepper, PartParameterId.MaxFrequency, 1.5);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 }

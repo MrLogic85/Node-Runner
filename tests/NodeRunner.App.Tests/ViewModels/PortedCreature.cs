@@ -17,10 +17,11 @@ internal static class PortedCreature
     public const int VelocityMotor = 16;
     public const int Brake = 17;
     public const int AngleSensor = 18;
+    public const int Stepper = 22;
 
     public static CreatureDef Def { get; } = new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(4, new Vector2D(0, 2))],
-        [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 1, 4)],
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(4, new Vector2D(0, 2)), new NodeDef(19, new Vector2D(2, 2))],
+        [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 1, 4), new BeamDef(20, 4, 19), new BeamDef(21, 2, 19)],
         [new SensorDef(Accelerometer, 5, SensorKind.Accelerometer), new SensorDef(Camera, 6, SensorKind.Camera, "Eye", rays: 5)],
         [new ServoDef(Servo, 1, 5, 7, "Hip")],
         [new PistonDef(Piston, 1, 3, "Ram")],
@@ -31,7 +32,8 @@ internal static class PortedCreature
         [new VelocityMotorDef(VelocityMotor, 2, 5, 6, "Drive")],
         [new BrakeDef(Brake, 3, 6, Wheel)],
         [new AngleSensorDef(AngleSensor, 4, 7, Spring, "Knee")],
-        nextPartId: 19);
+        [new StepperDef(Stepper, 19, 20, 21, "Ratchet")],
+        nextPartId: 23);
 
     public static BrainPortLayout Layout { get; } = BrainPorts.Of(Def);
 

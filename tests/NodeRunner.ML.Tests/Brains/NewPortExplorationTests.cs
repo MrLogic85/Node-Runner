@@ -187,6 +187,31 @@ public sealed class NewPortExplorationTests
         Should.Throw<ArgumentOutOfRangeException>(() => NewPortExploration.Explore(Generation(_elite, 4), 5, _ports, [], new Random(11)));
     }
 
+    // #1036: a new Stepper reads as new by its frequency bias, and its children step from half its Max frequency.
+    [Fact]
+    public void Explore_RedrawsANewStepper_FromHalfItsMaxFrequency_AndLeavesATrainedOne()
+    {
+        var ports = new BrainPortLayout([BrainPorts.TouchInput(5)], [.. BrainPorts.StepperOutputs(3), .. BrainPorts.StepperOutputs(4)]);
+        // Weights (4 outputs × 1 input), then biases: Stepper 3 trained, Stepper 4 as a refit leaves it.
+        double[] elite = [0.6, -0.9, 0, 0, 1.2, 0.3, PortSignals.PassiveStrengthBias, 0];
+
+        var generation = Generation(elite, 4001);
+
+        var explored = NewPortExploration.Explore(generation, 1, ports, [], new Random(12))[1..];
+
+        for (var slot = 0; slot < explored.Length; slot++)
+        {
+            foreach (var trained in (int[])[0, 1, 4, 5])
+            {
+                explored[slot][trained].ShouldBe(generation[slot + 1][trained]);
+            }
+        }
+
+        ShouldSpread(explored, 6, GenerationZero.HalfFrequencyBias, GenerationZero.BiasSpread);
+        ShouldSpread(explored, 7, 0, GenerationZero.BiasSpread);
+        ShouldSpread(explored, 2, 0, GenerationZero.WeightSpread);
+    }
+
     // The elite, then children as the genetic algorithm leaves them: the elite's genes, a few nudged.
     private static double[][] Generation(double[] elite, int size)
     {

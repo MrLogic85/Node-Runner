@@ -573,7 +573,8 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
-            var hasHingePart = definition.HingeParts.Any(part => part.NodeId == definition.Nodes[i].Id);
+            // A Stepper has no picture yet (#1038), so its joint keeps its ring, at the joint motor's radius.
+            var hasHingePart = definition.HingeParts.Any(part => part.NodeId == definition.Nodes[i].Id && part is not StepperDef);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
             var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);
@@ -771,6 +772,7 @@ public partial class Creature : Node2D
                 .. definition.Servos.SelectMany(servo => BrainPorts.ServoInputs(servo.Id)),
                 .. definition.VelocityMotors.SelectMany(motor => BrainPorts.VelocityMotorInputs(motor.Id)),
                 .. definition.Pistons.SelectMany(piston => BrainPorts.PistonInputs(piston.Id)),
+                .. definition.Steppers.SelectMany(stepper => BrainPorts.StepperInputs(stepper.Id)),
             ],
             Ports.Inputs);
         _outputPortOf = PortPositions(
@@ -778,6 +780,7 @@ public partial class Creature : Node2D
                 .. definition.Servos.SelectMany(servo => BrainPorts.ServoOutputs(servo.Id)),
                 .. definition.VelocityMotors.SelectMany(motor => BrainPorts.VelocityMotorOutputs(motor.Id)),
                 .. definition.Pistons.SelectMany(piston => BrainPorts.PistonOutputs(piston.Id)),
+                .. definition.Steppers.SelectMany(stepper => BrainPorts.StepperOutputs(stepper.Id)),
             ],
             Ports.Outputs);
         _rawInputs = new double[_inputPortOf.Length];
@@ -815,7 +818,7 @@ public partial class Creature : Node2D
     // left to right, then hit), then each Touch sensor its touch, each Angle sensor its angle's sine and
     // cosine and its speed, each Servo its angle and speed,
     // each Velocity motor its angle's sine and cosine and its speed, and each Piston its length and speed, into the raw buffer in sim order;
-    // they are then copied into the brain's port order (BrainPorts).
+    // they are then copied into the brain's port order (BrainPorts). A Stepper has no mechanics yet (#1037), so its inputs, last, stay 0.
     private void ReadSensors(double[] values, double delta)
     {
         var index = 0;

@@ -38,10 +38,10 @@ list; move one only with a new issue.
 ## What lives here
 
 - `CreatureDef`, `NodeDef`, `BeamDef`, `SensorDef`, `SensorKind`,
-  `ServoDef`, `VelocityMotorDef`, `BrakeDef`, `AngleSensorDef`, `PistonDef`, `SpringDef`, `WheelDef`, `TouchSensorDef`, `RubberDef`, `LinkRef` — anatomy
+  `ServoDef`, `VelocityMotorDef`, `StepperDef`, `BrakeDef`, `AngleSensorDef`, `PistonDef`, `SpringDef`, `WheelDef`, `TouchSensorDef`, `RubberDef`, `LinkRef` — anatomy
 - `IPartDef`, `IJointPartDef`, `PartKind`, `JointSlot` — what every part shares: id, name and kind, and for a part on a joint its node and slot (`CreatureDef.Parts`)
 - `IHingePartDef` — what fills a joint's hinge-part slot, a joint motor, a Brake or an Angle sensor: its sides
-- `IJointMotorDef`, `JointMotor` — what a Servo and a Velocity motor share: kind, sides and radius
+- `IJointMotorDef`, `JointMotor` — what a Servo, a Velocity motor and a Stepper share: kind, sides and radius
 - `CreatureElementKind`, `CreatureElementSelection` — what is selected
 - `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout` — brain ports
 - `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,

@@ -88,6 +88,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `velocityMotors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, maxSpeed, riseTime }` | Motors (#454): a Servo's sides and units, without `range` or `start`. One per node (`docs/CREATURE_MODEL.md` → Node → One part per slot). |
 | `brakes[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength }` | Brakes (#1039): a Servo's sides and slot, no ports. `strength` in world torque units (N·m × 10⁴), above 0, or `"Infinity"` when Locked. |
 | `angleSensors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name }` | Angle sensors (#1204): a Servo's sides and slot, three inputs, no settings. |
+| `steppers[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, holdStrength, stepsPerTurn, maxFrequency }` | Steppers (#1036): a Servo's sides and slot. `strength` and `holdStrength` in world torque units (N·m × 10⁴), above 0; `stepsPerTurn` a whole number 2–24; `maxFrequency` steps per second, above 0. |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training` (meaning of latest and best: `docs/TRAINING_LOOP.md` → "Latest
@@ -176,6 +177,7 @@ Current `creation.json` migrations:
 | 10 | 11 | #454: add required `creature.velocityMotors: []`. |
 | 11 | 12 | #1039: add required `creature.brakes: []`. |
 | 12 | 13 | #1204: add required `creature.angleSensors: []`. |
+| 13 | 14 | #1036: add required `creature.steppers: []`. |
 
 #1086 needs no migration: its saved shape is unchanged, but a saved creature
 with a Wheel or Servo moves and senses a little differently, since links and
@@ -233,7 +235,7 @@ owns it.
 - The code is `NR`, the format version and a dot, then its JSON
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
-  scratch. The Walker example's is about 50 characters, starting `NR13.`,
+  scratch. The Walker example's is about 50 characters, starting `NR14.`,
   and so is two joints and a Spring's (#1094).
 - Its JSON is `creation.json` on one line with `training` and
   `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,

@@ -49,6 +49,7 @@ public sealed class CreationVersioningTests : IDisposable
         expected["creature"]!.AsObject()["velocityMotors"] = new JsonArray();
         expected["creature"]!.AsObject()["brakes"] = new JsonArray();
         expected["creature"]!.AsObject()["angleSensors"] = new JsonArray();
+        expected["creature"]!.AsObject()["steppers"] = new JsonArray();
         foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
         {
             piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
@@ -454,6 +455,65 @@ public sealed class CreationVersioningTests : IDisposable
         creature.VelocityMotors.ShouldHaveSingleItem().MaxSpeed.ShouldBe(3);
     }
 
+    // #1036: a creature saved before Steppers has none.
+    [Fact]
+    public void AVersion13Save_GetsNoSteppers_AndIsWrittenBackInTheCurrentVersion()
+    {
+        var path = WriteCreation(Version13Walker().ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Steppers.ShouldBeEmpty();
+
+        var written = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
+        written["creature"]!["steppers"]!.AsArray().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AVersion13Save_WithoutACreature_IsSkipped()
+    {
+        var file = Version13Walker();
+        file.Remove("creature");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ASaveInTheCurrentVersion_WithoutSteppers_IsSkipped()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file["creature"]!.AsObject().Remove("steppers");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AStepper_WithItsSettings_AWheelSide_OrAMissingSide_SurvivesASaveAndALoad()
+    {
+        var walker = LoadFixture013("walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
+        var named = builder.AddStepper(joints[0]);
+        builder.Rename(named, "Ratchet");
+        builder.SetParameter(named, PartParameterId.HoldStrength, 300000);
+        builder.SetParameter(named, PartParameterId.StepsPerTurn, 12);
+        builder.SetParameter(named, PartParameterId.MaxFrequency, 1.5);
+        var wheel = builder.AddWheel(joints[1]);
+        builder.AddStepper(joints[1], builder.LinksAt(joints[1])[0].Id, wheel);
+        builder.AddStepper(joints[2], fixedLinkId: null, builder.LinksAt(joints[2])[0].Id);
+        var creature = builder.Build();
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        repository.Save(walker.WithCreature(creature, training: null));
+
+        repository.Get(walker.Id)!.Creature.Steppers.ShouldBe(creature.Steppers);
+        creature.Steppers.Select(stepper => (stepper.Name, stepper.TargetLinkId == wheel, stepper.FixedLinkId is null))
+            .ShouldBe([("Ratchet", false, false), (null, true, false), (null, false, true)]);
+        creature.Steppers[0].HoldStrength.ShouldBe(300000);
+        creature.Steppers[0].StepsPerTurn.ShouldBe(12);
+        creature.Steppers[0].MaxFrequency.ShouldBe(1.5);
+    }
+
     // #1204: a creature saved before Angle sensors has none.
     [Fact]
     public void AVersion12Save_GetsNoAngleSensors_AndIsWrittenBackInTheCurrentVersion()
@@ -801,6 +861,7 @@ public sealed class CreationVersioningTests : IDisposable
         file["creature"]!.AsObject()["velocityMotors"] = new JsonArray();
         file["creature"]!.AsObject()["brakes"] = new JsonArray();
         file["creature"]!.AsObject()["angleSensors"] = new JsonArray();
+        file["creature"]!.AsObject()["steppers"] = new JsonArray();
     }
 
     private static CreationDef LoadFixture013(string name) =>
@@ -828,10 +889,19 @@ public sealed class CreationVersioningTests : IDisposable
         return JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(wheels, walker.Training)))!.AsObject();
     }
 
+    // The 0.13.0 walker as version 13 wrote it, before Steppers (#1036).
+    private static JsonObject Version13Walker()
+    {
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        file[_versionField] = 13;
+        file["creature"]!.AsObject().Remove("steppers");
+        return file;
+    }
+
     // The 0.13.0 walker as version 12 wrote it, before Angle sensors (#1204).
     private static JsonObject Version12Walker()
     {
-        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        var file = Version13Walker();
         file[_versionField] = 12;
         file["creature"]!.AsObject().Remove("angleSensors");
         return file;

@@ -35,6 +35,7 @@ public static class PartKinds
         new(PartKind.VelocityMotor, CreatureElementKind.VelocityMotor, Sensor: null, JointSlot.HingePart, part => [.. BrainPorts.VelocityMotorInputs(part.Id), .. BrainPorts.VelocityMotorOutputs(part.Id)]),
         new(PartKind.Brake, CreatureElementKind.Brake, Sensor: null, JointSlot.HingePart, _noPorts),
         new(PartKind.AngleSensor, CreatureElementKind.AngleSensor, Sensor: null, JointSlot.HingePart, part => BrainPorts.AngleSensorInputs(part.Id)),
+        new(PartKind.Stepper, CreatureElementKind.Stepper, Sensor: null, JointSlot.HingePart, part => [.. BrainPorts.StepperInputs(part.Id), .. BrainPorts.StepperOutputs(part.Id)]),
     ];
 
     /// <summary>The kind <paramref name="kind"/>.</summary>

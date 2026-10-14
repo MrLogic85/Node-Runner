@@ -23,4 +23,7 @@ public enum PartParameterId
     MotorStrength,
     MotorMaxSpeed,
     BrakeStrength,
+    HoldStrength,
+    StepsPerTurn,
+    MaxFrequency,
 }

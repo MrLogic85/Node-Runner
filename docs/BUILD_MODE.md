@@ -389,8 +389,8 @@ panel shows it (`InPanel`). Each kind lists its own
 `docs/CREATURE_MODEL.md`.
 
 Each parameter is basic or `Advanced` for every part that has it (#903):
-Start position, the Piston's and the Servo's Max speed, Rise time, Damping
-and Coil length (#989) are advanced. A Motor is all about speed, so its own
+Start position, the Piston's and the Servo's Max speed, Rise time, Damping,
+Coil length (#989) and a Stepper's Max frequency (#1036) are advanced. A Motor is all about speed, so its own
 Max speed is basic (#1189). The panel shows Name, the basic sliders and any other controls,
 like a joint motor's link pickers, then a closed Advanced section with the rest, left out when there
 is none, then the part's note. The section stays open or closed across selections
@@ -424,6 +424,10 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   Wheel included. It has no Range or Start
   position, since it turns round and round. Its note: "Turns one side round
   and round. The brain picks how fast and which way."
+- **Stepper (#1036):** Max strength (the Servo's setting, so it edits
+  together with a selected Servo's), Hold strength (5–200 N·m, step 5),
+  Steps per turn (2–24, step 1) and Max frequency (0.2–5.0 Hz, step 0.1).
+  It cannot be placed yet (#1038).
 - **Brake (#1041):** Strength (20–400 N·m, step 20, then a last step that
   reads "Locked", an endless Strength; a span up to it reads "60 N·m–Locked"),
   and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "Slows its

@@ -168,7 +168,9 @@ the reference's "a training session has finished" (#369).
   its base brain holds the built pose at full strength: all weights 0,
   positions at the built pose, strength at bias 3 (about 95%). A Servo's
   angle output holds its built pose at 0, and a Motor's speed
-  output at 0 means standing still, so it holds its joint; a Piston's position output gets
+  output at 0 means standing still, so it holds its joint; a Stepper's
+  frequency output starts at bias 0, half its Max frequency, and its power
+  at 0, so it pushes neither way (#1036); a Piston's position output gets
   the bias that asks for its drawn length, clamped to ±6, about 0.25%
   short of either end (`Piston.DrawnPositions`, #870, #1129). A brain kept after its Start position
   changes keeps its old bias. This is how robots start in robotics ML:
@@ -196,7 +198,8 @@ the reference's "a training session has finished" (#369).
   generation with no elite (every trial invalid) explores nothing.
   - Which ports are new is read from the best elite's values, so nothing is
     saved and exploration survives closing the app. A powered part is new
-    while its strength bias is exactly −4; all its outputs' weights and
+    while its strength bias, or a Stepper's frequency bias (#1036), is
+    exactly −4; all its outputs' weights and
     biases are redrawn. An input is new while every weight out of it is
     exactly 0; its weights into every output are redrawn. A disabled
     connection is never redrawn.

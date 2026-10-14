@@ -413,7 +413,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<VelocityMotorDef> VelocityMotors => _builder.VelocityMotors;
 
-    /// <summary>Every joint motor: the Servos, then the Velocity motors.</summary>
+    /// <summary>Every joint motor: the Servos, then the Velocity motors, then the Steppers.</summary>
     public IReadOnlyList<IJointMotorDef> JointMotors => _builder.JointMotors;
 
     /// <summary>What fills each joint's hinge-part slot: the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
@@ -427,6 +427,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>The Angle sensors (#1204, #1206).</summary>
     public IReadOnlyList<AngleSensorDef> AngleSensors => _builder.AngleSensors;
+
+    /// <summary>The Steppers (#1036).</summary>
+    public IReadOnlyList<StepperDef> Steppers => _builder.Steppers;
 
     public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;
 
@@ -602,14 +605,15 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId)
         && !CreatureDef.HasJointPart(nodeId, _builder.JointParts.Where(part => PartKinds.SlotOf(part) is JointSlot.HingePart or JointSlot.Wheel));
 
-    /// <summary>Why a Servo, Motor, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work (#1118).</summary>
+    /// <summary>Why a Servo, Motor, Stepper, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work (#1118).</summary>
     public static UiText NeedsTwoSidesReason(CreatureElementKind kind) => kind switch
     {
         CreatureElementKind.Servo => CreatureBuilder.ServoNeedsTwoSidesReason,
         CreatureElementKind.VelocityMotor => CreatureBuilder.VelocityMotorNeedsTwoSidesReason,
         CreatureElementKind.Brake => CreatureBuilder.BrakeNeedsTwoSidesReason,
         CreatureElementKind.AngleSensor => CreatureBuilder.AngleSensorNeedsTwoSidesReason,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Only a Servo, Motor, Brake or Angle sensor has sides."),
+        CreatureElementKind.Stepper => CreatureBuilder.StepperNeedsTwoSidesReason,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Only a Servo, Motor, Stepper, Brake or Angle sensor has sides."),
     };
 
     /// <summary>The pieces the links join the joints into (<see cref="CreatureReadiness.Pieces"/>); more than one cannot train.</summary>
@@ -645,6 +649,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         CreatureElementKind.VelocityMotor => _builder.VelocityMotors.Any(motor => motor.Id == element.Id),
         CreatureElementKind.Brake => _builder.Brakes.Any(brake => brake.Id == element.Id),
         CreatureElementKind.AngleSensor => _builder.AngleSensors.Any(angleSensor => angleSensor.Id == element.Id),
+        CreatureElementKind.Stepper => _builder.Steppers.Any(stepper => stepper.Id == element.Id),
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
@@ -787,7 +792,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees
     /// (<see cref="DrawGroups.PartAt"/>), with the selection and the <paramref name="targets"/> on
-    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A motor, Brake (#1041), Angle sensor (#1206) or Wheel
+    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A motor, Stepper, Brake (#1041), Angle sensor (#1206) or Wheel
     /// is hit as its joint; a Touch sensor (#1045) and a Rubber (#1142) add no tap area. Null off every part.
     /// </summary>
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
@@ -799,6 +804,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             CreatureElementKind.Servo => new CreatureElementSelection(CreatureElementKind.Node, _builder.Servos[_builder.ServoIndexOf(hit.Id)].NodeId),
             CreatureElementKind.VelocityMotor => new CreatureElementSelection(CreatureElementKind.Node, _builder.VelocityMotors[_builder.VelocityMotorIndexOf(hit.Id)].NodeId),
             CreatureElementKind.Brake => new CreatureElementSelection(CreatureElementKind.Node, _builder.Brakes[_builder.BrakeIndexOf(hit.Id)].NodeId),
+            CreatureElementKind.Stepper => new CreatureElementSelection(CreatureElementKind.Node, _builder.Steppers[_builder.StepperIndexOf(hit.Id)].NodeId),
             CreatureElementKind.Wheel => new CreatureElementSelection(CreatureElementKind.Node, _builder.Wheels[_builder.WheelIndexOf(hit.Id)].NodeId),
             _ => hit,
         };
@@ -862,7 +868,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             && !_builder.Rubbers.Any(rubber => rubber.Id == partId)
             && !_builder.VelocityMotors.Any(motor => motor.Id == partId)
             && !_builder.Brakes.Any(brake => brake.Id == partId)
-            && !_builder.AngleSensors.Any(angleSensor => angleSensor.Id == partId))
+            && !_builder.AngleSensors.Any(angleSensor => angleSensor.Id == partId)
+            && !_builder.Steppers.Any(stepper => stepper.Id == partId))
         {
             return;
         }
@@ -1022,6 +1029,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int AngleSensorIndexOf(int angleSensorId) => _builder.AngleSensorIndexOf(angleSensorId);
 
+    public int StepperIndexOf(int stepperId) => _builder.StepperIndexOf(stepperId);
+
     public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
 
     public bool ServoNeedsTwoSides(int nodeId) => _builder.ServoNeedsTwoSides(nodeId);
@@ -1042,7 +1051,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public LinkRef Link(int linkId) => _builder.Link(linkId);
 
     /// <summary>
-    /// Gives the Servo, Velocity motor, Brake or Angle sensor <paramref name="partId"/> a new Fixed or Target side,
+    /// Gives the Servo, Velocity motor, Stepper, Brake or Angle sensor <paramref name="partId"/> a new Fixed or Target side,
     /// from its panel's pickers; it keeps its id (#1177). Its ports do not depend on its sides, so a locked
     /// Creation changes them too (#1041, #1179).
     /// </summary>
@@ -1051,6 +1060,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         var isBrake = _builder.Brakes.Any(brake => brake.Id == partId);
         var isAngleSensor = _builder.AngleSensors.Any(angleSensor => angleSensor.Id == partId);
         var isServo = _builder.Servos.Any(servo => servo.Id == partId);
+        var isStepper = _builder.Steppers.Any(stepper => stepper.Id == partId);
         _history.Change(() =>
         {
             if (isBrake)
@@ -1064,6 +1074,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             else if (isServo)
             {
                 _builder.SetServoLink(partId, fixedRole, linkId);
+            }
+            else if (isStepper)
+            {
+                _builder.SetStepperLink(partId, fixedRole, linkId);
             }
             else
             {

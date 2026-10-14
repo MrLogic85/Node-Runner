@@ -89,7 +89,7 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   resisted by a Brake, or read by an Angle sensor. Each is a link, or the Wheel on its joint as a one-sided link
   (#1118). See: `docs/CREATURE_MODEL.md` → "Servo".
 - **Hinge part** — What fills a joint's hinge-part slot, one per joint: a
-  Servo, Motor, Brake or Angle sensor, each with a Fixed and a Target side
+  Servo, Motor, Stepper, Brake or Angle sensor, each with a Fixed and a Target side
   (`IHingePartDef`, `CreatureDef.HingeParts`). See: `docs/CREATURE_MODEL.md`
   → Node → One part per slot.
 - **Hub** — The `NodeDef.HubRadius` circle at every joint's centre where
@@ -100,8 +100,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   Touch sensor can each sit on it, one of each. Not a Godot physics joint. See: `docs/BUILD_MODE.md` → "Parts stand in for
   their joint".
 - **Joint motor** — A powered joint part with a Fixed and a Target side: a
-  Servo or a Motor (`IJointMotorDef`, `JointMotor`). See:
-  `docs/CREATURE_MODEL.md` → "Servo" and "Motor (Velocity motor in code)".
+  Servo, a Motor or a Stepper (`IJointMotorDef`, `JointMotor`). See:
+  `docs/CREATURE_MODEL.md` → "Servo", "Motor (Velocity motor in code)" and
+  "Stepper".
 - **Link** — A joint-to-joint connection a hinge part may use as Fixed or Target:
   Beam, Piston or Spring. The Links tool lists them all, Beam included. Say
   Links for the group and Beam for a beam (#913).
@@ -132,6 +133,10 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   turns another as Target.
 - **Spring** — A passive link (#453) that pulls back toward its rest length;
   no brain ports.
+- **Stepper** — A powered joint part (#455, #1036) that holds its joint in
+  notches and, at the frequency the brain picks, lets go and pushes it to
+  the next one, with the brain's power and direction (`StepperDef`). See:
+  `docs/CREATURE_MODEL.md` → "Stepper".
 - **Start position** — Where a part's drawn pose sits in its travel or
   range, 0…100%.
 - **Strength output / Strength setting** — The setting is a powered part's

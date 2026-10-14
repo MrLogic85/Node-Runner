@@ -5,7 +5,7 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// A drawn creature: nodes, the beams between them, the sensors on the beams, the joint parts on
-/// the nodes (Servos, Velocity motors, Brakes, Angle sensors, Wheels, Touch sensors and Rubbers) and the Pistons and Springs that link them. Any drawing is a valid
+/// the nodes (Servos, Velocity motors, Steppers, Brakes, Angle sensors, Wheels, Touch sensors and Rubbers) and the Pistons and Springs that link them. Any drawing is a valid
 /// <see cref="CreatureDef"/>, so an unfinished one can be saved; only its part references must point
 /// at existing parts. Whether it can be simulated and trained is checked before training
 /// (<c>CreatureReadiness</c> in <c>NodeRunner.App</c>). A Camera placed without an aim gets
@@ -25,6 +25,7 @@ public sealed record CreatureDef
     private readonly ReadOnlyCollection<VelocityMotorDef> _velocityMotors;
     private readonly ReadOnlyCollection<BrakeDef> _brakes;
     private readonly ReadOnlyCollection<AngleSensorDef> _angleSensors;
+    private readonly ReadOnlyCollection<StepperDef> _steppers;
     private readonly Dictionary<int, IPartDef> _partById;
     private readonly Dictionary<int, int> _nodeIndexById;
     private readonly Dictionary<int, int> _beamIndexById;
@@ -38,6 +39,7 @@ public sealed record CreatureDef
     private readonly Dictionary<int, int> _velocityMotorIndexById;
     private readonly Dictionary<int, int> _brakeIndexById;
     private readonly Dictionary<int, int> _angleSensorIndexById;
+    private readonly Dictionary<int, int> _stepperIndexById;
 
     internal CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors)
         : this(Join(nodes, beams, sensors))
@@ -89,9 +91,14 @@ public sealed record CreatureDef
     {
     }
 
-    [JsonConstructor]
     internal CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, IReadOnlyList<RubberDef> rubbers, IReadOnlyList<VelocityMotorDef> velocityMotors, IReadOnlyList<BrakeDef> brakes, IReadOnlyList<AngleSensorDef> angleSensors, int nextPartId)
         : this(Join(nodes, beams, sensors, servos, pistons, springs, wheels, touchSensors, rubbers, velocityMotors, brakes, angleSensors), nextPartId)
+    {
+    }
+
+    [JsonConstructor]
+    internal CreatureDef(IReadOnlyList<NodeDef> nodes, IReadOnlyList<BeamDef> beams, IReadOnlyList<SensorDef> sensors, IReadOnlyList<ServoDef> servos, IReadOnlyList<PistonDef> pistons, IReadOnlyList<SpringDef> springs, IReadOnlyList<WheelDef> wheels, IReadOnlyList<TouchSensorDef> touchSensors, IReadOnlyList<RubberDef> rubbers, IReadOnlyList<VelocityMotorDef> velocityMotors, IReadOnlyList<BrakeDef> brakes, IReadOnlyList<AngleSensorDef> angleSensors, IReadOnlyList<StepperDef> steppers, int nextPartId)
+        : this(Join(nodes, beams, sensors, servos, pistons, springs, wheels, touchSensors, rubbers, velocityMotors, brakes, angleSensors, steppers), nextPartId)
     {
     }
 
@@ -114,6 +121,7 @@ public sealed record CreatureDef
         List<VelocityMotorDef> velocityMotors = [];
         List<BrakeDef> brakes = [];
         List<AngleSensorDef> angleSensors = [];
+        List<StepperDef> steppers = [];
         foreach (var part in parts)
         {
             switch (part)
@@ -156,12 +164,15 @@ public sealed record CreatureDef
                 case AngleSensorDef angleSensor:
                     angleSensors.Add(angleSensor);
                     break;
+                case StepperDef stepper:
+                    steppers.Add(stepper);
+                    break;
                 default:
                     throw new ArgumentException($"A creature cannot hold a {part.GetType().Name}: it is not a part kind it saves.", nameof(parts));
             }
         }
 
-        IPartDef[] sorted = [.. nodes, .. beams, .. sensors, .. servos, .. pistons, .. springs, .. wheels, .. touchSensors, .. rubbers, .. velocityMotors, .. brakes, .. angleSensors];
+        IPartDef[] sorted = [.. nodes, .. beams, .. sensors, .. servos, .. pistons, .. springs, .. wheels, .. touchSensors, .. rubbers, .. velocityMotors, .. brakes, .. angleSensors, .. steppers];
 
         var maxId = 0;
         var ids = new HashSet<int>();
@@ -233,9 +244,10 @@ public sealed record CreatureDef
         _velocityMotors = Array.AsReadOnly(velocityMotors.ToArray());
         _brakes = Array.AsReadOnly(brakes.ToArray());
         _angleSensors = Array.AsReadOnly(angleSensors.ToArray());
-        JointMotors = Array.AsReadOnly(_servos.Concat<IJointMotorDef>(_velocityMotors).ToArray());
+        _steppers = Array.AsReadOnly(steppers.ToArray());
+        JointMotors = Array.AsReadOnly(_servos.Concat<IJointMotorDef>(_velocityMotors).Concat(_steppers).ToArray());
         HingeParts = Array.AsReadOnly(JointMotors.Concat<IHingePartDef>(_brakes).Concat(_angleSensors).ToArray());
-        Parts = Array.AsReadOnly<IPartDef>([.. _nodes, .. _beams, .. _sensors, .. _servos, .. _pistons, .. _springs, .. _wheels, .. _touchSensors, .. _rubbers, .. _velocityMotors, .. _brakes, .. _angleSensors]);
+        Parts = Array.AsReadOnly<IPartDef>([.. _nodes, .. _beams, .. _sensors, .. _servos, .. _pistons, .. _springs, .. _wheels, .. _touchSensors, .. _rubbers, .. _velocityMotors, .. _brakes, .. _angleSensors, .. _steppers]);
         _partById = Parts.ToDictionary(part => part.Id);
         NextPartId = resolvedNextPartId;
         _nodeIndexById = BuildIndex(_nodes, node => node.Id);
@@ -250,6 +262,7 @@ public sealed record CreatureDef
         _velocityMotorIndexById = BuildIndex(_velocityMotors, motor => motor.Id);
         _brakeIndexById = BuildIndex(_brakes, brake => brake.Id);
         _angleSensorIndexById = BuildIndex(_angleSensors, angleSensor => angleSensor.Id);
+        _stepperIndexById = BuildIndex(_steppers, stepper => stepper.Id);
     }
 
     public IReadOnlyList<NodeDef> Nodes => _nodes;
@@ -285,8 +298,11 @@ public sealed record CreatureDef
     /// <summary>The Angle sensors (#1204): joint sensors that read the angle between their sides and apply no force.</summary>
     public IReadOnlyList<AngleSensorDef> AngleSensors => _angleSensors;
 
+    /// <summary>The Steppers (#1036): joint motors that step their sides from notch to notch at the rate the brain picks.</summary>
+    public IReadOnlyList<StepperDef> Steppers => _steppers;
+
     /// <summary>
-    /// Every joint motor, the Servos then the Velocity motors. With the <see cref="Brakes"/> and <see cref="AngleSensors"/>, they fill
+    /// Every joint motor, the Servos, then the Velocity motors, then the Steppers. With the <see cref="Brakes"/> and <see cref="AngleSensors"/>, they fill
     /// the joints' hinge-part slots (#1044).
     /// </summary>
     [JsonIgnore]
@@ -298,7 +314,7 @@ public sealed record CreatureDef
 
     /// <summary>
     /// Every part (#1221), list by list: nodes, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers,
-    /// Velocity motors, Brakes and Angle sensors. Ids are unique across them.
+    /// Velocity motors, Brakes, Angle sensors and Steppers. Ids are unique across them.
     /// </summary>
     [JsonIgnore]
     public IReadOnlyList<IPartDef> Parts { get; }
@@ -348,6 +364,8 @@ public sealed record CreatureDef
     public int BrakeIndexOf(int brakeId) => IndexOf(_brakeIndexById, brakeId, "Brake id must point to an existing brake.");
 
     public int AngleSensorIndexOf(int angleSensorId) => IndexOf(_angleSensorIndexById, angleSensorId, "Angle sensor id must point to an existing angle sensor.");
+
+    public int StepperIndexOf(int stepperId) => IndexOf(_stepperIndexById, stepperId, "Stepper id must point to an existing stepper.");
 
     /// <summary>A node's drawn and collision radius: see <see cref="JointRadius"/>.</summary>
     public double NodeRadius(int nodeId)

@@ -131,6 +131,7 @@ public partial class Creature
             CreatureElementKind.TouchSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
             CreatureElementKind.Rubber => _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(selection.Id)].NodeId)].GlobalPosition,
             CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(selection.Id)].GlobalPosition,
+            CreatureElementKind.Stepper => _nodeVisuals[Definition!.NodeIndexOf(Definition.Steppers[Definition.StepperIndexOf(selection.Id)].NodeId)].GlobalPosition,
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
         };
 
@@ -199,6 +200,8 @@ public partial class Creature
             CreatureElementKind.VelocityMotor => _velocityMotorVisuals[Definition!.VelocityMotorIndexOf(part.Id)],
             CreatureElementKind.Brake => _brakeVisuals[Definition!.BrakeIndexOf(part.Id)],
             CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(part.Id)],
+            // A Stepper has no picture of its own yet (#1038, #1067), so its joint's ring shows it.
+            CreatureElementKind.Stepper => _nodeVisuals[Definition!.NodeIndexOf(Definition.Steppers[Definition.StepperIndexOf(part.Id)].NodeId)],
             CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
             CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],
             _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
