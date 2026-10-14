@@ -92,12 +92,33 @@ file owns how Godot realises it.
 15. **An Angle sensor only reads its `HingePartSides`.** An `AngleSensorJoint`
     reads the angle and speed between its sides as a Motor does (#1204),
     and never applies torque or adds a joint.
+16. **Tearing keeps every body in its slot (#1256).** `CheckTears` runs
+    first in `_PhysicsProcess`, before the Springs, Brakes and sensors, and
+    measures each end's drift from one body snapshot (`ReadBodies`). A torn
+    end clears its `PinJoint2D`'s `NodeA`/`NodeB` rather than freeing it:
+    the pin stops acting in that tick's physics step with no kick, and
+    nothing that holds a body or joint is left pointing at a freed object
+    (#1255). A beam gone at both ends is hidden and `ProcessMode.Disabled`;
+    its sensors are skipped, so their inputs keep their last values. A hinge
+    part on a torn beam goes passive (`GoPassive`): it stops driving, keeps
+    its inputs, and a Locked Brake clears its weld's or slide lock's
+    bodies the same way. The drift sum is written out in floats because it
+    runs for every end of every shadow each tick; `Mechanics.Tear` keeps
+    the rule and its counter.
+17. **Read bodies once a tick.** `ReadBodies` caches every beam's
+    transform and node's position per physics frame, so the tear check,
+    `CenterOfMass`, `Bounds` and `LowestPointY` share one read across the
+    C#/Godot boundary. Outside a physics tick it reads afresh, and `Build`
+    and `ResetPose` invalidate it. After a tear those three count only the
+    main piece.
 
 ## What lives here
 
 - `Creature.cs`, `Creature.Links.cs`, `Creature.Wheels.cs`,
   `Creature.Rubbers.cs` — builds bodies, pins, sensors, links (each with its
   end-stop cylinder), Wheels and Rubbers, and wires the brain
+- `Creature.Tears.cs` — the tear check, letting go, the main piece and the
+  creature's `TearSample` for the trial (#1256)
 - `Creature.Selection.cs` — what a tap selects and each part's draw group,
   with the selection raised (#1107)
 - `IBeamSensor.cs` — what `Creature` needs from a beam sensor: value names,

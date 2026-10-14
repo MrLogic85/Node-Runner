@@ -73,7 +73,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **One piece (#930):** the links must join every linked joint into one
   piece. Separate pieces can be saved, but `CreatureReadiness` stops training
   until they are joined or all but one are removed. Joint motors and sensors join
-  nothing.
+  nothing. After a tear (Beam → Tearing) the same rule over the links still
+  attached finds the **main piece**: the one with the most joints, the
+  lowest-numbered on a tie (`Mechanics.Tear.MainPiece`).
 
 ### Beam
 
@@ -102,6 +104,28 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   units under each end (#1086). A Servo's Fixed-link housing stub may take
   part of the gap (`docs/WORLD_VISUALS.md` → Servo). A shorter link can be
   drawn and saved, but it blocks training until its joints move apart.
+- **Tearing (#962, #1256):** in Simulate and Training a beam end lets go of
+  its joint when the joint has drifted at least `Tear.DriftLimit` (20 units,
+  0.2 m) from it on `Tear.Ticks` (4) ticks in a row, the limit #1255 chose
+  well above anything a sound creature reaches. A creature built so its
+  joints give way breaks instead of shaking. Ends are checked in beam
+  order, the first end before the second, every tick.
+  - **One end gone:** the beam dangles from its other joint.
+  - **Both ends gone:** the beam leaves the creature at once: it is hidden
+    and no longer moves.
+  - **Main piece:** from then on the creature's centre, bounds and lowest
+    point count only the main piece (One piece above), so the camera and
+    the trial follow it, and a joint or Wheel that came loose falls or rolls
+    away on its own.
+  - **Joint motors and sensors:** a Servo, Motor, Brake or Angle sensor
+    whose Fixed or Target beam has let go at either end goes passive in the
+    same tick: it stops its torque, a Brake lets go of its weld, and its
+    inputs keep the last values read before the tear. A sensor on a beam
+    that has let go at one end keeps sensing; on a beam gone at both ends,
+    its inputs keep their last values.
+  - **Rigid triangles** that lose a beam lose their hatch at once.
+  - The trial's score freezes at the first tear (`docs/TRAINING_LOOP.md` →
+    Trial), and a new trial starts whole. Build never tears.
 
 ### Sensor
 
@@ -198,7 +222,8 @@ Three beams that close a triangle are rigid (three fixed side lengths fix
 all three angles), so its joints cannot turn. `RigidTriangles.Of` finds
 every such triangle, and Build and Training show them (#627). A larger
 truss is a composition of triangles; a bare quadrilateral stays free to
-fold.
+fold. A triangle that loses a beam to a tear (Beam → Tearing) is no longer
+hatched.
 
 A triangle is only as rigid as the joints that pin its beams to their
 nodes; how the simulation keeps them from giving way under load is in

@@ -72,10 +72,14 @@ public partial class Creature
                 continue;
             }
 
+            // The ends sit half a length either way along the body's x axis. Plain floats, as this runs for
+            // every end of every shadow each tick and Godot's vector operators cost more in debug builds.
             var transform = _beamTransforms[beam];
             var halfLength = _beamHalfLengths[beam];
-            tore |= CheckEnd(2 * beam, transform * new Vector2(-halfLength, 0));
-            tore |= CheckEnd((2 * beam) + 1, transform * new Vector2(halfLength, 0));
+            var alongX = transform.X.X * halfLength;
+            var alongY = transform.X.Y * halfLength;
+            tore |= CheckEnd(2 * beam, transform.Origin.X - alongX, transform.Origin.Y - alongY);
+            tore |= CheckEnd((2 * beam) + 1, transform.Origin.X + alongX, transform.Origin.Y + alongY);
         }
 
         if (tore)
@@ -84,14 +88,17 @@ public partial class Creature
         }
     }
 
-    private bool CheckEnd(int end, Vector2 beamEnd)
+    private bool CheckEnd(int end, float endX, float endY)
     {
         if (_endTorn[end])
         {
             return false;
         }
 
-        var drift = beamEnd.DistanceTo(_nodePositions[_beamEndNodes[end]]);
+        var node = _nodePositions[_beamEndNodes[end]];
+        var driftX = endX - node.X;
+        var driftY = endY - node.Y;
+        var drift = MathF.Sqrt((driftX * driftX) + (driftY * driftY));
         _endTicksOver[end] = Tear.NextTicksOver(_endTicksOver[end], drift);
         if (!Tear.LetsGo(_endTicksOver[end]))
         {

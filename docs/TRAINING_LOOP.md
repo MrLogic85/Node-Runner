@@ -67,6 +67,14 @@ the reference's "a training session has finished" (#369).
     infinite, or a tracked point moved further in one tick than
     `TrialMeasurement.MaxPlausibleSpeed` allows, far above anything a
     creature reaches. An invalid trial stops measuring.
+  - **Tears (#962, #1256):** the first tear (`docs/CREATURE_MODEL.md` →
+    Beam → Tearing) freezes `Distance`, `TopSpeed`, `Elevation` and
+    `FrontDistance` at their values before it (`TrialMeasurement.Freeze`).
+    The creature runs on to the end of the trial, and its samples are still
+    checked, now on the main piece (`Rebase`): a later blow-up still makes
+    the trial invalid, but a tear alone does not. A creature that breaks
+    keeps the progress it made whole, so a tear at or after its peak costs
+    nothing.
   - `Fitness`: `Distance`, or negative infinity for an invalid trial so it
     ranks below every valid one. `Evolver` logs each invalid trial. Invalid
     results never become the latest or the best, never count toward
