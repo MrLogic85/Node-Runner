@@ -307,6 +307,21 @@ public sealed class TrialMeasurementTests
         measurement.Result.Distance.ShouldBe(10);
     }
 
+    // A later tear moves the main piece again, so each tear's sample is the next one's check.
+    [Fact]
+    public void Freeze_AgainAtALaterTear_ChecksFromThatTearsSample()
+    {
+        var measurement = Start(0);
+        measurement.Record(10, 10, 0);
+
+        measurement.Freeze(-3000, 2000, 400);
+        measurement.Record(-2990, 2010, 390);
+        measurement.Freeze(4000, 6000, 100);
+        measurement.Record(4010, 6010, 90);
+
+        measurement.Result.ShouldBe(new TrialResult(10, 0, 0, 10));
+    }
+
     // The tear's own tick: a sample close to the last one but implausibly far from the tear's is a blow-up.
     [Fact]
     public void Freeze_MakesABlowUpFromTheTearSampleInvalid()
