@@ -88,19 +88,27 @@ file owns how Godot realises it.
     every tick, brain or not (#1040), using `HingePartSides.BrakeInertia`,
     which must never read heavier than the joint. A Locked Brake is a
     second Godot joint instead, as no Godot angular joint can brake;
-    `Creature.Links.cs` (WeldSides) says how, and when it stays friction.
+    `Creature.Links.cs` (Welder) says how, and when it stays friction.
 15. **An Angle sensor only reads its `HingePartSides`.** An `AngleSensorJoint`
     reads the angle and speed between its sides as a Motor does (#1204),
     and never applies torque or adds a joint.
-16. **A tear clears a pin, it frees nothing (#1256).** A torn end sets its
+16. **A Stepper steps its `HingePartSides` by torque and holds them by a
+    weld.** A `StepperJoint` runs `Mechanics.Stepper` every tick, brain or
+    not (#1037), reading `HingePartSides.BrakeInertia` as a Brake does. While
+    it steps it turns its sides by torque (rule 6); while locked it welds them
+    as a Locked Brake does (`Creature.Links.cs`, Welder, which also says
+    when no weld fits) and lets the weld go as it steps on. The weld is one
+    `HingeWeld` made with the creature and switched on and off, so the tick
+    makes no node (rule 9).
+17. **A tear clears a pin, it frees nothing (#1256).** A torn end sets its
     `PinJoint2D`'s `NodeA`/`NodeB` to an empty path: the pin stops acting
     in that tick's physics step with no kick, and every body and joint
     keeps its slot, so nothing is left pointing at a freed object (#1255).
     A beam gone at both ends is hidden and `ProcessMode.Disabled`, and a
-    Locked Brake going passive clears its weld or slide lock the same way.
-    What tears and what follows is `docs/CREATURE_MODEL.md` → Beam →
-    Tearing; when it runs is `docs/ARCHITECTURE.md` → The tick.
-17. **Read bodies once a tick.** `ReadBodies` keeps every beam's transform
+    Locked Brake or a Stepper going passive releases its `HingeWeld` the
+    same way. What tears and what follows is `docs/CREATURE_MODEL.md` →
+    Beam → Tearing; when it runs is `docs/ARCHITECTURE.md` → The tick.
+18. **Read bodies once a tick.** `ReadBodies` keeps every beam's transform
     and node's position for the physics frame, so the tear check,
     `CenterOfMass`, `Bounds` and `LowestPointY` share one read. Outside a
     physics tick it reads afresh, and `Build` and `ResetPose` clear it.
@@ -124,6 +132,8 @@ file owns how Godot realises it.
 - `HingePartSides.cs` — a hinge part's two sides: angle, speed, inertia, torque
 - `ServoJoint.cs`, `VelocityMotorJoint.cs`, `PistonLink.cs`, `SpringLink.cs` — the driven parts
 - `BrakeJoint.cs` — a Brake's friction on its sides
+- `StepperJoint.cs` — a Stepper's hold and steps on its sides
+- `HingeWeld.cs` — the joint that welds a Locked Brake or locked Stepper rigid
 - `AngleSensorJoint.cs` — an Angle sensor's reading of its sides
   (`AngleSensorVisual.cs` draws its arc from the same `HingePartSides`, #1205)
 - `AngleSensorTurn.cs` — the turn Training's Angle sensor arc is on, from

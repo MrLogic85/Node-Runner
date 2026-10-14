@@ -563,11 +563,7 @@
               },
               "strength": {
                 "type": "number",
-                "default": 500000
-              },
-              "holdStrength": {
-                "type": "number",
-                "default": 500000
+                "default": 1500000
               },
               "stepsPerTurn": {
                 "type": "integer",

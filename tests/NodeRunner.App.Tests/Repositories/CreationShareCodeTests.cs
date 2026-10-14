@@ -172,8 +172,8 @@ public sealed class CreationShareCodeTests
 
     // Build's Stepper sliders hold its settings (#1036), so only a code changed by hand holds another.
     [Theory]
-    [InlineData("holdStrength", 50000.0, null)]
-    [InlineData("holdStrength", 2000001.0, ShareCodeRefusal.Damaged)]
+    [InlineData("strength", 50000.0, null)]
+    [InlineData("strength", 2000001.0, ShareCodeRefusal.Damaged)]
     [InlineData("strength", 49999.0, ShareCodeRefusal.Damaged)]
     [InlineData("stepsPerTurn", 24.0, null)]
     [InlineData("stepsPerTurn", 25.0, ShareCodeRefusal.Damaged)]
@@ -193,7 +193,6 @@ public sealed class CreationShareCodeTests
             ["targetLinkId"] = null,
             ["name"] = null,
             ["strength"] = StepperDef.DefaultStrength,
-            ["holdStrength"] = StepperDef.DefaultHoldStrength,
             ["stepsPerTurn"] = StepperDef.DefaultStepsPerTurn,
             ["maxFrequency"] = StepperDef.DefaultMaxFrequency,
         };

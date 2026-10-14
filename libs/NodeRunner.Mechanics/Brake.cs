@@ -7,7 +7,8 @@ namespace NodeRunner.Mechanics;
 /// Strength the joint grips and stays put; past it the joint slips, braked by the full Strength.
 /// It has no preferred angle: it holds wherever the joint stopped. Godot welds a Locked Brake's
 /// sides instead, unless no Godot joint can, and then it comes here with an infinite Strength
-/// (project/src/creature/Creature.Links.cs, WeldSides).
+/// (project/src/creature/Creature.Links.cs, Welder). A <see cref="Stepper"/> (#1037) drives and
+/// holds its joint with the same loop (<see cref="Toward"/>), so a change here changes it too.
 /// </summary>
 public static class Brake
 {
@@ -32,17 +33,32 @@ public static class Brake
     /// </remarks>
     public static BrakeState Next(double speed, double strength, BrakeState? previous, double step, double effectiveInertia)
     {
-        MotorLoop.RequirePositive(effectiveInertia, nameof(effectiveInertia), "Effective inertia");
-        MotorLoop.RequirePositive(step, nameof(step), "Step");
         if (double.IsNaN(strength) || strength <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(strength), "Brake strength must be positive, or infinite when locked.");
         }
 
+        return Toward(0, speed, strength, previous, step, effectiveInertia);
+    }
+
+    /// <summary>
+    /// As <see cref="Next"/>, but it takes the turning to <paramref name="wantedSpeed"/> instead of to
+    /// a stop, with at most <paramref name="strength"/>, which may be 0. A Stepper (#1037) steps its
+    /// joint and pulls it onto a notch with it.
+    /// </summary>
+    internal static BrakeState Toward(double wantedSpeed, double speed, double strength, BrakeState? previous, double step, double effectiveInertia)
+    {
         var torquePerSpeed = effectiveInertia / step;
-        var load = previous is { } last ? (torquePerSpeed * (speed - last.Speed)) - last.Torque : 0;
-        var torque = Math.Clamp((-torquePerSpeed * speed) - load, -strength, strength);
+        var torque = Math.Clamp((torquePerSpeed * (wantedSpeed - speed)) - Load(speed, previous, step, effectiveInertia), -strength, strength);
         return new BrakeState(torque, speed);
+    }
+
+    /// <summary>What else turned the joint last step, read a step late from its speed and the torque given.</summary>
+    internal static double Load(double speed, BrakeState? previous, double step, double effectiveInertia)
+    {
+        MotorLoop.RequirePositive(effectiveInertia, nameof(effectiveInertia), "Effective inertia");
+        MotorLoop.RequirePositive(step, nameof(step), "Step");
+        return previous is { } last ? (effectiveInertia / step * (speed - last.Speed)) - last.Torque : 0;
     }
 }
 

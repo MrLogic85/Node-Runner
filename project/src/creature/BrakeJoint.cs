@@ -1,4 +1,3 @@
-using Godot;
 using NodeRunner.Domain;
 
 namespace NodeRunner.Creature;
@@ -6,15 +5,15 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// A Brake (#1040) between the two <see cref="HingePartSides"/> at its joint: friction that slows and
 /// holds the Target's turning against the Fixed side, up to its Strength. It has no brain ports, so
-/// it holds every tick, with or without a brain. A Locked one held by a weld (Creature.WeldSides) holds
+/// it holds every tick, with or without a brain. A Locked one held by a weld (Creature.Welder) holds
 /// through that joint instead.
 /// </summary>
 public sealed class BrakeJoint
 {
-    private readonly Joint2D? _weld;
+    private readonly HingeWeld? _weld;
     private Mechanics.BrakeState? _state;
 
-    public BrakeJoint(BrakeDef definition, HingePartSides sides, Joint2D? weld)
+    public BrakeJoint(BrakeDef definition, HingePartSides sides, HingeWeld? weld)
     {
         Definition = definition;
         Sides = sides;
@@ -32,11 +31,7 @@ public sealed class BrakeJoint
     public void GoPassive()
     {
         IsPassive = true;
-        if (_weld is not null)
-        {
-            _weld.NodeA = new NodePath();
-            _weld.NodeB = new NodePath();
-        }
+        _weld?.Release();
     }
 
     /// <param name="step">The physics step, in seconds.</param>

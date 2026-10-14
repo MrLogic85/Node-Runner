@@ -17,7 +17,7 @@ public sealed partial class CreatureBuilder
     /// <summary>Why a Stepper cannot work yet: it needs two sides at its joint (#1118).</summary>
     public static UiText StepperNeedsTwoSidesReason { get; } = UiText.Plain("A Stepper needs two links, or a link and a Wheel");
 
-    private static readonly PartParameterId[] _stepperParameters = [PartParameterId.ServoStrength, PartParameterId.HoldStrength, PartParameterId.StepsPerTurn, PartParameterId.MaxFrequency];
+    private static readonly PartParameterId[] _stepperParameters = [PartParameterId.ServoStrength, PartParameterId.StepsPerTurn, PartParameterId.MaxFrequency];
 
     private readonly List<StepperDef> _steppers = [];
 
@@ -94,7 +94,6 @@ public sealed partial class CreatureBuilder
         return parameter switch
         {
             PartParameterId.ServoStrength => stepper.Strength,
-            PartParameterId.HoldStrength => stepper.HoldStrength,
             PartParameterId.StepsPerTurn => stepper.StepsPerTurn,
             PartParameterId.MaxFrequency => stepper.MaxFrequency,
             _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
@@ -107,10 +106,9 @@ public sealed partial class CreatureBuilder
         var stepper = _steppers[index];
         _steppers[index] = parameter switch
         {
-            PartParameterId.ServoStrength => stepper.WithSettings(value, stepper.HoldStrength, stepper.StepsPerTurn, stepper.MaxFrequency),
-            PartParameterId.HoldStrength => stepper.WithSettings(stepper.Strength, value, stepper.StepsPerTurn, stepper.MaxFrequency),
-            PartParameterId.StepsPerTurn => stepper.WithSettings(stepper.Strength, stepper.HoldStrength, (int)Math.Round(value), stepper.MaxFrequency),
-            PartParameterId.MaxFrequency => stepper.WithSettings(stepper.Strength, stepper.HoldStrength, stepper.StepsPerTurn, value),
+            PartParameterId.ServoStrength => stepper.WithSettings(value, stepper.StepsPerTurn, stepper.MaxFrequency),
+            PartParameterId.StepsPerTurn => stepper.WithSettings(stepper.Strength, (int)Math.Round(value), stepper.MaxFrequency),
+            PartParameterId.MaxFrequency => stepper.WithSettings(stepper.Strength, stepper.StepsPerTurn, value),
             _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
         };
     }

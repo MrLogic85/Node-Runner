@@ -178,7 +178,8 @@ the reference's "a training session has finished" (#369).
   angle output holds its built pose at 0, and a Motor's speed
   output at 0 means standing still, so it holds its joint; a Stepper's
   frequency output starts at bias 0, half its Max frequency, and its power
-  at 0, so it pushes neither way (#1036); a Piston's position output gets
+  at 0, so it lets go about once a second and pushes neither way, and a
+  load can carry its joint to the next notch (#1036, #1037); a Piston's position output gets
   the bias that asks for its drawn length, clamped to ±6, about 0.25%
   short of either end (`Piston.DrawnPositions`, #870, #1129). A brain kept after its Start position
   changes keeps its old bias. This is how robots start in robotics ML:

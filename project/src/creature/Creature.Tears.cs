@@ -168,6 +168,11 @@ public partial class Creature
             angleSensor.GoPassive();
         }
 
+        foreach (var stepper in _steppers.Where(stepper => !stepper.IsPassive && TornSide(stepper.Definition)))
+        {
+            stepper.GoPassive();
+        }
+
         // A triangle with a torn beam can fold, so it is no longer rigid.
         for (var hatch = 0; hatch < _hatchVisuals.Length; hatch++)
         {
