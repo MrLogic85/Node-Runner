@@ -57,6 +57,24 @@ public sealed class DrawLayersTests
         CreatureLayers.Of(DrawSlot.Link, 3, selected: true).ShouldBe(CreatureLayers.Of(DrawSlot.Link, 3, selected: false) + CreatureLayers.SelectedParts - CreatureLayers.Parts);
     }
 
+    // A joint's ring, Touch cushion and Rubber skin share DrawSlot.Over with the hinge part on it, so
+    // the scene tree orders them: the joints come first, and the part covers the cushion's inner edge.
+    [Theory]
+    [InlineData("ui/widgets/CreatureParts.cs", "shape", "ShowJoints", "ShowServos", "ShowVelocityMotors", "ShowBrakes", "ShowSteppers", "ShowAngleSensors")]
+    [InlineData("creature/Creature.cs", "definition", "CreateNodes", "CreateServos", "CreateVelocityMotors", "CreateBrakes", "CreateSteppers", "CreateAngleSensors")]
+    public void Joints_are_made_before_the_hinge_parts_that_draw_over_them(string path, string argument, string joints, params string[] hingeParts)
+    {
+        var text = CSharpSources.Project.Single(source => source.Path == path).Tree.GetRoot().ToFullString();
+        var jointsAt = text.IndexOf($"{joints}({argument}", StringComparison.Ordinal);
+
+        jointsAt.ShouldBeGreaterThanOrEqualTo(0);
+        foreach (var hingePart in hingeParts)
+        {
+            text.IndexOf($"{hingePart}({argument}", StringComparison.Ordinal)
+                .ShouldBeGreaterThan(jointsAt, $"{hingePart} draws over its joint's cushion only if it is made after {joints}.");
+        }
+    }
+
     [Fact]
     public void Every_drawn_layer_stays_within_godots_z_range() =>
         ((long)(ArenaLayers.Followed + HighestCreatureLayer)).ShouldBeLessThanOrEqualTo(Godot.RenderingServer.CanvasItemZMax);

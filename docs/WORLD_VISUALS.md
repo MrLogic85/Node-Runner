@@ -25,11 +25,8 @@ UI around the world is in `docs/UI_DIRECTION.md`. Drawing code rules are in
 Every part in a joint's hinge-part slot (`docs/CREATURE_MODEL.md` →
 Node → One part per slot), a *joint motor* (`docs/GLOSSARY.md` → Joint
 motor), Brake or Angle sensor, stands in for its joint's ring in the same
-place. A rule that names only joint motors means Servos and Velocity motors
-alike. A Stepper (#1036) has no picture until #1067: its joint keeps its
-ring, at the joint motor's radius, and shows the Stepper selected; a
-Stepper being placed previews that ring on the joint it would take. On a
-Wheel's joint that ring covers the hub, over the Wheel's face, as a Servo does.
+place. A rule that names only joint motors means Servos, Velocity motors
+and Steppers alike.
 
 ### Joint
 
@@ -113,6 +110,48 @@ only the horn's hub without a Target link. Its range band is placed as
 for a complete Servo; without a Target link, as if the Target pointed
 opposite the Fixed link, or to the screen's left when it has neither.
 Thumbnails draw it as in Build, badge included.
+
+### Stepper
+
+A detent wheel and a pawl, like a clock's escapement (#1067), standing in
+for the joint's ring or a Wheel's hub at the joint motor's radius R (27).
+It has no Servo housing, range band or horn. Its parts are in
+`StepperGeometry`, drawn by `StepperPart`:
+
+- a body: an opaque disc of radius R, the joint's tint (Joint) on a
+  `background` disc;
+- the rim: an `accent` `stroke-signal` outline centred on R − 1 with one
+  symmetric V notch per step. With s = (R − 1)·2π/N the rim's length
+  between notches, a notch's mouth is 2·min(4.5, 0.32·s) wide and it is
+  min(6, 0.55·s + 1) deep, so 24 notches still read as a wheel. When a
+  mouth is under `TriangleHatch.MinPixelSpacing` (3 px) on screen, the rim
+  is a plain circle at R − 1 (thumbnails, far zoom);
+- the pawl: an isosceles `accent` triangle, its base 12 wide at R + 6 and,
+  seated, its tip at a notch's bottom;
+- the hub: an `accent` `stroke-hair` ring at r 8 and a disc of r 3.5.
+
+The rim turns with the Fixed side and the pawl with the Target side, each
+along its link, or with the Wheel as a Wheel side. Notch 0 lies on the
+Target side's built direction, so the pawl sits in it as built; with a side
+missing, along the side there is. Notches count counter-clockwise on screen,
+as the mechanics count them (`docs/CREATURE_MODEL.md` → Stepper).
+
+In Training it shows the Stepper's state (`Mechanics.StepperState`), which
+the creature adapts for it (`StepperLooks`); the part never reads physics:
+
+- **Hold:** the pawl seated and filled, as in Build.
+- **Step:** the pawl lifts, its tip at R, with a `panel` fill and an
+  `accent` outline. A soft `accent` wedge at `alpha_soft` runs from it round
+  to the notch it steps to, its side showing the way it turns, and that
+  notch's V is redrawn in `accent` at `stroke-beam` (3). When it catches,
+  the pawl seats and fills and the lit V fades out over 0.15 s.
+
+The brief pull to the nearest notch after an unfinished step shows as
+Hold. The frequency is not drawn: it shows as the pace of the steps.
+
+A Stepper missing a side keeps its usual fill and draws its rim and hub in `danger`, with the Servo's "!" badge. Its pawl shows only with a Target
+side, seated, with a `panel` fill and an `accent` outline. Thumbnails
+draw it as in Build, badge included.
 
 ### Motor
 
@@ -360,6 +399,16 @@ outside its arc, the others inside the cushion.
   `accent` colour alone tells Fixed from Target.
 - **Motor:** a 2-wide `halo` ring round it, with the Servo's
   Fixed and Target bands.
+- **Stepper:** a `halo` `stroke-signal` ring at R + 3, like a joint
+  motor's (a 3-unit offset of the notched rim would fill every notch),
+  with a keyhole round the pawl like the Servo's round its housing. The
+  keyhole turns with the pawl: it leaves the ring 10 either side of the
+  pawl's axis and runs round the pawl's base at r 37, 3 outside the
+  pawl's drawn edge. Without a Target side it is the plain ring. On a
+  Touch sensor's joint it is a plain ring 3 outside the pawl's drawn base
+  corners (r ≈ 37.5), so it clears both the cushion and the pawl. It lies
+  over the rim and pawl and under the hub and "!" badge. Selected alone
+  it has the Servo's Fixed and Target bands.
 - **Brake:** a 2-wide `halo` ring round it, like a joint's, with the
   Servo's Fixed and Target bands in their colours (`docs/UI_DIRECTION.md`
   → Reference token mapping deviations → `detail`).
@@ -445,7 +494,7 @@ above every shadow.
   Rubber's skin, or a Touch sensor's cushion round the joint's largest
   part; a refused joint's ring is round its own edge. Either is clear of an
   Angle sensor's arc (Angle sensor). Every dragged joint part also shows
-  itself on a free joint it would land on: a Servo, Motor, Brake or Angle
+  itself on a free joint it would land on: a Servo, Motor, Stepper, Brake or Angle
   sensor selected, with the sides it would take, a Wheel, a Rubber as its
   skin and a Touch sensor as its cushion. A picked part (#1016) marks the same free and taken targets
   from the moment it is picked, so a tap can find them. The targets that
@@ -553,6 +602,9 @@ rule 10):
 - **Motor:** its outer ring and a circle round the coils; no
   magnets, and it does not turn.
 - **Brake:** its outer ring and its disc's ring; it does not turn.
+- **Stepper:** its notched rim and the pawl's outline, both `accent` (the
+  rim `danger` with a side missing, and then no pawl); no body, hub, wedge
+  or lit notch. They turn as on the followed creature.
 - **Angle sensor:** a plain shadow joint, its outer ring only: shadows
   draw no sensors.
 - **Wheel:** the plain circle at its Radius: no tubes or line, and its

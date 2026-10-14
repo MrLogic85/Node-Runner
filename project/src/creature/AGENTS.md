@@ -143,6 +143,8 @@ file owns how Godot realises it.
   (`AngleSensorVisual.cs` draws its arc from the same `HingePartSides`, #1205)
 - `AngleSensorTurn.cs` — the turn Training's Angle sensor arc is on, from
   `HingePartSides.ContinuousAngle`, a physics tick behind the bodies (#1243)
+- `StepperLooks.cs` — the look a Stepper's visual shows from its
+  `Mechanics.StepperState`: pawl, wedge and lit notch (#1067)
 - `*Visual.cs` — rendering only: Training's adapters over the shared part
   visuals in `project/src/theme` (#767); `ShadowDrawing.cs` holds
   `IShadowVisual`

@@ -22,16 +22,21 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    the order; `DrawGroups` and `DrawSlot` live in `libs/NodeRunner.Domain`
    so Build's touches rank parts the same way (#1107). `DrawLayersTests`
    checks that layers are passed by name and that every `ZIndex` is a
-   named layer within Godot's range.
+   named layer within Godot's range. One known exception: a joint's
+   cushion and skin share `DrawSlot.Over` with its hinge part, so only
+   creating joints first puts the hinge part on top; `DrawLayersTests`
+   guards that order until #1269 gives them a layer of their own.
 3. **Selection is drawn with its part.** A part draws its own marks in its
-   `_Draw` and rises whole to the selected surface while selected or
-   raised. Never draw a part's mark on a separate layer. A Touch sensor's
+   `_Draw`, or a child layer of its own that turns with it (a Stepper's
+   keyhole turns with its pawl), and rises whole to the selected surface
+   while selected or raised. Never draw a part's mark on a separate
+   layer. A Touch sensor's
    part is the cushion `JointPart` draws, and a Rubber's the skin, so
    `JointPart` draws their marks too. Two exceptions:
    - A Wheel's mark is drawn by its joint (`JointPart`), which draws its
      hub, so it lies over the links and the cushion
      (`docs/WORLD_VISUALS.md` → "Selection marks").
-   - A selected joint motor's (a Servo's or Velocity motor's), Brake's or
+   - A selected joint motor's (a Servo's, Velocity motor's or Stepper's), Brake's or
      Angle sensor's Fixed and Target link bands lie along other parts' links, so the Build canvas draws them on
      `CreatureLayers.SelectedUnderlays`, under the selected surface.
 4. **Strokes follow the pen rule** in `project/src/ui/lib/AGENTS.md` →
@@ -44,14 +49,16 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 - `JointDrawing.cs`, `PistonDrawing.cs`, `SpringDrawing.cs`,
   `SensorDrawing.cs`, `SelectionDrawing.cs`, `TriangleHatch.cs`, `ServoGeometry.cs`,
   `TelescopeGeometry.cs`, `HubMotorGeometry.cs`, `BrakeGeometry.cs`,
-  `AngleSensorGeometry.cs`, `JointMotorDrawing.cs`, `TearPulseDrawing.cs` — static drawing helpers
+  `AngleSensorGeometry.cs`, `StepperGeometry.cs`, `JointMotorDrawing.cs`, `TearPulseDrawing.cs` — static drawing helpers
 - `PartVisual.cs` — the base of every part visual: theme, selection and
   layer, and the redraw on a new pixel scale every view that holds parts
   calls, which also redraws any child a part draws on from its `Draw` signal
-  (`VelocityMotorPart`'s and `BrakePart`'s turning layers)
+  (`VelocityMotorPart`'s, `BrakePart`'s and `StepperPart`'s turning layers)
 - `JointPart.cs`, `BeamPart.cs`, `ServoPart.cs`, `VelocityMotorPart.cs`, `BrakePart.cs`,
-  `AngleSensorPart.cs`, `PistonPart.cs`, `SpringPart.cs`, `WheelPart.cs`, `SensorPart.cs`,
+  `StepperPart.cs`, `AngleSensorPart.cs`, `PistonPart.cs`, `SpringPart.cs`, `WheelPart.cs`, `SensorPart.cs`,
   `HatchPart.cs` — one visual per part kind
+- `StepperLook.cs` — what a `StepperPart` shows of its Stepper's motion,
+  as plain state the creature layer adapts
 - `KnockoutPart.cs` — the arena background around a beam or joint, or
   along a path such as an Angle sensor's arc, under the whole creature
   (#818, #1205)

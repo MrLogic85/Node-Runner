@@ -136,7 +136,7 @@ public partial class Creature
             CreatureElementKind.TouchSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
             CreatureElementKind.Rubber => _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(selection.Id)].NodeId)].GlobalPosition,
             CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Stepper => _nodeVisuals[Definition!.NodeIndexOf(Definition.Steppers[Definition.StepperIndexOf(selection.Id)].NodeId)].GlobalPosition,
+            CreatureElementKind.Stepper => _stepperVisuals[Definition!.StepperIndexOf(selection.Id)].GlobalPosition,
             _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
         };
 
@@ -154,7 +154,7 @@ public partial class Creature
     // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
     private void ApplySelection()
     {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_velocityMotorVisuals).Concat(_brakeVisuals).Concat(_angleSensorVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
+        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_velocityMotorVisuals).Concat(_brakeVisuals).Concat(_stepperVisuals).Concat(_angleSensorVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
         {
             visual.Selected = false;
         }
@@ -205,8 +205,7 @@ public partial class Creature
             CreatureElementKind.VelocityMotor => _velocityMotorVisuals[Definition!.VelocityMotorIndexOf(part.Id)],
             CreatureElementKind.Brake => _brakeVisuals[Definition!.BrakeIndexOf(part.Id)],
             CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(part.Id)],
-            // A Stepper has no picture of its own yet (#1067), so its joint's ring shows it.
-            CreatureElementKind.Stepper => _nodeVisuals[Definition!.NodeIndexOf(Definition.Steppers[Definition.StepperIndexOf(part.Id)].NodeId)],
+            CreatureElementKind.Stepper => _stepperVisuals[Definition!.StepperIndexOf(part.Id)],
             CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
             CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],
             _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
@@ -243,6 +242,12 @@ public partial class Creature
         {
             var id = definition.Brakes[i].NodeId;
             _brakeVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
+        }
+
+        for (var i = 0; i < _stepperVisuals.Length; i++)
+        {
+            var id = definition.Steppers[i].NodeId;
+            _stepperVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
         }
 
         for (var i = 0; i < _angleSensorVisuals.Length; i++)

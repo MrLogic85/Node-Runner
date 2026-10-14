@@ -60,6 +60,7 @@ public sealed class VisualTheme
         TouchCushionTouching = UiThemes.Color(theme, UiTokens.Color.Accent),
         RubberSkin = UiThemes.Color(theme, UiTokens.Color.Detail),
         BrakeLine = UiThemes.Color(theme, UiTokens.Color.Detail),
+        StepperWedge = UiThemes.Color(theme, UiTokens.Color.Accent) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
         AreaCorner = UiThemes.Color(theme, UiTokens.Color.Accent),
         BeamWidth = UiSize.Widget.CreatureBeamWidth,
         // The reference's 2-wide ring, not scaled up with our wider beams (owner, 2026-10-03).
@@ -176,6 +177,9 @@ public sealed class VisualTheme
 
     /// <summary>A Brake's caliper, disc and ring (#1041): <c>detail</c>, as it is passive.</summary>
     public Color BrakeLine { get; private init; }
+
+    /// <summary>A stepping Stepper's wedge from its pawl to the notch it steps to (#1067): <c>accent</c> at <c>alpha_soft</c>.</summary>
+    public Color StepperWedge { get; private init; }
 
     /// <summary>The corner marks that show where the Build area ends.</summary>
     public Color AreaCorner { get; private init; }

@@ -416,6 +416,7 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | UI size multiplies the canvas | Pixels per unit (#299, #738) | UI size |
 | Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim (#578) | BM → Parameters |
 | Velocity motor | Motor; Velocity motor only in code and the save format (#454) | BM → Interactions |
+| Stepper as a Servo with a dashed dial (#531 brief) | A detent wheel with one notch per step and a pawl on the Target side; its own glyph (#1067) | WV → Stepper |
 | Servo Max speed in °/s | In rpm, like the Motor's (#454) | BM → Parameters |
 | Max speed always under Advanced | The Motor's is basic; the Piston's and Servo's stay Advanced (#1189) | BM → Parameters |
 | Brake "Max strength 30 N·m" | "Strength", ending in Locked (#1041) | BM → Parameters |

@@ -60,6 +60,7 @@ public partial class Creature : Node2D
     private VelocityMotorVisual[] _velocityMotorVisuals = [];
     private BrakeJoint[] _brakes = [];
     private BrakeVisual[] _brakeVisuals = [];
+    private StepperVisual[] _stepperVisuals = [];
     private AngleSensorJoint[] _angleSensors = [];
     private AngleSensorVisual[] _angleSensorVisuals = [];
     private StepperJoint[] _steppers = [];
@@ -373,6 +374,11 @@ public partial class Creature : Node2D
             visual.IsShadow = _isShadow;
         }
 
+        foreach (var visual in _stepperVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
         foreach (var visual in _angleSensorVisuals)
         {
             visual.IsShadow = _isShadow;
@@ -536,9 +542,7 @@ public partial class Creature : Node2D
             };
             body.AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = radius } });
 
-            // A Stepper has no picture yet (#1067), so its joint keeps its ring, at the joint motor's radius, over a Wheel's hub.
-            var hasHingePart = definition.HingeParts.Any(part => part.NodeId == definition.Nodes[i].Id && part is not StepperDef);
-            var hasStepper = definition.Steppers.Any(stepper => stepper.NodeId == definition.Nodes[i].Id);
+            var hasHingePart = definition.HingeParts.Any(part => part.NodeId == definition.Nodes[i].Id);
             var hasWheel = definition.Wheels.Any(wheel => wheel.NodeId == definition.Nodes[i].Id);
             var hasTouch = definition.TouchSensors.Any(touch => touch.NodeId == definition.Nodes[i].Id);
             var hasRubber = definition.Rubbers.Any(rubber => rubber.NodeId == definition.Nodes[i].Id);
@@ -549,8 +553,7 @@ public partial class Creature : Node2D
                 Theme = Theme,
                 Radius = radius,
                 ShowsRing = !hasWheel && !hasHingePart,
-                ShowsHub = hasWheel && !hasHingePart && !hasStepper,
-                ShowsStepper = hasStepper,
+                ShowsHub = hasWheel && !hasHingePart,
                 Cushion = hasTouch,
                 Skin = hasRubber,
             };
