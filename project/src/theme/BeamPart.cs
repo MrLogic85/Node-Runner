@@ -14,11 +14,18 @@ public partial class BeamPart : PartVisual
 {
     private const float _placingWidth = 2.2f;
 
+    /// <summary>How much of a torn end flashes <c>danger</c> (#1257), in creature units.</summary>
+    public const float TornEndLength = 8f;
+
     private Vector2 _a;
     private Vector2 _b;
     private float _radiusA;
     private float _radiusB;
     private bool _danger;
+    private bool _tornA;
+    private bool _tornB;
+    private bool _flashA;
+    private bool _flashB;
     private bool _haloA;
     private bool _haloB;
     private PlacingMark _placing;
@@ -61,6 +68,37 @@ public partial class BeamPart : PartVisual
         set => Change(ref _danger, value);
     }
 
+    /// <summary>
+    /// Whether end A has torn from its joint in a run (#1257): with no joint ring over it, the rod runs
+    /// out to <see cref="A"/>.
+    /// </summary>
+    public bool TornA
+    {
+        get => _tornA;
+        set => Change(ref _tornA, value);
+    }
+
+    /// <summary>Whether end B has torn from its joint in a run.</summary>
+    public bool TornB
+    {
+        get => _tornB;
+        set => Change(ref _tornB, value);
+    }
+
+    /// <summary>Whether torn end A is flashing: its last <see cref="TornEndLength"/> units are drawn in <c>danger</c>.</summary>
+    public bool FlashA
+    {
+        get => _flashA;
+        set => Change(ref _flashA, value);
+    }
+
+    /// <summary>Whether torn end B is flashing.</summary>
+    public bool FlashB
+    {
+        get => _flashB;
+        set => Change(ref _flashB, value);
+    }
+
     /// <summary>Whether joint A is selected too, so the selection lines end on its halo ring (#710).</summary>
     public bool HaloA
     {
@@ -85,6 +123,8 @@ public partial class BeamPart : PartVisual
     public override void _Draw()
     {
         var (start, end) = JointDrawing.BeamSpan(Theme.JointRingWidth, A, JointDrawing.HubRadius, B, JointDrawing.HubRadius) ?? (A, B);
+        start = TornA ? A : start;
+        end = TornB ? B : end;
         using (var pen = UiPixelPen.Begin(this))
         {
             if (Placing == PlacingMark.Takes && start != end)
@@ -97,6 +137,16 @@ public partial class BeamPart : PartVisual
             }
 
             pen.Line(start, end, Danger ? Theme.Danger : Theme.Beam, Theme.BeamWidth);
+            var tornLength = Math.Min(TornEndLength, start.DistanceTo(end));
+            if (FlashA && tornLength > 0)
+            {
+                pen.Line(start, start + (start.DirectionTo(end) * tornLength), Theme.Danger, Theme.BeamWidth);
+            }
+
+            if (FlashB && tornLength > 0)
+            {
+                pen.Line(end, end + (end.DirectionTo(start) * tornLength), Theme.Danger, Theme.BeamWidth);
+            }
         }
 
         if (Selected)

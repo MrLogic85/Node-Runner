@@ -111,8 +111,9 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   joints give way breaks instead of shaking. Ends are checked in beam
   order, the first end before the second, every tick.
   - **One end gone:** the beam dangles from its other joint.
-  - **Both ends gone:** the beam leaves the creature at once: it is hidden
-    and no longer moves.
+  - **Both ends gone:** the beam leaves the creature at once and falls on
+    its own, with a collider of its own width so it lands on the ground
+    (#1257); nothing in the creature counts it again.
   - **Main piece:** from then on the creature's centre, bounds and lowest
     point count only the main piece (One piece above), so the camera and
     the trial follow it, and a joint or Wheel that came loose falls or rolls
@@ -124,7 +125,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
     that has let go at one end keeps sensing; on a beam gone at both ends,
     its inputs keep their last values.
   - The trial's score freezes at the first tear (`docs/TRAINING_LOOP.md` →
-    Trial), and a new trial starts whole. Build never tears.
+    Trial), and a new trial starts whole. Build never tears. How a tear
+    looks is `docs/WORLD_VISUALS.md` → Tear.
 
 ### Sensor
 
@@ -222,7 +224,7 @@ all three angles), so its joints cannot turn. `RigidTriangles.Of` finds
 every such triangle, and Build and Training show them (#627). A larger
 truss is a composition of triangles; a bare quadrilateral stays free to
 fold. A triangle that loses a beam to a tear (Beam → Tearing) can fold
-again, so it loses its hatch at once.
+again, so it loses its hatch (`docs/WORLD_VISUALS.md` → Tear).
 
 A triangle is only as rigid as the joints that pin its beams to their
 nodes; how the simulation keeps them from giving way under load is in

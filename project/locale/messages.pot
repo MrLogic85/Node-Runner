@@ -323,6 +323,10 @@ msgstr ""
 msgid "Could not start training. Try again."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/TrainingPresentationViewModel.cs
+msgid "Crash {0}"
+msgstr ""
+
 #: project/src/hosts/CreationsHost.cs
 msgid "Create failed"
 msgstr ""

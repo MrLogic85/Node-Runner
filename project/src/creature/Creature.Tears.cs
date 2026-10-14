@@ -1,15 +1,19 @@
 using Godot;
 using NodeRunner.Domain;
 using NodeRunner.Mechanics;
+using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
 // Beams tear from their joints (#962): each tick, before anything senses or drives, every beam end still
 // pinned is checked by the rule in Mechanics.Tear, in beam order, end A before end B. A torn end's pin
-// lets go of both bodies; a beam torn at both ends leaves the world. Everything else keeps its slot, so
-// brain ports and the arrays the creature runs on never shift.
+// lets go of both bodies; a beam torn at both ends leaves the creature and falls on its own. Everything
+// else keeps its slot, so brain ports and the arrays the creature runs on never shift. How a tear looks
+// (#1257) is docs/WORLD_VISUALS.md → Tear.
 public partial class Creature
 {
+    private const double _hatchFadeSeconds = 0.2;
+
     // Each beam end as 2 × beam index + 0 for end A, 1 for end B.
     private PinJoint2D[] _beamPins = [];
     private int[] _beamEndNodes = [];
@@ -17,6 +21,9 @@ public partial class Creature
     private bool[] _endTorn = [];
     private bool[] _beamGone = [];
     private int[] _hatchBeams = [];
+    private bool[] _hatchGone = [];
+    private bool[] _nodePulsed = [];
+    private readonly List<TearPulseVisual> _tearPulses = [];
     private int[] _sensorBeams = [];
 
     // After the first tear the centre, bounds and lowest point follow the main piece only.
@@ -41,6 +48,9 @@ public partial class Creature
         _endTicksOver = new int[ends];
         _endTorn = new bool[ends];
         _beamGone = new bool[definition.Beams.Count];
+        _hatchGone = new bool[_hatchVisuals.Length];
+        _nodePulsed = new bool[definition.Nodes.Count];
+        _tearPulses.Clear();
         _beamEndNodes = new int[ends];
         for (var i = 0; i < definition.Beams.Count; i++)
         {
@@ -115,12 +125,25 @@ public partial class Creature
         TornEnds++;
 
         var beam = end / 2;
+        var isA = end % 2 == 0;
+        if (isA)
+        {
+            _beamVisuals[beam].TornA = true;
+            _beamKnockouts[beam].TornA = true;
+        }
+        else
+        {
+            _beamVisuals[beam].TornB = true;
+            _beamKnockouts[beam].TornB = true;
+        }
+
+        Flash(_beamVisuals[beam], isA);
+        Pulse(_beamEndNodes[end]);
         if (_endTorn[2 * beam] && _endTorn[(2 * beam) + 1])
         {
-            // A body taken out of the world with nothing joined to it: it costs no physics and draws nothing.
+            // Nothing holds it any more: it falls on its own, as a loose joint does (#1257).
             _beamGone[beam] = true;
-            _beamBodies[beam].Visible = false;
-            _beamBodies[beam].ProcessMode = ProcessModeEnum.Disabled;
+            LetFall(beam);
             for (var sensor = 0; sensor < _sensors.Length; sensor++)
             {
                 if (_sensorBeams[sensor] == beam && _sensors[sensor] is CameraSensor camera)
@@ -176,11 +199,12 @@ public partial class Creature
         // A triangle with a torn beam can fold, so it is no longer rigid.
         for (var hatch = 0; hatch < _hatchVisuals.Length; hatch++)
         {
-            for (var side = 0; side < 3; side++)
+            for (var side = 0; side < 3 && !_hatchGone[hatch]; side++)
             {
                 if (torn.Contains(definition.Beams[_hatchBeams[(3 * hatch) + side]].Id))
                 {
-                    _hatchVisuals[hatch].Visible = false;
+                    _hatchGone[hatch] = true;
+                    FadeOut(_hatchVisuals[hatch]);
                 }
             }
         }
@@ -188,6 +212,73 @@ public partial class Creature
         FindMainPiece(definition);
         _hasTorn = true;
         TearSample = (CenterOfMass.X, Bounds.End.X, LowestPointY);
+    }
+
+    // The followed creature marks where a joint let go, once per joint; a shadow does not (#1257).
+    private void Pulse(int node)
+    {
+        if (_isShadow || _nodePulsed[node])
+        {
+            return;
+        }
+
+        _nodePulsed[node] = true;
+        var pulse = new TearPulseVisual { Theme = Theme, Radius = _nodeColliderRadii[node], VisibilityLayer = ArenaVisibility.Both };
+        _nodeBodies[node].AddChild(pulse);
+        _tearPulses.Add(pulse);
+    }
+
+    // On the followed creature a torn end flashes danger for as long as the pulse runs, then is a plain
+    // beam end again: the tear is said once (#1257). A shadow's ends do not flash.
+    private void Flash(BeamVisual visual, bool isA)
+    {
+        if (_isShadow)
+        {
+            return;
+        }
+
+        SetFlash(visual, isA, on: true);
+        var tween = visual.CreateTween().SetProcessMode(Tween.TweenProcessMode.Physics);
+        tween.TweenInterval(TearPulseVisual.Seconds);
+        tween.TweenCallback(Callable.From(() => SetFlash(visual, isA, on: false)));
+    }
+
+    private static void SetFlash(BeamVisual visual, bool isA, bool on)
+    {
+        if (isA)
+        {
+            visual.FlashA = on;
+        }
+        else
+        {
+            visual.FlashB = on;
+        }
+    }
+
+    // The beam had no collider while pinned, as the nodes touch the world; loose, it needs one to land.
+    private void LetFall(int beam)
+    {
+        var halfWidth = Theme.BeamWidth / 2;
+        _beamBodies[beam].AddChild(new CollisionShape2D
+        {
+            Shape = new CapsuleShape2D { Radius = halfWidth, Height = 2 * (_beamHalfLengths[beam] + halfWidth) },
+            Rotation = Mathf.Pi / 2,
+        });
+    }
+
+    // On the followed creature a rigid triangle's hatch fades out over 200 ms (12 ticks), short enough
+    // that the folding triangle does not carry its lines out of itself; on a shadow it goes at once.
+    private void FadeOut(RigidHatchVisual hatch)
+    {
+        if (_isShadow)
+        {
+            hatch.Visible = false;
+            return;
+        }
+
+        var tween = hatch.CreateTween().SetProcessMode(Tween.TweenProcessMode.Physics);
+        tween.TweenProperty(hatch, "modulate:a", 0f, _hatchFadeSeconds);
+        tween.TweenCallback(Callable.From(() => hatch.Visible = false));
     }
 
     private void FindMainPiece(CreatureDef definition)

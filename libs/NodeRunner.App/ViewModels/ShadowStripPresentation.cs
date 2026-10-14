@@ -1,7 +1,10 @@
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>One cell of the shadow strip: a shadow, its bar (0–1) and its marks.</summary>
-public sealed record ShadowStripCell(int Number, double Fill, bool IsFollowed);
+/// <summary>
+/// One cell of the shadow strip: a shadow, its bar (0–1) and its marks. <paramref name="IsCapped"/>:
+/// the followed shadow's distance froze at a tear (#1257).
+/// </summary>
+public sealed record ShadowStripCell(int Number, double Fill, bool IsFollowed, bool IsCapped = false);
 
 /// <summary>What the strip's last place holds once it pages (#387).</summary>
 public enum ShadowStripTrailing
@@ -71,9 +74,10 @@ public sealed class ShadowStripPresentation
     /// <summary>
     /// The strip for <paramref name="shadows"/> in <paramref name="generation"/>. Bars measure each
     /// shadow's distance against this generation's leader, whose bar is full. Not against the
-    /// best ever: that may come from a run with another trial length (owner decision).
+    /// best ever: that may come from a run with another trial length (owner decision). Only the
+    /// followed cell is capped when <paramref name="followedCrashed"/>: up to 100 caps would be noise.
     /// </summary>
-    public ShadowStripView View(IReadOnlyList<ShadowStanding> shadows, int generation)
+    public ShadowStripView View(IReadOnlyList<ShadowStanding> shadows, int generation, bool followedCrashed = false)
     {
         ArgumentNullException.ThrowIfNull(shadows);
         var shown = Shown(shadows.Count, generation);
@@ -87,7 +91,7 @@ public sealed class ShadowStripPresentation
         var cells = shown
             .Reverse()
             .Select(index => shadows[index])
-            .Select(shadow => new ShadowStripCell(shadow.Number, Fill(shadow.Distance, scale), shadow.IsFollowed))
+            .Select(shadow => new ShadowStripCell(shadow.Number, Fill(shadow.Distance, scale), shadow.IsFollowed, shadow.IsFollowed && followedCrashed))
             .ToArray();
         return new ShadowStripView(
             cells,

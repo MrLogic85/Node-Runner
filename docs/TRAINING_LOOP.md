@@ -145,7 +145,9 @@ the reference's "a training session has finished" (#369).
     right. A bar is the shown distance so far against this generation's
     leader, whose bar is full; not against the best ever, which may come
     from another run length. Only the followed cell is marked, since the
-    lead changes too often. The strip has as many places as fit its width,
+    lead changes too often. Once the followed run has torn, its cell gets
+    a `danger` cap across the top of its bar, where its distance froze
+    (#1257); other cells are not marked, as up to 100 could be. The strip has as many places as fit its width,
     at least 3 (#791). Up to that many shadows each get a cell, in shadow
     order with shadow 1 on the right; past that it pages, with a "worse"
     button and a last button that sorts on the first page and pages back
@@ -225,7 +227,7 @@ the reference's "a training session has finished" (#369).
 - Training is its own routed scene, `TrainingRoute(creationId, mode)`, with
   `TrainingHost` as its root. `TrainingHost.tscn` authors the world inside
   the Training screen's arena viewport (background, ground, ruler, best
-  marker, start sign, spawn marker, shadows' parent and camera); the host
+  and crash markers, start sign, spawn marker, shadows' parent and camera); the host
   adds the creature and the `Evolver`, so leaving the scene frees them all.
   - **Simulate (#702).** No `Evolver`: the creature plays the saved brain
     in one trial that never ends, so there is no generation, shadow strip,
@@ -316,6 +318,11 @@ the reference's "a training session has finished" (#369).
     and jumps when a generation's front passes it. Off screen it shows
     nothing. It fades while a part's name shows, since the name may cover
     it.
+  - **Crash marker (#1257).** Once the followed run has torn, a second
+    flag reading "Crash 3.4 m" marks where its distance froze, in Training
+    and Simulate alike; it goes when a new trial or shadow starts whole.
+    Like the best marker it is behind every creature, keeps its screen
+    size, shows nothing off screen and fades while a part's name shows.
   - **Start sign (#848).** A "Start" signpost at 0 m pointing the way to
     go, in Training and Simulate alike, so a creature that walks backwards
     (and so shows 0 m) is seen to have gone the wrong way. It is behind
@@ -356,7 +363,8 @@ the reference's "a training session has finished" (#369).
   Beside the arena a side panel titled "Status" shows the Inputs → Brain →
   Outputs → Distance stages (`SignalFlowPresentationViewModel`, #813);
   Outputs counts the parts the brain drives, Servos, Motors and Pistons
-  alike ("2 parts"). The stages count readings and parts (#196). Collapsing the panel widens the arena, and the camera refits.
+  alike ("2 parts"). Once the followed run has torn, the Distance stage's
+  note reads "Crash 3.4 m" instead of the distance, in Simulate too (#1257). The stages count readings and parts (#196). Collapsing the panel widens the arena, and the camera refits.
   Under the arena are Pause and the generation caption.
   - **Pause** freezes the trial mid-run and resumes exactly where it left
     off; the screen keeps responding. Each visit starts unpaused.

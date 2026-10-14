@@ -32,6 +32,18 @@ public sealed class SignalFlowPresentationViewModelTests
     }
 
     [Fact]
+    public void Update_AfterATear_NotesWhereTheDistanceFroze()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+
+        viewModel.Update(0, 1, 340, crashed: true);
+
+        viewModel.DistanceNote.ShouldBe(UiText.Format("Crash {0}", UiText.Format("{0} m", new FixedNumber(3.4, 1))));
+        viewModel.Update(0, 1, double.NaN, crashed: true);
+        viewModel.DistanceNote.ShouldBeNull("No try runs.");
+    }
+
+    [Fact]
     public void Update_WithANegativeCount_Throws()
     {
         var viewModel = new SignalFlowPresentationViewModel();
