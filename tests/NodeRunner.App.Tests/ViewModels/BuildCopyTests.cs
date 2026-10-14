@@ -11,7 +11,7 @@ public sealed class BuildCopyTests
     public void Copy_DuplicatesJointsBeamsAndSpringsAStepAside_KeepsTheirSettings_AndSelectsTheCopy()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4), Ids(11, 12), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4), Ids(11, 12), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
         build.CanCopySelection.ShouldBeTrue();
 
         build.CopySelectedParts();
@@ -38,7 +38,7 @@ public sealed class BuildCopyTests
     public void Copy_OfEveryPart_TakesThePistonSensorAndServoToo_WithTheirSettings_AndTheServoOnTheCopiedLinks()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4, 5), Ids(11, 12), Ids(21), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4, 5), Ids(11, 12), Ids(21), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
         build.CanCopySelection.ShouldBeTrue();
 
         build.CopySelectedParts();
@@ -71,7 +71,7 @@ public sealed class BuildCopyTests
             [new PistonDef(14, 2, 3)],
             [new SpringDef(13, 1, 2)],
             nextPartId: 40));
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3), Ids(), Ids(), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1, 2, 3), Ids(), Ids(), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
 
         build.CopySelectedParts();
 
@@ -84,7 +84,7 @@ public sealed class BuildCopyTests
     public void Copy_OfAServoWithOneOfItsLinks_LeavesTheOtherRoleEmpty()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(11), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(11), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
 
         build.CopySelectedParts();
 
@@ -145,7 +145,7 @@ public sealed class BuildCopyTests
     {
         var build = Loaded();
         var before = build.Snapshot();
-        var selection = new PartSet(Ids(1, 2, 3, 4, 5), Ids(11, 12), Ids(21), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids());
+        var selection = new PartSet(Ids(1, 2, 3, 4, 5), Ids(11, 12), Ids(21), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids());
         build.ReplaceSelection(selection);
         build.CopySelectedParts();
         var copied = build.Snapshot();
@@ -169,7 +169,7 @@ public sealed class BuildCopyTests
             [new NodeDef(1, new Vector2D(corner.X - 20, corner.Y - 20)), new NodeDef(2, new Vector2D(corner.X - 120, corner.Y - 20))],
             [new BeamDef(3, 1, 2)],
             []));
-        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(3), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(3), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
 
         build.CopySelectedParts();
 
@@ -179,13 +179,13 @@ public sealed class BuildCopyTests
 
     public static TheoryData<PartSet, CreatureElementSelection[], string, bool> Blocked => new()
     {
-        { new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Beam, 11)], "Select both its joints", false },
-        { new PartSet(Ids(3), Ids(), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Spring, 13)], "Select both its joints", false },
-        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Select both its joints", false },
-        { new PartSet(Ids(1, 2), Ids(), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Select its beam", false },
-        { new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Locked: would change the model", true },
-        { new PartSet(Ids(1, 2), Ids(), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Servo, 31)], "Locked: would change the model", true },
-        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Locked: would change the model", true },
+        { new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Beam, 11)], "Select both its joints", false },
+        { new PartSet(Ids(3), Ids(), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Spring, 13)], "Select both its joints", false },
+        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Select both its joints", false },
+        { new PartSet(Ids(1, 2), Ids(), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Select its beam", false },
+        { new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Locked: would change the model", true },
+        { new PartSet(Ids(1, 2), Ids(), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Servo, 31)], "Locked: would change the model", true },
+        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Locked: would change the model", true },
     };
 
     [Theory]
@@ -211,7 +211,7 @@ public sealed class BuildCopyTests
     public void ADimmedCopy_MarksEveryOffendingPart_KindByKind_InIdOrder()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(5), Ids(12, 11), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(5), Ids(12, 11), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
 
         build.CopySelectedParts();
 
@@ -227,7 +227,7 @@ public sealed class BuildCopyTests
     public void ASelectedServo_BringsItsJoint_SoItsLinksCopy_AndTheCopyServoStandsInForIt()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(3), Ids(12), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(3), Ids(12), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
         build.CanCopySelection.ShouldBeTrue();
 
         build.CopySelectedParts();
@@ -249,7 +249,7 @@ public sealed class BuildCopyTests
     {
         var build = new BuildViewModel();
         build.Load(Creature(), locked: true);
-        build.ReplaceSelection(new PartSet(Ids(3), Ids(12, 11), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(3), Ids(12, 11), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
 
         build.CopySelectedParts();
 
@@ -266,7 +266,7 @@ public sealed class BuildCopyTests
     {
         var build = new BuildViewModel();
         build.Load(Creature(), locked: true);
-        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
         build.CopySelectedParts();
         build.CanvasNotes().ShouldNotBeEmpty();
         var changed = new List<string?>();
@@ -293,7 +293,7 @@ public sealed class BuildCopyTests
             ],
             [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
             []));
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3), Ids(4, 5), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1, 2, 3), Ids(4, 5), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
 
         build.CopySelectedParts();
 
@@ -309,7 +309,7 @@ public sealed class BuildCopyTests
     public void ADimmedCopysNotes_GoWhenTheSelectionChanges()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
         build.CopySelectedParts();
         build.CanvasNotes().ShouldNotBeEmpty();
 
@@ -323,7 +323,7 @@ public sealed class BuildCopyTests
     public void ADimmedCopysNotes_GoOnTheNextCanvasTouch()
     {
         var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
         build.CopySelectedParts();
         build.CanvasNotes().ShouldNotBeEmpty();
 
@@ -346,7 +346,7 @@ public sealed class BuildCopyTests
     {
         var build = new BuildViewModel();
         build.Load(Creature(), locked: true);
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4), Ids(11, 12), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4), Ids(11, 12), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
 
         build.CanOfferCopy.ShouldBeTrue();
         build.CanCopySelection.ShouldBeTrue();

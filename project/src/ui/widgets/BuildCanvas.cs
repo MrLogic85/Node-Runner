@@ -395,7 +395,7 @@ public partial class BuildCanvas : Node2D
         _creature.Transform = ViewTransform();
         _creature.Theme = Theme;
         _creature.Show(
-            new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Servos, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors, _viewModel.Wheels, _viewModel.TouchSensors, _viewModel.Rubbers, _viewModel.VelocityMotors, _viewModel.Brakes, _viewModel.AngleSensors),
+            new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Servos, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors, _viewModel.Wheels, _viewModel.TouchSensors, _viewModel.Rubbers, _viewModel.VelocityMotors, _viewModel.Brakes, _viewModel.AngleSensors, _viewModel.Steppers),
             new CreatureMarks(
                 selected,
                 ShowsAsLoose,

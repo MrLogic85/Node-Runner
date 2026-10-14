@@ -125,7 +125,8 @@ public sealed class EveryPartPinTests
                 new BrakeDef(25, 5, fixedLinkId: 11, targetLinkId: 12, strength: BrakeDef.LockedStrength),
             ],
             angleSensors: [new AngleSensorDef(26, 3, fixedLinkId: 9, targetLinkId: 10)],
-            nextPartId: 29);
+            steppers: [new StepperDef(29, 7, fixedLinkId: 15, targetLinkId: 16, strength: 400000, holdStrength: 300000, stepsPerTurn: 12, maxFrequency: 1.5)],
+            nextPartId: 30);
 
     private static int Count(CreatureDef creature, CreatureElementKind kind) => kind switch
     {
@@ -141,6 +142,7 @@ public sealed class EveryPartPinTests
         CreatureElementKind.VelocityMotor => creature.VelocityMotors.Count,
         CreatureElementKind.Brake => creature.Brakes.Count,
         CreatureElementKind.AngleSensor => creature.AngleSensors.Count,
+        CreatureElementKind.Stepper => creature.Steppers.Count,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Count has no case for this part kind: add one, then add the kind to Creature()."),
     };
 }

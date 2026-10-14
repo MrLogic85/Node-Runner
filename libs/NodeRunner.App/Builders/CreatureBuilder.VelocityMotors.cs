@@ -22,8 +22,8 @@ public sealed partial class CreatureBuilder
 
     public IReadOnlyList<VelocityMotorDef> VelocityMotors => _velocityMotors;
 
-    /// <summary>Every joint motor, the Servos then the Velocity motors, as <see cref="CreatureDef.JointMotors"/> lists them.</summary>
-    public IReadOnlyList<IJointMotorDef> JointMotors => [.. _servos, .. _velocityMotors];
+    /// <summary>Every joint motor, the Servos, the Velocity motors, then the Steppers, as <see cref="CreatureDef.JointMotors"/> lists them.</summary>
+    public IReadOnlyList<IJointMotorDef> JointMotors => [.. _servos, .. _velocityMotors, .. _steppers];
 
     /// <summary>Whether a Velocity motor can sit on this node; if not, <paramref name="reason"/> says why.</summary>
     public bool CanAddVelocityMotor(int nodeId, [NotNullWhen(false)] out UiText? reason)

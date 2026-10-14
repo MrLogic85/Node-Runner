@@ -191,6 +191,33 @@ public sealed class BrainPortsTests
         layout.Outputs.ShouldBe(BrainPorts.Of(without).Outputs);
     }
 
+    // #1036: the angle between its sides and its frequency in, frequency then power out.
+    [Fact]
+    public void Of_GivesAStepperAngleAndFrequencyInputs_AndFrequencyAndPowerOutputs_InPartIdOrder()
+    {
+        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))];
+        BeamDef[] beams = [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)];
+        var creature = new CreatureDef(nodes, beams, [], [new ServoDef(8, 2, 4)], [], [], [], [], [], [], [], [], [new StepperDef(6, 1, 4, 5)], nextPartId: 9);
+
+        var layout = BrainPorts.Of(creature);
+
+        layout.Inputs.ShouldBe(
+        [
+            BrainPort.Input(6, "angleSin"),
+            BrainPort.Input(6, "angleCos"),
+            BrainPort.Input(6, "frequency"),
+            BrainPort.Input(8, "angle"),
+            BrainPort.Input(8, "speed"),
+        ]);
+        layout.Outputs.ShouldBe(
+        [
+            BrainPort.Output(6, "frequency", PortSignal.Frequency),
+            BrainPort.Output(6, "power", PortSignal.Power),
+            BrainPort.Output(8, "angle", PortSignal.Position),
+            BrainPort.Output(8, "strength", PortSignal.Strength),
+        ]);
+    }
+
     [Fact]
     public void Of_GivesAWheelNoPorts()
     {

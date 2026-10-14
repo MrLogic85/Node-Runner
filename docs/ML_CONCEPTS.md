@@ -23,8 +23,8 @@ sensor off are #960.
 - **What:** The nonlinearity between layers. Without it, a deep network
   collapses to a single linear map.
 - **Where:** `libs/NodeRunner.ML/Activation.cs` (`Tanh`, `ReLU`,
-  `Sigmoid`); each output uses its signal's activation, tanh for velocity
-  and position, sigmoid for length and strength (#535, #1129).
+  `Sigmoid`); each output uses its signal's activation (#535; `docs/CREATURE_MODEL.md`
+  → Output conventions).
 - **How we show it:** Swapping the activation of a trained brain and
   watching its behaviour change (#960).
 
@@ -73,11 +73,11 @@ sensor off are #960.
 - **What:** What the network gets to *see*. Bad inputs cap performance;
   redundant inputs waste capacity.
 - **Where:** Sensor parts on beams (Accelerometer, Camera) and on joints
-  (Touch, Angle sensor; `docs/CREATURE_MODEL.md`) and Servo, Motor and
-  Piston readings. There is no speed or elevation input: the brain learns
+  (Touch, Angle sensor; `docs/CREATURE_MODEL.md`) and Servo, Motor,
+  Stepper and Piston readings. There is no speed or elevation input: the brain learns
   movement from what its parts feel. Pulse, a rhythm input, is #527.
-- **Why a turning angle reads as sine and cosine (#454):** a Motor, or
-  the joint under an Angle sensor (#1204), may turn round and round, so a plain angle would jump from one
+- **Why a turning angle reads as sine and cosine (#454):** a Motor, a
+  Stepper (#1036), or the joint under an Angle sensor (#1204), may turn round and round, so a plain angle would jump from one
   end to the other after each full turn, and the brain would see a sudden
   change where nothing moved. Its sine and cosine change smoothly all the
   way round and together still say exactly where it is: where its Target

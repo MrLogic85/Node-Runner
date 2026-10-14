@@ -32,6 +32,10 @@ msgstr ""
 msgid "A Servo needs two links, or a link and a Wheel"
 msgstr ""
 
+#: libs/NodeRunner.App/Builders/CreatureBuilder.Steppers.cs
+msgid "A Stepper needs two links, or a link and a Wheel"
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "A beam already joins these joints"
 msgstr ""
@@ -441,6 +445,10 @@ msgid "Hills"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Hold strength"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How far it can see"
 msgstr ""
 
@@ -457,11 +465,19 @@ msgid "How fast it's allowed to move"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How hard it holds each notch"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How hard it holds the joint still. Locked holds it fully."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How hard it springs back"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "How many notches make a full turn"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -563,6 +579,10 @@ msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Map"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Max frequency"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1006,8 +1026,25 @@ msgstr ""
 msgid "Status"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Stepper"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "Stepper {0}"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Steppers"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.Steppers.cs
+msgid "Steppers go on a joint"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Steps per turn"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1125,6 +1162,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "The most force it can turn with"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "The most steps it takes each second"
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
@@ -1360,6 +1401,10 @@ msgid "far right"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "frequency"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "hit"
 msgstr ""
 
@@ -1369,6 +1414,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "length"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "power"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
@@ -1390,6 +1439,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "touch"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0} Hz"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1617,6 +1670,10 @@ msgid "{0}: far right"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "{0}: frequency"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: hit"
 msgstr ""
 
@@ -1626,6 +1683,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: length"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "{0}: power"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
@@ -1642,6 +1703,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: touch"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "{0}–{1} Hz"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

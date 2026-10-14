@@ -26,6 +26,7 @@ public sealed partial class BuildViewModel
     private readonly HashSet<int> _selectedVelocityMotorIds = [];
     private readonly HashSet<int> _selectedBrakeIds = [];
     private readonly HashSet<int> _selectedAngleSensorIds = [];
+    private readonly HashSet<int> _selectedStepperIds = [];
 
     /// <summary>How many joints the selection moves: <see cref="SelectedNodeIds"/>.</summary>
     public int SelectedNodeCount => SelectedNodeIds.Count;
@@ -52,7 +53,9 @@ public sealed partial class BuildViewModel
 
     public int SelectedAngleSensorCount => _selectedAngleSensorIds.Count;
 
-    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount + SelectedTouchSensorCount + SelectedRubberCount + SelectedVelocityMotorCount + SelectedBrakeCount + SelectedAngleSensorCount;
+    public int SelectedStepperCount => _selectedStepperIds.Count;
+
+    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount + SelectedTouchSensorCount + SelectedRubberCount + SelectedVelocityMotorCount + SelectedBrakeCount + SelectedAngleSensorCount + SelectedStepperCount;
 
     public int? SingleSelectedNodeId => Single(_selectedNodeIds);
 
@@ -78,6 +81,8 @@ public sealed partial class BuildViewModel
 
     public int? SingleSelectedAngleSensorId => Single(_selectedAngleSensorIds);
 
+    public int? SingleSelectedStepperId => Single(_selectedStepperIds);
+
     /// <summary>A copy of everything selected (#704).</summary>
     public PartSet Selection => new(
         _selectedNodeIds.ToHashSet(),
@@ -91,13 +96,14 @@ public sealed partial class BuildViewModel
         _selectedRubberIds.ToHashSet(),
         _selectedVelocityMotorIds.ToHashSet(),
         _selectedBrakeIds.ToHashSet(),
-        _selectedAngleSensorIds.ToHashSet());
+        _selectedAngleSensorIds.ToHashSet(),
+        _selectedStepperIds.ToHashSet());
 
     /// <summary>
     /// The joints the selection moves: the selected joints and the joints under selected joint
-    /// parts, Servos, Velocity motors, Brakes, Angle sensors, Wheels, Touch sensors and Rubbers, since to the player a joint part is its joint (#973).
+    /// parts, Servos, Velocity motors, Steppers, Brakes, Angle sensors, Wheels, Touch sensors and Rubbers, since to the player a joint part is its joint (#973).
     /// </summary>
-    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0 && _selectedRubberIds.Count == 0 && _selectedVelocityMotorIds.Count == 0 && _selectedBrakeIds.Count == 0 && _selectedAngleSensorIds.Count == 0
+    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0 && _selectedRubberIds.Count == 0 && _selectedVelocityMotorIds.Count == 0 && _selectedBrakeIds.Count == 0 && _selectedAngleSensorIds.Count == 0 && _selectedStepperIds.Count == 0
         ? _selectedNodeIds
         : _selectedNodeIds.Union(SelectedJointPartJoints()).ToHashSet();
 
@@ -149,7 +155,7 @@ public sealed partial class BuildViewModel
     }
 
     private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds).Concat(_selectedTouchSensorIds).Concat(_selectedRubberIds).Concat(_selectedVelocityMotorIds).Concat(_selectedBrakeIds).Concat(_selectedAngleSensorIds);
+        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds).Concat(_selectedTouchSensorIds).Concat(_selectedRubberIds).Concat(_selectedVelocityMotorIds).Concat(_selectedBrakeIds).Concat(_selectedAngleSensorIds).Concat(_selectedStepperIds);
 
     public void ClearSelection()
     {
@@ -196,6 +202,7 @@ public sealed partial class BuildViewModel
         CreatureElementKind.VelocityMotor => _selectedVelocityMotorIds,
         CreatureElementKind.Brake => _selectedBrakeIds,
         CreatureElementKind.AngleSensor => _selectedAngleSensorIds,
+        CreatureElementKind.Stepper => _selectedStepperIds,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
@@ -213,16 +220,18 @@ public sealed partial class BuildViewModel
         _selectedVelocityMotorIds.Clear();
         _selectedBrakeIds.Clear();
         _selectedAngleSensorIds.Clear();
+        _selectedStepperIds.Clear();
     }
 
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
 
-    // The joints under the selected joint parts, motors, Brakes, Angle sensors, Wheels, Rubbers and Touch sensors.
+    // The joints under the selected joint parts, motors, Steppers, Brakes, Angle sensors, Wheels, Rubbers and Touch sensors.
     // Each joint once, though several parts of a stack can be selected (#1044).
     private HashSet<int> SelectedJointPartJoints() =>
     [
         .. _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId),
         .. _builder.VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).Select(motor => motor.NodeId),
+        .. _builder.Steppers.Where(stepper => _selectedStepperIds.Contains(stepper.Id)).Select(stepper => stepper.NodeId),
         .. _builder.Brakes.Where(brake => _selectedBrakeIds.Contains(brake.Id)).Select(brake => brake.NodeId),
         .. _builder.AngleSensors.Where(angleSensor => _selectedAngleSensorIds.Contains(angleSensor.Id)).Select(angleSensor => angleSensor.NodeId),
         .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId),
@@ -255,6 +264,14 @@ public sealed partial class BuildViewModel
             if (_selectedNodeIds.Remove(motor.NodeId))
             {
                 _selectedVelocityMotorIds.Add(motor.Id);
+            }
+        }
+
+        foreach (var stepper in _builder.Steppers)
+        {
+            if (_selectedNodeIds.Remove(stepper.NodeId))
+            {
+                _selectedStepperIds.Add(stepper.Id);
             }
         }
 
@@ -452,5 +469,7 @@ public sealed partial class BuildViewModel
         OnPropertyChanged(nameof(SingleSelectedBrakeId));
         OnPropertyChanged(nameof(SelectedAngleSensorCount));
         OnPropertyChanged(nameof(SingleSelectedAngleSensorId));
+        OnPropertyChanged(nameof(SelectedStepperCount));
+        OnPropertyChanged(nameof(SingleSelectedStepperId));
     }
 }

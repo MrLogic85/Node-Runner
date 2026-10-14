@@ -34,6 +34,7 @@ public sealed partial class BuildViewModel
             AddBrainPortNotes(CreatureElementKind.Piston, _selectedPistonIds);
             AddBrainPortNotes(CreatureElementKind.TouchSensor, _selectedTouchSensorIds);
             AddBrainPortNotes(CreatureElementKind.AngleSensor, _selectedAngleSensorIds);
+            AddBrainPortNotes(CreatureElementKind.Stepper, _selectedStepperIds);
         }
 
         foreach (var beam in Beams)
@@ -116,6 +117,7 @@ public sealed partial class BuildViewModel
         var sensors = Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id)).ToList();
         var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
         var velocityMotors = VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).ToList();
+        var steppers = Steppers.Where(stepper => _selectedStepperIds.Contains(stepper.Id)).ToList();
         var brakes = Brakes.Where(brake => _selectedBrakeIds.Contains(brake.Id)).ToList();
         var angleSensors = AngleSensors.Where(angleSensor => _selectedAngleSensorIds.Contains(angleSensor.Id)).ToList();
         var wheels = Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).ToList();
@@ -123,7 +125,7 @@ public sealed partial class BuildViewModel
         var rubbers = Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).ToList();
 
         // A copied joint is as big as the joint parts that come along with it (#1044).
-        var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, [.. servos, .. velocityMotors], wheels));
+        var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, [.. servos, .. velocityMotors, .. steppers], wheels));
         var offset = CopyOffset(nodes, copiedRadii);
         _history.Change(() =>
         {
@@ -182,6 +184,12 @@ public sealed partial class BuildViewModel
             {
                 var copy = _builder.AddVelocityMotor(nodeCopies[motor.NodeId], CopyOf(motor.FixedLinkId), CopyOf(motor.TargetLinkId));
                 _selectedVelocityMotorIds.Add(CopySettings(motor.Id, copy));
+            }
+
+            foreach (var stepper in steppers)
+            {
+                var copy = _builder.AddStepper(nodeCopies[stepper.NodeId], CopyOf(stepper.FixedLinkId), CopyOf(stepper.TargetLinkId));
+                _selectedStepperIds.Add(CopySettings(stepper.Id, copy));
             }
 
             foreach (var brake in brakes)

@@ -192,6 +192,23 @@ public sealed class DirectBrainTests
             .ShouldBe(NeuralNetwork.FromGenome(before, _genome, Activation.Tanh).Forward(readings));
     }
 
+    // #1036: a Stepper added to a trained brain barely steps and pushes neither way, so the trained gait plays on.
+    [Fact]
+    public void Compile_ANewStepper_StepsAlmostNeverAndPushesNeitherWay()
+    {
+        var trained = DirectBrain.ToBrainDef(_ports, _genome, previous: null);
+        var grown = new BrainPortLayout([.. _ports.Inputs, .. BrainPorts.StepperInputs(9)], [.. _ports.Outputs, .. BrainPorts.StepperOutputs(9)]);
+
+        var genome = DirectBrain.Compile(DirectBrain.Refit(trained, grown), grown);
+
+        // Weights output by output (6 inputs each), then the three biases.
+        genome.ShouldBe([0.5, -0.25, 0.75, 0, 0, 0, .. new double[12], 0.1, PortSignals.PassiveStrengthBias, 0]);
+        var outputs = NeuralNetwork.FromGenome(DirectBrain.LayerSizes(grown), genome, Activation.Tanh, DirectBrain.OutputActivations(grown))
+            .Forward([1, -1, 1, 0.5, 0.5, 0.5]);
+        outputs[1].ShouldBe(0.018, tolerance: 0.001);
+        outputs[2].ShouldBe(0);
+    }
+
     [Fact]
     public void Refit_WithIdsFrom_KeepsALaterBrainsIdsForNewPorts_AndNeverReusesAnId()
     {

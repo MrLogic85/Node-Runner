@@ -170,6 +170,39 @@ public sealed class CreationShareCodeTests
         CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(refusal);
     }
 
+    // Build's Stepper sliders hold its settings (#1036), so only a code changed by hand holds another.
+    [Theory]
+    [InlineData("holdStrength", 50000.0, null)]
+    [InlineData("holdStrength", 2000001.0, ShareCodeRefusal.Damaged)]
+    [InlineData("strength", 49999.0, ShareCodeRefusal.Damaged)]
+    [InlineData("stepsPerTurn", 24.0, null)]
+    [InlineData("stepsPerTurn", 25.0, ShareCodeRefusal.Damaged)]
+    [InlineData("maxFrequency", 5.0, null)]
+    [InlineData("maxFrequency", 5.01, ShareCodeRefusal.Damaged)]
+    public void Read_AStepperSetting_IsRefusedAsDamaged_OffItsSlider(string setting, double value, ShareCodeRefusal? refusal)
+    {
+        var file = WalkerFile();
+        var creature = file["creature"]!;
+        var id = creature["nextPartId"]!.GetValue<int>();
+        creature["nextPartId"] = id + 1;
+        var stepper = new JsonObject
+        {
+            ["id"] = id,
+            ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(),
+            ["fixedLinkId"] = null,
+            ["targetLinkId"] = null,
+            ["name"] = null,
+            ["strength"] = StepperDef.DefaultStrength,
+            ["holdStrength"] = StepperDef.DefaultHoldStrength,
+            ["stepsPerTurn"] = StepperDef.DefaultStepsPerTurn,
+            ["maxFrequency"] = StepperDef.DefaultMaxFrequency,
+        };
+        stepper[setting] = setting == "stepsPerTurn" ? JsonValue.Create((int)value) : JsonValue.Create(value);
+        creature["steppers"] = new JsonArray(stepper);
+
+        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(refusal);
+    }
+
     [Fact]
     public void Code_RoundTripsARubber()
     {
@@ -300,7 +333,7 @@ public sealed class CreationShareCodeTests
     }
 
     // Whole-number settings that are counts, not part ids.
-    private static readonly string[] _countFields = ["rays"];
+    private static readonly string[] _countFields = ["rays", "stepsPerTurn"];
 
     [Fact]
     public void PartIdFields_AreEveryPartsIdAndReference()

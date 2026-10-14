@@ -24,6 +24,7 @@ public static class PartIcons
         PartKind.VelocityMotor => UiIconId.PartVelocity,
         PartKind.Brake => UiIconId.PartBrake,
         PartKind.AngleSensor => UiIconId.PartAngleSensor,
+        PartKind.Stepper => UiIconId.PartStepper,
         _ => UiIconId.None,
     };
 }

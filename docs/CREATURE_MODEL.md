@@ -10,11 +10,11 @@ types, and no rules that differ by how a part happens to be simulated. How
 Godot realises each part is in `project/src/creature/AGENTS.md` and the code
 comments there.
 
-## Parts: Node, Beam, Sensor, Servo, Motor, Brake, Angle sensor, Piston, Spring, Wheel, Rubber, Touch sensor
+## Parts: Node, Beam, Sensor, Servo, Motor, Stepper, Brake, Angle sensor, Piston, Spring, Wheel, Rubber, Touch sensor
 
 A creature is built from two structural parts (Node, Beam), sensor parts
 that sit on beams (the Accelerometer and the Camera), joint parts (the
-Servo and the Motor, which turn their joint, the Brake, which resists
+Servo, the Motor and the Stepper, which turn their joint, the Brake, which resists
 that, the Angle sensor, which feels it, the Wheel, which rolls, the Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
@@ -25,7 +25,7 @@ thinks" (the brain) stay separate; this is the most important rule here:
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
 so it sits on a beam, or on a joint, a body of its own (Touch sensor); a
 part acting or sensing between two beams, or on the ground around a joint, sits on that
-joint (Servo, Motor, Brake, Angle sensor, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
+joint (Servo, Motor, Stepper, Brake, Angle sensor, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
 one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
@@ -58,7 +58,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   or Spring's travel measures from hub to hub, `NodeDef.HubRadius` (15)
   from each joint's centre, whatever sits on the joint.
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
-  hinge part (a Servo, Motor, Brake or Angle sensor, #1204), one Rubber (#1142) and one Touch sensor
+  hinge part (a Servo, Motor, Stepper, Brake or Angle sensor, #1204, #1036), one Rubber (#1142) and one Touch sensor
   (#1043), so a Servo can drive the links of a Wheel's joint while the
   Wheel turns freely between them, or drive the Wheel itself (see Servo),
   and a Rubber and a Touch sensor may share its joint with both.
@@ -261,6 +261,24 @@ nodes; how the simulation keeps them from giving way under load is in
   **Rise time** (s, as a Servo's); their ranges are in `docs/BUILD_MODE.md`
   → Parameters. Its Max strength tops out at a fifth of a Servo's, so it
   struggles up hills.
+
+### Stepper
+
+- **Beginner:** A joint motor that works like a clock: it holds its joint
+  in fixed notches and, as often as the brain asks, lets go and pushes it
+  on to the next one. Like a Servo it holds one side as Fixed and turns
+  the other as Target.
+- `StepperDef` (#1036), saved under `steppers`. Its sides follow the
+  Servo's rules and it takes the joint's hinge-part slot (see Servo, and
+  Node → One part per slot). It is saved, loaded, shared and has brain
+  ports; stepping in the simulation comes with #1037 and placing it in
+  Build with #1038, so until then a Stepper is only data.
+- **Settings:** **Max strength** (torque while stepping, N·m), **Hold
+  strength** (the torque its notch holds against, N·m, as a Brake's
+  Strength), **Steps per turn** (notches in a full turn, 2–24) and **Max
+  frequency** (the most steps each second); their slider ranges are in
+  `docs/BUILD_MODE.md` → Parameters. Its ports are in Sensor–model
+  contract.
 
 ### Brake
 
@@ -476,6 +494,9 @@ nodes; how the simulation keeps them from giving way under load is in
     jumps; Target a quarter turn counter-clockwise from Fixed reads 1 and 0)
     and `speed` (as a Servo's); outputs `speed` (Velocity,
     −1…1 of Max speed, counter-clockwise positive) and `strength`.
+  - **Stepper (#1036):** inputs `angleSin` and `angleCos` (as a Motor's)
+    and `frequency` (0…1 of Max frequency, the rate it runs at); outputs
+    `frequency` (Frequency) and `power` (Power).
   - **Touch sensor (#1043):** input `touch` (Touch sensor → Reading).
   - **Angle sensor (#1204):** inputs `angleSin`, `angleCos` and `speed`
     (Angle sensor → Reading); no outputs.
@@ -495,10 +516,16 @@ nodes; how the simulation keeps them from giving way under load is in
   - **Strength** uses `sigmoid`: 0…1, the share of the part's Strength
     setting used this tick. The setting is the part's maximum, chosen in
     Build; the output is the brain's choice of how much of it to use.
+  - **Frequency** (#1036) uses `sigmoid`: 0…1 of a Stepper's Max
+    frequency.
+  - **Power** (#1036) uses `tanh`: −1…1, the share of a Stepper's Max
+    strength it pushes with each step, counter-clockwise positive.
   - **New ports start almost passive:** when a part joins a trained brain,
-    its incoming weights are 0 and a new strength output starts at bias −4,
-    about 2% force. Position, velocity and length outputs start at bias 0:
-    a length output then asks for the middle of its travel. The saved brain
+    its incoming weights are 0 and a new strength or frequency output starts
+    at bias −4, about 2% force or 2% of Max frequency. Position, velocity,
+    length and power outputs start at bias 0: a length output then asks for
+    the middle of its travel. Generation 0 starts its own way
+    (`docs/TRAINING_LOOP.md` → Generations → Generation 0). The saved brain
     keeps this start so the trained gait never breaks; training redraws the
     new port's genes in every child instead of mutating them, until one
     beats the elite (#1180, `docs/TRAINING_LOOP.md` → "New ports are

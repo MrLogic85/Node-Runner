@@ -12,6 +12,10 @@ namespace NodeRunner.Domain;
 /// length output starts at bias 0, the middle of its travel.</item>
 /// <item>Strength uses <c>sigmoid</c>: 0…1 of the part's Strength setting, which stays the maximum.
 /// A new strength output starts at bias −4, about 2% force, with no dead zone below it.</item>
+/// <item>Frequency uses <c>sigmoid</c>: 0…1 of a Stepper's Max frequency. A new frequency output
+/// starts at bias −4, like a strength output, so it almost never steps (#1036).</item>
+/// <item>Power uses <c>tanh</c>: −1…1 of a Stepper's Max strength, its sign the direction. A new
+/// power output starts at bias 0: no push (#1036).</item>
 /// </list>
 /// How an output's value becomes a physical demand is the sim's (<c>OutputSignals</c> in
 /// NodeRunner.Mechanics). Stateless. See docs/CREATURE_MODEL.md.
@@ -23,16 +27,16 @@ public static class PortSignals
     public static NeuronActivation Activation(PortSignal signal) => signal switch
     {
         PortSignal.Reading => NeuronActivation.Identity,
-        PortSignal.Velocity or PortSignal.Position => NeuronActivation.Tanh,
-        PortSignal.Length or PortSignal.Strength => NeuronActivation.Sigmoid,
+        PortSignal.Velocity or PortSignal.Position or PortSignal.Power => NeuronActivation.Tanh,
+        PortSignal.Length or PortSignal.Strength or PortSignal.Frequency => NeuronActivation.Sigmoid,
         _ => throw new ArgumentOutOfRangeException(nameof(signal), signal, null),
     };
 
     /// <summary>The bias a newly added port starts with; its incoming weights start at 0.</summary>
     public static double PassiveBias(PortSignal signal) => signal switch
     {
-        PortSignal.Strength => PassiveStrengthBias,
-        PortSignal.Reading or PortSignal.Velocity or PortSignal.Position or PortSignal.Length => 0,
+        PortSignal.Strength or PortSignal.Frequency => PassiveStrengthBias,
+        PortSignal.Reading or PortSignal.Velocity or PortSignal.Position or PortSignal.Length or PortSignal.Power => 0,
         _ => throw new ArgumentOutOfRangeException(nameof(signal), signal, null),
     };
 }

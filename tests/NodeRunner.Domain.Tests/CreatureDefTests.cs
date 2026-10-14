@@ -470,7 +470,7 @@ public sealed class CreatureDefTests
             EveryPartKind.Creature.FindPart(part.Id).ShouldBeSameAs(part);
         }
 
-        EveryPartKind.Creature.FindPart(18).ShouldBeNull();
+        EveryPartKind.Creature.FindPart(22).ShouldBeNull();
         ((SensorDef)EveryPartKind.Creature.FindPart(8)!).Aim.ShouldNotBeNull();
     }
 
