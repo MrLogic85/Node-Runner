@@ -71,8 +71,8 @@ the reference's "a training session has finished" (#369).
     Beam → Tearing) freezes `Distance`, `TopSpeed`, `Elevation` and
     `FrontDistance` at their values before it (`TrialMeasurement.Freeze`).
     The creature runs on to the end of the trial, and its samples are still
-    checked, now on the main piece (`Rebase`): a later blow-up still makes
-    the trial invalid, but a tear alone does not. A creature that breaks
+    checked, now on the main piece: a later blow-up still makes the trial
+    invalid, but a tear alone does not. A creature that breaks
     keeps the progress it made whole, so a tear at or after its peak costs
     nothing.
   - `Fitness`: `Distance`, or negative infinity for an invalid trial so it

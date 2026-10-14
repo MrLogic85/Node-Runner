@@ -137,8 +137,7 @@ public partial class TrialController : Node
         }
 
         _tornEnds = creature.TornEnds;
-        _measurement.Freeze();
         var (centerX, frontX, lowestPointY) = creature.TearSample;
-        _measurement.Rebase(centerX, frontX, GroundTopY - lowestPointY);
+        _measurement.Freeze(centerX, frontX, GroundTopY - lowestPointY);
     }
 }

@@ -616,8 +616,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Only a Servo, Motor, Stepper, Brake or Angle sensor has sides."),
     };
 
-    /// <summary>The pieces the links join the joints into (<see cref="LinkRef.Pieces"/>); more than one cannot train.</summary>
-    public IReadOnlyList<IReadOnlyList<int>> Pieces() => LinkRef.Pieces(Nodes, LinkRef.All(Beams, Pistons, Springs));
+    /// <summary>The pieces the links join the joints into (<see cref="Mechanics.Pieces.Of"/>); more than one cannot train.</summary>
+    public IReadOnlyList<IReadOnlyList<int>> Pieces() => Mechanics.Pieces.Of(Nodes, LinkRef.All(Beams, Pistons, Springs));
 
     /// <summary>
     /// Answers a tap on the dimmed play button (#844): every joint loose now gets a "Not connected"

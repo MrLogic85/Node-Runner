@@ -70,7 +70,7 @@ public partial class Creature
         for (var beamIndex = 0; beamIndex < _beamBodies.Length; beamIndex++)
         {
             var body = _beamBodies[beamIndex];
-            if (!body.Visible)
+            if (_beamGone[beamIndex])
             {
                 continue;
             }

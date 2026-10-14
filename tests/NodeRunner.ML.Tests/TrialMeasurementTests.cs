@@ -271,57 +271,90 @@ public sealed class TrialMeasurementTests
         measurement.Result.ShouldBe(new TrialResult(1, 0, 0, 1));
     }
 
-    // A tear (#962) keeps every value as it was, so a loose part thrown forward scores nothing.
+    // A tear (#962) keeps every value as it was, so a loose part thrown forward scores nothing. At ten ticks
+    // a second the speed window is half a second, so the five samples before the tear give a top speed.
     [Fact]
     public void Freeze_KeepsEveryValueAsItWas()
     {
         var measurement = new TrialMeasurement(_ticksPerSecond);
         measurement.Reset(0, 50);
-        measurement.Record(10, 60, 0);
-        measurement.Record(20, 70, 5);
+        Record(measurement, 10, 20, 30, 40);
+        measurement.Record(50, 90, 5);
         var before = measurement.Result;
+        before.TopSpeed.ShouldBeGreaterThan(0);
+        before.Elevation.ShouldBeGreaterThan(0);
+        before.FrontDistance.ShouldBeGreaterThan(0);
 
-        measurement.Freeze();
+        measurement.Freeze(50, 90, 5);
         measurement.Record(300, 400, 80);
         measurement.Record(600, 700, 160);
 
-        measurement.IsFrozen.ShouldBeTrue();
         measurement.Result.ShouldBe(before);
     }
 
+    // At ten ticks a second a step over 1000 units is a blow-up; after a tear the next sample is checked
+    // against the tear's sample, not the last.
     [Fact]
-    public void Freeze_StillMakesABlowUpAfterTheTearInvalid()
+    public void Freeze_LetsTheTrackedValuesJumpToTheTearSample()
     {
         var measurement = Start(0);
         measurement.Record(10, 10, 0);
 
-        measurement.Freeze();
-        measurement.Record(5000, 10, 0);
-
-        measurement.Result.IsValid.ShouldBeFalse();
-    }
-
-    // At ten ticks a second a step over 1000 units is a blow-up; a rebased sample is not checked against the last.
-    [Fact]
-    public void Rebase_LetsTheTrackedValuesJumpWithoutMakingTheTrialInvalid()
-    {
-        var measurement = Start(0);
-        measurement.Record(10, 10, 0);
-
-        measurement.Freeze();
-        measurement.Rebase(-3000, 2000, 400);
+        measurement.Freeze(-3000, 2000, 400);
         measurement.Record(-2990, 2010, 390);
 
         measurement.Result.IsValid.ShouldBeTrue();
         measurement.Result.Distance.ShouldBe(10);
     }
 
+    // The tear's own tick: a sample close to the last one but implausibly far from the tear's is a blow-up.
     [Fact]
-    public void Rebase_MakesTheTrialInvalidForANonFiniteSample()
+    public void Freeze_MakesABlowUpFromTheTearSampleInvalid()
+    {
+        var measurement = Start(0);
+        measurement.Record(10, 10, 0);
+
+        measurement.Freeze(-3000, 2000, 400);
+        measurement.Record(10, 10, 0);
+
+        measurement.Result.ShouldBe(new TrialResult(10, 0, 0, 10, IsValid: false));
+    }
+
+    [Fact]
+    public void Freeze_StillMakesALaterBlowUpInvalid()
+    {
+        var measurement = Start(0);
+        measurement.Record(10, 10, 0);
+
+        measurement.Freeze(10, 10, 0);
+        measurement.Record(20, 20, 0);
+        measurement.Record(5000, 20, 0);
+
+        measurement.Result.ShouldBe(new TrialResult(10, 0, 0, 10, IsValid: false));
+    }
+
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    public void Freeze_StillMakesANonFiniteSampleInvalid(double x)
+    {
+        var measurement = Start(0);
+        measurement.Record(10, 10, 0);
+
+        measurement.Freeze(10, 10, 0);
+        measurement.Record(x, 10, 0);
+
+        measurement.Result.ShouldBe(new TrialResult(10, 0, 0, 10, IsValid: false));
+    }
+
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.NegativeInfinity)]
+    public void Freeze_MakesTheTrialInvalidForANonFiniteTearSample(double x)
     {
         var measurement = Start(0);
 
-        measurement.Rebase(double.NaN, 0, 0);
+        measurement.Freeze(x, 0, 0);
 
         measurement.Result.IsValid.ShouldBeFalse();
     }
@@ -330,12 +363,11 @@ public sealed class TrialMeasurementTests
     public void Reset_UnfreezesTheNextTrial()
     {
         var measurement = Start(0);
-        measurement.Freeze();
+        measurement.Freeze(0, 0, 0);
 
         measurement.Reset(0, 0);
         measurement.Record(10, 10, 0);
 
-        measurement.IsFrozen.ShouldBeFalse();
         measurement.Result.Distance.ShouldBe(10);
     }
 

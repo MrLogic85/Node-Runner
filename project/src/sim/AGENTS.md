@@ -27,8 +27,8 @@ Training orchestration: trials, slots and generations.
 ## What lives here
 
 - `TrialController.cs` — times one fixed-length trial for one creature,
-  resets its pose and feeds `TrialMeasurement` each tick, freezing it and
-  rebasing it on the creature's `TearSample` at the first new tear; raises
+  resets its pose and feeds `TrialMeasurement` each tick, freezing it on
+  the creature's `TearSample` at every new tear; raises
   `TrialStarted` and `TrialCompleted`. Simulate (#702) runs one with no end
   (`int.MaxValue` ticks).
 - `Evolver.cs` — the generation cycle: every genome in fixed parallel slots

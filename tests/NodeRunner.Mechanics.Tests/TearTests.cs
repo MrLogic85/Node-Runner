@@ -1,15 +1,9 @@
+using NodeRunner.Domain;
+
 namespace NodeRunner.Mechanics.Tests;
 
 public sealed class TearTests
 {
-    // The #1255 limit: 20 world units, 0.2 m, for 4 ticks in a row.
-    [Fact]
-    public void Limit_Is20UnitsFor4Ticks()
-    {
-        Tear.DriftLimit.ShouldBe(20);
-        Tear.Ticks.ShouldBe(4);
-    }
-
     [Theory]
     [InlineData(0, 19.99, 0)]
     [InlineData(3, 19.99, 0)]
@@ -56,22 +50,53 @@ public sealed class TearTests
         Tear.LetsGo(ticksOver).ShouldBeFalse();
     }
 
+    // Joints 1–2–3 in a row by beams 10 and 11, and 4–5 by beam 12.
+    private static CreatureDef Chain(PistonDef[]? pistons = null) => new(
+        Enumerable.Range(1, 5).Select(id => new NodeDef(id, new Vector2D(id * 100, 0))).ToArray(),
+        [new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 4, 5)],
+        [],
+        pistons ?? [],
+        [],
+        100);
+
     [Fact]
     public void MainPiece_IsThePieceWithTheMostJoints()
     {
-        Tear.MainPiece([[1, 2], [3, 4, 5], [6]]).ShouldBe([3, 4, 5]);
+        Tear.MainPiece(Chain(), new bool[6]).ShouldBe([1, 2, 3]);
     }
 
-    // Pieces are listed by their first joint in joint order, so the first listed has the lowest joint index.
+    // A beam torn at one end no longer joins its joints, so 1–2–3 splits into 1–2 and 3 alone.
     [Fact]
-    public void MainPiece_OnATie_IsTheFirstListed()
+    public void MainPiece_LeavesOutABeamTornAtOneEnd()
     {
-        Tear.MainPiece([[7, 1], [3, 9]]).ShouldBe([7, 1]);
+        Tear.MainPiece(Chain(), [false, false, false, true, false, false]).ShouldBe([1, 2]);
+    }
+
+    // With beam 11 gone at both ends the creature is 1–2 and 4–5: a tie, which the first listed wins.
+    [Fact]
+    public void MainPiece_OnATie_IsThePieceWithTheFirstJoint()
+    {
+        Tear.MainPiece(Chain(), [false, false, true, true, false, false]).ShouldBe([1, 2]);
+    }
+
+    // A Piston never tears, so it still joins 3 to 4 when beam 11 has let go.
+    [Fact]
+    public void MainPiece_CountsPistonsAndSpringsAsHolding()
+    {
+        var creature = Chain([new PistonDef(13, 3, 4)]);
+
+        Tear.MainPiece(creature, [false, false, true, true, false, false]).ShouldBe([3, 4, 5]);
     }
 
     [Fact]
-    public void MainPiece_IsEmptyWhenNoLinkJoinsAnything()
+    public void MainPiece_WithEveryLinkTorn_IsTheFirstJoint()
     {
-        Tear.MainPiece([]).ShouldBeEmpty();
+        Tear.MainPiece(Chain(), [true, false, false, true, true, true]).ShouldBe([1]);
+    }
+
+    [Fact]
+    public void MainPiece_NeedsBothEndsOfEveryBeam()
+    {
+        Should.Throw<ArgumentException>(() => Tear.MainPiece(Chain(), new bool[5]));
     }
 }

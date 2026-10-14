@@ -145,9 +145,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Stroke** — How far a Piston or Spring travels between its end stops.
 - **Tear** — A beam end letting go of its joint in Simulate and Training
   (#962, #1256) when the joint has pulled too far from it for a few ticks
-  (`Mechanics.Tear`). The trial's score freezes at the first tear; the
-  camera and score then follow the **main piece**, the piece with the most
-  joints. See: `docs/CREATURE_MODEL.md` → Beam.
+  (`Mechanics.Tear`). The trial's score freezes at the first tear, and the
+  camera follows the **main piece**. See: `docs/CREATURE_MODEL.md` → Beam
+  → Tearing.
 - **Touch sensor** — A sensor on a joint (#1043) that tells the brain
   how close that joint is to touching the ground (`TouchSensorDef`); one
   per joint.

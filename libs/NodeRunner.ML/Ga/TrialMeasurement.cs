@@ -76,9 +76,6 @@ public sealed class TrialMeasurement
 
     public TrialResult Result => new(_distance, _topSpeed, _elevation, _frontDistance, _valid);
 
-    /// <summary>Whether a tear has frozen what the trial measures (<see cref="Freeze"/>).</summary>
-    public bool IsFrozen => _frozen;
-
     /// <summary>Begins a new trial from the centre's and the front-most point's starting X positions.</summary>
     public void Reset(double startX, double startFrontX)
     {
@@ -101,18 +98,14 @@ public sealed class TrialMeasurement
 
     /// <summary>
     /// Keeps every value as it is now for the rest of the trial (#962): later samples are only checked for
-    /// a blow-up. Freezing again changes nothing.
+    /// a blow-up. A tear calls it with the sample it changed what the samples track to (the creature's centre
+    /// and bounds now follow its main piece), and the next sample is checked against that one instead of the
+    /// last, so the change is not taken for a blow-up. Every later tear calls it again. A non-finite sample
+    /// makes the trial invalid.
     /// </summary>
-    public void Freeze() => _frozen = true;
-
-    /// <summary>
-    /// Makes this sample the one the next is checked against, without checking how far it is from the last
-    /// or measuring it. A tear calls it when what the samples track changes (the creature's centre and bounds
-    /// follow its main piece), so that change is not taken for a blow-up. A non-finite sample makes the trial
-    /// invalid.
-    /// </summary>
-    public void Rebase(double centerX, double frontX, double groundClearance)
+    public void Freeze(double centerX, double frontX, double groundClearance)
     {
+        _frozen = true;
         if (!_valid)
         {
             return;

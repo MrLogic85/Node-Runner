@@ -72,8 +72,10 @@ public partial class Creature
                 continue;
             }
 
-            // The ends sit half a length either way along the body's x axis. Plain floats, as this runs for
-            // every end of every shadow each tick and Godot's vector operators cost more in debug builds.
+            // The ends sit half a length either way along the body's x axis. Written out in floats, as this
+            // runs for every end of every shadow each tick: with Transform2D * Vector2 and DistanceTo the check
+            // took 0.19 ms a tick for 59 shadows of 19 beams on a desktop debug build, about 8 % of the tick;
+            // written out, 0.03 ms (#1256).
             var transform = _beamTransforms[beam];
             var halfLength = _beamHalfLengths[beam];
             var alongX = transform.X.X * halfLength;
@@ -119,6 +121,13 @@ public partial class Creature
             _beamGone[beam] = true;
             _beamBodies[beam].Visible = false;
             _beamBodies[beam].ProcessMode = ProcessModeEnum.Disabled;
+            for (var sensor = 0; sensor < _sensors.Length; sensor++)
+            {
+                if (_sensorBeams[sensor] == beam && _sensors[sensor] is CameraSensor camera)
+                {
+                    camera.IsGone = true;
+                }
+            }
         }
 
         return true;
@@ -176,21 +185,12 @@ public partial class Creature
         TearSample = (CenterOfMass.X, Bounds.End.X, LowestPointY);
     }
 
-    // The main piece by the one-piece check (#930) over the links still joining their nodes: every Piston
-    // and Spring, and every beam with neither end torn. With none left, the first joint stands for it.
     private void FindMainPiece(CreatureDef definition)
     {
-        var holding = definition.Beams.Where((_, beam) => !_endTorn[2 * beam] && !_endTorn[(2 * beam) + 1]);
-        var main = Tear.MainPiece(LinkRef.Pieces(definition.Nodes, LinkRef.All(holding, definition.Pistons, definition.Springs)));
         Array.Clear(_nodeInMainPiece);
-        foreach (var nodeId in main)
+        foreach (var nodeId in Tear.MainPiece(definition, _endTorn))
         {
             _nodeInMainPiece[definition.NodeIndexOf(nodeId)] = true;
-        }
-
-        if (main.Count == 0)
-        {
-            _nodeInMainPiece[0] = true;
         }
 
         // A beam counts while one of its ends still holds on to the main piece, dangling or not.

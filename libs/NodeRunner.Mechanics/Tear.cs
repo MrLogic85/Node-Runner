@@ -1,3 +1,5 @@
+using NodeRunner.Domain;
+
 namespace NodeRunner.Mechanics;
 
 /// <summary>
@@ -26,15 +28,26 @@ public static class Tear
     public static bool LetsGo(int ticksOver) => ticksOver >= Ticks;
 
     /// <summary>
-    /// The piece the creature's centre and bounds follow after a tear: of the pieces its links still join
-    /// it into, in the order the one-piece check (#930) lists them (by their first joint in joint order),
-    /// the one with the most joints, the first listed on a tie. Empty when no link joins anything.
+    /// The joints of the piece a creature's centre and bounds follow after a tear, by id. The one-piece
+    /// check (<see cref="Pieces.Of"/>, #930) runs over the links still joining their joints: every Piston
+    /// and Spring, and every beam with neither end torn. Of the pieces it lists (by their first joint in
+    /// joint order), the one with the most joints wins, the first listed on a tie. When no link joins
+    /// anything, the first joint stands for the creature.
     /// </summary>
-    public static IReadOnlyList<int> MainPiece(IReadOnlyList<IReadOnlyList<int>> pieces)
+    /// <param name="creature">The creature as built.</param>
+    /// <param name="endTorn">Whether each beam end has torn: end A of beam i at 2i, end B at 2i + 1.</param>
+    public static IReadOnlyList<int> MainPiece(CreatureDef creature, IReadOnlyList<bool> endTorn)
     {
-        ArgumentNullException.ThrowIfNull(pieces);
+        ArgumentNullException.ThrowIfNull(creature);
+        ArgumentNullException.ThrowIfNull(endTorn);
+        if (endTorn.Count != 2 * creature.Beams.Count)
+        {
+            throw new ArgumentException("Every beam has two ends.", nameof(endTorn));
+        }
+
+        var holding = creature.Beams.Where((_, beam) => !endTorn[2 * beam] && !endTorn[(2 * beam) + 1]);
         IReadOnlyList<int> main = [];
-        foreach (var piece in pieces)
+        foreach (var piece in Pieces.Of(creature.Nodes, LinkRef.All(holding, creature.Pistons, creature.Springs)))
         {
             if (piece.Count > main.Count)
             {
@@ -42,6 +55,6 @@ public static class Tear
             }
         }
 
-        return main;
+        return main.Count > 0 ? main : [creature.Nodes[0].Id];
     }
 }

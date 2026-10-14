@@ -1,5 +1,6 @@
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using NodeRunner.Mechanics;
 
 namespace NodeRunner.App.Lifecycle;
 
@@ -74,7 +75,7 @@ public static class CreatureReadiness
             }
         }
 
-        var pieces = LinkRef.Pieces(creature.Nodes, LinkRef.All(creature.Beams, creature.Pistons, creature.Springs)).Count;
+        var pieces = Pieces.Of(creature.Nodes, LinkRef.All(creature.Beams, creature.Pistons, creature.Springs)).Count;
         if (pieces > 1)
         {
             problems.Add(UiText.Counted(

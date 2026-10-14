@@ -123,7 +123,6 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
     inputs keep the last values read before the tear. A sensor on a beam
     that has let go at one end keeps sensing; on a beam gone at both ends,
     its inputs keep their last values.
-  - **Rigid triangles** that lose a beam lose their hatch at once.
   - The trial's score freezes at the first tear (`docs/TRAINING_LOOP.md` →
     Trial), and a new trial starts whole. Build never tears.
 
@@ -222,8 +221,8 @@ Three beams that close a triangle are rigid (three fixed side lengths fix
 all three angles), so its joints cannot turn. `RigidTriangles.Of` finds
 every such triangle, and Build and Training show them (#627). A larger
 truss is a composition of triangles; a bare quadrilateral stays free to
-fold. A triangle that loses a beam to a tear (Beam → Tearing) is no longer
-hatched.
+fold. A triangle that loses a beam to a tear (Beam → Tearing) can fold
+again, so it loses its hatch at once.
 
 A triangle is only as rigid as the joints that pin its beams to their
 nodes; how the simulation keeps them from giving way under load is in
