@@ -374,7 +374,7 @@ Redo changes the part it shows (#910).
 **On this joint (#1044).** When the selected part's joint holds two or more
 parts, a small "On this joint" label and a strip of glyph tabs sit between
 the title and Name (`PartSettingsPresentation.OnThisJoint`), one per part,
-top → down: joint motor, Brake or Angle sensor, then Wheel, then Rubber, then Touch sensor. The strip is the tray's tab
+in the joint's stack order (Interactions → "Every tool"). The strip is the tray's tab
 strip (`UiIconTabs`), with the selected part's tab filled. A tab tap selects
 that part alone, which moves the canvas mark and scrolls the panel to the
 top. A joint with one part shows no strip; tabs work on a locked creation
