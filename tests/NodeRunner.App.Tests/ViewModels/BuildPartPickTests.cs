@@ -25,7 +25,7 @@ public class BuildPartPickTests
     public void PickPart_AComingLaterPart_OrOutsideParts_OrAPartWithPortsOnALockedCreation_PicksNothing()
     {
         var build = PartsBuild();
-        build.PickPart(BuildPart.Stepper);
+        build.PickPart(BuildPart.Pulse);
         build.PickedPart.ShouldBeNull();
 
         build.ActiveTool = BuildTool.Joint;

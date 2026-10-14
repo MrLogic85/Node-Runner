@@ -203,7 +203,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
 - **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
   drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
   go on a joint"; a joint that already has a joint motor, Brake or Angle sensor refuses with
-  "One Servo, Motor, Brake or Angle sensor per joint", while a Wheel's joint takes it (#1044). A good placement picks its Fixed and Target as
+  "One Servo, Stepper, Motor, Brake or Angle sensor per joint", while a Wheel's joint takes it (#1044). A good placement picks its Fixed and Target as
   `docs/CREATURE_MODEL.md` → "Servo" says and is one Undo step; a drop also selects the Servo. Without two sides the missing roles
   stay empty and the Servo's panel note says "A Servo needs two links, or a
   link and a Wheel" until another link or a Wheel is added there and picked: drop first,
@@ -217,6 +217,10 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   link refuses with "Motors go on a joint"; its sides, missing
   roles and notes follow the Servo's, with "A Motor needs two
   links, or a link and a Wheel".
+- **Stepper (#1038):** placed from Parts → Moving parts on any joint
+  exactly like a Motor, in the same slot. A beam, sensor or link refuses
+  with "Steppers go on a joint"; its sides, missing roles and notes follow
+  the Servo's, with "A Stepper needs two links, or a link and a Wheel".
 - **Brake (#1041):** placed from Parts → Moving parts on any joint exactly
   like a Motor, in the same slot, also on a locked creation. A beam, sensor
   or link refuses with "Brakes go on a joint"; its sides, missing roles and
@@ -339,7 +343,7 @@ active one, clears the selection so its panel shows (#1096).
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
   settings note) and where it goes ("Tap a joint to place it. A joint holds
-  one Servo, Motor, Brake or Angle sensor." for a joint motor, Brake or Angle sensor, "… holds one wheel." for a Wheel, "…
+  one Servo, Stepper, Motor, Brake or Angle sensor." for a joint motor, Brake or Angle sensor, "… holds one wheel." for a Wheel, "…
   holds one rubber." for a Rubber, "… holds one Touch sensor." for a Touch
   sensor), per part, not per tab, as a tab can mix placements. Under
   the rows the help line says "Tap a part to pick it, or drag it onto the
@@ -425,8 +429,9 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   position, since it turns round and round. Its note: "Turns one side round
   and round. The brain picks how fast and which way."
 - **Stepper (#1036):** Max strength (the Servo's setting, so it edits
-  together with a selected Servo's), Steps per turn (2–24, step 1) and Max frequency (0.2–5.0 Hz, step 0.1).
-  It cannot be placed yet (#1038).
+  together with a selected Servo's), Steps per turn (2–24, step 1) and Max frequency (0.2–5.0 Hz, step 0.1),
+  and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "A motor that turns
+  one notch at a time and holds it."
 - **Brake (#1041):** Strength (20–400 N·m, step 20, then a last step that
   reads "Locked", an endless Strength; a span up to it reads "60 N·m–Locked"),
   and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "Slows its
@@ -436,7 +441,7 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   the brain the angle between its two sides, and how fast it turns."
 - **Wheel:** Radius (0.4–1.0 m, step 0.1), then a read-only Weight
   ("1.2 kg", `PartSettingsPresentation.Readouts`) that follows Radius. Its
-  note: "Rolls freely on the ground. Add a Motor or Servo to power it."
+  note: "Rolls freely on the ground. Add a Motor, Servo or Stepper to power it."
 - **Camera:** Aim, set on the canvas, one Camera at a time; Rays (1, 3 or
   5, three evenly spaced stops, #578), Spread (15°–90°, step 5) and Range
   (1.0–10.0 m, step 0.1, #1097) in the panel. Spread shows disabled while every

@@ -105,6 +105,23 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(motor.NodeId));
             }
 
+            if (_build.SingleSelectedStepperId is { } stepperId)
+            {
+                var stepper = _build.Steppers[_build.StepperIndexOf(stepperId)];
+                return new PartSettingsPresentation(
+                    stepperId,
+                    PartKind.Stepper,
+                    _build.PartDisplayName(stepperId),
+                    _build.DefaultPartName(stepperId),
+                    null,
+                    null,
+                    PartInfo.Stepper,
+                    canDelete,
+                    PanelSliders(),
+                    SidePickers(stepper, CreatureBuilder.StepperNeedsTwoSidesReason),
+                    OnThisJoint: OnThisJoint(stepper.NodeId));
+            }
+
             if (_build.SingleSelectedBrakeId is { } brakeId)
             {
                 var brake = _build.Brakes[_build.BrakeIndexOf(brakeId)];

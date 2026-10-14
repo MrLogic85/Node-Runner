@@ -107,6 +107,7 @@ public static class PartTray
     {
         BuildPart.Servo => PartInfo.Servo,
         BuildPart.VelocityMotor => PartInfo.VelocityMotor,
+        BuildPart.Stepper => PartInfo.Stepper,
         BuildPart.Brake => PartInfo.Brake,
         BuildPart.Wheel => PartInfo.Wheel,
         BuildPart.Accelerometer => PartInfo.Accelerometer,
@@ -124,7 +125,7 @@ public static class PartTray
         BuildPart.Wheel => UiText.Plain("Tap a joint to place it. A joint holds one wheel."),
         BuildPart.TouchSensor => UiText.Plain("Tap a joint to place it. A joint holds one Touch sensor."),
         BuildPart.Rubber => UiText.Plain("Tap a joint to place it. A joint holds one rubber."),
-        _ => UiText.Plain("Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor."),
+        _ => UiText.Plain("Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor."),
     };
 
     /// <summary>
@@ -149,8 +150,8 @@ public static class PartTray
         _ => null,
     };
 
-    /// <summary>Whether a tray part goes on a joint (a Servo, a Velocity motor, #454, a Brake, #1041, a Wheel, #129, a Touch sensor, #1045, a Rubber, #1142, or an Angle sensor, #1206) rather than on a beam.</summary>
-    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.VelocityMotor or BuildPart.Brake or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber or BuildPart.AngleSensor;
+    /// <summary>Whether a tray part goes on a joint (a Servo, a Stepper, #1038, a Velocity motor, #454, a Brake, #1041, a Wheel, #129, a Touch sensor, #1045, a Rubber, #1142, or an Angle sensor, #1206) rather than on a beam.</summary>
+    public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Stepper or BuildPart.VelocityMotor or BuildPart.Brake or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber or BuildPart.AngleSensor;
 
     /// <summary>
     /// The radius of the joint part <paramref name="placing"/> as placed on a joint drawn
@@ -161,7 +162,7 @@ public static class PartTray
     /// </summary>
     public static double PlacingRingRadius(BuildPart placing, double jointRadius) => placing switch
     {
-        BuildPart.Servo or BuildPart.VelocityMotor => JointMotor.Radius,
+        BuildPart.Servo or BuildPart.Stepper or BuildPart.VelocityMotor => JointMotor.Radius,
         BuildPart.Brake or BuildPart.AngleSensor => NodeDef.HubRadius,
         BuildPart.Wheel => WheelDef.DefaultRadius,
         BuildPart.TouchSensor => jointRadius + TouchSensorDef.Cushion,
@@ -174,7 +175,7 @@ public static class PartTray
         new(UiText.Plain("Moving parts"),
         [
             Available(BuildPart.Servo, UiText.Plain("Servo")),
-            Locked(BuildPart.Stepper, UiText.Plain("Stepper"), "0.14.3"),
+            Available(BuildPart.Stepper, UiText.Plain("Stepper")),
             Available(BuildPart.VelocityMotor, UiText.Plain("Motor")),
             Available(BuildPart.Brake, UiText.Plain("Brake")),
             Available(BuildPart.Wheel, UiText.Plain("Wheel")),

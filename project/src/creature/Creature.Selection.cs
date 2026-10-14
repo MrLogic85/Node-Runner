@@ -205,7 +205,7 @@ public partial class Creature
             CreatureElementKind.VelocityMotor => _velocityMotorVisuals[Definition!.VelocityMotorIndexOf(part.Id)],
             CreatureElementKind.Brake => _brakeVisuals[Definition!.BrakeIndexOf(part.Id)],
             CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(part.Id)],
-            // A Stepper has no picture of its own yet (#1038, #1067), so its joint's ring shows it.
+            // A Stepper has no picture of its own yet (#1067), so its joint's ring shows it.
             CreatureElementKind.Stepper => _nodeVisuals[Definition!.NodeIndexOf(Definition.Steppers[Definition.StepperIndexOf(part.Id)].NodeId)],
             CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
             CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],

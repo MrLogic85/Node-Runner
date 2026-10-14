@@ -40,13 +40,14 @@ public sealed class PartTrayTests
     }
 
     [Theory]
-    [InlineData(BuildPart.Servo, "Turns its joint to a target angle and holds it there.", "Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor.")]
-    [InlineData(BuildPart.VelocityMotor, "Turns one side round and round. The brain picks how fast and which way.", "Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor.")]
-    [InlineData(BuildPart.Wheel, "Rolls freely on the ground. Add a Motor or Servo to power it.", "Tap a joint to place it. A joint holds one wheel.")]
+    [InlineData(BuildPart.Servo, "Turns its joint to a target angle and holds it there.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
+    [InlineData(BuildPart.Stepper, "A motor that turns one notch at a time and holds it.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
+    [InlineData(BuildPart.VelocityMotor, "Turns one side round and round. The brain picks how fast and which way.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
+    [InlineData(BuildPart.Wheel, "Rolls freely on the ground. Add a Motor, Servo or Stepper to power it.", "Tap a joint to place it. A joint holds one wheel.")]
     [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
     [InlineData(BuildPart.TouchSensor, "Feels how near its joint is to the ground.", "Tap a joint to place it. A joint holds one Touch sensor.")]
     [InlineData(BuildPart.Rubber, "Makes its joint grip the ground.", "Tap a joint to place it. A joint holds one rubber.")]
-    [InlineData(BuildPart.AngleSensor, "Tells the brain the angle between its two sides, and how fast it turns.", "Tap a joint to place it. A joint holds one Servo, Motor, Brake or Angle sensor.")]
+    [InlineData(BuildPart.AngleSensor, "Tells the brain the angle between its two sides, and how fast it turns.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
     public void Create_WithAPickedPart_SelectsItsRow_AndSaysUnderItWhatItDoesAndWhereItGoes(BuildPart part, string info, string placement)
     {
         var tray = PartTray.Create(part);
@@ -61,7 +62,7 @@ public sealed class PartTrayTests
     [Fact]
     public void Create_WithAComingLaterPart_PicksNothing()
     {
-        var tray = PartTray.Create(BuildPart.Stepper);
+        var tray = PartTray.Create(BuildPart.Pulse);
 
         tray.Groups.SelectMany(group => group.Rows).ShouldNotContain(row => row.State == PartTrayRowState.Selected);
         tray.PickedInfo.ShouldBeNull();
@@ -123,7 +124,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToList();
 
-        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.AngleSensor and not BuildPart.Servo and not BuildPart.VelocityMotor and not BuildPart.Brake and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
+        rows.Where(row => row.Part is not BuildPart.Accelerometer and not BuildPart.Camera and not BuildPart.TouchSensor and not BuildPart.AngleSensor and not BuildPart.Servo and not BuildPart.Stepper and not BuildPart.VelocityMotor and not BuildPart.Brake and not BuildPart.Wheel and not BuildPart.Rubber).ShouldAllBe(row =>
             row.State == PartTrayRowState.ComingLater && !row.IsAvailable);
     }
 
@@ -132,7 +133,7 @@ public sealed class PartTrayTests
     {
         PartTray.Groups().SelectMany(group => group.Rows).Select(row => (row.Part, row.Version)).ShouldBe([
             (BuildPart.Servo, null),
-            (BuildPart.Stepper, "0.14.3"),
+            (BuildPart.Stepper, null),
             (BuildPart.VelocityMotor, null),
             (BuildPart.Brake, null),
             (BuildPart.Wheel, null),
@@ -157,7 +158,7 @@ public sealed class PartTrayTests
     [Fact]
     public void ATapOnAComingLaterRow_NamesThePartAndItsVersion()
     {
-        PartTray.ComingLaterReason(BuildPart.Stepper).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Stepper"), "0.14.3"));
+        PartTray.ComingLaterReason(BuildPart.Pulse).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Pulse"), "0.14.4"));
         PartTray.ComingLaterReason(BuildPart.Battery).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Battery"), "0.18.0"));
         BuildLinkList.ComingLaterReason(BuildLink.Wing).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Wing"), "0.18.0"));
         Should.Throw<ArgumentOutOfRangeException>(() => PartTray.ComingLaterReason(BuildPart.Servo));
@@ -169,7 +170,7 @@ public sealed class PartTrayTests
     {
         var rows = PartTray.Create(picked: null, creationLocked: true).Groups.SelectMany(group => group.Rows).ToList();
         rows.Where(row => row.State == PartTrayRowState.ComingLater).Select(row => row.Version).ShouldAllBe(version => version != null);
-        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(5);
+        rows.Count(row => row.State == PartTrayRowState.ComingLater).ShouldBe(4);
     }
 
     [Fact]

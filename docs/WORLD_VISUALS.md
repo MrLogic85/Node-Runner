@@ -26,8 +26,10 @@ Every part in a joint's hinge-part slot (`docs/CREATURE_MODEL.md` →
 Node → One part per slot), a *joint motor* (`docs/GLOSSARY.md` → Joint
 motor), Brake or Angle sensor, stands in for its joint's ring in the same
 place. A rule that names only joint motors means Servos and Velocity motors
-alike. A Stepper (#1036) has no picture until #1038: its joint keeps its
-ring, at the joint motor's radius, and shows the Stepper selected.
+alike. A Stepper (#1036) has no picture until #1067: its joint keeps its
+ring, at the joint motor's radius, and shows the Stepper selected; a
+Stepper being placed previews that ring on the joint it would take. On a
+Wheel's joint that ring covers the hub, over the Wheel's face, as a Servo does.
 
 ### Joint
 
