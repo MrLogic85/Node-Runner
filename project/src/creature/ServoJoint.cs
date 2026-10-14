@@ -20,6 +20,14 @@ public sealed class ServoJoint
 
     public HingePartSides Sides { get; }
 
+    /// <summary>
+    /// Whether its Fixed or Target beam has torn at either end (#962): it then drives nothing, and its
+    /// brain inputs keep the values they last had (Creature.Tears).
+    /// </summary>
+    public bool IsPassive { get; private set; }
+
+    public void GoPassive() => IsPassive = true;
+
     public double AngleInput => Mechanics.Servo.AngleInput(Sides.ContinuousAngle, Definition, Sides.BuiltAngle);
 
     public double SpeedInput => Mechanics.MotorLoop.SpeedInput(Sides.Speed, Definition.MaxSpeed);
@@ -29,6 +37,11 @@ public sealed class ServoJoint
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double position, double strength, double step)
     {
+        if (IsPassive)
+        {
+            return;
+        }
+
         var angle = Sides.ContinuousAngle;
         var speed = Sides.Speed;
         var effectiveInertia = Sides.EffectiveInertia;

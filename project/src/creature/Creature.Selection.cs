@@ -70,6 +70,11 @@ public partial class Creature
         for (var beamIndex = 0; beamIndex < _beamBodies.Length; beamIndex++)
         {
             var body = _beamBodies[beamIndex];
+            if (!body.Visible)
+            {
+                continue;
+            }
+
             var halfLength = _beamHalfLengths[beamIndex];
             var start = body.ToGlobal(new Vector2(-halfLength, 0));
             var end = body.ToGlobal(new Vector2(halfLength, 0));

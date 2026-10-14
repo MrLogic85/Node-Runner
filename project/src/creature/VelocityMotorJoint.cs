@@ -21,6 +21,14 @@ public sealed class VelocityMotorJoint
 
     public HingePartSides Sides { get; }
 
+    /// <summary>
+    /// Whether its Fixed or Target beam has torn at either end (#962): it then drives nothing, and its
+    /// brain inputs keep the values they last had (Creature.Tears).
+    /// </summary>
+    public bool IsPassive { get; private set; }
+
+    public void GoPassive() => IsPassive = true;
+
     /// <summary>The angle between the sides as its sine and cosine (#1207), which never jump across a whole turn.</summary>
     public (double Sin, double Cos) AngleInputs => Mechanics.VelocityMotor.AngleInputs(Sides.ContinuousAngle);
 
@@ -31,6 +39,11 @@ public sealed class VelocityMotorJoint
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double speedOutput, double strength, double step)
     {
+        if (IsPassive)
+        {
+            return;
+        }
+
         _motor = Mechanics.VelocityMotor.NextMotor(Definition, Sides.Speed, speedOutput, strength, _motor, step, Sides.EffectiveInertia);
         Sides.ApplyTorque(_motor.Torque);
     }

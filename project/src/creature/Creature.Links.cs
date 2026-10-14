@@ -65,16 +65,13 @@ public partial class Creature
     // cylinders exist, as a Locked side can be one.
     private void CreateBrakes(CreatureDef definition)
     {
-        var brakes = new List<BrakeJoint>();
+        _brakes = new BrakeJoint[definition.Brakes.Count];
         _brakeVisuals = new BrakeVisual[definition.Brakes.Count];
         for (var i = 0; i < definition.Brakes.Count; i++)
         {
             var brake = definition.Brakes[i];
             var sides = HingePartSidesFor(definition, brake);
-            if (!brake.Locked || !WeldSides(definition, brake))
-            {
-                brakes.Add(new BrakeJoint(brake, sides));
-            }
+            _brakes[i] = new BrakeJoint(brake, sides, brake.Locked ? WeldSides(definition, brake) : null);
 
             var visual = new BrakeVisual
             {
@@ -89,8 +86,6 @@ public partial class Creature
             AddChild(visual);
             _brakeVisuals[i] = visual;
         }
-
-        _brakes = [.. brakes];
     }
 
     // An Angle sensor (#1204) reads its sides as a Velocity motor does and never turns them, so it adds
@@ -136,8 +131,8 @@ public partial class Creature
     // (godotengine/godot#91691, #87513). A Piston or Spring whose node B is the joint slides that
     // node along its cylinder, so a pin would stop its stroke; that side's far node runs in a groove
     // on the other side's body instead (SlideLock). When both sides slide no Godot joint locks only
-    // the angle, so it returns false and the Brake holds as endless friction.
-    private bool WeldSides(CreatureDef definition, BrakeDef brake)
+    // the angle, so it returns no joint and the Brake holds as endless friction.
+    private Joint2D? WeldSides(CreatureDef definition, BrakeDef brake)
     {
         var fixedSide = brake.FixedLinkId!.Value;
         var targetSide = brake.TargetLinkId!.Value;
@@ -145,7 +140,7 @@ public partial class Creature
         var targetSlides = SlidesAt(definition, brake.NodeId, targetSide);
         if (fixedSlides && targetSlides)
         {
-            return false;
+            return null;
         }
 
         var fixedBody = SideBody(definition, brake.NodeId, fixedSide);
@@ -157,8 +152,7 @@ public partial class Creature
             var (holdingSide, holdingBody) = fixedSlides ? (targetSide, targetBody) : (fixedSide, fixedBody);
             WeighCylinderAsBar(definition, holdingSide, holdingBody);
             var sliding = definition.Link(fixedSlides ? fixedSide : targetSide);
-            SlideLock($"Brake{brake.Id}Weld", holdingBody, joint, _nodeBodies[definition.NodeIndexOf(sliding.NodeA)]);
-            return true;
+            return SlideLock($"Brake{brake.Id}Weld", holdingBody, joint, _nodeBodies[definition.NodeIndexOf(sliding.NodeA)]);
         }
 
         WeighCylinderAsBar(definition, fixedSide, fixedBody);
@@ -170,7 +164,7 @@ public partial class Creature
         AddChild(weld);
         weld.NodeA = weld.GetPathTo(fixedBody);
         weld.NodeB = weld.GetPathTo(targetBody);
-        return true;
+        return weld;
     }
 
     // Locks a sliding Piston's or Spring's angle on the other side's body: its far node (node A)
@@ -179,7 +173,7 @@ public partial class Creature
     // (CapEndStops caps only those): a capped groove would let the lock turn, as Godot caps a
     // groove's whole push, across it too. It holds the far node, not node B, as the cylinder is
     // too light to carry the lock: grooves on it gave way when a creature landed.
-    private void SlideLock(string name, RigidBody2D body, Vector2 joint, RigidBody2D farNode)
+    private GrooveJoint2D SlideLock(string name, RigidBody2D body, Vector2 joint, RigidBody2D farNode)
     {
         var toFar = farNode.Position - joint;
         var groove = new GrooveJoint2D
@@ -193,6 +187,7 @@ public partial class Creature
         AddChild(groove);
         groove.NodeA = groove.GetPathTo(body);
         groove.NodeB = groove.GetPathTo(farNode);
+        return groove;
     }
 
     // Whether a Piston or Spring slides its node B at this joint.

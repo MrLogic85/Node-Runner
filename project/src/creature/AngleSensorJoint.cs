@@ -18,6 +18,14 @@ public sealed class AngleSensorJoint
 
     public HingePartSides Sides { get; }
 
+    /// <summary>
+    /// Whether its Fixed or Target beam has torn at either end (#962): its brain inputs then keep the
+    /// values they last had (Creature.Tears).
+    /// </summary>
+    public bool IsPassive { get; private set; }
+
+    public void GoPassive() => IsPassive = true;
+
     /// <summary>The angle between the sides as its sine and cosine, the same as a Velocity motor on those sides reads.</summary>
     public (double Sin, double Cos) AngleInputs => Mechanics.AngleSensor.AngleInputs(Sides.ContinuousAngle);
 

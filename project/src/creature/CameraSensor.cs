@@ -48,6 +48,9 @@ public sealed class CameraSensor : IBeamSensor
     public Vector2 GlobalOrigin => _rays[0].GlobalPosition;
 
     /// <summary>Each ray's ground hit as of the last physics step, in global space; a ray that sees nothing has none.</summary>
+    /// <summary>Whether its beam is still in the world: a beam torn at both ends (#962) is hidden, rays and all.</summary>
+    public bool IsShown => _rays[0].IsVisibleInTree();
+
     public IEnumerable<Vector2> GlobalHits => _rays.Where(ray => ray.IsColliding()).Select(ray => ray.GetCollisionPoint());
 
     // One reading per ray, then hit (BrainPorts.CameraChannels).

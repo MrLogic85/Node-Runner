@@ -48,6 +48,11 @@ public partial class Creature : Node2D
     private float[] _beamHalfLengths = [];
     private RigidBody2D[] _nodeBodies = [];
 
+    // Where every body is this physics tick (ReadBodies).
+    private Transform2D[] _beamTransforms = [];
+    private Vector2[] _nodePositions = [];
+    private ulong _bodiesReadTick = ulong.MaxValue;
+
     private float[] _nodeColliderRadii = [];
     private NodeVisual[] _nodeVisuals = [];
     private BeamVisual[] _beamVisuals = [];
@@ -122,6 +127,8 @@ public partial class Creature : Node2D
 
     public override void _PhysicsProcess(double delta)
     {
+        CheckTears();
+
         foreach (var spring in _springs)
         {
             spring.Step(delta);
@@ -206,12 +213,14 @@ public partial class Creature : Node2D
         }
 
         _isBuilt = true;
+        _bodiesReadTick = ulong.MaxValue;
         _knockoutVisuals.Clear();
 
         CreateBeams(definition);
         CreateRigidHatches(definition);
         CreateNodes(definition);
         PinBeamsToNodes(definition);
+        ResetTears(definition);
         CreateSensors(definition);
         CreateServos(definition);
         CreateVelocityMotors(definition);
@@ -293,6 +302,7 @@ public partial class Creature : Node2D
             body.Position += offset;
         }
 
+        _bodiesReadTick = ulong.MaxValue;
         ResetSensors();
     }
 
@@ -300,15 +310,22 @@ public partial class Creature : Node2D
     /// The Y of the creature's lowest physical point: the bottom of the lowest
     /// node collider (beams do not collide). Godot's Y grows downward, so this
     /// is the largest Y. Returns negative infinity for a creature with no nodes.
+    /// After a tear (#962), of the main piece's nodes only.
     /// </summary>
     public float LowestPointY
     {
         get
         {
+            ReadBodies();
             var lowest = float.NegativeInfinity;
             for (var i = 0; i < _nodeBodies.Length; i++)
             {
-                lowest = Math.Max(lowest, _nodeBodies[i].GlobalPosition.Y + _nodeColliderRadii[i]);
+                if (_hasTorn && !_nodeInMainPiece[i])
+                {
+                    continue;
+                }
+
+                lowest = Math.Max(lowest, _nodePositions[i].Y + _nodeColliderRadii[i]);
             }
 
             return lowest;
@@ -318,55 +335,129 @@ public partial class Creature : Node2D
     /// <summary>
     /// The box around the creature's node colliders, in global coordinates: what the Training
     /// camera fits in view (#675). Beams run between nodes, so the nodes bound them. An empty
-    /// rectangle for a creature with no nodes.
+    /// rectangle for a creature with no nodes. After a tear (#962), round the main piece's nodes only.
     /// </summary>
     public Rect2 Bounds
     {
         get
         {
-            if (_nodeBodies.Length == 0)
+            ReadBodies();
+            Rect2? bounds = null;
+            for (var i = 0; i < _nodeBodies.Length; i++)
             {
-                return default;
+                if (_hasTorn && !_nodeInMainPiece[i])
+                {
+                    continue;
+                }
+
+                bounds = bounds is { } box ? box.Merge(NodeBox(i)) : NodeBox(i);
             }
 
-            var bounds = NodeBox(0);
-            for (var i = 1; i < _nodeBodies.Length; i++)
-            {
-                bounds = bounds.Merge(NodeBox(i));
-            }
-
-            return bounds;
+            return bounds ?? default;
         }
     }
 
     /// <summary>
     /// The average position of all beam bodies, used as a simple centroid
     /// for fitness tracking (e.g. forward distance travelled). Returns
-    /// Vector2.Zero for a creature with no beams.
+    /// Vector2.Zero for a creature with no beams. After a tear (#962), of the beams
+    /// still holding on to the main piece, or of its nodes when none does.
     /// </summary>
     public Vector2 CenterOfMass
     {
         get
         {
+            ReadBodies();
+            if (_hasTorn)
+            {
+                return MainPieceCentre();
+            }
+
             if (_beamBodies.Length == 0)
             {
                 return Vector2.Zero;
             }
 
             var sum = Vector2.Zero;
-            foreach (var body in _beamBodies)
+            foreach (var transform in _beamTransforms)
             {
-                sum += body.GlobalPosition;
+                sum += transform.Origin;
             }
 
             return sum / _beamBodies.Length;
         }
     }
 
+    private Vector2 MainPieceCentre()
+    {
+        var sum = Vector2.Zero;
+        var count = 0;
+        if (_countedBeams > 0)
+        {
+            for (var i = 0; i < _beamBodies.Length; i++)
+            {
+                if (_beamCounted[i])
+                {
+                    sum += _beamTransforms[i].Origin;
+                    count++;
+                }
+            }
+        }
+        else
+        {
+            for (var i = 0; i < _nodeBodies.Length; i++)
+            {
+                if (_nodeInMainPiece[i])
+                {
+                    sum += _nodePositions[i];
+                    count++;
+                }
+            }
+        }
+
+        return sum / count;
+    }
+
     private Rect2 NodeBox(int index)
     {
         var radius = _nodeColliderRadii[index];
-        return new Rect2(_nodeBodies[index].GlobalPosition - new Vector2(radius, radius), new Vector2(radius, radius) * 2);
+        return new Rect2(_nodePositions[index] - new Vector2(radius, radius), new Vector2(radius, radius) * 2);
+    }
+
+    // Reads every body's place once per physics tick, in global coordinates. Within a tick nothing moves
+    // a body but a reset, which reads again, so the trial's sample, the camera and the tear check all
+    // share one read (#1256): each read crosses into Godot, and with every shadow's every body it adds up.
+    // Outside a physics tick it reads afresh, as the step may have moved them.
+    private void ReadBodies()
+    {
+        var inTick = Engine.IsInPhysicsFrame();
+        var tick = inTick ? Engine.GetPhysicsFrames() : ulong.MaxValue;
+        if (inTick && tick == _bodiesReadTick && _beamTransforms.Length == _beamBodies.Length && _nodePositions.Length == _nodeBodies.Length)
+        {
+            return;
+        }
+
+        if (_beamTransforms.Length != _beamBodies.Length)
+        {
+            _beamTransforms = new Transform2D[_beamBodies.Length];
+        }
+
+        if (_nodePositions.Length != _nodeBodies.Length)
+        {
+            _nodePositions = new Vector2[_nodeBodies.Length];
+        }
+
+        for (var i = 0; i < _beamBodies.Length; i++)
+        {
+            _beamTransforms[i] = _beamBodies[i].GlobalTransform;
+        }
+
+        for (var i = 0; i < _nodeBodies.Length; i++)
+        {
+            _nodePositions[i] = _nodeBodies[i].GlobalPosition;
+        }
+
+        _bodiesReadTick = tick;
     }
 
     private void ApplyShadow()
@@ -613,15 +704,16 @@ public partial class Creature : Node2D
 
     private void PinBeamsToNodes(CreatureDef definition)
     {
+        _beamPins = new PinJoint2D[2 * definition.Beams.Count];
         for (var i = 0; i < definition.Beams.Count; i++)
         {
             var beamDef = definition.Beams[i];
-            PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeA));
-            PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeB));
+            _beamPins[2 * i] = PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeA));
+            _beamPins[(2 * i) + 1] = PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeB));
         }
     }
 
-    private void PinBeamToNode(int beamIndex, int nodeIndex)
+    private PinJoint2D PinBeamToNode(int beamIndex, int nodeIndex)
     {
         var pin = new PinJoint2D
         {
@@ -631,13 +723,16 @@ public partial class Creature : Node2D
         AddChild(pin);
         pin.NodeA = pin.GetPathTo(_nodeBodies[nodeIndex]);
         pin.NodeB = pin.GetPathTo(_beamBodies[beamIndex]);
+        return pin;
     }
 
     // Each rigid triangle's hatch rides on one of its beams. The lines are laid out in the
     // creature's built space, as in Build, so the hatches of triangles that share a beam line up.
+    // Each keeps its three beams, as a tear of any hides it (Creature.Tears).
     private void CreateRigidHatches(CreatureDef definition)
     {
         var hatches = new List<RigidHatchVisual>();
+        var hatchBeams = new List<int>();
         foreach (var triangle in RigidTriangles.Of(definition))
         {
             var beamIndex = BeamIndexBetween(definition, triangle.NodeA, triangle.NodeB);
@@ -661,9 +756,11 @@ public partial class Creature : Node2D
             };
             _beamBodies[beamIndex].AddChild(visual);
             hatches.Add(visual);
+            hatchBeams.AddRange([beamIndex, BeamIndexBetween(definition, triangle.NodeB, triangle.NodeC), BeamIndexBetween(definition, triangle.NodeA, triangle.NodeC)]);
         }
 
         _hatchVisuals = [.. hatches];
+        _hatchBeams = [.. hatchBeams];
     }
 
     private static int BeamIndexBetween(CreatureDef definition, int nodeIndexA, int nodeIndexB)
@@ -685,11 +782,13 @@ public partial class Creature : Node2D
     {
         var gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsDouble();
         _sensors = new IBeamSensor[definition.Sensors.Count];
+        _sensorBeams = new int[definition.Sensors.Count];
 
         for (var i = 0; i < _sensors.Length; i++)
         {
             var sensor = definition.Sensors[i];
             var beamIndex = definition.BeamIndexOf(sensor.BeamId);
+            _sensorBeams[i] = beamIndex;
             _sensors[i] = sensor.Kind switch
             {
                 SensorKind.Accelerometer => CreateAccelerometer(definition, beamIndex, gravity),
@@ -819,12 +918,19 @@ public partial class Creature : Node2D
     // cosine and its speed, each Servo its angle and speed,
     // each Velocity motor its angle's sine and cosine and its speed, and each Piston its length and speed, into the raw buffer in sim order;
     // they are then copied into the brain's port order (BrainPorts). A Stepper has no mechanics yet (#1037), so its inputs, last, stay 0.
+    // After a tear (#962) a sensor on a beam gone from the world and a passive part write nothing, so
+    // their inputs keep the values they last had.
     private void ReadSensors(double[] values, double delta)
     {
         var index = 0;
-        foreach (var sensor in _sensors)
+        for (var i = 0; i < _sensors.Length; i++)
         {
-            sensor.Read(_rawInputs, index, delta);
+            var sensor = _sensors[i];
+            if (!_beamGone[_sensorBeams[i]])
+            {
+                sensor.Read(_rawInputs, index, delta);
+            }
+
             index += sensor.ValueCount;
         }
 
@@ -835,6 +941,12 @@ public partial class Creature : Node2D
 
         foreach (var angleSensor in _angleSensors)
         {
+            if (angleSensor.IsPassive)
+            {
+                index += 3;
+                continue;
+            }
+
             var (sin, cos) = angleSensor.AngleInputs;
             _rawInputs[index++] = sin;
             _rawInputs[index++] = cos;
@@ -843,12 +955,24 @@ public partial class Creature : Node2D
 
         foreach (var servo in _servos)
         {
+            if (servo.IsPassive)
+            {
+                index += 2;
+                continue;
+            }
+
             _rawInputs[index++] = servo.AngleInput;
             _rawInputs[index++] = servo.SpeedInput;
         }
 
         foreach (var motor in _velocityMotors)
         {
+            if (motor.IsPassive)
+            {
+                index += 3;
+                continue;
+            }
+
             var (sin, cos) = motor.AngleInputs;
             _rawInputs[index++] = sin;
             _rawInputs[index++] = cos;
