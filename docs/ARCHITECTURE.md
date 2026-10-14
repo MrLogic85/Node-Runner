@@ -140,10 +140,12 @@ Node Runner/
 
 ## The tick
 
-At 60 Hz (`_physics_process`) each Spring first sets its rest length and
-each Brake holds its joint, brain or not (`Mechanics.Brake`). With no
-brain, each Stepper then keeps its notch locked (`Mechanics.Stepper`) and the tick
-ends; with one, the creature runs four steps:
+At 60 Hz (`_physics_process`) the creature first lets go of any beam end
+past the tear limit (`docs/CREATURE_MODEL.md` → Beam → Tearing), then each
+Spring sets its rest length and each Brake holds its joint, brain or not
+(`Mechanics.Brake`). With no brain, each Stepper then keeps its notch locked
+(`Mechanics.Stepper`) and the tick ends; with one, the creature runs four
+steps:
 
 1. **Sense:** every part writes its readings into one `double[]` in
    `BrainPorts` order (`docs/CREATURE_MODEL.md` → "Sensor–model contract").

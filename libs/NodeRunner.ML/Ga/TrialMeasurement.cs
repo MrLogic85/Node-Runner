@@ -27,6 +27,11 @@ public readonly record struct TrialResult(double Distance, double TopSpeed, doub
 /// </list>
 /// A trial is invalid when a sample is not finite or any value moves more than
 /// <see cref="MaxPlausibleSpeed"/> allows in one tick: physics blowing up, not a creature moving.
+/// <para>
+/// A tear (#962) freezes the trial (<see cref="Freeze"/>): every value keeps what it measured up to then,
+/// so throwing a loose part forward cannot raise them, but later samples are still checked, so a blow-up
+/// after the tear still makes the trial invalid.
+/// </para>
 /// </summary>
 public sealed class TrialMeasurement
 {
@@ -55,6 +60,7 @@ public sealed class TrialMeasurement
     private double _elevation;
     private bool _landed;
     private bool _valid;
+    private bool _frozen;
     private double _lastX;
     private double _lastFrontX;
     private double _lastClearance;
@@ -80,6 +86,7 @@ public sealed class TrialMeasurement
         _topSpeed = 0;
         _elevation = 0;
         _landed = false;
+        _frozen = false;
         _valid = double.IsFinite(startX) && double.IsFinite(startFrontX);
         _lastX = startX;
         _lastFrontX = startFrontX;
@@ -89,7 +96,36 @@ public sealed class TrialMeasurement
         Push(startX);
     }
 
-    /// <summary>Records one physics tick. A non-finite or implausibly far-moved sample makes the trial invalid and is not measured.</summary>
+    /// <summary>
+    /// Keeps every value as it is now for the rest of the trial (#962): later samples are only checked for
+    /// a blow-up. A tear calls it with the sample it changed what the samples track to (the creature's centre
+    /// and bounds now follow its main piece), and the next sample is checked against that one instead of the
+    /// last, so the change is not taken for a blow-up. Every later tear calls it again. A non-finite sample
+    /// makes the trial invalid.
+    /// </summary>
+    public void Freeze(double centerX, double frontX, double groundClearance)
+    {
+        _frozen = true;
+        if (!_valid)
+        {
+            return;
+        }
+
+        if (!double.IsFinite(centerX) || !double.IsFinite(frontX) || !double.IsFinite(groundClearance))
+        {
+            _valid = false;
+            return;
+        }
+
+        _lastX = centerX;
+        _lastFrontX = frontX;
+        _lastClearance = groundClearance;
+    }
+
+    /// <summary>
+    /// Records one physics tick. A non-finite or implausibly far-moved sample makes the trial invalid and is
+    /// not measured; once frozen (<see cref="Freeze"/>) a sample is only checked.
+    /// </summary>
     /// <param name="centerX">The creature centre's X position.</param>
     /// <param name="frontX">The X position of the creature's front-most point.</param>
     /// <param name="groundClearance">The gap between the lowest part and the ground beneath it; negative when it sinks in.</param>
@@ -109,6 +145,11 @@ public sealed class TrialMeasurement
         _lastX = centerX;
         _lastFrontX = frontX;
         _lastClearance = groundClearance;
+        if (_frozen)
+        {
+            return;
+        }
+
         _landed |= groundClearance <= LandedClearance;
         if (_landed)
         {

@@ -36,7 +36,7 @@ public partial class CameraRaysVisual : Node2D, IShadowVisual
 
     public override void _Draw()
     {
-        foreach (var camera in Cameras)
+        foreach (var camera in Cameras.Where(camera => !camera.IsGone))
         {
             SensorDrawing.DrawRayHits(this, Transform2D.Identity, Theme, ToLocal(camera.GlobalOrigin), camera.GlobalHits.Select(ToLocal));
         }

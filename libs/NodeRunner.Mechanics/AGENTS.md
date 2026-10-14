@@ -40,6 +40,8 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 - `EndStop` — the most force a Piston's or Spring's end stop holds
 - `Travel` — the shortest and longest length a Piston's or Spring's stroke
   gives
+- `Pieces` — the pieces a creature's links join its joints into (#930)
+- `Tear` — when a beam end tears from its joint, and the main piece left
 - `RigidTriangles`, `RigidTriangleDef` — the closed beam triangles of a
   creature
 - `OutputSignals` — an output's value as a Servo's target angle and as a

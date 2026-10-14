@@ -47,6 +47,9 @@ public sealed class CameraSensor : IBeamSensor
     /// <summary>Where each ray starts, in global space (the camera's picture).</summary>
     public Vector2 GlobalOrigin => _rays[0].GlobalPosition;
 
+    /// <summary>Whether its beam has torn from both its joints and left the world (#962); its rays are not drawn then.</summary>
+    public bool IsGone { get; set; }
+
     /// <summary>Each ray's ground hit as of the last physics step, in global space; a ray that sees nothing has none.</summary>
     public IEnumerable<Vector2> GlobalHits => _rays.Where(ray => ray.IsColliding()).Select(ray => ray.GetCollisionPoint());
 

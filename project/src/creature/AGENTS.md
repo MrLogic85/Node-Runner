@@ -100,12 +100,28 @@ file owns how Godot realises it.
     when no weld fits) and lets the weld go as it steps on. The weld is one
     `HingeWeld` made with the creature and switched on and off, so the tick
     makes no node (rule 9).
+17. **A tear clears a pin, it frees nothing (#1256).** A torn end sets its
+    `PinJoint2D`'s `NodeA`/`NodeB` to an empty path: the pin stops acting
+    in that tick's physics step with no kick, and every body and joint
+    keeps its slot, so nothing is left pointing at a freed object (#1255).
+    A beam gone at both ends is hidden and `ProcessMode.Disabled`, and a
+    Locked Brake or a Stepper going passive releases its `HingeWeld` the
+    same way. What tears and what follows is `docs/CREATURE_MODEL.md` →
+    Beam → Tearing; when it runs is `docs/ARCHITECTURE.md` → The tick.
+18. **Read bodies once a tick.** `ReadBodies` keeps every beam's transform
+    and node's position for the physics frame, so the tear check,
+    `CenterOfMass`, `Bounds` and `LowestPointY` share one read. Outside a
+    physics tick it reads afresh, and `Build` and `ResetPose` clear it.
 
 ## What lives here
 
 - `Creature.cs`, `Creature.Links.cs`, `Creature.Wheels.cs`,
   `Creature.Rubbers.cs` — builds bodies, pins, sensors, links (each with its
   end-stop cylinder), Wheels and Rubbers, and wires the brain
+- `Creature.Tears.cs` — the tear check, letting go, the main piece and the
+  creature's `TearSample` for the trial (#1256)
+- `Creature.Measure.cs` — the creature's centre, bounds and lowest point,
+  from one read of its bodies a tick
 - `Creature.Selection.cs` — what a tap selects and each part's draw group,
   with the selection raised (#1107)
 - `IBeamSensor.cs` — what `Creature` needs from a beam sensor: value names,

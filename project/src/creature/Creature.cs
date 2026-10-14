@@ -123,6 +123,8 @@ public partial class Creature : Node2D
 
     public override void _PhysicsProcess(double delta)
     {
+        CheckTears();
+
         foreach (var spring in _springs)
         {
             spring.Step(delta);
@@ -225,12 +227,14 @@ public partial class Creature : Node2D
         }
 
         _isBuilt = true;
+        _bodiesReadTick = ulong.MaxValue;
         _knockoutVisuals.Clear();
 
         CreateBeams(definition);
         CreateRigidHatches(definition);
         CreateNodes(definition);
         PinBeamsToNodes(definition);
+        ResetTears(definition);
         CreateSensors(definition);
         CreateServos(definition);
         CreateVelocityMotors(definition);
@@ -313,80 +317,8 @@ public partial class Creature : Node2D
             body.Position += offset;
         }
 
+        _bodiesReadTick = ulong.MaxValue;
         ResetSensors();
-    }
-
-    /// <summary>
-    /// The Y of the creature's lowest physical point: the bottom of the lowest
-    /// node collider (beams do not collide). Godot's Y grows downward, so this
-    /// is the largest Y. Returns negative infinity for a creature with no nodes.
-    /// </summary>
-    public float LowestPointY
-    {
-        get
-        {
-            var lowest = float.NegativeInfinity;
-            for (var i = 0; i < _nodeBodies.Length; i++)
-            {
-                lowest = Math.Max(lowest, _nodeBodies[i].GlobalPosition.Y + _nodeColliderRadii[i]);
-            }
-
-            return lowest;
-        }
-    }
-
-    /// <summary>
-    /// The box around the creature's node colliders, in global coordinates: what the Training
-    /// camera fits in view (#675). Beams run between nodes, so the nodes bound them. An empty
-    /// rectangle for a creature with no nodes.
-    /// </summary>
-    public Rect2 Bounds
-    {
-        get
-        {
-            if (_nodeBodies.Length == 0)
-            {
-                return default;
-            }
-
-            var bounds = NodeBox(0);
-            for (var i = 1; i < _nodeBodies.Length; i++)
-            {
-                bounds = bounds.Merge(NodeBox(i));
-            }
-
-            return bounds;
-        }
-    }
-
-    /// <summary>
-    /// The average position of all beam bodies, used as a simple centroid
-    /// for fitness tracking (e.g. forward distance travelled). Returns
-    /// Vector2.Zero for a creature with no beams.
-    /// </summary>
-    public Vector2 CenterOfMass
-    {
-        get
-        {
-            if (_beamBodies.Length == 0)
-            {
-                return Vector2.Zero;
-            }
-
-            var sum = Vector2.Zero;
-            foreach (var body in _beamBodies)
-            {
-                sum += body.GlobalPosition;
-            }
-
-            return sum / _beamBodies.Length;
-        }
-    }
-
-    private Rect2 NodeBox(int index)
-    {
-        var radius = _nodeColliderRadii[index];
-        return new Rect2(_nodeBodies[index].GlobalPosition - new Vector2(radius, radius), new Vector2(radius, radius) * 2);
     }
 
     private void ApplyShadow()
@@ -633,15 +565,16 @@ public partial class Creature : Node2D
 
     private void PinBeamsToNodes(CreatureDef definition)
     {
+        _beamPins = new PinJoint2D[2 * definition.Beams.Count];
         for (var i = 0; i < definition.Beams.Count; i++)
         {
             var beamDef = definition.Beams[i];
-            PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeA));
-            PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeB));
+            _beamPins[2 * i] = PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeA));
+            _beamPins[(2 * i) + 1] = PinBeamToNode(i, definition.NodeIndexOf(beamDef.NodeB));
         }
     }
 
-    private void PinBeamToNode(int beamIndex, int nodeIndex)
+    private PinJoint2D PinBeamToNode(int beamIndex, int nodeIndex)
     {
         var pin = new PinJoint2D
         {
@@ -651,13 +584,16 @@ public partial class Creature : Node2D
         AddChild(pin);
         pin.NodeA = pin.GetPathTo(_nodeBodies[nodeIndex]);
         pin.NodeB = pin.GetPathTo(_beamBodies[beamIndex]);
+        return pin;
     }
 
     // Each rigid triangle's hatch rides on one of its beams. The lines are laid out in the
     // creature's built space, as in Build, so the hatches of triangles that share a beam line up.
+    // Each keeps its three beams, as a tear of any hides it (Creature.Tears).
     private void CreateRigidHatches(CreatureDef definition)
     {
         var hatches = new List<RigidHatchVisual>();
+        var hatchBeams = new List<int>();
         foreach (var triangle in RigidTriangles.Of(definition))
         {
             var beamIndex = BeamIndexBetween(definition, triangle.NodeA, triangle.NodeB);
@@ -681,9 +617,11 @@ public partial class Creature : Node2D
             };
             _beamBodies[beamIndex].AddChild(visual);
             hatches.Add(visual);
+            hatchBeams.AddRange([beamIndex, BeamIndexBetween(definition, triangle.NodeB, triangle.NodeC), BeamIndexBetween(definition, triangle.NodeA, triangle.NodeC)]);
         }
 
         _hatchVisuals = [.. hatches];
+        _hatchBeams = [.. hatchBeams];
     }
 
     private static int BeamIndexBetween(CreatureDef definition, int nodeIndexA, int nodeIndexB)
@@ -705,11 +643,13 @@ public partial class Creature : Node2D
     {
         var gravity = ProjectSettings.GetSetting("physics/2d/default_gravity").AsDouble();
         _sensors = new IBeamSensor[definition.Sensors.Count];
+        _sensorBeams = new int[definition.Sensors.Count];
 
         for (var i = 0; i < _sensors.Length; i++)
         {
             var sensor = definition.Sensors[i];
             var beamIndex = definition.BeamIndexOf(sensor.BeamId);
+            _sensorBeams[i] = beamIndex;
             _sensors[i] = sensor.Kind switch
             {
                 SensorKind.Accelerometer => CreateAccelerometer(definition, beamIndex, gravity),
@@ -839,12 +779,19 @@ public partial class Creature : Node2D
     // cosine and its speed, each Servo its angle and speed,
     // each Velocity motor its angle's sine and cosine and its speed, each Piston its length and speed, and each Stepper its angle's
     // sine and cosine and its running frequency, into the raw buffer in sim order; they are then copied into the brain's port order (BrainPorts).
+    // After a tear (#962) a sensor on a beam gone from the world and a passive part write nothing, so
+    // their inputs keep the values they last had.
     private void ReadSensors(double[] values, double delta)
     {
         var index = 0;
-        foreach (var sensor in _sensors)
+        for (var i = 0; i < _sensors.Length; i++)
         {
-            sensor.Read(_rawInputs, index, delta);
+            var sensor = _sensors[i];
+            if (!_beamGone[_sensorBeams[i]])
+            {
+                sensor.Read(_rawInputs, index, delta);
+            }
+
             index += sensor.ValueCount;
         }
 
@@ -855,6 +802,12 @@ public partial class Creature : Node2D
 
         foreach (var angleSensor in _angleSensors)
         {
+            if (angleSensor.IsPassive)
+            {
+                index += 3;
+                continue;
+            }
+
             var (sin, cos) = angleSensor.AngleInputs;
             _rawInputs[index++] = sin;
             _rawInputs[index++] = cos;
@@ -863,12 +816,24 @@ public partial class Creature : Node2D
 
         foreach (var servo in _servos)
         {
+            if (servo.IsPassive)
+            {
+                index += 2;
+                continue;
+            }
+
             _rawInputs[index++] = servo.AngleInput;
             _rawInputs[index++] = servo.SpeedInput;
         }
 
         foreach (var motor in _velocityMotors)
         {
+            if (motor.IsPassive)
+            {
+                index += 3;
+                continue;
+            }
+
             var (sin, cos) = motor.AngleInputs;
             _rawInputs[index++] = sin;
             _rawInputs[index++] = cos;
@@ -883,6 +848,12 @@ public partial class Creature : Node2D
 
         foreach (var stepper in _steppers)
         {
+            if (stepper.IsPassive)
+            {
+                index += 3;
+                continue;
+            }
+
             var (sin, cos) = stepper.AngleInputs;
             _rawInputs[index++] = sin;
             _rawInputs[index++] = cos;

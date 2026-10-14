@@ -65,20 +65,15 @@ public partial class Creature
     // cylinders exist, as a Locked side can be one.
     private void CreateBrakes(CreatureDef definition)
     {
-        var brakes = new List<BrakeJoint>();
+        _brakes = new BrakeJoint[definition.Brakes.Count];
         _brakeVisuals = new BrakeVisual[definition.Brakes.Count];
         for (var i = 0; i < definition.Brakes.Count; i++)
         {
             var brake = definition.Brakes[i];
             var sides = HingePartSidesFor(definition, brake);
-            if (brake.Locked && Welder(definition, brake, $"Brake{brake.Id}Weld") is { } weld)
-            {
-                weld.Weld();
-            }
-            else
-            {
-                brakes.Add(new BrakeJoint(brake, sides));
-            }
+            var weld = brake.Locked ? Welder(definition, brake, $"Brake{brake.Id}Weld") : null;
+            weld?.Weld();
+            _brakes[i] = new BrakeJoint(brake, sides, weld);
 
             var visual = new BrakeVisual
             {
@@ -93,8 +88,6 @@ public partial class Creature
             AddChild(visual);
             _brakeVisuals[i] = visual;
         }
-
-        _brakes = [.. brakes];
     }
 
     // A Stepper (#1037) steps its sides as a Velocity motor turns them, and welds them at each notch

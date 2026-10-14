@@ -28,6 +28,18 @@ public sealed class StepperJoint
 
     public HingePartSides Sides { get; }
 
+    /// <summary>
+    /// Whether its Fixed or Target beam has torn at either end (#962): it then lets go of its weld and
+    /// drives nothing, and its brain inputs keep the values they last had (Creature.Tears).
+    /// </summary>
+    public bool IsPassive { get; private set; }
+
+    public void GoPassive()
+    {
+        IsPassive = true;
+        _weld?.Release();
+    }
+
     /// <summary>The angle between the sides as its sine and cosine, as a Velocity motor's.</summary>
     public (double Sin, double Cos) AngleInputs => Mechanics.Stepper.AngleInputs(Sides.ContinuousAngle);
 
@@ -39,6 +51,11 @@ public sealed class StepperJoint
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double frequencyOutput, double powerOutput, double step)
     {
+        if (IsPassive)
+        {
+            return;
+        }
+
         _state = Mechanics.Stepper.Next(
             Definition,
             Sides.ContinuousAngle - Sides.BuiltAngle,

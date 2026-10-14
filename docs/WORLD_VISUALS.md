@@ -57,7 +57,9 @@ lines riding on one of its beams. The lines run into the corners (#1198);
 "Draw layers" says what covers them there. Where the lines would come closer than
 `TriangleHatch.MinPixelSpacing` (zoomed far out, in a thumbnail) and on
 every other shadow, the triangle gets a faint fill of the same density
-instead (#770).
+instead (#770). A triangle a tear has undone is not hatched
+(`docs/CREATURE_MODEL.md` → Rigid triangles), and a beam torn from both
+its joints is not drawn (Beam → Tearing there).
 
 ### Servo
 

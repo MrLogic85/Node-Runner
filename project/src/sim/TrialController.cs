@@ -19,6 +19,7 @@ public partial class TrialController : Node
     private readonly TrialMeasurement _measurement = new(Engine.PhysicsTicksPerSecond);
     private Creature.Creature? _creature;
     private int _elapsedTicks;
+    private int _tornEnds;
     private bool _startsNextTick;
 
     /// <summary>Trial length in physics ticks. Default is 10s at 60Hz.</summary>
@@ -87,6 +88,7 @@ public partial class TrialController : Node
     {
         _creature!.ResetPose(GroundTopY - StartClearance);
         _measurement.Reset(_creature.CenterOfMass.X, _creature.Bounds.End.X);
+        _tornEnds = 0;
         _elapsedTicks = 0;
         TrialStarted?.Invoke();
     }
@@ -114,6 +116,7 @@ public partial class TrialController : Node
         }
 
         _elapsedTicks++;
+        FollowTears(_creature);
         _measurement.Record(_creature.CenterOfMass.X, _creature.Bounds.End.X, GroundTopY - _creature.LowestPointY);
 
         if (_elapsedTicks >= TrialDurationTicks)
@@ -121,5 +124,20 @@ public partial class TrialController : Node
             IsRunning = false;
             TrialCompleted?.Invoke(_measurement.Result);
         }
+    }
+
+    // A tear (#962), decided in the creature's tick after the last sample, freezes the trial from this
+    // sample on. The creature's centre and bounds then follow its main piece, so this sample is checked
+    // against the tear's own, which counts the same bodies, not against the last.
+    private void FollowTears(Creature.Creature creature)
+    {
+        if (creature.TornEnds == _tornEnds)
+        {
+            return;
+        }
+
+        _tornEnds = creature.TornEnds;
+        var (centerX, frontX, lowestPointY) = creature.TearSample;
+        _measurement.Freeze(centerX, frontX, GroundTopY - lowestPointY);
     }
 }
