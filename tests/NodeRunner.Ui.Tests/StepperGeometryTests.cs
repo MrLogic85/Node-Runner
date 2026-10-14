@@ -94,6 +94,15 @@ public sealed class StepperGeometryTests
         StepperGeometry.IsTooSmall(steps, pixelScale).ShouldBe(plain);
 
     [Theory]
+    [InlineData(8, 4f)]
+    [InlineData(24, 1f)]
+    public void A_shadows_rim_is_a_plain_circle_however_large(int steps, float pixelScale)
+    {
+        StepperGeometry.IsPlain(steps, pixelScale, simplified: true).ShouldBeTrue();
+        StepperGeometry.IsPlain(steps, pixelScale, simplified: false).ShouldBeFalse();
+    }
+
+    [Theory]
     [InlineData(2)]
     [InlineData(8)]
     [InlineData(24)]

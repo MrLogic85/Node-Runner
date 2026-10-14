@@ -8,8 +8,8 @@ namespace NodeRunner.Theme;
 /// A Stepper (#1067): a detent wheel in <c>accent</c> that stands in for its joint's ring or a Wheel's
 /// hub (<see cref="StepperGeometry"/>). Its notched rim turns with the Fixed side and its pawl with the
 /// Target side, each drawn on its own layer behind the part, so a holding creature never redraws it.
-/// While it steps (<see cref="Look"/>) the pawl lifts, a soft wedge runs from it to the notch it steps
-/// to and that notch lights, fading once caught. The part itself draws the hub and the missing-link
+/// While it steps (<see cref="Look"/>) the pawl lifts and a soft wedge runs from it to the notch it steps
+/// to. The part itself draws the hub and the missing-link
 /// badge over them all, and its selection mark turns with the pawl on a layer over the rim and pawl.
 /// </summary>
 public partial class StepperPart : PartVisual
@@ -77,14 +77,14 @@ public partial class StepperPart : PartVisual
         set => Change(ref _cushioned, value);
     }
 
-    /// <summary>A Training shadow's look: the rim's and the pawl's outlines only.</summary>
+    /// <summary>A Training shadow's look: a plain rim circle and the pawl's outline only.</summary>
     public bool Simplified
     {
         get => _simplified;
         set => Change(ref _simplified, value);
     }
 
-    /// <summary>The pawl, wedge and lit notch of a stepping Stepper; Build shows <see cref="StepperLook.Hold"/>.</summary>
+    /// <summary>The pawl and wedge of a stepping Stepper; Build shows <see cref="StepperLook.Hold"/>.</summary>
     public StepperLook Look
     {
         get => _look;
@@ -93,15 +93,10 @@ public partial class StepperPart : PartVisual
             var last = _look;
             _look = value;
 
-            // Only the layer that shows what changed is drawn again, so a step redraws the pawl's alone each frame.
+            // Only the pawl's layer shows the look, so a step redraws it alone each frame.
             if (last.Lifted != value.Lifted || (!Simplified && last.Sweep != value.Sweep))
             {
                 _pawlLayer.QueueRedraw();
-            }
-
-            if (!Simplified && (last.LitNotch != value.LitNotch || last.LitStrength != value.LitStrength))
-            {
-                _rimLayer.QueueRedraw();
             }
         }
     }
@@ -153,7 +148,7 @@ public partial class StepperPart : PartVisual
     private void DrawRimLayer()
     {
         using var pen = UiPixelPen.Begin(_rimLayer);
-        var plain = StepperGeometry.IsTooSmall(StepsPerTurn, pen.Scale);
+        var plain = StepperGeometry.IsPlain(StepsPerTurn, pen.Scale, Simplified);
         if (!Simplified)
         {
             var fill = Selected ? Theme.SelectionFill : Theme.JointFill;
@@ -168,12 +163,6 @@ public partial class StepperPart : PartVisual
         else
         {
             pen.Strokes([StepperGeometry.Outline(StepsPerTurn, BuiltAngle)], Line, Theme.MotorSignalWidth);
-        }
-
-        if (!Simplified && !plain && Look.LitNotch is { } lit && Look.LitStrength > 0)
-        {
-            var color = Theme.MotorAccent with { A = Theme.MotorAccent.A * Look.LitStrength };
-            pen.Strokes([StepperGeometry.Notch(lit, StepsPerTurn, BuiltAngle)], color, UiSize.Stroke.Beam);
         }
     }
 
@@ -211,6 +200,8 @@ public partial class StepperPart : PartVisual
         var pawl = StepperGeometry.Pawl(StepsPerTurn, seated: !Look.Lifted);
         if (!Simplified)
         {
+            // A dark band round the pawl keeps it apart from the notch walls it sits between.
+            pen.Strokes([pawl], Theme.ArenaBackground, Theme.MotorSignalWidth + (2 * StepperGeometry.PawlGap));
             pen.Polygon(pawl[..^1], Look.Lifted || Missing ? Theme.ServoPanelFill : Theme.MotorAccent);
         }
 

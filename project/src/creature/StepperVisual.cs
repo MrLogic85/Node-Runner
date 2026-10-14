@@ -30,6 +30,6 @@ public partial class StepperVisual : StepperPart, IShadowVisual
         var state = Joint.State;
 
         // A torn Stepper drives nothing, so its last state stands; it shows as holding.
-        Look = StepperLooks.Next(Look, state.Releasing && !Joint.IsPassive, state.Locked, state.Notch, state.Direction, sides.ContinuousAngle - sides.BuiltAngle, StepsPerTurn, delta);
+        Look = StepperLooks.Next(state.Releasing && !Joint.IsPassive, state.Notch, state.Direction, sides.ContinuousAngle - sides.BuiltAngle, StepsPerTurn);
     }
 }

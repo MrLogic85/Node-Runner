@@ -125,9 +125,10 @@ It has no Servo housing, range band or horn. Its parts are in
   between notches, a notch's mouth is 2·min(4.5, 0.32·s) wide and it is
   min(6, 0.55·s + 1) deep, so 24 notches still read as a wheel. When a
   mouth is under `TriangleHatch.MinPixelSpacing` (3 px) on screen, the rim
-  is a plain circle at R − 1 (thumbnails, far zoom);
+  is a plain circle at R − 1 (thumbnails, far zoom, shadows);
 - the pawl: an isosceles `accent` triangle, its base 12 wide at R + 6 and,
-  seated, its tip at a notch's bottom;
+  seated, its tip at a notch's bottom, edged by a 1-wide `background` band
+  so it stays apart from the notch walls it sits between;
 - the hub: an `accent` `stroke-hair` ring at r 8 and a disc of r 3.5.
 
 The rim turns with the Fixed side and the pawl with the Target side, each
@@ -142,9 +143,10 @@ the creature adapts for it (`StepperLooks`); the part never reads physics:
 - **Hold:** the pawl seated and filled, as in Build.
 - **Step:** the pawl lifts, its tip at R, with a `panel` fill and an
   `accent` outline. A soft `accent` wedge at `alpha_soft` runs from it round
-  to the notch it steps to, its side showing the way it turns, and that
-  notch's V is redrawn in `accent` at `stroke-beam` (3). When it catches,
-  the pawl seats and fills and the lit V fades out over 0.15 s.
+  to the notch it steps to, its side showing the way it turns. When it
+  catches, the pawl seats and fills: hollow and lifted against filled and
+  seated is the step, so no notch is lit (a thicker V in the rim's own
+  colour did not read on device).
 
 The brief pull to the nearest notch after an unfinished step shows as
 Hold. The frequency is not drawn: it shows as the pace of the steps.
@@ -602,9 +604,11 @@ rule 10):
 - **Motor:** its outer ring and a circle round the coils; no
   magnets, and it does not turn.
 - **Brake:** its outer ring and its disc's ring; it does not turn.
-- **Stepper:** its notched rim and the pawl's outline, both `accent` (the
-  rim `danger` with a side missing, and then no pawl); no body, hub, wedge
-  or lit notch. They turn as on the followed creature.
+- **Stepper:** a plain rim circle at R − 1 and the pawl's outline, both
+  `accent` (the rim `danger` with a side missing, and then no pawl); no
+  notches, body, hub or wedge, so crowded shadows stay
+  readable. The pawl turns as on the followed creature, so each step
+  still shows.
 - **Angle sensor:** a plain shadow joint, its outer ring only: shadows
   draw no sensors.
 - **Wheel:** the plain circle at its Radius: no tubes or line, and its

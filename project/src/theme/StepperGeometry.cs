@@ -25,6 +25,9 @@ public static class StepperGeometry
     /// <summary>Half the pawl's <c>stroke-signal</c> outline: how far its drawn edge lies past its shape.</summary>
     public const float PawlEdge = 1;
 
+    /// <summary>The dark band round the pawl's outline that parts it from the rim.</summary>
+    public const float PawlGap = 1;
+
     /// <summary>How far either side of the pawl's axis the selection mark leaves the rim for its keyhole.</summary>
     public const float KeyholeHalfWidth = PawlHalfWidth + PawlEdge + (float)SelectionMarks.Gap;
 
@@ -84,6 +87,13 @@ public static class StepperGeometry
         2 * MouthHalfWidth(stepsPerTurn) * pixelScale < TriangleHatch.MinPixelSpacing;
 
     /// <summary>
+    /// Whether the rim is a plain circle: its notches too small to see, or a Training shadow, whose
+    /// notches would tangle in a crowd while its pawl still shows each step.
+    /// </summary>
+    public static bool IsPlain(int stepsPerTurn, float pixelScale, bool simplified) =>
+        simplified || IsTooSmall(stepsPerTurn, pixelScale);
+
+    /// <summary>
     /// The notched outline at <paramref name="radius"/> as a closed loop, its notches as deep as the
     /// rim's and as wide along it, notch 0 at <paramref name="builtAngle"/>.
     /// </summary>
@@ -110,18 +120,6 @@ public static class StepperGeometry
         return [.. points];
     }
 
-    /// <summary>One notch's V on the rim, to light it.</summary>
-    public static Vector2[] Notch(int notch, int stepsPerTurn, float builtAngle)
-    {
-        var at = NotchAngle(notch, stepsPerTurn, builtAngle);
-        var half = MouthHalfWidth(stepsPerTurn) / RimRadius;
-        return
-        [
-            Vector2.FromAngle(at + half) * RimRadius,
-            Vector2.FromAngle(at) * (RimRadius - Depth(stepsPerTurn)),
-            Vector2.FromAngle(at - half) * RimRadius,
-        ];
-    }
 
     /// <summary>The pawl along rotation 0: seated, its tip at a notch's bottom; lifted, at the edge.</summary>
     public static Vector2[] Pawl(int stepsPerTurn, bool seated)
