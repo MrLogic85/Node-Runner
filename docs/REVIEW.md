@@ -6,7 +6,8 @@ How a change lands in `main`, for humans and AI agents alike.
 
 1. Branch from `main`; never push to `main` directly (the ruleset rejects
    it).
-2. Run the review agents in `CODEREVIEW.md` before every commit or push.
+2. Run the review agents (see "Review agents") before every commit or
+   push.
 3. Push, open a PR against `main` with the template, and enable squash
    auto-merge.
 4. Own the PR until it merges: fix failing checks, answer every review
@@ -18,9 +19,8 @@ How a change lands in `main`, for humans and AI agents alike.
 A trivial change (typo, comment) still goes through a PR and CI; skip
 manual verification and say "trivial" in the PR.
 
-The local code-review agents in `CODEREVIEW.md` review every PR; Copilot
-code review is not used (#956). Human review is optional, and `nit:`
-comments don't block.
+The local review agents review every PR; Copilot code review is not used
+(#956). Human review is optional, and `nit:` comments don't block.
 
 ## Definition of Done
 
@@ -33,24 +33,93 @@ not apply:
       `dotnet build NodeRunner.slnx -warnaserror` is clean: CI does not
       fail on warnings in `project/`
 - [ ] New logic in `libs/NodeRunner.{Domain,Mechanics,ML}/` has unit tests
-- [ ] Review agents (`CODEREVIEW.md`) ran on the final diff, and every new
-      finding is fixed or dismissed with a written reason. Each
+- [ ] Review agents (see "Review agents") ran on the final diff, and
+      every new finding is fixed or dismissed with a written reason. Each
       preexisting finding has an issue (`docs/ISSUES.md` → "Creating an
-      issue"). UI-touching
-      changes (screens, controls, layout, theme) include "Visual & UX
-      design", run by `design-lead` (`.github/agents/design-lead.agent.md`);
-      its "insufficient evidence" result blocks until live app access,
-      screenshots or recordings, or a human waiver is recorded in the PR.
+      issue"). For a UI-touching change, `design-lead`'s "insufficient
+      evidence" result blocks until live app access, screenshots or
+      recordings, or a human waiver is recorded in the PR.
 - [ ] Docs and the nearest `AGENTS.md` updated where behaviour,
       architecture or a rule changed
 - [ ] A change to a saved shape updates `docs/SAVE_FORMAT.md` and the
       schemas in `docs/save-schema/`, and adds the migration and test the
       current stage requires (`docs/SAVE_FORMAT.md` → "Versions and
       migration")
+- [ ] A breaking change to a public API is noted in the PR, and a change
+      to `AGENTS.md`, `docs/ARCHITECTURE.md` or `docs/TEST_STRATEGY.md`
+      has a paragraph in the PR saying why
 - [ ] No secrets, credentials or personal data
 - [ ] PR title follows "PR title and commit hygiene"
 - [ ] Manual testing decided and done per `docs/MANUAL_TESTING.md`
 - [ ] Squash auto-merge enabled
+
+## Review agents
+
+Each review agent owns one focus and the documents it is judged against.
+Its definition lives in `.github/agents/<name>.agent.md`, and Claude Code
+finds the same file through a symlink in `.claude/agents/`. This section
+owns when the agents run, how they report and how their files are
+written.
+
+### Choosing reviewers
+
+Select every reviewer whose trigger the final diff touches; when unsure,
+include it.
+
+| Agent | Selected when the diff touches |
+|---|---|
+| `docs-reviewer` | Docs, or behaviour, rules or commands that docs describe |
+| `structure-reviewer` | Code, scenes or the solution layout |
+| `ml-reviewer` | Networks, evolution, scoring, numerics or seeded randomness |
+| `concurrency-reviewer` | Threads, tasks, async flow, signals, events or node lifecycle |
+| `errors-reviewer` | Failure paths: I/O, parsing, validation, exceptions, invalid state |
+| `security-reviewer` | Input, storage, logs, permissions, credentials or personal data |
+| `tests-reviewer` | Tests, or logic that needs them |
+| `performance-reviewer` | Per-frame or per-tick paths, training loops or long-lived state |
+| `build-reviewer` | CI, scripts, project, package or editor config, agent files or hooks |
+| `design-lead` | Anything visible: screens, controls, layout, theme or world visuals |
+
+Then:
+
+1. Give each agent the repository path, the exact diff or commit range,
+   and the issue goal.
+2. Run independent reviews in parallel.
+3. Give `design-lead` live app access or fresh screenshots or recordings
+   from the target device (`docs/MANUAL_TESTING.md` → "Android checks"),
+   and the `reference design/` path when it guides a new surface. Without
+   them it reports **insufficient evidence** (see "Definition of Done").
+
+### Reporting
+
+Every review agent must:
+
+- Read root `AGENTS.md`, the nearest local `AGENTS.md` files, and the
+  documents its definition names, and judge the diff against them without
+  inventing stricter rules.
+- Stay within the diff. Mention preexisting problems separately; they do
+  not block.
+- Report only actionable correctness, maintainability or process
+  problems, not preferences.
+- Classify each finding as **Major**, **Medium** or **Minor**, mark it
+  **new** or **preexisting**, and give file, lines, evidence, impact and a
+  suggested direction.
+- Return "No findings" when nothing clears that bar.
+
+"Definition of Done" says how findings gate a commit. Issue reviews use
+`issue-reviewer` (`docs/ISSUES.md` → "Reviewing an issue"), which reports
+in its own format and finding levels.
+
+### Agent files
+
+- Each agent is one `.github/agents/<name>.agent.md`; `.claude/agents/`
+  holds a relative symlink `<name>.md` to it, so both tools load the same
+  file (#1314).
+- The frontmatter has `name`, a one-line `description` and, for a
+  reviewer, `tools: Read, Grep, Glob, Bash`; it sets no `model`.
+- A hook in an agent's frontmatter uses Claude Code's shape, a `matcher`
+  with an inner `hooks` list. Claude Code drops the whole agent if it
+  finds Copilot's flat shape.
+- Each reviewer's file tells it not to edit files.
 
 ## Merge gates
 
@@ -71,19 +140,9 @@ gh pr merge --auto --squash
 
 GitHub owns the wait, so no local process has to outlive the session. The
 author still watches the checks while the session lasts, fixes failures,
-re-runs the affected review focuses after a corrective change, and confirms
+re-runs the review agents the corrective change selects, and confirms
 the PR reached `MERGED` with `main` green. If auto-merge cannot be enabled,
 keep the PR open, report the blocker, and never bypass the required checks.
-
-## What review should flag
-
-- Layer violations the arch tests don't know to check
-- Missing tests for load-bearing math or state changes
-- Hidden breaking changes (public API shape, save format) without a note in
-  the PR, or without the migration the current stage requires
-  (`docs/ROADMAP.md` → "Project stage")
-- Changes to `AGENTS.md`, `ARCHITECTURE.md` or `TEST_STRATEGY.md` without a
-  paragraph in the PR saying why
 
 ## What does NOT block a merge
 

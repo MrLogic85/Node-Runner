@@ -1,0 +1,1 @@
+../../.github/agents/errors-reviewer.agent.md
