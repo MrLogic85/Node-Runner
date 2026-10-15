@@ -120,12 +120,17 @@ in its own format and finding levels.
 
 - Each agent is one `.github/agents/<name>.agent.md`; `.claude/agents/`
   holds a relative symlink `<name>.md` to it, so both tools load the same
-  file (#1314).
-- The frontmatter has `name`, a one-line `description` and, for a
-  reviewer, `tools: Read, Grep, Glob, Bash`; it sets no `model`.
-- A hook in an agent's frontmatter uses Claude Code's shape, a `matcher`
-  with an inner `hooks` list. Claude Code drops the whole agent if it
-  finds Copilot's flat shape.
+  file (#1314). Neither folder holds anything else.
+- The frontmatter has only `name` (the file's `<name>`), a one-line
+  `description`, `tools` and `hooks`; a reviewer (`*-reviewer`) has
+  `tools: Read, Grep, Glob, Bash`, and no agent sets `model`. A value
+  with `: ` or ` #` is invalid YAML unless quoted; prefer ` — `.
+- A hook in an agent's frontmatter uses Claude Code's shape: each entry
+  holds an inner `hooks` list, with a `matcher` where the event takes
+  one. Claude Code drops the whole agent if it finds Copilot's flat shape.
+- `AgentFilesSpec` in `NodeRunner.Arch.Tests` checks the rules above
+  (#1334), so `Test & coverage` fails when an agent would load in only
+  one tool.
 - Each reviewer's file tells it not to edit files.
 - Committed agent instructions require only the tools `README.md` →
   "Tools" marks as required; for a recommended tool they name a fallback
