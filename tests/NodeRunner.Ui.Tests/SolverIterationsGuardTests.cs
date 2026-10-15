@@ -9,9 +9,7 @@ public sealed class SolverIterationsGuardTests
     [Fact]
     public void The_project_solves_creature_joints_with_at_least_24_iterations()
     {
-        var lines = File.ReadLines(Path.Combine(ThemeFile.ProjectRoot, "project.godot"));
-
-        SolverIterations(lines).ShouldBeGreaterThanOrEqualTo(
+        SolverIterations(ProjectGodot.Lines).ShouldBeGreaterThanOrEqualTo(
             _minimumIterations,
             "Fewer solver iterations let beams stretch and rigid triangles flip (#1245; why: project/src/creature/AGENTS.md rule 3).");
     }
@@ -25,17 +23,8 @@ public sealed class SolverIterationsGuardTests
         SolverIterations(["[physics]", "2d/default_gravity=980", "[rendering]", "2d/solver/solver_iterations=24"])
             .ShouldBe(_godotDefaultIterations);
 
-    private static int SolverIterations(IEnumerable<string> projectLines)
-    {
-        const string key = "2d/solver/solver_iterations=";
-        var section = "";
-        foreach (var line in projectLines)
-        {
-            if (line.StartsWith('['))
-                section = line;
-            else if (section == "[physics]" && line.StartsWith(key, StringComparison.Ordinal))
-                return int.Parse(line[key.Length..], System.Globalization.CultureInfo.InvariantCulture);
-        }
-        return _godotDefaultIterations;
-    }
+    private static int SolverIterations(IEnumerable<string> projectLines) =>
+        ProjectGodot.Setting(projectLines, "physics", "2d/solver/solver_iterations") is { } value
+            ? int.Parse(value, System.Globalization.CultureInfo.InvariantCulture)
+            : _godotDefaultIterations;
 }

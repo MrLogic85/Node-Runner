@@ -86,6 +86,7 @@ source or `project.godot`:
 |---|---|---|
 | Creature bodies run without CCD | `CreatureCcdGuardTests` | `project/src/creature/AGENTS.md` rule 3 |
 | The 2D solver runs at least 24 iterations | `SolverIterationsGuardTests` | `project/src/creature/AGENTS.md` rule 3 |
+| 2D gravity is Earth's at the metre scale | `MetreScaleTests` | `docs/GLOSSARY.md` → "Metre" |
 
 ## What we do NOT test
 
