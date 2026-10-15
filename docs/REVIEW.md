@@ -100,12 +100,19 @@ Every review agent must:
   not block.
 - Report only actionable correctness, maintainability or process
   problems, not preferences.
-- Classify each finding as **Major**, **Medium** or **Minor**, mark it
-  **new** or **preexisting**, and give file, lines, evidence, impact and a
-  suggested direction.
+- Classify each finding by level, mark it **new** or **preexisting**, and
+  give file, lines, evidence, impact and a suggested direction.
 - Return "No findings" when nothing clears that bar.
 
-"Definition of Done" says how findings gate a commit. Issue reviews use
+The levels rank findings:
+
+- **Major**: wrong behaviour, a wrong statement, or a broken rule in the
+  owning documents.
+- **Medium**: a risk or gap worth fixing now.
+- **Minor**: a small, actionable fix.
+
+The level does not change how a finding gates a commit: "Definition of
+Done" treats every new finding alike. Issue reviews use
 `issue-reviewer` (`docs/ISSUES.md` → "Reviewing an issue"), which reports
 in its own format and finding levels.
 
