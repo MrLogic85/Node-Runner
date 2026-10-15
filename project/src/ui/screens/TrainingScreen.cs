@@ -80,16 +80,6 @@ public partial class TrainingScreen : Control
     /// <summary>Shows or hides the "Too many shadows!" chip in the arena's top-left corner (#318).</summary>
     public void ShowSlowMotion(bool shown) => GetNode<Control>("%SlowMotionChip").Visible = shown;
 
-    /// <summary>How far down from the arena's top the slow-motion chip reaches, shown or not, in UI units.</summary>
-    public float SlowMotionChipBottom
-    {
-        get
-        {
-            var chip = GetNode<Control>("%SlowMotionChip");
-            return chip.Position.Y + chip.GetCombinedMinimumSize().Y;
-        }
-    }
-
     /// <summary>
     /// What the selected parts' callout shows (#388, #1064): for each part, top → down, its name
     /// and, for a part with network ports, its glyph and live values; a stacked joint's parts each
