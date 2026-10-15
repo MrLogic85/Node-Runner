@@ -337,8 +337,8 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         var bounds = creature.Bounds;
         return new FramedCreature(
-            creature.CenterOfMass.X,
-            creature.CenterOfMass.Y,
+            creature.Centre.X,
+            creature.Centre.Y,
             bounds.Position.X,
             bounds.Position.Y,
             bounds.End.X,

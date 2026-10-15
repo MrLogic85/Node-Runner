@@ -68,64 +68,30 @@ public partial class Creature
     }
 
     /// <summary>
-    /// The average position of all beam bodies, used as a simple centroid
-    /// for fitness tracking (e.g. forward distance travelled). Returns
-    /// Vector2.Zero for a creature with no beams. After a tear (#962), of the beams
-    /// still holding on to the main piece, or of its nodes when none does.
+    /// The creature's centre: the average position of its nodes, which every creature has, whatever
+    /// links join them (#1303). Vector2.Zero for a creature with no nodes. After a tear (#962), of
+    /// the main piece's nodes only.
     /// </summary>
-    public Vector2 CenterOfMass
+    public Vector2 Centre
     {
         get
         {
             ReadBodies();
-            if (_hasTorn)
-            {
-                return MainPieceCentre();
-            }
-
-            if (_beamBodies.Length == 0)
-            {
-                return Vector2.Zero;
-            }
-
             var sum = Vector2.Zero;
-            foreach (var transform in _beamTransforms)
-            {
-                sum += transform.Origin;
-            }
-
-            return sum / _beamBodies.Length;
-        }
-    }
-
-    private Vector2 MainPieceCentre()
-    {
-        var sum = Vector2.Zero;
-        var count = 0;
-        if (_countedBeams > 0)
-        {
-            for (var i = 0; i < _beamBodies.Length; i++)
-            {
-                if (_beamCounted[i])
-                {
-                    sum += _beamTransforms[i].Origin;
-                    count++;
-                }
-            }
-        }
-        else
-        {
+            var count = 0;
             for (var i = 0; i < _nodeBodies.Length; i++)
             {
-                if (_nodeInMainPiece[i])
+                if (_hasTorn && !_nodeInMainPiece[i])
                 {
-                    sum += _nodePositions[i];
-                    count++;
+                    continue;
                 }
-            }
-        }
 
-        return sum / count;
+                sum += _nodePositions[i];
+                count++;
+            }
+
+            return count == 0 ? Vector2.Zero : sum / count;
+        }
     }
 
     private Rect2 NodeBox(int index)

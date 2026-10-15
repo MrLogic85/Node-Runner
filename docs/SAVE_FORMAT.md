@@ -184,6 +184,12 @@ Current `creation.json` migrations:
 with a Wheel or Servo moves and senses a little differently, since links and
 sensors now measure from the hub (`docs/CREATURE_MODEL.md` → Node, Sensor).
 
+#1303 needs no migration either: a saved `training.best.distance` was
+measured from the old centre, the average of the beams' midpoints, and is
+compared as-is with new scores measured from the average of the nodes
+(`docs/TRAINING_LOOP.md` → Trial). The two agree for a creature that moves
+without turning or changing shape and differ a little for one that does.
+
 ### Changing a saved shape
 
 1. Change the record, this document and the schema as usual.
