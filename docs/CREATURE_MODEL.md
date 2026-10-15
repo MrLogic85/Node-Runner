@@ -312,9 +312,9 @@ nodes; how the simulation keeps them from giving way under load is in
   clock is a phase that runs at |frequency| and lets go each time it
   wraps, at most once a physics step. The clock never resets: a release,
   a lock or a timeout leaves it as it is, and frequency 0 stops it where
-  it is. Its tick input reads it as (2 × phase − 1)²: 1 as it lets go,
-  0 halfway to the next release, so the brain can time other parts to
-  its steps.
+  it is. Its tick input reads the phase, a sawtooth: 0 as it lets go,
+  rising to 1 just before the next release, so the brain can time other
+  parts to its steps.
 - **Release:** each time it lets go it unlocks, picks the neighbouring
   notch the way the frequency's sign says and drives the joint there with
   at most Max strength, like a clock's tick: full torque, then braking

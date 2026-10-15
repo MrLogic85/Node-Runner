@@ -149,7 +149,7 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   camera follows the **main piece**. See: `docs/CREATURE_MODEL.md` → Beam
   → Tearing.
 - **Tick input** — A Stepper's input (#1263) that shows when it steps
-  next: 1 as it steps, 0 halfway to its next step. Not a **Tick**. See:
+  next: 0 as it steps, rising to 1 just before the next. Not a **Tick**. See:
   `docs/CREATURE_MODEL.md` → "Stepper".
 - **Touch sensor** — A sensor on a joint (#1043) that tells the brain
   how close that joint is to touching the ground (`TouchSensorDef`); one

@@ -62,24 +62,24 @@ public sealed class StepperTests
         joint.Speed.ShouldBe(0);
     }
 
-    // #1263: 1 as it steps, 0 halfway to the next step, smooth between.
+    // #1263: a sawtooth, rising from 0 as it steps to 1 just before the next step.
     [Fact]
-    public void ItsTick_IsOneAsItSteps_AndZeroHalfwayToTheNext()
+    public void ItsTick_RisesFromZeroAsItSteps_ToOneJustBeforeTheNext()
     {
         // Half its Max frequency is one step a second: 60 physics steps.
         var joint = new Joint();
-        Stepper.TickInput(joint.State).ShouldBe(1);
+        Stepper.TickInput(joint.State).ShouldBe(0);
 
         joint.Run(seconds: 0.25, frequencyOutput: 0.5, load: 0);
         Stepper.TickInput(joint.State).ShouldBe(0.25, tolerance: 1e-9);
 
-        joint.Run(seconds: 0.25, frequencyOutput: 0.5, load: 0);
-        Stepper.TickInput(joint.State).ShouldBe(0, tolerance: 1e-9);
+        joint.Run(seconds: 0.5, frequencyOutput: 0.5, load: 0);
+        Stepper.TickInput(joint.State).ShouldBe(0.75, tolerance: 1e-9);
         joint.Releases.ShouldBe(0);
 
         joint.RunUntil(() => joint.Releases == 1, frequencyOutput: 0.5, load: 0);
         joint.Ticks.ShouldBeInRange(59, 61);
-        Stepper.TickInput(joint.State).ShouldBe(1, tolerance: 0.07);
+        Stepper.TickInput(joint.State).ShouldBe(0, tolerance: 0.02);
     }
 
     [Fact]

@@ -32,10 +32,10 @@ public static class Stepper
     public static (double Sin, double Cos) AngleInputs(double angle) => VelocityMotor.AngleInputs(angle);
 
     /// <summary>
-    /// The tick input (#1263): (2 × phase − 1)², 1 as its clock ticks and it steps, 0 halfway to the
-    /// next tick. It holds still while the Stepper does not step.
+    /// The tick input (#1263): its clock's phase, a sawtooth that drops to 0 as it steps and rises to 1
+    /// just before the next step. It holds still while the Stepper does not step.
     /// </summary>
-    public static double TickInput(StepperState state) => Math.Pow((2 * state.Phase) - 1, 2);
+    public static double TickInput(StepperState state) => state.Phase;
 
     /// <summary>The angle of notch <paramref name="notch"/> from the built angle, in radians.</summary>
     public static double NotchAngle(int notch, StepperDef stepper)

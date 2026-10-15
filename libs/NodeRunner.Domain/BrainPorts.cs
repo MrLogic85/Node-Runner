@@ -93,7 +93,7 @@ public static class BrainPorts
     /// <summary>A Stepper's angle cosine input key (#1036): cos of the angle between its sides.</summary>
     public const string StepperAngleCosChannel = "angleCos";
 
-    /// <summary>A Stepper's tick input key (#1263): 1 as it steps, 0 halfway to its next step (<c>NodeRunner.Mechanics.Stepper.TickInput</c>).</summary>
+    /// <summary>A Stepper's tick input key (#1263): 0 as it steps, rising to 1 just before its next (<c>NodeRunner.Mechanics.Stepper.TickInput</c>).</summary>
     public const string StepperTickChannel = "tick";
 
     /// <summary>A Stepper's frequency output key: how often to step and which way, −1…1 of its Max frequency (#1263).</summary>

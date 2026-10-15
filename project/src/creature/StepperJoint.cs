@@ -46,7 +46,7 @@ public sealed class StepperJoint
     /// <summary>The angle between the sides as its sine and cosine, as a Velocity motor's.</summary>
     public (double Sin, double Cos) AngleInputs => Mechanics.Stepper.AngleInputs(Sides.ContinuousAngle);
 
-    /// <summary>Its tick as of the last physics step: 1 as it steps, 0 halfway to its next step (#1263).</summary>
+    /// <summary>Its tick as of the last physics step: 0 as it steps, rising to 1 just before its next (#1263).</summary>
     public double TickInput => Mechanics.Stepper.TickInput(_state);
 
     /// <param name="frequencyOutput">The brain's Frequency output, −1…1 of its Max frequency, counter-clockwise positive.</param>

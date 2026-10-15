@@ -380,8 +380,9 @@ the reference's "a training session has finished" (#369).
   - **Brain** (the button or the Brain stage) opens BrainFocus; Android
     Back closes it before leaving the scene. It shows the direct brain
     (#536): inputs named by port ("Accel: along"), outputs named by joint,
-    the enabled connections and live activations, refreshed every ~0.15 s
-    rather than every frame (#42). Nothing is selected at first; tapping an
+    the enabled connections and live activations, refreshed about 30 times a
+    second rather than every frame (#42), often enough that a Stepper's
+    tick (#1263) still shows its rise and drop. Nothing is selected at first; tapping an
     output names the two inputs that drive it most, tapping an input names
     the outputs it drives most, and the other connections fade; tapping
     empty space clears the selection.
