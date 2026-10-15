@@ -48,9 +48,6 @@ public partial class ArenaFlagMarker : ArenaMark
         }
     }
 
-    /// <summary>How far down from the view's top this marker's flag reaches, in UI units.</summary>
-    public float FlagBottom => FlagTop + _flagHeight;
-
     private float FlagTop => _firstRowTop + (_row * (_flagHeight + _rowGap));
 
     private Color Ink => _danger ? Theme.Danger : Theme.MarkerInk;

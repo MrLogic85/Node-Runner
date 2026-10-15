@@ -12,9 +12,9 @@ namespace NodeRunner.Ui.Widgets;
 /// so a thin line does not flicker between pixel rows (#1173). The distance scale runs along the
 /// view's bottom edge, its ticks rising from the edge and labels above them; the height scale runs
 /// up the left edge from the ground's top (0 m), its ticks reaching in and labels sitting on them.
-/// The height scale is cut off at the distance scale's band and below <see cref="TopClear"/>, as the
-/// distance labels are at the view's sides, rather than faded, so a label never blinks as the view
-/// shakes (#1302). Both share one label step, so a metre reads the same either way. It draws only
+/// The height scale is cut off at the distance scale's band and the view's top, as the distance
+/// labels are at the view's sides, rather than faded, so a label never blinks as the view shakes
+/// (#1302, #1338). Both share one label step, so a metre reads the same either way. It draws only
 /// what the camera shows, and the distance labels half a label past it, so they slide in and out
 /// under the view's sides (#1191); it redraws when the view moves. Ticks and labels keep their screen size at any zoom; every metre is labelled, or
 /// every 2, 5, 10, … when labels would overlap (#675), and from 5 m between labels the ticks thin
@@ -50,7 +50,6 @@ public partial class ArenaRuler : Node2D
     private Rect2 _drawnView;
     private int _metresPerLabel = 1;
     private float _widestLabel;
-    private float _topClear;
 
     public VisualTheme Theme
     {
@@ -98,20 +97,6 @@ public partial class ArenaRuler : Node2D
     }
 
     /// <summary>
-    /// How far down from the view's top the height scale is cut off, in UI units, for what the
-    /// arena shows along its top, such as the slow-motion chip and the best flag.
-    /// </summary>
-    public float TopClear
-    {
-        get => _topClear;
-        set
-        {
-            _topClear = value;
-            Redraw();
-        }
-    }
-
-    /// <summary>
     /// The share of the view's height the distance scale takes along the bottom; the camera keeps
     /// the ground line above it while it makes room for a part callout (#1170).
     /// </summary>
@@ -148,19 +133,18 @@ public partial class ArenaRuler : Node2D
         DrawSetTransformMatrix(Transform2D.Identity);
     }
 
-    // Cut off at the distance scale's band and below the top clearance, with the gap the labels
-    // keep from it.
+    // Cut off at the distance scale's band; it runs up to the view's top, which cuts it as the
+    // sides cut the distance labels (#1338).
     private void DrawHeightScale()
     {
         var (view, screenScale, metresPerLabel) = Measure();
         var bandTop = view.End.Y - (BandHeight() * screenScale);
-        var clearTop = view.Position.Y + ((_topClear + _tickToLabel) * screenScale);
-        var room = new Rect2(view.Position.X, clearTop, view.Size.X, Mathf.Max(0f, bandTop - clearTop));
+        var room = new Rect2(view.Position, view.Size.X, Mathf.Max(0f, bandTop - view.Position.Y));
         RenderingServer.CanvasItemSetCustomRect(_heightScale.GetCanvasItem(), true, room);
         RenderingServer.CanvasItemSetClip(_heightScale.GetCanvasItem(), true);
 
         var labelReach = (_tickToLabel + _theme.RulerFont.GetAscent(_theme.RulerFontSize)) * screenScale;
-        DistanceRuler.FillHeights(-bandTop, labelReach, -clearTop, metresPerLabel, _heightMarks);
+        DistanceRuler.FillHeights(-bandTop, labelReach, -view.Position.Y, metresPerLabel, _heightMarks);
         using (var pen = UiPixelPen.Begin(_heightScale))
         {
             foreach (var mark in _heightMarks)

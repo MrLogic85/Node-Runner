@@ -351,7 +351,6 @@ public partial class TrainingHost : Node, IRoutedScene
     private void BindScreen(CreationDef? creation)
     {
         _screen = GetNode<TrainingScreen>("%TrainingScreen");
-        KeepScaleClear(crashed: false);
         _screen.Setup(
             creation is null
                 ? TrainingHeaderPresentation.ForWalker(Mode, _map.Id)
@@ -460,23 +459,12 @@ public partial class TrainingHost : Node, IRoutedScene
     private bool FollowedCrashed => _evolver?.FollowedTrialCrashed ?? _playback is { IsRunning: true, IsFrozen: true };
 
     // The crash flag stands where the followed run's distance froze (#1257), one row under the best
-    // flag, so the height scale is cut off below that row while it shows.
+    // flag.
     private void ShowCrash()
     {
         var distance = FollowedDistance;
         var crashed = FollowedCrashed && double.IsFinite(distance);
         CrashMarker.Show(distance, crashed ? UiTextTranslation.Source(TrainingPresentationViewModel.CrashText(distance)) : null);
-        KeepScaleClear(crashed);
-    }
-
-    // The height scale is cut off below the lowest flag showing and the slow-motion chip.
-    private void KeepScaleClear(bool crashed)
-    {
-        var topClear = Math.Max((crashed ? CrashMarker : BestMarker).FlagBottom, _screen.SlowMotionChipBottom);
-        if (Ruler.TopClear != topClear)
-        {
-            Ruler.TopClear = topClear;
-        }
     }
 
     // The selection and the camera move to the new subject: the old shadow drops the selection, the
