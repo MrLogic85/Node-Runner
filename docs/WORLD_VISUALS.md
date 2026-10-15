@@ -534,8 +534,9 @@ a creature's links past `DrawGroups.MaxGroups` share the last group.
   in `muted`, ticks `line-strong`; what they count is in
   `docs/TRAINING_LOOP.md` → Scales. Distance labels slide in and out under
   the view's sides, cut off by its edge like the ground (#1191). The
-  height scale stops above the distance scale's band; its labels fade into
-  the band and before the slow-motion chip and the lowest flag showing along the top.
+  height scale is cut off the same way at the distance scale's band and a
+  label's gap below the slow-motion chip and the lowest flag showing along
+  the top; its labels never fade, so none blinks as the view shakes (#1302).
 - **Best and crash markers (#388, #1257):** a dashed line up to a flag,
   `ArenaFlagMarker`. The best marker's flag reads "Best 4.2 m" in the
   marker ink; the crash marker's, "Crash 3.4 m" in `danger`, hangs one

@@ -130,14 +130,17 @@ public static class DistanceRuler
     }
 
     /// <summary>
-    /// Fills <paramref name="marks"/> with every tick of the height scale from <paramref name="low"/>
+    /// Fills <paramref name="marks"/> with every tick of the height scale from <paramref name="floor"/>
     /// to <paramref name="high"/>, in order: heights above the ground's top, which is 0 m, and
-    /// none below it, as <see cref="Fill"/> marks the ground.
+    /// none below it, as <see cref="Fill"/> marks the ground. A mark just below the floor stays
+    /// while its label still reaches above it, so the label is cut off there rather than dropped
+    /// whole (#1302).
     /// </summary>
-    /// <param name="low">The lowest height in the range, in world units; below 0 counts from 0.</param>
+    /// <param name="floor">The lowest height the scale shows, in world units; below 0 counts from 0.</param>
+    /// <param name="labelReach">How far a label reaches above its mark, in world units.</param>
     /// <param name="high">The highest height in the range, in world units.</param>
     /// <param name="metresPerLabel">Labels every metre that is a multiple of this, shared with the distance scale.</param>
     /// <param name="marks">Cleared, then filled, so a caller can reuse one list every frame.</param>
-    public static void FillHeights(double low, double high, int metresPerLabel, List<RulerMark> marks) =>
-        Fill(0, Math.Max(0, low), high, metresPerLabel, marks);
+    public static void FillHeights(double floor, double labelReach, double high, int metresPerLabel, List<RulerMark> marks) =>
+        Fill(0, Math.Max(0, floor - labelReach), high, metresPerLabel, marks);
 }

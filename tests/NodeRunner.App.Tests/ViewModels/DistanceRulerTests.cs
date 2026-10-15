@@ -29,7 +29,7 @@ public sealed class DistanceRulerTests
     {
         var marks = new List<RulerMark>();
 
-        DistanceRuler.FillHeights(low: -120, high: 160, metresPerLabel: 1, marks);
+        DistanceRuler.FillHeights(floor: -120, labelReach: 0, high: 160, metresPerLabel: 1, marks);
 
         marks.ShouldBe(
         [
@@ -45,7 +45,7 @@ public sealed class DistanceRulerTests
     {
         var marks = new List<RulerMark>();
 
-        DistanceRuler.FillHeights(low: 150, high: 1050, metresPerLabel: 5, marks);
+        DistanceRuler.FillHeights(floor: 150, labelReach: 0, high: 1050, metresPerLabel: 5, marks);
 
         marks.ShouldBe(
         [
@@ -59,6 +59,18 @@ public sealed class DistanceRulerTests
             new RulerMark(900, false, null),
             new RulerMark(1000, true, 10),
         ]);
+    }
+
+    [Theory]
+    [InlineData(40, 0)]
+    [InlineData(20, 50)]
+    public void FillHeights_KeepsAMarkBelowTheFloorWhileItsLabelStillReachesAboveIt(double labelReach, double firstHeight)
+    {
+        var marks = new List<RulerMark>();
+
+        DistanceRuler.FillHeights(floor: 30, labelReach, high: 160, metresPerLabel: 1, marks);
+
+        marks[0].X.ShouldBe(firstHeight);
     }
 
     [Fact]
