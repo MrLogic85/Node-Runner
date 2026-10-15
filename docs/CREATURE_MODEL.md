@@ -110,10 +110,12 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   well above anything a sound creature reaches. A creature built so its
   joints give way breaks instead of shaking. Ends are checked in beam
   order, the first end before the second, every tick.
-  - **One end gone:** the beam dangles from its other joint.
+  - **One end gone:** the beam dangles from its other joint, and its loose
+    end lands on the ground instead of passing through it (#1288). The rest
+    of the beam still passes through anything in its way.
   - **Both ends gone:** the beam leaves the creature at once and falls on
-    its own, with a collider of its own width so it lands on the ground
-    (#1257); nothing in the creature counts it again.
+    its own, with a collider of its own width along it so it lands on the
+    ground (#1257); nothing in the creature counts it again.
   - **Main piece:** from then on the creature's centre, bounds and lowest
     point count only the main piece (One piece above), so the camera and
     the trial follow it, and a joint or Wheel that came loose falls or rolls

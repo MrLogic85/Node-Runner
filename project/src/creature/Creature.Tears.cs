@@ -7,9 +7,9 @@ namespace NodeRunner.Creature;
 
 // Beams tear from their joints (#962): each tick, before anything senses or drives, every beam end still
 // pinned is checked by the rule in Mechanics.Tear, in beam order, end A before end B. A torn end's pin
-// lets go of both bodies; a beam torn at both ends leaves the creature and falls on its own. Everything
-// else keeps its slot, so brain ports and the arrays the creature runs on never shift. How a tear looks
-// (#1257) is docs/WORLD_VISUALS.md → Tear.
+// lets go of both bodies and the end gets a collider so it lands (#1288); a beam torn at both ends leaves
+// the creature and falls on its own. Everything else keeps its slot, so brain ports and the arrays the
+// creature runs on never shift. How a tear looks (#1257) is docs/WORLD_VISUALS.md → Tear.
 public partial class Creature
 {
     private const double _hatchFadeSeconds = 0.2;
@@ -20,6 +20,7 @@ public partial class Creature
     private int[] _endTicksOver = [];
     private bool[] _endTorn = [];
     private bool[] _beamGone = [];
+    private CollisionShape2D?[] _beamShapes = [];
     private int[] _hatchBeams = [];
     private bool[] _hatchGone = [];
     private bool[] _nodePulsed = [];
@@ -48,6 +49,7 @@ public partial class Creature
         _endTicksOver = new int[ends];
         _endTorn = new bool[ends];
         _beamGone = new bool[definition.Beams.Count];
+        _beamShapes = new CollisionShape2D?[definition.Beams.Count];
         _hatchGone = new bool[_hatchVisuals.Length];
         _nodePulsed = new bool[definition.Nodes.Count];
         _tearPulses.Clear();
@@ -139,7 +141,11 @@ public partial class Creature
 
         Flash(_beamVisuals[beam], isA);
         Pulse(_beamEndNodes[end]);
-        if (_endTorn[2 * beam] && _endTorn[(2 * beam) + 1])
+        if (!_endTorn[2 * beam] || !_endTorn[(2 * beam) + 1])
+        {
+            LandEnd(beam, isA);
+        }
+        else
         {
             // Nothing holds it any more: it falls on its own, as a loose joint does (#1257).
             _beamGone[beam] = true;
@@ -255,15 +261,36 @@ public partial class Creature
         }
     }
 
-    // The beam had no collider while pinned, as the nodes touch the world; loose, it needs one to land.
+    // An intact beam has no collider (AGENTS.md rule 3). A torn end needs one so it lands instead of
+    // passing through the ground: a circle as wide as the beam (#1288).
+    private void LandEnd(int beam, bool isA)
+    {
+        var halfLength = _beamHalfLengths[beam];
+        BeamShape(beam).Shape = new CircleShape2D { Radius = Theme.BeamWidth / 2 };
+        BeamShape(beam).Position = new Vector2(isA ? -halfLength : halfLength, 0);
+    }
+
+    // Loose at both ends, the whole beam lands: its one shape becomes a capsule along it (#1257).
     private void LetFall(int beam)
     {
         var halfWidth = Theme.BeamWidth / 2;
-        _beamBodies[beam].AddChild(new CollisionShape2D
+        var shape = BeamShape(beam);
+        shape.Shape = new CapsuleShape2D { Radius = halfWidth, Height = 2 * (_beamHalfLengths[beam] + halfWidth) };
+        shape.Position = Vector2.Zero;
+        shape.Rotation = Mathf.Pi / 2;
+    }
+
+    // A beam keeps one shape at most, so its end circle never stays behind under the capsule.
+    private CollisionShape2D BeamShape(int beam)
+    {
+        if (_beamShapes[beam] is not { } shape)
         {
-            Shape = new CapsuleShape2D { Radius = halfWidth, Height = 2 * (_beamHalfLengths[beam] + halfWidth) },
-            Rotation = Mathf.Pi / 2,
-        });
+            shape = new CollisionShape2D();
+            _beamBodies[beam].AddChild(shape);
+            _beamShapes[beam] = shape;
+        }
+
+        return shape;
     }
 
     // On the followed creature a rigid triangle's hatch fades out over 200 ms (12 ticks), short enough
