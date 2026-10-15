@@ -19,12 +19,7 @@ public sealed class AgentFilesSpec : IDisposable
             name: {_reviewer}
             description: Reviews a fixture diff — one focus, read-only.
             tools: {AgentFiles.ReviewerTools}
-            hooks:
-              PreToolUse:
-                - matcher: "Bash"
-                  hooks:
-                    - type: command
-                      command: "./deny.sh"
+            {AgentFiles.ReviewerHook}
             """);
         // Valid YAML the checks must not flag: a comment, a quoted ": " and " #", and hooks
         // indented by four with an entry that takes no matcher.
@@ -94,8 +89,10 @@ public sealed class AgentFilesSpec : IDisposable
     [InlineData("model", $".github/agents/{_reviewer}.agent.md: sets model")]
     [InlineData("reviewer tools", $".github/agents/{_reviewer}.agent.md: a reviewer has tools")]
     [InlineData("no tools", $".github/agents/{_reviewer}.agent.md: a reviewer has tools")]
-    [InlineData("empty hooks", $".github/agents/{_reviewer}.agent.md: hooks must use Claude Code's shape")]
-    [InlineData("flat hooks", $".github/agents/{_reviewer}.agent.md: hooks must use Claude Code's shape")]
+    [InlineData("no reviewer hook", $".github/agents/{_reviewer}.agent.md: a reviewer registers reviewer-bash.sh")]
+    [InlineData("other reviewer hook", $".github/agents/{_reviewer}.agent.md: a reviewer registers reviewer-bash.sh")]
+    [InlineData("empty hooks", $".github/agents/{_lead}.agent.md: hooks must use Claude Code's shape")]
+    [InlineData("flat hooks", $".github/agents/{_lead}.agent.md: hooks must use Claude Code's shape")]
     public void Fixture_WithOneRuleBroken_NamesTheFileAndRule(string broken, string expected)
     {
         Break(broken);
@@ -109,6 +106,7 @@ public sealed class AgentFilesSpec : IDisposable
     {
         var link = Path.Combine(LinksDirectory, _reviewer + ".md");
         var agent = Path.Combine(AgentsDirectory, _reviewer + ".agent.md");
+        var lead = Path.Combine(AgentsDirectory, _lead + ".agent.md");
         switch (broken)
         {
             case "missing link":
@@ -170,12 +168,17 @@ public sealed class AgentFilesSpec : IDisposable
             case "no tools":
                 Replace(agent, $"tools: {AgentFiles.ReviewerTools}\n", "");
                 break;
+            case "no reviewer hook":
+                Replace(agent, "\n" + AgentFiles.ReviewerHook.ReplaceLineEndings("\n"), "");
+                break;
+            case "other reviewer hook":
+                Replace(agent, AgentFiles.ReviewerHookScript, "guard-bash.sh");
+                break;
             case "empty hooks":
-                Replace(agent, "\n  PreToolUse:\n    - matcher: \"Bash\"\n      hooks:\n        - type: command\n          command: \"./deny.sh\"", "");
+                Replace(lead, "\n    Stop:\n    - hooks:\n        - type: command\n          command: \"./done.sh\"", "");
                 break;
             case "flat hooks":
-                Replace(agent, "    - matcher: \"Bash\"\n      hooks:\n        - type: command\n          command:",
-                    "    - type: command\n      bash:");
+                Replace(lead, "    - hooks:\n        - type: command\n          command:", "    - type: command\n      bash:");
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(broken), broken, "No such fixture break.");

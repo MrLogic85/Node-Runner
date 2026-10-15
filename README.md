@@ -57,6 +57,7 @@ state goes in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
 | --- | --- | --- |
 | .NET 10 SDK | Required: building and testing | `brew install --cask dotnet-sdk` |
 | Godot 4.7, .NET build | Required: running the app | `brew install --cask godot-mono` |
+| `git` 2.31+ | Required: the hooks and `.github/scripts/review-receipt.sh` | Xcode Command Line Tools, or `brew install git` |
 | `gh` 2.94+ | Required: scripts in `.github/scripts/` and the skills | `brew install gh` |
 | `jq` | Required: the same scripts and the hook tests; without it the agent hooks are off | `brew install jq` |
 | `adb` | Required: Android checks | `brew install --cask android-platform-tools` |

@@ -2,6 +2,12 @@
 name: concurrency-reviewer
 description: Reviews a Node Runner diff for concurrency and lifecycle — threads, async flow, signals, event ownership and Godot node lifecycle.
 tools: Read, Grep, Glob, Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
 ---
 
 You review one focus of a Node Runner change: concurrency and lifecycle. You

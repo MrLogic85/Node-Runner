@@ -8,7 +8,8 @@ How a change lands in `main`, for humans and AI agents alike.
    for example `fix/1234-joint-drift`; never push to `main` directly (the
    ruleset rejects it).
 2. Run the review agents (see "Review agents") before every commit or
-   push, with the `review-change` skill.
+   push, with the `review-change` skill; a push needs its receipt (see
+   "Review receipts").
 3. Push, open a PR against `main` with the template, and enable squash
    auto-merge, with the `ship-pr` skill.
 4. Own the PR until it merges: fix failing checks, answer every review
@@ -113,6 +114,44 @@ Done" treats every new finding alike. Issue reviews use
 `issue-reviewer` (`docs/ISSUES.md` → "Reviewing an issue"), which reports
 in its own format and finding levels.
 
+### Review receipts
+
+Review runs before the commit, on the change `git add -A` stages,
+measured from where the branch left `main`; after a commit it runs the
+same way with a clean working tree. When no new finding is left
+unaddressed, the `review-change` skill records a receipt for your own
+change with `.github/scripts/review-receipt.sh write`, which refuses
+unless the index holds the whole working tree. The receipt,
+`.git/review-receipts/<key>.md`, holds the date, branch, base and tree,
+the reviewers that ran, and each finding with its result or disposition
+(#1321).
+
+The key hashes the raw diff (modes, blob ids and paths) from the newest
+common ancestor with `main` or `origin/main` to the reviewed tree.
+Committing that same content, or rebasing it onto a newer `main` without
+touching its files, keeps the receipt valid. Any other change, such as a
+fix after a finding, needs the reviewers the corrective change selects to
+run again, and then a new receipt. An empty change needs none, and
+receipts older than 30 days are pruned.
+
+`guard-bash.sh` denies `git push` of a branch or commit of this
+repository unless a receipt matches what it holds. A commit earlier in
+the same line is measured from the index, or from the working tree after
+`git add -A` (or `--all`, `.` at the top, `:/`) or with `commit -a`.
+After a git command earlier in the line that changes what the push sends
+in a way the hook cannot measure, the push must be its own command: a
+`git add` or `commit` of some paths, or a `merge`, `rebase`, `pull`,
+`cherry-pick`, `am`, `revert`, `reset`, `restore`, `rm`, `mv`, `apply`,
+`update-ref`, a `branch` that forces, renames or copies, `switch -C`,
+`checkout -B`, a `switch -c` or `checkout -b` from a start point, or a
+`fetch` into a branch. That list guards against mistakes and is not
+complete; the hook measures what the branch holds when it runs, and a
+branch created earlier in the line from `HEAD` is measured as `HEAD`.
+Tags, deletes, dry runs, `release/vX.Y` branches (`docs/RELEASING.md`)
+and a name that is no branch or commit pass. When the check cannot
+measure the branch, for example without a `main`, the push is denied
+with its reason; when the script is missing, it is allowed.
+
 ### Agent, rule and skill files
 
 - Each agent is one `.github/agents/<name>.agent.md`; `.claude/agents/`
@@ -121,11 +160,22 @@ in its own format and finding levels.
   `local_*` agents (`AGENTS.md` → "Machine-local setup").
 - The frontmatter has only `name` (the file's `<name>`), a one-line
   `description`, `tools` and `hooks`; a reviewer (`*-reviewer`) has
-  `tools: Read, Grep, Glob, Bash`, and no agent sets `model`. A value
+  `tools: Read, Grep, Glob, Bash` and registers `reviewer-bash.sh` (see
+  "Hooks") with the block below, and no agent sets `model`. A value
   with `: ` or ` #` is invalid YAML unless quoted; prefer ` — `.
 - A hook in an agent's frontmatter uses Claude Code's shape: each entry
   holds an inner `hooks` list, with a `matcher` where the event takes
   one. Claude Code drops the whole agent if it finds Copilot's flat shape.
+  A reviewer's block:
+
+  ```yaml
+  hooks:
+    PreToolUse:
+      - matcher: "Bash"
+        hooks:
+          - type: command
+            command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
+  ```
 - A rule in `.claude/rules/<topic>.md` starts with frontmatter that has
   only `paths`: at least one quoted glob, one per line, each an existing
   file or `<folder>/**` (#1315).
@@ -148,13 +198,16 @@ in its own format and finding levels.
 ## Hooks
 
 `.claude/settings.json` registers the scripts in `.claude/hooks/`, and both
-tools run them for every agent, not only reviewers (#1320). They hold what
-an instruction alone does not reliably hold:
+tools run them for every agent, not only reviewers (#1320). The exception
+is `reviewer-bash.sh`, which each reviewer's frontmatter registers (see
+"Agent, rule and skill files"), so it runs only in reviewers (#1321). They
+hold what an instruction alone does not reliably hold:
 
 | Event | Script | Does |
 | --- | --- | --- |
 | `SessionStart` | `session-start.sh` | Tells the agent the branch and any uncommitted changes, and records the user's running emulators |
-| `PreToolUse` on `Bash` | `guard-bash.sh` | Denies the git commands `AGENTS.md` → "Working copy" forbids, a commit or push to `main`, `gh pr create` without `--title`, and a literal PR title CI would reject in `gh pr create` or `gh pr edit` |
+| `PreToolUse` on `Bash` | `guard-bash.sh` | Denies the git commands `AGENTS.md` → "Working copy" forbids, a commit or push to `main`, a push without a review receipt (see "Review receipts"), `gh pr create` without `--title`, and a literal PR title CI would reject in `gh pr create` or `gh pr edit` |
+| `PreToolUse` on `Bash`, in reviewers | `reviewer-bash.sh` | Allows only commands that read or build: read-only `git` and `gh` commands, `rg`, `grep`, `ls`, `cat`, `sed -n` with line ranges, `find` without actions, `bash -n`, `shellcheck`, `review-receipt.sh check` and `base`, `dotnet build`, `dotnet test` and similar; denies the rest, and every redirect into a file, with a reason |
 | `PreToolUse` on edits | `guard-edit.sh` | Denies writes into `/tmp` and `issues/` |
 | `Stop` | `turn-end.sh` | Blocks the turn's end once for each emulator or APK in `build/` that appeared during the session |
 | `SessionEnd` | `session-end.sh` | Removes the session's state in `.git/agent-hooks/`; a session start also prunes state idle for over two days |
@@ -162,31 +215,45 @@ an instruction alone does not reliably hold:
 The hooks guard against mistakes, not intent. `guard-bash.sh` reads simple
 commands, follows `cd`, `env -C`, `git -C`, `bash -c` and a `git switch` or
 `git checkout` of a branch earlier in the line, and allows what it cannot
-read: a substitution inside double quotes, a wrapper such as `xargs` or
-`timeout`, a title held in a variable, a nested `env -C`, a detached
-HEAD or a checkout of `@{-1}`. It assumes an earlier switch succeeded,
-even after `||`. `guard-edit.sh` sees only the edit tools and only `/tmp`
-itself, so a shell redirect into `/tmp` or a write into macOS's
-`$TMPDIR` passes. The `Stop` hook reports any emulator the user starts
-during the session, including another session's but not one whose path
-holds a space, and the APK a release
-(`docs/RELEASING.md`) leaves in `build/`; say why it stays.
+read: a substitution inside double quotes or arithmetic, a wrapper such
+as `xargs` or `timeout`, a title held in a variable, a nested `env -C`, a
+detached HEAD or a checkout of `@{-1}`. It assumes an earlier switch
+succeeded, even after `||`. `reviewer-bash.sh` reads commands the same
+way, and also every substitution, quoted or not, but denies what it does
+not know, including `bash -c`, `xargs`, `env`, `awk`, a substitution that
+never closes and a program run by a path outside the system folders. It
+reads text, not values, so a command hidden in a variable's value and
+expanded later, as by `${x@P}` or arithmetic, still runs; it stops
+mistakes, not a reviewer set on writing. It trusts `dotnet build`,
+`dotnet test` and `dotnet format --verify-no-changes`, which run the
+reviewed code, but allows only their options that select, filter or
+quiet the run, and it does not hide the environment or readable files.
+`design-lead` is not a `*-reviewer` and keeps plain `Bash`, since it
+saves screenshots outside the repository.
+`guard-edit.sh` sees only the edit tools and only `/tmp` itself, so a
+shell redirect into `/tmp` or a write into macOS's `$TMPDIR` passes.
+The `Stop` hook reports any emulator the user starts during the
+session, including another session's but not one whose path holds a
+space, and the APK a release (`docs/RELEASING.md`) leaves in `build/`;
+say why it stays.
 
 A hook is a bash script that needs only bash, `git`, `jq` and POSIX tools.
 It writes its verdict in both tools' JSON shapes, always exits 0, and
-allows the call when `jq` is missing, because both tools block the call
-when a `PreToolUse` hook fails; `session-start.sh` then says the hooks are
-off, as it does when it cannot record the session's state for `Stop`. The settings command is
+allows the call when `jq` is missing, `reviewer-bash.sh` included,
+because both tools block the call when a `PreToolUse` hook fails;
+`session-start.sh` then says the hooks are off, as it does when it cannot
+record the session's state for `Stop`. The settings command is
 `"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/<name>.sh`:
 quoted, since the checkout path may hold spaces, and found from the
 repository root when `CLAUDE_PROJECT_DIR` is unset, so a session started
 in a subfolder still finds it.
 `guard-bash.sh` copies CI's PR title rule.
 
-The specs in `NodeRunner.Arch.Tests/Hooks/` run each hook against a
-throwaway repository, check each script's event and matcher in
-`settings.json`, and compare the title rule with `ci.yml`. A `local_*` hook
-is registered in `.claude/settings.local.json` (`AGENTS.md` →
+The specs in `NodeRunner.Arch.Tests/Hooks/` run each hook and
+`review-receipt.sh` against a throwaway repository, check each script's
+event and matcher in `settings.json`, and compare the title rule with
+`ci.yml`; `AgentFilesSpec` checks each reviewer's hook block. A `local_*`
+hook is registered in `.claude/settings.local.json` (`AGENTS.md` →
 "Machine-local setup").
 
 ## Merge gates

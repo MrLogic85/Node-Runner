@@ -9,6 +9,19 @@ internal static class AgentFiles
 {
     internal const string ReviewerTools = "Read, Grep, Glob, Bash";
 
+    /// <summary>The agent-scoped hook that keeps a reviewer's Bash to reading commands (#1321).</summary>
+    internal const string ReviewerHookScript = "reviewer-bash.sh";
+
+    /// <summary>The frontmatter each reviewer registers <see cref="ReviewerHookScript"/> with, in Claude Code's shape.</summary>
+    internal const string ReviewerHook = $$"""
+        hooks:
+          PreToolUse:
+            - matcher: "Bash"
+              hooks:
+                - type: command
+                  command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerHookScript}}'
+        """;
+
     private const string _agentSuffix = ".agent.md";
 
     /// <summary>Git-ignored machine-local agents and rules: AGENTS.md → "Machine-local setup" (#1342).</summary>
@@ -143,6 +156,12 @@ internal static class AgentFiles
             && (!values.TryGetValue("tools", out var tools) || tools != ReviewerTools))
         {
             problems.Add($"{shown}: a reviewer has tools: {ReviewerTools}.");
+        }
+
+        if (name.EndsWith("-reviewer", StringComparison.Ordinal)
+            && !string.Join('\n', lines[1..end]).Contains(ReviewerHook.ReplaceLineEndings("\n"), StringComparison.Ordinal))
+        {
+            problems.Add($"{shown}: a reviewer registers {ReviewerHookScript} with the hooks block in docs/REVIEW.md → \"Agent, rule and skill files\".");
         }
 
         if (values.ContainsKey("hooks"))

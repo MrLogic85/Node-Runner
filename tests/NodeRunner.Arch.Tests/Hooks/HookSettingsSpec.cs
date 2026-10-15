@@ -4,9 +4,9 @@ using System.Text.RegularExpressions;
 namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
-/// .claude/settings.json registers only the repository's hooks, with the quoted command path
-/// both tools need (#1314), and guard-bash.sh checks PR titles as CI's `PR title` check does
-/// (#1320). See docs/REVIEW.md → "Hooks".
+/// .claude/settings.json registers the repository's hooks but the reviewers' own (#1321), with the
+/// quoted command path both tools need (#1314), and guard-bash.sh checks PR titles as CI's
+/// `PR title` check does (#1320). See docs/REVIEW.md → "Hooks".
 /// </summary>
 public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixture<HookFixture>
 {
@@ -35,13 +35,14 @@ public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixtur
             }
         }
 
-        registered.Distinct().Order(StringComparer.Ordinal).ShouldBe(HookScripts().Order(StringComparer.Ordinal));
+        registered.Distinct().Order(StringComparer.Ordinal)
+            .ShouldBe(HookScripts().Where(script => script != AgentFiles.ReviewerHookScript).Order(StringComparer.Ordinal));
         if (OperatingSystem.IsWindows())
         {
             return;
         }
 
-        foreach (var script in registered)
+        foreach (var script in HookScripts())
         {
             File.GetUnixFileMode(Path.Combine(_hooks, script)).HasFlag(UnixFileMode.UserExecute)
                 .ShouldBeTrue($"{script} is not executable; run git update-index --chmod=+x.");

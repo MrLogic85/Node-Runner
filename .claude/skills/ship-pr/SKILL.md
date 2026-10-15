@@ -15,10 +15,15 @@ follows `docs/RELEASING.md` instead. Read `LOCAL_CONFIG.md` first for the
    (`docs/MANUAL_TESTING.md`).
 2. Commit with the PR title as the subject and a `Co-authored-by:` trailer
    for each contributor.
-3. Push the branch: `git push -u origin <branch>`.
+3. Push the branch: `git push -u origin <branch>`. The hook denies the
+   push unless the `review-change` skill recorded a receipt for exactly
+   this change (`docs/REVIEW.md` → "Review receipts"); if it denies the
+   push, review what changed since and record a new receipt.
 4. Write the body from `.github/pull_request_template.md` to
    `.scratch/pr.md`, with everything the "Definition of Done" asks the PR
-   to say, then open the PR, enable auto-merge and delete the file:
+   to say and "Notes for the reviewer" from the `review-change` skill's
+   `.scratch/review.md`, then open the PR, enable auto-merge and delete
+   both files:
 
    ```bash
    gh pr create --title "type(#N): Description" --body-file .scratch/pr.md

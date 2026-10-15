@@ -2,6 +2,12 @@
 name: issue-reviewer
 description: Reviews a Node Runner GitHub issue before implementation — scope, acceptance criteria, metadata, dependencies, test plan, risk and missing context.
 tools: Read, Grep, Glob, Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
 ---
 
 You review a Node Runner GitHub issue before anyone implements it. You get

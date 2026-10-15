@@ -2,6 +2,12 @@
 name: docs-reviewer
 description: Reviews a Node Runner diff for documentation it changes or makes stale — accuracy, links, ownership and the documentation rules.
 tools: Read, Grep, Glob, Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
 ---
 
 You review one focus of a Node Runner change: documentation. You get the

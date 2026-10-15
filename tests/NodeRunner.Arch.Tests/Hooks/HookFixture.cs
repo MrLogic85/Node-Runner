@@ -128,6 +128,29 @@ public sealed class HookFixture : IDisposable
     internal static JsonObject Bash(string command) =>
         new() { ["tool_name"] = "Bash", ["tool_input"] = new JsonObject { ["command"] = command } };
 
+    /// <summary>Runs a repository script with bash in <paramref name="directory"/>; returns its exit code and output.</summary>
+    internal static (int ExitCode, string Output) Script(string directory, string script, params string[] arguments)
+    {
+        var start = new ProcessStartInfo("bash")
+        {
+            WorkingDirectory = directory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        Isolate(start);
+        start.ArgumentList.Add(Path.Combine(RepositoryRoot.Find(), script));
+        foreach (var argument in arguments)
+        {
+            start.ArgumentList.Add(argument);
+        }
+
+        using var process = Process.Start(start)!;
+        var output = process.StandardOutput.ReadToEndAsync();
+        var errors = process.StandardError.ReadToEndAsync();
+        process.WaitForExit(10_000).ShouldBeTrue($"{script} timed out.");
+        return (process.ExitCode, output.Result + errors.Result);
+    }
+
     internal static string Git(string directory, params string[] arguments)
     {
         var start = new ProcessStartInfo("git") { RedirectStandardOutput = true, RedirectStandardError = true };
