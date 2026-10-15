@@ -4,9 +4,10 @@ namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// How a <see cref="StepperDef"/> steps (#1037), like a clock. It holds its joint locked at a notch,
-/// one of <see cref="StepperDef.StepsPerTurn"/> evenly spaced angles counted from the built angle. At
-/// its running frequency it unlocks and drives the joint to the neighbouring notch in Power's direction
-/// with at most |Power| × Max strength: full torque, then braking just in time to arrive still. It has
+/// one of <see cref="StepperDef.StepsPerTurn"/> evenly spaced angles counted from the built angle. Its
+/// clock runs at the brain's frequency (#1263); each time it ticks it unlocks and drives the joint to the
+/// neighbouring notch, the way the frequency's sign says, with at most Max strength: full torque, then
+/// braking just in time to arrive still. It has
 /// no top speed. It locks the joint the moment it is close enough to the notch, or as soon as it has
 /// passed it: an overshoot still counts one step. A release that times out between notches pulls
 /// the joint with Max strength to the nearest notch and locks it as it gets there; one cut short by the
@@ -14,13 +15,10 @@ namespace NodeRunner.Mechanics;
 /// (<see cref="StepperState.Locked"/>); where it can't, <see cref="StepperState.Torque"/> holds it as
 /// endless friction, as a Locked Brake's does. Its
 /// angle is the one between its sides, as a <see cref="VelocityMotor"/>'s, and the brain sees it the
-/// same way, as a sine and cosine.
+/// same way, as a sine and cosine, with a tick that shows when it steps next.
 /// </summary>
 public static class Stepper
 {
-    /// <summary>How long the running frequency takes to follow the Frequency output, in seconds: a time constant.</summary>
-    public const double FrequencyTimeConstant = 1;
-
     /// <summary>The longest a release lasts, in seconds, before it heads for the nearest notch.</summary>
     public const double MaxReleaseTime = 0.5;
 
@@ -33,12 +31,11 @@ public static class Stepper
     /// <summary>The angle inputs: the sine and cosine of the angle between the sides, as a Velocity motor's.</summary>
     public static (double Sin, double Cos) AngleInputs(double angle) => VelocityMotor.AngleInputs(angle);
 
-    /// <summary>The frequency input: the running frequency as a share of Max frequency, 0…1.</summary>
-    public static double FrequencyInput(StepperState state, StepperDef stepper)
-    {
-        ArgumentNullException.ThrowIfNull(stepper);
-        return state.Frequency / stepper.MaxFrequency;
-    }
+    /// <summary>
+    /// The tick input (#1263): its clock's phase, a sawtooth that drops to 0 as it steps and rises to 1
+    /// just before the next step. It holds still while the Stepper does not step.
+    /// </summary>
+    public static double TickInput(StepperState state) => state.Phase;
 
     /// <summary>The angle of notch <paramref name="notch"/> from the built angle, in radians.</summary>
     public static double NotchAngle(int notch, StepperDef stepper)
@@ -50,9 +47,9 @@ public static class Stepper
     /// <summary>
     /// The Stepper's next state from its last. <paramref name="angle"/> is the angle between its sides
     /// from the built angle, counted on across whole turns; <paramref name="speed"/> its turning speed.
-    /// <paramref name="frequencyOutput"/> is the brain's Frequency output (0…1 of Max frequency) and
-    /// <paramref name="powerOutput"/> its Power output (−1…1 of Max strength). With no brain, pass 0
-    /// for both: the Stepper then only holds its notch. <paramref name="welded"/> is whether the host
+    /// <paramref name="frequencyOutput"/> is the brain's Frequency output, −1…1 of Max frequency, its sign
+    /// the way to step, counter-clockwise positive. It takes effect at once. With no brain, pass 0: the
+    /// Stepper then only holds its notch. <paramref name="welded"/> is whether the host
     /// welds the joint while <see cref="StepperState.Locked"/>; if not, the Stepper holds it by torque.
     /// </summary>
     public static StepperState Next(
@@ -60,7 +57,6 @@ public static class Stepper
         double angle,
         double speed,
         double frequencyOutput,
-        double powerOutput,
         StepperState previous,
         double step,
         double effectiveInertia,
@@ -70,9 +66,9 @@ public static class Stepper
         MotorLoop.RequirePositive(step, nameof(step), "Step");
         var position = angle / NotchSpacing(stepper);
 
-        var wantedFrequency = Math.Clamp(frequencyOutput, 0, 1) * stepper.MaxFrequency;
-        var frequency = previous.Frequency + ((wantedFrequency - previous.Frequency) * (1 - Math.Exp(-step / FrequencyTimeConstant)));
-        var phase = previous.Phase + (frequency * step);
+        // Its clock never resets: a step that locks early or late, or times out, leaves it ticking on.
+        var frequency = Math.Clamp(frequencyOutput, -1, 1) * stepper.MaxFrequency;
+        var phase = previous.Phase + (Math.Abs(frequency) * step);
         var due = phase >= 1;
         phase -= Math.Floor(phase);
 
@@ -107,7 +103,7 @@ public static class Stepper
         if (due)
         {
             (releasing, locked) = (true, false);
-            direction = powerOutput < 0 ? -1 : 1;
+            direction = Math.Sign(frequency);
             releaseTime = 0;
         }
         else if (!releasing)
@@ -116,11 +112,11 @@ public static class Stepper
         }
 
         // A release drives as fast as it can still stop by the notch, at most covering what is left in a step.
-        var torque = releasing ? Approach(NotchAngle(notch + direction, stepper), angle, speed, Math.Abs(Math.Clamp(powerOutput, -1, 1)) * stepper.Strength, 1 / step, previous.Last, step, effectiveInertia)
+        var torque = releasing ? Approach(NotchAngle(notch + direction, stepper), angle, speed, stepper.Strength, 1 / step, previous.Last, step, effectiveInertia)
             : locked && welded ? 0
             : locked ? Brake.Next(speed, double.PositiveInfinity, previous.Last, step, effectiveInertia).Torque
             : Approach(NotchAngle(notch, stepper), angle, speed, stepper.Strength, HoldApproachRate, previous.Last, step, effectiveInertia);
-        return new StepperState(frequency, phase, notch, releasing, direction, releaseTime, new BrakeState(torque, speed), locked);
+        return new StepperState(phase, notch, releasing, direction, releaseTime, new BrakeState(torque, speed), locked);
     }
 
     private static double NotchSpacing(StepperDef stepper) => 2 * Math.PI / stepper.StepsPerTurn;
@@ -150,8 +146,8 @@ public static class Stepper
 }
 
 /// <summary>
-/// What a <see cref="Stepper"/> carries between physics steps. <see cref="Frequency"/> is its running
-/// frequency in steps a second, <see cref="Phase"/> how far it is to its next release (0…1),
+/// What a <see cref="Stepper"/> carries between physics steps. <see cref="Phase"/> is how far its clock is
+/// from its last tick to its next (0…1),
 /// <see cref="Notch"/> the notch it holds or last held, counted from the built angle, and, while it
 /// <see cref="Releasing"/>, <see cref="Direction"/> the way it steps (±1) and <see cref="ReleaseTime"/>
 /// how long it has pushed. <see cref="Last"/> is the torque it turned with and the speed it read, which
@@ -159,7 +155,6 @@ public static class Stepper
 /// default state is a trial's start: at the built notch, still, and about to lock.
 /// </summary>
 public readonly record struct StepperState(
-    double Frequency,
     double Phase,
     int Notch,
     bool Releasing,

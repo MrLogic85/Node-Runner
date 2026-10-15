@@ -18,7 +18,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray, AddAngleSensorsArray, AddSteppersArray]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray, AddAngleSensorsArray, AddSteppersArray, StepperPowerBecomesFrequency]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -334,6 +334,73 @@ public sealed class FileCreationRepository : ICreationRepository
             if (targets.Contains(IntOf(connection["to"], "connection to")))
             {
                 connection["weight"] = 2 * NumberOf(connection["weight"], "connection weight");
+            }
+        }
+    }
+
+    // Before #1263 a Stepper's outputs were a sigmoid frequency, 0…1 of its Max frequency, and a tanh
+    // power, −1…1 of its Max strength, its sign the way to step; its third input was its running
+    // frequency. Its one output is now a tanh frequency whose sign is the way to step, so the power
+    // neuron, already tanh, becomes it and keeps the trained direction. The old frequency neurons and
+    // every connection to or from them go; the new tick input starts with no neuron, as a new port does.
+    private static void StepperPowerBecomesFrequency(JsonObject file)
+    {
+        // A file without training, or with one the strict load refuses, has no brain to change.
+        if (file["training"] is not JsonObject training || training["brain"] is not JsonObject brain)
+        {
+            return;
+        }
+
+        if (brain["neurons"] is not JsonArray neurons || brain["connections"] is not JsonArray connections)
+        {
+            throw new InvalidDataException("creation.json has a brain without neurons or connections.");
+        }
+
+        if (file["creature"] is not JsonObject creature || creature["steppers"] is not JsonArray steppers)
+        {
+            throw new InvalidDataException("creation.json is missing its creature's steppers.");
+        }
+
+        var stepperIds = steppers
+            .Select(stepper => stepper is JsonObject entry
+                ? IntOf(entry["id"], "stepper id")
+                : throw new InvalidDataException("creation.json has a stepper that is not an object."))
+            .ToHashSet();
+        var dropped = new HashSet<int>();
+        foreach (var node in neurons.ToArray())
+        {
+            if (node is not JsonObject neuron)
+            {
+                throw new InvalidDataException("creation.json has a neuron that is not an object.");
+            }
+
+            if (neuron["partId"] is not JsonValue partId || !stepperIds.Contains(IntOf(partId, "neuron partId")))
+            {
+                continue;
+            }
+
+            switch (TextOf(neuron["kind"]), TextOf(neuron["channel"]))
+            {
+                case ("input", "frequency") or ("output", "frequency"):
+                    dropped.Add(IntOf(neuron["id"], "neuron id"));
+                    neurons.Remove(neuron);
+                    break;
+                case ("output", "power"):
+                    neuron["channel"] = BrainPorts.StepperFrequencyChannel;
+                    break;
+            }
+        }
+
+        foreach (var node in connections.ToArray())
+        {
+            if (node is not JsonObject connection)
+            {
+                throw new InvalidDataException("creation.json has a connection that is not an object.");
+            }
+
+            if (dropped.Contains(IntOf(connection["from"], "connection from")) || dropped.Contains(IntOf(connection["to"], "connection to")))
+            {
+                connections.Remove(connection);
             }
         }
     }

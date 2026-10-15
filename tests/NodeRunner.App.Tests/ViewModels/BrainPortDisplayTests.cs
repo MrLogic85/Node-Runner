@@ -33,9 +33,8 @@ public sealed class BrainPortDisplayTests
     [InlineData(PartKind.AngleSensor, PortDirection.Input, "speed", PortRange.MinusOneToOne, "speed")]
     [InlineData(PartKind.Stepper, PortDirection.Input, "angleSin", PortRange.MinusOneToOne, "angle sin")]
     [InlineData(PartKind.Stepper, PortDirection.Input, "angleCos", PortRange.MinusOneToOne, "angle cos")]
-    [InlineData(PartKind.Stepper, PortDirection.Input, "frequency", PortRange.ZeroToOne, "frequency")]
-    [InlineData(PartKind.Stepper, PortDirection.Output, "frequency", PortRange.ZeroToOne, "frequency")]
-    [InlineData(PartKind.Stepper, PortDirection.Output, "power", PortRange.MinusOneToOne, "power")]
+    [InlineData(PartKind.Stepper, PortDirection.Input, "tick", PortRange.ZeroToOne, "tick")]
+    [InlineData(PartKind.Stepper, PortDirection.Output, "frequency", PortRange.MinusOneToOne, "frequency")]
     public void EveryPort_HasItsRangeAndShortLabel(PartKind kind, PortDirection direction, string channel, PortRange range, string label)
     {
         var port = new BrainPort(1, channel, direction, direction == PortDirection.Input ? PortSignal.Reading : PortSignal.Position);
@@ -57,7 +56,7 @@ public sealed class BrainPortDisplayTests
         }
 
         layout.Inputs.Count.ShouldBe(22);
-        layout.Outputs.Count.ShouldBe(8);
+        layout.Outputs.Count.ShouldBe(7);
     }
 
     // The bar draws the value as it leaves the brain, so each output's range must be its activation's.

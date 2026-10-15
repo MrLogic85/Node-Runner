@@ -4,7 +4,7 @@ namespace NodeRunner.ML.Brains;
 
 /// <summary>
 /// The first generation of a new Creation (#537, #810). Its base brain has no weights and holds the
-/// built pose at <see cref="FullStrengthBias"/>, each Stepper at <see cref="HalfFrequencyBias"/>: each length output's bias asks for the Piston's
+/// built pose at <see cref="FullStrengthBias"/>, each Stepper still (#1263): each length output's bias asks for the Piston's
 /// drawn length (#870, #1129), like a robot that starts stiff in its default pose
 /// and learns offsets from it. Generation 0 never changes it. The last shadow runs it unchanged, as a
 /// reference near 0; every other shadow is a wide random perturbation of it. Parts added to a
@@ -22,9 +22,6 @@ public static class GenerationZero
 
     /// <summary>The bias every strength output starts at: about 95% of its Strength.</summary>
     public const double FullStrengthBias = 3;
-
-    /// <summary>The bias every frequency output starts at: half its Max frequency (#1036).</summary>
-    public const double HalfFrequencyBias = 0;
 
     // A length output's sigmoid takes twice the input a tanh would for the same length, as
     // (tanh(x) + 1) / 2 = sigmoid(2x) (#1129). Its bias limit and noise are scaled by it, so a
@@ -50,10 +47,6 @@ public static class GenerationZero
             if (output.Signal == PortSignal.Strength)
             {
                 genome[biasStart + o] = FullStrengthBias;
-            }
-            else if (output.Signal == PortSignal.Frequency)
-            {
-                genome[biasStart + o] = HalfFrequencyBias;
             }
             else if (output.Signal == PortSignal.Length && drawnPositions?.TryGetValue(output.PartId, out var drawn) == true)
             {

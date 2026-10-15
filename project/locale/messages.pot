@@ -1417,10 +1417,6 @@ msgid "length"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
-msgid "power"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "right"
 msgstr ""
 
@@ -1435,6 +1431,10 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/src/ui/lib/UiPicker.cs
 msgid "swaps"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "tick"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
@@ -1686,10 +1686,6 @@ msgid "{0}: length"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
-msgid "{0}: power"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: right"
 msgstr ""
 
@@ -1699,6 +1695,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: strength"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "{0}: tick"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs

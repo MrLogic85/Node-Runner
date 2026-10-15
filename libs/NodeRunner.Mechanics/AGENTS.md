@@ -27,7 +27,7 @@ Build and tests reuse so they show and check exactly the same thing (#596).
   with, and the speed input both give the brain
 - `Brake`, `BrakeState` — a Brake's friction torque, capped at its Strength,
   and the speed loop a Stepper drives and holds with
-- `Stepper`, `StepperState` — a Stepper's notches, running frequency,
+- `Stepper`, `StepperState` — a Stepper's notches, clock,
   releases and lock, and its inputs
 - `AngleSensor` — an Angle sensor's angle and speed inputs, on its own speed scale
 - `HingePartSideGeometry`, `MotorCouple` — how both motors, the Stepper, the Brake and the Angle sensor measure

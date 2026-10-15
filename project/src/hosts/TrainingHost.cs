@@ -27,7 +27,7 @@ namespace NodeRunner.Hosts;
 /// </summary>
 public partial class TrainingHost : Node, IRoutedScene
 {
-    private const double _signalRefreshIntervalSeconds = 0.15;
+    private const double _signalRefreshIntervalSeconds = 1.0 / 30;
 
 
     private readonly VisualTheme _theme = VisualTheme.Neon;
@@ -164,7 +164,9 @@ public partial class TrainingHost : Node, IRoutedScene
             return;
         }
 
-        _signalRefreshElapsed = 0;
+        // Keep the remainder: zeroing it would make a refresh wait an extra frame whenever two
+        // smoothed frames fall a microsecond short of the interval, about 20 a second instead of 30.
+        _signalRefreshElapsed %= _signalRefreshIntervalSeconds;
         _followed.ReadInputs(_brainInputs);
         _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.MotorCount, FollowedDistance, FollowedCrashed);
         ShowCrash();

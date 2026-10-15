@@ -135,7 +135,7 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   no brain ports.
 - **Stepper** — A powered joint part (#455, #1036) that holds its joint in
   notches and, at the frequency the brain picks, lets go and pushes it to
-  the next one, with the brain's power and direction (`StepperDef`). See:
+  the next one, the way the frequency's sign says (`StepperDef`). See:
   `docs/CREATURE_MODEL.md` → "Stepper".
 - **Start position** — Where a part's drawn pose sits in its travel or
   range, 0…100%.
@@ -148,6 +148,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   (`Mechanics.Tear`). The trial's score freezes at the first tear, and the
   camera follows the **main piece**. See: `docs/CREATURE_MODEL.md` → Beam
   → Tearing.
+- **Tick input** — A Stepper's input (#1263) that shows when it steps
+  next: 0 as it steps, rising to 1 just before the next. Not a **Tick**. See:
+  `docs/CREATURE_MODEL.md` → "Stepper".
 - **Touch sensor** — A sensor on a joint (#1043) that tells the brain
   how close that joint is to touching the ground (`TouchSensorDef`); one
   per joint.
