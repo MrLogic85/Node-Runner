@@ -30,3 +30,7 @@ paths:
      committing.
 
   `UiThemeExpanderTests` fail when a theme was edited without regenerating.
+- `Screenshot.cs` — runs a scene for some frames, saves what the window
+  shows as a PNG and quits, so an agent can see a desktop check at any
+  window size, which Godot's Movie Maker cannot. The `desktop-check` skill
+  has the command.

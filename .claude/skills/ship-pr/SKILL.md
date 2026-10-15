@@ -12,7 +12,7 @@ follows `docs/RELEASING.md` instead. Read `LOCAL_CONFIG.md` first for the
 
 1. Check every "Definition of Done" box, including the `review-change`
    skill run on the final diff and the manual testing decision
-   (`docs/MANUAL_TESTING.md`).
+   (`docs/MANUAL_TESTING.md`; the `plan-manual-tests` skill).
 2. Commit with the PR title as the subject and a `Co-authored-by:` trailer
    for each contributor.
 3. Push the branch: `git push -u origin <branch>`. The hook denies the
