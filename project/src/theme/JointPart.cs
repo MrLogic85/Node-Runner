@@ -5,11 +5,14 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A joint (#767): a Touch sensor's cushion (<see cref="Cushion"/>, #1045) under everything else it
-/// draws, and its halo while that sensor is selected; a Rubber's skin (<see cref="Skin"/>, #1142) over the cushion; its ring (<see cref="JointDrawing"/>) at its
-/// origin and, while selected, its halo; a Wheel's hub (<see cref="ShowsHub"/>) where a Wheel stands in for its ring, so the hub sits over
-/// the links that reach it (#1086); and over them its <see cref="Placing"/> mark, which it draws even
-/// where a Servo or Wheel stands in for its ring (<see cref="ShowsRing"/>).
+/// A joint (#767). On its bands layer (<see cref="DrawSlot.Band"/>, #1269), under the hinge part on
+/// it: a Touch sensor's cushion (<see cref="Cushion"/>, #1045); a Rubber's skin (<see cref="Skin"/>,
+/// #1142) over the cushion; and the marks round the joint, the Wheel's and Touch sensor's halos and
+/// its <see cref="Placing"/> mark, which it draws even where a Servo or Wheel stands in for its ring
+/// (<see cref="ShowsRing"/>). In its own slot (<see cref="DrawSlot.Over"/>): its ring
+/// (<see cref="JointDrawing"/>) at its origin and, while selected, its halo; or a Wheel's hub
+/// (<see cref="ShowsHub"/>) where a Wheel stands in for its ring, so the hub sits over the links
+/// that reach it (#1086).
 /// </summary>
 public partial class JointPart : PartVisual
 {
@@ -31,10 +34,13 @@ public partial class JointPart : PartVisual
     private bool _wheelSelected;
     private bool _skin;
     private bool _skinSelected;
+    private readonly Node2D _bands;
 
     public JointPart()
         : base(DrawSlot.Over)
     {
+        _bands = AddSlotLayer(DrawSlot.Band, "Bands");
+        _bands.Draw += DrawBands;
     }
 
     public float Radius
@@ -154,22 +160,14 @@ public partial class JointPart : PartVisual
         set => Change(ref _placingRadius, value);
     }
 
+    protected override void Changed()
+    {
+        base.Changed();
+        _bands.QueueRedraw();
+    }
+
     public override void _Draw()
     {
-        var cushion = Cushion && !Simplified;
-        if (cushion)
-        {
-            using var cushionPen = UiPixelPen.Begin(this);
-            var color = Theme.TouchCushion.Lerp(Theme.TouchCushionTouching, Touch);
-            cushionPen.Ring(Vector2.Zero, Radius + ((float)TouchSensorDef.Cushion / 2), color, (float)TouchSensorDef.Cushion, _cushionSegments);
-        }
-
-        if (Skin && !Simplified)
-        {
-            using var skinPen = UiPixelPen.Begin(this);
-            skinPen.Ring(Vector2.Zero, Radius + ((float)RubberDef.Skin / 2), SkinSelected ? Theme.SelectionGlow : Theme.RubberSkin, (float)RubberDef.Skin, _skinSegments);
-        }
-
         if (ShowsRing)
         {
             var look = Selected ? JointLook.Selected : Loose ? JointLook.Loose : JointLook.Plain;
@@ -180,26 +178,44 @@ public partial class JointPart : PartVisual
             }
         }
 
-        if (WheelSelected && !Simplified)
-        {
-            SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, (float)SelectionMarks.JointHalo(Radius));
-        }
-
-        if (cushion && TouchSelected)
-        {
-            SelectionDrawing.DrawJoint(this, Theme, Transform2D.Identity, Vector2.Zero, (float)SelectionMarks.JointHalo(Radius + (float)TouchSensorDef.Cushion));
-        }
-
         if (ShowsHub && !ShowsRing && Simplified)
         {
             // A shadow's Wheel joint shows its outer ring at the hub, as every shadow joint does.
             JointDrawing.DrawPlain(this, Theme, Transform2D.Identity, Vector2.Zero, JointDrawing.HubRadius, Loose ? JointLook.Loose : JointLook.Plain, simplified: true);
         }
 
-        using var pen = UiPixelPen.Begin(this);
         if (ShowsHub && !ShowsRing && !Simplified)
         {
+            using var pen = UiPixelPen.Begin(this);
             WheelPart.DrawHub(pen, Theme, Loose);
+        }
+    }
+
+    // Every mark here lies outside the ring and hub, so drawing them under those changes nothing.
+    private void DrawBands()
+    {
+        var cushion = Cushion && !Simplified;
+        if (cushion)
+        {
+            using var cushionPen = UiPixelPen.Begin(_bands);
+            var color = Theme.TouchCushion.Lerp(Theme.TouchCushionTouching, Touch);
+            cushionPen.Ring(Vector2.Zero, Radius + ((float)TouchSensorDef.Cushion / 2), color, (float)TouchSensorDef.Cushion, _cushionSegments);
+        }
+
+        if (Skin && !Simplified)
+        {
+            using var skinPen = UiPixelPen.Begin(_bands);
+            skinPen.Ring(Vector2.Zero, Radius + ((float)RubberDef.Skin / 2), SkinSelected ? Theme.SelectionGlow : Theme.RubberSkin, (float)RubberDef.Skin, _skinSegments);
+        }
+
+        if (WheelSelected && !Simplified)
+        {
+            SelectionDrawing.DrawJoint(_bands, Theme, Transform2D.Identity, Vector2.Zero, (float)SelectionMarks.JointHalo(Radius));
+        }
+
+        if (cushion && TouchSelected)
+        {
+            SelectionDrawing.DrawJoint(_bands, Theme, Transform2D.Identity, Vector2.Zero, (float)SelectionMarks.JointHalo(Radius + (float)TouchSensorDef.Cushion));
         }
 
         if (Placing == PlacingMark.None)
@@ -207,6 +223,7 @@ public partial class JointPart : PartVisual
             return;
         }
 
+        using var pen = UiPixelPen.Begin(_bands);
         var ring = (float)SelectionMarks.JointHalo(PlacingRadius);
         if (Placing == PlacingMark.Takes)
         {

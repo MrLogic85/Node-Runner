@@ -22,10 +22,9 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    the order; `DrawGroups` and `DrawSlot` live in `libs/NodeRunner.Domain`
    so Build's touches rank parts the same way (#1107). `DrawLayersTests`
    checks that layers are passed by name and that every `ZIndex` is a
-   named layer within Godot's range. One known exception: a joint's
-   cushion and skin share `DrawSlot.Over` with its hinge part, so only
-   creating joints first puts the hinge part on top; `DrawLayersTests`
-   guards that order until #1269 gives them a layer of their own.
+   named layer within Godot's range. A part that draws in two slots, as a
+   joint draws its bands under the hinge part on it (#1269), draws the
+   second on a child from `PartVisual.AddSlotLayer`.
 3. **Selection is drawn with its part.** A part draws its own marks in its
    `_Draw`, or a child layer of its own that turns with it (a Stepper's
    keyhole turns with its pawl), and rises whole to the selected surface
@@ -33,8 +32,8 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    layer. A Touch sensor's
    part is the cushion `JointPart` draws, and a Rubber's the skin, so
    `JointPart` draws their marks too. Two exceptions:
-   - A Wheel's mark is drawn by its joint (`JointPart`), which draws its
-     hub, so it lies over the links and the cushion
+   - A Wheel's mark is drawn by its joint (`JointPart`) after its bands,
+     so it lies over the links and the cushion
      (`docs/WORLD_VISUALS.md` → "Selection marks").
    - A selected joint motor's (a Servo's, Velocity motor's or Stepper's), Brake's or
      Angle sensor's Fixed and Target link bands lie along other parts' links, so the Build canvas draws them on
@@ -69,7 +68,8 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
 - `ViewLayer.cs` — a selected underlay or overlay a screen draws its own
   marks on, between the parts' layers
 - `PlacingMark.cs` — whether a beam or joint takes or refuses the part being
-  placed; the part draws the mark itself, in its own draw slot (#1107)
+  placed; the part draws the mark itself, on its own layers (#1107), a
+  joint's on its bands (#1269)
 
 ## What does NOT live here
 

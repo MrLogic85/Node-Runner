@@ -12,6 +12,12 @@ public enum DrawSlot
     /// <summary>The sensor on a beam.</summary>
     Sensor,
 
+    /// <summary>
+    /// A joint's bands, its Touch sensor's cushion and Rubber's skin, with the marks round the joint
+    /// (#1269): over every link end at the joint, under its ring and the hinge part on it.
+    /// </summary>
+    Band,
+
     /// <summary>A motor or plain joint ring, over every link end at its joint.</summary>
     Over,
 }

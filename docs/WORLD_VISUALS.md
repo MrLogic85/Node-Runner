@@ -388,8 +388,8 @@ outside its arc, the others inside the cushion.
 - **Rubber:** its skin turns `halo` (#1142), with no ring of its own, which
   would fall where the skin already is. The joint gets no mark of its own.
 - **Wheel:** the joint's ring, outside the tyre. The Wheel stands in for its
-  joint, which has no mark of its own. Its joint draws the mark with the
-  hub, over the links and a Touch sensor's cushion, however it was chosen
+  joint, which has no mark of its own. Its joint draws the mark after its
+  bands, over the links and a Touch sensor's cushion, however it was chosen
   (`docs/BUILD_MODE.md` → Interactions). With a joint motor on the same joint, each selected part shows its
   own mark (#1044).
 - **Servo:** a keyhole `halo` outline. Selected alone, a hatched `detail`
@@ -432,7 +432,7 @@ outside its arc, the others inside the cushion.
 
 A creature draws on two surfaces, the unselected parts and over them the
 selected ones, which draw alike (#1107). Each surface draws from the bottom
-up: its parts, then the joints joined to no link; the selected surface
+up: its parts, then the joints joined to no link, as one more group; the selected surface
 starts with a selected joint motor's, Brake's or Angle sensor's bands (Selection marks). On top
 of both go the overlays (camera rays, link travel marks, the link drag and
 sensor move lines, the picked link's start rings, the link a link drag
@@ -443,7 +443,8 @@ Parts draw in groups, one per link, so the drawing is the same in Build and
 Training and never changes while the creature moves (`DrawGroups`). The link
 whose lower end sits highest on screen draws first, so what is lower is
 nearer; ties keep link id order. Within a group: a Wheel (with its joint's
-first link), the link, its sensor, then a joint's Touch cushion, Rubber skin, ring,
+first link), the link, its sensor, then a joint's bands (its Touch cushion,
+Rubber skin, and the Wheel and Touch halos and placing mark round it), its ring,
 Wheel hub, joint motor, Brake or Angle sensor (with its joint's last
 link). So a link covers a Wheel's face and a ring or hub covers its link's
 end. An Angle sensor's arc draws with its ring, after its joint's links,
@@ -464,7 +465,10 @@ under the rod or around the ring, so a refused mark stays in its part's
 place (Build canvas → Placing a part). A touch hits what is drawn on top
 (`docs/BUILD_MODE.md` → Interactions). In Training the best and crash markers and the start
 sign are behind the ground, the shadows above it, and the followed creature
-above every shadow.
+above every shadow. Training's world starts at Godot's lowest `ZIndex`
+(`ArenaLayers`), so the shadows and the followed creature each get a whole
+creature's layers within Godot's range rather than fewer draw groups (#1269);
+a creature's links past `DrawGroups.MaxGroups` share the last group.
 
 ## Build canvas
 

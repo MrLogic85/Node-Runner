@@ -40,6 +40,7 @@ public sealed class DrawGroupsTests
 
         groups.Joint(1, DrawSlot.Under).ShouldBe(0);
         groups.Joint(1, DrawSlot.Over).ShouldBe(1);
+        groups.Joint(1, DrawSlot.Band).ShouldBe(1, "A joint's bands draw over every link at it, with its ring and hinge part.");
         groups.Joint(4, DrawSlot.Under).ShouldBe(2);
         groups.Joint(5, DrawSlot.Over).ShouldBeNull();
     }
@@ -273,9 +274,12 @@ public sealed class DrawGroupsTests
             DrawGroups.Rank(DrawSlot.Under, 0, selected: false),
             DrawGroups.Rank(DrawSlot.Link, 0, selected: false),
             DrawGroups.Rank(DrawSlot.Sensor, 0, selected: false),
+            DrawGroups.Rank(DrawSlot.Band, 0, selected: false),
             DrawGroups.Rank(DrawSlot.Over, 0, selected: false),
             DrawGroups.Rank(DrawSlot.Under, 1, selected: false),
             DrawGroups.Rank(DrawSlot.Over, DrawGroups.MaxGroups - 1, selected: false),
+            DrawGroups.Rank(DrawSlot.Under, group: null, selected: false),
+            DrawGroups.Rank(DrawSlot.Band, group: null, selected: false),
             DrawGroups.Rank(DrawSlot.Over, group: null, selected: false),
             DrawGroups.Rank(DrawSlot.Under, 0, selected: true),
             DrawGroups.Rank(DrawSlot.Over, group: null, selected: true),
