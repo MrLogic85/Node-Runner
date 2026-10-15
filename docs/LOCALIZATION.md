@@ -79,20 +79,12 @@ all text set in C#, and it cannot be checked in a test.
 
 ## Adding a language
 
-1. Create `project/locale/<language>.po` from `messages.pot`, for example
-   with Poedit (New from POT) or `msginit --locale=sv -i messages.pot -o
-   sv.po`. Set the `Language` and `Plural-Forms` headers for the language.
-2. Translate every entry. Keep `{0}`, `{1}` and so on: each one must be
-   used exactly once. A plural entry has one `msgstr[n]` per form of the
-   language.
-3. Register the file in Project Settings → Localization → Translations. It
-   is saved as `internationalization/locale/translations` in
-   `project/project.godot`.
-4. Turn on the text server data (below).
-5. Run the game with the device set to the language. Godot reads the
-   system language when the game starts, so restart it after changing the
-   device language. A change through `TranslationServer.SetLocale` updates
-   open screens at once.
+A language is a `project/locale/<language>.po` file made from the template.
+In a translation, each `{0}`, `{1}` … is used exactly once, and a plural
+entry has one `msgstr[n]` per form of the language. Godot reads the system
+language when the game starts, so a check in another language restarts the
+game after changing it; a change through `TranslationServer.SetLocale`
+updates open screens at once. The `add-language` skill has the steps.
 
 When the template changes, update each language with Poedit (Update from
 POT) or `msgmerge -U <language>.po messages.pot`.

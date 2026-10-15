@@ -62,6 +62,7 @@ state goes in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
 | `jq` | Required: the same scripts and the hook tests; without it the agent hooks are off | `brew install jq` |
 | `adb` | Required: Android checks | `brew install --cask android-platform-tools` |
 | `rg` (ripgrep) | Recommended: fast search that skips build output | `brew install ripgrep` |
+| `gettext` | Recommended: adding a language; Poedit does the same | `brew install gettext` |
 
 The `dotnet-sdk` cask installs the newest SDK; the build needs 10.x. The
 scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
@@ -91,7 +92,7 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 | Tools to install | `README.md` → "Tools" |
 | How a change lands, review agents, hooks | [`docs/REVIEW.md`](docs/REVIEW.md) |
 | What each review agent checks | [`.github/agents/`](.github/agents/) |
-| Procedures (skills): `start-issue`, `create-issue`, `review-issue`, `review-change`, `ship-pr`, `write-docs`, `plan-manual-tests`, `desktop-check`, `android-check` | [`.claude/skills/`](.claude/skills/) |
+| Procedures (skills): `start-issue`, `create-issue`, `review-issue`, `review-change`, `ship-pr`, `write-docs`, `plan-manual-tests`, `desktop-check`, `android-check`, `release-milestone`, `fix-release`, `write-release-notes`, `change-saved-shape`, `add-language`, `change-app-icon` | [`.claude/skills/`](.claude/skills/) |
 | Releasing | [`docs/RELEASING.md`](docs/RELEASING.md) |
 
 ## Contributing
