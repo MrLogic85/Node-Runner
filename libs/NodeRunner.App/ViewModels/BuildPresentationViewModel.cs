@@ -299,7 +299,7 @@ public sealed class BuildPresentationViewModel
     {
         SensorKind.Accelerometer => PartInfo.Accelerometer,
         SensorKind.Camera => aimable
-            ? UiText.Plain("Its rays see how near the ground is. Drag the round handle to aim it.")
+            ? UiText.Plain("Measures distance to the ground. Drag the round handle to aim it.")
             : PartInfo.Camera,
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };

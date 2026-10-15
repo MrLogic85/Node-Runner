@@ -119,14 +119,9 @@ public static class PartTray
     };
 
     /// <summary>Where a picked part goes, per part rather than per tab, as a tab can mix placements (#805).</summary>
-    public static UiText Placement(BuildPart part) => part switch
-    {
-        _ when SensorKindOf(part) is not null => UiText.Plain("Tap a beam to place it. A beam holds one sensor."),
-        BuildPart.Wheel => UiText.Plain("Tap a joint to place it. A joint holds one wheel."),
-        BuildPart.TouchSensor => UiText.Plain("Tap a joint to place it. A joint holds one Touch sensor."),
-        BuildPart.Rubber => UiText.Plain("Tap a joint to place it. A joint holds one rubber."),
-        _ => UiText.Plain("Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor."),
-    };
+    public static UiText Placement(BuildPart part) => IsJointPart(part)
+        ? UiText.Plain("Drag onto a joint, or tap a joint to place it.")
+        : UiText.Plain("Drag onto a beam, or tap a beam to place it.");
 
     /// <summary>
     /// The tab the tray opens on: the first with a part the player can place (#887), so a

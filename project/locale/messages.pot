@@ -53,7 +53,7 @@ msgid "A piston must connect two different joints."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "A rigid rod."
+msgid "A rigid beam."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -377,6 +377,10 @@ msgstr ""
 msgid "Distance"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Doubles a joint's friction."
+msgstr ""
+
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Drag a box"
 msgstr ""
@@ -387,6 +391,14 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Drag inside the box"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Drag onto a beam, or tap a beam to place it."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Drag onto a joint, or tap a joint to place it."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -403,15 +415,7 @@ msgid "Examples"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Extends and retracts toward its built length."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
 msgid "Extends and retracts."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Feels how near its joint is to the ground."
 msgstr ""
 
 #: project/src/hosts/TrainingHost.cs
@@ -513,14 +517,6 @@ msgstr ""
 msgid "Inputs"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Its rays see how near the ground is."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-msgid "Its rays see how near the ground is. Drag the round handle to aim it."
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 #: project/scenes/screens/BuildScreen.tscn
@@ -573,10 +569,6 @@ msgstr ""
 msgid "Made in a newer version"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Makes its joint grip the ground."
-msgstr ""
-
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Map"
 msgstr ""
@@ -594,7 +586,19 @@ msgid "Max strength"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Measures its beam's acceleration."
+msgid "Measures a beam's acceleration."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Measures a joint's angle and velocity."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Measures distance to the ground."
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "Measures distance to the ground. Drag the round handle to aim it."
 msgstr ""
 
 #: project/scenes/screens/TrainSetupScreen.tscn
@@ -840,7 +844,7 @@ msgid "Rise time"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Rolls freely on the ground. Add a Motor, Servo or Stepper to power it."
+msgid "Rolls freely, a motor can drive it."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -950,6 +954,10 @@ msgstr ""
 msgid "Shared from an older version, import may differ from original."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Signals when a joint is touching the ground."
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Simulate"
 msgstr ""
@@ -959,7 +967,7 @@ msgid "Simulating · {0}"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Slows its joint's turning, or holds it still when Locked."
+msgid "Slows or locks its joint."
 msgstr ""
 
 #: project/scenes/widgets/ShadowStrip.tscn
@@ -969,6 +977,10 @@ msgstr ""
 
 #: project/src/ui/lib/UiToggleRow.cs
 msgid "Sounds"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Spins round and round."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -986,6 +998,10 @@ msgstr ""
 
 #: project/scenes/screens/ImportScreen.tscn
 msgid "Springs"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Springs back and damps movement."
 msgstr ""
 
 #: project/scenes/ui/UiStageCard.tscn
@@ -1067,26 +1083,6 @@ msgstr ""
 msgid "Tail"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a beam to place it. A beam holds one sensor."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a joint to place it. A joint holds one Touch sensor."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a joint to place it. A joint holds one rubber."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Tap a joint to place it. A joint holds one wheel."
-msgstr ""
-
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
 msgid "Tap a link to pick it."
 msgstr ""
@@ -1111,10 +1107,6 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Target part"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Tells the brain the angle between its two sides, and how fast it turns."
 msgstr ""
 
 #: project/src/hosts/BuildHost.cs
@@ -1262,11 +1254,7 @@ msgid "Turn it around its middle"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Turns its joint to a target angle and holds it there."
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Turns one side round and round. The brain picks how fast and which way."
+msgid "Turns and holds an angle."
 msgstr ""
 
 #: libs/NodeRunner.App/Services/CreationExamples.cs

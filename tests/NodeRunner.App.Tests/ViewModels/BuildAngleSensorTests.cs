@@ -253,7 +253,7 @@ public sealed class BuildAngleSensorTests
         part.Kind.ShouldBe(PartKind.AngleSensor);
         part.Title.ShouldBe(UiText.Plain("Angle sensor"));
         part.Name.ShouldBe(UiText.Format("Angle {0}", 1));
-        part.Note.ShouldBe(UiText.Plain("Tells the brain the angle between its two sides, and how fast it turns."));
+        part.Note.ShouldBe(UiText.Plain("Measures a joint's angle and velocity."));
         part.CanDelete.ShouldBeTrue();
         part.Settings.ShouldBeEmpty();
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex, picker.Note)).ShouldBe(
