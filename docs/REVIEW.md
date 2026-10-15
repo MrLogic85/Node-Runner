@@ -120,6 +120,9 @@ in its own format and finding levels.
   with an inner `hooks` list. Claude Code drops the whole agent if it
   finds Copilot's flat shape.
 - Each reviewer's file tells it not to edit files.
+- Committed agent instructions require only the tools `README.md` →
+  "Tools" marks as required; for a recommended tool they name a fallback
+  that always exists, such as `git grep` for `rg`.
 
 ## Merge gates
 
