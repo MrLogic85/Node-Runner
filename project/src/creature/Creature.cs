@@ -37,7 +37,7 @@ public partial class Creature : Node2D
     // set as a solid bar this thick.
     private const float _beamInertiaThickness = 12f;
 
-    // How far a Locked Brake's groove reaches each way from the joint (Creature.Links.SlideLock): 100 m.
+    // How far a weld's groove reaches each way from the joint (Creature.Links.GrooveLock): 100 m.
     private const float _lockGrooveReach = 10000;
 
     // How near a tap must land to a part, on screen, at least: a part drawn smaller when the
