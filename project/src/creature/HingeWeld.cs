@@ -15,12 +15,12 @@ public sealed class HingeWeld
     // How far the groove reaches each way from the joint: 100 m, far past any link or stroke, so only a
     // Piston's or Spring's end stops stop its stroke. It has no cap (CapEndStops caps only those): Godot
     // caps a groove's whole push, across it too, so a capped groove would let the lock turn.
-    private const float GrooveReach = 10000;
+    private const float _grooveReach = 10000;
 
     // How much of the weld's error Godot's solver takes back each step: its most, so a Stepper caught
     // past its notch is on it within a few ticks (#1272). Godot's default, 0.2, took a quarter second.
     // A Locked Brake's weld takes back its drift as fast; creatures with Brakes moved as before.
-    private const float WeldBias = 0.9f;
+    private const float _weldBias = 0.9f;
 
     private readonly GrooveJoint2D _groove;
     private readonly RigidBody2D _grooveBody;
@@ -45,8 +45,8 @@ public sealed class HingeWeld
         _joint = joint;
         _far = far;
         _heldIsTarget = heldIsTarget;
-        _groove.Length = 2 * GrooveReach;
-        _groove.Bias = WeldBias;
+        _groove.Length = 2 * _grooveReach;
+        _groove.Bias = _weldBias;
         _groove.NodeA = _groove.GetPathTo(grooveBody);
         _held = _groove.GetPathTo(heldBody);
     }
@@ -66,9 +66,9 @@ public sealed class HingeWeld
         var direction = Mechanics.HingePartSideGeometry.WeldGrooveDirection(
             new Domain.Vector2D(joint.X, joint.Y), new Domain.Vector2D(far.X, far.Y), overshoot, _heldIsTarget);
         var along = new Vector2((float)direction.X, (float)direction.Y);
-        _groove.GlobalPosition = joint - (along * GrooveReach);
+        _groove.GlobalPosition = joint - (along * _grooveReach);
         _groove.GlobalRotation = along.Angle() - (Mathf.Pi / 2);
-        _groove.InitialOffset = GrooveReach + toFar.Length();
+        _groove.InitialOffset = _grooveReach + toFar.Length();
         _groove.NodeB = _held;
         Welded = true;
         if (overshoot == 0)
@@ -78,7 +78,7 @@ public sealed class HingeWeld
 
         // Godot's GrooveJoint2D anchors node B on its groove, so it only welds the sides as they stand.
         // The server makes the same groove with the held point still at the far node, off it.
-        PhysicsServer2D.JointMakeGroove(_groove.GetRid(), joint - (along * GrooveReach), joint + (along * GrooveReach), far, _grooveBody.GetRid(), _heldBody.GetRid());
+        PhysicsServer2D.JointMakeGroove(_groove.GetRid(), joint - (along * _grooveReach), joint + (along * _grooveReach), far, _grooveBody.GetRid(), _heldBody.GetRid());
     }
 
     public void Release()
