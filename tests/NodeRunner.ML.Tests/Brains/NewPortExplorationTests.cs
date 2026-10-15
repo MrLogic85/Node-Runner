@@ -187,13 +187,16 @@ public sealed class NewPortExplorationTests
         Should.Throw<ArgumentOutOfRangeException>(() => NewPortExploration.Explore(Generation(_elite, 4), 5, _ports, [], new Random(11)));
     }
 
-    // #1036: a new Stepper reads as new by its frequency bias, and its children step from half its Max frequency.
+    // #1263: a new Stepper reads as new while its frequency has bias 0 and no weight, and its children step either way.
     [Fact]
-    public void Explore_RedrawsANewStepper_FromHalfItsMaxFrequency_AndLeavesATrainedOne()
+    public void Explore_RedrawsANewStepper_FromStill_AndLeavesTrainedOnes()
     {
-        var ports = new BrainPortLayout([BrainPorts.TouchInput(5)], [.. BrainPorts.StepperOutputs(3), .. BrainPorts.StepperOutputs(4)]);
-        // Weights (4 outputs × 1 input), then biases: Stepper 3 trained, Stepper 4 as a refit leaves it.
-        double[] elite = [0.6, -0.9, 0, 0, 1.2, 0.3, PortSignals.PassiveStrengthBias, 0];
+        var ports = new BrainPortLayout(
+            [BrainPorts.TouchInput(5), BrainPorts.TouchInput(6)],
+            [.. BrainPorts.StepperOutputs(3), .. BrainPorts.StepperOutputs(4), .. BrainPorts.StepperOutputs(7)]);
+        // Weights (3 outputs × 2 inputs), then biases: Stepper 3 trained, Stepper 4 as a refit leaves it,
+        // Stepper 7 trained to bias 0 but weighted.
+        double[] elite = [0.6, -0.9, 0, 0, 0.4, 0, 1.2, 0, 0];
 
         var generation = Generation(elite, 4001);
 
@@ -201,15 +204,15 @@ public sealed class NewPortExplorationTests
 
         for (var slot = 0; slot < explored.Length; slot++)
         {
-            foreach (var trained in (int[])[0, 1, 4, 5])
+            foreach (var trained in (int[])[0, 1, 4, 5, 6, 8])
             {
                 explored[slot][trained].ShouldBe(generation[slot + 1][trained]);
             }
         }
 
-        ShouldSpread(explored, 6, GenerationZero.HalfFrequencyBias, GenerationZero.BiasSpread);
         ShouldSpread(explored, 7, 0, GenerationZero.BiasSpread);
         ShouldSpread(explored, 2, 0, GenerationZero.WeightSpread);
+        ShouldSpread(explored, 3, 0, GenerationZero.WeightSpread);
     }
 
     // The elite, then children as the genetic algorithm leaves them: the elite's genes, a few nudged.

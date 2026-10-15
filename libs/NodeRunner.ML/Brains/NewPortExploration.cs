@@ -79,10 +79,10 @@ public static class NewPortExploration
         var outputs = ports.Outputs.Count;
         var biasStart = inputs * outputs;
 
-        // A part is new while an output whose passive bias is not 0, a strength or a Stepper's frequency
-        // (#1036), still has it exactly: training has not moved it yet.
+        // A part is new while an output whose passive bias is not 0, a strength, still has it exactly, or
+        // while a Stepper's frequency (#1263) still has bias 0 and no weight: training has not moved it yet.
         var newParts = Enumerable.Range(0, outputs)
-            .Where(o => IsStillPassive(ports.Outputs[o].Signal, elite[biasStart + o]))
+            .Where(o => IsStillPassive(ports.Outputs[o].Signal, elite[biasStart + o], Enumerable.Range(0, inputs).All(i => elite[(o * inputs) + i] == 0)))
             .Select(o => ports.Outputs[o].PartId)
             .ToHashSet();
         var newOutputs = Enumerable.Range(0, outputs).Where(o => newParts.Contains(ports.Outputs[o].PartId)).ToHashSet();
@@ -107,6 +107,6 @@ public static class NewPortExploration
         return genes.ToArray();
     }
 
-    private static bool IsStillPassive(PortSignal signal, double bias) =>
-        PortSignals.PassiveBias(signal) is var passive && passive != 0 && bias == passive;
+    private static bool IsStillPassive(PortSignal signal, double bias, bool unweighted) =>
+        PortSignals.PassiveBias(signal) is var passive && bias == passive && (passive != 0 || (signal == PortSignal.Frequency && unweighted));
 }

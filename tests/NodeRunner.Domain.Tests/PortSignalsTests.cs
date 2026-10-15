@@ -8,8 +8,7 @@ public sealed class PortSignalsTests
     [InlineData(PortSignal.Position, NeuronActivation.Tanh)]
     [InlineData(PortSignal.Length, NeuronActivation.Sigmoid)]
     [InlineData(PortSignal.Strength, NeuronActivation.Sigmoid)]
-    [InlineData(PortSignal.Frequency, NeuronActivation.Sigmoid)]
-    [InlineData(PortSignal.Power, NeuronActivation.Tanh)]
+    [InlineData(PortSignal.Frequency, NeuronActivation.Tanh)]
     public void Activation_MatchesThePhysicalSignal(PortSignal signal, NeuronActivation activation) =>
         PortSignals.Activation(signal).ShouldBe(activation);
 
@@ -19,9 +18,8 @@ public sealed class PortSignalsTests
     [InlineData(PortSignal.Position, 0)]
     [InlineData(PortSignal.Length, 0)]
     [InlineData(PortSignal.Strength, -4)]
-    [InlineData(PortSignal.Frequency, -4)]
-    [InlineData(PortSignal.Power, 0)]
-    public void PassiveBias_HoldsStrengthAndFrequencyDown(PortSignal signal, double bias) =>
+    [InlineData(PortSignal.Frequency, 0)]
+    public void PassiveBias_HoldsStrengthDown_AndStopsAStepper(PortSignal signal, double bias) =>
         PortSignals.PassiveBias(signal).ShouldBe(bias);
 
     [Fact]

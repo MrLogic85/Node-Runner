@@ -137,14 +137,13 @@ public sealed class GenerationZeroTests
         GenerationZero.BaseGenome(ports).ShouldBe([0, 0, 0, 0, 0, GenerationZero.FullStrengthBias]);
     }
 
-    // #1036: a Stepper starts at half its Max frequency and pushes neither way.
+    // #1263: a Stepper starts still; its noise steps it either way.
     [Fact]
-    public void BaseGenome_StepsEachStepperAtHalfItsMaxFrequency_WithNoPower()
+    public void BaseGenome_StartsEachStepperStill()
     {
         var ports = new BrainPortLayout(BrainPorts.StepperInputs(4).ToArray(), BrainPorts.StepperOutputs(4).ToArray());
 
-        GenerationZero.BaseGenome(ports).ShouldBe([0, 0, 0, 0, 0, 0, GenerationZero.HalfFrequencyBias, 0]);
-        Sigmoid(GenerationZero.HalfFrequencyBias).ShouldBe(0.5);
+        GenerationZero.BaseGenome(ports).ShouldBe([0, 0, 0, 0]);
     }
 
     [Fact]

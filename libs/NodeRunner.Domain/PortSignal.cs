@@ -28,12 +28,9 @@ public enum PortSignal
     /// <summary>How much of the part's Strength setting to use this tick, 0…1.</summary>
     Strength,
 
-    /// <summary>How often to step, 0…1 of the part's Max frequency, as a Stepper's (#1036).</summary>
-    Frequency,
-
     /// <summary>
-    /// How hard to push and which way, −1…1 of the part's Max strength, counter-clockwise positive, as a
-    /// Stepper's (#1036). At 0 it pushes with no force but still lets go.
+    /// How often to step and which way, −1…1 of the part's Max frequency, counter-clockwise positive, as a
+    /// Stepper's (#1036, #1263). At 0 it does not step.
     /// </summary>
-    Power,
+    Frequency,
 }

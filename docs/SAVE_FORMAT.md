@@ -178,6 +178,7 @@ Current `creation.json` migrations:
 | 11 | 12 | #1039: add required `creature.brakes: []`. |
 | 12 | 13 | #1204: add required `creature.angleSensors: []`. |
 | 13 | 14 | #1036: add required `creature.steppers: []`. |
+| 14 | 15 | #1263: a Stepper's `power` output neuron becomes its `frequency` output; its old `frequency` input and output neurons and their connections are dropped. |
 
 #1086 needs no migration: its saved shape is unchanged, but a saved creature
 with a Wheel or Servo moves and senses a little differently, since links and
@@ -235,7 +236,7 @@ owns it.
 - The code is `NR`, the format version and a dot, then its JSON
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
-  scratch. The Walker example's is about 50 characters, starting `NR14.`,
+  scratch. The Walker example's is about 50 characters, starting `NR15.`,
   and so is two joints and a Spring's (#1094).
 - Its JSON is `creation.json` on one line with `training` and
   `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,

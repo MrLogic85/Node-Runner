@@ -172,7 +172,7 @@ public partial class Creature : Node2D
         Brain.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
 
         // Each Servo, Velocity motor and Piston has two outputs in sim order: target or speed, then strength;
-        // each Stepper, last, its frequency then its power.
+        // each Stepper, last, its frequency.
         var output = 0;
         foreach (var servo in _servos)
         {
@@ -194,8 +194,8 @@ public partial class Creature : Node2D
 
         foreach (var stepper in _steppers)
         {
-            stepper.Drive(_outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]], delta);
-            output += 2;
+            stepper.Drive(_outputValues[_outputPortOf[output]], delta);
+            output++;
         }
     }
 
@@ -791,7 +791,7 @@ public partial class Creature : Node2D
     // left to right, then hit), then each Touch sensor its touch, each Angle sensor its angle's sine and
     // cosine and its speed, each Servo its angle and speed,
     // each Velocity motor its angle's sine and cosine and its speed, each Piston its length and speed, and each Stepper its angle's
-    // sine and cosine and its running frequency, into the raw buffer in sim order; they are then copied into the brain's port order (BrainPorts).
+    // sine and cosine and its tick, into the raw buffer in sim order; they are then copied into the brain's port order (BrainPorts).
     // After a tear (#962) a sensor on a beam gone from the world and a passive part write nothing, so
     // their inputs keep the values they last had.
     private void ReadSensors(double[] values, double delta)
@@ -870,7 +870,7 @@ public partial class Creature : Node2D
             var (sin, cos) = stepper.AngleInputs;
             _rawInputs[index++] = sin;
             _rawInputs[index++] = cos;
-            _rawInputs[index++] = stepper.FrequencyInput;
+            _rawInputs[index++] = stepper.TickInput;
         }
 
         for (var i = 0; i < _rawInputs.Length; i++)

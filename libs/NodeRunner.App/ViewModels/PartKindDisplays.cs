@@ -98,9 +98,8 @@ public static class PartKindDisplays
         [
             In(BrainPorts.StepperAngleSinChannel, name => UiText.Format("{0}:\u00A0angle sin", name), UiText.Plain("angle sin"), _signed),
             In(BrainPorts.StepperAngleCosChannel, name => UiText.Format("{0}:\u00A0angle cos", name), UiText.Plain("angle cos"), _signed),
-            In(BrainPorts.StepperFrequencyChannel, name => UiText.Format("{0}:\u00A0frequency", name), UiText.Plain("frequency"), _unsigned),
-            Out(BrainPorts.StepperFrequencyOutputChannel, name => UiText.Format("{0}:\u00A0frequency", name), UiText.Plain("frequency"), _unsigned),
-            Out(BrainPorts.StepperPowerChannel, name => UiText.Format("{0}:\u00A0power", name), UiText.Plain("power"), _signed),
+            In(BrainPorts.StepperTickChannel, name => UiText.Format("{0}:\u00A0tick", name), UiText.Plain("tick"), _unsigned),
+            Out(BrainPorts.StepperFrequencyChannel, name => UiText.Format("{0}:\u00A0frequency", name), UiText.Plain("frequency"), _signed),
         ]),
     ];
 

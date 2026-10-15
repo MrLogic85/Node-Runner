@@ -514,6 +514,62 @@ public sealed class CreationVersioningTests : IDisposable
         creature.Steppers[0].MaxFrequency.ShouldBe(1.5);
     }
 
+    // #1263: version 14 saved a Stepper's frequency output as sigmoid, its power output as tanh and its
+    // running frequency as an input. Version 15 makes the power neuron its signed frequency output and
+    // drops the old frequency neurons with every connection to or from them; nothing else changes.
+    [Fact]
+    public void AVersion14Save_MakesAStepperPowerItsFrequency_AndDropsItsOldFrequencyNeurons()
+    {
+        var (expected, stepperId) = TrainedWalkerWithAStepper();
+        var brain = expected["training"]!["brain"]!.AsObject();
+        var inputs = NeuronIds(brain, "input");
+        var outputs = NeuronIds(brain, "output");
+        var next = brain["nextNeuronId"]!.GetValue<int>();
+        var (power, oldInput, oldFrequency) = (next, next + 1, next + 2);
+        brain["neurons"]!.AsArray().Add(Neuron(power, "output", stepperId, BrainPorts.StepperFrequencyChannel, -0.7, "tanh"));
+        foreach (var input in inputs)
+        {
+            brain["connections"]!.AsArray().Add(Connection(input, power, 0.1 * input));
+        }
+
+        brain["nextNeuronId"] = next + 3;
+        var file = expected.DeepClone().AsObject();
+        file[_versionField] = 14;
+        var old = file["training"]!["brain"]!.AsObject();
+        old["neurons"]!.AsArray().Single(neuron => neuron!["id"]!.GetValue<int>() == power)!["channel"] = "power";
+        old["neurons"]!.AsArray().Add(Neuron(oldInput, "input", stepperId, "frequency", 0, "identity"));
+        old["neurons"]!.AsArray().Add(Neuron(oldFrequency, "output", stepperId, "frequency", 0.4, "sigmoid"));
+        foreach (var output in (int[])[.. outputs, power, oldFrequency])
+        {
+            old["connections"]!.AsArray().Add(Connection(oldInput, output, 0.9));
+        }
+
+        foreach (var input in inputs)
+        {
+            old["connections"]!.AsArray().Add(Connection(input, oldFrequency, -0.3));
+        }
+
+        var path = WriteCreation(file.ToJsonString());
+
+        var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        var written = JsonNode.Parse(File.ReadAllText(path))!;
+        JsonNode.DeepEquals(written["training"]!["brain"], expected["training"]!["brain"]).ShouldBeTrue();
+        written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
+        Should.NotThrow(() => DirectBrain.Compile(creation.Training!.Brain, BrainPorts.Of(creation.Creature)));
+    }
+
+    [Fact]
+    public void AVersion14Save_WithoutSteppers_IsSkipped()
+    {
+        var (file, _) = TrainedWalkerWithAStepper();
+        file[_versionField] = 14;
+        file["creature"]!.AsObject().Remove("steppers");
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
     // #1204: a creature saved before Angle sensors has none.
     [Fact]
     public void AVersion12Save_GetsNoAngleSensors_AndIsWrittenBackInTheCurrentVersion()
@@ -888,6 +944,39 @@ public sealed class CreationVersioningTests : IDisposable
             nextPartId: 13);
         return JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(wheels, walker.Training)))!.AsObject();
     }
+
+    // The trained walker with a Stepper its brain has no neurons for yet, as the current version writes it.
+    private static (JsonObject File, int StepperId) TrainedWalkerWithAStepper()
+    {
+        var walker = LoadFixture013("trained-walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var joint = builder.Nodes.First(node => builder.LinksAt(node.Id).Count >= 2).Id;
+        var stepperId = builder.AddStepper(joint);
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(builder.Build(), walker.Training)))!.AsObject();
+        return (file, stepperId);
+    }
+
+    private static int[] NeuronIds(JsonObject brain, string kind) =>
+        [.. brain["neurons"]!.AsArray().Where(neuron => neuron!["kind"]!.GetValue<string>() == kind).Select(neuron => neuron!["id"]!.GetValue<int>())];
+
+    private static JsonObject Neuron(int id, string kind, int partId, string channel, double bias, string activation) => new()
+    {
+        ["id"] = id,
+        ["kind"] = kind,
+        ["partId"] = partId,
+        ["channel"] = channel,
+        ["layer"] = kind == "input" ? 0 : 1,
+        ["bias"] = bias,
+        ["activation"] = activation,
+    };
+
+    private static JsonObject Connection(int from, int to, double weight) => new()
+    {
+        ["from"] = from,
+        ["to"] = to,
+        ["weight"] = weight,
+        ["enabled"] = true,
+    };
 
     // The 0.13.0 walker as version 13 wrote it, before Steppers (#1036).
     private static JsonObject Version13Walker()

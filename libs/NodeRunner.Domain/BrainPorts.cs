@@ -93,14 +93,11 @@ public static class BrainPorts
     /// <summary>A Stepper's angle cosine input key (#1036): cos of the angle between its sides.</summary>
     public const string StepperAngleCosChannel = "angleCos";
 
-    /// <summary>A Stepper's frequency input key (#1036): the rate it runs at, 0…1 of its Max frequency, as of the last tick.</summary>
+    /// <summary>A Stepper's tick input key (#1263): 1 as it steps, 0 halfway to its next step (<c>NodeRunner.Mechanics.Stepper.TickInput</c>).</summary>
+    public const string StepperTickChannel = "tick";
+
+    /// <summary>A Stepper's frequency output key: how often to step and which way, −1…1 of its Max frequency (#1263).</summary>
     public const string StepperFrequencyChannel = "frequency";
-
-    /// <summary>A Stepper's frequency output key: how often to step, 0…1 of its Max frequency.</summary>
-    public const string StepperFrequencyOutputChannel = "frequency";
-
-    /// <summary>A Stepper's power output key: how hard to push, −1…1 of its Max strength, its sign the direction.</summary>
-    public const string StepperPowerChannel = "power";
 
     public static BrainPortLayout Of(CreatureDef creature)
     {
@@ -183,18 +180,17 @@ public static class BrainPorts
         BrainPort.Output(velocityMotorId, VelocityMotorStrengthChannel, PortSignal.Strength),
     ];
 
-    /// <summary>A Stepper's input ports, angle sine, angle cosine, then frequency.</summary>
+    /// <summary>A Stepper's input ports, angle sine, angle cosine, then tick.</summary>
     public static IEnumerable<BrainPort> StepperInputs(int stepperId) =>
     [
         BrainPort.Input(stepperId, StepperAngleSinChannel),
         BrainPort.Input(stepperId, StepperAngleCosChannel),
-        BrainPort.Input(stepperId, StepperFrequencyChannel),
+        BrainPort.Input(stepperId, StepperTickChannel),
     ];
 
-    /// <summary>A Stepper's output ports, frequency then power.</summary>
+    /// <summary>A Stepper's output port: its frequency.</summary>
     public static IEnumerable<BrainPort> StepperOutputs(int stepperId) =>
     [
-        BrainPort.Output(stepperId, StepperFrequencyOutputChannel, PortSignal.Frequency),
-        BrainPort.Output(stepperId, StepperPowerChannel, PortSignal.Power),
+        BrainPort.Output(stepperId, StepperFrequencyChannel, PortSignal.Frequency),
     ];
 }

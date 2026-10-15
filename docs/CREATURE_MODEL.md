@@ -292,7 +292,7 @@ nodes; how the simulation keeps them from giving way under load is in
 
 - **Beginner:** A joint motor that works like a clock: it holds its joint
   in fixed notches and, as often as the brain asks, lets go and pushes it
-  on to the next one. Like a Servo it holds one side as Fixed and turns
+  on to the next one, either way. Like a Servo it holds one side as Fixed and turns
   the other as Target.
 - `StepperDef` (#1036), saved under `steppers`. Its sides follow the
   Servo's rules and it takes the joint's hinge-part slot (see Servo, and
@@ -306,17 +306,23 @@ nodes; how the simulation keeps them from giving way under load is in
 - **Notches:** Steps per turn evenly spaced angles between its sides,
   counted from the built angle, so a trial starts locked at a notch. Its
   angle is measured as a Motor's and counts on across whole turns.
-- **Frequency:** its running frequency follows the Frequency output with
-  a time constant of 1 s, so a brain can't jerk it, and its frequency
-  input reads it. At that rate it lets go, at most once a physics step.
+- **Frequency (#1263):** its one output, Frequency, sets how often it
+  lets go, −1…1 of Max frequency, at once with no lag; its sign is the
+  way to step, counter-clockwise positive. At 0 it stands still. Its
+  clock is a phase that runs at |frequency| and lets go each time it
+  wraps, at most once a physics step. The clock never resets: a release,
+  a lock or a timeout leaves it as it is, and frequency 0 stops it where
+  it is. Its tick input reads it as (2 × phase − 1)²: 1 as it lets go,
+  0 halfway to the next release, so the brain can time other parts to
+  its steps.
 - **Release:** each time it lets go it unlocks, picks the neighbouring
-  notch in Power's direction and drives the joint there with at most
-  |Power| × Max strength, like a clock's tick: full torque, then braking
-  just in time, tick by tick, to arrive still. It has no top speed; Max
-  strength alone sets how quick a step is (a new Stepper steps a light
-  joint in a few physics steps). Power changing sign mid-release doesn't
-  turn it round. There is no dead zone: at Power 0 it still lets go, and
-  the joint turns freely. The release ends, and the Stepper locks, once
+  notch the way the frequency's sign says and drives the joint there with
+  at most Max strength, like a clock's tick: full torque, then braking
+  just in time, physics step by physics step, to arrive still. The brain picks when and
+  which way, never how hard. It has no top speed; Max strength alone sets
+  how quick a step is (a new Stepper steps a light joint in a few physics
+  steps). Frequency changing sign or falling to 0 mid-release doesn't
+  turn it round or stop it. The release ends, and the Stepper locks, once
   the joint is within 2 % of a notch spacing of that notch, or has passed
   it, or the one behind if a load stronger than the push carries it back.
   It never measures how heavy the joint is, so on a joint heavier than it
@@ -548,9 +554,9 @@ nodes; how the simulation keeps them from giving way under load is in
     jumps; Target a quarter turn counter-clockwise from Fixed reads 1 and 0)
     and `speed` (as a Servo's); outputs `speed` (Velocity,
     −1…1 of Max speed, counter-clockwise positive) and `strength`.
-  - **Stepper (#1036):** inputs `angleSin` and `angleCos` (as a Motor's)
-    and `frequency` (0…1 of Max frequency, the rate it runs at); outputs
-    `frequency` (Frequency) and `power` (Power).
+  - **Stepper (#1036, #1263):** inputs `angleSin` and `angleCos` (as a
+    Motor's) and `tick` (0…1, see Stepper → Frequency); output `frequency`
+    (Frequency).
   - **Touch sensor (#1043):** input `touch` (Touch sensor → Reading).
   - **Angle sensor (#1204):** inputs `angleSin`, `angleCos` and `speed`
     (Angle sensor → Reading); no outputs.
@@ -570,15 +576,13 @@ nodes; how the simulation keeps them from giving way under load is in
   - **Strength** uses `sigmoid`: 0…1, the share of the part's Strength
     setting used this tick. The setting is the part's maximum, chosen in
     Build; the output is the brain's choice of how much of it to use.
-  - **Frequency** (#1036) uses `sigmoid`: 0…1 of a Stepper's Max
-    frequency.
-  - **Power** (#1036) uses `tanh`: −1…1, the share of a Stepper's Max
-    strength it pushes with each step, counter-clockwise positive.
+  - **Frequency** (#1036, #1263) uses `tanh`: −1…1 of a Stepper's Max
+    frequency, counter-clockwise positive; 0 means it stands still.
   - **New ports start almost passive:** when a part joins a trained brain,
-    its incoming weights are 0 and a new strength or frequency output starts
-    at bias −4, about 2% force or 2% of Max frequency. Position, velocity,
-    length and power outputs start at bias 0: a length output then asks for
-    the middle of its travel. Generation 0 starts its own way
+    its incoming weights are 0 and a new strength output starts
+    at bias −4, about 2% force. Position, velocity, length and frequency
+    outputs start at bias 0: a length output then asks for the middle of
+    its travel, and a Stepper stands still. Generation 0 starts its own way
     (`docs/TRAINING_LOOP.md` → Generations → Generation 0). The saved brain
     keeps this start so the trained gait never breaks; training redraws the
     new port's genes in every child instead of mutating them, until one
