@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PreToolUse on Bash (#1320): denies the git commands AGENTS.md → "Working copy" forbids, a
-# commit on main or a push that updates it, and a PR title CI's `PR title` check would fail.
+# commit on main or a push that updates it, a push of a branch without a review receipt
+# (#1321), and a PR title CI's `PR title` check would fail.
 # Each check_* function returns to allow, and denies through deny(), which ends the script.
 . "${0%/*}/common.sh"
 
@@ -10,10 +11,20 @@ title_types='feat fix docs chore refactor test build ci perf style revert'
 title_pattern="^(${title_types// /|})\\((#[1-9][0-9]*(, #[1-9][0-9]*)*)\\): [A-Z].+\$"
 
 working_copy='AGENTS.md → "Working copy"'
+receipts='docs/REVIEW.md → "Review receipts"'
+receipt_script=$hooks_dir/../../.github/scripts/review-receipt.sh
 
 # One line per switch or checkout earlier in the command line: the checkout's top level, a
 # tab, and the branch it moved to; '?' when the hook cannot tell, which allows the call.
 switches=''
+
+# What a commit earlier in the line will commit, as review-receipt.sh check measures it:
+# --index, or --worktree after a `git add -A` or with `commit -a`; empty without a commit.
+committed=''
+added=0
+# The last git command earlier in the line that changes what a push sends in a way the hook
+# cannot measure: one that moves HEAD, or a `git add` of only some paths.
+moved=''
 
 top_of() { git -C "$1" rev-parse --show-toplevel 2>/dev/null; }
 
@@ -34,14 +45,16 @@ branch_in() {
 # with paths, or of a single path, restores files and leaves HEAD where it was; a trailing
 # `--` with nothing after it only marks the branch.
 note_switch() {
-  local dir=$1 sub=$2 first='' count=0 target='' track=0
+  local dir=$1 sub=$2 first='' count=0 target='' track=0 created=0 a
   shift 2
   while [ $# -gt 0 ] && [ -z "$target" ]; do
     case $1 in
-      -c | -C | --create | --force-create | -b | -B | --orphan) target=$2 ;;
-      --create=* | --force-create=* | --orphan=*) target=${1#*=} ;;
-      -[fqmt][cCbB] | -[fqmt][fqmt][cCbB]) target=$2 ;;
-      -[cCbB]?*) target=${1#-?} ;;
+      -c | -C | --create | --force-create | -b | -B) target=$2; created=1 ;;
+      --create=* | --force-create=*) target=${1#*=}; created=1 ;;
+      -[fqmt][cCbB] | -[fqmt][fqmt][cCbB]) target=$2; created=1 ;;
+      -[cCbB]?*) target=${1#-?}; created=1 ;;
+      --orphan) target=$2; moved=$sub ;;
+      --orphan=*) target=${1#*=}; moved=$sub ;;
       --detach | -d | -) target='?' ;;
       -t | --track | --track=*) track=1 ;;
       -p | --patch) return 0 ;;
@@ -51,6 +64,13 @@ note_switch() {
     esac
     shift
   done
+  if [ $created = 1 ]; then
+    # A start point makes the new branch something other than HEAD.
+    [ "${1:-}" = "$target" ] && shift
+    for a in "$@"; do
+      case $a in -*) ;; *) moved=$sub ;; esac
+    done
+  fi
   if [ -z "$target" ] && [ -n "$first" ]; then
     if [ $track = 1 ]; then
       # git creates a local branch named after the remote one.
@@ -113,6 +133,7 @@ check_git() {
       for a in "${args[@]}"; do
         [ "$a" = --hard ] && deny "git reset --hard is not allowed ($working_copy): it discards uncommitted changes; stop and ask the human."
       done
+      moved=reset
       ;;
     commit)
       for a in "${args[@]}"; do
@@ -120,14 +141,75 @@ check_git() {
       done
       [ "$(branch_in "$dir")" = "$main_branch" ] \
         && deny "Do not commit on $main_branch ($working_copy): create a feature branch with git switch -c; $main_branch changes only through a merged PR (docs/REVIEW.md → \"Merge gates\")."
+      committed=--index
+      [ $added = 1 ] && committed=--worktree
+      local value=0
+      for a in "${args[@]}"; do
+        if [ $value = 1 ]; then
+          value=0
+          continue
+        fi
+        case $a in
+          --all) committed=--worktree ;;
+          # Paths, or --only and --include, commit some files from the working tree.
+          --only | --include | --pathspec-from-file*) moved=commit ;;
+          --message | --file | --reuse-message | --reedit-message | --template | --author | --date \
+            | --cleanup | --fixup | --squash | --trailer) value=1 ;;
+          --) moved=commit ;;
+          --*) ;;
+          -*)
+            # Short options combine, as in -sam; letters after one that takes a value are its value.
+            a=${a#-}
+            case ${a%%[mFCctuS]*} in *a*) committed=--worktree ;; esac
+            case ${a%%[mFCctuS]*} in *[oi]*) moved=commit ;; esac
+            # A value letter takes the next argument only when nothing follows it.
+            case ${a#"${a%%[mFCctuS]*}"} in [mFCct]) value=1 ;; esac
+            ;;
+          *) moved=commit ;;
+        esac
+      done
+      ;;
+    add)
+      # Only `git add -A`, `.` or `:/` from the top stages what review-receipt.sh measures.
+      local whole=0 paths=0
+      for a in "${args[@]}"; do
+        case $a in
+          -A | --all | :/) whole=1 ;;
+          .) [ "$(top_of "$dir")" = "$(cd "$dir" && pwd -P)" ] && whole=1 || paths=1 ;;
+          --) ;;
+          -*) ;;
+          *) paths=1 ;;
+        esac
+      done
+      if [ $whole = 1 ] && [ $paths = 0 ]; then
+        added=1
+      else
+        moved=add
+      fi
+      ;;
+    merge | rebase | cherry-pick | pull | am | revert | restore | rm | mv | apply | update-ref) moved=$sub ;;
+    branch)
+      for a in "${args[@]}"; do
+        case $a in -f | --force | -m | -M | -c | -C | --move | --copy) moved=branch ;; esac
+      done
+      ;;
+    fetch)
+      for a in "${args[@]}"; do
+        case $a in *:*) moved=fetch ;; esac
+      done
       ;;
     push) check_push "$dir" "${args[@]}" ;;
-    switch | checkout) note_switch "$dir" "$sub" "${args[@]}" ;;
+    switch | checkout)
+      for a in "${args[@]}"; do
+        case $a in -C | -B | --force-create | --force-create=*) moved=$sub ;; esac
+      done
+      note_switch "$dir" "$sub" "${args[@]}"
+      ;;
   esac
 }
 
 check_push() {
-  local dir=$1 i=0 a all=0 tags=0 dst branch
+  local dir=$1 i=0 a all=0 tags=0 skip=0 dst branch
   shift
   local -a args=("$@") positional=()
   while [ $i -lt ${#args[@]} ]; do
@@ -136,6 +218,7 @@ check_push() {
       --repo | -o | --push-option | --receive-pack | --exec) i=$((i + 1)) ;;
       --all | --mirror | --branches) all=1 ;;
       --tags) tags=1 ;;
+      --delete | -d | --dry-run | -n) skip=1 ;;
       --) positional+=("${args[@]:$((i + 1))}"); break ;;
       -*) ;;
       *) positional+=("$a") ;;
@@ -146,7 +229,9 @@ check_push() {
   [ $all = 1 ] && deny "$reason"
   branch=$(branch_in "$dir")
   if [ ${#positional[@]} -lt 2 ]; then
-    [ $tags = 0 ] && [ "$branch" = "$main_branch" ] && deny "$reason"
+    [ $tags = 0 ] || return
+    [ "$branch" = "$main_branch" ] && deny "$reason"
+    [ $skip = 1 ] || check_receipt "$dir" "$branch"
     return
   fi
   for a in "${positional[@]:1}"; do
@@ -156,6 +241,51 @@ check_push() {
     dst=${dst#refs/heads/}
     [ "$dst" = "$main_branch" ] && deny "$reason"
   done
+  [ $skip = 1 ] && return
+  for a in "${positional[@]:1}"; do
+    a=${a#+}
+    dst=${a#*:}
+    case $dst in refs/tags/* | release/v[0-9]* | refs/heads/release/v[0-9]*) continue ;; esac
+    a=${a%%:*}
+    case $a in HEAD | @) [ -n "$branch" ] && a=$branch ;; esac
+    check_receipt "$dir" "$a"
+  done
+}
+
+common_dir() { git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null; }
+
+# Denies the push of a branch or commit of this repository, other than a release branch,
+# unless review-receipt.sh finds a receipt for what it pushes. A commit earlier in the line is
+# measured from the index or working tree it will commit; a source the hook cannot tell, a tag,
+# or a missing script is allowed, and a receipt check that fails denies with its reason.
+check_receipt() {
+  local dir=$1 name=${2#refs/heads/} rev='' out status
+  case $name in '' | '?' | "$main_branch" | release/v[0-9]* | refs/*) return ;; esac
+  [ "$(common_dir "$dir")" = "$(common_dir "$root")" ] || return 0
+  [ -n "$moved" ] && deny "Run git push as its own command after git $moved, so the hook can check the review receipt for what it pushes ($receipts)."
+  case $name in "$(branch_in "$dir")" | HEAD | @) rev=$committed ;; esac
+  if [ -z "$rev" ]; then
+    if git -C "$dir" show-ref -q --verify "refs/heads/$name"; then
+      rev=refs/heads/$name
+    elif git -C "$dir" show-ref -q --verify "refs/tags/$name"; then
+      return 0
+    elif git -C "$dir" rev-parse -q --verify "$name^{commit}" >/dev/null; then
+      # A commit named another way: a SHA, HEAD~1, or HEAD when detached.
+      rev=$name
+    elif [ "$name" = "$(branch_in "$dir")" ]; then
+      # A branch this line creates from HEAD.
+      rev=HEAD
+    else
+      return 0
+    fi
+  fi
+  out=$(bash "$receipt_script" -C "$dir" check "$rev" 2>&1)
+  status=$?
+  case $status in
+    1) deny "No review receipt matches $name ($receipts): run the review-change skill on the change, which records one when the review passes; any change after the review needs a new review." ;;
+    2) deny "The review receipt check failed for $name ($receipts): ${out:-no reason given}" ;;
+  esac
+  return 0
 }
 
 check_gh() {

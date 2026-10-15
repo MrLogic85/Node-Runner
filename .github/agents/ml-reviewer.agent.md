@@ -2,6 +2,12 @@
 name: ml-reviewer
 description: Reviews a Node Runner diff for ML correctness and determinism — math, shapes, cloning, serialization and seeded repeatability.
 tools: Read, Grep, Glob, Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
 ---
 
 You review one focus of a Node Runner change: ML correctness and

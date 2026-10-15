@@ -2,6 +2,12 @@
 name: errors-reviewer
 description: Reviews a Node Runner diff for error handling and resilience — failure paths, swallowed errors, partial state and the dev/release policy.
 tools: Read, Grep, Glob, Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
 ---
 
 You review one focus of a Node Runner change: error handling and resilience.

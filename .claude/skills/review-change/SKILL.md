@@ -6,14 +6,14 @@ description: Review a Node Runner change with the review agents before it is com
 # Review a change
 
 `docs/REVIEW.md` → "Review agents" owns which reviewer a diff selects and
-how they report, and "Definition of Done" owns the gate; this skill owns
-the steps.
+how they report, "Review receipts" owns when review runs and what a push
+needs, and "Definition of Done" owns the gate; this skill owns the steps.
 
 1. Fix the exact change under review, measured from where the branch
    left `main`:
    - before the commit: `git add -A`, then
-     `git diff --cached "$(git merge-base main HEAD)"`;
-   - after it: `git diff main...HEAD`;
+     `git diff --cached "$(.github/scripts/review-receipt.sh base)"`;
+   - after it: `git diff "$(.github/scripts/review-receipt.sh base)" HEAD`;
    - someone else's PR: `gh pr diff N`.
 2. Select the reviewers by "Choosing reviewers".
 3. Run the selected agents in parallel as subagents. Give each the
@@ -27,4 +27,13 @@ the steps.
      "Definition of Done" says it may pass.
 5. Run the reviewers that the corrective change selects again, on the
    new diff, until no new finding is left unaddressed.
-6. For your own change, commit and ship it with the `ship-pr` skill.
+6. For your own change, record the receipt. With the reviewed change
+   staged in full (`git add -A`), write each reviewer's findings and their
+   dispositions, or "No findings", to `.scratch/review.md`, then run:
+
+   ```bash
+   .github/scripts/review-receipt.sh write --reviewers docs-reviewer,tests-reviewer .scratch/review.md
+   ```
+
+   naming every reviewer that ran. Keep the file for the PR body.
+7. Commit and ship it with the `ship-pr` skill.
