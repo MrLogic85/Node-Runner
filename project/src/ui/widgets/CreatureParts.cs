@@ -9,7 +9,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// A creature shown still, made of the same part visuals Training draws (#769, #770): one
-/// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="VelocityMotorPart"/>, <see cref="BrakePart"/>, <see cref="AngleSensorPart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
+/// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="VelocityMotorPart"/>, <see cref="BrakePart"/>, <see cref="StepperPart"/>, <see cref="AngleSensorPart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
 /// <see cref="SpringPart"/> and <see cref="SensorPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
 /// its <see cref="CreatureLayers"/> layer. Its points are creature units; its owner places it and
 /// hands it what to show after every change. Build's <see cref="BuildCanvas"/> shows its edits
@@ -21,6 +21,7 @@ public partial class CreatureParts : Node2D
     private readonly Dictionary<int, ServoPart> _servos = [];
     private readonly Dictionary<int, VelocityMotorPart> _velocityMotors = [];
     private readonly Dictionary<int, BrakePart> _brakes = [];
+    private readonly Dictionary<int, StepperPart> _steppers = [];
     private readonly Dictionary<int, AngleSensorPart> _angleSensors = [];
     private readonly Dictionary<int, WheelPart> _wheels = [];
     private readonly Dictionary<int, BeamPart> _beams = [];
@@ -60,6 +61,7 @@ public partial class CreatureParts : Node2D
         ShowServos(shape, nodes, marks);
         ShowVelocityMotors(shape, nodes, marks);
         ShowBrakes(shape, nodes, marks);
+        ShowSteppers(shape, nodes, marks);
         ShowAngleSensors(shape, nodes, marks);
         ShowWheels(shape, nodes, marks);
         ShowBeams(shape, nodes, marks);
@@ -80,13 +82,9 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            // A Stepper has no picture yet (#1067), so its joint shows it selected, placed or previewed.
-            part.Selected = (marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointParts))
-                || shape.Steppers.Any(stepper => stepper.NodeId == node.Id && marks.Selected.Steppers.Contains(stepper.Id))
-                || marks.PreviewNodeOf(BuildPart.Stepper) == node.Id;
+            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointParts);
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasHingePart(shape, marks, node.Id);
-            part.ShowsStepper = HasStepper(shape, marks, node.Id);
-            part.ShowsHub = HasWheelAndNoHingePart(shape, marks, node.Id) && !part.ShowsStepper;
+            part.ShowsHub = HasWheelAndNoHingePart(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
             part.Cushion = touch is not null || marks.PreviewNodeOf(BuildPart.TouchSensor) == node.Id;
             part.TouchSelected = touch is not null && marks.Selected.TouchSensors.Contains(touch.Id);
@@ -105,16 +103,13 @@ public partial class CreatureParts : Node2D
         }
     }
 
-    // A joint's radius as drawn, with a previewed motor, Stepper or Wheel, so a cushion sits round it.
+    // A joint's radius as drawn, with a previewed motor or Wheel, so a cushion sits round it.
     private static double ShownRadius(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         Math.Max(
             NodeRadius(shape, nodeId),
             marks.PreviewNodeOf(BuildPart.Wheel) == nodeId ? WheelDef.DefaultRadius
-            : PreviewsMotor(marks, nodeId) || marks.PreviewNodeOf(BuildPart.Stepper) == nodeId ? JointMotor.Radius
+            : PreviewsMotor(marks, nodeId) ? JointMotor.Radius
             : 0);
-
-    private static bool HasStepper(CreatureShape shape, CreatureMarks marks, int nodeId) =>
-        shape.Steppers.Any(stepper => stepper.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.Stepper) == nodeId;
 
     private static bool HasWheel(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         shape.Wheels.Any(wheel => wheel.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.Wheel) == nodeId;
@@ -123,12 +118,12 @@ public partial class CreatureParts : Node2D
     private static bool HasWheelAndNoHingePart(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         HasWheel(shape, marks, nodeId) && !HasHingePart(shape, marks, nodeId);
 
-    // A Servo, Velocity motor (#454), Brake (#1041) or Angle sensor (#1205), placed or previewed, stands in for its joint's ring.
+    // A Servo, Velocity motor (#454), Stepper (#1067), Brake (#1041) or Angle sensor (#1205), placed or previewed, stands in for its joint's ring.
     private static bool HasHingePart(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         shape.HingeParts.Any(part => part.NodeId == nodeId) || PreviewsMotor(marks, nodeId) || marks.PreviewNodeOf(BuildPart.Brake) == nodeId || marks.PreviewNodeOf(BuildPart.AngleSensor) == nodeId;
 
     private static bool PreviewsMotor(CreatureMarks marks, int nodeId) =>
-        marks.PreviewNodeOf(BuildPart.Servo) == nodeId || marks.PreviewNodeOf(BuildPart.VelocityMotor) == nodeId;
+        marks.PreviewNodeOf(BuildPart.Servo) == nodeId || marks.PreviewNodeOf(BuildPart.VelocityMotor) == nodeId || marks.PreviewNodeOf(BuildPart.Stepper) == nodeId;
 
     // A Wheel stands in for its joint (#129), so it shows the joint's loose mark too. Build shows it
     // unturned; a tray drag previews the smallest Wheel on the joint it would take.
@@ -258,6 +253,52 @@ public partial class CreatureParts : Node2D
         part.HasTarget = TrySide(shape, nodes, nodeId, targetLinkId, out _, out var targetAngle);
         part.FixedAngle = fixedAngle;
         part.TargetAngle = targetAngle;
+    }
+
+    private void ShowSteppers(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
+    {
+        var ids = shape.Steppers.Select(stepper => stepper.Id).Concat(marks.PreviewNodeOf(BuildPart.Stepper) is { } nodeId ? [-nodeId] : []);
+        Prune(_steppers, ids);
+        foreach (var stepper in shape.Steppers)
+        {
+            var part = PartFor(_steppers, stepper.Id);
+            ShowStepperPart(part, shape, nodes, stepper.NodeId, stepper.FixedLinkId, stepper.TargetLinkId, stepper.StepsPerTurn, marks.Selected.Steppers.Contains(stepper.Id), Cushioned(shape, marks, stepper.NodeId));
+        }
+
+        if (marks.PreviewNodeOf(BuildPart.Stepper) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
+        {
+            var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
+            ShowStepperPart(PartFor(_steppers, -previewNode), shape, nodes, node.Id, fixedId, targetId, StepperDef.DefaultStepsPerTurn, selected: true, Cushioned(shape, marks, node.Id));
+        }
+    }
+
+    private static bool Cushioned(CreatureShape shape, CreatureMarks marks, int nodeId) =>
+        shape.TouchSensors.Any(touch => touch.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.TouchSensor) == nodeId;
+
+    // The rim takes the Fixed side's built direction and the pawl the Target's, so notch 0 sits on the
+    // Target; with a side missing, both take the one there is (#1067).
+    private static void ShowStepperPart(
+        StepperPart part,
+        CreatureShape shape,
+        Dictionary<int, NodeDef> nodes,
+        int nodeId,
+        int? fixedLinkId,
+        int? targetLinkId,
+        int stepsPerTurn,
+        bool selected,
+        bool cushioned)
+    {
+        part.Position = ToGodot(nodes[nodeId].Position);
+        part.Selected = selected;
+        part.Visible = true;
+        part.Simplified = false;
+        part.StepsPerTurn = stepsPerTurn;
+        part.Cushioned = cushioned;
+        part.HasFixed = TrySide(shape, nodes, nodeId, fixedLinkId, out _, out var fixedAngle);
+        part.HasTarget = TrySide(shape, nodes, nodeId, targetLinkId, out _, out var targetAngle);
+        var (rim, pawl, built) = StepperGeometry.BuildAngles(part.HasFixed ? fixedAngle : null, part.HasTarget ? targetAngle : null);
+        part.Turn(rim, pawl);
+        part.BuiltAngle = built;
     }
 
     private void ShowAngleSensors(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
@@ -541,6 +582,13 @@ public partial class CreatureParts : Node2D
         foreach (var (id, part) in _brakes)
         {
             var nodeId = id < 0 ? -id : brakeNodes[id];
+            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
+        }
+
+        var stepperNodes = shape.Steppers.ToDictionary(stepper => stepper.Id, stepper => stepper.NodeId);
+        foreach (var (id, part) in _steppers)
+        {
+            var nodeId = id < 0 ? -id : stepperNodes[id];
             part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
         }
 

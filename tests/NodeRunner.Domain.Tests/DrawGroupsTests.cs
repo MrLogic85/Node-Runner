@@ -61,13 +61,14 @@ public sealed class DrawGroupsTests
     }
 
     [Fact]
-    public void A_selected_Servo_Velocity_motor_Brake_Wheel_Touch_sensor_or_Rubber_raises_as_its_joint()
+    public void A_selected_Servo_Velocity_motor_Brake_Stepper_Wheel_Touch_sensor_or_Rubber_raises_as_its_joint()
     {
         var groups = Frame();
 
         groups.Raised([Part(CreatureElementKind.Servo, 30)], [new ServoDef(30, 3)], [], [], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
         groups.Raised([Part(CreatureElementKind.VelocityMotor, 70)], [new VelocityMotorDef(70, 3)], [], [], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
         groups.Raised([Part(CreatureElementKind.Brake, 80)], [new BrakeDef(80, 3)], [], [], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
+        groups.Raised([Part(CreatureElementKind.Stepper, 90)], [new StepperDef(90, 3)], [], [], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
         groups.Raised([Part(CreatureElementKind.Wheel, 40)], [], [new WheelDef(40, 4)], [], []).Links.ShouldBe([12]);
         groups.Raised([Part(CreatureElementKind.TouchSensor, 50)], [], [], [new TouchSensorDef(50, 3)], []).Joints.ShouldBe([1, 3], ignoreOrder: true);
         groups.Raised([Part(CreatureElementKind.Rubber, 60)], [], [], [], [new RubberDef(60, 3)]).Joints.ShouldBe([1, 3], ignoreOrder: true);
@@ -172,6 +173,22 @@ public sealed class DrawGroupsTests
         HitCross(new Vector2D(0, servoHalo), hingeParts: servos).ShouldBe(new CreatureElementSelection(CreatureElementKind.Servo, 30));
         HitCross(new Vector2D(0, servoHalo + 1), hingeParts: servos).ShouldBe(new CreatureElementSelection(CreatureElementKind.Piston, 21));
         HitCross(new Vector2D(0, servoHalo), hingeParts: [new VelocityMotorDef(70, 1)]).ShouldBe(new CreatureElementSelection(CreatureElementKind.VelocityMotor, 70));
+    }
+
+    // #1067: a Stepper stands in for its joint at a joint motor's size, over its Wheel's hub and inside a Touch sensor's cushion.
+    [Fact]
+    public void A_Stepper_is_hit_to_a_joint_motors_halo_over_its_links_and_its_Wheels_hub()
+    {
+        var halo = SelectionMarks.JointHalo(JointMotor.Radius);
+        StepperDef[] steppers = [new(90, 1)];
+        var stepper = new CreatureElementSelection(CreatureElementKind.Stepper, 90);
+        HitCross(new Vector2D(0, halo), hingeParts: steppers).ShouldBe(stepper);
+        HitCross(new Vector2D(0, halo + 1), hingeParts: steppers).ShouldBe(new CreatureElementSelection(CreatureElementKind.Piston, 21));
+        HitCross(new Vector2D(0, NodeDef.HubRadius), hingeParts: steppers, wheels: [new(40, 1)]).ShouldBe(stepper);
+
+        var raised = DrawGroups.Of(_crossNodes, [new(20, 3, 4, CreatureElementKind.Beam), new(21, 1, 2, CreatureElementKind.Piston)])
+            .Raised([Part(CreatureElementKind.TouchSensor, 50)], steppers, [], [new TouchSensorDef(50, 1)], []);
+        HitCross(new Vector2D(0, halo), raised: raised, hingeParts: steppers).ShouldBe(stepper);
     }
 
     // A Brake is drawn at a plain joint's size in place of the ring or the Wheel's hub (#1041).

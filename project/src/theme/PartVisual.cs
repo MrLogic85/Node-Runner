@@ -76,7 +76,7 @@ public partial class PartVisual : Node2D
 
             _selected = value;
             ApplyLayer();
-            QueueRedraw();
+            Changed();
         }
     }
 

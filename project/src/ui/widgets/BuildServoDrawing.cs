@@ -8,7 +8,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// Build canvas marks for joint parts: the link bands of a selected Servo, Velocity motor (#454),
-/// Brake (#1041) or Angle sensor (#1205), a Wheel side's under its tyre (#1118). The bands name the sides,
+/// Stepper (#1067), Brake (#1041) or Angle sensor (#1205), a Wheel side's under its tyre (#1118). The bands name the sides,
 /// so every hinge part's are drawn alike.
 /// </summary>
 public static class BuildServoDrawing
@@ -21,6 +21,7 @@ public static class BuildServoDrawing
     {
         IHingePartDef? part = viewModel.SingleSelectedServoId is { } servoId ? viewModel.Servos[viewModel.ServoIndexOf(servoId)]
             : viewModel.SingleSelectedVelocityMotorId is { } motorId ? viewModel.VelocityMotors[viewModel.VelocityMotorIndexOf(motorId)]
+            : viewModel.SingleSelectedStepperId is { } stepperId ? viewModel.Steppers[viewModel.StepperIndexOf(stepperId)]
             : viewModel.SingleSelectedBrakeId is { } brakeId ? viewModel.Brakes[viewModel.BrakeIndexOf(brakeId)]
             : viewModel.SingleSelectedAngleSensorId is { } angleSensorId ? viewModel.AngleSensors[viewModel.AngleSensorIndexOf(angleSensorId)]
             : null;

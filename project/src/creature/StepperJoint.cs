@@ -28,6 +28,9 @@ public sealed class StepperJoint
 
     public HingePartSides Sides { get; }
 
+    /// <summary>Its state as of the last tick, which its visual shows (#1067).</summary>
+    public Mechanics.StepperState State => _state;
+
     /// <summary>
     /// Whether its Fixed or Target beam has torn at either end (#962): it then lets go of its weld and
     /// drives nothing, and its brain inputs keep the values they last had (Creature.Tears).

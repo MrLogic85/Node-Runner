@@ -25,12 +25,11 @@ public sealed record CreatureShape(
     public IReadOnlyList<IJointMotorDef> JointMotors => [.. Servos, .. VelocityMotors, .. Steppers];
 
     /// <summary>
-    /// The Servos, Velocity motors, Brakes (#1041) and Angle sensors (#1204, #1205): the slot parts drawn
-    /// in place of their joint's ring. A Stepper has no picture yet (#1067), so its joint keeps its ring,
-    /// at the joint motor's radius.
+    /// The joint motors, Brakes (#1041) and Angle sensors (#1204, #1205), as <see cref="CreatureDef.HingeParts"/>:
+    /// the slot parts drawn in place of their joint's ring.
     /// </summary>
-    public IReadOnlyList<IHingePartDef> HingeParts => [.. Servos, .. VelocityMotors, .. Brakes, .. AngleSensors];
+    public IReadOnlyList<IHingePartDef> HingeParts => [.. JointMotors, .. Brakes, .. AngleSensors];
 
-    /// <summary>Every part on a joint's slots (#1221): the hinge parts, Steppers included, Wheels, Touch sensors and Rubbers.</summary>
-    public IReadOnlyList<IJointPartDef> JointParts => [.. HingeParts, .. Steppers, .. Wheels, .. TouchSensors, .. Rubbers];
+    /// <summary>Every part on a joint's slots (#1221): the hinge parts, Wheels, Touch sensors and Rubbers.</summary>
+    public IReadOnlyList<IJointPartDef> JointParts => [.. HingeParts, .. Wheels, .. TouchSensors, .. Rubbers];
 }

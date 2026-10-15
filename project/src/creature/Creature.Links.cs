@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
-// Builds the links between body parts: Servos, Velocity motors, Brakes and Angle sensors on joints, Pistons with their end stops, and Springs.
+// Builds the links between body parts: Servos, Velocity motors, Brakes, Steppers and Angle sensors on joints, Pistons with their end stops, and Springs.
 public partial class Creature
 {
     private void CreateServos(CreatureDef definition)
@@ -91,12 +91,30 @@ public partial class Creature
     }
 
     // A Stepper (#1037) steps its sides as a Velocity motor turns them, and welds them at each notch
-    // as a Locked Brake does (Welder).
+    // as a Locked Brake does (Welder). Its detent wheel (#1067) shows its notches and its pawl.
     private void CreateSteppers(CreatureDef definition)
     {
-        _steppers = definition.Steppers
-            .Select(stepper => new StepperJoint(stepper, HingePartSidesFor(definition, stepper), Welder(definition, stepper, $"Stepper{stepper.Id}Weld")))
-            .ToArray();
+        _steppers = new StepperJoint[definition.Steppers.Count];
+        _stepperVisuals = new StepperVisual[definition.Steppers.Count];
+        for (var i = 0; i < definition.Steppers.Count; i++)
+        {
+            var stepper = definition.Steppers[i];
+            _steppers[i] = new StepperJoint(stepper, HingePartSidesFor(definition, stepper), Welder(definition, stepper, $"Stepper{stepper.Id}Weld"));
+            var sides = _steppers[i].Sides;
+            var visual = new StepperVisual
+            {
+                Name = $"Stepper{i}Visual",
+                Theme = Theme,
+                Joint = _steppers[i],
+                StepsPerTurn = stepper.StepsPerTurn,
+                BuiltAngle = (float)sides.BuiltRelativeRotation,
+                Cushioned = definition.TouchSensors.Any(touch => touch.NodeId == stepper.NodeId),
+                Position = sides.JointLocalPosition,
+            };
+            visual.Turn((float)sides.FixedRotation, (float)sides.TargetRotation);
+            AddChild(visual);
+            _stepperVisuals[i] = visual;
+        }
     }
 
     // An Angle sensor (#1204) reads its sides as a Velocity motor does and never turns them, so it adds
