@@ -257,7 +257,7 @@ public partial class Creature
         }
     }
 
-    // An intact beam has no collider (AGENTS.md rule 3). A torn end needs one so it lands instead of
+    // An intact beam has no collider (.claude/rules/creature.md rule 3). A torn end needs one so it lands instead of
     // passing through the ground: a circle as wide as the beam (#1288).
     private void LandEnd(int beam, bool isA)
     {

@@ -20,7 +20,7 @@ public enum BuildTool
 /// <summary>
 /// Drives 0.3.0's Build mode: whether it is active, which tool is
 /// selected, and the anatomy placed so far via a <see cref="CreatureBuilder"/>.
-/// UI (see `project/src/ui/AGENTS.md`) binds to this instead of mutating the
+/// UI (see `.claude/rules/ui.md`) binds to this instead of mutating the
 /// builder directly; it may still read the Domain DTOs (<see cref="NodeDef"/>
 /// etc.) this view-model exposes. The selection and its transforms are in
 /// BuildViewModel.Selection.cs. See `docs/BUILD_MODE.md`.

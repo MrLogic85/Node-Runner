@@ -1,9 +1,18 @@
-# AGENTS.md — `src/ui/`
+---
+paths:
+  - "project/src/ui/**"
+  - "project/scenes/screens/**"
+  - "project/scenes/ui/**"
+  - "project/scenes/widgets/**"
+---
+
+# UI rules — `project/src/ui/`
 
 **Godot Controls, scenes, screens. The last mile.**
 
-`lib/AGENTS.md` holds the theme, drawing, icon, input and UI-level rules.
-They bind every file under `src/ui/`, not only the library.
+`.claude/rules/ui-lib.md` holds the theme, drawing, icon, input and
+UI-level rules. Its `paths` cover every file this rule does, not only the
+library.
 
 ## Rules
 
@@ -86,10 +95,11 @@ unchanged, it belongs in `lib/`. If it embeds project vocabulary
   named `UiSize`/`UiLayout`/`UiSpacing` values, never one-off literals or a
   local copy. A scene owns the paddings and sizes it authors; do not
   re-apply them from code (#331).
-- Order drawing with the tree, not `ZIndex` (`lib/AGENTS.md` → "UI levels").
+- Order drawing with the tree, not `ZIndex` (`.claude/rules/ui-lib.md` →
+  "UI levels").
   Inside a world (`UiWorldView`) holding creature parts, draw a view's own
   marks on a `ViewLayer`, not as a last child: the parts sit on
-  `CreatureLayers` (`project/src/theme/AGENTS.md`).
+  `CreatureLayers` (`.claude/rules/theme.md`).
 
 ## Text
 

@@ -1,9 +1,9 @@
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Checks the agent-file rules in docs/REVIEW.md → "Agent files": a broken one silently removes
-/// an agent from Copilot CLI or Claude Code (#1314, #1334). Reads only the frontmatter keys these
-/// files use; it is not a YAML parser.
+/// Checks the agent-file rules in docs/REVIEW.md → "Agent and rule files": a broken one silently
+/// removes an agent from Copilot CLI or Claude Code (#1314, #1334). Reads only the frontmatter keys
+/// these files use; it is not a YAML parser.
 /// </summary>
 internal static class AgentFiles
 {
@@ -11,8 +11,8 @@ internal static class AgentFiles
 
     private const string _agentSuffix = ".agent.md";
 
-    /// <summary>Git-ignored machine-local agents: AGENTS.md → "Machine-local setup" (#1342).</summary>
-    private const string _localPrefix = "local_";
+    /// <summary>Git-ignored machine-local agents and rules: AGENTS.md → "Machine-local setup" (#1342).</summary>
+    internal const string LocalPrefix = "local_";
     private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks"];
 
     /// <summary>Every broken rule under <paramref name="root"/>, each naming its file.</summary>
@@ -30,7 +30,7 @@ internal static class AgentFiles
         foreach (var path in Directory.EnumerateFileSystemEntries(agents).Order(StringComparer.Ordinal))
         {
             var file = Path.GetFileName(path);
-            if (file.StartsWith(_localPrefix, StringComparison.Ordinal))
+            if (file.StartsWith(LocalPrefix, StringComparison.Ordinal))
             {
                 continue;
             }
@@ -52,7 +52,7 @@ internal static class AgentFiles
             foreach (var path in Directory.EnumerateFileSystemEntries(links).Order(StringComparer.Ordinal))
             {
                 var file = Path.GetFileName(path);
-                if (!file.StartsWith(_localPrefix, StringComparison.Ordinal)
+                if (!file.StartsWith(LocalPrefix, StringComparison.Ordinal)
                     && (!file.EndsWith(".md", StringComparison.Ordinal) || !names.Contains(file[..^".md".Length])))
                 {
                     problems.Add($".claude/agents/{file}: no matching .github/agents/*{_agentSuffix}.");
@@ -84,9 +84,13 @@ internal static class AgentFiles
         }
     }
 
+    /// <summary>The index of the line closing the frontmatter, or -1 when the file has none.</summary>
+    internal static int FrontmatterEnd(string[] lines) =>
+        lines.Length > 0 && lines[0] == "---" ? Array.IndexOf(lines, "---", 1) : -1;
+
     private static void CheckFrontmatter(string shown, string name, string[] lines, List<string> problems)
     {
-        var end = lines.Length > 0 && lines[0] == "---" ? Array.IndexOf(lines, "---", 1) : -1;
+        var end = FrontmatterEnd(lines);
         if (end < 0)
         {
             problems.Add($"{shown}: no frontmatter between two --- lines.");

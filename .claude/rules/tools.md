@@ -1,4 +1,10 @@
-# AGENTS.md — `src/tools/`
+---
+paths:
+  - "project/src/tools/**"
+  - "project/scenes/tools/**"
+---
+
+# Tool rules — `project/src/tools/`
 
 **Developer tools run from the command line or the editor. Never part of the game.**
 

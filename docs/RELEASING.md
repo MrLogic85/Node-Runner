@@ -22,7 +22,7 @@ and by the previous release issue. When it is the milestone's last open
 issue:
 
 1. A PR titled `docs(#N): Release notes for X.Y.Z` adds
-   `docs/release-notes/X.Y.Z.md` (`docs/release-notes/AGENTS.md`) with
+   `docs/release-notes/X.Y.Z.md` (`.claude/rules/release-notes.md`) with
    `Part of #N`, not a closing keyword, so the issue stays open until the
    release is out.
 2. From an up-to-date `main`, run `.github/scripts/release.sh`. It exports a

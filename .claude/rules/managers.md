@@ -1,4 +1,10 @@
-# AGENTS.md — `src/managers/`
+---
+paths:
+  - "project/src/managers/**"
+  - "project/project.godot"
+---
+
+# Manager rules — `project/src/managers/`
 
 Long-lived, app-wide services: Godot autoloads, one instance per app
 lifetime, registered in `project/project.godot` → `[autoload]`.
@@ -10,7 +16,7 @@ lifetime, registered in `project/project.godot` → `[autoload]`.
    scenes. App-wide UI autoloads live in `project/src/ui/lib/`.
 3. **Managers are the composition root.** They build the concrete
    App-layer classes and hand out their interfaces, so everything else takes
-   constructor-injected interfaces (`libs/NodeRunner.App/AGENTS.md`).
+   constructor-injected interfaces (`.claude/rules/app.md`).
 4. **Code reaches an autoload with `GetNode<T>("/root/<Name>")`.**
 5. **Raise C# events (`event Action<...>`) for state changes,** not only
    Godot signals: view-models subscribe to plain events in tests.

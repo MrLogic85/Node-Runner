@@ -1,4 +1,9 @@
-# AGENTS.md — `src/sim/`
+---
+paths:
+  - "project/src/sim/**"
+---
+
+# Sim rules — `project/src/sim/`
 
 Training orchestration: trials, slots and generations.
 

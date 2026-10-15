@@ -4,7 +4,7 @@ How the world is drawn in Build, Training and the creation thumbnails.
 What a part is and does is in `docs/CREATURE_MODEL.md`; how Build and
 Training behave is in `docs/BUILD_MODE.md` and `docs/TRAINING_LOOP.md`; the
 UI around the world is in `docs/UI_DIRECTION.md`. Drawing code rules are in
-`project/src/theme/AGENTS.md`.
+`.claude/rules/theme.md`.
 
 ## Lines and zoom
 
@@ -600,7 +600,7 @@ and their overlaps readable.
   ground line (#1205).
 - The leader is not marked: the lead changes too often (#387).
 
-How each part draws as a shadow (the rule is `project/src/creature/AGENTS.md`
+How each part draws as a shadow (the rule is `.claude/rules/creature.md`
 rule 10):
 
 - **Joint:** its outer ring only.

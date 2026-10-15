@@ -6,7 +6,7 @@ but it is a guide, not the source of truth: where the two differ, the app and
 these docs win, and the reference is never edited to match. How the world
 itself is drawn (parts, selection, shadows, arena marks) is in
 `docs/WORLD_VISUALS.md`. Code rules for the UI library are in
-`project/src/ui/lib/AGENTS.md`.
+`.claude/rules/ui-lib.md`.
 
 ## Who owns what
 
@@ -51,7 +51,7 @@ its library component.
 Colours, opacities and typography are Theme items, one set per theme (Neon,
 Paper), which differ only in colour, soft-fill alpha and glow. Neon is one
 skin: layout, state and names never depend on it. Dimensions are constants
-every theme shares (`project/src/ui/lib/AGENTS.md` → "Theme and tokens").
+every theme shares (`.claude/rules/ui-lib.md` → "Theme and tokens").
 
 ### Reference token mapping deviations
 
@@ -113,7 +113,7 @@ session (Settings: #201).
 
 - **Tap only.** Nothing is press-and-hold (#866); where care is needed, a
   dialog names the action.
-- **No hover look** (`project/src/ui/lib/AGENTS.md` → "Input and press
+- **No hover look** (`.claude/rules/ui-lib.md` → "Input and press
   feedback").
 - **No touch margins** (#275), unlike the reference's 40-in-48 targets.
   Buttons are 40 high in a row, 32 compact and 48 × 48 stacked; toolbar

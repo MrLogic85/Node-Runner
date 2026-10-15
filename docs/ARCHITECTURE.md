@@ -81,7 +81,7 @@ Arrows only go **downward** across layer boundaries.
   the App's `ITrainingProgressSource`.
 - **Theme** (`project/src/theme/`) depends on: `NodeRunner.Domain`,
   `project/src/ui/lib` and Godot. It draws the arena and creature parts from
-  plain visual state (`project/src/theme/AGENTS.md`).
+  plain visual state (`.claude/rules/theme.md`).
 - **Managers** (`project/src/managers/`) depend on: `NodeRunner.App` (for
   repository/service interfaces), `NodeRunner.Domain`, Godot.
   Managers are the **composition root** — they wire concrete implementations
@@ -97,7 +97,7 @@ Arrows only go **downward** across layer boundaries.
 - **Mechanics** (`libs/NodeRunner.Mechanics/`) depends on: `NodeRunner.Domain`
   only. It holds the pure physics of creature parts — the sums the sim runs
   each step and Build reuses to draw the same thing (#596). What stays in
-  Domain, and why, is listed in `libs/NodeRunner.Domain/AGENTS.md`.
+  Domain, and why, is listed in `.claude/rules/domain.md`.
 - **ML** (`libs/NodeRunner.ML/`) depends on: `NodeRunner.Domain` only.
 
 ## Solution layout
@@ -187,14 +187,14 @@ anything the player expects to find again is saved before the scene closes.
   autoload.
 - Android Back and Escape go through a `UiBackHandler` (`ui/lib`) on each
   routed screen: an open menu, dialog or sheet takes Back first, then the
-  scene goes one step back (#474). `project/src/ui/AGENTS.md` says how to
+  scene goes one step back (#474). `.claude/rules/ui.md` says how to
   code it.
 - What must outlive a scene change lives in `ui/lib` autoloads, not
   `managers/`, because managers hold no UI: `Notifications`
   (`UiNotificationLayer`, #472), `BackPress` (one go-back per Back press,
   #506, #838), `SafeArea` (display-cutout insets, #513) and `UiScale` (the
   UI size, #299; how it scales without touching the world:
-  `project/src/ui/lib/AGENTS.md`).
+  `.claude/rules/ui-lib.md`).
 
 ## UI text and translation
 
@@ -209,7 +209,7 @@ default name takes a `Func<UiText, string>`, and the hosts pass
 `UiTextTranslation.Now`, since managers hold no UI (#759).
 
 `docs/LOCALIZATION.md` → "Text rules" owns what the text says and how it is
-translated; `project/src/ui/AGENTS.md` owns how UI code shows it.
+translated; `.claude/rules/ui.md` owns how UI code shows it.
 
 ## Threading
 

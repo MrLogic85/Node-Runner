@@ -433,7 +433,7 @@ public partial class Creature : Node2D
 
     // An intact beam is a body without a collider: it carries mass, turning inertia and sensors,
     // and is pinned at both ends to its nodes, which are what touch the world. A torn beam gets
-    // a shape to land (AGENTS.md rule 17).
+    // a shape to land (.claude/rules/creature.md rule 17).
     private void CreateBeams(CreatureDef definition)
     {
         var beamDefs = definition.Beams;
@@ -528,7 +528,7 @@ public partial class Creature : Node2D
             var position = ToGodot(definition.Nodes[i].Position);
             var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(JointMotor.Radius));
 
-            // No CCD (#1171; why: AGENTS.md rule 3).
+            // No CCD (#1171; why: .claude/rules/creature.md rule 3).
             var body = new RigidBody2D
             {
                 Name = $"Node{i}",

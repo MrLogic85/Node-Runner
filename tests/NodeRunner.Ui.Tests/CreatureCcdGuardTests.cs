@@ -15,7 +15,7 @@ public sealed class CreatureCcdGuardTests
             .ToList();
 
         violations.ShouldBeEmpty(
-            "Leave ContinuousCd unset on creature bodies (#1171; why: project/src/creature/AGENTS.md rule 3).");
+            "Leave ContinuousCd unset on creature bodies (#1171; why: .claude/rules/creature.md rule 3).");
     }
 
     [Theory]

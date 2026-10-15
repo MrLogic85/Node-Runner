@@ -1,4 +1,9 @@
-# AGENTS.md — `src/theme/`
+---
+paths:
+  - "project/src/theme/**"
+---
+
+# Theme rules — `project/src/theme/`
 
 **How the arena and creatures look: theme colours, drawing helpers and the
 shared part visuals that Build, Training and thumbnails draw with (#766).**
@@ -38,7 +43,7 @@ shared part visuals that Build, Training and thumbnails draw with (#766).**
    - A selected joint motor's (a Servo's, Velocity motor's or Stepper's), Brake's or
      Angle sensor's Fixed and Target link bands lie along other parts' links, so the Build canvas draws them on
      `CreatureLayers.SelectedUnderlays`, under the selected surface.
-4. **Strokes follow the pen rule** in `project/src/ui/lib/AGENTS.md` →
+4. **Strokes follow the pen rule** in `.claude/rules/ui-lib.md` →
    Drawing (`UiStrokeGuardTests`). `docs/WORLD_VISUALS.md` owns how parts
    look.
 

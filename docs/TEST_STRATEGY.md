@@ -1,8 +1,9 @@
 # Test Strategy
 
-How each layer of Node Runner is tested, with what tools, and why. Test-code
-conventions (layout, naming, AAA) are in `tests/AGENTS.md`; each library's
-test focus is in its `libs/*/AGENTS.md`.
+How each layer of Node Runner is tested, with what tools, and why.
+Test-code conventions (layout, naming, AAA) are in
+`.claude/rules/tests.md`; each library's test focus is in its rule in
+`.claude/rules/` (`domain.md`, `mechanics.md`, `ml.md`, `app.md`).
 
 ## Guiding principles
 
@@ -52,9 +53,9 @@ versions.
 `NodeRunner.Arch.Tests` (`ArchitectureSpec.cs`) guards the layer graph
 (`docs/ARCHITECTURE.md`), the file-size limit
 (`docs/CODE_DESIGN_PRINCIPLES.md` §5) and the Android export
-(`docs/RELEASING.md` → "Android export"). `AgentFilesSpec.cs` checks the
-agent files (`docs/REVIEW.md` → "Agent files"). Add a fact when we decide
-to enforce a convention.
+(`docs/RELEASING.md` → "Android export"). `AgentFilesSpec.cs` and
+`RuleFilesSpec.cs` check the agent and rule files (`docs/REVIEW.md` →
+"Agent and rule files"). Add a fact when we decide to enforce a convention.
 
 ## UI contracts
 
@@ -63,10 +64,10 @@ Godot scene tree. Each concern's rule lives in the owning doc:
 
 | Concern | Tests | Rule owner |
 |---|---|---|
-| Values come from their owner, so a root Theme swap restyles everything | `UiTokensTests`, `UiThemeExpanderTests`, `SceneDerivedStateTests`, `UiSourceGuardTests`, `AppIconTests` | `docs/UI_DIRECTION.md` → "Who owns what", `project/src/ui/lib/AGENTS.md`, `docs/RELEASING.md` → "App icon" |
-| Draw order and shared part visuals | `UiLayersTests`, `DrawLayersTests`, `SharedPartVisualsTests`; the draw groups and the hit rule Build and Training share (`PartAt`) in Domain's `DrawGroupsTests` | `project/src/ui/lib/AGENTS.md`, `project/src/theme/AGENTS.md`, `docs/WORLD_VISUALS.md` → "Draw layers" |
-| Text is translated once, by Godot | `UiTextTranslationTests`, `UiTranslationContextTests`, `TranslationTemplateTests` | `docs/LOCALIZATION.md`, `project/src/ui/AGENTS.md` |
-| Screens reuse the library | `UiComponentContractsTests`, `RewrittenSceneTests`, `UiSourceGuardTests` | `docs/UI_DIRECTION.md` → "Who owns what", `project/src/ui/AGENTS.md` |
+| Values come from their owner, so a root Theme swap restyles everything | `UiTokensTests`, `UiThemeExpanderTests`, `SceneDerivedStateTests`, `UiSourceGuardTests`, `AppIconTests` | `docs/UI_DIRECTION.md` → "Who owns what", `.claude/rules/ui-lib.md`, `docs/RELEASING.md` → "App icon" |
+| Draw order and shared part visuals | `UiLayersTests`, `DrawLayersTests`, `SharedPartVisualsTests`; the draw groups and the hit rule Build and Training share (`PartAt`) in Domain's `DrawGroupsTests` | `.claude/rules/ui-lib.md`, `.claude/rules/theme.md`, `docs/WORLD_VISUALS.md` → "Draw layers" |
+| Text is translated once, by Godot | `UiTextTranslationTests`, `UiTranslationContextTests`, `TranslationTemplateTests` | `docs/LOCALIZATION.md`, `.claude/rules/ui.md` |
+| Screens reuse the library | `UiComponentContractsTests`, `RewrittenSceneTests`, `UiSourceGuardTests` | `docs/UI_DIRECTION.md` → "Who owns what", `.claude/rules/ui.md` |
 | Saved scenes survive export | `SceneEditableChildrenTests`, `SceneParentPathTests` | Export re-packs every scene, and a node added inside an instance that is not `[editable]`, under a stale parent path, or beside a same-named sibling vanishes only on device (#333, #407, #496) |
 | Saved enum numbers keep their meaning | `SceneSavedEnumsTests` | The test's summary |
 | Every route opens its scene | `SceneRouterTests` | `docs/ARCHITECTURE.md` → "Navigation" |
@@ -85,8 +86,8 @@ source or `project.godot`:
 
 | Concern | Tests | Rule owner |
 |---|---|---|
-| Creature bodies run without CCD | `CreatureCcdGuardTests` | `project/src/creature/AGENTS.md` rule 3 |
-| The 2D solver runs at least 24 iterations | `SolverIterationsGuardTests` | `project/src/creature/AGENTS.md` rule 3 |
+| Creature bodies run without CCD | `CreatureCcdGuardTests` | `.claude/rules/creature.md` rule 3 |
+| The 2D solver runs at least 24 iterations | `SolverIterationsGuardTests` | `.claude/rules/creature.md` rule 3 |
 | 2D gravity is Earth's at the metre scale | `MetreScaleTests` | `docs/GLOSSARY.md` → "Metre" |
 
 ## What we do NOT test

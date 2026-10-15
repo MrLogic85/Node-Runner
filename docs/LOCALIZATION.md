@@ -3,7 +3,7 @@
 How Node Runner's text is written and translated. The game is written in
 English, and the English text is the translation key (gettext msgid).
 `docs/ARCHITECTURE.md` → "UI text and translation" owns how text crosses
-the layers, and `project/src/ui/AGENTS.md` how UI code shows it.
+the layers, and `.claude/rules/ui.md` how UI code shows it.
 
 The game ships in English only, but all text goes through Godot's
 translation system (#682), so adding a language needs no code changes.

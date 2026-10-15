@@ -1,4 +1,10 @@
-# AGENTS.md — `libs/NodeRunner.Domain`
+---
+paths:
+  - "libs/NodeRunner.Domain/**"
+  - "tests/NodeRunner.Domain.Tests/**"
+---
+
+# Domain rules — `libs/NodeRunner.Domain`
 
 Pure C# data types: the vocabulary of the app, with no behaviour beyond
 invariants.

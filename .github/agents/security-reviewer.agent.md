@@ -18,7 +18,8 @@ Review trust boundaries affected by the diff.
 
 Authoritative sources:
 
-- Root and local `AGENTS.md` files
+- Root `AGENTS.md` and the `.claude/rules/` files whose `paths` match the
+  diff
 - `docs/CODE_DESIGN_PRINCIPLES.md`
 - The issue's acceptance criteria and platform configuration
 

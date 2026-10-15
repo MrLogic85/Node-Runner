@@ -39,7 +39,7 @@ not apply:
       issue"). For a UI-touching change, `design-lead`'s "insufficient
       evidence" result blocks until live app access, screenshots or
       recordings, or a human waiver is recorded in the PR.
-- [ ] Docs and the nearest `AGENTS.md` updated where behaviour,
+- [ ] Docs and the matching `.claude/rules/` files updated where behaviour,
       architecture or a rule changed
 - [ ] A change to a saved shape updates `docs/SAVE_FORMAT.md` and the
       schemas in `docs/save-schema/`, and adds the migration and test the
@@ -93,9 +93,9 @@ Then:
 
 Every review agent must:
 
-- Read root `AGENTS.md`, the nearest local `AGENTS.md` files, and the
-  documents its definition names, and judge the diff against them without
-  inventing stricter rules.
+- Read root `AGENTS.md`, the `.claude/rules/` files whose `paths` match
+  the diff, and the documents its definition names, and judge the diff
+  against them without inventing stricter rules.
 - Stay within the diff. Mention preexisting problems separately; they do
   not block.
 - Report only actionable correctness, maintainability or process
@@ -116,7 +116,7 @@ Done" treats every new finding alike. Issue reviews use
 `issue-reviewer` (`docs/ISSUES.md` → "Reviewing an issue"), which reports
 in its own format and finding levels.
 
-### Agent files
+### Agent and rule files
 
 - Each agent is one `.github/agents/<name>.agent.md`; `.claude/agents/`
   holds a relative symlink `<name>.md` to it, so both tools load the same
@@ -129,9 +129,12 @@ in its own format and finding levels.
 - A hook in an agent's frontmatter uses Claude Code's shape: each entry
   holds an inner `hooks` list, with a `matcher` where the event takes
   one. Claude Code drops the whole agent if it finds Copilot's flat shape.
-- `AgentFilesSpec` in `NodeRunner.Arch.Tests` checks the rules above
-  (#1334), so `Test & coverage` fails when an agent would load in only
-  one tool.
+- A rule in `.claude/rules/<topic>.md` starts with frontmatter that has
+  only `paths`: at least one quoted glob, one per line, each an existing
+  file or `<folder>/**` (#1315).
+- `AgentFilesSpec` and `RuleFilesSpec` in `NodeRunner.Arch.Tests` check the
+  rules above (#1334, #1315), so `Test & coverage` fails when an agent or
+  rule would load in only one tool, or never.
 - Each reviewer's file tells it not to edit files.
 - Committed agent instructions require only the tools `README.md` →
   "Tools" marks as required; for a recommended tool they name a fallback
