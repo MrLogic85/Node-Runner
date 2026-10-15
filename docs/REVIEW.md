@@ -140,6 +140,50 @@ in its own format and finding levels.
   "Tools" marks as required; for a recommended tool they name a fallback
   that always exists, such as `git grep` for `rg`.
 
+## Hooks
+
+`.claude/settings.json` registers the scripts in `.claude/hooks/`, and both
+tools run them for every agent, not only reviewers (#1320). They hold what
+an instruction alone does not reliably hold:
+
+| Event | Script | Does |
+| --- | --- | --- |
+| `SessionStart` | `session-start.sh` | Tells the agent the branch and any uncommitted changes, and records the user's running emulators |
+| `PreToolUse` on `Bash` | `guard-bash.sh` | Denies the git commands `AGENTS.md` → "Working copy" forbids, a commit or push to `main`, `gh pr create` without `--title`, and a literal PR title CI would reject in `gh pr create` or `gh pr edit` |
+| `PreToolUse` on edits | `guard-edit.sh` | Denies writes into `/tmp` and `issues/` |
+| `Stop` | `turn-end.sh` | Blocks the turn's end once for each emulator or APK in `build/` that appeared during the session |
+| `SessionEnd` | `session-end.sh` | Removes the session's state in `.git/agent-hooks/`; a session start also prunes state idle for over two days |
+
+The hooks guard against mistakes, not intent. `guard-bash.sh` reads simple
+commands, follows `cd`, `env -C`, `git -C`, `bash -c` and a `git switch` or
+`git checkout` of a branch earlier in the line, and allows what it cannot
+read: a substitution inside double quotes, a wrapper such as `xargs` or
+`timeout`, a title held in a variable, a nested `env -C`, a detached
+HEAD or a checkout of `@{-1}`. It assumes an earlier switch succeeded,
+even after `||`. `guard-edit.sh` sees only the edit tools and only `/tmp`
+itself, so a shell redirect into `/tmp` or a write into macOS's
+`$TMPDIR` passes. The `Stop` hook reports any emulator the user starts
+during the session, including another session's but not one whose path
+holds a space, and the APK a release
+(`docs/RELEASING.md`) leaves in `build/`; say why it stays.
+
+A hook is a bash script that needs only bash, `git`, `jq` and POSIX tools.
+It writes its verdict in both tools' JSON shapes, always exits 0, and
+allows the call when `jq` is missing, because both tools block the call
+when a `PreToolUse` hook fails; `session-start.sh` then says the hooks are
+off, as it does when it cannot record the session's state for `Stop`. The settings command is
+`"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/<name>.sh`:
+quoted, since the checkout path may hold spaces, and found from the
+repository root when `CLAUDE_PROJECT_DIR` is unset, so a session started
+in a subfolder still finds it.
+`guard-bash.sh` copies CI's PR title rule.
+
+The specs in `NodeRunner.Arch.Tests/Hooks/` run each hook against a
+throwaway repository, check each script's event and matcher in
+`settings.json`, and compare the title rule with `ci.yml`. A `local_*` hook
+is registered in `.claude/settings.local.json` (`AGENTS.md` →
+"Machine-local setup").
+
 ## Merge gates
 
 The `main` ruleset requires a PR, linear history, squash merges and the

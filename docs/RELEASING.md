@@ -93,9 +93,11 @@ tracked files:
 
 ```bash
 cd project
+mkdir -p ../.scratch
 /Applications/Godot_mono.app/Contents/MacOS/Godot --headless \
-  --install-android-build-template --export-debug Android /tmp/template.apk
+  --install-android-build-template --export-debug Android ../.scratch/template.apk
 git checkout -- android/build/
+rm ../.scratch/template.apk
 ```
 
 After an upgrade, keep Godot's new `build.gradle` and `GodotApp.java`

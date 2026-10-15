@@ -58,7 +58,7 @@ state goes in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
 | .NET 10 SDK | Required: building and testing | `brew install --cask dotnet-sdk` |
 | Godot 4.7, .NET build | Required: running the app | `brew install --cask godot-mono` |
 | `gh` | Required: scripts in `.github/scripts/` | `brew install gh` |
-| `jq` | Required: the same scripts | `brew install jq` |
+| `jq` | Required: the same scripts and the hook tests; without it the agent hooks are off | `brew install jq` |
 | `adb` | Required: Android checks | `brew install --cask android-platform-tools` |
 | `rg` (ripgrep) | Recommended: fast search that skips build output | `brew install ripgrep` |
 
@@ -88,7 +88,7 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 | Manual tests | [`docs/MANUAL_TESTING.md`](docs/MANUAL_TESTING.md) |
 | Issues, labels and project fields | [`docs/ISSUES.md`](docs/ISSUES.md) |
 | Tools to install | `README.md` → "Tools" |
-| How a change lands, review agents | [`docs/REVIEW.md`](docs/REVIEW.md) |
+| How a change lands, review agents, hooks | [`docs/REVIEW.md`](docs/REVIEW.md) |
 | What each review agent checks | [`.github/agents/`](.github/agents/) |
 | Releasing | [`docs/RELEASING.md`](docs/RELEASING.md) |
 

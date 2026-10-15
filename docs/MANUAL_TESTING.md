@@ -94,8 +94,9 @@ differ from desktop.
 Use a connected physical phone first, because touch feel, screen density,
 performance and rendering artifacts are easiest to judge there. The phones
 belong to the owner: ask first whether they are free to use. Otherwise use
-a configured Android emulator/AVD, and stop any emulator you started as
-soon as you are done, since emulators are heavy for the local processor.
+a configured Android emulator/AVD, and stop any emulator you started
+(`adb -s <serial> emu kill`) as soon as you are done, since emulators are
+heavy for the local processor.
 If neither is available, record the missing prerequisite.
 
 An agent-run Android check needs Android export configured
