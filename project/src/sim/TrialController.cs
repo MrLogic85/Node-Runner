@@ -90,7 +90,7 @@ public partial class TrialController : Node
     private void Begin()
     {
         _creature!.ResetPose(GroundTopY - StartClearance);
-        _measurement.Reset(_creature.CenterOfMass.X, _creature.Bounds.End.X);
+        _measurement.Reset(_creature.Centre.X, _creature.Bounds.End.X);
         _tornEnds = 0;
         _elapsedTicks = 0;
         TrialStarted?.Invoke();
@@ -120,7 +120,7 @@ public partial class TrialController : Node
 
         _elapsedTicks++;
         FollowTears(_creature);
-        _measurement.Record(_creature.CenterOfMass.X, _creature.Bounds.End.X, GroundTopY - _creature.LowestPointY);
+        _measurement.Record(_creature.Centre.X, _creature.Bounds.End.X, GroundTopY - _creature.LowestPointY);
 
         if (_elapsedTicks >= TrialDurationTicks)
         {

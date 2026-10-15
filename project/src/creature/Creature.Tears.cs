@@ -30,8 +30,6 @@ public partial class Creature
     // After the first tear the centre, bounds and lowest point follow the main piece only.
     private bool _hasTorn;
     private bool[] _nodeInMainPiece = [];
-    private bool[] _beamCounted = [];
-    private int _countedBeams;
 
     /// <summary>How many beam ends have torn from their joints since the creature was last built (#962).</summary>
     public int TornEnds { get; private set; }
@@ -62,8 +60,6 @@ public partial class Creature
 
         _hasTorn = false;
         _nodeInMainPiece = new bool[definition.Nodes.Count];
-        _beamCounted = new bool[definition.Beams.Count];
-        _countedBeams = 0;
         TornEnds = 0;
         TearSample = default;
     }
@@ -217,7 +213,7 @@ public partial class Creature
 
         FindMainPiece(definition);
         _hasTorn = true;
-        TearSample = (CenterOfMass.X, Bounds.End.X, LowestPointY);
+        TearSample = (Centre.X, Bounds.End.X, LowestPointY);
     }
 
     // The followed creature marks where a joint let go, once per joint; a shadow does not (#1257).
@@ -315,15 +311,5 @@ public partial class Creature
         {
             _nodeInMainPiece[definition.NodeIndexOf(nodeId)] = true;
         }
-
-        // A beam counts while one of its ends still holds on to the main piece, dangling or not.
-        _countedBeams = 0;
-        for (var beam = 0; beam < _beamBodies.Length; beam++)
-        {
-            _beamCounted[beam] = HoldsOnToMainPiece(2 * beam) || HoldsOnToMainPiece((2 * beam) + 1);
-            _countedBeams += _beamCounted[beam] ? 1 : 0;
-        }
     }
-
-    private bool HoldsOnToMainPiece(int end) => !_endTorn[end] && _nodeInMainPiece[_beamEndNodes[end]];
 }

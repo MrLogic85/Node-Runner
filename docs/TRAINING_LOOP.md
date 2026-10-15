@@ -47,7 +47,10 @@ the reference's "a training session has finished" (#369).
 ## Trial
 
 - `TrialMeasurement` records every tick of a trial; its result is a
-  `TrialResult` (#420):
+  `TrialResult` (#420). *The centre* is the average position of the
+  creature's nodes, which every creature has whatever links join them
+  (#1303); a tear narrows it to the main piece (`docs/CREATURE_MODEL.md` →
+  Beam → Tearing).
   - `Distance`: the **running maximum** forward distance of the centre from
     its start, not the final or cumulative distance. This is the fitness:
     it rewards peak progress without penalising a creature that surges
@@ -233,15 +236,15 @@ the reference's "a training session has finished" (#369).
     caption, the Distance card reads the run's front distance, and the best
     marker stays at the saved best on this map.
   - **Camera (#668, #675, #1169, #1190).** `ArenaCamera` frames the followed
-    shadow through `ArenaFraming`, from its centre of mass and its box. It moves on physics ticks, as the creatures do, so on a
+    shadow through `ArenaFraming`, from its centre (Trial above) and its box. It moves on physics ticks, as the creatures do, so on a
     120 Hz screen the world never judders against it (#909). The other
     shadows may leave the view.
-    - *Centre (#1169):* it follows the shadow's centre of mass on both
+    - *Centre (#1169):* it follows the shadow's centre on both
       axes, through one `ArenaFollow` per axis, eased in two stages so a
       gait's wobble never shakes the view and a switch to another shadow
       glides in. Each follower's aim leads by the eased speed, so its
       eased point keeps up with a moving shadow instead of trailing it.
-      At rest the centre of mass shows in the middle of the view; *Ground*,
+      At rest the centre shows in the middle of the view; *Ground*,
       *Lead* and *Safe zone* below move it from there.
     - *Ground:* the ground line never rises above 80% down the view,
       unless the callout shelf lowers that limit. A shadow on the ground
@@ -262,7 +265,7 @@ the reference's "a training session has finished" (#369).
       and a third behind, so a fast shadow keeps room behind it to show
       where it came from. The view slides ahead by a sixth of the room it
       shows beyond the rest view, up to a sixth of a second of travel: at
-      a steady speed the centre of mass sits half the rest view plus a
+      a steady speed the centre sits half the rest view plus a
       third of the added room from the back edge, tending to a third of
       the view. Leading into a fall stops at the ground limit.
     - *Safe zone (#1190):* the shadow's box keeps 10% of the view clear
@@ -273,7 +276,7 @@ the reference's "a training session has finished" (#369).
       rest and always fits. It moves the view as little as keeps the box
       inside, and only when the follow alone would not: a sudden start or
       launch, when the eased speed lags. A gait stretching the box has
-      room, so the view follows the centre of mass and does not shake. A
+      room, so the view follows the centre and does not shake. A
       box too wide for both sides' margins, before the zoom has widened
       for it, is centred. After a switch to another shadow the zone holds
       only once the glide has brought its box inside, so the switch never

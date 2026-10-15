@@ -4,8 +4,8 @@ namespace NodeRunner.App.ViewModels;
 /// What the Training camera frames each frame: the followed creature's centre and the box around
 /// its parts, in world units (Y grows downward).
 /// </summary>
-/// <param name="CentreX">The centre point the camera follows sideways: the centre of mass.</param>
-/// <param name="CentreY">The centre point the camera follows up and down: the centre of mass.</param>
+/// <param name="CentreX">The centre point the camera follows sideways: the creature's centre.</param>
+/// <param name="CentreY">The centre point the camera follows up and down: the creature's centre.</param>
 /// <param name="Left">The left edge of the creature's box.</param>
 /// <param name="Top">The top of the creature's box, its smallest Y.</param>
 /// <param name="Right">The right edge of the creature's box.</param>
@@ -20,7 +20,7 @@ public readonly record struct FramedCreature(double CentreX, double CentreY, dou
 
 /// <summary>
 /// The Training camera's framing (#675, #1169): where it looks and how far it zooms out. It
-/// follows the creature's centre of mass on both axes through one <see cref="ArenaFollow"/> each and
+/// follows the creature's centre on both axes through one <see cref="ArenaFollow"/> each and
 /// shows it in the middle of the view at rest, except that the ground line never rises above
 /// <see cref="GroundFromTop"/>, so a creature on the ground sits low and a hopping gait does not
 /// bob the view, and that a moving creature shows behind the middle. It zooms out so the creature
@@ -320,7 +320,7 @@ public sealed class ArenaFraming
         Math.Sign(speed) * Math.Min(Math.Abs(speed) * SpeedLookaheadSeconds, Math.Max(0, extraRoom)) / 6;
 
     // The safe zone's margin on one side, in world units: SafeMargin of the shown span, or half the
-    // room the box's edge, reaching extent from the centre of mass, has there at rest when less.
+    // room the box's edge, reaching extent from the centre, has there at rest when less.
     private static double SafeRoom(double extent, double restSpan, double shownSpan) =>
         Math.Clamp(((_viewCentre * restSpan) - extent) / (2 * restSpan), 0, SafeMargin) * shownSpan;
 
