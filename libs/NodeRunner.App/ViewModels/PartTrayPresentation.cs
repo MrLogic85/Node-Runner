@@ -187,7 +187,7 @@ public static class PartTray
             Available(BuildPart.Camera, UiText.Plain("Camera")),
             Available(BuildPart.TouchSensor, UiText.Plain("Touch sensor")),
             Available(BuildPart.AngleSensor, UiText.Plain("Angle sensor")),
-            Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.4"),
+            Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.5"),
         ]),
         new(UiText.Plain("Blocks"),
         [
