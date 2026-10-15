@@ -130,7 +130,7 @@ if [[ $branch == main ]]; then
     "refs/tags/$tag" "$tag^{commit}:refs/heads/$release_branch" \
     || fail "Pushing $tag and $release_branch failed, so nothing was pushed. Run git tag -d $tag before retrying."
 else
-  git push origin "$tag"
+  git push origin "$tag" || fail "Pushing $tag failed, so nothing was pushed. Run git tag -d $tag before retrying."
 fi
 gh release create "$tag" "$apk" --repo "$repo" --verify-tag --title "Node Runner $version" \
   --notes-file "$notes" \

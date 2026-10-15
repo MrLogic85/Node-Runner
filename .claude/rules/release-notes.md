@@ -7,7 +7,8 @@ paths:
 
 One file per published version, `X.Y.Z.md`. `.github/scripts/release.sh`
 uses it unchanged as the GitHub release text and refuses to publish without
-it. `docs/RELEASING.md` says when and by which PR it is added.
+it. `docs/RELEASING.md` says when and by which PR it is added, and the
+`write-release-notes` skill has the steps.
 
 ## Writing the notes
 

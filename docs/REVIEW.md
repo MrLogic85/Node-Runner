@@ -53,7 +53,7 @@ not apply:
 - [ ] No secrets, credentials or personal data
 - [ ] PR title follows "PR title and commit hygiene"
 - [ ] Manual testing decided and done per `docs/MANUAL_TESTING.md`
-- [ ] Squash auto-merge enabled
+- [ ] Squash auto-merge enabled (a PR into `release/vX.Y` is merged by hand)
 
 ## Review agents
 
@@ -272,7 +272,9 @@ Every PR enables GitHub's squash auto-merge as soon as it opens (the
 process has to outlive the session. The author still owns the PR while
 the session lasts, as "TL;DR" says, until it reached `MERGED` with `main`
 green. If auto-merge cannot be enabled, keep the PR open, report the
-blocker, and never bypass the required checks.
+blocker, and never bypass the required checks. The one exception is a PR
+into `release/vX.Y`, which is merged by hand (`docs/RELEASING.md` → "Fix
+releases").
 
 ## What does NOT block a merge
 

@@ -6,9 +6,9 @@ description: Commit, push and open a Node Runner pull request, enable squash aut
 # Ship a PR
 
 `docs/REVIEW.md` owns the rules this follows: "TL;DR", "Definition of
-Done", "Auto-merge" and "PR title and commit hygiene". A release PR
-follows `docs/RELEASING.md` instead. Read `LOCAL_CONFIG.md` first for the
-`gh` login and push remote.
+Done", "Auto-merge" and "PR title and commit hygiene". A release's PRs
+also follow the `release-milestone` or `fix-release` skill. Read
+`LOCAL_CONFIG.md` first for the `gh` login and push remote.
 
 1. Check every "Definition of Done" box, including the `review-change`
    skill run on the final diff and the manual testing decision

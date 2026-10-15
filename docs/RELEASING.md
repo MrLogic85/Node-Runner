@@ -19,45 +19,51 @@ a minor can ship in steps from `main` as milestones X.Y.0, X.Y.1, … (0.14 is
 split this way, #1072). Every milestone has a "Release X.Y.Z" issue
 (`type: chore`, `area: android`), blocked by the milestone's other issues
 and by the previous release issue. When it is the milestone's last open
-issue:
+issue and the human has asked for the release, the `release-milestone`
+skill releases it in three parts, in this order:
 
-1. A PR titled `docs(#N): Release notes for X.Y.Z` adds
-   `docs/release-notes/X.Y.Z.md` (`.claude/rules/release-notes.md`) with
-   `Part of #N`, not a closing keyword, so the issue stays open until the
-   release is out.
-2. From an up-to-date `main`, run `.github/scripts/release.sh`. It exports a
-   signed release APK, checks its version and signature, tags `vX.Y.Z`,
-   creates or moves `release/vX.Y` to the tag, and creates the GitHub
-   release with the APK attached. The release text is exactly the notes
-   file. `release.sh --dry-run` exports and checks without publishing.
-3. A PR titled `chore(#N): Bump main to <next>` runs
-   `.github/scripts/set-version.sh <next>`, where `<next>` is the next
-   milestone's version, and closes the release issue.
+- A PR titled `docs(#N): Release notes for X.Y.Z` adds
+  `docs/release-notes/X.Y.Z.md` (`.claude/rules/release-notes.md`). It
+  says `Part of #N`, not a closing keyword, so the issue stays open until
+  the release is out.
+- `.github/scripts/release.sh`, run from an up-to-date `main`, exports a
+  signed release APK, checks its version and signature, tags `vX.Y.Z`,
+  creates or moves `release/vX.Y` to the tag, and creates the GitHub
+  release with the APK attached. The release text is exactly the notes
+  file. `release.sh --dry-run` exports and checks without publishing.
+- A PR titled `chore(#N): Bump main to <next>` sets the next milestone's
+  version with `.github/scripts/set-version.sh` and closes the release
+  issue.
 
 ## Fix releases
 
-A fix that cannot wait for the next milestone lands on `release/vX.Y` by PR
-(also on `main` when it applies there). That PR bumps the patch to the next
-free number with `set-version.sh X.Y.Z` and adds
+A fix that the human decides cannot wait for the next milestone lands on
+`release/vX.Y` by PR (also on `main` when it applies there). That PR bumps
+the patch to the next free number with `set-version.sh X.Y.Z` and adds
 `docs/release-notes/X.Y.Z.md`; after it merges, `release.sh` from that
 branch publishes it. If a milestone on `main` planned that number, rename
-it and the later ones up by one, and bump `main` to match. A fix that
-applies to `main` must be merged there before the next release from `main`,
-which force-moves `release/vX.Y`. `release.sh` refuses that move while the
-branch tip has no tag, and refuses any version older than the newest
-`vX.Y.*` tag.
+it, the later ones and their release issues up by one, and bump `main` to
+match. A fix that applies to `main` must be merged there before the next
+release from `main`, which force-moves `release/vX.Y`. `release.sh` refuses
+that move while the branch tip has no tag, and refuses any version older
+than the newest `vX.Y.*` tag.
 
 GitHub only honours closing keywords on PRs into `main`, so close the fix's
 issue by hand after the fix release unless its `main` PR closes it. CI runs
 on `release/**` as on `main`, but no ruleset protects those branches, so
-`release.sh` refuses to publish unless `Build`, `Test & coverage` and
-`Format check` passed on HEAD.
+auto-merge is not available there: merge a PR into one by hand once its
+checks pass. For the same reason `release.sh` refuses to publish unless
+`Build`, `Test & coverage` and `Format check` passed on HEAD. The
+`fix-release` skill has the steps.
 
 ## Publishing safeguards
 
-`release.sh` checks before tagging that the active `gh` login can push to the
-repository (`LOCAL_CONFIG.md` names the account). If `gh release create` still
-fails after the tag is pushed, the script prints the command to retry it.
+`release.sh` checks before tagging that the active `gh` login can push to
+the repository (`LOCAL_CONFIG.md` names the account). From `main` it pushes
+the tag and `release/vX.Y` together, so a failed push leaves nothing on
+GitHub. When a push fails, the script says how to remove the local tag. If
+`gh release create` fails after the tag is pushed, the script prints the
+command to retry it; never re-tag a pushed version.
 
 ## Signing key
 
@@ -150,4 +156,4 @@ density (#820). `docs/UI_DIRECTION.md` → "App icon" owns the design.
 
 `foreground.svg` owns the art; `main.svg` copies it, so change them
 together. `AppIconTests` checks the colours, sizes, the preset and the
-copy.
+copy. The `change-app-icon` skill has the steps for changing the icon.

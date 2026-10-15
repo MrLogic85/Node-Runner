@@ -193,18 +193,13 @@ without turning or changing shape and differ a little for one that does.
 
 ### Changing a saved shape
 
-1. Change the record, this document and the schema as usual.
-2. Append a `SaveMigration` to the file's list
-   (`FileCreationRepository.Format` for `creation.json`,
-   `FileProgressionRepository.Format` for `progression.json`). It turns a file
-   in the previous version into the new shape; the current version goes up
-   by one.
-3. Add a test that loads a file in the previous version, and keep the
-   0.13.0 fixtures loading.
-4. For `creation.json`, add the new version's share dictionary: run the App
-   tests with `NODE_RUNNER_UPDATE_SHARE_DICTIONARY=1`, then again to build
-   it in (see "Share code").
-5. Rewrite the pins (see "Pinned saves").
+A change to the shape of a file the project stage protects adds a migration,
+so the current version goes up by one and older files load in the new shape,
+with a test that loads a file in the previous version. A change that keeps
+the shape but changes what a saved value means is migrated too when a
+migration can keep the old meaning; otherwise "Versions and migration"
+records why it needs none, as it does for #1086 and #1303. The
+`change-saved-shape` skill has the steps.
 
 The real files 0.13.0 wrote are checked in as fixtures in
 `tests/NodeRunner.App.Tests/Repositories/SaveExamples/0.13.0/` (the Walker
