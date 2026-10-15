@@ -4,12 +4,13 @@ How a change lands in `main`, for humans and AI agents alike.
 
 ## TL;DR
 
-1. Branch from `main`; never push to `main` directly (the ruleset rejects
-   it).
+1. Branch from `main` as `<type>/<issue>-<slug>`, with the PR title's type,
+   for example `fix/1234-joint-drift`; never push to `main` directly (the
+   ruleset rejects it).
 2. Run the review agents (see "Review agents") before every commit or
-   push.
+   push, with the `review-change` skill.
 3. Push, open a PR against `main` with the template, and enable squash
-   auto-merge.
+   auto-merge, with the `ship-pr` skill.
 4. Own the PR until it merges: fix failing checks, answer every review
    comment with a fix or a reason, and don't resolve threads you didn't
    address.
@@ -76,18 +77,14 @@ include it.
 | `security-reviewer` | Input, storage, logs, permissions, credentials or personal data |
 | `tests-reviewer` | Tests, or logic that needs them |
 | `performance-reviewer` | Per-frame or per-tick paths, training loops or long-lived state |
-| `build-reviewer` | CI, scripts, project, package or editor config, agent files or hooks |
+| `build-reviewer` | CI, scripts, project, package or editor config, agent, rule or skill files, or hooks |
 | `design-lead` | Anything visible: screens, controls, layout, theme or world visuals |
 
-Then:
-
-1. Give each agent the repository path, the exact diff or commit range,
-   and the issue goal.
-2. Run independent reviews in parallel.
-3. Give `design-lead` live app access or fresh screenshots or recordings
-   from the target device (`docs/MANUAL_TESTING.md` → "Android checks"),
-   and the `reference design/` path when it guides a new surface. Without
-   them it reports **insufficient evidence** (see "Definition of Done").
+The `review-change` skill runs them. `design-lead` needs live app access
+or fresh screenshots or recordings from the target device
+(`docs/MANUAL_TESTING.md` → "Android checks"), and the `reference
+design/` path when it guides a new surface. Without them it reports
+**insufficient evidence** (see "Definition of Done").
 
 ### Reporting
 
@@ -116,7 +113,7 @@ Done" treats every new finding alike. Issue reviews use
 `issue-reviewer` (`docs/ISSUES.md` → "Reviewing an issue"), which reports
 in its own format and finding levels.
 
-### Agent and rule files
+### Agent, rule and skill files
 
 - Each agent is one `.github/agents/<name>.agent.md`; `.claude/agents/`
   holds a relative symlink `<name>.md` to it, so both tools load the same
@@ -132,9 +129,17 @@ in its own format and finding levels.
 - A rule in `.claude/rules/<topic>.md` starts with frontmatter that has
   only `paths`: at least one quoted glob, one per line, each an existing
   file or `<folder>/**` (#1315).
-- `AgentFilesSpec` and `RuleFilesSpec` in `NodeRunner.Arch.Tests` check the
-  rules above (#1334, #1315), so `Test & coverage` fails when an agent or
-  rule would load in only one tool, or never.
+- Each skill is `.claude/skills/<name>/SKILL.md`, which both tools load
+  (#1314). Its frontmatter has only `name`, the folder's name in lowercase
+  letters, digits and hyphens, at most 64 (a git-ignored `local_*` skill
+  keeps its underscore), and a one-line `description` of at most 1024
+  characters saying what it does and when to use it, since that is what
+  the model matches a task against. Both limits are Claude Code's. A skill
+  that the docs name exists.
+- `AgentFilesSpec`, `RuleFilesSpec` and `SkillFilesSpec` in
+  `NodeRunner.Arch.Tests` check the rules above (#1334, #1315, #1317), so
+  `Test & coverage` fails when an agent, rule or skill would load in only
+  one tool, or never.
 - Each reviewer's file tells it not to edit files.
 - Committed agent instructions require only the tools `README.md` →
   "Tools" marks as required; for a recommended tool they name a fallback
@@ -195,17 +200,12 @@ conflict.
 
 ## Auto-merge
 
-After opening the PR, enable GitHub's squash auto-merge:
-
-```bash
-gh pr merge --auto --squash
-```
-
-GitHub owns the wait, so no local process has to outlive the session. The
-author still watches the checks while the session lasts, fixes failures,
-re-runs the review agents the corrective change selects, and confirms
-the PR reached `MERGED` with `main` green. If auto-merge cannot be enabled,
-keep the PR open, report the blocker, and never bypass the required checks.
+Every PR enables GitHub's squash auto-merge as soon as it opens (the
+`ship-pr` skill has the commands). GitHub owns the wait, so no local
+process has to outlive the session. The author still owns the PR while
+the session lasts, as "TL;DR" says, until it reached `MERGED` with `main`
+green. If auto-merge cannot be enabled, keep the PR open, report the
+blocker, and never bypass the required checks.
 
 ## What does NOT block a merge
 

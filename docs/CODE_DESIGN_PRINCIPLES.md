@@ -132,6 +132,8 @@ Documentation follows these rules:
 - Instructions that add nothing are removed: generic advice, restating what
   code, tests or CI enforce without a why, and history that no longer guides
   decisions.
+- A procedure's steps live in a skill in `.claude/skills/`; the owning doc
+  keeps the rules and the why, and links to the skill.
 - Layer-specific instructions live in a `.claude/rules/` file whose `paths`
   cover the files they govern.
 
