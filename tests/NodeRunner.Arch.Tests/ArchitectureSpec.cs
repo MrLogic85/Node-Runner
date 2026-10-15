@@ -80,7 +80,7 @@ public sealed partial class ArchitectureSpec
     public void ProductionSourceFiles_StayWithinHardLineLimit()
     {
         const int hardLimit = 2000;
-        var root = FindRepositoryRoot();
+        var root = RepositoryRoot.Find();
         string[] skipped = ["bin", "obj", ".godot"];
         var offenders = new List<string>();
 
@@ -125,21 +125,6 @@ public sealed partial class ArchitectureSpec
         ProjectSetting("export_presets.cfg", "version/name")
             .ShouldBe("\"\"", "An empty name makes the export read application/config/version (#809).");
 
-    private static string FindRepositoryRoot()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
-             directory is not null;
-             directory = directory.Parent)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "NodeRunner.slnx")))
-            {
-                return directory.FullName;
-            }
-        }
-
-        throw new DirectoryNotFoundException("Could not find NodeRunner.slnx.");
-    }
-
     [Fact]
     public void AndroidPreset_BuildsWithGradleAndGivesTheDebugBuildItsOwnIdentity()
     {
@@ -151,7 +136,7 @@ public sealed partial class ArchitectureSpec
         preset["package/unique_name"].ShouldBe("\"dev.mrlogic85.noderunner\"");
         preset["package/name"].ShouldBe("\"Node Runner\"");
 
-        var template = Path.Combine(FindRepositoryRoot(), "project", "android", "build");
+        var template = Path.Combine(RepositoryRoot.Find(), "project", "android", "build");
         DebugIdSuffix().IsMatch(File.ReadAllText(Path.Combine(template, "build.gradle")))
             .ShouldBeTrue("build.gradle's debug build type must keep applicationIdSuffix \".debug\".");
         var label = XDocument.Load(Path.Combine(template, "src", "monoDebug", "AndroidManifest.xml"))
@@ -165,7 +150,7 @@ public sealed partial class ArchitectureSpec
     {
         // Godot's own activity, tracked so the release keeps our keyboard hook (#906). A Godot
         // upgrade replaces it; see docs/RELEASING.md → "Android export".
-        var activity = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "project", "android", "build",
+        var activity = File.ReadAllText(Path.Combine(RepositoryRoot.Find(), "project", "android", "build",
             "src", "main", "java", "com", "godot", "game", "GodotApp.java"));
         activity.ShouldContain("public class GodotApp extends GodotActivity");
         activity.ShouldContain("InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES");
@@ -176,7 +161,7 @@ public sealed partial class ArchitectureSpec
     private static string ProjectSetting(string file, string key)
     {
         var prefix = key + "=";
-        var values = File.ReadLines(Path.Combine(FindRepositoryRoot(), "project", file))
+        var values = File.ReadLines(Path.Combine(RepositoryRoot.Find(), "project", file))
             .Where(line => line.StartsWith(prefix, StringComparison.Ordinal))
             .Select(line => line[prefix.Length..])
             .Distinct()
@@ -190,7 +175,7 @@ public sealed partial class ArchitectureSpec
     private static List<Dictionary<string, string>> ExportPresets()
     {
         var presets = new List<Dictionary<string, string>>();
-        foreach (var line in File.ReadLines(Path.Combine(FindRepositoryRoot(), "project", "export_presets.cfg")))
+        foreach (var line in File.ReadLines(Path.Combine(RepositoryRoot.Find(), "project", "export_presets.cfg")))
         {
             if (line.StartsWith("[preset.", StringComparison.Ordinal) && !line.EndsWith(".options]", StringComparison.Ordinal))
             {
