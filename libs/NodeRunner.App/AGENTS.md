@@ -27,7 +27,7 @@ in-memory fakes. The bridge between the Godot side and the pure layers.
 
 - `ViewModels/` — screen state and presentation: `BuildViewModel` and its
   `BuildGestures`, `CreationsPresentationViewModel`,
-  `TrainingPresentationViewModel` (shadows), the Brain focus and Signal flow
+  `TrainingPresentationViewModel` (shadows), the Network focus and Signal flow
   presentations
 - `Repositories/` — `ICreationRepository` (`FileCreationRepository`,
   `InMemoryCreationRepository`), `CreationShareCode`,

@@ -5,7 +5,7 @@ namespace NodeRunner.Creature;
 
 /// <summary>
 /// An Angle sensor's ring and arc in Training (#1205): the arc follows its sides' live directions,
-/// so it shows the angle the brain reads, and fills and empties with each turn counted from the built
+/// so it shows the angle the network reads, and fills and empties with each turn counted from the built
 /// pose (#1243, <see cref="AngleSensorTurn"/>); each trial builds a new one, so the count starts again at rest.
 /// The followed creature's <see cref="Knockout"/> runs along it, so it never merges into the ground line.
 /// </summary>

@@ -79,7 +79,7 @@ detectable.
   may exceed it. `NodeRunner.Arch.Tests` fails the build.
 - Test files have no size limit; see `tests/AGENTS.md`.
 - Prefer composition over inheritance. A creature *has* nodes, beams, sensors
-  and a brain — it doesn't *inherit* from any of them.
+  and a network — it doesn't *inherit* from any of them.
 - No abstract base classes "just in case". Introduce them when the second
   concrete case appears, not before.
 

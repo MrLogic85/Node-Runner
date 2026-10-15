@@ -27,7 +27,7 @@ public sealed class TrainingPresentationViewModelTests
     [Fact]
     public void Saved_ShowsTheSavedBestOnThisMap()
     {
-        var training = new TrainingStateDef(TestTraining.Brain, 3, TestTraining.Run, new TrainingBestDef(2, 300, MapIds.Flat, frontDistance: 420));
+        var training = new TrainingStateDef(TestTraining.Network, 3, TestTraining.Run, new TrainingBestDef(2, 300, MapIds.Flat, frontDistance: 420));
 
         var presentation = TrainingPresentationViewModel.Saved(training, MapIds.Flat);
 
@@ -40,7 +40,7 @@ public sealed class TrainingPresentationViewModelTests
     [InlineData("map-hills", 420.0)]
     public void Saved_HidesTheMarkerWithoutABestFrontOnThisMap(string mapId, double? frontDistance)
     {
-        var training = new TrainingStateDef(TestTraining.Brain, 3, TestTraining.Run, new TrainingBestDef(2, 300, MapIds.Flat, frontDistance));
+        var training = new TrainingStateDef(TestTraining.Network, 3, TestTraining.Run, new TrainingBestDef(2, 300, MapIds.Flat, frontDistance));
 
         var presentation = TrainingPresentationViewModel.Saved(training, mapId);
 

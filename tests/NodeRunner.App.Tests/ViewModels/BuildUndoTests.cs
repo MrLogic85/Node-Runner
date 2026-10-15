@@ -2,7 +2,7 @@ using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
-using NodeRunner.ML.Brains;
+using NodeRunner.ML.Networks;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
@@ -422,25 +422,25 @@ public sealed class BuildUndoTests
     [InlineData(CreatureElementKind.Piston, 30)]
     [InlineData(CreatureElementKind.Node, 3)]
     [InlineData(CreatureElementKind.Node, 1)]
-    public void UndoingADelete_GivesThePartsTrainedBrainBack(CreatureElementKind kind, int id)
+    public void UndoingADelete_GivesThePartsTrainedNetworkBack(CreatureElementKind kind, int id)
     {
         var creation = Trained(Creature());
-        var opened = creation.Training!.Brain;
+        var opened = creation.Training!.Network;
         var (repository, build, autosave) = Open(creation);
         build.Unlock();
         build.ToggleSelected(new CreatureElementSelection(kind, id));
         build.DeleteSelectedParts();
         autosave.Save();
-        repository.Get(creation.Id)!.Training!.Brain.Neurons.Count.ShouldBeLessThan(opened.Neurons.Count);
+        repository.Get(creation.Id)!.Training!.Network.Neurons.Count.ShouldBeLessThan(opened.Neurons.Count);
 
         build.Undo();
         autosave.Save();
 
-        var brain = repository.Get(creation.Id)!.Training!.Brain;
-        brain.Neurons.ShouldBe(opened.Neurons, ignoreOrder: true);
-        brain.Connections.ShouldBe(opened.Connections, ignoreOrder: true);
-        var ports = BrainPorts.Of(build.Snapshot());
-        DirectBrain.Compile(brain, ports).ShouldBe(DirectBrain.Compile(opened, ports));
+        var network = repository.Get(creation.Id)!.Training!.Network;
+        network.Neurons.ShouldBe(opened.Neurons, ignoreOrder: true);
+        network.Connections.ShouldBe(opened.Connections, ignoreOrder: true);
+        var ports = NetworkPorts.Of(build.Snapshot());
+        DirectNetwork.Compile(network, ports).ShouldBe(DirectNetwork.Compile(opened, ports));
     }
 
     [Fact]
@@ -456,8 +456,8 @@ public sealed class BuildUndoTests
         autosave.Save();
 
         var saved = repository.Get(creation.Id)!;
-        var ports = BrainPorts.Of(saved.Creature);
-        var genome = DirectBrain.Compile(saved.Training!.Brain, ports);
+        var ports = NetworkPorts.Of(saved.Creature);
+        var genome = DirectNetwork.Compile(saved.Training!.Network, ports);
         var inputs = ports.Inputs.Select((port, index) => (port, index)).Where(entry => entry.port.PartId == second).Select(entry => entry.index).ToList();
         inputs.ShouldNotBeEmpty();
         for (var o = 0; o < ports.Outputs.Count; o++)
@@ -475,22 +475,22 @@ public sealed class BuildUndoTests
         var creation = Trained(Creature());
         var (repository, build, autosave) = Open(creation);
         build.Unlock();
-        BrainDef SavedBrain()
+        NeuralNetworkDef SavedNetwork()
         {
             autosave.Save();
-            return repository.Get(creation.Id)!.Training!.Brain;
+            return repository.Get(creation.Id)!.Training!.Network;
         }
 
         var first = build.PlacePart(BuildPart.Accelerometer, new CreatureElementSelection(CreatureElementKind.Beam, 11))!.Value;
-        var withFirst = SavedBrain();
+        var withFirst = SavedNetwork();
         build.MoveNode(1, new Vector2D(0, 10));
         var firstIds = withFirst.Neurons.Where(neuron => neuron.PartId == first).Select(neuron => neuron.Id).ToList();
-        SavedBrain().Neurons.Where(neuron => neuron.PartId == first).Select(neuron => neuron.Id).ShouldBe(firstIds);
+        SavedNetwork().Neurons.Where(neuron => neuron.PartId == first).Select(neuron => neuron.Id).ShouldBe(firstIds);
         build.SelectOnly(CreatureElementKind.Sensor, first);
         build.DeleteSelectedParts();
-        var withoutFirst = SavedBrain();
+        var withoutFirst = SavedNetwork();
         var second = build.PlacePart(BuildPart.Accelerometer, new CreatureElementSelection(CreatureElementKind.Beam, 12))!.Value;
-        var withSecond = SavedBrain();
+        var withSecond = SavedNetwork();
 
         withoutFirst.NextNeuronId.ShouldBeGreaterThanOrEqualTo(withFirst.NextNeuronId);
         withSecond.Neurons.Where(neuron => neuron.PartId == second).Select(neuron => neuron.Id).ShouldAllBe(id => !firstIds.Contains(id));

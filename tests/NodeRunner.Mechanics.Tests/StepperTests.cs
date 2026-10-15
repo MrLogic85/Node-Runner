@@ -264,7 +264,7 @@ public sealed class StepperTests
     }
 
     [Fact]
-    public void WithoutABrain_ItStaysLockedAtItsNotch_AndLeavesTheHoldToTheWeld()
+    public void WithoutANetwork_ItStaysLockedAtItsNotch_AndLeavesTheHoldToTheWeld()
     {
         // Against a load the weld holds: Godot's, so the phone test plan checks it.
         var joint = new Joint();

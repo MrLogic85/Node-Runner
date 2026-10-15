@@ -210,7 +210,7 @@ are in `AngleSensorGeometry`):
   each end on its side's centre line, over the links, with a knock-out
   edge that parts it from the links it crosses, a Piston's cylinder or a
   beam in its angle, and rims its round ends where they lie on the two
-  sides' links. Its ends show the angle the brain reads
+  sides' links. Its ends show the angle the network reads
   (`docs/CREATURE_MODEL.md` → Angle sensor → Reading); which part of the
   ring it covers shows how the sides got there (#1243). Counting the angle
   on across whole turns, counter-clockwise on screen, on an even turn it
@@ -345,7 +345,7 @@ sensor's arc goes round it (Angle sensor). The skin is only drawn
 
 A cushion around its joint (#665, #1045): a ring 5 units wide (`TouchSensorDef.Cushion`)
 just outside the joint's largest drawn radius R, the tyre on a Wheel's
-joint. Its colour is the brain's reading
+joint. Its colour is the network's reading
 (`docs/CREATURE_MODEL.md` → Touch sensor → Reading): `accent` at
 `alpha_soft` at 0 and in Build, solid `accent` at 1, blended between. It
 draws first on its joint, under the ring, hub, joint motor, Brake or
@@ -362,7 +362,7 @@ when selected), upright on the beam's built-up side and turning with it,
 where `docs/CREATURE_MODEL.md` → Sensor puts it (#1086).
 
 - **Accelerometer:** a 16 × 22 rounded frame with a zigzag spring to a round
-  weight. The weight shows the proof mass the brain reads, with 1 g at half
+  weight. The weight shows the proof mass the network reads, with 1 g at half
   its travel. In Build it hangs at rest and swings on the same spring as in
   a run, so nothing jumps when a run starts.
 - **Camera:** a body, lens ring and hood at twice that scale, looking along
@@ -558,7 +558,7 @@ a creature's links past `DrawGroups.MaxGroups` share the last group.
   one callout (#1066): a row each, in their stack order
   (`docs/BUILD_MODE.md` → Interactions), with its own glyph, name and
   lines, split by a `line` hairline with `S1` above and below.
-- **Port bars (#1064):** a part with brain ports adds its glyph before the
+- **Port bars (#1064):** a part with network ports adds its glyph before the
   name and, under the name, a line of its inputs in `accent`, then a line
   of its outputs in `output`. Each line starts with a muted `Overline`
   word, **IN** or **OUT** (short for Inputs and Outputs), so colour is
@@ -570,7 +570,7 @@ a creature's links past `DrawGroups.MaxGroups` share the last group.
   bars in their own columns so wrapped bars line up, and the word shows on
   a line's first row only. A −1…1 port fills from the centre, past a
   1-wide muted tick at 0; a 0…1 port fills from the left. Values outside
-  the range clamp. A Wheel, Rubber or Brake shows its glyph and a muted "No brain
+  the range clamp. A Wheel, Rubber or Brake shows its glyph and a muted "No network
   ports"; a Joint, Beam or Spring shows only its name.
 - **Slow-motion chip (#318):** a Warning chip, "Too many shadows!", top
   left, over the Best flag when that scrolls past.

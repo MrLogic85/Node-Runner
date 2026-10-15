@@ -3,7 +3,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// A Spring (#453): a passive link between two nodes that pulls them back toward its rest length,
 /// their distance in the drawing unless <see cref="CoilLength"/> presses it against a stop, and damps
-/// how fast that distance changes. It limits movement without holding it rigid, has no brain ports and draws no power. Like a Piston it travels between a shortest and
+/// how fast that distance changes. It limits movement without holding it rigid, has no network ports and draws no power. Like a Piston it travels between a shortest and
 /// a longest length, <see cref="Stroke"/> apart, and <see cref="CoilLength"/> moves its rest length
 /// evenly across that travel and half its drawn gap, between its joints' hubs, past each stop, where it starts pressed
 /// against that stop (#835). See

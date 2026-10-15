@@ -50,7 +50,7 @@ public partial class ComponentGalleryScreen : GalleryScreen
 
         var note = GetNode<UiCallout>("%Note");
         note.IconId = UiIconId.PartWheel;
-        note.Lines = [UiCalloutLine.OfNote("No brain ports")];
+        note.Lines = [UiCalloutLine.OfNote("No network ports")];
 
         var stack = GetNode<UiCallout>("%Stack");
         stack.IconId = UiIconId.PartServo;
@@ -59,7 +59,7 @@ public partial class ComponentGalleryScreen : GalleryScreen
             UiCalloutLine.OfMeters(UiTokens.Color.Accent, [new("angle", 0.5, Centred: true), new("speed", -1, Centred: true)], "In"),
             UiCalloutLine.OfMeters(UiTokens.Color.Output, [new("angle", 0, Centred: true), new("strength", 1, Centred: false)], "Out"),
         ];
-        stack.Sections = [new UiCalloutSection(UiIconId.PartWheel, "Wheel 1", [UiCalloutLine.OfNote("No brain ports")])];
+        stack.Sections = [new UiCalloutSection(UiIconId.PartWheel, "Wheel 1", [UiCalloutLine.OfNote("No network ports")])];
     }
 
     private void ResetScrollPosition()

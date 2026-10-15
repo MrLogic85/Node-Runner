@@ -16,12 +16,12 @@ public sealed class TrainingScreenCalloutSectionTests
             UiText.AsWritten("Knee"),
             ShowsGlyph: true,
             [
-                new PartCalloutPort(BrainPort.Input(1, "angle"), UiText.Plain("angle"), PortRange.MinusOneToOne, -0.5),
-                new PartCalloutPort(BrainPort.Input(1, "speed"), UiText.Plain("speed"), PortRange.MinusOneToOne, null),
+                new PartCalloutPort(NetworkPort.Input(1, "angle"), UiText.Plain("angle"), PortRange.MinusOneToOne, -0.5),
+                new PartCalloutPort(NetworkPort.Input(1, "speed"), UiText.Plain("speed"), PortRange.MinusOneToOne, null),
             ],
             [
-                new PartCalloutPort(BrainPort.Output(1, "angle", PortSignal.Position), UiText.Plain("angle"), PortRange.MinusOneToOne, 0.25),
-                new PartCalloutPort(BrainPort.Output(1, "strength", PortSignal.Strength), UiText.Plain("strength"), PortRange.ZeroToOne, 0.75),
+                new PartCalloutPort(NetworkPort.Output(1, "angle", PortSignal.Position), UiText.Plain("angle"), PortRange.MinusOneToOne, 0.25),
+                new PartCalloutPort(NetworkPort.Output(1, "strength", PortSignal.Strength), UiText.Plain("strength"), PortRange.ZeroToOne, 0.75),
             ],
             null);
 
@@ -43,7 +43,7 @@ public sealed class TrainingScreenCalloutSectionTests
             PartKind.Camera,
             UiText.AsWritten("Eye"),
             ShowsGlyph: true,
-            [new PartCalloutPort(BrainPort.Input(1, "hit"), UiText.Plain("hit"), PortRange.ZeroToOne, 1)],
+            [new PartCalloutPort(NetworkPort.Input(1, "hit"), UiText.Plain("hit"), PortRange.ZeroToOne, 1)],
             [],
             null);
 
@@ -57,11 +57,11 @@ public sealed class TrainingScreenCalloutSectionTests
     [Fact]
     public void CalloutSection_ForAWheel_IsOneMutedNote()
     {
-        var wheel = new PartCalloutPresentation(PartKind.Wheel, UiText.AsWritten("Wheel"), ShowsGlyph: true, [], [], UiText.Plain("No brain ports"));
+        var wheel = new PartCalloutPresentation(PartKind.Wheel, UiText.AsWritten("Wheel"), ShowsGlyph: true, [], [], UiText.Plain("No network ports"));
 
         var line = Lines(wheel)!.ShouldHaveSingleItem();
 
-        line.Note.ShouldBe("No brain ports");
+        line.Note.ShouldBe("No network ports");
         line.Heading.ShouldBeNull();
         line.Color.ShouldBe(UiTokens.Color.Muted);
         line.Meters.ShouldBeEmpty();
@@ -78,7 +78,7 @@ public sealed class TrainingScreenCalloutSectionTests
     [Fact]
     public void CalloutSection_ShowsTheGlyphAndName_OrTheNameAlone()
     {
-        var wheel = new PartCalloutPresentation(PartKind.Wheel, UiText.AsWritten("Rear"), ShowsGlyph: true, [], [], UiText.Plain("No brain ports"));
+        var wheel = new PartCalloutPresentation(PartKind.Wheel, UiText.AsWritten("Rear"), ShowsGlyph: true, [], [], UiText.Plain("No network ports"));
         var beam = new PartCalloutPresentation(PartKind.Beam, UiText.AsWritten("Shin"), ShowsGlyph: false, [], [], null);
 
         var wheelSection = Section(wheel, "Rear");

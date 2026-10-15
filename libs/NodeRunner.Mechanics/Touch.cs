@@ -10,7 +10,7 @@ namespace NodeRunner.Mechanics;
 public static class Touch
 {
     /// <summary>
-    /// Its brain input: 0 with the ground at the cushion's outer edge or farther, rising linearly to
+    /// Its network input: 0 with the ground at the cushion's outer edge or farther, rising linearly to
     /// 1 where the ground meets the joint. The ground is <paramref name="groundDistance"/> from the
     /// joint's centre and the joint's edge <paramref name="jointRadius"/>.
     /// </summary>

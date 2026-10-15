@@ -1,9 +1,9 @@
 namespace NodeRunner.Creature;
 
-/// <summary>A sensor part on a beam as the sim runs it: writes its readings into the brain's input buffer.</summary>
+/// <summary>A sensor part on a beam as the sim runs it: writes its readings into the network's input buffer.</summary>
 public interface IBeamSensor
 {
-    /// <summary>How many brain inputs it writes, one per channel (<see cref="Domain.BrainPorts"/>).</summary>
+    /// <summary>How many network inputs it writes, one per channel (<see cref="Domain.NetworkPorts"/>).</summary>
     int ValueCount { get; }
 
     void Read(double[] values, int startIndex, double dt);

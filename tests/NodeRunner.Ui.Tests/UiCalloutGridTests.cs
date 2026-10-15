@@ -47,7 +47,7 @@ public sealed class UiCalloutGridTests
     {
         UiCalloutGrid.HasColumn(UiIconId.PartPiston, [Line(1)]).ShouldBeTrue();
         UiCalloutGrid.HasColumn(UiIconId.None, [Line(1), Line(1, "Out")]).ShouldBeTrue();
-        UiCalloutGrid.HasColumn(UiIconId.None, [Line(1), UiCalloutLine.OfNote("No brain ports")]).ShouldBeFalse();
+        UiCalloutGrid.HasColumn(UiIconId.None, [Line(1), UiCalloutLine.OfNote("No network ports")]).ShouldBeFalse();
     }
 
     [Fact]

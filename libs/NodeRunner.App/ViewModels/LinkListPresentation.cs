@@ -15,7 +15,7 @@ public enum LinkListRowState
     Selected,
     Locked,
 
-    /// <summary>Implemented, but the creation is locked and the link has brain ports, like a Piston (#896).</summary>
+    /// <summary>Implemented, but the creation is locked and the link has network ports, like a Piston (#896).</summary>
     CreationLocked,
 }
 
@@ -36,7 +36,7 @@ public sealed record LinkListPresentation(
 
 /// <summary>
 /// The Links tool's list: Beam, Piston and Spring now, later links locked. On a locked creation the
-/// Piston is locked too, since it has brain ports (#896).
+/// Piston is locked too, since it has network ports (#896).
 /// </summary>
 public static class BuildLinkList
 {
@@ -58,8 +58,8 @@ public static class BuildLinkList
             ? PartTray.ComingIn(row.Name, row.Version!)
             : throw new ArgumentOutOfRangeException(nameof(link), link, "Only a locked link has a version.");
 
-    /// <summary>Whether <paramref name="link"/> has brain ports, so a locked creation neither draws nor replaces it (#896, #1176).</summary>
-    public static bool HasBrainPorts(BuildLink link) => link == BuildLink.Piston;
+    /// <summary>Whether <paramref name="link"/> has network ports, so a locked creation neither draws nor replaces it (#896, #1176).</summary>
+    public static bool HasNetworkPorts(BuildLink link) => link == BuildLink.Piston;
 
     public static UiText HelpText { get; } = UiText.Plain("Tap a link to pick it.");
 
@@ -79,7 +79,7 @@ public static class BuildLinkList
         Info(link) is { } info ? UiText.Format("{0}\n{1}", info, DrawHelp) : DrawHelp;
 
     private static LinkListRow Row(BuildLink link, UiText name, BuildLink? picked, bool creationLocked) =>
-        new(link, name, creationLocked && HasBrainPorts(link) ? LinkListRowState.CreationLocked
+        new(link, name, creationLocked && HasNetworkPorts(link) ? LinkListRowState.CreationLocked
             : link == picked ? LinkListRowState.Selected
             : LinkListRowState.Rest,
             Version: null);

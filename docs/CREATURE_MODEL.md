@@ -1,7 +1,7 @@
 # Creature model
 
 What each part of a Node Runner creature is and does, and the contract
-between its parts and the brain. Short definitions are in
+between its parts and the network. Short definitions are in
 `docs/GLOSSARY.md`; how parts look is in `docs/WORLD_VISUALS.md`.
 
 **The model is not the simulation** (#452). This document describes a part
@@ -18,9 +18,9 @@ Servo, the Motor and the Stepper, which turn their joint, the Brake, which resis
 that, the Angle sensor, which feels it, the Wheel, which rolls, the Rubber, which grips, and the Touch sensor, which feels the ground) and links between two nodes
 (the Piston and the Spring). Plain joints
 are passive (#450): a beam turns freely where it meets another, and only
-parts with brain ports move the body. "What senses" (sensors) and "what
-thinks" (the brain) stay separate; this is the most important rule here:
-**a sensor is not the brain.**
+parts with network ports move the body. "What senses" (sensors) and "what
+thinks" (the network) stay separate; this is the most important rule here:
+**a sensor is not the network.**
 
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
 so it sits on a beam, or on a joint, a body of its own (Touch sensor); a
@@ -29,7 +29,7 @@ joint (Servo, Motor, Stepper, Brake, Angle sensor, Wheel, Rubber); one joining t
 one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
-identity only: not display, draw or brain-port order, and not names.
+identity only: not display, draw or network-port order, and not names.
 Display names are optional, may repeat and are never keys.
 
 **Air drag** (#1112): air slows a moving creature by about a tenth of its
@@ -39,7 +39,7 @@ speed, on Wheels for example, keeps most of it. A Wheel's spin barely slows
 recorded here.
 
 ```
-CreatureDef  ──build──▶  physical body  ──sensors──▶  model  ──outputs──▶  servos + pistons  ──force──▶  physical body
+CreatureDef  ──build──▶  physical body  ──sensors──▶ network ──outputs──▶  servos + pistons  ──force──▶  physical body
    (data)                    (physics)                (control)                                (physics)
 ```
 
@@ -69,7 +69,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
   - **1 link:** a dangling tip.
   - **2+ links:** a passive joint unless a joint motor sits on it: the links turn
     freely against each other unless beams close a rigid triangle. A plain
-    joint has no settings, angle limits or brain ports.
+    joint has no settings, angle limits or network ports.
 - **One piece (#930):** the links must join every linked joint into one
   piece. Separate pieces can be saved, but `CreatureReadiness` stops training
   until they are joined or all but one are removed. Joint motors and sensors join
@@ -133,7 +133,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 ### Sensor
 
 - **Beginner:** A part on a beam that feels something about that beam and
-  feeds it to the brain. It is *not* the brain.
+  feeds it to the network. It is *not* the network.
 - `SensorDef`: its `SensorKind` and the beam it sits on. A sensor measures
   its own beam where it sits, with no position setting, and shows as a small
   picture there (#576): midway between what is drawn over the beam's two
@@ -154,25 +154,25 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 
 - **Beginner:** A small weight on a spring inside a box. When the beam
   speeds up, slows down or tilts, the weight shifts; that shift is what the
-  brain feels. At rest it feels gravity, so it also knows which way is down.
+  network feels. At rest it feels gravity, so it also knows which way is down.
 - A proof mass on a damped spring in the beam's sensor frame, driven by the
   beam's specific force where it sits (1 g "up" at rest, so its direction
   gives the tilt). Mechanics: `Accelerometer`.
-- **Reading:** two brain inputs, along the beam and across it, always in
+- **Reading:** two network inputs, along the beam and across it, always in
   −1…1 (`Accelerometer.Reading`). At rest on a level beam it reads about 0
   along and 0.76 across.
 - **The spring is the filter:** it smooths spiky per-tick acceleration from
   contacts but still shows an impact as a spike that decays, and gives the
   reading a short memory of recent motion.
 - **Deterministic:** the proof mass starts at rest under gravity as built,
-  on every build, so the same brain, build and map give the same readings.
-  The visual and SignalFlow show the same proof mass the brain reads.
-- **There is no speed or elevation sensor:** the brain learns movement from
+  on every build, so the same network, build and map give the same readings.
+  The visual and SignalFlow show the same proof mass the network reads.
+- **There is no speed or elevation sensor:** the network learns movement from
   acceleration, Piston length and speed, and its own outputs.
 
 #### Camera
 
-- **Beginner:** Rays that tell the brain how near the ground is. A new
+- **Beginner:** Rays that tell the network how near the ground is. A new
   camera has three, looking level: ahead-and-up, straight ahead and
   ahead-and-down; you can turn it and change its rays, spread and range in
   Build. The nearer the ground a ray sees, the stronger its reading.
@@ -214,7 +214,7 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶  model 
 - **Reading:** one input per ray, then hit (`CameraRays.Read`). First each
   ray's **nearness**, left to right: 0 at or beyond the camera's own range
   and rising linearly to 1 at contact (`CameraRays.Reading`); a hit at half
-  its range reads 0.5. Nothing seen adds nothing to the brain's weighted
+  its range reads 0.5. Nothing seen adds nothing to the network's weighted
   sum (`docs/ML_CONCEPTS.md`). Last, **hit**: 1 when any ray sees the
   ground, else 0, so far ground, whose nearness is almost 0, differs from
   none (#1032). It comes after every ray, whatever the ray count.
@@ -234,7 +234,7 @@ nodes; how the simulation keeps them from giving way under load is in
 
 ### Servo
 
-- **Beginner:** A joint motor that turns to the angle the brain picks. It holds one link as Fixed and turns
+- **Beginner:** A joint motor that turns to the angle the network picks. It holds one link as Fixed and turns
   another as Target; any other links at that joint stay free. It can turn
   its joint's Wheel too, as if the Wheel were a link.
 - `ServoDef`; Mechanics: `Servo`. Fixed and Target may be Beams, Pistons or
@@ -257,7 +257,7 @@ nodes; how the simulation keeps them from giving way under load is in
 - **Torque:** it chases a wanted speed, ten times the angle still to go and
   at most Max speed, with a push that closes most of the speed gap at once
   and a holding part that slowly gathers what a steady load needs, so it
-  can hold weight up to the strength the brain chose (`Servo.NextMotor`).
+  can hold weight up to the strength the network chose (`Servo.NextMotor`).
   Under a sudden load it sags a little, then climbs back within a second or
   two. Its torque builds to that strength over Rise time and drops at once.
 - **Settings:** **Max strength** (torque, N·m), **Range** (its total
@@ -267,9 +267,9 @@ nodes; how the simulation keeps them from giving way under load is in
 
 ### Motor (Velocity motor in code)
 
-- **Beginner:** A joint motor that turns at the speed the brain
+- **Beginner:** A joint motor that turns at the speed the network
   chooses, round and round if it likes. Like a Servo it holds one side as
-  Fixed and turns the other as Target, but the brain picks a speed, not an
+  Fixed and turns the other as Target, but the network picks a speed, not an
   angle.
 - The code and save format call it the Velocity motor: `VelocityMotorDef`
   (#454), saved under `velocityMotors`; Mechanics: `VelocityMotor`. Its sides follow
@@ -282,9 +282,9 @@ nodes; how the simulation keeps them from giving way under load is in
   pose, so a Motor reads where Target points from Fixed all the way round.
   It has no Range and no end stops.
 - **Torque:** the Servo's loop (`MotorLoop`), with the wanted speed set
-  straight from the brain: the speed output times Max speed
+  straight from the network: the speed output times Max speed
   (`VelocityMotor.NextMotor`). It keeps that speed against a load up to the
-  strength the brain chose; a larger load slows it or turns it back.
+  strength the network chose; a larger load slows it or turns it back.
 - **Settings:** **Max strength** (torque, N·m), **Max speed** (rpm) and
   **Rise time** (s, as a Servo's); their ranges are in `docs/BUILD_MODE.md`
   → Parameters. Its Max strength tops out at a fifth of a Servo's, so it
@@ -293,18 +293,18 @@ nodes; how the simulation keeps them from giving way under load is in
 ### Stepper
 
 - **Beginner:** A joint motor that works like a clock: it holds its joint
-  in fixed notches and, as often as the brain asks, lets go and pushes it
+  in fixed notches and, as often as the network asks, lets go and pushes it
   on to the next one, either way. Like a Servo it holds one side as Fixed and turns
   the other as Target.
 - `StepperDef` (#1036), saved under `steppers`. Its sides follow the
   Servo's rules and it takes the joint's hinge-part slot (see Servo, and
-  Node → One part per slot). It is saved, loaded, shared and has brain
+  Node → One part per slot). It is saved, loaded, shared and has network
   ports, steps in the simulation (#1037) and is placed in Build (#1038).
   `docs/WORLD_VISUALS.md` → Parts says how it is drawn.
 - **Settings:** **Max strength** (torque while stepping, N·m), **Notches**
   (in a full turn, 2–24, saved as `stepsPerTurn`) and **Max frequency** (the
   most steps each second); their slider ranges are in `docs/BUILD_MODE.md`
-  → Parameters. Its ports are in Sensor–model contract.
+  → Parameters. Its ports are in Sensor–network contract.
 - **Notch angles:** as many evenly spaced angles as its Notches, between its sides,
   counted from the built angle, so a trial starts locked at a notch. Its
   angle is measured as a Motor's and counts on across whole turns.
@@ -315,12 +315,12 @@ nodes; how the simulation keeps them from giving way under load is in
   wraps, at most once a physics step. The clock never resets: a release,
   a lock or a timeout leaves it as it is, and frequency 0 stops it where
   it is. Its tick input reads the phase, a sawtooth: 0 as it lets go,
-  rising to 1 just before the next release, so the brain can time other
+  rising to 1 just before the next release, so the network can time other
   parts to its steps.
 - **Release:** each time it lets go it unlocks, picks the neighbouring
   notch the way the frequency's sign says and drives the joint there with
   at most Max strength, like a clock's tick: full torque, then braking
-  just in time, physics step by physics step, to arrive still. The brain picks when and
+  just in time, physics step by physics step, to arrive still. The network picks when and
   which way, never how hard. It has no top speed; Max strength alone sets
   how quick a step is (a new Stepper steps a light joint in a few physics
   steps). Frequency changing sign or falling to 0 mid-release doesn't
@@ -335,7 +335,7 @@ nodes; how the simulation keeps them from giving way under load is in
   strength to the nearest notch, so a push too weak doesn't count a step,
   and locks it there. If the next release comes due first, that nearest
   notch counts as reached and the next step goes on from it.
-- **Lock:** between releases it holds the joint locked, brain or not
+- **Lock:** between releases it holds the joint locked, network or not
   (`Mechanics.Stepper`): Godot welds its sides rigid at the notch, with
   the weld a Locked Brake uses (`Creature.Links.cs`, `Welder`), so no
   load turns it. It pulls a joint caught past the notch onto it within
@@ -345,7 +345,7 @@ nodes; how the simulation keeps them from giving way under load is in
 ### Brake
 
 - **Beginner:** A brake on a joint: it stops its two sides turning against
-  each other, up to its Strength (#456). It has no brain ports and draws no power.
+  each other, up to its Strength (#456). It has no network ports and draws no power.
 - `BrakeDef` (#1039), saved under `brakes`: it is saved, loaded, validated,
   shared and simulated (#1040), and placed in Build (#1041). Its
   sides and hinge-part slot are a Servo's (see Servo, and Node → One part per slot),
@@ -354,7 +354,7 @@ nodes; how the simulation keeps them from giving way under load is in
   its id.
 - **Settings:** **Strength**, the most torque it resists with (N·m), or
   **Locked** (`BrakeDef.Locked`), an endless Strength.
-- **Holding:** friction between its sides, always on, brain or not
+- **Holding:** friction between its sides, always on, network or not
   (`Mechanics.Brake`). Each step it stops the turning between them and
   holds against everything else pushing on the joint, with at most its
   Strength. Within Strength the joint stays put; past it the joint slips,
@@ -371,7 +371,7 @@ nodes; how the simulation keeps them from giving way under load is in
 
 ### Angle sensor
 
-- **Beginner:** A sensor on a joint that tells the brain the angle between
+- **Beginner:** A sensor on a joint that tells the network the angle between
   two of its sides, links or its Wheel, and how fast it is changing,
   without moving them.
 - `AngleSensorDef` (#1204), saved under `angleSensors`; Mechanics:
@@ -385,12 +385,12 @@ nodes; how the simulation keeps them from giving way under load is in
   #1207), and `speed`, `tanh(ω / 2π rad/s)`, counter-clockwise positive.
   Its speed scale, 60 rpm (`AngleSensor.SpeedScale`), is its own: it
   does not follow any Motor's Max speed, so retuning a Motor never changes
-  what a trained brain reads.
+  what a trained network reads.
 
 ### Wheel
 
 - **Beginner:** A wheel on a joint. It turns freely there and rolls on the
-  ground, so a body on wheels can roll instead of walk. It has no brain
+  ground, so a body on wheels can roll instead of walk. It has no network
   ports: on its own it never pushes; something else has to move the body.
 - `WheelDef` (#129). It sits on one joint. Build takes any joint, even a
   loose one, which is drawn `danger` and blocks training by the degree
@@ -410,8 +410,8 @@ nodes; how the simulation keeps them from giving way under load is in
 
 - **Beginner:** A rubber skin on a joint. The joint, or its wheel's tyre,
   grips the ground harder, so it slips less when it pushes or brakes. It
-  has no brain ports: it changes how the body meets the ground, not what
-  the brain does.
+  has no network ports: it changes how the body meets the ground, not what
+  the network does.
 - `RubberDef` (#1142). It sits on one joint, at most one per joint, and
   may share it with the other joint parts (see Node → One part per slot).
   A Wheel's tyre is its joint's, so a Rubber on a Wheel's joint is its tyre.
@@ -425,7 +425,7 @@ nodes; how the simulation keeps them from giving way under load is in
 
 ### Touch sensor
 
-- **Beginner:** A sensor on a joint that tells the brain how close that
+- **Beginner:** A sensor on a joint that tells the network how close that
   joint is to touching the ground.
 - `TouchSensorDef` (#665, #1043). It sits on one joint, at most one per
   joint, and may share it with the other joint parts (see Node → One part
@@ -435,7 +435,7 @@ nodes; how the simulation keeps them from giving way under load is in
   cushion's outer edge, 5 units (`TouchSensorDef.Cushion`) outside the
   joint, or farther, rising to 1 where the ground meets the joint. The
   nearest ground in any direction counts, so a slope or step reads as flat
-  ground does. No smoothing: the cushion shows what the brain gets. Only the ground counts, never the creature's own parts or other
+  ground does. No smoothing: the cushion shows what the network gets. Only the ground counts, never the creature's own parts or other
   shadows. A freshly built or reset body reads 0 until it senses the ground.
 - **Size:** it adds no radius and does not change the joint's collider (see
   Node); its cushion only sets how far it feels, and adds no tap area. It
@@ -446,7 +446,7 @@ nodes; how the simulation keeps them from giving way under load is in
 ### Piston
 
 - **Beginner:** A powered link between two nodes that pushes them apart or
-  pulls them together, in a straight line. The brain chooses how far out it
+  pulls them together, in a straight line. The network chooses how far out it
   goes and how hard it may push.
 - `PistonDef`; Mechanics: `Piston`. Settings: **Strength** (its most
   force), **Stroke** (how much the gap between its joints' hubs can grow,
@@ -475,7 +475,7 @@ nodes; how the simulation keeps them from giving way under load is in
   change how it responds. A held load sags it a little and a heavy one can
   make it bob; a light load at the shortest Rise time and a low Max speed
   can swing round its target, and a weak Piston with a high Max speed
-  overshoots. Those are for the player's settings, the brain and fitness
+  overshoots. Those are for the player's settings, the network and fitness
   (#546).
 - **End stops** (#701): its length stays within its travel under ordinary
   loads; a hard impact can give a little before it is pushed back, more
@@ -492,7 +492,7 @@ nodes; how the simulation keeps them from giving way under load is in
 
 - **Beginner:** A springy link between two nodes. Stretch or squeeze it
   and it pulls back toward the length it was drawn at; its damping stops it
-  bouncing. It has no brain ports: it stores and gives back energy, so a
+  bouncing. It has no network ports: it stores and gives back energy, so a
   Piston's push can bounce, but it never chooses anything. Like a car's
   spring it only moves so far: a new Spring hangs free at its drawn length
   and squeezes to half of it.
@@ -526,10 +526,10 @@ nodes; how the simulation keeps them from giving way under load is in
   lightest pair of nodes unstable at Training's fixed step (#787).
 - **Minimum length:** a link's (Beam → Minimum length, #1212, #1210).
 
-## Sensor–model contract
+## Sensor–network contract
 
-- **Ports (#534):** every part that affects the brain declares its brain
-  channels as ports, `BrainPort(partId, channel, direction, signal)`. The
+- **Ports (#534):** every part that affects the network declares its network
+  channels as ports, `NetworkPort(partId, channel, direction, signal)`. The
   channel is a machine key that never changes; display names are separate.
   An input carries a reading; an output names the physical signal it drives
   (#535). The player sees each port as its part's name and a label; an
@@ -577,35 +577,35 @@ nodes; how the simulation keeps them from giving way under load is in
     built…upper end (`OutputSignals.PositionFromTarget`).
   - **Strength** uses `sigmoid`: 0…1, the share of the part's Strength
     setting used this tick. The setting is the part's maximum, chosen in
-    Build; the output is the brain's choice of how much of it to use.
+    Build; the output is the network's choice of how much of it to use.
   - **Frequency** (#1036, #1263) uses `tanh`: −1…1 of a Stepper's Max
     frequency, counter-clockwise positive; 0 means it stands still.
-  - **New ports start almost passive:** when a part joins a trained brain,
+  - **New ports start almost passive:** when a part joins a trained network,
     its incoming weights are 0 and a new strength output starts
     at bias −4, about 2% force. Position, velocity, length and frequency
     outputs start at bias 0: a length output then asks for the middle of
     its travel, and a Stepper stands still. Generation 0 starts its own way
-    (`docs/TRAINING_LOOP.md` → Generations → Generation 0). The saved brain
+    (`docs/TRAINING_LOOP.md` → Generations → Generation 0). The saved network
     keeps this start so the trained gait never breaks; training redraws the
     new port's genes in every child instead of mutating them, until one
     beats the elite (#1180, `docs/TRAINING_LOOP.md` → "New ports are
     explored").
-  - **A rebuild keeps the brain (#516):** saving a Build edit to a trained
-    creature refits its brain to the new ports (`DirectBrain.Refit`). Ports
+  - **A rebuild keeps the network (#516):** saving a Build edit to a trained
+    creature refits its network to the new ports (`DirectNetwork.Refit`). Ports
     match by part id, channel and direction: a kept port keeps its weights
     and bias, a new port starts almost passive, and a removed part's
     neurons and connections are dropped. Moving nodes, changing settings or
     changing a joint motor's or Angle sensor's sides keeps every port, except a Camera's Rays,
     which add or remove its outer rays' ports while the rays it keeps keep
     their weights (#578).
-  - **Build refits the brain it opened with (#689):** every save in one
-    Build visit refits the brain as it was when Build opened, not the last
+  - **Build refits the network it opened with (#689):** every save in one
+    Build visit refits the network as it was when Build opened, not the last
     saved one, so a part an Undo brings back gets its neurons, ids and
-    weights back. A port that brain lacks keeps the neuron ids the last save
-    gave it; fresh ids start past both brains' `NextNeuronId`, so no neuron
+    weights back. A port that network lacks keeps the neuron ids the last save
+    gave it; fresh ids start past both networks' `NextNeuronId`, so no neuron
     id is reused. Generation, latest and best always come from the saved
     training.
-- **Order** comes from `BrainPorts.Of`: ports sorted by part id, then in the
+- **Order** comes from `NetworkPorts.Of`: ports sorted by part id, then in the
   order the part declares them (its kind's entry in `PartKinds`). It depends only on ids, so moving,
   resizing or adding a part never reorders the other ports.
 
@@ -624,7 +624,7 @@ nodes; how the simulation keeps them from giving way under load is in
   Target side: filling an empty one, picking another link or the Wheel,
   swapping the two, or any link replacing the link it held (#1176, #1177).
   A motor's or Angle sensor's ports may change meaning or sign, but the
-  brain keeps their weights and adapts through training.
+  network keeps their weights and adapts through training.
 - Parts refer to each other by id. Code that needs an array position uses
   `CreatureDef`'s id-to-index lookups at the boundary.
 
@@ -653,7 +653,7 @@ Pistons crossing between them.
 - **2 Pistons** with the default settings, `N2`–`N3` and `N1`–`N4`. They
   hold the body up and swing the legs.
 - **1 accelerometer** on the back.
-- **Brain:** 6 inputs (2 from the accelerometer, 2 per Piston) and 4
+- **Network:** 6 inputs (2 from the accelerometer, 2 per Piston) and 4
   outputs (each Piston's position and strength).
 - **Why this one (#745):** it shows learning in the first minutes with the
   default Train setup (8 shadows, 10 s runs) and walks upright.

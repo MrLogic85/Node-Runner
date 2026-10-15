@@ -11,7 +11,7 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 - **No I/O, no global state, no randomness.**
 - **Only what Godot lacks.** A part's own rule, never a rigid-body solver
   (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
-- **The brain contract stays in Domain.** Port order, channel keys and each
+- **The network contract stays in Domain.** Port order, channel keys and each
   output's activation are Domain's (`libs/NodeRunner.Domain/AGENTS.md` says
   why). This library turns a port's value into physics (`OutputSignals`) and
   physics into a reading.
@@ -24,7 +24,7 @@ Build and tests reuse so they show and check exactly the same thing (#596).
 - `Servo` — a Servo's angle input, target angle, end stops and torque
 - `VelocityMotor` — a Velocity motor's angle inputs, wanted speed and torque
 - `MotorLoop`, `MotorState` — the speed loop both motors drive their torque
-  with, and the speed input both give the brain
+  with, and the speed input both give the network
 - `Brake`, `BrakeState` — a Brake's friction torque, capped at its Strength,
   and the speed loop a Stepper drives and holds with
 - `Stepper`, `StepperState` — a Stepper's notches, clock,

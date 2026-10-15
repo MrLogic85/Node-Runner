@@ -25,9 +25,9 @@ list; move one only with a new issue.
 
 | Type | Why it is here | Issue |
 |---|---|---|
-| `PartKinds`, `PartKindInfo` | Each part kind once: what selects it, its sensor variant, its joint slot and its brain ports; read by `CreatureDef`'s slot check and `BrainPorts`, both in Domain, so code walks the kinds instead of listing them | #1221 |
-| `BrainPorts` | Every part's brain ports, their order and channel keys, shared by the sim, Build and ML | #534 |
-| `PortSignals` | Each output's activation and passive start: the brain's half of the port contract (ML) | #535 |
+| `PartKinds`, `PartKindInfo` | Each part kind once: what selects it, its sensor variant, its joint slot and its network ports; read by `CreatureDef`'s slot check and `NetworkPorts`, both in Domain, so code walks the kinds instead of listing them | #1221 |
+| `NetworkPorts` | Every part's network ports, their order and channel keys, shared by the sim, Build and ML | #534 |
+| `PortSignals` | Each output's activation and passive start: the network's half of the port contract (ML) | #535 |
 | `SensorDef.DefaultAim` | A new Camera's aim, filled in by `CreatureDef` at construction | #622 |
 | `SensorPicture` | Where a sensor's picture sits and senses from, and the area a tap on it hits, shared by the sim, Build and Training | #576, #1086 |
 | `SelectionMarks` | The selection gap, a joint's halo and touch reach, shared by Build's gestures and the drawing in Build and Training | #710 |
@@ -43,9 +43,9 @@ list; move one only with a new issue.
 - `IHingePartDef` — what fills a joint's hinge-part slot, a joint motor, a Brake or an Angle sensor: its sides
 - `IJointMotorDef`, `JointMotor` — what a Servo, a Velocity motor and a Stepper share: kind, sides and radius
 - `CreatureElementKind`, `CreatureElementSelection` — what is selected
-- `BrainPort`, `PortDirection`, `PortSignal`, `BrainPortLayout` — brain ports
-- `BrainDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,
-  `NeuronActivation` — the saved brain graph (#536)
+- `NetworkPort`, `PortDirection`, `PortSignal`, `NetworkPortLayout` — network ports
+- `NeuralNetworkDef`, `NeuronDef`, `ConnectionGeneDef`, `NeuronKind`,
+  `NeuronActivation` — the saved network graph (#536)
 - `CreationDef`, `TrainingStateDef`, `TrainingRunDef`, `TrainingBestDef`,
   `TrainSettingsDef` — a saved Creation; `ProgressionDef` — saved progress
 - `MapDef`, `FlatGround`, `Maps`, `MapIds` — the maps a creation trains on

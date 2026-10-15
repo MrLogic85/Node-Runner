@@ -67,7 +67,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private IReadOnlyList<CanvasNote> _shownRefusalNotes = [];
     private bool _advancedSettingsOpen;
     private readonly BuildHistory _history;
-    private BrainDef? _openedBrain;
+    private NeuralNetworkDef? _openedNetwork;
     private bool _shownCanUndo;
     private bool _shownCanRedo;
 
@@ -82,11 +82,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
-    /// <summary>Why a locked Creation refuses an edit that would change its model (#896): see <see cref="IsLocked"/>.</summary>
-    public static UiText LockedReason { get; } = UiText.Plain("The creation is locked to avoid changes to the model, unlock to enable.");
+    /// <summary>Why a locked Creation refuses an edit that would change its network (#896): see <see cref="IsLocked"/>.</summary>
+    public static UiText LockedReason { get; } = UiText.Plain("The creation is locked to avoid changes to the network, unlock to enable.");
 
     // On each part that makes a locked Creation refuse Copy (#990) or Delete (#987).
-    private static readonly UiText _wouldChangeModelNote = UiText.Plain("Locked: would change the model");
+    private static readonly UiText _wouldChangeNetworkNote = UiText.Plain("Locked: would change the network");
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -102,7 +102,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         ClearSelectionSets();
         _creationName = creationName ?? string.Empty;
         _trainingGeneration = training?.Generation;
-        _openedBrain = training?.Brain;
+        _openedNetwork = training?.Network;
         _locked = locked;
         _history.Clear();
         _shownBlockers.Clear();
@@ -118,7 +118,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Opens a saved Creation. It is fully editable until it is locked (<see cref="CreationLock"/>);
-    /// a locked one refuses every edit that would change its model until <see cref="Unlock"/>.
+    /// a locked one refuses every edit that would change its network until <see cref="Unlock"/>.
     /// </summary>
     public void LoadCreation(CreationDef creation)
     {
@@ -132,8 +132,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public event EventHandler? AnatomyChanged;
 
     /// <summary>
-    /// True for a locked Creation (#896): it refuses every edit that would change its model, adding or
-    /// deleting a part with brain ports or clearing a Servo's link. Joints, beams, Springs and Wheels
+    /// True for a locked Creation (#896): it refuses every edit that would change its network, adding or
+    /// deleting a part with network ports or clearing a Servo's link. Joints, beams, Springs and Wheels
     /// have no ports, so they can still be added and deleted, unless a delete takes a joint's Touch sensor. A Rubber (#1142)
     /// and a Brake (#1041) have none either.
     /// </summary>
@@ -141,7 +141,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Unlocks a locked Creation for this Build visit (#371), so its body can change. The training
-    /// is kept: each saved edit refits the brain to the new body (#516). Nothing about the unlock is
+    /// is kept: each saved edit refits the network to the new body (#516). Nothing about the unlock is
     /// saved, so the Creation is locked again the next time Build opens it.
     /// </summary>
     public void Unlock()
@@ -164,10 +164,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public string CreationName => _creationName;
 
     /// <summary>
-    /// The trained brain as it was when Build opened, or null for an untrained Creation. Saves refit
-    /// this brain rather than the last saved one, so an undone delete gets its trained weights back (#689).
+    /// The trained network as it was when Build opened, or null for an untrained Creation. Saves refit
+    /// this network rather than the last saved one, so an undone delete gets its trained weights back (#689).
     /// </summary>
-    public BrainDef? OpenedBrain => _openedBrain;
+    public NeuralNetworkDef? OpenedNetwork => _openedNetwork;
 
     public bool CanUndo => _history.CanUndo;
 
@@ -323,7 +323,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Picks the link the Links tool draws, or clears it if it is the picked one (#1057). Locked and future links do nothing.</summary>
     public void PickLink(BuildLink link)
     {
-        if (_activeTool != BuildTool.Beam || !BuildLinkList.IsAvailable(link) || (_locked && BuildLinkList.HasBrainPorts(link)))
+        if (_activeTool != BuildTool.Beam || !BuildLinkList.IsAvailable(link) || (_locked && BuildLinkList.HasNetworkPorts(link)))
         {
             return;
         }
@@ -362,7 +362,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Picks a tray part, or clears it if it is the picked one (#805). Parts that cannot be placed
-    /// now do nothing, as a part with brain ports on a locked Creation (<see cref="PartTray.CanPick"/>).
+    /// now do nothing, as a part with network ports on a locked Creation (<see cref="PartTray.CanPick"/>).
     /// </summary>
     public void PickPart(BuildPart part)
     {
@@ -653,7 +653,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
-    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id. A joint has no brain ports, so a locked Creation places one too (#896).</summary>
+    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id. A joint has no network ports, so a locked Creation places one too (#896).</summary>
     public int PlaceNode(Vector2D position)
     {
         var id = _history.Change(() => _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius)));
@@ -691,7 +691,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The <see cref="ShownParameters"/> the selection can change now. Like a Camera's aim (#638),
-    /// most tune the body without changing the brain's ports, so a locked Creation can change them
+    /// most tune the body without changing the network's ports, so a locked Creation can change them
     /// too; one that <see cref="PartParameter.ChangesPorts"/>, a Camera's Rays, it keeps (#578, #896).
     /// </summary>
     public IReadOnlyList<PartParameterId> EditableParameters =>

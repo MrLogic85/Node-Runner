@@ -3,11 +3,11 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The brain conventions and torque of a <see cref="VelocityMotorDef"/> (#454). Its angle is the
+/// The network conventions and torque of a <see cref="VelocityMotorDef"/> (#454). Its angle is the
 /// one between its sides (#1207): the target side's direction minus the fixed side's, a Wheel side
 /// read from a mark on its tyre, both measured with <see cref="HingePartSideGeometry"/>. It has no end stops and can
-/// turn round and round, so the brain sees the angle as its sine and cosine, which never jump. The
-/// brain drives a speed and a strength share, and the motor chases that speed with
+/// turn round and round, so the network sees the angle as its sine and cosine, which never jump. The
+/// network drives a speed and a strength share, and the motor chases that speed with
 /// <see cref="MotorLoop"/>, so it can keep a speed against a load up to its strength.
 /// </summary>
 public static class VelocityMotor
@@ -24,7 +24,7 @@ public static class VelocityMotor
 
     /// <summary>
     /// The motor's next state from its last (<see cref="MotorLoop.Next"/>), chasing the speed the
-    /// brain chose. <c>speedOutput</c> is the brain's speed output (−1…1 of Max speed) and
+    /// network chose. <c>speedOutput</c> is the network's speed output (−1…1 of Max speed) and
     /// <c>strength</c> its share of Max strength (0…1).
     /// </summary>
     public static MotorState NextMotor(

@@ -7,8 +7,8 @@ test-code conventions; tools, projects and what each layer tests are in
 
 ## Rules
 
-- **Mirror the production layout.** `libs/NodeRunner.ML/Brains/DirectBrain.cs`
-  is tested in `tests/NodeRunner.ML.Tests/Brains/DirectBrainTests.cs`.
+- **Mirror the production layout.** `libs/NodeRunner.ML/Networks/DirectNetwork.cs`
+  is tested in `tests/NodeRunner.ML.Tests/Networks/DirectNetworkTests.cs`.
 - **One test class per production class.** When a production file splits,
   split its tests the same way. Test files have no size limit.
 - **Names describe behaviour:** `Forward_WithZeroInput_ReturnsZeroesForTanh`,

@@ -123,7 +123,7 @@ public sealed class BuildCopyTests
         build.CanCopySelection.ShouldBeFalse();
         build.CopySelectedParts();
 
-        build.CanvasNotes().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.VelocityMotor, 6), UiText.Plain("Locked: would change the model"))]);
+        build.CanvasNotes().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.VelocityMotor, 6), UiText.Plain("Locked: would change the network"))]);
         ShouldHaveTheSameParts(build.Snapshot(), before);
         build.CanUndo.ShouldBeFalse();
     }
@@ -183,9 +183,9 @@ public sealed class BuildCopyTests
         { new PartSet(Ids(3), Ids(), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Spring, 13)], "Select both its joints", false },
         { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Select both its joints", false },
         { new PartSet(Ids(1, 2), Ids(), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Select its beam", false },
-        { new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Locked: would change the model", true },
-        { new PartSet(Ids(1, 2), Ids(), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Servo, 31)], "Locked: would change the model", true },
-        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Locked: would change the model", true },
+        { new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Locked: would change the network", true },
+        { new PartSet(Ids(1, 2), Ids(), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Servo, 31)], "Locked: would change the network", true },
+        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Locked: would change the network", true },
     };
 
     [Theory]
@@ -245,7 +245,7 @@ public sealed class BuildCopyTests
     }
 
     [Fact]
-    public void OnALockedCreation_ADimmedCopy_MarksBrainPortsFirst_AndOnlyOnce()
+    public void OnALockedCreation_ADimmedCopy_MarksNetworkPortsFirst_AndOnlyOnce()
     {
         var build = new BuildViewModel();
         build.Load(Creature(), locked: true);
@@ -256,7 +256,7 @@ public sealed class BuildCopyTests
         // The Servo still brings its joint 2, so beam 12 has both of its joints.
         build.CanvasNotes().ShouldBe(
         [
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Servo, 31), UiText.Plain("Locked: would change the model")),
+            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Servo, 31), UiText.Plain("Locked: would change the network")),
             new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 11), UiText.Plain("Select both its joints")),
         ]);
     }

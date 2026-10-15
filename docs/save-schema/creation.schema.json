@@ -609,7 +609,7 @@
         "null"
       ],
       "properties": {
-        "brain": {
+        "network": {
           "type": "object",
           "properties": {
             "neurons": {
@@ -767,7 +767,7 @@
         }
       },
       "required": [
-        "brain",
+        "network",
         "generation",
         "latest",
         "best"

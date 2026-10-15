@@ -48,7 +48,7 @@ public static class Accelerometer
         return state;
     }
 
-    /// <summary>The two brain inputs, along and across: <c>tanh(-d / d_ref)</c>, so 1 g up reads tanh 1.</summary>
+    /// <summary>The two network inputs, along and across: <c>tanh(-d / d_ref)</c>, so 1 g up reads tanh 1.</summary>
     public static Vector2D Reading(ProofMass state) =>
         new(
             Math.Tanh(-state.Displacement.X / ReferenceDisplacement),

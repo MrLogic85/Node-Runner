@@ -6,7 +6,7 @@ namespace NodeRunner.Domain;
 /// rigidity. Its length as built is the distance between its nodes in the drawing. Like a real
 /// three-part telescope (#1208), the gap between its joints' hubs grows from its shortest by
 /// <see cref="Stroke"/> of that, so it can at most triple (#835, #1211); <see cref="Start"/> says
-/// where in that travel the drawn length sits (#870). The brain sets where it goes and how much of
+/// where in that travel the drawn length sits (#870). The network sets where it goes and how much of
 /// <see cref="Strength"/> it uses
 /// (<c>Piston</c> in NodeRunner.Mechanics). See docs/CREATURE_MODEL.md.
 /// </summary>
@@ -119,7 +119,7 @@ public sealed record PistonDef : IPartDef
     /// <summary>The fastest it extends or retracts, in world units per second.</summary>
     public double MaxSpeed { get; }
 
-    /// <summary>How long, in seconds, its force takes to build up to the strength the brain chose (#801).</summary>
+    /// <summary>How long, in seconds, its force takes to build up to the strength the network chose (#801).</summary>
     public double RiseTime { get; }
 
     public PistonDef WithName(string? name) => new(Id, NodeA, NodeB, name, Strength, Stroke, Start, MaxSpeed, RiseTime);

@@ -70,7 +70,7 @@ public sealed class HingePartSides
 
     private double RelativeAngle => _target.Angle - _fixed.Angle;
 
-    /// <summary>Unwraps the live angle once per physics tick, before the brain reads it.</summary>
+    /// <summary>Unwraps the live angle once per physics tick, before the network reads it.</summary>
     public void UpdatePhysicsState()
     {
         var current = RelativeAngle;

@@ -124,7 +124,7 @@ public sealed class BuildServoWheelTests
     }
 
     [Fact]
-    public void Locked_DeletingTheServosWheel_IsRefused_ForItChangesTheModel()
+    public void Locked_DeletingTheServosWheel_IsRefused_ForItChangesTheNetwork()
     {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))],

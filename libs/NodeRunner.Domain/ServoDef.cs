@@ -122,7 +122,7 @@ public sealed record ServoDef : IJointMotorDef
     /// <summary>The fastest target angular speed, in radians per second.</summary>
     public double MaxSpeed { get; }
 
-    /// <summary>How long, in seconds, its torque takes to build up to the strength the brain chose.</summary>
+    /// <summary>How long, in seconds, its torque takes to build up to the strength the network chose.</summary>
     public double RiseTime { get; }
 
     PartKind IPartDef.PartKind => PartKind.Servo;
@@ -133,7 +133,7 @@ public sealed record ServoDef : IJointMotorDef
         new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength, range, start, maxSpeed, riseTime);
 
     /// <summary>
-    /// The Servo with new sides. It keeps its id, and so its brain ports and training, through every
+    /// The Servo with new sides. It keeps its id, and so its network ports and training, through every
     /// side change (<c>docs/CREATURE_MODEL.md</c> → "Editing identity rules").
     /// </summary>
     public ServoDef WithLinks(int? fixedLinkId, int? targetLinkId) =>

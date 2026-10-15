@@ -2,7 +2,7 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// A Stepper (#455, #1036): a joint motor on one node that works like a clock. It holds its Target side in
-/// notches against its Fixed side and, at the rate the brain picks, lets go and pushes it on to the next notch.
+/// notches against its Fixed side and, at the rate the network picks, lets go and pushes it on to the next notch.
 /// Its sides follow the Servo's rules (#1118): a link at the joint or the joint's Wheel, not both the same,
 /// either null once that part is deleted. It shares the joint's hinge-part slot with a Servo, a Velocity motor,
 /// a Brake and an Angle sensor (#1044); see <see cref="JointMotor"/>. See docs/CREATURE_MODEL.md → "Stepper".

@@ -2,7 +2,7 @@ using Godot;
 using NodeRunner.Domain;
 using NodeRunner.Mechanics;
 using NodeRunner.ML;
-using NodeRunner.ML.Brains;
+using NodeRunner.ML.Networks;
 using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
@@ -91,11 +91,11 @@ public partial class Creature : Node2D
 
     public VisualTheme Theme { get; set; } = VisualTheme.Neon;
 
-    /// <summary>The brain driving the creature; <c>null</c> until training or Simulate sets one.</summary>
-    public NeuralNetwork? Brain { get; private set; }
+    /// <summary>The network driving the creature; <c>null</c> until training or Simulate sets one.</summary>
+    public NeuralNetwork? Network { get; private set; }
 
-    /// <summary>The brain's ports in runtime order (#534); empty when the creature has no brain.</summary>
-    public BrainPortLayout Ports { get; private set; } = BrainPortLayout.Empty;
+    /// <summary>The network's ports in runtime order (#534); empty when the creature has no network.</summary>
+    public NetworkPortLayout Ports { get; private set; } = NetworkPortLayout.Empty;
 
     /// <summary>
     /// True for every shadow except the followed one (#385): each visual draws as it declares in
@@ -137,7 +137,7 @@ public partial class Creature : Node2D
             brake.Hold(delta);
         }
 
-        // Its arc counts the turns too (AngleSensorVisual), brain or not.
+        // Its arc counts the turns too (AngleSensorVisual), network or not.
         foreach (var angleSensor in _angleSensors)
         {
             angleSensor.Sides.UpdatePhysicsState();
@@ -148,9 +148,9 @@ public partial class Creature : Node2D
             stepper.Sides.UpdatePhysicsState();
         }
 
-        if (Brain is null)
+        if (Network is null)
         {
-            // A Stepper holds its notch with or without a brain, as a Brake holds.
+            // A Stepper holds its notch with or without a network, as a Brake holds.
             foreach (var stepper in _steppers)
             {
                 stepper.Hold(delta);
@@ -170,7 +170,7 @@ public partial class Creature : Node2D
         }
 
         ReadSensors(_sensorValues, delta);
-        Brain.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
+        Network.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
 
         // Each Servo, Velocity motor and Piston has two outputs in sim order: target or speed, then strength;
         // each Stepper, last, its frequency.
@@ -212,7 +212,7 @@ public partial class Creature : Node2D
         _selection = [];
         Build(definition);
         ResetSensors();
-        Brain = null;
+        Network = null;
     }
 
     // Builds every body, joint, sensor and picture afresh from the definition, in its built shape
@@ -245,7 +245,7 @@ public partial class Creature : Node2D
         CreateSteppers(definition);
         CapEndStops(definition);
         _drawGroups = DrawGroups.Of(definition.Nodes, LinkRef.All(definition.Beams, definition.Pistons, definition.Springs));
-        ConfigureBrainBuffers(definition);
+        ConfigureNetworkBuffers(definition);
         ShowInEitherArenaView(this);
         ApplyShadow();
     }
@@ -273,24 +273,24 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
-    /// Assigns the brain to drive the creature, e.g. a candidate genome from a trial or the saved
-    /// brain in Simulate. The brain's layer sizes must match this creature's brain ports.
+    /// Assigns the network to drive the creature, e.g. a candidate genome from a trial or the saved
+    /// network in Simulate. The network's layer sizes must match this creature's network ports.
     /// </summary>
-    public void SetBrain(NeuralNetwork brain)
+    public void SetNetwork(NeuralNetwork network)
     {
-        ArgumentNullException.ThrowIfNull(brain);
+        ArgumentNullException.ThrowIfNull(network);
 
         var expectedInputs = _sensorValues.Length;
         var expectedOutputs = _outputValues.Length;
-        if (brain.LayerSizes[0] != expectedInputs || brain.LayerSizes[^1] != expectedOutputs)
+        if (network.LayerSizes[0] != expectedInputs || network.LayerSizes[^1] != expectedOutputs)
         {
             throw new ArgumentException(
-                $"Brain shape [{string.Join(',', brain.LayerSizes)}] does not match this creature's " +
+                $"Network shape [{string.Join(',', network.LayerSizes)}] does not match this creature's " +
                 $"input/output counts [{expectedInputs}, ..., {expectedOutputs}].",
-                nameof(brain));
+                nameof(network));
         }
 
-        Brain = brain;
+        Network = network;
     }
 
     /// <summary>
@@ -298,8 +298,8 @@ public partial class Creature : Node2D
     /// is at <paramref name="lowestPointY"/>. Every body and joint is built afresh (#798): Godot's
     /// solver remembers the last pushes of joints and contacts and applies them again on the next
     /// step, so bodies merely moved back would start each run a little differently, and a
-    /// creature's motion is chaotic enough that the same brain then ends somewhere else. Fresh
-    /// bodies make the same brain run the same way every time. The brain, the selection and the
+    /// creature's motion is chaotic enough that the same network then ends somewhere else. Fresh
+    /// bodies make the same network run the same way every time. The network, the selection and the
     /// shadow look are kept. This is plain physical reset, not evolution/fitness logic.
     /// </summary>
     public void ResetPose(float lowestPointY)
@@ -735,57 +735,57 @@ public partial class Creature : Node2D
         return new Vector2(ToGodotFloat(shift, nameof(SensorPicture.Shift)), 0);
     }
 
-    private void ConfigureBrainBuffers(CreatureDef definition)
+    private void ConfigureNetworkBuffers(CreatureDef definition)
     {
-        // A creature with nothing to drive still has its senses: its brain runs with no outputs (#845).
-        Ports = BrainPorts.Of(definition);
+        // A creature with nothing to drive still has its senses: its network runs with no outputs (#845).
+        Ports = NetworkPorts.Of(definition);
         _inputPortOf = PortPositions(
             [
-                .. definition.Sensors.SelectMany(BrainPorts.SensorPorts),
-                .. definition.TouchSensors.Select(touch => BrainPorts.TouchInput(touch.Id)),
-                .. definition.AngleSensors.SelectMany(angleSensor => BrainPorts.AngleSensorInputs(angleSensor.Id)),
-                .. definition.Servos.SelectMany(servo => BrainPorts.ServoInputs(servo.Id)),
-                .. definition.VelocityMotors.SelectMany(motor => BrainPorts.VelocityMotorInputs(motor.Id)),
-                .. definition.Pistons.SelectMany(piston => BrainPorts.PistonInputs(piston.Id)),
-                .. definition.Steppers.SelectMany(stepper => BrainPorts.StepperInputs(stepper.Id)),
+                .. definition.Sensors.SelectMany(NetworkPorts.SensorPorts),
+                .. definition.TouchSensors.Select(touch => NetworkPorts.TouchInput(touch.Id)),
+                .. definition.AngleSensors.SelectMany(angleSensor => NetworkPorts.AngleSensorInputs(angleSensor.Id)),
+                .. definition.Servos.SelectMany(servo => NetworkPorts.ServoInputs(servo.Id)),
+                .. definition.VelocityMotors.SelectMany(motor => NetworkPorts.VelocityMotorInputs(motor.Id)),
+                .. definition.Pistons.SelectMany(piston => NetworkPorts.PistonInputs(piston.Id)),
+                .. definition.Steppers.SelectMany(stepper => NetworkPorts.StepperInputs(stepper.Id)),
             ],
             Ports.Inputs);
         _outputPortOf = PortPositions(
             [
-                .. definition.Servos.SelectMany(servo => BrainPorts.ServoOutputs(servo.Id)),
-                .. definition.VelocityMotors.SelectMany(motor => BrainPorts.VelocityMotorOutputs(motor.Id)),
-                .. definition.Pistons.SelectMany(piston => BrainPorts.PistonOutputs(piston.Id)),
-                .. definition.Steppers.SelectMany(stepper => BrainPorts.StepperOutputs(stepper.Id)),
+                .. definition.Servos.SelectMany(servo => NetworkPorts.ServoOutputs(servo.Id)),
+                .. definition.VelocityMotors.SelectMany(motor => NetworkPorts.VelocityMotorOutputs(motor.Id)),
+                .. definition.Pistons.SelectMany(piston => NetworkPorts.PistonOutputs(piston.Id)),
+                .. definition.Steppers.SelectMany(stepper => NetworkPorts.StepperOutputs(stepper.Id)),
             ],
             Ports.Outputs);
         _rawInputs = new double[_inputPortOf.Length];
         _sensorValues = new double[_inputPortOf.Length];
         _outputValues = new double[_outputPortOf.Length];
 
-        var scratchSize = DirectBrain.LayerSizes(Ports).Max();
+        var scratchSize = DirectNetwork.LayerSizes(Ports).Max();
         _scratchA = new double[scratchSize];
         _scratchB = new double[scratchSize];
     }
 
-    // Where each sim-order port sits in the brain's port order. The sim and BrainPorts must
+    // Where each sim-order port sits in the network's port order. The sim and NetworkPorts must
     // declare exactly the same ports; a mismatch is a bug, not bad data.
-    private static int[] PortPositions(IReadOnlyList<BrainPort> simOrder, IReadOnlyList<BrainPort> brainOrder)
+    private static int[] PortPositions(IReadOnlyList<NetworkPort> simOrder, IReadOnlyList<NetworkPort> networkOrder)
     {
-        var positionOf = new Dictionary<BrainPort, int>(brainOrder.Count);
-        for (var i = 0; i < brainOrder.Count; i++)
+        var positionOf = new Dictionary<NetworkPort, int>(networkOrder.Count);
+        for (var i = 0; i < networkOrder.Count; i++)
         {
-            positionOf.Add(brainOrder[i], i);
+            positionOf.Add(networkOrder[i], i);
         }
 
-        if (simOrder.Count != brainOrder.Count)
+        if (simOrder.Count != networkOrder.Count)
         {
-            throw new InvalidOperationException($"The sim has {simOrder.Count} ports but BrainPorts declares {brainOrder.Count}.");
+            throw new InvalidOperationException($"The sim has {simOrder.Count} ports but NetworkPorts declares {networkOrder.Count}.");
         }
 
         return simOrder
             .Select(port => positionOf.TryGetValue(port, out var position)
                 ? position
-                : throw new InvalidOperationException($"BrainPorts does not declare {port}."))
+                : throw new InvalidOperationException($"NetworkPorts does not declare {port}."))
             .ToArray();
     }
 
@@ -793,7 +793,7 @@ public partial class Creature : Node2D
     // left to right, then hit), then each Touch sensor its touch, each Angle sensor its angle's sine and
     // cosine and its speed, each Servo its angle and speed,
     // each Velocity motor its angle's sine and cosine and its speed, each Piston its length and speed, and each Stepper its angle's
-    // sine and cosine and its tick, into the raw buffer in sim order; they are then copied into the brain's port order (BrainPorts).
+    // sine and cosine and its tick, into the raw buffer in sim order; they are then copied into the network's port order (NetworkPorts).
     // After a tear (#962) a sensor on a beam gone from the world and a passive part write nothing, so
     // their inputs keep the values they last had.
     private void ReadSensors(double[] values, double delta)
@@ -882,8 +882,8 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
-    /// The brain's inputs as of the last physics step, in its port order (<see cref="BrainPorts"/>),
-    /// for BrainFocus and the stage notes; empty while no brain drives a part. Read-only: never
+    /// The network's inputs as of the last physics step, in its port order (<see cref="NetworkPorts"/>),
+    /// for NetworkFocus and the stage notes; empty while no network drives a part. Read-only: never
     /// changes the simulation.
     /// </summary>
     public void ReadInputs(List<double> inputs)
@@ -891,7 +891,7 @@ public partial class Creature : Node2D
         ArgumentNullException.ThrowIfNull(inputs);
 
         inputs.Clear();
-        if (Brain is null)
+        if (Network is null)
         {
             return;
         }

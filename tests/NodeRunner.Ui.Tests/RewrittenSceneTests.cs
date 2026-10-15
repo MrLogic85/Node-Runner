@@ -34,10 +34,10 @@ internal static class RewrittenUi
         "ui/widgets/ArenaRuler.cs",
         "ui/widgets/ArenaShadows.cs",
         "ui/widgets/ArenaStartSign.cs",
-        "ui/widgets/BrainFocusNetworkView.cs",
-        "ui/widgets/BrainFocusRowLayout.cs",
-        "ui/widgets/BrainFocusRows.cs",
-        "ui/widgets/BrainFocusSheet.cs",
+        "ui/widgets/NetworkFocusView.cs",
+        "ui/widgets/NetworkFocusRowLayout.cs",
+        "ui/widgets/NetworkFocusRows.cs",
+        "ui/widgets/NetworkFocusSheet.cs",
         "ui/widgets/BuildCanvas.cs",
         "ui/widgets/CreationCard.cs",
         "ui/widgets/CreatureMarks.cs",
@@ -58,7 +58,7 @@ internal static class RewrittenUi
         "ui/widgets/ArenaFlagMarker.cs",
         "ui/widgets/ArenaRuler.cs",
         "ui/widgets/ArenaShadows.cs",
-        "ui/widgets/BrainFocusNetworkView.cs",
+        "ui/widgets/NetworkFocusView.cs",
         "ui/widgets/BuildCanvas.cs",
     ];
 
@@ -76,7 +76,7 @@ internal static class RewrittenUi
         "screens/ToolbarsScreen.tscn",
         "screens/TrainSetupScreen.tscn",
         "screens/TrainingScreen.tscn",
-        "widgets/BrainFocusSheet.tscn",
+        "widgets/NetworkFocusSheet.tscn",
         "widgets/CreationCard.tscn",
         "widgets/ShadowStrip.tscn",
     ];

@@ -99,7 +99,7 @@ public sealed record SensorDef : IPartDef
 
     /// <summary>
     /// A Camera's ray count (#578): 1, 3 or 5, odd so its centre ray is its aim. It decides the
-    /// Camera's brain ports (<see cref="BrainPorts"/>). Null for other kinds.
+    /// Camera's network ports (<see cref="NetworkPorts"/>). Null for other kinds.
     /// </summary>
     public int? Rays { get; }
 

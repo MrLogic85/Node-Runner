@@ -18,13 +18,13 @@ textbook terms (population, candidate, genome).
   Construction. As a noun, a creation's build is its body without its
   training, what Share build shares. See: `docs/BUILD_MODE.md`.
 - **Creation** — The thing the player saves, names, lists and copies
-  (`CreationDef`): a creature body plus its brain and training.
+  (`CreationDef`): a creature body plus its network and training.
 - **Creature** — The body inside a Creation (`CreatureDef`): joints, beams,
-  sensors and links, driven by a brain. `CreatureDef` is the body's pure
-  data, distinct from the brain's genome. Copy never calls the saved item a
+  sensors and links, driven by a network. `CreatureDef` is the body's pure
+  data, distinct from the network's genome. Copy never calls the saved item a
   creature. See: `docs/CREATURE_MODEL.md`.
 - **Followed shadow** — The one shadow drawn in full; the camera frames it
-  and it feeds the brain view and signal flow. See:
+  and it feeds the network view and signal flow. See:
   `docs/TRAINING_LOOP.md` → Generations.
 - **Latest** — The best trial of the most recently finished generation; it
   can go down. See: `docs/TRAINING_LOOP.md` → "Latest and best ever".
@@ -34,7 +34,7 @@ textbook terms (population, candidate, genome).
   "Links" (#913); in code it is `BuildTool.Beam`. See:
   `docs/BUILD_MODE.md` → Interactions.
 - **Locked** — A Creation that has trained at least one generation: Build
-  keeps what the trained model needs (`CreationLock.IsLocked`, #369). See:
+  keeps what the trained network needs (`CreationLock.IsLocked`, #369). See:
   `docs/TRAINING_LOOP.md` → "Product lifecycle boundary".
 - **Parts tool** — The first Build rail tool. It opens the Parts tray when
   nothing is selected. See: `docs/BUILD_MODE.md` → Interactions.
@@ -53,7 +53,7 @@ textbook terms (population, candidate, genome).
 - **Shown distance** — The distance the player reads: how far ahead of its
   start the creature's front-most point ended up (#725). Not the fitness,
   which follows the centre. See: `docs/TRAINING_LOOP.md` → Trial.
-- **Simulate** — Plays a Creation's saved brain with one shadow and saves
+- **Simulate** — Plays a Creation's saved network with one shadow and saves
   nothing (#702). See: `docs/TRAINING_LOOP.md` → "Product lifecycle
   boundary".
 - **Train setup** — The screen between Build and Training that sets Shadows
@@ -61,13 +61,13 @@ textbook terms (population, candidate, genome).
 
 ## Creature anatomy
 
-`docs/CREATURE_MODEL.md` owns every part's behaviour and the sensor–model
+`docs/CREATURE_MODEL.md` owns every part's behaviour and the sensor–network
 contract; `docs/WORLD_VISUALS.md` owns how parts look.
 
 - **Accelerometer** — A sensor: a proof mass on a damped spring that feels
   its beam speed up, slow down and tilt. Two inputs, along and across the
   beam.
-- **Angle sensor** — A sensor on a joint (#1204) that tells the brain the
+- **Angle sensor** — A sensor on a joint (#1204) that tells the network the
   angle between its Fixed and Target sides, as a sine and a cosine, and how
   fast it changes (`AngleSensorDef`). It takes its joint's hinge-part slot but
   applies no force. See: `docs/CREATURE_MODEL.md` → "Angle sensor".
@@ -109,18 +109,18 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Link** — A joint-to-joint connection a hinge part may use as Fixed or Target:
   Beam, Piston or Spring. The Links tool lists them all, Beam included. Say
   Links for the group and Beam for a beam (#913).
-- **Model input / Model output** — One slot of the brain's input or output
-  vector, filled from or consumed by one port.
 - **Motor** — A powered joint part (#454) that turns its Target side against
-  its Fixed one at the speed the brain picks, round and round if it likes.
+  its Fixed one at the speed the network picks, round and round if it likes.
   The code and save format call it the Velocity motor (`VelocityMotorDef`,
   `velocityMotors`). See: `docs/CREATURE_MODEL.md` → "Motor (Velocity motor
   in code)".
+- **Network input / Network output** — One slot of the network's input or output
+  vector, filled from or consumed by one port.
 - **Piston** — A powered link that pushes its two joints apart or pulls them
   together (#451). Not a beam: inside its stroke it adds no rigidity.
-- **Port** — One brain channel a part declares (`BrainPort`): part id,
-  channel key, input or output, and the signal it carries. `BrainPorts`
-  gives the brain's order.
+- **Port** — One network channel a part declares (`NetworkPort`): part id,
+  channel key, input or output, and the signal it carries. `NetworkPorts`
+  gives the network's order.
 - **Proof mass** — The accelerometer's inner weight; its displacement is the
   reading.
 - **Range** — How far a Servo may turn, 20°–360°.
@@ -128,24 +128,24 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   turn; Build hatches it (`RigidTriangles`).
 - **Sensor (part)** — A part that feels: on a beam, an Accelerometer or
   Camera (`SensorDef`, `SensorKind`), one per beam; on a joint, a Touch
-  sensor or an Angle sensor. Not the brain.
+  sensor or an Angle sensor. Not the network.
 - **Rubber** — A passive joint part (#1142) that makes its joint, or its
   Wheel's tyre, grip the ground harder (`RubberDef`); one per joint, no
-  brain ports.
+  network ports.
 - **Servo** — A powered joint part (#452) that holds one link as Fixed and
   turns another as Target.
 - **Skin** — A Rubber's band, 3 units outside its joint (`RubberDef.Skin`);
   only drawn, no collider. See: `docs/CREATURE_MODEL.md` → "Rubber".
 - **Spring** — A passive link (#453) that pulls back toward its rest length;
-  no brain ports.
+  no network ports.
 - **Stepper** — A powered joint part (#455, #1036) that holds its joint in
-  notches and, at the frequency the brain picks, lets go and pushes it to
+  notches and, at the frequency the network picks, lets go and pushes it to
   the next one, the way the frequency's sign says (`StepperDef`). See:
   `docs/CREATURE_MODEL.md` → "Stepper".
 - **Start position** — Where a part's drawn pose sits in its travel or
   range, 0…100%.
 - **Strength output / Strength setting** — The setting is a powered part's
-  maximum force, chosen in Build; the output is the brain's 0…1 choice of
+  maximum force, chosen in Build; the output is the network's 0…1 choice of
   how much of it to use this tick.
 - **Stroke** — How far a Piston or Spring travels between its end stops.
 - **Tear** — A beam end letting go of its joint in Simulate and Training
@@ -156,11 +156,11 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Tick input** — A Stepper's input (#1263) that shows when it steps
   next: 0 as it steps, rising to 1 just before the next. Not a **Tick**. See:
   `docs/CREATURE_MODEL.md` → "Stepper".
-- **Touch sensor** — A sensor on a joint (#1043) that tells the brain
+- **Touch sensor** — A sensor on a joint (#1043) that tells the network
   how close that joint is to touching the ground (`TouchSensorDef`); one
   per joint.
 - **Wheel** — A passive joint part (#129) that turns freely on its joint and
-  rolls on the ground; no brain ports.
+  rolls on the ground; no network ports.
 
 ## Build canvas
 
@@ -182,40 +182,41 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 
 ## ML
 
-- **Activation** — The nonlinearity after each layer. A brain output uses
+- **Activation** — The nonlinearity after each layer. A network output uses
   the one its signal needs (#535).
-- **Brain** — The neural network attached to a creature: a pure function
-  from inputs to output targets. It is direct: every input port connects
-  straight to every output port (#536).
-- **Brain graph** — How a brain is saved (`BrainDef`): neurons keyed by port
-  and the connection genes between them. See: `docs/SAVE_FORMAT.md`.
 - **Connection gene** — One saved connection (`ConnectionGeneDef`): from and
   to neuron ids, a weight, and whether it is enabled.
 - **Crossover** — Combines two parent genomes into a child; training uses
   uniform crossover.
 - **Fitness** — A trial's score; higher is better. It is the distance the
   creature's centre got.
-- **Genome** — The flat `double[]` of a brain's weights and biases that the
-  GA mutates and recombines; the brain graph compiles to it by port
-  (`DirectBrain`).
+- **Genome** — The flat `double[]` of a network's weights and biases that the
+  GA mutates and recombines; the network graph compiles to it by port
+  (`DirectNetwork`).
 - **Generation** — One GA cycle: evaluate, select, recombine, mutate.
 - **Mutation** — Gaussian noise added to genome values at a per-weight
   probability.
+- **Network graph** — How a network is saved (`NeuralNetworkDef`): neurons keyed by port
+  and the connection genes between them. See: `docs/SAVE_FORMAT.md`.
+- **Neural network** — The network attached to a creature: a pure function
+  from inputs to output targets. It is direct: every input port connects
+  straight to every output port (#536). Say "network" for short; not
+  "brain" or "model" (#1308).
 - **Population** — The candidates of one generation, shown as shadows.
 - **Selection** — Picks the parents of the next generation; we use
   tournament selection.
 - **Warm start** — Training resumes by breeding the next generation from the
-  saved brain (#538).
+  saved network (#538).
 
 ## Simulation
 
 - **Evolver** — Runs generations (`project/src/sim/Evolver.cs`): one slot
   per candidate, all at once (up to 100); it calls the GA, resets each
-  slot's trial and assigns new brains.
-- **Fixed timestep** — Physics and brain updates run at a locked 60 Hz
+  slot's trial and assigns new networks.
+- **Fixed timestep** — Physics and network updates run at a locked 60 Hz
   whatever the frame rate, for determinism.
 - **Seed** — The integer the run's RNG starts from.
-- **Tick** — One fixed step: sensors, brain, joint motors and Pistons, then the
+- **Tick** — One fixed step: sensors, network, joint motors and Pistons, then the
   physics step and the trial measurement. See: `docs/ARCHITECTURE.md` →
   "The tick".
 - **Trial** — One shadow's run of Run length; `TrialMeasurement` records its

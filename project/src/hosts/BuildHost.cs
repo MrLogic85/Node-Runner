@@ -145,7 +145,7 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.ComingLaterLinkPressed += link => NotifyUnavailable($"build.link.{(BuildLink)link}", UiTextTranslation.Source(BuildLinkList.ComingLaterReason((BuildLink)link))!);
     }
 
-    // A locked Creation keeps Delete in view; when deleting would change the model, it says why (#896)
+    // A locked Creation keeps Delete in view; when deleting would change the network, it says why (#896)
     // beside the notes the refused delete puts on the parts that block it (#987).
     private void DeleteSelection()
     {
@@ -191,7 +191,7 @@ public partial class BuildHost : Node, IRoutedScene
         _navigator?.Navigate(new SceneNavigation(new TrainSetupRoute(id)));
     }
 
-    // The copy keeps the trained brain, so the player can change one and keep the other. Build then
+    // The copy keeps the trained network, so the player can change one and keep the other. Build then
     // opens the copy in place of the original (#840), so Back still returns to Creations.
     private void CopyActiveCreation()
     {
@@ -272,7 +272,7 @@ public partial class BuildHost : Node, IRoutedScene
     }
 
     // Saves the drawing as it stands, finished or not: only training needs a creature that can be
-    // simulated (#515). Every saved edit keeps the training, with its brain refitted to the edited
+    // simulated (#515). Every saved edit keeps the training, with its network refitted to the edited
     // creature's ports (ICreationUpdateCoordinator.ApplyEdit, #516). Returns false when edits are left unsaved; the next save tries again. A save
     // the player asked for reports every failure; background saves report only the first in a row.
     private bool SaveEdits(bool playerAsked)

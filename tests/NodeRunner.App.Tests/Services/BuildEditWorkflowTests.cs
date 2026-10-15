@@ -22,8 +22,8 @@ public sealed class BuildEditWorkflowTests
         result.Creature.ShouldBe(editedCreature);
         result.Training.ShouldNotBeNull();
         result.Training.Generation.ShouldBe(original.Training!.Generation);
-        result.Training.Brain.Neurons.ShouldBe(original.Training.Brain.Neurons);
-        result.Training.Brain.Connections.ShouldBe(original.Training.Brain.Connections);
+        result.Training.Network.Neurons.ShouldBe(original.Training.Network.Neurons);
+        result.Training.Network.Connections.ShouldBe(original.Training.Network.Connections);
         repository.Get(original.Id)!.Creature.ShouldBe(editedCreature);
     }
 

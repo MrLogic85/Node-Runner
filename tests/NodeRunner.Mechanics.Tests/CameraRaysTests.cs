@@ -217,13 +217,13 @@ public sealed class CameraRaysTests
     [InlineData(5)]
     public void Read_FillsTheCameraChannels_WithHitLast(int rays)
     {
-        var channels = BrainPorts.CameraChannels(rays);
+        var channels = NetworkPorts.CameraChannels(rays);
         var values = new double[channels.Count];
 
         CameraRays.Read(new double?[rays], _range, values);
 
         channels.Count.ShouldBe(rays + 1);
-        channels[^1].ShouldBe(BrainPorts.CameraHitChannel);
+        channels[^1].ShouldBe(NetworkPorts.CameraHitChannel);
     }
 
     private static Vector2D ToWorld(Vector2D local, double beamAngle)

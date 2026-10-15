@@ -199,8 +199,8 @@ public static class CreationShareCode
     private static IEnumerable<JsonArray> PartLists(JsonObject creature, JsonObject templateCreature) =>
         templateCreature.Where(field => field.Value is JsonArray).Select(field => creature[field.Key]).OfType<JsonArray>();
 
-    // Numbers the parts 1, 2, 3 … in the order of their ids, which keeps the brain's ports in their
-    // order (BrainPorts) and is the order they were added in. A part
+    // Numbers the parts 1, 2, 3 … in the order of their ids, which keeps the network's ports in their
+    // order (NetworkPorts) and is the order they were added in. A part
     // then leaves out its id when it is one more than the one before it in its list, and the
     // creature its next part id, which is one more than its last; Number puts them back.
     private static void Renumber(JsonObject creature, JsonObject templateCreature)

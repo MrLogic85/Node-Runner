@@ -5,10 +5,10 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class PartCalloutPresentationTests
 {
-    private static BrainPortValues Live() =>
-        BrainPortValues.Sample(PortedCreature.Layout, PortedCreature.Brain(), PortedCreature.Readings());
+    private static NetworkPortValues Live() =>
+        NetworkPortValues.Sample(PortedCreature.Layout, PortedCreature.Network(), PortedCreature.Readings());
 
-    private static PartCalloutPresentation For(CreatureElementKind kind, int id, BrainPortValues values) =>
+    private static PartCalloutPresentation For(CreatureElementKind kind, int id, NetworkPortValues values) =>
         PartCalloutPresentation.For(PortedCreature.Def, new CreatureElementSelection(kind, id), values);
 
     [Fact]
@@ -43,7 +43,7 @@ public sealed class PartCalloutPresentationTests
     [InlineData(CreatureElementKind.VelocityMotor, PortedCreature.VelocityMotor, PartKind.VelocityMotor, 3, 2)]
     [InlineData(CreatureElementKind.AngleSensor, PortedCreature.AngleSensor, PartKind.AngleSensor, 3, 0)]
     [InlineData(CreatureElementKind.TouchSensor, PortedCreature.Touch, PartKind.TouchSensor, 1, 0)]
-    public void APartWithBrainPorts_ShowsEachOfThem(CreatureElementKind element, int id, PartKind kind, int inputs, int outputs)
+    public void APartWithNetworkPorts_ShowsEachOfThem(CreatureElementKind element, int id, PartKind kind, int inputs, int outputs)
     {
         var callout = For(element, id, Live());
 
@@ -58,14 +58,14 @@ public sealed class PartCalloutPresentationTests
     [InlineData(CreatureElementKind.Wheel, PortedCreature.Wheel, PartKind.Wheel)]
     [InlineData(CreatureElementKind.Rubber, PortedCreature.Rubber, PartKind.Rubber)]
     [InlineData(CreatureElementKind.Brake, PortedCreature.Brake, PartKind.Brake)]
-    public void AWheelRubberOrBrake_SaysItHasNoBrainPorts(CreatureElementKind element, int id, PartKind kind)
+    public void AWheelRubberOrBrake_SaysItHasNoNetworkPorts(CreatureElementKind element, int id, PartKind kind)
     {
         var callout = For(element, id, Live());
 
         callout.Kind.ShouldBe(kind);
 
         callout.ShowsGlyph.ShouldBeTrue();
-        callout.Note.ShouldBe(UiText.Plain("No brain ports"));
+        callout.Note.ShouldBe(UiText.Plain("No network ports"));
         callout.Inputs.ShouldBeEmpty();
         callout.Outputs.ShouldBeEmpty();
     }
@@ -85,34 +85,34 @@ public sealed class PartCalloutPresentationTests
     }
 
     [Fact]
-    public void WithNoLiveBrain_ThePortsShowNoValues()
+    public void WithNoLiveNetwork_ThePortsShowNoValues()
     {
-        var callout = For(CreatureElementKind.Piston, PortedCreature.Piston, BrainPortValues.Sample(PortedCreature.Layout, null, []));
+        var callout = For(CreatureElementKind.Piston, PortedCreature.Piston, NetworkPortValues.Sample(PortedCreature.Layout, null, []));
 
         callout.Inputs.Count.ShouldBe(2);
         callout.Inputs.Concat(callout.Outputs).ShouldAllBe(port => port.Value == null);
     }
 
     [Fact]
-    public void BrainFocusAndTheCallout_ShowTheSameSample()
+    public void NetworkFocusAndTheCallout_ShowTheSameSample()
     {
         var values = Live();
-        var brainFocus = new BrainFocusPresentationViewModel();
-        brainFocus.Configure(BrainPortLabels.For(PortedCreature.Def), []);
+        var networkFocus = new NetworkFocusPresentationViewModel();
+        networkFocus.Configure(NetworkPortLabels.For(PortedCreature.Def), []);
 
-        brainFocus.Update(values);
+        networkFocus.Update(values);
         var callout = For(CreatureElementKind.Piston, PortedCreature.Piston, values);
 
         var layout = PortedCreature.Layout;
         foreach (var port in callout.Inputs)
         {
-            var neuron = brainFocus.Layers[BrainFocusPresentationViewModel.InputLayer].Neurons[layout.Inputs.ToList().IndexOf(port.Port)];
+            var neuron = networkFocus.Layers[NetworkFocusPresentationViewModel.InputLayer].Neurons[layout.Inputs.ToList().IndexOf(port.Port)];
             port.Value.ShouldBe(neuron.Activation);
         }
 
         foreach (var port in callout.Outputs)
         {
-            var neuron = brainFocus.Layers[BrainFocusPresentationViewModel.OutputLayer].Neurons[layout.Outputs.ToList().IndexOf(port.Port)];
+            var neuron = networkFocus.Layers[NetworkFocusPresentationViewModel.OutputLayer].Neurons[layout.Outputs.ToList().IndexOf(port.Port)];
             port.Value.ShouldBe(neuron.Activation);
         }
     }

@@ -5,7 +5,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Services;
 
 /// <summary>
-/// Saves an identical creation, trained model included, from an example under a new id and the
+/// Saves an identical creation, trained network included, from an example under a new id and the
 /// example's name in the player's language, or "Copy of …" when that name is taken
 /// (<see cref="CreationNames"/>, #840).
 /// </summary>

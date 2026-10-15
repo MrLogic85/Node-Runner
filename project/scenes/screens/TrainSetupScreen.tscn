@@ -135,7 +135,7 @@ Segments = Array[ExtResource("7_segment")]([SubResource("Resource_train"), SubRe
 [node name="ModeNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup/Mode"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Shadows race and the brain keeps learning."
+text = "Shadows race and the network keeps learning."
 autowrap_mode = 3
 script = ExtResource("4_label")
 TextStyle = 9

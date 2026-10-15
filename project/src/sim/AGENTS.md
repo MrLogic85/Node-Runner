@@ -13,10 +13,10 @@ Training orchestration: trials, slots and generations.
 4. **Collision isolation** follows `docs/TRAINING_LOOP.md` → Collision
    layers; no layer scheme of its own.
 5. **Trial timing.** A trial begins before any creature drives that tick,
-   however it is started, so the same brain replays the same run
-   (`docs/TRAINING_LOOP.md` → The same brain runs the same trial):
+   however it is started, so the same network replays the same run
+   (`docs/TRAINING_LOOP.md` → The same network runs the same trial):
    - `TrialController.ProcessPhysicsPriority = -100`, below `Creature`'s
-     0, so the new brain drives the trial's first step.
+     0, so the new network drives the trial's first step.
    - `StartTrial` begins at once inside a physics tick
      (`Engine.IsInPhysicsFrame`) and otherwise at the start of the next
      tick.

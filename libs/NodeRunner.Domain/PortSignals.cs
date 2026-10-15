@@ -3,7 +3,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// The output conventions (#535): which activation each <see cref="PortSignal"/> uses and how a
 /// newly added output starts. A new output has no incoming weight and an almost passive bias, so a
-/// part added to a trained brain starts close to doing nothing; training explores it from there
+/// part added to a trained network starts close to doing nothing; training explores it from there
 /// (#1180, docs/TRAINING_LOOP.md → "New ports are explored").
 /// <list type="bullet">
 /// <item>Velocity, position and frequency use <c>tanh</c>: −1…1, with 0 meaning stand still, a

@@ -6,7 +6,7 @@ namespace NodeRunner.App.Builders;
 
 /// <summary>
 /// The Brakes (#1039): passive joint parts that fill a joint's hinge-part slot and take their
-/// sides by the Servo's rules (#1118). They have no brain ports, so they are not joint motors.
+/// sides by the Servo's rules (#1118). They have no network ports, so they are not joint motors.
 /// </summary>
 public sealed partial class CreatureBuilder
 {

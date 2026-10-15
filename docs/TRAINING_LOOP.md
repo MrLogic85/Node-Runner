@@ -13,24 +13,24 @@ the reference's "a training session has finished" (#369).
 1. Build's play button autosaves and opens Train setup, unlocked or locked.
    Saving never needs a finished creature; only training does
    (`CreatureReadiness`, #515). Saving an edit keeps any training, even a
-   generation that finished while Build was open, and refits its brain to
+   generation that finished while Build was open, and refits its network to
    the edited anatomy (`docs/CREATURE_MODEL.md` → "A rebuild keeps the
-   brain"); Training then resumes from the refitted brain.
+   network"); Training then resumes from the refitted network.
 2. Train setup (`TrainSetupRoute`, #194) sets Shadows and Run length, filled
    from the Creation's saved values or the default (#617). Start saves them
    and opens Training in Train setup's place, so Back from Training returns
    to Build; Back from Train setup discards the changes. Simulate (#702)
-   plays the saved brain with one shadow until the player leaves and saves
+   plays the saved network with one shadow until the player leaves and saves
    nothing, not even the settings. It needs a trained Creation, so an
    untrained one has no Train or Simulate switch: Start trains (#843). A
-   creature with no powered part may train too (#845): its brain has no
+   creature with no powered part may train too (#845): its network has no
    outputs, so every shadow stands still and nothing is learned, and Train
    setup warns "Warning, no powered parts added! There is nothing to
    train". Flat ground is the only map (#540); its card takes its name from
    `Maps.Default` (#444).
 3. Each finished generation is saved. Once the Creation has trained at
    least one generation it is locked (`CreationLock.IsLocked`), so the
-   trained model cannot be lost by accident. Only what changes the model is
+   trained network cannot be lost by accident. Only what changes the network is
    locked (#638); `docs/BUILD_MODE.md` → Locked Build says what Build still
    allows. The lock follows from the saved training alone and is not
    stored, so `Evolver` knows nothing of it.
@@ -88,9 +88,9 @@ the reference's "a training session has finished" (#369).
   can do worse than an earlier one; that is not a bug. The saved training
   keeps two records for the map it trained on:
   - **Latest:** the best trial of the most recently finished generation
-    (`Evolver.LatestGenome`/`LatestRun`, saved as `TrainingStateDef.Brain`
+    (`Evolver.LatestGenome`/`LatestRun`, saved as `TrainingStateDef.Network`
     and `Latest`). It can go down. The Creations card shows it, and
-    Simulate and the warm start use its brain, because that is what the
+    Simulate and the warm start use its network, because that is what the
     creature can do now.
   - **Best ever:** the highest score any generation got, and which
     generation that was (`Evolver.BestFitness`/`BestGeneration`, saved as
@@ -106,11 +106,11 @@ the reference's "a training session has finished" (#369).
     and the best marker stays hidden until the next generation is saved.
 - **Trial timing.** `TrialController` times a fixed-length trial
   (`TrialDurationTicks`, 600 ≈ 10 s) for one creature; callers own the
-  creature and its brain. Every trial, in every slot, starts from rest in
+  creature and its network. Every trial, in every slot, starts from rest in
   the built shape with its lowest point `TrialController.StartClearance`
   above the ground (#649). The fall counts as trial time, but distance is
   measured from the start, so it does not change fitness.
-- **The same brain runs the same trial (#798).** The followed shadow
+- **The same network runs the same trial (#798).** The followed shadow
   replays the previous best, so it must end where that run ended: a reset
   leaves no physics state behind, and a trial begins before any creature
   drives, however it is started (`project/src/sim/AGENTS.md`).
@@ -136,7 +136,7 @@ the reference's "a training session has finished" (#369).
     layer 2 with mask 1, so a body hits the ground and nothing else, neither
     its own parts nor another shadow. Camera rays see the ground only.
   - **Followed shadow (#385):** one shadow is drawn in full, above the
-    others, and feeds SignalFlow, the brain view and part selection; every
+    others, and feeds SignalFlow, the network view and part selection; every
     other shadow is drawn simplified (`docs/WORLD_VISUALS.md` → "Drawing as
     a shadow"). Shadow `i` is slot `i`, which runs candidate `i`. The
     default is shadow 1: the resumed genome or the elite, i.e. the previous
@@ -177,19 +177,19 @@ the reference's "a training session has finished" (#369).
   generation budget. Best is plain distance, so a longer Run length
   reaches further (#703). A creature with nothing to drive still starts:
   its shadows stand still (#845).
-- **Generation 0 (#537, #810).** A new Creation has no trained brain, so
-  its base brain holds the built pose at full strength: all weights 0,
+- **Generation 0 (#537, #810).** A new Creation has no trained network, so
+  its base network holds the built pose at full strength: all weights 0,
   positions at the built pose, strength at bias 3 (about 95%). A Servo's
   angle output holds its built pose at 0, and a Motor's speed
   output at 0 means standing still, so it holds its joint; a Stepper's
   frequency output starts at 0, so it holds its notch (#1036, #1263); a Piston's position output gets
   the bias that asks for its drawn length, clamped to ±6, about 0.25%
-  short of either end (`Piston.DrawnPositions`, #870, #1129). A brain kept after its Start position
+  short of either end (`Piston.DrawnPositions`, #870, #1129). A network kept after its Start position
   changes keeps its old bias. This is how robots start in robotics ML:
   stiff in a default pose, the network learning offsets from it.
   `GenerationZero` builds the first population from it whenever there is
-  no saved brain to resume:
-  - The last shadow runs the base brain unchanged, as a reference that
+  no saved network to resume:
+  - The last shadow runs the base network unchanged, as a reference that
     stays near 0 m.
   - Every other shadow perturbs it: Gaussian noise on every weight (σ 1.5)
     and bias (σ 0.5), so every Piston and joint motor pushes from the start, and
@@ -201,11 +201,11 @@ the reference's "a training session has finished" (#369).
     σ 1.5 saturates the outputs into visible, decisive motion (#785).
     Backprop needs a different start (#955).
 - **New ports are explored (#1180).** A part or sensor added to a trained
-  brain starts almost passive (`docs/CREATURE_MODEL.md` → "New ports start
+  network starts almost passive (`docs/CREATURE_MODEL.md` → "New ports start
   almost passive"), so mutation alone would take hundreds of generations to
   find a use for it. Instead, in every generation that opens with an elite,
   `NewPortExploration` redraws the new ports' genes in every child as
-  generation 0 draws them: the base brain's values plus its noise. The
+  generation 0 draws them: the base network's values plus its noise. The
   elite, shadow 1, stays unchanged and keeps the trained gait. A
   generation with no elite (every trial invalid) explores nothing.
   - Which ports are new is read from the best elite's values, so nothing is
@@ -230,7 +230,7 @@ the reference's "a training session has finished" (#369).
   the Training screen's arena viewport (background, ground, ruler, best
   and crash markers, start sign, spawn marker, shadows' parent and camera); the host
   adds the creature and the `Evolver`, so leaving the scene frees them all.
-  - **Simulate (#702).** No `Evolver`: the creature plays the saved brain
+  - **Simulate (#702).** No `Evolver`: the creature plays the saved network
     in one trial that never ends, so there is no generation, shadow strip,
     save or count. The header reads "Simulating" with no generation
     caption, the Distance card reads the run's front distance, and the best
@@ -337,15 +337,15 @@ the reference's "a training session has finished" (#369).
     (`docs/BUILD_MODE.md` → Interactions, #1143); a tap on a joint with parts on it selects them all
     (`docs/BUILD_MODE.md` → "Parts stand in for their joint", #1066). The
     selected parts' Build names show in one callout docked at the arena
-    top (#388, #1137), with a live bar for each of their brain ports
+    top (#388, #1137), with a live bar for each of their network ports
     (#1064, `docs/WORLD_VISUALS.md` → Part callout). Each
-    BrainFocus refresh samples the followed brain once into one
-    `BrainPortValues` keyed by `BrainPort`; BrainFocus and the callout
+    NetworkFocus refresh samples the followed network once into one
+    `NetworkPortValues` keyed by `NetworkPort`; NetworkFocus and the callout
     both read it, so they always agree. Each port's range and short label
-    are in `docs/CREATURE_MODEL.md` → "Sensor–model contract".
+    are in `docs/CREATURE_MODEL.md` → "Sensor–network contract".
   - **Resume (warm start, #538).** Opening Training continues from the
     saved `TrainingStateDef`: the generation count goes on, and the saved
-    brain (the latest generation's best) is the elite: it runs unchanged as
+    network (the latest generation's best) is the elite: it runs unchanged as
     shadow 1 and its mutated children fill the other shadows
     (`GeneticAlgorithm.FromElites`), with any new ports explored (#1180,
     "New ports are explored" above). A disabled connection stays at 0
@@ -360,10 +360,10 @@ the reference's "a training session has finished" (#369).
     for them, so Build opened right after Training never shows a stale
     lock (#370).
 - The top bar shows the creation's name, the status ("Training · Flat
-  ground") and Brain and Stats buttons; unlock progress is not shown (#488).
-  Beside the arena a side panel titled "Status" shows the Inputs → Brain →
+  ground") and Network and Stats buttons; unlock progress is not shown (#488).
+  Beside the arena a side panel titled "Status" shows the Inputs → Network →
   Outputs → Distance stages (`SignalFlowPresentationViewModel`, #813);
-  Outputs counts the parts the brain drives, Servos, Motors and Pistons
+  Outputs counts the parts the network drives, Servos, Motors and Pistons
   alike ("2 parts"). Once the followed run has torn, the Distance stage's
   note reads "Crash 3.4 m" instead of the distance, in Simulate too (#1257). The stages count readings and parts (#196). Collapsing the panel widens the arena, and the camera refits.
   Under the arena are Pause and the generation caption.
@@ -380,8 +380,8 @@ the reference's "a training session has finished" (#369).
     chip, "Too many shadows!", not a notification. It stays 60 s after the
     last slow stretch, so a player who only glances at the arena still sees
     it. Pause restarts the measuring and leaves the chip as it is.
-  - **Brain** (the button or the Brain stage) opens BrainFocus; Android
-    Back closes it before leaving the scene. It shows the direct brain
+  - **Network** (the button or the Network stage) opens NetworkFocus; Android
+    Back closes it before leaving the scene. It shows the direct network
     (#536): inputs named by port ("Accel: along"), outputs named by joint,
     the enabled connections and live activations, refreshed about 30 times a
     second rather than every frame (#42), often enough that a Stepper's

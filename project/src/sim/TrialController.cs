@@ -10,7 +10,7 @@ namespace NodeRunner.Sim;
 /// trial that never ends, as Simulate (#702) plays.
 ///
 /// This node does not own the creature's lifecycle (creation/destruction) or
-/// brain assignment — its caller (the <see cref="Evolver"/>, or TrainingHost
+/// network assignment — its caller (the <see cref="Evolver"/>, or TrainingHost
 /// in Simulate) is responsible for both. TrialController only knows how to
 /// time a trial and measure how far, how fast and how high the creature got.
 /// </summary>
@@ -62,7 +62,7 @@ public partial class TrialController : Node
         // Must run its _PhysicsProcess before any Creature's (default
         // priority 0), so a trial always begins before its creature drives
         // that tick, whether it started inside a tick or between ticks
-        // (docs/TRAINING_LOOP.md, "The same brain runs the same trial").
+        // (docs/TRAINING_LOOP.md, "The same network runs the same trial").
         ProcessPhysicsPriority = -100;
     }
 
@@ -71,7 +71,7 @@ public partial class TrialController : Node
     /// <see cref="StartClearance"/> above the ground. Replaces any trial already in progress.
     /// Called inside a physics tick, as <see cref="Evolver"/> starts the next trial, it begins at
     /// once; called between ticks, as a scene starts training, it begins at the start of the next
-    /// tick (#798). Either way it begins before any creature drives that tick, so the same brain
+    /// tick (#798). Either way it begins before any creature drives that tick, so the same network
     /// runs the same trial every time. <see cref="TrialStarted"/> says when it has begun.
     /// </summary>
     public void StartTrial(Creature.Creature creature)

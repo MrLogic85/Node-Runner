@@ -5,12 +5,12 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
-/// A locked Creation adds and deletes joints, beams and Springs, which have no brain ports, and
-/// refuses every edit that would change its model (#896).
+/// A locked Creation adds and deletes joints, beams and Springs, which have no network ports, and
+/// refuses every edit that would change its network (#896).
 /// </summary>
 public sealed class BuildLockedTests
 {
-    private static readonly UiText _lockedReason = UiText.Plain("The creation is locked to avoid changes to the model, unlock to enable.");
+    private static readonly UiText _lockedReason = UiText.Plain("The creation is locked to avoid changes to the network, unlock to enable.");
 
     [Fact]
     public void AJointABeamAndASpring_AreAdded_AndUndoneAndRedoneOneByOne()
@@ -74,7 +74,7 @@ public sealed class BuildLockedTests
     [InlineData(CreatureElementKind.Beam, 63)] // The Velocity motor's Fixed link.
     [InlineData(CreatureElementKind.Beam, 64)] // The Velocity motor's Target link.
     [InlineData(CreatureElementKind.Node, 60)] // Its beam is the Velocity motor's Fixed link.
-    public void Delete_ThatChangesTheModel_IsLocked_AndChangesNothing(CreatureElementKind kind, int id)
+    public void Delete_ThatChangesTheNetwork_IsLocked_AndChangesNothing(CreatureElementKind kind, int id)
     {
         var build = Locked();
         var before = build.Snapshot();
@@ -217,7 +217,7 @@ public sealed class BuildLockedTests
     [Fact]
     public void ConnectLink_ABeamAndASpring_ReplaceEachOther_AndTheServoKeepsItsRole()
     {
-        // No brain ports change: the Servo holding the beam keeps its id (#1176, #1177).
+        // No network ports change: the Servo holding the beam keeps its id (#1176, #1177).
         var build = Locked();
 
         build.CanConnectLink(BuildLink.Spring, 2, 1, out _, out var replaced).ShouldBeTrue();
@@ -355,7 +355,7 @@ public sealed class BuildLockedTests
     }
 
     private static CanvasNote WouldChangeModel(CreatureElementKind kind, int id) =>
-        new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Locked: would change the model"));
+        new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Locked: would change the network"));
 
     private static (int Nodes, int Beams, int Springs, int Pistons, int Sensors, int Servos, int VelocityMotors) Parts(CreatureDef creature) =>
         (creature.Nodes.Count, creature.Beams.Count, creature.Springs.Count, creature.Pistons.Count, creature.Sensors.Count, creature.Servos.Count, creature.VelocityMotors.Count);

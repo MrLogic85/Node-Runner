@@ -5,7 +5,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
 /// The Rubber in Build (#1142): placed on a joint from the tray, between the Wheel and the Touch sensor
-/// on the joint's stack, selected, copied, boxed and deleted with its joint, and, without brain ports,
+/// on the joint's stack, selected, copied, boxed and deleted with its joint, and, without network ports,
 /// added and deleted on a locked Creation like a Wheel.
 /// </summary>
 public sealed class BuildRubberTests
@@ -49,7 +49,7 @@ public sealed class BuildRubberTests
         build.Rubbers.Count.ShouldBe(1);
     }
 
-    // A Rubber has no brain ports, so it does not change the model a locked Creation's brain was bred for.
+    // A Rubber has no network ports, so it does not change the model a locked Creation's network was bred for.
     [Fact]
     public void PlacePart_OnALockedCreation_AddsIt()
     {

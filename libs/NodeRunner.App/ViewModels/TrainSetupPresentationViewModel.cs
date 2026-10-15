@@ -44,7 +44,7 @@ public sealed class TrainSetupPresentationViewModel
         Settings = creation.TrainSettings ?? TrainSettingsDef.Default;
         ShadowsBudget = ShadowsBudget.For(creation.Creature);
         CanSimulate = creation.Training is not null;
-        HasPoweredParts = BrainPorts.Of(creation.Creature).Outputs.Count > 0;
+        HasPoweredParts = NetworkPorts.Of(creation.Creature).Outputs.Count > 0;
     }
 
     public event EventHandler? Changed;
@@ -65,13 +65,13 @@ public sealed class TrainSetupPresentationViewModel
     public ShadowsBudget ShadowsBudget { get; }
 
     /// <summary>
-    /// Whether Simulate can be chosen: only a trained Creation has a brain to play. Without it there
+    /// Whether Simulate can be chosen: only a trained Creation has a network to play. Without it there
     /// is nothing to choose, so Train setup hides the Train or Simulate switch (#843).
     /// </summary>
     public bool CanSimulate { get; }
 
     /// <summary>
-    /// Whether the brain has a powered part to drive. Without one the creature may still train, but
+    /// Whether the network has a powered part to drive. Without one the creature may still train, but
     /// it only stands still, so Train setup warns at the top (#845).
     /// </summary>
     public bool HasPoweredParts { get; }
@@ -79,8 +79,8 @@ public sealed class TrainSetupPresentationViewModel
     /// <summary>The one line under Train or Simulate saying what the chosen mode does.</summary>
     public UiText ModeNote => Mode switch
     {
-        TrainingRunMode.Simulate => UiText.Plain("Plays the trained brain with one shadow. Nothing is learned or saved."),
-        _ => UiText.Plain("Shadows race and the brain keeps learning."),
+        TrainingRunMode.Simulate => UiText.Plain("Plays the trained network with one shadow. Nothing is learned or saved."),
+        _ => UiText.Plain("Shadows race and the network keeps learning."),
     };
 
     public SettingSlider Shadows => Mode == TrainingRunMode.Simulate
@@ -101,7 +101,7 @@ public sealed class TrainSetupPresentationViewModel
         {
             ShadowsLoad.TooMany => new(UiText.Plain("Probably too many shadows."), ShadowsLoad.TooMany),
             ShadowsLoad.Caution => new(UiText.Format("Phone may stutter above {0}.", ShadowsBudget.SmoothLimit), ShadowsLoad.Caution),
-            _ => new(UiText.Plain("The brain learns faster with more shadows."), ShadowsLoad.Smooth),
+            _ => new(UiText.Plain("The network learns faster with more shadows."), ShadowsLoad.Smooth),
         };
 
     public SettingSlider RunLength => Mode == TrainingRunMode.Simulate
@@ -122,7 +122,7 @@ public sealed class TrainSetupPresentationViewModel
     {
         if (mode == TrainingRunMode.Simulate && !CanSimulate)
         {
-            throw new InvalidOperationException("An untrained Creation has no brain to simulate.");
+            throw new InvalidOperationException("An untrained Creation has no network to simulate.");
         }
 
         if (mode == Mode)

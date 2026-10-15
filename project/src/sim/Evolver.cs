@@ -1,8 +1,8 @@
 using Godot;
 using NodeRunner.Domain;
 using NodeRunner.ML;
-using NodeRunner.ML.Brains;
 using NodeRunner.ML.Ga;
+using NodeRunner.ML.Networks;
 
 namespace NodeRunner.Sim;
 
@@ -23,7 +23,7 @@ public partial class Evolver : Node
     private int[] _layerSizes = [];
     private Activation[] _outputActivations = [];
     private int[] _disabledGenes = [];
-    private BrainPortLayout _ports = BrainPortLayout.Empty;
+    private NetworkPortLayout _ports = NetworkPortLayout.Empty;
     private IReadOnlyDictionary<int, double>? _drawnPositions;
     private double[][] _genomes = [];
     private double[] _fitness = [];
@@ -69,7 +69,7 @@ public partial class Evolver : Node
 
     /// <summary>
     /// The shadow (zero-based slot, which is also its candidate index) drawn in full and shown in
-    /// signal flow and the brain. Shadow 0 by default: the previous best, or shadow 1 in a fresh
+    /// signal flow and NetworkFocus. Shadow 0 by default: the previous best, or shadow 1 in a fresh
     /// generation 0. The player changes it through <see cref="Follow"/> (#385), and every new
     /// generation sets it back to shadow 0 (#894).
     /// </summary>
@@ -166,7 +166,7 @@ public partial class Evolver : Node
     }
 
     /// <summary>
-    /// Begins evolving brains for the given creature. <paramref name="layerSizes"/>
+    /// Begins evolving networks for the given creature. <paramref name="layerSizes"/>
     /// must match the creature's sensor/motor counts (its input/output layers).
     /// Supplying <paramref name="creatureFactory"/> runs every shadow of a
     /// generation at once, one slot per genome, so <paramref name="populationSize"/>
@@ -174,7 +174,7 @@ public partial class Evolver : Node
     /// (#384); without it, evaluation remains sequential for compatibility. <paramref name="groundTopY"/> is the
     /// ground's top edge, which each trial measures elevation from.
     /// <paramref name="disabledGenes"/> are genome positions that stay 0 in every
-    /// candidate: a saved brain's disabled connection genes. Without
+    /// candidate: a saved network's disabled connection genes. Without
     /// <paramref name="resumeGenome"/> the run starts at generation 0 (#537); with it, the saved
     /// elite and its children open the run (#538), and <see cref="BestFitness"/> starts from
     /// <paramref name="resumeBestFitness"/>, reached in <paramref name="resumeBestGeneration"/>,
@@ -228,7 +228,7 @@ public partial class Evolver : Node
         ReleaseSlots();
         _primaryCreature = creature;
         _layerSizes = layerSizes.ToArray();
-        _outputActivations = DirectBrain.OutputActivations(creature.Ports);
+        _outputActivations = DirectNetwork.OutputActivations(creature.Ports);
         _ga = ga;
         _rng = rng;
         _disabledGenes = disabledGenes?.ToArray() ?? [];
@@ -329,8 +329,8 @@ public partial class Evolver : Node
 
     private void StartCandidate(int slot, int genomeIndex)
     {
-        var brain = NeuralNetwork.FromGenome(_layerSizes, _genomes[genomeIndex], Activation.Tanh, _outputActivations);
-        _creatures[slot].SetBrain(brain);
+        var network = NeuralNetwork.FromGenome(_layerSizes, _genomes[genomeIndex], Activation.Tanh, _outputActivations);
+        _creatures[slot].SetNetwork(network);
         _trialControllers[slot].StartTrial(_creatures[slot]);
     }
 

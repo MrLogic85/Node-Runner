@@ -4,7 +4,7 @@ using System.Text.Json.Schema;
 using NodeRunner.App.Lifecycle;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
-using NodeRunner.ML.Brains;
+using NodeRunner.ML.Networks;
 
 namespace NodeRunner.App.Tests.Repositories;
 
@@ -64,28 +64,28 @@ public sealed class SaveFormatTests : IDisposable
         SaveJson.Serialize(loaded).ShouldBe(SaveJson.Serialize(ExampleCreation()));
     }
 
-    // The example's Camera (7) was saved before its hit input (#1032), so its brain has no hit neuron.
+    // The example's Camera (7) was saved before its hit input (#1032), so its network has no hit neuron.
     // It loads unchanged and locked, and plays exactly as before whatever hit reads: the input
     // compiles silent. A refit, as an edit makes, adds the neuron, still silent.
     [Fact]
-    public void Example_ACameraBrainFromBeforeHit_PlaysAsBefore_AndARefitAddsHit()
+    public void Example_ACameraNetworkFromBeforeHit_PlaysAsBefore_AndARefitAddsHit()
     {
         var loaded = Load(Example(), "creation.json");
-        var brain = loaded.Training!.Brain;
-        var ports = BrainPorts.Of(loaded.Creature);
-        var hit = BrainPort.Input(7, "hit");
+        var network = loaded.Training!.Network;
+        var ports = NetworkPorts.Of(loaded.Creature);
+        var hit = NetworkPort.Input(7, "hit");
         var hitIndex = ports.Inputs.ToList().IndexOf(hit);
-        brain.Neurons.ShouldNotContain(neuron => neuron.PartId == 7 && neuron.Channel == "hit");
+        network.Neurons.ShouldNotContain(neuron => neuron.PartId == 7 && neuron.Channel == "hit");
         CreationLock.IsLocked(loaded).ShouldBeTrue();
 
         double[] seenBefore = [0.3, -0.2, 0.1, 0.6, 0, 0.4, -0.5];
         double[] seenNow = [.. seenBefore[..hitIndex], 1, .. seenBefore[hitIndex..]];
-        var before = DirectBrain.Network(brain, ports with { Inputs = ports.Inputs.Where(port => port != hit).ToArray() }).Forward(seenBefore);
-        DirectBrain.Network(brain, ports).Forward(seenNow).ShouldBe(before);
+        var before = DirectNetwork.Build(network, ports with { Inputs = ports.Inputs.Where(port => port != hit).ToArray() }).Forward(seenBefore);
+        DirectNetwork.Build(network, ports).Forward(seenNow).ShouldBe(before);
 
-        var refit = DirectBrain.Refit(brain, ports);
+        var refit = DirectNetwork.Refit(network, ports);
         refit.Neurons.ShouldContain(neuron => neuron.Kind == NeuronKind.Input && neuron.PartId == 7 && neuron.Channel == "hit");
-        DirectBrain.Network(refit, ports).Forward(seenNow).ShouldBe(before);
+        DirectNetwork.Build(refit, ports).Forward(seenNow).ShouldBe(before);
     }
 
     [Theory]
@@ -136,13 +136,13 @@ public sealed class SaveFormatTests : IDisposable
     }
 
     [Fact]
-    public void Loading_WithNullBrain_FailsAndNamesIt()
+    public void Loading_WithNullNetwork_FailsAndNamesIt()
     {
         var json = JsonNode.Parse(Example())!.AsObject();
         json["training"]!["brain"] = null;
 
         Should.Throw<JsonException>(() => Load(json.ToJsonString(), "creation.json"))
-            .Message.ShouldContain("brain");
+            .Message.ShouldContain("network");
     }
 
     [Fact]
@@ -224,27 +224,27 @@ public sealed class SaveFormatTests : IDisposable
                 [new PistonDef(9, 1, 3, stroke: 2 * 0.3 / (1 - 0.3))],
                 [new SpringDef(11, 2, 10, "Tail", stiffness: 300, damping: 0.25, stroke: 1, coilLength: 0.55)],
                 nextPartId: 12),
-            new TrainingStateDef(ExampleBrain(), 12, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat, 3.75), new TrainingBestDef(9, 4.25, MapIds.Flat, 4.5)),
+            new TrainingStateDef(ExampleNetwork(), 12, new TrainingRunDef(3.5, 1.25, 0.5, MapIds.Flat, 3.75), new TrainingBestDef(9, 4.25, MapIds.Flat, 4.5)),
             new TrainSettingsDef(12, 20));
 
-    // The direct brain for ExampleCreation's ports: the Accelerometer (6), the Camera (7) and the
+    // The direct network for ExampleCreation's ports: the Accelerometer (6), the Camera (7) and the
     // Piston (9). Every input drives the Piston's position, one connection is disabled, and its
     // strength starts passive with no connection. The file is older than #870, so loading it doubles
     // the Piston length weight (0.5) and takes 0.5 off the position bias (0.25). It is older than
     // #1129 too, so the position output turns sigmoid with its bias and every weight into it doubled.
-    private static BrainDef ExampleBrain()
+    private static NeuralNetworkDef ExampleNetwork()
     {
-        (int Part, string Channel)[] inputs = [(6, "along"), (6, "across"), (7, "left1"), (7, "centre"), (7, "right1"), (9, BrainPorts.PistonLengthChannel), (9, BrainPorts.PistonSpeedChannel)];
+        (int Part, string Channel)[] inputs = [(6, "along"), (6, "across"), (7, "left1"), (7, "centre"), (7, "right1"), (9, NetworkPorts.PistonLengthChannel), (9, NetworkPorts.PistonSpeedChannel)];
         double[] weights = [2 * 0.125, 2 * 1, 2 * -1, 2 * 0.75, 2 * -0.5, 2 * 2 * 0.5, 2 * -0.25];
         var neurons = inputs
             .Select((input, index) => new NeuronDef(index + 1, NeuronKind.Input, input.Part, input.Channel, 0, 0, NeuronActivation.Identity))
-            .Append(new NeuronDef(8, NeuronKind.Output, 9, BrainPorts.PistonPositionChannel, 1, 2 * (0.25 - 0.5), NeuronActivation.Sigmoid))
-            .Append(new NeuronDef(9, NeuronKind.Output, 9, BrainPorts.PistonStrengthChannel, 1, -4, NeuronActivation.Sigmoid))
+            .Append(new NeuronDef(8, NeuronKind.Output, 9, NetworkPorts.PistonPositionChannel, 1, 2 * (0.25 - 0.5), NeuronActivation.Sigmoid))
+            .Append(new NeuronDef(9, NeuronKind.Output, 9, NetworkPorts.PistonStrengthChannel, 1, -4, NeuronActivation.Sigmoid))
             .ToArray();
         var connections = weights
             .Select((weight, index) => new ConnectionGeneDef(index + 1, 8, weight, enabled: index != 2))
             .ToArray();
-        return new BrainDef(neurons, connections, nextNeuronId: 10);
+        return new NeuralNetworkDef(neurons, connections, nextNeuronId: 10);
     }
 
     // VersionedSaveFile writes the version first, outside the record.

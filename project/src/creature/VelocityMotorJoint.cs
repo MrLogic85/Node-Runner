@@ -4,7 +4,7 @@ namespace NodeRunner.Creature;
 
 /// <summary>
 /// A Velocity motor (#454) between the two <see cref="HingePartSides"/> at its joint: it drives the
-/// Target's speed against the Fixed side toward the brain's speed, round and round with no end
+/// Target's speed against the Fixed side toward the network's speed, round and round with no end
 /// stops. At zero strength it pushes nothing, so the joint turns freely.
 /// </summary>
 public sealed class VelocityMotorJoint
@@ -23,7 +23,7 @@ public sealed class VelocityMotorJoint
 
     /// <summary>
     /// Whether its Fixed or Target beam has torn at either end (#962): it then drives nothing, and its
-    /// brain inputs keep the values they last had (Creature.Tears).
+    /// network inputs keep the values they last had (Creature.Tears).
     /// </summary>
     public bool IsPassive { get; private set; }
 
@@ -34,8 +34,8 @@ public sealed class VelocityMotorJoint
 
     public double SpeedInput => Mechanics.MotorLoop.SpeedInput(Sides.Speed, Definition.MaxSpeed);
 
-    /// <param name="speedOutput">The brain's speed output, −1…1 of its Max speed setting, counter-clockwise positive.</param>
-    /// <param name="strength">The brain's strength output, 0…1 of its Max strength setting.</param>
+    /// <param name="speedOutput">The network's speed output, −1…1 of its Max speed setting, counter-clockwise positive.</param>
+    /// <param name="strength">The network's strength output, 0…1 of its Max strength setting.</param>
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double speedOutput, double strength, double step)
     {

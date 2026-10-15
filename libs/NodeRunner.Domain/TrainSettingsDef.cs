@@ -7,7 +7,7 @@ namespace NodeRunner.Domain;
 /// </summary>
 public sealed record TrainSettingsDef
 {
-    /// <summary>Training needs one shadow to keep the best brain and one to try something new.</summary>
+    /// <summary>Training needs one shadow to keep the best network and one to try something new.</summary>
     public const int MinShadows = 2;
 
     public const int MaxShadows = 100;

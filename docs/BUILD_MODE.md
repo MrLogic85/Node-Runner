@@ -14,7 +14,7 @@ motor), Build treats every kind alike.
 - Build state lives in `BuildViewModel` while Build is open. Build always
   edits a saved creation: + New saves an empty "Untitled Creation", named in
   the player's language (`NewCreationWorkflow`), before Build opens. Its
-  brain is direct (#536), so there is no brain to set up.
+  network is direct (#536), so it needs no setup.
 - Build and Training share only the save (#469); the play button saves and
   opens Train setup (`docs/TRAINING_LOOP.md` step 1).
 - **Autosave (#368).** There is no Save button. Every edit is saved once
@@ -27,21 +27,21 @@ motor), Build treats every kind alike.
   removed again; if Android ends the app in the background, it stays in
   the list.
 - **Locked Build.** A locked creation (`CreationLock`) opens in Joint like
-  any other, and `BuildViewModel` refuses on its own what changes the model
-  (#638, #896). Joints, beams, Springs, Wheels, Rubbers and Brakes have no brain ports, so
+  any other, and `BuildViewModel` refuses on its own what changes the network
+  (#638, #896). Joints, beams, Springs, Wheels, Rubbers and Brakes have no network ports, so
   they can be added, copied and deleted. A joint motor's, Brake's or Angle sensor's sides change
   from its pickers (#1041, #1179, #1206), since a part keeps its id and ports through them (#1177); joints move, sensors move to another beam (#806),
   cameras aim, the selection handles all work (scaling changes only beam
   lengths), parameters change, except a Camera's Rays (#578), and parts can
   be renamed. A part with ports (a sensor, Touch sensor, Angle sensor, Piston or joint motor) can be neither
   added nor deleted: every tray row except the Brake's, the Wheel's and the Rubber's is locked, and so is
-  the Piston row; the tray's help line says "Unlock to add parts the brain
-  uses.", and tapping a row so locked shows "The creation is locked to avoid changes to the model, unlock to enable."
+  the Piston row; the tray's help line says "Unlock to add parts the network
+  uses.", and tapping a row so locked shows "The creation is locked to avoid changes to the network, unlock to enable."
   (`BuildViewModel.LockedReason`) in a notification; a Coming later row
   still names its version (see Parts tray). Delete stays,
   Unavailable, when it would take a part with ports along, also by cascade,
   or clear a joint motor's or Angle sensor's link (`BuildViewModel.DeleteLockedReason`); a tap shows
-  the same notification and the danger note "Locked: would change the model"
+  the same notification and the danger note "Locked: would change the network"
   on each part that blocks it: each part with ports it would take and each
   kept joint motor or Angle sensor whose link it would clear (#987), which clear like Copy's.
   Copy stays too (see Selection panel). There is no
@@ -56,7 +56,7 @@ motor), Build treats every kind alike.
   chat, which Import creation in Creations adds back (#899,
   `docs/SAVE_FORMAT.md` → "Share code"). Copy creation and Share build are
   offered for anything drawn, trained or not (#840). Copy creation saves edits first, keeps
-  any trained brain, names the copy "Copy of …", opens it in place of the
+  any trained network, names the copy "Copy of …", opens it in place of the
   original and confirms with a notification. Reset training (#370, #687)
   and Delete creation each ask first in a dialog confirmed with a tap
   (#866); Reset training's names the generations lost.
@@ -74,7 +74,7 @@ motor), Build treats every kind alike.
   - Undo keeps the selected parts that still exist; undoing a delete
     selects the deleted parts again and Redo of it clears them (#878).
     An undone delete gets its trained weights back
-    (`docs/CREATURE_MODEL.md` → "Build refits the brain it opened with").
+    (`docs/CREATURE_MODEL.md` → "Build refits the network it opened with").
   - Each edit has an owner, the canvas or a slider, so one never closes or
     drops the other's; a canvas tap while a slider is held is a step of its
     own. Undo and Redo do nothing while an edit is open, so a second finger
@@ -191,7 +191,7 @@ and into zoom and pan; `BuildCanvas` only forwards input and draws.
   with the part's own reason, "Accelerometers go on a beam" or "Cameras go
   on a beam" (#1053).
   - **Moving a sensor (#806):** drag its picture to another beam in any
-    tool, locked or not. It keeps its id, name and settings, so its brain
+    tool, locked or not. It keeps its id, name and settings, so its network
     ports and trained weights stay (`CreatureBuilder.MoveSensor`); a
     Camera keeps the direction it looks in the world. How the drag looks
     is in `docs/WORLD_VISUALS.md` → "Moving a sensor". A drop on a beam
@@ -365,7 +365,7 @@ what it is; there is no close button, and tapping empty canvas deselects.
 The rows are **Name**, then what the part is joined to (a beam's two
 joints, a sensor's beam; joints and links list nothing, as the canvas shows
 them, #913), then its note, and last a full-width **Delete**, Unavailable on
-a locked creation when deleting would change the model (see Locked Build).
+a locked creation when deleting would change the network (see Locked Build).
 Delete acts on a tap, with no dialog; Undo brings the part
 back, selected (#866, #878). Structure is read-only here: a beam's length
 is drawn, not a number. A part's note is its `PartInfo` line, the same as
@@ -427,7 +427,7 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   position, since it turns round and round.
 - **Stepper (#1036):** Max strength (the Servo's setting, so it edits
   together with a selected Servo's), Notches (2–24, step 1) and Max
-  frequency (1.0–5.0 Hz, step 0.1; it starts at 1 Hz, since the brain's Frequency output near 0 slows it
+  frequency (1.0–5.0 Hz, step 0.1; it starts at 1 Hz, since the network's Frequency output near 0 slows it
   down to a stop, #1296; an older saved value under 1 Hz loads and reads as it is, but a share code with
   one is refused, like any setting off its slider),
   and the Servo's "Fixed part" and "Target part" pickers, Wheel included.
@@ -465,7 +465,7 @@ even past `BuildViewBounds` (`BuildGestures.ShowSelectedCameraRays`, #1092).
 It grows only toward the side the rays reach past, so the opposite edge
 stays put, eases at the Training camera's zoom-out rate, and never zooms
 in, not even when Range goes back down. A pinch or pan stops the move, and
-it waits while a finger is on the canvas. Parameters change no brain port,
+it waits while a finger is on the canvas. Parameters change no network port,
 so a locked creation can change them, except a Camera's Rays, which add or
 remove ports (`PartParameter.ChangesPorts`): on a locked creation its
 slider shows disabled (`BuildViewModel.EditableParameters`), and a tap on
@@ -511,8 +511,8 @@ Several selected parts show the selection panel instead (#558, #704), titled
   the copied joint is sized for the parts it carries (#1044). A copied joint motor, Brake or Angle sensor uses the copies of its Fixed
   and Target links or Wheel and leaves a role empty whose link was not copied, so
   it shows its error note. On a locked creation a sensor, Touch sensor,
-  Angle sensor, Piston or joint motor would change the model, so it blocks Copy too, with the note "Locked:
-  would change the model". Copy is dimmed while the selection
+  Angle sensor, Piston or joint motor would change the network, so it blocks Copy too, with the note "Locked:
+  would change the network". Copy is dimmed while the selection
   holds a part it cannot take; a tap then puts a danger note on each such
   part until the selection changes, the creation is unlocked or the next
   canvas touch (#991).

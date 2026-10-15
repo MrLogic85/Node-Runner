@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
-using NodeRunner.ML.Brains;
+using NodeRunner.ML.Networks;
 
 namespace NodeRunner.App.Services;
 
@@ -114,23 +114,23 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         }
     }
 
-    public CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, BrainDef? openedBrain = null)
+    public CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, NeuralNetworkDef? openedNetwork = null)
     {
         ArgumentNullException.ThrowIfNull(editedCreature);
         return UpdateIfPresent(id, source =>
         {
             BumpTrainingEpoch(id);
-            return source.WithCreature(editedCreature, Refit(source.Training, openedBrain, editedCreature));
+            return source.WithCreature(editedCreature, Refit(source.Training, openedNetwork, editedCreature));
         });
     }
 
-    private static TrainingStateDef? Refit(TrainingStateDef? training, BrainDef? openedBrain, CreatureDef creature) =>
+    private static TrainingStateDef? Refit(TrainingStateDef? training, NeuralNetworkDef? openedNetwork, CreatureDef creature) =>
         training is null
             ? null
             : new TrainingStateDef(
-                openedBrain is null
-                    ? DirectBrain.Refit(training.Brain, BrainPorts.Of(creature))
-                    : DirectBrain.Refit(openedBrain, BrainPorts.Of(creature), idsFrom: training.Brain),
+                openedNetwork is null
+                    ? DirectNetwork.Refit(training.Network, NetworkPorts.Of(creature))
+                    : DirectNetwork.Refit(openedNetwork, NetworkPorts.Of(creature), idsFrom: training.Network),
                 training.Generation,
                 training.Latest,
                 training.Best);

@@ -6,7 +6,7 @@
 draw a 2D creature from joints, beams, pistons and sensors, and the app
 gives it a small neural network: its sensor readings are the inputs and its
 pistons the outputs. Then you watch a population of shadows race, generation by
-generation, until the brain figures out how to move.
+generation, until the network figures out how to move.
 
 The goal isn't to build a state-of-the-art ML model. It's to make the *shape*
 of machine learning (populations, fitness, weights pushing and pulling)
@@ -24,10 +24,10 @@ something you can watch, poke and understand.
   and says what is missing before it can train.
 - **Train** it: shadows race on flat ground, each finished generation is
   saved, and the best one leads the next.
-- **Simulate** the trained brain without learning anything.
-- **Look inside the brain** with BrainFocus: which input pushes which output,
+- **Simulate** the trained network without learning anything.
+- **Look inside the network** with NetworkFocus: which input pushes which output,
   and how strongly.
-- **Change the body after training.** The brain keeps what it learned for the
+- **Change the body after training.** The network keeps what it learned for the
   parts you keep; new parts start almost unused.
 
 A genetic algorithm trains the network; all the math is in
@@ -55,7 +55,7 @@ Android export: `docs/RELEASING.md` → "Android export".
 | Agent and contributor entry point | [`AGENTS.md`](AGENTS.md) |
 | Vision, project stage, plan | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 | Layers, dependencies, solution layout | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
-| Creature parts and the brain's ports | [`docs/CREATURE_MODEL.md`](docs/CREATURE_MODEL.md) |
+| Creature parts and the network's ports | [`docs/CREATURE_MODEL.md`](docs/CREATURE_MODEL.md) |
 | Build mode | [`docs/BUILD_MODE.md`](docs/BUILD_MODE.md) |
 | Training loop | [`docs/TRAINING_LOOP.md`](docs/TRAINING_LOOP.md) |
 | ML concepts the app teaches | [`docs/ML_CONCEPTS.md`](docs/ML_CONCEPTS.md) |

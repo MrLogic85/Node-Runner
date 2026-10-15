@@ -4,8 +4,8 @@ namespace NodeRunner.Creature;
 
 /// <summary>
 /// A Brake (#1040) between the two <see cref="HingePartSides"/> at its joint: friction that slows and
-/// holds the Target's turning against the Fixed side, up to its Strength. It has no brain ports, so
-/// it holds every tick, with or without a brain. A Locked one held by a weld (Creature.Welder) holds
+/// holds the Target's turning against the Fixed side, up to its Strength. It has no network ports, so
+/// it holds every tick, with or without a network. A Locked one held by a weld (Creature.Welder) holds
 /// through that joint instead.
 /// </summary>
 public sealed class BrakeJoint

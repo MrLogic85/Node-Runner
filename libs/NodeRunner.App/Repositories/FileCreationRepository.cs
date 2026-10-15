@@ -14,11 +14,14 @@ public sealed class FileCreationRepository : ICreationRepository
     // The stroke a version 2 save meant when it left the field out.
     private const double _strokeBefore870 = 0.3;
 
+    // Before #1308 training kept its network under this key, so the migrations before that read it here.
+    private const string _networkKeyBefore1308 = "brain";
+
     /// <summary>
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray, AddAngleSensorsArray, AddSteppersArray, StepperPowerBecomesFrequency]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray, AddAngleSensorsArray, AddSteppersArray, StepperPowerBecomesFrequency, NetworkKeyFromBrain]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -96,17 +99,17 @@ public sealed class FileCreationRepository : ICreationRepository
 
     // A Piston's length input was −1…1 around its built length and is now 0…1 over its travel, so
     // old = 2·new − 1. Doubling each weight from it and taking the old weight off the bias it feeds
-    // keeps a trained brain doing what it did, exactly while its stroke was within ±⅓.
+    // keeps a trained network doing what it did, exactly while its stroke was within ±⅓.
     private static void PistonLengthInputsFromShortest(JsonObject file)
     {
-        if (file["training"]?["brain"] is not JsonObject brain)
+        if (file["training"]?[_networkKeyBefore1308] is not JsonObject network)
         {
             return;
         }
 
-        if (brain["neurons"] is not JsonArray neurons || brain["connections"] is not JsonArray connections)
+        if (network["neurons"] is not JsonArray neurons || network["connections"] is not JsonArray connections)
         {
-            throw new InvalidDataException("creation.json has a brain without neurons or connections.");
+            throw new InvalidDataException("creation.json has a network without neurons or connections.");
         }
 
         var pistonIds = file["creature"]!["pistons"]!.AsArray()
@@ -117,7 +120,7 @@ public sealed class FileCreationRepository : ICreationRepository
             .ToDictionary(neuron => IntOf(neuron["id"], "neuron id"));
         var lengthInputs = neuronsById
             .Where(entry => TextOf(entry.Value["kind"]) == "input"
-                && TextOf(entry.Value["channel"]) == BrainPorts.PistonLengthChannel
+                && TextOf(entry.Value["channel"]) == NetworkPorts.PistonLengthChannel
                 && entry.Value["partId"] is { } partId
                 && pistonIds.Contains(IntOf(partId, "neuron partId")))
             .Select(entry => entry.Key)
@@ -278,19 +281,19 @@ public sealed class FileCreationRepository : ICreationRepository
 
     // Before #1129 a Piston's target-length output was tanh, −1 shortest … +1 longest, and is now
     // sigmoid, 0…1 like its length input. (tanh(x) + 1) / 2 = sigmoid(2x), so doubling its bias and
-    // every weight into it keeps a trained brain asking for the same lengths. A disabled connection
+    // every weight into it keeps a trained network asking for the same lengths. A disabled connection
     // doubles too, so mutation can enable it as it was.
     private static void PistonTargetLengthSigmoid(JsonObject file)
     {
-        // A file without training, or with one the strict load refuses, has no brain to change.
-        if (file["training"] is not JsonObject training || training["brain"] is not JsonObject brain)
+        // A file without training, or with one the strict load refuses, has no network to change.
+        if (file["training"] is not JsonObject training || training[_networkKeyBefore1308] is not JsonObject network)
         {
             return;
         }
 
-        if (brain["neurons"] is not JsonArray neurons || brain["connections"] is not JsonArray connections)
+        if (network["neurons"] is not JsonArray neurons || network["connections"] is not JsonArray connections)
         {
-            throw new InvalidDataException("creation.json has a brain without neurons or connections.");
+            throw new InvalidDataException("creation.json has a network without neurons or connections.");
         }
 
         if (file["creature"] is not JsonObject creature || creature["pistons"] is not JsonArray pistons)
@@ -311,9 +314,9 @@ public sealed class FileCreationRepository : ICreationRepository
                 throw new InvalidDataException("creation.json has a neuron that is not an object.");
             }
 
-            // Any other activation already fails to compile (DirectBrain.Compile), as it did before.
+            // Any other activation already fails to compile (DirectNetwork.Compile), as it did before.
             if (TextOf(neuron["kind"]) == "output"
-                && TextOf(neuron["channel"]) == BrainPorts.PistonPositionChannel
+                && TextOf(neuron["channel"]) == NetworkPorts.PistonPositionChannel
                 && TextOf(neuron["activation"]) == "tanh"
                 && neuron["partId"] is { } partId
                 && pistonIds.Contains(IntOf(partId, "neuron partId")))
@@ -345,15 +348,15 @@ public sealed class FileCreationRepository : ICreationRepository
     // every connection to or from them go; the new tick input starts with no neuron, as a new port does.
     private static void StepperPowerBecomesFrequency(JsonObject file)
     {
-        // A file without training, or with one the strict load refuses, has no brain to change.
-        if (file["training"] is not JsonObject training || training["brain"] is not JsonObject brain)
+        // A file without training, or with one the strict load refuses, has no network to change.
+        if (file["training"] is not JsonObject training || training[_networkKeyBefore1308] is not JsonObject network)
         {
             return;
         }
 
-        if (brain["neurons"] is not JsonArray neurons || brain["connections"] is not JsonArray connections)
+        if (network["neurons"] is not JsonArray neurons || network["connections"] is not JsonArray connections)
         {
-            throw new InvalidDataException("creation.json has a brain without neurons or connections.");
+            throw new InvalidDataException("creation.json has a network without neurons or connections.");
         }
 
         if (file["creature"] is not JsonObject creature || creature["steppers"] is not JsonArray steppers)
@@ -386,7 +389,7 @@ public sealed class FileCreationRepository : ICreationRepository
                     neurons.Remove(neuron);
                     break;
                 case ("output", "power"):
-                    neuron["channel"] = BrainPorts.StepperFrequencyChannel;
+                    neuron["channel"] = NetworkPorts.StepperFrequencyChannel;
                     break;
             }
         }
@@ -423,6 +426,24 @@ public sealed class FileCreationRepository : ICreationRepository
 
             wheel.Remove("grip");
         }
+    }
+
+    // #1308 calls the creature's network a neural network everywhere, so training's key follows.
+    private static void NetworkKeyFromBrain(JsonObject file)
+    {
+        if (file["training"] is not JsonObject training || !training.ContainsKey(_networkKeyBefore1308))
+        {
+            return;
+        }
+
+        if (training.ContainsKey("network"))
+        {
+            throw new InvalidDataException("creation.json has both training.brain and training.network.");
+        }
+
+        var network = training[_networkKeyBefore1308];
+        training.Remove(_networkKeyBefore1308);
+        training["network"] = network;
     }
 
     private static string? TextOf(JsonNode? node) =>
@@ -562,4 +583,5 @@ public sealed class FileCreationRepository : ICreationRepository
     private string FolderFor(Guid id) => Path.Combine(_directoryPath, id.ToString("N"));
 
     private string PathFor(Guid id) => Path.Combine(FolderFor(id), CreationFileName);
+
 }

@@ -7,7 +7,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
 /// Placing, setting up and relinking a Brake in Build (#1041), as a Servo is, and keeping it through
-/// edits, deletes and undo steps (#1039). It has no brain ports, so a locked creation edits it freely.
+/// edits, deletes and undo steps (#1039). It has no network ports, so a locked creation edits it freely.
 /// </summary>
 public sealed class BuildBrakeTests
 {

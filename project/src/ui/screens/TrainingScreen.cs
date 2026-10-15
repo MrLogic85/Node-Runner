@@ -8,7 +8,7 @@ namespace NodeRunner.Ui.Screens;
 
 /// <summary>
 /// The Training screen (<c>reference design/components/Training</c>), also used to simulate a saved
-/// brain. The layout is authored in <c>scenes/screens/TrainingScreen.tscn</c>; its host authors the
+/// network. The layout is authored in <c>scenes/screens/TrainingScreen.tscn</c>; its host authors the
 /// world inside <c>%ArenaView</c>, feeds the view-models and owns the run.
 /// </summary>
 public partial class TrainingScreen : Control
@@ -34,7 +34,7 @@ public partial class TrainingScreen : Control
     [Signal]
     public delegate void ArenaPressedEventHandler(Vector2 worldPosition);
 
-    private BrainFocusSheet BrainFocus => GetNode<BrainFocusSheet>("%BrainFocusSheet");
+    private NetworkFocusSheet NetworkFocus => GetNode<NetworkFocusSheet>("%NetworkFocusSheet");
 
     /// <summary>
     /// The share of the arena's height the part callout takes from the top, with its leader and
@@ -42,22 +42,22 @@ public partial class TrainingScreen : Control
     /// </summary>
     public double PartCalloutShelf { get; private set; }
 
-    /// <summary>Binds the run: its header, its progress, the signal flow and the brain it shows.</summary>
+    /// <summary>Binds the run: its header, its progress, the signal flow and the network it shows.</summary>
     public void Setup(
         TrainingHeaderPresentation header,
         TrainingPresentationViewModel training,
         SignalFlowPresentationViewModel signalFlow,
-        BrainFocusPresentationViewModel brainFocus)
+        NetworkFocusPresentationViewModel networkFocus)
     {
         ArgumentNullException.ThrowIfNull(header);
         ArgumentNullException.ThrowIfNull(training);
         ArgumentNullException.ThrowIfNull(signalFlow);
-        ArgumentNullException.ThrowIfNull(brainFocus);
+        ArgumentNullException.ThrowIfNull(networkFocus);
         Unsubscribe();
         _header = header;
         _training = training;
         _signalFlow = signalFlow;
-        BrainFocus.Presentation = brainFocus;
+        NetworkFocus.Presentation = networkFocus;
         if (IsInsideTree())
         {
             Subscribe();
@@ -92,7 +92,7 @@ public partial class TrainingScreen : Control
 
     /// <summary>
     /// What the selected parts' callout shows (#388, #1064): for each part, top → down, its name
-    /// and, for a part with brain ports, its glyph and live values; a stacked joint's parts each
+    /// and, for a part with network ports, its glyph and live values; a stacked joint's parts each
     /// get a section of one callout (#1066). An empty list shows none. Call when the selection or
     /// the sampled values change; <see cref="MovePartCallout"/> places it every frame.
     /// </summary>
@@ -210,15 +210,15 @@ public partial class TrainingScreen : Control
             ports.Select(port => new UiCalloutMeter(label(port), port.Value ?? double.NaN, port.Range == PortRange.MinusOneToOne)).ToArray(),
             heading);
 
-    /// <summary>Closes the brain sheet, as Android Back does first. False when it was closed.</summary>
+    /// <summary>Closes the network sheet, as Android Back does first. False when it was closed.</summary>
     public bool CloseOverlay()
     {
-        if (!BrainFocus.IsOpen)
+        if (!NetworkFocus.IsOpen)
         {
             return false;
         }
 
-        BrainFocus.Close();
+        NetworkFocus.Close();
         return true;
     }
 
@@ -231,8 +231,8 @@ public partial class TrainingScreen : Control
     {
         UiLayout.ApplyScreen(this);
         GetNode<UiToolbar>("%Toolbar").BackPressed += () => EmitSignal(SignalName.BackRequested);
-        GetNode<UiButton>("%Brain").Activated += BrainFocus.Open;
-        GetNode<UiStageCard>("%BrainStage").StageSelected += BrainFocus.Open;
+        GetNode<UiButton>("%Network").Activated += NetworkFocus.Open;
+        GetNode<UiStageCard>("%NetworkStage").StageSelected += NetworkFocus.Open;
         GetNode<UiButton>("%Stats").Activated += () => EmitSignal(SignalName.StatsRequested);
         GetNode<UiButton>("%Pause").Activated += () => EmitSignal(SignalName.PauseRequested);
         GetNode<UiWorldView>("%ArenaView").WorldPressed += position => EmitSignal(SignalName.ArenaPressed, position);

@@ -8,7 +8,7 @@ Domain only) are in `docs/ARCHITECTURE.md` and enforced by
 
 - **Plain values in and out.** The public API takes and returns primitives
   (`double`, `double[]`, `int`), small structs and Domain records such as
-  `BrainDef` and `BrainPortLayout`, so the engine stays testable with plain
+  `NeuralNetworkDef` and `NetworkPortLayout`, so the engine stays testable with plain
   xUnit.
 - **`double`, not `float`,** so training maths is consistent and
   reproducible.
@@ -18,16 +18,16 @@ Domain only) are in `docs/ARCHITECTURE.md` and enforced by
   scratchA, scratchB)` takes caller-owned buffers, which must be distinct
   arrays (`ValidateDistinctBuffer`); the network keeps no per-call state.
 - **Genome layout.** Per layer: weights in row-major output-neuron order,
-  then biases. `DirectBrain.LayerSizes` is `[inputs, outputs]` in
-  `BrainPorts` order, and `DirectBrain.Compile` matches genes by port, never
-  by list order, so a saved brain loads whatever its order. A disabled gene
+  then biases. `DirectNetwork.LayerSizes` is `[inputs, outputs]` in
+  `NetworkPorts` order, and `DirectNetwork.Compile` matches genes by port, never
+  by list order, so a saved network loads whatever its order. A disabled gene
   compiles to 0 and `Evolver.SilenceDisabledGenes` keeps it there
-  (`DirectBrain.DisabledGenes`). The `DirectBrain` XML doc has the detail.
+  (`DirectNetwork.DisabledGenes`). The `DirectNetwork` XML doc has the detail.
 
 ## Scope
 
 - `NeuralNetwork`, `Activation` — the feedforward network
-- `Brains/` — `DirectBrain` (brain graph ↔ network), `GenerationZero`,
+- `Networks/` — `DirectNetwork` (network graph ↔ runtime `NeuralNetwork`), `GenerationZero`,
   `NewPortExploration`
 - `Ga/` — `GeneticAlgorithm`, `CrossoverStrategy`,
   `ParallelEvaluationSchedule`, `TrialMeasurement`
@@ -46,7 +46,7 @@ Backpropagation is #955.
   replacement, and mutation hits genes at the rate with noise of the given
   sigma
 - Round-trips: `FromGenome(LayerSizes, FlattenGenome(), activation)` and
-  `DirectBrain.Compile(ToBrainDef(...))` whatever the saved order
+  `DirectNetwork.Compile(ToNeuralNetworkDef(...))` whatever the saved order
 - `Clone` gives an independent network
 - `NewPortExploration`: only new ports' genes are redrawn, with generation
   0's spread; elites, trained parts and disabled genes are untouched; the

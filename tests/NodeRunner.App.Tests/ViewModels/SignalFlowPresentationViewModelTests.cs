@@ -5,7 +5,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class SignalFlowPresentationViewModelTests
 {
     [Fact]
-    public void Update_WithALiveBrain_NotesEachStage()
+    public void Update_WithALiveNetwork_NotesEachStage()
     {
         var viewModel = new SignalFlowPresentationViewModel();
         var changed = new List<string?>();

@@ -30,7 +30,7 @@ component derives in code is never saved in a scene
 - **Neon simulator:** a digital petri dish for synthetic life, more
   Tron/circuit lab than cute toy.
 - **Learning by watching:** visuals and controls help the player connect
-  cause and effect: sensors → model → moving parts → movement.
+  cause and effect: sensors → network → moving parts → movement.
 - **Low ceremony:** opening the app quickly shows something alive.
 - **Experiment-first:** change one thing and see what happened.
 - **Understanding over creatures:** every screen answers "why did it do
@@ -58,12 +58,12 @@ every theme shares (`project/src/ui/lib/AGENTS.md` → "Theme and tokens").
 Every reference token has a named Godot mapping or a reason here, so a later
 token import does not bring back a dead one.
 
-- **`detail`** marks passive parts and passive details, which the brain
+- **`detail`** marks passive parts and passive details, which the network
   neither drives nor reads: the Spring's coil (#1059), the Brake (#1041),
   the Servo's Fixed-link band and picker icon. A Target-link band stays
   `accent` on a Brake too: the band colours name the side, not who drives
   it. Structure (beams, joints, rods, seats,
-  bodies) stays `line-strong` and `panel`. `accent` marks what the brain
+  bodies) stays `line-strong` and `panel`. `accent` marks what the network
   drives or reads.
 - **`*-glow` colours** are not imported. CSS needs them only because it
   cannot derive an alpha variant; `UiGlow` derives glow from the base colour,
@@ -124,7 +124,7 @@ session (Settings: #201).
   off or scrolling cancels it. Destructive controls tint `danger`, Primary
   ones on-accent (#964). Selected and disabled controls, and controls whose
   press already changes something (tabs, segments, sliders, part rows, the
-  Brain stage card, BrainFocus rows), show none.
+  Network stage card, NetworkFocus rows), show none.
 
 ## Components
 
@@ -190,7 +190,7 @@ entry (#315). The entries that are not a component of their own (#306):
   air. Part glyphs keep their 20 grid. A mark echoes the launcher glyph
   and is the one icon drawn 20 on the 24 grid, larger than its
   neighbours: at the shared stroke a network drawn 16 fills into lumps
-  (#1018). `icon_model` keeps the 16 rule by stopping its lines short of
+  (#1018). `icon_network` keeps the 16 rule by stopping its lines short of
   the middle column. `UiIconGridTests` reads each file's kind from its
   prefix and enforces its grid.
 - **Toggles and checkboxes:** transparent rows with solid indicator
@@ -363,14 +363,15 @@ the library's `Locked` card ("the only choice"); each card shows a
 
 The signal flow is a collapsible `UiSidePanel` titled "Status" (#813). The
 "Generation 37" caption ends in a bare `UiSlider` filling as the run goes by
-(#715). Only the Brain stage looks like a button, Raised with glow; the
+(#715). Only the Network stage looks like a button, Raised with glow; the
 other stages are plain frames without glow (#847). Only the followed
 shadow's strip cell is marked (`accent`). Stats is Unavailable (#198).
 
-### BrainFocus
+### NetworkFocus
 
-BrainFocus shows the direct brain, inputs straight to outputs (#536; hidden
-layers: #549).
+NetworkFocus shows the direct network, inputs straight to outputs (#536; hidden
+layers: #549). The sheet is titled "Network", after the stage that opens it;
+NetworkFocus is the component's name, not player copy.
 
 - "INPUTS" and "OUTPUTS" (#660, #1155) sit over the label columns, flush with
   their inner edge; the sheet's margins are 12 (bottom 8).
@@ -382,7 +383,7 @@ layers: #549).
 
 ## App icon
 
-The launcher icon is the Brain glyph (the 2-3-2 network) in Neon colours
+The launcher icon is the Network glyph (the 2-3-2 network) in Neon colours
 (#820). Inputs are `accent`, connections fade through `line_strong` to
 `output`, hidden neurons are `ink`, and the centre neuron wears the `halo`
 focus ring. Neurons sit on `panel_raised` discs over a vignette to
@@ -410,8 +411,8 @@ repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
 | Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top (#1107) | WV → Draw layers, BM → Interactions |
 | "Sensors go on a beam" | Each sensor names itself: "Cameras go on a beam" (#1053) | BM → Sensors |
 | Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with other joint parts; its own glyph (#665, #1044, #1045) | BM → Touch sensor, WV → Touch sensor |
-| "Senses" for the brain's inputs (stages, BrainFocus, accent) | "Inputs", the machine-learning word (#1155) | TL → The Training scene, Screens → BrainFocus, WV → Port bars |
-| Brain setup screen; hidden neurons | Removed; the direct brain (#536) | Screens → BrainFocus |
+| "Senses" for the brain's inputs (stages, BrainFocus, accent) | "Inputs", the machine-learning word (#1155) | TL → The Training scene, Screens → NetworkFocus, WV → Port bars |
+| Brain setup screen; hidden neurons | Removed; the direct network (#536) | Screens → NetworkFocus |
 | Speed control | None (#787) | TL → No speed-up |
 | The followed shadow about 43% from the left | Its centre in the middle, the ground never above 80% down, and the room speed adds mostly in front (#1169, #1190) | TL → Camera |
 | Callout above the whole creature; ground always 80% down | Callout docked at the arena top; the camera keeps a shelf for it (#1137) | WV → Training arena, TL → Camera |

@@ -35,7 +35,7 @@ src/ui/
 
 Rule of thumb: if a Control could be lifted into another Godot project
 unchanged, it belongs in `lib/`. If it embeds project vocabulary
-("creature", "generation", "brain"), it's a `widget/`.
+("creature", "generation", "network"), it's a `widget/`.
 
 ## Rules per subfolder
 

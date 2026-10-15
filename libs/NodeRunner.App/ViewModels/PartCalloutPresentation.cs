@@ -3,14 +3,14 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>One port in the part callout: its short label, the range its bar spans, and its live value or null.</summary>
-public sealed record PartCalloutPort(BrainPort Port, UiText Label, PortRange Range, double? Value);
+public sealed record PartCalloutPort(NetworkPort Port, UiText Label, PortRange Range, double? Value);
 
 /// <summary>
-/// The tapped part's callout in Training and Simulate (#388, #1064). A part with brain ports
+/// The tapped part's callout in Training and Simulate (#388, #1064). A part with network ports
 /// shows its glyph and name, then its inputs and its outputs with their live values; a Wheel, Rubber or Brake
-/// shows its glyph, its name and that it has no brain ports; a Joint, Beam or Spring shows only
-/// its name. Built from one <see cref="BrainPortValues"/> sample, the same one BrainFocus reads,
-/// so the callout never runs the brain. See docs/WORLD_VISUALS.md → "Part callout".
+/// shows its glyph, its name and that it has no network ports; a Joint, Beam or Spring shows only
+/// its name. Built from one <see cref="NetworkPortValues"/> sample, the same one NetworkFocus reads,
+/// so the callout never runs the network. See docs/WORLD_VISUALS.md → "Part callout".
 /// </summary>
 public sealed record PartCalloutPresentation(
     PartKind Kind,
@@ -20,22 +20,22 @@ public sealed record PartCalloutPresentation(
     IReadOnlyList<PartCalloutPort> Outputs,
     UiText? Note)
 {
-    private static readonly UiText _noBrainPorts = UiText.Plain("No brain ports");
+    private static readonly UiText _noNetworkPorts = UiText.Plain("No network ports");
 
     /// <summary>
     /// The word before the inputs' line (#1150), short for Inputs: the values the part gives the
-    /// brain. It names the line, so its colour is never the only cue.
+    /// network. It names the line, so its colour is never the only cue.
     /// </summary>
     public static UiText InputsHeading { get; } = UiText.Plain("In").InContext("part callout");
 
-    /// <summary>The word before the outputs' line (#1150), short for Outputs: the values the brain sets.</summary>
+    /// <summary>The word before the outputs' line (#1150), short for Outputs: the values the network sets.</summary>
     public static UiText OutputsHeading { get; } = UiText.Plain("Out").InContext("part callout");
 
     /// <summary>
     /// The callout for <paramref name="selection"/> on <paramref name="creature"/>. Its ports and
     /// their values come from <paramref name="values"/>, sampled with the creature's layout.
     /// </summary>
-    public static PartCalloutPresentation For(CreatureDef creature, CreatureElementSelection selection, BrainPortValues values)
+    public static PartCalloutPresentation For(CreatureDef creature, CreatureElementSelection selection, NetworkPortValues values)
     {
         ArgumentNullException.ThrowIfNull(creature);
         ArgumentNullException.ThrowIfNull(selection);
@@ -48,13 +48,13 @@ public sealed record PartCalloutPresentation(
             case PartKind.Node or PartKind.Beam or PartKind.Spring:
                 return new PartCalloutPresentation(kind, name, ShowsGlyph: false, [], [], null);
             case PartKind.Wheel or PartKind.Rubber or PartKind.Brake:
-                return new PartCalloutPresentation(kind, name, ShowsGlyph: true, [], [], _noBrainPorts);
+                return new PartCalloutPresentation(kind, name, ShowsGlyph: true, [], [], _noNetworkPorts);
         }
 
         var ports = values.Of(selection.Id);
         PartCalloutPort[] Of(PortDirection direction) => ports
             .Where(value => value.Port.Direction == direction)
-            .Select(value => new PartCalloutPort(value.Port, BrainPortDisplay.ShortLabel(kind, value.Port), BrainPortDisplay.Range(kind, value.Port), value.Value))
+            .Select(value => new PartCalloutPort(value.Port, NetworkPortDisplay.ShortLabel(kind, value.Port), NetworkPortDisplay.Range(kind, value.Port), value.Value))
             .ToArray();
         return new PartCalloutPresentation(kind, name, ShowsGlyph: true, Of(PortDirection.Input), Of(PortDirection.Output), null);
     }

@@ -27,13 +27,13 @@ public sealed class TouchSensor
             TargetPosition = Vector2.Zero,
             CollisionMask = joint.CollisionMask,
             MaxResults = 1,
-            // Sense casts it, so the reading is of the pose the brain reads in this step.
+            // Sense casts it, so the reading is of the pose the network reads in this step.
             Enabled = false,
         };
         joint.AddChild(_cushion);
     }
 
-    /// <summary>The brain input, 0–1, as of the last <see cref="Sense"/>; 0 once reset.</summary>
+    /// <summary>The network input, 0–1, as of the last <see cref="Sense"/>; 0 once reset.</summary>
     public double Reading { get; private set; }
 
     /// <summary>Reads the ground round the joint; on a physics step, when the space can be queried.</summary>

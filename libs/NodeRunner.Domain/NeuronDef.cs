@@ -1,11 +1,11 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// One neuron in a saved brain (#536). A port neuron (input or output) stands for the
-/// <see cref="BrainPort"/> with its <see cref="PartId"/> and <see cref="Channel"/>; a hidden one has
+/// One neuron in a saved network (#536). A port neuron (input or output) stands for the
+/// <see cref="NetworkPort"/> with its <see cref="PartId"/> and <see cref="Channel"/>; a hidden one has
 /// neither. <see cref="Layer"/> is 0 for inputs and grows towards the outputs, so every connection
 /// runs from a lower layer to a higher one. An input neuron has no bias and passes its value through.
-/// See <see cref="BrainDef"/> and docs/SAVE_FORMAT.md.
+/// See <see cref="NeuralNetworkDef"/> and docs/SAVE_FORMAT.md.
 /// </summary>
 public sealed record NeuronDef
 {
