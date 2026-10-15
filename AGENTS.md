@@ -48,6 +48,23 @@ understanding of the project before starting to work.
    concept names (`docs/GLOSSARY.md`), file names and quoted issue text
    exactly as they are; translating them makes them hard to recognise.
 
+## Working copy
+
+- Work only in the checkout the session started in. Do not create git
+  worktrees, extra clones or copies of the repository.
+- Do each change on a feature branch (`git switch -c ...`), and switch back
+  to `main` once it is merged. `main` changes only through a merged PR
+  (`docs/REVIEW.md` → "Merge gates").
+- If the checkout has uncommitted changes or is on another branch when work
+  should start, stop and ask the human. Never stash, reset or discard them,
+  and never work around them.
+- Scratch files (screenshots, builds, renders, notes) go in `.scratch/` in
+  the checkout, which is git-ignored, never in `/tmp`; delete them when
+  they are no longer needed.
+
+Hooks in `.claude/hooks/` enforce what they can of this, and the PR title
+format, in both tools (`docs/REVIEW.md` → "Hooks").
+
 ## Repository map
 
 - `libs/`: the engine-independent Domain, Mechanics, ML and App layers.

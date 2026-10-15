@@ -25,6 +25,8 @@ test-code conventions; tools, projects and what each layer tests are in
 - **Disk I/O only in a per-test temp directory.** The exceptions are committed
   fixtures, pins and share dictionaries, which a test may read from the
   checkout (`TestRepository.Root`). It rewrites them only when its opt-in
-  `NODE_RUNNER_UPDATE_*` variable is set.
+  `NODE_RUNNER_UPDATE_*` variable is set. The hook specs make their
+  throwaway repositories under the test output rather than `/tmp`
+  (`docs/REVIEW.md` → "Hooks").
 - **`NodeRunner.Ui.Tests` never constructs Godot nodes**
   (`docs/TEST_STRATEGY.md`).

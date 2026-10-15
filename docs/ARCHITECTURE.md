@@ -134,7 +134,7 @@ Node Runner/
     ├── NodeRunner.Mechanics.Tests/
     ├── NodeRunner.ML.Tests/
     ├── NodeRunner.App.Tests/
-    ├── NodeRunner.Arch.Tests/      # layer rules, source conventions, agent files
+    ├── NodeRunner.Arch.Tests/      # layer rules, source conventions, agent files, hooks
     └── NodeRunner.Ui.Tests/        # static Godot source contracts; no scene tree
 ```
 

@@ -35,6 +35,9 @@ coverage.*.xml
 *.apk
 *.aab
 
+# Agents' scratch files (AGENTS.md → "Working copy")
+/.scratch/
+
 # Local env
 .env
 /LOCAL_CONFIG.md
