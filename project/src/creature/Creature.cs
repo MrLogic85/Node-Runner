@@ -33,8 +33,9 @@ public partial class Creature : Node2D
     // Godot needs some mass on every body; a node joined to nothing still weighs this.
     private const float _minNodeMass = 0.1f;
 
-    // Beams have no collider, so Godot cannot derive their turning inertia; it is
-    // set as a solid bar this thick.
+    // An intact beam has no collider, so Godot cannot derive its turning inertia; it is
+    // set as a solid bar this thick. Mass, centre of mass and inertia are all set by hand,
+    // so the shape a torn beam gets (Creature.Tears.cs) changes none of them.
     private const float _beamInertiaThickness = 12f;
 
     // How near a tap must land to a part, on screen, at least: a part drawn smaller when the
@@ -430,8 +431,9 @@ public partial class Creature : Node2D
         }
     }
 
-    // A beam is a body without a collider: it carries mass, turning inertia and sensors,
-    // and is pinned at both ends to its nodes, which are what touch the world.
+    // An intact beam is a body without a collider: it carries mass, turning inertia and sensors,
+    // and is pinned at both ends to its nodes, which are what touch the world. A torn beam gets
+    // a shape to land (AGENTS.md rule 17).
     private void CreateBeams(CreatureDef definition)
     {
         var beamDefs = definition.Beams;

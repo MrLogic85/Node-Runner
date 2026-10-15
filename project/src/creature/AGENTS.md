@@ -18,9 +18,10 @@ file owns how Godot realises it.
    creature of 19 nodes and 37 beams stretch its beams up to 26 % and turn
    rigid triangles inside out; at 24 they stretch at most about 4 %, for
    about 5 % more time per physics tick on a phone (#1229, #1245). Long
-   trusses still bend (#1229). Only nodes collide (a
-   circle each); beams and links have no collider, until a beam is free at
-   both ends and needs one to land (rule 17). No body uses continuous
+   trusses still bend (#1229). While every beam is
+   intact only nodes collide (a circle each); beams and links have no collider: a shape on
+   every beam of 59 shadows costs the S25 nearly three times the tick
+   (#1268). A torn beam gets one shape to land (rule 17). No body uses continuous
    collision detection (#1171): the ground is an endless half-plane that a
    node cannot tunnel through, and Godot's ray CCD sets a fast body's
    velocity outright, which launched rolling creatures. Revisit this when
@@ -105,8 +106,10 @@ file owns how Godot realises it.
     `PinJoint2D`'s `NodeA`/`NodeB` to an empty path: the pin stops acting
     in that tick's physics step with no kick, and every body and joint
     keeps its slot, so nothing is left pointing at a freed object (#1255).
-    A beam gone at both ends is only marked gone, never hidden or
-    disabled: it gets a capsule collider and falls on its own (#1257). A
+    A torn end gets a circle collider as wide as the beam, so it lands
+    instead of passing through the ground (#1288). A beam gone at both ends
+    is only marked gone, never hidden or disabled: that one shape becomes a
+    capsule along the beam and it falls on its own (#1257). A
     Locked Brake or a Stepper going passive releases its `HingeWeld` the
     same way. What tears and what follows is `docs/CREATURE_MODEL.md` →
     Beam → Tearing; when it runs is `docs/ARCHITECTURE.md` → The tick.

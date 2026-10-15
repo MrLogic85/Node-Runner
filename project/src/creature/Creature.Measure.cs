@@ -14,7 +14,10 @@ public partial class Creature
 
     /// <summary>
     /// The Y of the creature's lowest physical point: the bottom of the lowest
-    /// node collider (beams do not collide). Godot's Y grows downward, so this
+    /// node collider. An intact beam has no collider; a torn beam's shape is left
+    /// out on purpose: the score freezes at the first tear, and after it only the
+    /// blow-up check reads this, which follows the main piece's nodes
+    /// (docs/TRAINING_LOOP.md → Trial → Tears, #1288). Godot's Y grows downward, so this
     /// is the largest Y. Returns negative infinity for a creature with no nodes.
     /// After a tear (#962), of the main piece's nodes only.
     /// </summary>
@@ -40,7 +43,8 @@ public partial class Creature
 
     /// <summary>
     /// The box around the creature's node colliders, in global coordinates: what the Training
-    /// camera fits in view (#675). Beams run between nodes, so the nodes bound them. An empty
+    /// camera fits in view (#675). Intact beams run between nodes, so the nodes bound them; the
+    /// free tip of a torn beam is left out, as in <see cref="LowestPointY"/>. An empty
     /// rectangle for a creature with no nodes. After a tear (#962), round the main piece's nodes only.
     /// </summary>
     public Rect2 Bounds
