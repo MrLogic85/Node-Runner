@@ -37,6 +37,34 @@ public sealed class HingePartSideGeometryTests
         HingePartSideGeometry.WheelBodyTorque(60).ShouldBe(20 * couple.ForceOnFar.Y, tolerance: 1e-12);
     }
 
+    [Theory]
+    [InlineData(0.1)]
+    [InlineData(-0.05)]
+    public void WeldGrooveDirection_HoldsTheTargetSideAtTheNotch(double overshoot)
+    {
+        // The fixed side points right; the target was caught overshoot past a notch at 0.5 rad.
+        const double notch = 0.5;
+        var joint = new Vector2D(10, 20);
+        var fixedFar = new Vector2D(30, 20);
+        var caught = notch + overshoot;
+        var targetFar = new Vector2D(10 + (20 * Math.Cos(caught)), 20 - (20 * Math.Sin(caught)));
+
+        // Held on the fixed side's groove, the target's far joint is pulled onto the line at the notch.
+        var onFixed = HingePartSideGeometry.WeldGrooveDirection(joint, targetFar, overshoot, heldIsTarget: true);
+        (HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), onFixed) - HingePartSideGeometry.LinkAngle(joint, fixedFar))
+            .ShouldBe(notch, tolerance: 1e-12);
+
+        // Held on the target side's groove, the fixed side's far joint is pulled onto the line at the notch.
+        var onTarget = HingePartSideGeometry.WeldGrooveDirection(joint, fixedFar, overshoot, heldIsTarget: false);
+        (HingePartSideGeometry.LinkAngle(joint, targetFar) - HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), onTarget))
+            .ShouldBe(notch, tolerance: 1e-12);
+        (Math.Sqrt((onTarget.X * onTarget.X) + (onTarget.Y * onTarget.Y))).ShouldBe(1, tolerance: 1e-12);
+
+        // As the creature welds two links: the held point is the target's, where the fixed side's far joint stands.
+        var atFixedFar = HingePartSideGeometry.WeldGrooveDirection(joint, fixedFar, overshoot, heldIsTarget: true);
+        HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), atFixedFar).ShouldBe(-overshoot, tolerance: 1e-12);
+    }
+
     [Fact]
     public void CoupleForTorque_ReturnsEqualOppositeForcesWithTheRequestedMoment()
     {

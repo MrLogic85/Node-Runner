@@ -97,8 +97,8 @@ file owns how Godot realises it.
     weld.** A `StepperJoint` runs `Mechanics.Stepper` every tick, brain or
     not (#1037), reading `HingePartSides.BrakeInertia` as a Brake does. While
     it steps it turns its sides by torque (rule 6); while locked it welds them
-    as a Locked Brake does (`Creature.Links.cs`, Welder, which also says
-    when no weld fits) and lets the weld go as it steps on. The weld is one
+    at the notch, with a Locked Brake's weld (`Creature.Links.cs`, Welder,
+    which also says when no weld fits), and lets the weld go as it steps on. The weld is one
     `HingeWeld` made with the creature and switched on and off, so the tick
     makes no node (rule 9).
 17. **A tear clears a pin, it frees nothing (#1256).** A torn end sets its
