@@ -301,11 +301,11 @@ nodes; how the simulation keeps them from giving way under load is in
   Node → One part per slot). It is saved, loaded, shared and has brain
   ports, steps in the simulation (#1037) and is placed in Build (#1038).
   `docs/WORLD_VISUALS.md` → Parts says how it is drawn.
-- **Settings:** **Max strength** (torque while stepping, N·m), **Steps
-  per turn** (notches in a full turn, 2–24) and **Max frequency** (the
+- **Settings:** **Max strength** (torque while stepping, N·m), **Notches**
+  (in a full turn, 2–24, saved as `stepsPerTurn`) and **Max frequency** (the
   most steps each second); their slider ranges are in `docs/BUILD_MODE.md`
   → Parameters. Its ports are in Sensor–model contract.
-- **Notches:** Steps per turn evenly spaced angles between its sides,
+- **Notch angles:** as many evenly spaced angles as its Notches, between its sides,
   counted from the built angle, so a trial starts locked at a notch. Its
   angle is measured as a Motor's and counts on across whole turns.
 - **Frequency (#1263):** its one output, Frequency, sets how often it

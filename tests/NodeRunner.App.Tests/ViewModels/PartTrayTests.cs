@@ -41,7 +41,7 @@ public sealed class PartTrayTests
 
     [Theory]
     [InlineData(BuildPart.Servo, "Turns its joint to a target angle and holds it there.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
-    [InlineData(BuildPart.Stepper, "A motor that turns one notch at a time and holds it.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
+    [InlineData(BuildPart.Stepper, "A motor that ticks like a clock.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
     [InlineData(BuildPart.VelocityMotor, "Turns one side round and round. The brain picks how fast and which way.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
     [InlineData(BuildPart.Wheel, "Rolls freely on the ground. Add a Motor, Servo or Stepper to power it.", "Tap a joint to place it. A joint holds one wheel.")]
     [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]

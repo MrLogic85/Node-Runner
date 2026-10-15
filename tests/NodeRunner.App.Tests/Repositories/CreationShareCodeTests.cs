@@ -179,6 +179,8 @@ public sealed class CreationShareCodeTests
     [InlineData("stepsPerTurn", 25.0, ShareCodeRefusal.Damaged)]
     [InlineData("maxFrequency", 5.0, null)]
     [InlineData("maxFrequency", 5.01, ShareCodeRefusal.Damaged)]
+    [InlineData("maxFrequency", 1.0, null)]
+    [InlineData("maxFrequency", 0.5, ShareCodeRefusal.Damaged)]
     public void Read_AStepperSetting_IsRefusedAsDamaged_OffItsSlider(string setting, double value, ShareCodeRefusal? refusal)
     {
         var file = WalkerFile();
