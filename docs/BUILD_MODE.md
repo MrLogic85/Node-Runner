@@ -342,11 +342,10 @@ active one, clears the selection so its panel shows (#1096).
 - A tap on an available row picks it (#805; `BuildViewModel.PickedPart`):
   the row shows selected, and a line fades in right under it, as under the
   picked link in the Links list: its `PartInfo` (the same as its Part
-  settings note) and where it goes ("Tap a joint to place it. A joint holds
-  one Servo, Stepper, Motor, Brake or Angle sensor." for a joint motor, Brake or Angle sensor, "… holds one wheel." for a Wheel, "…
-  holds one rubber." for a Rubber, "… holds one Touch sensor." for a Touch
-  sensor), per part, not per tab, as a tab can mix placements. Under
-  the rows the help line says "Tap a part to pick it, or drag it onto the
+  settings note) and where it goes ("Drag onto a joint, or tap a joint to
+  place it." or "… a beam …" for an Accelerometer or Camera), per part,
+  not per tab, as a tab can mix placements. It does not say how many fit:
+  Build already shows which spots are free (#1297). Under the rows the help line says "Tap a part to pick it, or drag it onto the
   creature." A canvas tap then places the part where a drop there would
   land, with the same refusals, notes and Undo. The placed part is not
   selected, so the tray stays and the part stays picked for the next one.
@@ -421,30 +420,24 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   Play-tap canvas note say "A Servo needs two links, or a link and a Wheel" instead,
   and the play-blocked reason asks to connect another link or add a Wheel there, because
   no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
-  "Editing identity rules". Its note: "Turns its joint to a target angle and
-  holds it there."
+  "Editing identity rules".
 - **Motor (#454):** Max strength (5–40 N·m, step 5), Max speed (10–240
   rpm, step 10) and the Servo's Rise time, and the Servo's "Fixed part" and "Target part" pickers,
   Wheel included. It has no Range or Start
-  position, since it turns round and round. Its note: "Turns one side round
-  and round. The brain picks how fast and which way."
+  position, since it turns round and round.
 - **Stepper (#1036):** Max strength (the Servo's setting, so it edits
   together with a selected Servo's), Notches (2–24, step 1) and Max
   frequency (1.0–5.0 Hz, step 0.1; it starts at 1 Hz, since the brain's Frequency output near 0 slows it
   down to a stop, #1296; an older saved value under 1 Hz loads and reads as it is, but a share code with
   one is refused, like any setting off its slider),
-  and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "A motor that ticks
-  like a clock."
+  and the Servo's "Fixed part" and "Target part" pickers, Wheel included.
 - **Brake (#1041):** Strength (20–400 N·m, step 20, then a last step that
   reads "Locked", an endless Strength; a span up to it reads "60 N·m–Locked"),
-  and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "Slows its
-  joint's turning, or holds it still when Locked."
+  and the Servo's "Fixed part" and "Target part" pickers, Wheel included.
 - **Angle sensor (#1206):** no parameters, so no sliders and no Advanced
-  section: Name, the Motor's pickers, its note and Delete. Its note: "Tells
-  the brain the angle between its two sides, and how fast it turns."
+  section: Name, the Motor's pickers, its note and Delete.
 - **Wheel:** Radius (0.4–1.0 m, step 0.1), then a read-only Weight
-  ("1.2 kg", `PartSettingsPresentation.Readouts`) that follows Radius. Its
-  note: "Rolls freely on the ground. Add a Motor, Servo or Stepper to power it."
+  ("1.2 kg", `PartSettingsPresentation.Readouts`) that follows Radius.
 - **Camera:** Aim, set on the canvas, one Camera at a time; Rays (1, 3 or
   5, three evenly spaced stops, #578), Spread (15°–90°, step 5) and Range
   (1.0–10.0 m, step 0.1, #1097) in the panel. Spread shows disabled while every

@@ -335,6 +335,10 @@ and confirms with a "Code copied" notification.
   "Coming soon".
 - **Side panel:** the tool's panel or the selection's settings
   (`docs/BUILD_MODE.md`).
+- **Part copy** (#1297): a part's description (`PartInfo`) is one short
+  sentence to take in at a glance, saying what the part does, not how it is
+  wired or what else it needs. A placement hint is at most one short
+  sentence. Neither lists other parts by name.
 - **Readiness** (#1163): a `c_chip` at the canvas's bottom right,
   `space-3` in, says whether the creature can train: `accent` with a check
   when ready, `danger` with a warning and a short counted reason when

@@ -241,8 +241,8 @@ public sealed class BuildPresentationViewModelTests
     }
 
     [Theory]
-    [InlineData(SensorKind.Accelerometer, PartKind.Accelerometer, "Accel", "Measures its beam's acceleration.")]
-    [InlineData(SensorKind.Camera, PartKind.Camera, "Camera", "Its rays see how near the ground is. Drag the round handle to aim it.")]
+    [InlineData(SensorKind.Accelerometer, PartKind.Accelerometer, "Accel", "Measures a beam's acceleration.")]
+    [InlineData(SensorKind.Camera, PartKind.Camera, "Camera", "Measures distance to the ground. Drag the round handle to aim it.")]
     public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartKind partKind, string name, string note)
     {
         var build = new BuildViewModel();
@@ -354,7 +354,7 @@ public sealed class BuildPresentationViewModelTests
             locked: true);
         build.SelectOnly(CreatureElementKind.Sensor, 7);
 
-        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe(UiText.Plain("Its rays see how near the ground is. Drag the round handle to aim it."));
+        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe(UiText.Plain("Measures distance to the ground. Drag the round handle to aim it."));
     }
 
     [Fact]

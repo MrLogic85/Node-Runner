@@ -40,14 +40,16 @@ public sealed class PartTrayTests
     }
 
     [Theory]
-    [InlineData(BuildPart.Servo, "Turns its joint to a target angle and holds it there.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
-    [InlineData(BuildPart.Stepper, "A motor that ticks like a clock.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
-    [InlineData(BuildPart.VelocityMotor, "Turns one side round and round. The brain picks how fast and which way.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
-    [InlineData(BuildPart.Wheel, "Rolls freely on the ground. Add a Motor, Servo or Stepper to power it.", "Tap a joint to place it. A joint holds one wheel.")]
-    [InlineData(BuildPart.Accelerometer, "Measures its beam's acceleration.", "Tap a beam to place it. A beam holds one sensor.")]
-    [InlineData(BuildPart.TouchSensor, "Feels how near its joint is to the ground.", "Tap a joint to place it. A joint holds one Touch sensor.")]
-    [InlineData(BuildPart.Rubber, "Makes its joint grip the ground.", "Tap a joint to place it. A joint holds one rubber.")]
-    [InlineData(BuildPart.AngleSensor, "Tells the brain the angle between its two sides, and how fast it turns.", "Tap a joint to place it. A joint holds one Servo, Stepper, Motor, Brake or Angle sensor.")]
+    [InlineData(BuildPart.Servo, "Turns and holds an angle.", "Drag onto a joint, or tap a joint to place it.")]
+    [InlineData(BuildPart.Stepper, "A motor that ticks like a clock.", "Drag onto a joint, or tap a joint to place it.")]
+    [InlineData(BuildPart.VelocityMotor, "Spins round and round.", "Drag onto a joint, or tap a joint to place it.")]
+    [InlineData(BuildPart.Brake, "Slows or locks its joint.", "Drag onto a joint, or tap a joint to place it.")]
+    [InlineData(BuildPart.Wheel, "Rolls freely, a motor can drive it.", "Drag onto a joint, or tap a joint to place it.")]
+    [InlineData(BuildPart.Accelerometer, "Measures a beam's acceleration.", "Drag onto a beam, or tap a beam to place it.")]
+    [InlineData(BuildPart.Camera, "Measures distance to the ground.", "Drag onto a beam, or tap a beam to place it.")]
+    [InlineData(BuildPart.TouchSensor, "Signals when a joint is touching the ground.", "Drag onto a joint, or tap a joint to place it.")]
+    [InlineData(BuildPart.Rubber, "Doubles a joint's friction.", "Drag onto a joint, or tap a joint to place it.")]
+    [InlineData(BuildPart.AngleSensor, "Measures a joint's angle and velocity.", "Drag onto a joint, or tap a joint to place it.")]
     public void Create_WithAPickedPart_SelectsItsRow_AndSaysUnderItWhatItDoesAndWhereItGoes(BuildPart part, string info, string placement)
     {
         var tray = PartTray.Create(part);
@@ -178,7 +180,7 @@ public sealed class PartTrayTests
     {
         var list = BuildLinkList.Create(BuildLink.Beam);
 
-        list.PickedInfo.ShouldBe(UiText.Format("{0}\n{1}", UiText.Plain("A rigid rod."), UiText.Plain("Drag from joint to joint to add it.")));
+        list.PickedInfo.ShouldBe(UiText.Format("{0}\n{1}", UiText.Plain("A rigid beam."), UiText.Plain("Drag from joint to joint to add it.")));
         list.HelpText.ShouldBe(UiText.Plain("Tap a link to pick it."));
         list.Rows.Select(row => (row.Link, row.Name, row.State)).ShouldBe([
             (BuildLink.Beam, UiText.Plain("Beam"), LinkListRowState.Selected),
