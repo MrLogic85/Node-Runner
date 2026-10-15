@@ -157,7 +157,7 @@ public partial class Creature
     // from the joint's own pin, inside Godot's solver, so no load can turn the joint. A friction torque
     // lags a step behind the load it holds, so even an endless one gives a little under a sudden load.
     // Godot's own angular limit and motor on PinJoint2D cannot hold it (godotengine/godot#91691, #87513).
-    // The weld is a groove (GrooveLock), which takes only the angle the hinge leaves free: a second pin
+    // The weld is a groove (HingeWeld), which takes only the angle the hinge leaves free: a second pin
     // takes two, fights the hinge's pins and pumps energy into the creature until it spins (#1286). A
     // Piston or Spring whose node B is the joint slides that node along its cylinder, so that side's far
     // node runs in the groove, on the other side's body, and the stroke stays free. When both sides
@@ -179,14 +179,18 @@ public partial class Creature
         var fixedBody = SideBody(definition, part.NodeId, fixedSide);
         var targetBody = SideBody(definition, part.NodeId, targetSide);
         RigidBody2D grooveBody, heldBody, farBody;
+        bool heldIsTarget;
         if (fixedSlides || targetSlides)
         {
             // The sliding side's cylinder is not in the lock, so only the holding side turns as a bar.
+            // Its far node (node A) is held, not the cylinder: the cylinder is too light to carry the lock,
+            // and grooves on it gave way when a creature landed.
             var (holdingSide, holdingBody) = fixedSlides ? (targetSide, targetBody) : (fixedSide, fixedBody);
             WeighCylinderAsBar(definition, holdingSide, holdingBody);
             var sliding = definition.Link(fixedSlides ? fixedSide : targetSide);
             grooveBody = holdingBody;
             heldBody = farBody = _nodeBodies[definition.NodeIndexOf(sliding.NodeA)];
+            heldIsTarget = targetSlides;
         }
         else
         {
@@ -195,32 +199,16 @@ public partial class Creature
 
             // The groove runs along a side with a link: the fixed side, or the target if the fixed is a Wheel.
             int alongSide;
-            (alongSide, grooveBody, heldBody) = definition.IsWheel(fixedSide)
-                ? (targetSide, targetBody, fixedBody)
-                : (fixedSide, fixedBody, targetBody);
+            heldIsTarget = !definition.IsWheel(fixedSide);
+            (alongSide, grooveBody, heldBody) = heldIsTarget
+                ? (fixedSide, fixedBody, targetBody)
+                : (targetSide, targetBody, fixedBody);
             farBody = _nodeBodies[definition.NodeIndexOf(definition.Link(alongSide).FarNodeFrom(part.NodeId))];
         }
 
-        var jointBody = _nodeBodies[definition.NodeIndexOf(part.NodeId)];
-        var weld = new GrooveJoint2D { Name = name, Length = 2 * _lockGrooveReach };
-        AddChild(weld);
-        weld.NodeA = weld.GetPathTo(grooveBody);
-        return new HingeWeld(weld, weld.GetPathTo(heldBody), () => GrooveLock(weld, jointBody.Position, farBody.Position));
-    }
-
-    // Locks the angle between a groove's body and the body it holds: the held point, where the far
-    // node stands as the weld closes, runs in a groove on the line from the joint through it, so it
-    // can move along that line but not turn about the joint. A sliding Piston or Spring is held by its
-    // far node (node A), so its stroke runs along the groove; the cylinder is too light to carry the
-    // lock, as grooves on it gave way when a creature landed. The groove reaches far past any link or
-    // stroke, so only end stops stop a stroke, and has no cap (CapEndStops caps only those): a capped
-    // groove would let the lock turn, as Godot caps a groove's whole push, across it too.
-    private static void GrooveLock(GrooveJoint2D groove, Vector2 joint, Vector2 farNode)
-    {
-        var toFar = farNode - joint;
-        groove.Position = joint - (toFar.Normalized() * _lockGrooveReach);
-        groove.Rotation = toFar.Angle() - (Mathf.Pi / 2);
-        groove.InitialOffset = _lockGrooveReach + toFar.Length();
+        var groove = new GrooveJoint2D { Name = name };
+        AddChild(groove);
+        return new HingeWeld(groove, grooveBody, heldBody, _nodeBodies[definition.NodeIndexOf(part.NodeId)], farBody, heldIsTarget);
     }
 
     // Whether a Piston or Spring slides its node B at this joint.
@@ -388,7 +376,7 @@ public partial class Creature
     // Every end stop gives way past EndStop.MaxForce (#1115; why: AGENTS.md rule 4). Godot has no
     // such cap on the GrooveJoint2D node, only the server's MaxForce, which it keeps when it
     // remakes the joint. Run once every body exists, as the weight counts them all. A weld's
-    // groove is no end stop and keeps no cap (GrooveLock).
+    // groove is no end stop and keeps no cap (HingeWeld).
     private void CapEndStops(CreatureDef definition)
     {
         var mass = GetChildren().OfType<RigidBody2D>().Sum(body => (double)body.Mass);

@@ -320,19 +320,19 @@ nodes; how the simulation keeps them from giving way under load is in
   the joint is within 2 % of a notch spacing of that notch, or has passed
   it, or the one behind if a load stronger than the push carries it back.
   It never measures how heavy the joint is, so on a joint heavier than it
-  reads (a foot on the ground) it brakes late; it then locks where the
-  joint passed the notch, a little past it, and the overshoot still
-  counts one step. The next step drives to the exact notch angle, so the
-  error never adds up. If it reaches neither notch within 0.5 s, it pulls
-  the joint with Max strength to the nearest notch, so a push too weak
-  doesn't count a step, and locks it there. If the next release comes due
-  first, that nearest notch counts as reached and the next step goes on
-  from it.
+  reads (a foot on the ground) it brakes late and catches the joint a
+  little past the notch, and the overshoot still counts one step. The
+  next step drives to the exact notch angle, so the error never adds up.
+  If it reaches neither notch within 0.5 s, it pulls the joint with Max
+  strength to the nearest notch, so a push too weak doesn't count a step,
+  and locks it there. If the next release comes due first, that nearest
+  notch counts as reached and the next step goes on from it.
 - **Lock:** between releases it holds the joint locked, brain or not
-  (`Mechanics.Stepper`): Godot welds its sides rigid as they stand, as a
-  Locked Brake's (`Creature.Links.cs`, `Welder`), so no load turns it.
-  Where no weld fits it holds as endless friction instead, as a Locked
-  Brake does then (see Brake).
+  (`Mechanics.Stepper`): Godot welds its sides rigid at the notch, with
+  the weld a Locked Brake uses (`Creature.Links.cs`, `Welder`), so no
+  load turns it. It pulls a joint caught past the notch onto it within
+  a few physics steps (#1272). Where no weld fits it holds as endless
+  friction instead, as a Locked Brake does then (see Brake).
 
 ### Brake
 

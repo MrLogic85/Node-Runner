@@ -40,6 +40,19 @@ public static class HingePartSideGeometry
         return Math.Atan2(-dy, dx);
     }
 
+    /// <summary>
+    /// The unit direction, in creature coordinates, of the groove that welds a hinge part's sides at
+    /// <paramref name="overshoot"/> radians short of their angle (#1272): the line from the joint
+    /// through where the held point, a point on the held side now at <paramref name="far"/>, will be
+    /// once the target side has turned back by it. The groove runs on the other side, so when the held
+    /// side is the fixed one it turns the other way.
+    /// </summary>
+    public static Vector2D WeldGrooveDirection(Vector2D joint, Vector2D far, double overshoot, bool heldIsTarget)
+    {
+        var angle = LinkAngle(joint, far) - (heldIsTarget ? overshoot : -overshoot);
+        return new Vector2D(Math.Cos(angle), -Math.Sin(angle));
+    }
+
     /// <summary>How fast the direction from <paramref name="joint"/> to <paramref name="far"/> turns, in radians per second.</summary>
     public static double LinkAngularSpeed(Vector2D joint, Vector2D far, Vector2D jointVelocity, Vector2D farVelocity)
     {

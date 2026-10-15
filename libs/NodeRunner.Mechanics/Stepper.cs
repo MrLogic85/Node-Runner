@@ -7,10 +7,10 @@ namespace NodeRunner.Mechanics;
 /// one of <see cref="StepperDef.StepsPerTurn"/> evenly spaced angles counted from the built angle. At
 /// its running frequency it unlocks and drives the joint to the neighbouring notch in Power's direction
 /// with at most |Power| × Max strength: full torque, then braking just in time to arrive still. It has
-/// no top speed. It locks the joint the moment it is close enough to the notch, or where it is if it has
-/// already passed it: an overshoot still counts one step. A release that times out between notches pulls
+/// no top speed. It locks the joint the moment it is close enough to the notch, or as soon as it has
+/// passed it: an overshoot still counts one step. A release that times out between notches pulls
 /// the joint with Max strength to the nearest notch and locks it as it gets there; one cut short by the
-/// next steps on from that nearest notch. Locked, the host welds the joint rigid
+/// next steps on from that nearest notch. Locked, the host welds the joint rigid at its notch
 /// (<see cref="StepperState.Locked"/>); where it can't, <see cref="StepperState.Torque"/> holds it as
 /// endless friction, as a Locked Brake's does. Its
 /// angle is the one between its sides, as a <see cref="VelocityMotor"/>'s, and the brain sees it the
