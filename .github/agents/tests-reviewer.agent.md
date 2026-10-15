@@ -20,7 +20,8 @@ Authoritative sources:
 
 - `docs/TEST_STRATEGY.md`
 - `docs/ARCHITECTURE.md`
-- The nearest test and production `AGENTS.md` files
+- The `.claude/rules/` files whose `paths` match the changed tests and
+  production code
 
 Inspect meaningful branches and failure cases, not just coverage. Flag
 load-bearing math or state changes without tests, and tests that assert

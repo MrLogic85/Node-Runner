@@ -5,7 +5,7 @@ namespace NodeRunner.Managers;
 
 /// <summary>
 /// Godot autoload exposing the app's single seeded RNG source (see
-/// project/src/managers/AGENTS.md). Reseeds itself with a time-based seed on
+/// .claude/rules/managers.md). Reseeds itself with a time-based seed on
 /// startup so out-of-the-box runs vary, but logs the seed so any run can be
 /// reproduced by reseeding with the same value.
 /// </summary>

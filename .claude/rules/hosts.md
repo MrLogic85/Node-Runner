@@ -1,4 +1,10 @@
-# AGENTS.md — `src/hosts/`
+---
+paths:
+  - "project/src/hosts/**"
+  - "project/scenes/hosts/**"
+---
+
+# Host rules — `project/src/hosts/`
 
 Routed scene roots that wire screens to managers and the navigator. The
 dependency rule is in `docs/ARCHITECTURE.md` → Dependency rules (Scene

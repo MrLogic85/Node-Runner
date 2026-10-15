@@ -56,9 +56,11 @@ understanding of the project before starting to work.
 - `docs/`: design, process and teaching documents.
 - `issues/`: a read-only archive of the old file-based tracker.
 
-`docs/ARCHITECTURE.md` owns the layers and solution layout. Code folders
-with layer-specific rules have their own `AGENTS.md`; read the nearest one
-before editing there.
+`docs/ARCHITECTURE.md` owns the layers and solution layout. Folder- and
+layer-specific rules live in `.claude/rules/`; each lists the files it
+governs in `paths`, and both tools load it when you read a matching file.
+Read the matching rules yourself before creating a file there, or when you
+work from a diff alone.
 
 ## Machine-local setup
 

@@ -5,7 +5,7 @@
     <AssemblyName>NodeRunner.Domain</AssemblyName>
   </PropertyGroup>
 
-  <!-- The per-kind CreatureDef constructors are for tests: see AGENTS.md → Rules. -->
+  <!-- The per-kind CreatureDef constructors are for tests: see .claude/rules/domain.md → Rules. -->
   <ItemGroup>
     <InternalsVisibleTo Include="NodeRunner.Domain.Tests" />
     <InternalsVisibleTo Include="NodeRunner.Mechanics.Tests" />

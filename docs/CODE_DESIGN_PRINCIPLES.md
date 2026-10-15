@@ -42,7 +42,7 @@ an option.
 
 Nothing in `libs/` references Godot (`docs/ARCHITECTURE.md`; the arch
 tests enforce it). The ML engine's own rules are in
-`libs/NodeRunner.ML/AGENTS.md`.
+`.claude/rules/ml.md`.
 
 Why: it forces a clean interface, lets us test on the CLI, and means the ML
 code could be lifted into another project without rewriting.
@@ -77,7 +77,7 @@ detectable.
   flags it.
 - **Hard limit, 2000 lines.** No `.cs` file under `libs/` or `project/src/`
   may exceed it. `NodeRunner.Arch.Tests` fails the build.
-- Test files have no size limit; see `tests/AGENTS.md`.
+- Test files have no size limit; see `.claude/rules/tests.md`.
 - Prefer composition over inheritance. A creature *has* nodes, beams, sensors
   and a network — it doesn't *inherit* from any of them.
 - No abstract base classes "just in case". Introduce them when the second
@@ -132,7 +132,8 @@ Documentation follows these rules:
 - Instructions that add nothing are removed: generic advice, restating what
   code, tests or CI enforce without a why, and history that no longer guides
   decisions.
-- Layer-specific instructions live in the nearest `AGENTS.md`.
+- Layer-specific instructions live in a `.claude/rules/` file whose `paths`
+  cover the files they govern.
 
 ## 10. Testing
 

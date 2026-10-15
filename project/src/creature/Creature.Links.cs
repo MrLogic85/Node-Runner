@@ -373,7 +373,7 @@ public partial class Creature
         return new EndStops(cylinder, groove);
     }
 
-    // Every end stop gives way past EndStop.MaxForce (#1115; why: AGENTS.md rule 4). Godot has no
+    // Every end stop gives way past EndStop.MaxForce (#1115; why: .claude/rules/creature.md rule 4). Godot has no
     // such cap on the GrooveJoint2D node, only the server's MaxForce, which it keeps when it
     // remakes the joint. Run once every body exists, as the weight counts them all. A weld's
     // groove is no end stop and keeps no cap (HingeWeld).

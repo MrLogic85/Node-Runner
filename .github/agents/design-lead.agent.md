@@ -22,7 +22,8 @@ Read before every task:
   where the app and the reference differ, the app wins.
 - `docs/ROADMAP.md` and the current GitHub milestone — what the version is
   trying to teach, so design serves the pedagogical goal.
-- `docs/ARCHITECTURE.md` and the nearest `project/src/**/AGENTS.md` — so
+- `docs/ARCHITECTURE.md` and the `.claude/rules/` files whose `paths`
+  match the screens and scenes involved — so
   suggestions respect layering and fit the existing scene structure.
 - `docs/MANUAL_TESTING.md` — evidence and on-device checks.
 

@@ -113,7 +113,7 @@ the reference's "a training session has finished" (#369).
 - **The same network runs the same trial (#798).** The followed shadow
   replays the previous best, so it must end where that run ended: a reset
   leaves no physics state behind, and a trial begins before any creature
-  drives, however it is started (`project/src/sim/AGENTS.md`).
+  drives, however it is started (`.claude/rules/sim.md`).
 
 ## Generations
 

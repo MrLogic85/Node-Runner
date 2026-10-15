@@ -22,8 +22,8 @@ Authoritative sources:
 - `docs/ARCHITECTURE.md` for the current system shape
 - `docs/ROADMAP.md`, `docs/ML_CONCEPTS.md`, and `docs/GLOSSARY.md` for their
   respective subject matter
-- Root and local `AGENTS.md` files for agent instructions (including
-  `docs/release-notes/AGENTS.md` for release notes)
+- Root `AGENTS.md` and the `.claude/rules/` files for agent instructions
+  (including `.claude/rules/release-notes.md` for release notes)
 
 Check that statements, links, commands, examples, diagrams and ownership
 pointers are accurate and durable. Flag anything that breaks the

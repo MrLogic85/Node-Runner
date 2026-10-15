@@ -20,7 +20,8 @@ Authoritative sources:
 
 - `docs/ARCHITECTURE.md`, especially its threading model
 - `docs/CODE_DESIGN_PRINCIPLES.md` for determinism and concurrency choices
-- The nearest `project/src/**/AGENTS.md` files for Godot-layer constraints
+- The `.claude/rules/` files whose `paths` match the diff, for Godot-layer
+  constraints
 
 Follow work across callbacks, signals, tasks, and node enter/exit boundaries.
 Flag races, blocking of the Godot main thread, leaked subscriptions/resources,

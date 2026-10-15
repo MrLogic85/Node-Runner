@@ -1,9 +1,14 @@
-# AGENTS.md — `tests/`
+---
+paths:
+  - "tests/**"
+---
+
+# Test rules — `tests/`
 
 CLI xUnit tests, run with `dotnet test NodeRunner.slnx`. This file owns
 test-code conventions; tools, projects and what each layer tests are in
-`docs/TEST_STRATEGY.md`, and each library's test focus is in its
-`libs/*/AGENTS.md`.
+`docs/TEST_STRATEGY.md`, and each library's test focus is in its rule in
+`.claude/rules/` (`domain.md`, `mechanics.md`, `ml.md`, `app.md`).
 
 ## Rules
 

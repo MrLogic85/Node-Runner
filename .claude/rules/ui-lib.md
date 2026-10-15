@@ -1,10 +1,21 @@
-# AGENTS.md — `src/ui/lib/`
+---
+paths:
+  - "project/src/ui/**"
+  - "project/scenes/screens/**"
+  - "project/scenes/ui/**"
+  - "project/scenes/widgets/**"
+  - "project/assets/themes/**"
+  - "project/assets/icons/**"
+  - "project/project.godot"
+---
+
+# UI library rules — `project/src/ui/lib/`
 
 **The component library: reusable, app-agnostic Controls, their scenes in
 `project/scenes/ui/`, the theme files and the dimension constants.**
 
 `docs/UI_DIRECTION.md` owns how it looks; this file, how its code is
-written. Its rules bind all UI code (`../AGENTS.md`).
+written. Its rules bind all UI code (`.claude/rules/ui.md` loads with it).
 
 ## Boundaries
 
@@ -65,7 +76,7 @@ written. Its rules bind all UI code (`../AGENTS.md`).
 - Colour-derived items (`UiThemeExpander.DerivedColors`: text-colour
   variations, the `UiButton`, `UiBadge` and `UiIconTab` variations, base
   `Label`/`Button`/`LineEdit` colours) are generated. Never hand-edit them;
-  regenerate them as `project/src/tools/AGENTS.md` says.
+  regenerate them as `.claude/rules/tools.md` says.
 - Each typography's `FontVariation` in `Neon.tres` sets
   `spacing_top`/`spacing_bottom` to reach the token's `lineHeight`: top =
   floor(adjustment / 2), bottom the rest, adjustment = `lineHeight` − font
@@ -167,7 +178,7 @@ sets no colour override outside `UiIcons`' tint helper (#338).
   `CanvasLayer` and draws a raised control through everything above it
   (#463, #768). Order by the tree: add an overlay last, or a part that must
   draw last with `InternalMode.Back`. Marks in a world go on a `ViewLayer`,
-  whose order `project/src/theme/AGENTS.md` owns.
+  whose order `.claude/rules/theme.md` owns.
 - The levels in a Viewport or Window are the `UiLayers` CanvasLayers:
   `Screen`, `Overlay` (menus), `Notification`. A dialog is an embedded
   Window over every level of its Viewport, so it covers notifications.

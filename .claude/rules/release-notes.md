@@ -1,4 +1,9 @@
-# AGENTS.md — `docs/release-notes/`
+---
+paths:
+  - "docs/release-notes/**"
+---
+
+# Release-note rules — `docs/release-notes/`
 
 One file per published version, `X.Y.Z.md`. `.github/scripts/release.sh`
 uses it unchanged as the GitHub release text and refuses to publish without

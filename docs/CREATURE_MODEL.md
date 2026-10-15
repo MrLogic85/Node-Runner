@@ -7,7 +7,7 @@ between its parts and the network. Short definitions are in
 **The model is not the simulation** (#452). This document describes a part
 in words that would hold for any physics engine: no engine body or joint
 types, and no rules that differ by how a part happens to be simulated. How
-Godot realises each part is in `project/src/creature/AGENTS.md` and the code
+Godot realises each part is in `.claude/rules/creature.md` and the code
 comments there.
 
 ## Parts: Node, Beam, Sensor, Servo, Motor, Stepper, Brake, Angle sensor, Piston, Spring, Wheel, Rubber, Touch sensor
@@ -230,7 +230,7 @@ again, so it loses its hatch (`docs/WORLD_VISUALS.md` → Tear).
 
 A triangle is only as rigid as the joints that pin its beams to their
 nodes; how the simulation keeps them from giving way under load is in
-`project/src/creature/AGENTS.md` → Bodies and joints.
+`.claude/rules/creature.md` → Bodies and joints.
 
 ### Servo
 

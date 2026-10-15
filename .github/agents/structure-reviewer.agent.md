@@ -22,7 +22,8 @@ Authoritative sources:
 - `docs/ARCHITECTURE.md` for layers and dependencies
 - `docs/CODE_DESIGN_PRINCIPLES.md` for code structure, naming, style, and
   rejected patterns
-- The nearest local `AGENTS.md` for layer-specific constraints
+- The `.claude/rules/` files whose `paths` match the diff, for
+  layer-specific constraints
 
 Trace affected callers and dependencies far enough to verify the change.
 Flag unnecessary abstractions, dead paths, confused ownership, or code whose

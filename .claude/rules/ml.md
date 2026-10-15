@@ -1,4 +1,10 @@
-# AGENTS.md — `libs/NodeRunner.ML`
+---
+paths:
+  - "libs/NodeRunner.ML/**"
+  - "tests/NodeRunner.ML.Tests/**"
+---
+
+# ML rules — `libs/NodeRunner.ML`
 
 The neural-network and genetic-algorithm engine. Layer rules (no Godot,
 Domain only) are in `docs/ARCHITECTURE.md` and enforced by

@@ -11,7 +11,7 @@ public sealed class SolverIterationsGuardTests
     {
         SolverIterations(ProjectGodot.Lines).ShouldBeGreaterThanOrEqualTo(
             _minimumIterations,
-            "Fewer solver iterations let beams stretch and rigid triangles flip (#1245; why: project/src/creature/AGENTS.md rule 3).");
+            "Fewer solver iterations let beams stretch and rigid triangles flip (#1245; why: .claude/rules/creature.md rule 3).");
     }
 
     [Fact]

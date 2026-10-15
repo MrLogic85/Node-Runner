@@ -16,7 +16,7 @@ namespace NodeRunner.App.Builders;
 ///
 /// Lives in `NodeRunner.App`, not `NodeRunner.Domain`: this is mutable
 /// business logic (add/remove/cascade), and Domain keeps only records and
-/// a short list of stateless helpers (`libs/NodeRunner.Domain/AGENTS.md`).
+/// a short list of stateless helpers (`.claude/rules/domain.md`).
 /// </summary>
 public sealed partial class CreatureBuilder
 {

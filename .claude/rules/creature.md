@@ -1,4 +1,11 @@
-# AGENTS.md — `src/creature/`
+---
+paths:
+  - "project/src/creature/**"
+  - "project/scenes/Creature.tscn"
+  - "project/project.godot"
+---
+
+# Creature rules — `project/src/creature/`
 
 The Godot side of a creature: bodies, joints, sensors, Servos, Velocity motors, Pistons,
 Springs, Wheels and the network wiring. `docs/CREATURE_MODEL.md` owns the model; this

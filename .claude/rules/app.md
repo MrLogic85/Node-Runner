@@ -1,4 +1,10 @@
-# AGENTS.md — `libs/NodeRunner.App`
+---
+paths:
+  - "libs/NodeRunner.App/**"
+  - "tests/NodeRunner.App.Tests/**"
+---
+
+# App rules — `libs/NodeRunner.App`
 
 Application-level pure C#: view-models, services, repositories and their
 in-memory fakes. The bridge between the Godot side and the pure layers.
@@ -8,7 +14,7 @@ in-memory fakes. The bridge between the Godot side and the pure layers.
 - **Every service Godot code consumes has an interface,** and callers use
   it, so tests substitute it with NSubstitute.
 - **Constructor injection, no static state or singletons.** The composition
-  root is `SaveManager` (`project/src/managers/AGENTS.md`).
+  root is `SaveManager` (`.claude/rules/managers.md`).
 - **JSON via `System.Text.Json` only** (`SaveJson`).
 - **No `async void`,** so every fault reaches a caller.
 - **Fakes live next to their interfaces.** `InMemoryCreationRepository` is

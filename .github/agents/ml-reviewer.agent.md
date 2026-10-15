@@ -21,7 +21,7 @@ Authoritative sources:
 
 - `docs/CODE_DESIGN_PRINCIPLES.md` for determinism rules
 - `docs/ML_CONCEPTS.md` for intended teaching behavior
-- `libs/NodeRunner.ML/AGENTS.md` for ML-layer constraints and test focus
+- `.claude/rules/ml.md` for ML-layer constraints and test focus
 
 Work through the relevant math and state transitions rather than relying only
 on test names. Check edge cases, shapes, cloning/serialization behavior, and

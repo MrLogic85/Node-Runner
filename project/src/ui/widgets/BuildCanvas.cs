@@ -14,7 +14,7 @@ namespace NodeRunner.Ui.Widgets;
 /// <see cref="BuildGestures.View"/>, and forwards every pointer to
 /// <see cref="BuildGestures"/>, which decides what the active
 /// <see cref="BuildTool"/> does and when to zoom or pan. Binds to
-/// <see cref="BuildViewModel"/> per `project/src/ui/AGENTS.md`; does
+/// <see cref="BuildViewModel"/> per `.claude/rules/ui.md`; does
 /// not own any anatomy state itself. See docs/BUILD_MODE.md.
 /// It lives in the world of a <see cref="UiWorldView"/> (#769), so its creature is drawn with the
 /// same part visuals and layers as Training's (<see cref="CreatureParts"/>) without any of them
