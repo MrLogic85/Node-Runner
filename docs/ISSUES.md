@@ -178,22 +178,11 @@ implementation when it:
 - likely needs manual testing; or
 - is in **Needs review** or **Needs decision**.
 
-Give the review agent the issue URL or full text and ask it to check:
-
-- Scope: one clear outcome, or a suggested split
-- Acceptance criteria: concrete, testable, not implementation-biased
-- Metadata: labels, fields, milestone and linked docs follow this file
-- Dependencies: blocked-by and follow-up relationships are explicit
-- Test plan: automated or manual (`docs/MANUAL_TESTING.md`)
-- Risk: architecture, data loss, determinism, performance, device
-  behaviour, UX surprises
-- Missing context: screenshots, logs, seed and settings, reproduction
-  steps, design references
-
-Findings are **Major** (do not implement yet), **Medium** (fix before work
-starts) or **Minor** (fix when convenient). Post the review summary as an
-issue comment; if the review changes the issue, edit its body and say what
-changed in the comment.
+Give the `issue-reviewer` agent (`.github/agents/issue-reviewer.agent.md`)
+the issue URL or full text; the agent owns what to check and what each
+finding level means. Act on each finding as its level says. Post the
+review summary as an issue comment; if the review changes the issue, edit
+its body and say what changed in the comment.
 
 Each milestone that changes UI has a design brief that `design-lead`
 reviews before its screens are built.

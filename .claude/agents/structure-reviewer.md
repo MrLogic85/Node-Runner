@@ -1,0 +1,1 @@
+../../.github/agents/structure-reviewer.agent.md

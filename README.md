@@ -68,7 +68,8 @@ Android export: `docs/RELEASING.md` → "Android export".
 | Automated tests | [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md) |
 | Manual tests | [`docs/MANUAL_TESTING.md`](docs/MANUAL_TESTING.md) |
 | Issues, labels and project fields | [`docs/ISSUES.md`](docs/ISSUES.md) |
-| How a change lands | [`docs/REVIEW.md`](docs/REVIEW.md), [`CODEREVIEW.md`](CODEREVIEW.md) |
+| How a change lands, review agents | [`docs/REVIEW.md`](docs/REVIEW.md) |
+| What each review agent checks | [`.github/agents/`](.github/agents/) |
 | Releasing | [`docs/RELEASING.md`](docs/RELEASING.md) |
 
 ## Contributing

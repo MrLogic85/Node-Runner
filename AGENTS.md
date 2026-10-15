@@ -27,8 +27,9 @@ understanding of the project before starting to work.
    `docs/CODE_DESIGN_PRINCIPLES.md` §9.
 2. **Godot first, always.** Write our own solution only when Godot cannot
    do it natively, and say why (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
-3. **Run the review agents in `CODEREVIEW.md` before every commit or
-   push.** `docs/REVIEW.md` → "Definition of Done" owns the gate.
+3. **Run the review agents before every commit or push.** `docs/REVIEW.md`
+   → "Review agents" says which and how; "Definition of Done" owns the
+   gate.
 4. **Work autonomously.** Pause only when blocked by hardware or when a
    decision genuinely needs a human. Pick work from recent discussions with
    a human or from GitHub, and break big issues into milestones or

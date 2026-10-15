@@ -1,0 +1,1 @@
+../../.github/agents/issue-reviewer.agent.md
