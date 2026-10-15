@@ -16,7 +16,7 @@ public static class PartInfo
 
     public static UiText VelocityMotor { get; } = UiText.Plain("Turns one side round and round. The brain picks how fast and which way.");
 
-    public static UiText Stepper { get; } = UiText.Plain("A motor that turns one notch at a time and holds it.");
+    public static UiText Stepper { get; } = UiText.Plain("A motor that ticks like a clock.");
 
     public static UiText Brake { get; } = UiText.Plain("Slows its joint's turning, or holds it still when Locked.");
 

@@ -9,7 +9,7 @@ public sealed class PartParametersTests
     [Fact]
     public void EverySetting_IsBasicOrAdvanced_AsDesigned()
     {
-        // #903, #989, #1189, #1036: the split docs/BUILD_MODE.md → "Parameters" owns.
+        // #903, #989, #1189, #1296: the split docs/BUILD_MODE.md → "Parameters" owns.
         PartParameterId[] advanced =
         [
             PartParameterId.StartPosition,
@@ -19,7 +19,6 @@ public sealed class PartParametersTests
             PartParameterId.RiseTime,
             PartParameterId.Damping,
             PartParameterId.CoilLength,
-            PartParameterId.MaxFrequency,
         ];
 
         foreach (var id in Enum.GetValues<PartParameterId>())
@@ -186,8 +185,9 @@ public sealed class PartParametersTests
     }
 
     [Fact]
-    public void StepsPerTurn_RunsFrom2To24_InWholeSteps_WithTheDefaultOnAStep()
+    public void StepsPerTurn_ReadsNotches_RunsFrom2To24_InWholeSteps_WithTheDefaultOnAStep()
     {
+        PartParameters.StepsPerTurn.Slider!.Label.ShouldBe(UiText.Plain("Notches"));
         PartParameters.StepsPerTurn.Slider!.Range.ShouldBe(new SettingRange(StepperDef.MinStepsPerTurn, StepperDef.MaxStepsPerTurn, 1));
         PartParameters.StepsPerTurn.ChangesPorts.ShouldBeFalse();
         PartParameters.ValueAt(PartParameterId.StepsPerTurn, 0).ShouldBe(2);
@@ -198,15 +198,25 @@ public sealed class PartParametersTests
     }
 
     [Fact]
-    public void MaxFrequency_RunsFrom0Point2To5Hertz_InTenths_Advanced_WithTheDefaultOnAStep()
+    public void MaxFrequency_RunsFrom1To5Hertz_InTenths_Basic_WithTheDefaultOnAStep()
     {
-        PartParameters.MaxFrequency.Slider!.Range.ShouldBe(new SettingRange(0.2, 5, 0.1));
-        PartParameters.MaxFrequency.Advanced.ShouldBeTrue();
-        PartParameters.ValueAt(PartParameterId.MaxFrequency, 0).ShouldBe(0.2, tolerance: 1e-9);
+        PartParameters.MaxFrequency.Slider!.Range.ShouldBe(new SettingRange(1, 5, 0.1));
+        PartParameters.MaxFrequency.Advanced.ShouldBeFalse();
+        PartParameters.ValueAt(PartParameterId.MaxFrequency, 0).ShouldBe(1, tolerance: 1e-9);
         PartParameters.ValueAt(PartParameterId.MaxFrequency, 1).ShouldBe(5, tolerance: 1e-9);
         var slider = PartParameters.SliderOver(PartParameterId.MaxFrequency, [StepperDef.DefaultMaxFrequency]);
         slider.Readout.ShouldBe(UiText.Format("{0} Hz", new FixedNumber(2, 1)));
         PartParameters.ValueAt(PartParameterId.MaxFrequency, slider.High).ShouldBe(StepperDef.DefaultMaxFrequency, tolerance: 1e-9);
+    }
+
+    // The old slider reached 0.2 Hz (#1296): such a saved value reads as it is, at the slider's low end.
+    [Fact]
+    public void MaxFrequency_UnderTheSlider_ReadsAsSaved_AtTheLowEnd()
+    {
+        var slider = PartParameters.SliderOver(PartParameterId.MaxFrequency, [0.5]);
+
+        slider.Readout.ShouldBe(UiText.Format("{0} Hz", new FixedNumber(0.5, 1)));
+        slider.High.ShouldBe(0);
     }
 
     [Fact]

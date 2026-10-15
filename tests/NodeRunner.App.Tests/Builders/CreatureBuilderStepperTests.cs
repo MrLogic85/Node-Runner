@@ -118,7 +118,7 @@ public sealed class CreatureBuilderStepperTests
         Should.Throw<ArgumentException>(() => builder.SetStepperLink(stepper, fixedRole: true, linkId: 999));
     }
 
-    // Steps per turn is a whole number of notches, so a slider's value rounds to one.
+    // Notches (steps per turn) is a whole number, so a slider's value rounds to one.
     [Fact]
     public void AStepper_HasItsThreeSettings_AndStepsPerTurn_RoundsToAWholeNotch()
     {
@@ -136,7 +136,7 @@ public sealed class CreatureBuilderStepperTests
         builder.IsWithinBuildLimits().ShouldBeTrue();
     }
 
-    // Build's sliders: Max strength 5–200 N·m (50000–2000000 world units), Max frequency 0.2–5 Hz.
+    // Build's sliders: Max strength 5–200 N·m (50000–2000000 world units), Max frequency 1–5 Hz.
     [Theory]
     [InlineData(PartParameterId.ServoStrength, 50000.0, true)]
     [InlineData(PartParameterId.ServoStrength, 2000000.0, true)]
@@ -144,9 +144,9 @@ public sealed class CreatureBuilderStepperTests
     [InlineData(PartParameterId.ServoStrength, 2000001.0, false)]
     [InlineData(PartParameterId.StepsPerTurn, 2.0, true)]
     [InlineData(PartParameterId.StepsPerTurn, 24.0, true)]
-    [InlineData(PartParameterId.MaxFrequency, 0.2, true)]
+    [InlineData(PartParameterId.MaxFrequency, 1.0, true)]
     [InlineData(PartParameterId.MaxFrequency, 5.0, true)]
-    [InlineData(PartParameterId.MaxFrequency, 0.19, false)]
+    [InlineData(PartParameterId.MaxFrequency, 0.99, false)]
     [InlineData(PartParameterId.MaxFrequency, 5.01, false)]
     public void IsWithinBuildLimits_TakesAStepperSettingOnItsSlider(PartParameterId parameter, double value, bool within)
     {

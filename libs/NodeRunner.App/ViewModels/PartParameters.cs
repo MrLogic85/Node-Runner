@@ -177,10 +177,12 @@ public static class PartParameters
         PartParameterId.BrakeStrength, MultiEditable: true, new(UiText.Plain("Strength"), UiText.Plain("How hard it holds the joint still. Locked holds it fully."), new(20, _lockedBrakeStep, 20), 0, "{0} N·m", "{0}–{1} N·m", BrakeNewtonMetres, BrakeTorque, new TopStep(UiText.Plain("Locked"), "{0} N·m–Locked")), Advanced: false);
 
     public static PartParameter StepsPerTurn { get; } = new(
-        PartParameterId.StepsPerTurn, MultiEditable: true, new(UiText.Plain("Steps per turn"), UiText.Plain("How many notches make a full turn"), new(StepperDef.MinStepsPerTurn, StepperDef.MaxStepsPerTurn, 1), 0, "{0}", "{0}–{1}", value => value, value => value), Advanced: false);
+        PartParameterId.StepsPerTurn, MultiEditable: true, new(UiText.Plain("Notches"), UiText.Plain("How many notches make a full turn"), new(StepperDef.MinStepsPerTurn, StepperDef.MaxStepsPerTurn, 1), 0, "{0}", "{0}–{1}", value => value, value => value), Advanced: false);
 
+    // Starts at 1 Hz: slower stepping comes from the brain's Frequency output near 0, down to a stop (#1263, #1296).
+    // A saved value under 1 Hz still loads and reads as it is.
     public static PartParameter MaxFrequency { get; } = new(
-        PartParameterId.MaxFrequency, MultiEditable: true, new(UiText.Plain("Max frequency"), UiText.Plain("The most steps it takes each second"), new(0.2, 5, 0.1), 1, "{0} Hz", "{0}–{1} Hz", value => value, value => value), Advanced: true);
+        PartParameterId.MaxFrequency, MultiEditable: true, new(UiText.Plain("Max frequency"), UiText.Plain("The most steps it takes each second"), new(1, 5, 0.1), 1, "{0} Hz", "{0}–{1} Hz", value => value, value => value), Advanced: false);
 
     public static PartParameter Stroke { get; } = new(
         PartParameterId.Stroke, MultiEditable: true, new(UiText.Plain("Stroke"), UiText.Plain("How far it moves in and out"), new(10, PistonDef.MaxStroke * 100, 5), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: false);

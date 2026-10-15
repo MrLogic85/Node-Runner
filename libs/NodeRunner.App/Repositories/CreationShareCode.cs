@@ -125,7 +125,7 @@ public static class CreationShareCode
             return ShareCodeRead.Refused(ShareCodeRefusal.NothingToBuild);
         }
 
-        // Only a code changed by hand gives a name that fits to nothing or a build Build could not make.
+        // A code changed by hand, or made before a slider narrowed, can give a name that fits to nothing or a build Build could not make.
         var name = NameLimits.Fit(creation.Name, NameLimits.Creation);
         return name.Length == 0 || !new CreatureBuilder(creation.Creature).IsWithinBuildLimits()
             ? ShareCodeRead.Refused(ShareCodeRefusal.Damaged)

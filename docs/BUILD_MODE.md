@@ -394,8 +394,8 @@ panel shows it (`InPanel`). Each kind lists its own
 
 Each parameter is basic or `Advanced` for every part that has it (#903):
 Start position, the Piston's and the Servo's Max speed, Rise time, Damping,
-Coil length (#989) and a Stepper's Max frequency (#1036) are advanced. A Motor is all about speed, so its own
-Max speed is basic (#1189). The panel shows Name, the basic sliders and any other controls,
+Coil length (#989) are advanced. A Motor is all about speed, so its own
+Max speed is basic (#1189), and a Stepper has no advanced settings (#1296). The panel shows Name, the basic sliders and any other controls,
 like a joint motor's link pickers, then a closed Advanced section with the rest, left out when there
 is none, then the part's note. The section stays open or closed across selections
 until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
@@ -429,9 +429,12 @@ until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
   position, since it turns round and round. Its note: "Turns one side round
   and round. The brain picks how fast and which way."
 - **Stepper (#1036):** Max strength (the Servo's setting, so it edits
-  together with a selected Servo's), Steps per turn (2–24, step 1) and Max frequency (0.2–5.0 Hz, step 0.1),
-  and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "A motor that turns
-  one notch at a time and holds it."
+  together with a selected Servo's), Notches (2–24, step 1) and Max
+  frequency (1.0–5.0 Hz, step 0.1; it starts at 1 Hz, since the brain's Frequency output near 0 slows it
+  down to a stop, #1296; an older saved value under 1 Hz loads and reads as it is, but a share code with
+  one is refused, like any setting off its slider),
+  and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "A motor that ticks
+  like a clock."
 - **Brake (#1041):** Strength (20–400 N·m, step 20, then a last step that
   reads "Locked", an endless Strength; a span up to it reads "60 N·m–Locked"),
   and the Servo's "Fixed part" and "Target part" pickers, Wheel included. Its note: "Slows its

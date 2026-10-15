@@ -45,7 +45,7 @@ msgid "A beam must connect two different joints."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "A motor that turns one notch at a time and holds it."
+msgid "A motor that ticks like a clock."
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -673,6 +673,10 @@ msgstr ""
 msgid "Not trained yet. Tap to build."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartParameters.cs
+msgid "Notches"
+msgstr ""
+
 #: project/scenes/ui/UiStageCard.tscn
 msgid "Note about stage"
 msgstr ""
@@ -1041,10 +1045,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.Steppers.cs
 msgid "Steppers go on a joint"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartParameters.cs
-msgid "Steps per turn"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

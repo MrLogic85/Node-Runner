@@ -98,8 +98,8 @@ public sealed class BuildStepperTests
         part.Kind.ShouldBe(PartKind.Stepper);
         part.Title.ShouldBe(UiText.Plain("Stepper"));
         part.Note.ShouldBe(PartInfo.Stepper);
-        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.ServoStrength, PartParameterId.StepsPerTurn]);
-        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.MaxFrequency]);
+        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.ServoStrength, PartParameterId.StepsPerTurn, PartParameterId.MaxFrequency]);
+        part.AdvancedSettings.ShouldBeEmpty();
         part.Pickers!.Select(picker => (picker.Label, picker.SelectedIndex)).ShouldBe(
         [
             (UiText.Plain("Fixed part"), 0),
