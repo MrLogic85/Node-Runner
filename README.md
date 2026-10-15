@@ -91,7 +91,7 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 | Tools to install | `README.md` → "Tools" |
 | How a change lands, review agents, hooks | [`docs/REVIEW.md`](docs/REVIEW.md) |
 | What each review agent checks | [`.github/agents/`](.github/agents/) |
-| Procedures (skills): `start-issue`, `create-issue`, `review-issue`, `review-change`, `ship-pr`, `write-docs` | [`.claude/skills/`](.claude/skills/) |
+| Procedures (skills): `start-issue`, `create-issue`, `review-issue`, `review-change`, `ship-pr`, `write-docs`, `plan-manual-tests`, `desktop-check`, `android-check` | [`.claude/skills/`](.claude/skills/) |
 | Releasing | [`docs/RELEASING.md`](docs/RELEASING.md) |
 
 ## Contributing

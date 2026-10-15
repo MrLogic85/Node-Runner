@@ -72,6 +72,9 @@ check needs subjective judgement, such as touch or animation feel, or its
 runtime is missing, the agent records the missing prerequisite and leaves
 the check to the human; it never reports such a check as passed.
 
+An agent writes the plan with the `plan-manual-tests` skill and runs it
+with the `desktop-check` and `android-check` skills.
+
 ## Desktop checks
 
 Desktop is the first target because it is fast and close to the editor.

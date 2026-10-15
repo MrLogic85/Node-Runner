@@ -37,7 +37,7 @@ understanding of the project before starting to work.
    sub-issues.
 5. **Prefer physical devices for Android checks.** Ask first whether they
    are free, and stop any emulator you start (`docs/MANUAL_TESTING.md` →
-   "Android checks").
+   "Android checks"). Run them with the `android-check` skill.
 6. **Record work and decisions on GitHub.** File new work, bugs and
    decisions as issues, including improvements spotted along the way,
    with the `create-issue` skill, and review broad, risky or ambiguous

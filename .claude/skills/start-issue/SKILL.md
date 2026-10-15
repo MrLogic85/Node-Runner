@@ -39,4 +39,6 @@ what to do about it. Read `LOCAL_CONFIG.md` first for the `gh` login.
    - `.github/scripts/issue-fields.sh N --status "In progress"`.
    - `git pull --ff-only`, then branch with the name in `docs/REVIEW.md`
      → "TL;DR".
-4. Implement, then run the `review-change` skill and the `ship-pr` skill.
+4. Implement; if the issue has no manual testing decision, make one with
+   the `plan-manual-tests` skill. Then run the `review-change` skill and
+   the `ship-pr` skill.
