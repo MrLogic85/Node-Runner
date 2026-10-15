@@ -142,7 +142,7 @@ public sealed class PartTrayTests
             (BuildPart.Camera, null),
             (BuildPart.TouchSensor, null),
             (BuildPart.AngleSensor, null),
-            (BuildPart.Pulse, "0.14.4"),
+            (BuildPart.Pulse, "0.14.5"),
             (BuildPart.Battery, "0.18.0"),
             (BuildPart.Generator, "0.18.0"),
             (BuildPart.FuelTank, "0.18.0"),
@@ -158,7 +158,7 @@ public sealed class PartTrayTests
     [Fact]
     public void ATapOnAComingLaterRow_NamesThePartAndItsVersion()
     {
-        PartTray.ComingLaterReason(BuildPart.Pulse).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Pulse"), "0.14.4"));
+        PartTray.ComingLaterReason(BuildPart.Pulse).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Pulse"), "0.14.5"));
         PartTray.ComingLaterReason(BuildPart.Battery).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Battery"), "0.18.0"));
         BuildLinkList.ComingLaterReason(BuildLink.Wing).ShouldBe(UiText.Format("{0} comes in version {1}", UiText.Plain("Wing"), "0.18.0"));
         Should.Throw<ArgumentOutOfRangeException>(() => PartTray.ComingLaterReason(BuildPart.Servo));
