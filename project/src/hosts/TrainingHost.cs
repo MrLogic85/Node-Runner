@@ -460,7 +460,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private bool FollowedCrashed => _evolver?.FollowedTrialCrashed ?? _playback is { IsRunning: true, IsFrozen: true };
 
     // The crash flag stands where the followed run's distance froze (#1257), one row under the best
-    // flag, so the height labels keep clear of that row while it shows.
+    // flag, so the height scale is cut off below that row while it shows.
     private void ShowCrash()
     {
         var distance = FollowedDistance;
@@ -469,7 +469,7 @@ public partial class TrainingHost : Node, IRoutedScene
         KeepScaleClear(crashed);
     }
 
-    // The height labels stop above the lowest flag showing and the slow-motion chip.
+    // The height scale is cut off below the lowest flag showing and the slow-motion chip.
     private void KeepScaleClear(bool crashed)
     {
         var topClear = Math.Max((crashed ? CrashMarker : BestMarker).FlagBottom, _screen.SlowMotionChipBottom);

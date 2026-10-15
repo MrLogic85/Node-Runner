@@ -11,11 +11,12 @@ namespace NodeRunner.Ui.Widgets;
 /// The line runs along the node's origin, as wide as the world zooms it; the pixel pen feathers it,
 /// so a thin line does not flicker between pixel rows (#1173). The distance scale runs along the
 /// view's bottom edge, its ticks rising from the edge and labels above them; the height scale runs
-/// up the left edge from the ground's top (0 m), its ticks reaching in and labels sitting on them, and
-/// stops above the distance scale's band, so the corner stays clear. Both share one label step, so
-/// a metre reads the same either way. It draws only what the camera shows, and the distance labels
-/// half a label past it, so they slide in and out under the view's sides (#1191); it redraws when
-/// the view moves. Ticks and labels keep their screen size at any zoom; every metre is labelled, or
+/// up the left edge from the ground's top (0 m), its ticks reaching in and labels sitting on them.
+/// The height scale is cut off at the distance scale's band and below <see cref="TopClear"/>, as the
+/// distance labels are at the view's sides, rather than faded, so a label never blinks as the view
+/// shakes (#1302). Both share one label step, so a metre reads the same either way. It draws only
+/// what the camera shows, and the distance labels half a label past it, so they slide in and out
+/// under the view's sides (#1191); it redraws when the view moves. Ticks and labels keep their screen size at any zoom; every metre is labelled, or
 /// every 2, 5, 10, … when labels would overlap (#675), and from 5 m between labels the ticks thin
 /// out with them (#884).
 /// </summary>
@@ -29,10 +30,6 @@ public partial class ArenaRuler : Node2D
     // Clear space above the distance labels, inside the band the camera keeps the ground out of.
     private const float _bandPadding = UiSize.Space.S1;
 
-    // A height label fades out over this distance as it nears the top clearance or the distance
-    // band, so none shows cut in half or runs under them.
-    private const float _labelFade = UiSize.Space.S4;
-
     // The least clear space between two labels, on screen.
     private const float _labelSpacing = UiSize.Space.S4;
 
@@ -43,6 +40,11 @@ public partial class ArenaRuler : Node2D
 
     private readonly List<RulerMark> _marks = [];
     private readonly List<RulerMark> _heightMarks = [];
+
+    // Draws the height scale, clipped to the room it may use, so the ground line and distance scale
+    // stay whole. A scissor rect, as Control.ClipContents sets, not clip_children: that would need a
+    // drawn mask and an extra buffer, and the ruler draws in the world, not as a laid-out Control.
+    private readonly Node2D _heightScale = new() { Name = "HeightScale" };
     private VisualTheme _theme = VisualTheme.Neon;
     private double _startX;
     private Rect2 _drawnView;
@@ -56,7 +58,7 @@ public partial class ArenaRuler : Node2D
         set
         {
             _theme = value;
-            QueueRedraw();
+            Redraw();
         }
     }
 
@@ -67,15 +69,21 @@ public partial class ArenaRuler : Node2D
         set
         {
             _startX = value;
-            QueueRedraw();
+            Redraw();
         }
+    }
+
+    public override void _Ready()
+    {
+        _heightScale.Draw += DrawHeightScale;
+        AddChild(_heightScale, @internal: InternalMode.Front);
     }
 
     public override void _Notification(int what)
     {
         if (what == NotificationTranslationChanged)
         {
-            QueueRedraw();
+            Redraw();
         }
     }
 
@@ -85,12 +93,12 @@ public partial class ArenaRuler : Node2D
         if (view != _drawnView)
         {
             _drawnView = view;
-            QueueRedraw();
+            Redraw();
         }
     }
 
     /// <summary>
-    /// How far down from the view's top the height labels keep clear, in UI units, for what the
+    /// How far down from the view's top the height scale is cut off, in UI units, for what the
     /// arena shows along its top, such as the slow-motion chip and the best flag.
     /// </summary>
     public float TopClear
@@ -99,7 +107,7 @@ public partial class ArenaRuler : Node2D
         set
         {
             _topClear = value;
-            QueueRedraw();
+            Redraw();
         }
     }
 
@@ -118,11 +126,7 @@ public partial class ArenaRuler : Node2D
 
     public override void _Draw()
     {
-        var view = VisibleArea();
-        // World units per UI unit: the arena view undoes the UI size (#738), so this applies it again.
-        var screenScale = view.Size.X / GetViewportRect().Size.X * UiScale.FactorOf(this);
-        var metresPerLabel = MetresPerLabel(view, screenScale);
-        var bandTop = view.End.Y - (BandHeight() * screenScale);
+        var (view, screenScale, metresPerLabel) = Measure();
         using (var pen = UiPixelPen.Begin(this))
         {
             pen.Line(new Vector2(view.Position.X, 0), new Vector2(view.End.X, 0), _theme.GroundEdge, _theme.GroundEdgeWidth);
@@ -134,13 +138,6 @@ public partial class ArenaRuler : Node2D
                 var x = (float)mark.X;
                 pen.Line(new Vector2(x, view.End.Y), new Vector2(x, view.End.Y - (TickLength(mark) * screenScale)), _theme.RulerTick, _theme.RulerTickWidth * screenScale);
             }
-
-            DistanceRuler.FillHeights(-bandTop, -view.Position.Y, metresPerLabel, _heightMarks);
-            foreach (var mark in _heightMarks)
-            {
-                var y = -(float)mark.X;
-                pen.Line(new Vector2(view.Position.X, y), new Vector2(view.Position.X + (TickLength(mark) * screenScale), y), _theme.RulerTick, _theme.RulerTickWidth * screenScale);
-            }
         }
 
         foreach (var mark in _marks)
@@ -148,12 +145,53 @@ public partial class ArenaRuler : Node2D
             DrawDistanceLabel(mark, view, screenScale);
         }
 
-        foreach (var mark in _heightMarks)
+        DrawSetTransformMatrix(Transform2D.Identity);
+    }
+
+    // Cut off at the distance scale's band and below the top clearance, with the gap the labels
+    // keep from it.
+    private void DrawHeightScale()
+    {
+        var (view, screenScale, metresPerLabel) = Measure();
+        var bandTop = view.End.Y - (BandHeight() * screenScale);
+        var clearTop = view.Position.Y + ((_topClear + _tickToLabel) * screenScale);
+        var room = new Rect2(view.Position.X, clearTop, view.Size.X, Mathf.Max(0f, bandTop - clearTop));
+        RenderingServer.CanvasItemSetCustomRect(_heightScale.GetCanvasItem(), true, room);
+        RenderingServer.CanvasItemSetClip(_heightScale.GetCanvasItem(), true);
+
+        var labelReach = (_tickToLabel + _theme.RulerFont.GetAscent(_theme.RulerFontSize)) * screenScale;
+        DistanceRuler.FillHeights(-bandTop, labelReach, -clearTop, metresPerLabel, _heightMarks);
+        using (var pen = UiPixelPen.Begin(_heightScale))
         {
-            DrawHeightLabel(mark, view, bandTop, screenScale);
+            foreach (var mark in _heightMarks)
+            {
+                var y = -(float)mark.X;
+                pen.Line(new Vector2(view.Position.X, y), new Vector2(view.Position.X + (TickLength(mark) * screenScale), y), _theme.RulerTick, _theme.RulerTickWidth * screenScale);
+            }
         }
 
-        DrawSetTransformMatrix(Transform2D.Identity);
+        foreach (var mark in _heightMarks)
+        {
+            DrawHeightLabel(mark, view, screenScale);
+        }
+
+        _heightScale.DrawSetTransformMatrix(Transform2D.Identity);
+    }
+
+    // Both scales redraw together, so they never stand a frame apart.
+    private void Redraw()
+    {
+        QueueRedraw();
+        _heightScale.QueueRedraw();
+    }
+
+    // What the camera shows, world units per UI unit (the arena view undoes the UI size, #738, so
+    // this applies it again) and the label step. Both scales measure it as they draw.
+    private (Rect2 View, float ScreenScale, int MetresPerLabel) Measure()
+    {
+        var view = VisibleArea();
+        var screenScale = view.Size.X / GetViewportRect().Size.X * UiScale.FactorOf(this);
+        return (view, screenScale, MetresPerLabel(view, screenScale));
     }
 
     // Tick, gap, a line of text and clear space above it, in UI units.
@@ -186,13 +224,12 @@ public partial class ArenaRuler : Node2D
         var width = _theme.RulerFont.GetStringSize(label, HorizontalAlignment.Left, -1, _theme.RulerFontSize).X;
         var left = (float)mark.X - (width * screenScale / 2);
         var baseline = view.End.Y - ((_majorTickLength + _tickToLabel + _theme.RulerFont.GetDescent(_theme.RulerFontSize)) * screenScale);
-        DrawLabel(label, new Vector2(left, baseline), 1f, screenScale);
+        DrawLabel(this, label, new Vector2(left, baseline), screenScale);
     }
 
     // The label sits on its tick's line, just above it, so 0 m reads above the ground line rather
-    // than struck through by it. It stays whole until its baseline reaches the distance scale's
-    // band, so 0 m on a ground the shelf lowered onto the band still reads, then fades into it.
-    private void DrawHeightLabel(RulerMark mark, Rect2 view, float bandTop, float screenScale)
+    // than struck through by it.
+    private void DrawHeightLabel(RulerMark mark, Rect2 view, float screenScale)
     {
         if (mark.LabelMetre is not { } metre)
         {
@@ -200,31 +237,22 @@ public partial class ArenaRuler : Node2D
         }
 
         var baseline = -(float)mark.X - (_tickToLabel * screenScale);
-        var top = baseline - (_theme.RulerFont.GetAscent(_theme.RulerFontSize) * screenScale);
-        var room = Mathf.Min(
-            (top - (view.Position.Y + ((_topClear + _tickToLabel) * screenScale))) / screenScale,
-            ((bandTop - baseline) / screenScale) + _labelFade);
         var left = view.Position.X + ((_majorTickLength + _tickToLabel) * screenScale);
-        DrawLabel(Label(metre), new Vector2(left, baseline), Mathf.Clamp(room / _labelFade, 0f, 1f), screenScale);
+        DrawLabel(_heightScale, Label(metre), new Vector2(left, baseline), screenScale);
     }
 
     // Drawn at screen size, scaled back up by as much as the camera zooms out.
-    private void DrawLabel(string label, Vector2 baselineLeft, float fade, float screenScale)
+    private void DrawLabel(CanvasItem canvas, string label, Vector2 baselineLeft, float screenScale)
     {
-        if (fade <= 0f)
-        {
-            return;
-        }
-
-        DrawSetTransform(baselineLeft, 0f, new Vector2(screenScale, screenScale));
-        DrawString(
+        canvas.DrawSetTransform(baselineLeft, 0f, new Vector2(screenScale, screenScale));
+        canvas.DrawString(
             _theme.RulerFont,
             Vector2.Zero,
             label,
             HorizontalAlignment.Left,
             -1,
             _theme.RulerFontSize,
-            _theme.RulerLabel with { A = _theme.RulerLabel.A * fade });
+            _theme.RulerLabel);
     }
 
     private static string Label(long metre) => UiTextTranslation.Source(DistanceRuler.Label(metre))!();
