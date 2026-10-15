@@ -120,7 +120,8 @@ in its own format and finding levels.
 
 - Each agent is one `.github/agents/<name>.agent.md`; `.claude/agents/`
   holds a relative symlink `<name>.md` to it, so both tools load the same
-  file (#1314). Neither folder holds anything else.
+  file (#1314). Neither folder holds anything else, apart from git-ignored
+  `local_*` agents (`AGENTS.md` → "Machine-local setup").
 - The frontmatter has only `name` (the file's `<name>`), a one-line
   `description`, `tools` and `hooks`; a reviewer (`*-reviewer`) has
   `tools: Read, Grep, Glob, Bash`, and no agent sets `model`. A value

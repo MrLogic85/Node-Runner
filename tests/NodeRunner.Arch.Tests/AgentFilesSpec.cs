@@ -63,12 +63,24 @@ public sealed class AgentFilesSpec : IDisposable
         problems.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Fixture_WithLocalAgents_SkipsThem()
+    {
+        File.WriteAllText(Path.Combine(AgentsDirectory, "local_device.agent.md"), "No frontmatter.\n");
+        File.CreateSymbolicLink(Path.Combine(LinksDirectory, "local_device.md"), "../../.github/agents/local_device.agent.md");
+
+        var problems = AgentFiles.Problems(_root);
+
+        problems.ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("missing link", $".claude/agents/{_reviewer}.md: missing")]
     [InlineData("copied file", $".claude/agents/{_reviewer}.md: a copy, not a symlink")]
     [InlineData("absolute link", $".claude/agents/{_reviewer}.md: links to /")]
     [InlineData("stray link", ".claude/agents/old-reviewer.md: no matching")]
     [InlineData("stray file in links", ".claude/agents/notes.txt: no matching")]
+    [InlineData("near-miss local name", ".claude/agents/localnotes.md: no matching")]
     [InlineData("no agents folder", ".github/agents: missing")]
     [InlineData("wrong suffix", ".github/agents/notes.md: holds only agent files")]
     [InlineData("folder in agents", ".github/agents/old.agent.md: holds only agent files")]
@@ -115,6 +127,9 @@ public sealed class AgentFilesSpec : IDisposable
                 break;
             case "stray file in links":
                 File.WriteAllText(Path.Combine(LinksDirectory, "notes.txt"), "Notes.\n");
+                break;
+            case "near-miss local name":
+                File.WriteAllText(Path.Combine(LinksDirectory, "localnotes.md"), "Notes.\n");
                 break;
             case "no agents folder":
                 Directory.Delete(AgentsDirectory, recursive: true);

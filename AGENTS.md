@@ -66,3 +66,10 @@ before editing there.
 GitHub CLI accounts, SSH host aliases and paths. Read it before running
 `gh`, `git push` or anything that touches an external account; the primary
 `gh` login is not necessarily the one with write access to this repo.
+
+Skills, agents, rules and hook scripts named `local_*`, and
+`.claude/settings.local.json`, are git-ignored too (`.gitignore` lists the
+folders). Both tools load the local skills, agents and rules, and run the
+hooks that `settings.local.json` registers. Use them for one machine's
+procedures, such as a test device's lock; committed instructions never
+require one to exist.

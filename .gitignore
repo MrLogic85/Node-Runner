@@ -38,6 +38,13 @@ coverage.*.xml
 # Local env
 .env
 /LOCAL_CONFIG.md
+/.claude/settings.local.json
+# Machine-local agent files (AGENTS.md → "Machine-local setup")
+/.claude/skills/local_*/
+/.claude/rules/local_*
+/.claude/hooks/local_*
+/.claude/agents/local_*
+/.github/agents/local_*
 
 # Editor tooling
 .npp-md-preview.html

@@ -10,6 +10,9 @@ internal static class AgentFiles
     internal const string ReviewerTools = "Read, Grep, Glob, Bash";
 
     private const string _agentSuffix = ".agent.md";
+
+    /// <summary>Git-ignored machine-local agents: AGENTS.md → "Machine-local setup" (#1342).</summary>
+    private const string _localPrefix = "local_";
     private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks"];
 
     /// <summary>Every broken rule under <paramref name="root"/>, each naming its file.</summary>
@@ -27,6 +30,11 @@ internal static class AgentFiles
         foreach (var path in Directory.EnumerateFileSystemEntries(agents).Order(StringComparer.Ordinal))
         {
             var file = Path.GetFileName(path);
+            if (file.StartsWith(_localPrefix, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             if (!file.EndsWith(_agentSuffix, StringComparison.Ordinal) || Directory.Exists(path))
             {
                 problems.Add($".github/agents/{file}: holds only agent files ending in {_agentSuffix}.");
@@ -44,7 +52,8 @@ internal static class AgentFiles
             foreach (var path in Directory.EnumerateFileSystemEntries(links).Order(StringComparer.Ordinal))
             {
                 var file = Path.GetFileName(path);
-                if (!file.EndsWith(".md", StringComparison.Ordinal) || !names.Contains(file[..^".md".Length]))
+                if (!file.StartsWith(_localPrefix, StringComparison.Ordinal)
+                    && (!file.EndsWith(".md", StringComparison.Ordinal) || !names.Contains(file[..^".md".Length])))
                 {
                     problems.Add($".claude/agents/{file}: no matching .github/agents/*{_agentSuffix}.");
                 }
