@@ -84,6 +84,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Creature element selection** — A selected joint, beam, sensor or link: a
   `CreatureElementKind` plus the part's stable id (#220). A selection holds
   any mix of them as a `PartSet` (#704), in every tool (#803).
+- **Cushion** — The band a Touch sensor feels in, 5 units outside its
+  joint (`TouchSensorDef.Cushion`), drawn as a ring. See:
+  `docs/CREATURE_MODEL.md` → "Touch sensor".
 - **Fixed / Target** — The two sides a hinge part uses: Fixed is
   the reference, and Target turns against it, driven by a joint motor or
   resisted by a Brake, or read by an Angle sensor. Each is a link, or the Wheel on its joint as a one-sided link
@@ -131,6 +134,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   brain ports.
 - **Servo** — A powered joint part (#452) that holds one link as Fixed and
   turns another as Target.
+- **Skin** — A Rubber's band, 3 units outside its joint (`RubberDef.Skin`);
+  only drawn, no collider. See: `docs/CREATURE_MODEL.md` → "Rubber".
 - **Spring** — A passive link (#453) that pulls back toward its rest length;
   no brain ports.
 - **Stepper** — A powered joint part (#455, #1036) that holds its joint in
