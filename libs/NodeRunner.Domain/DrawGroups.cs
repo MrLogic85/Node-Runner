@@ -6,7 +6,7 @@ namespace NodeRunner.Domain;
 /// never changes while it moves. Each link is a group; the link whose lower end (larger y) sits
 /// highest draws first, so what is lower on screen is nearer, and ties keep link id order. A
 /// joint's <see cref="DrawSlot.Under"/> parts draw with its first link and its
-/// <see cref="DrawSlot.Over"/> parts with its last, so each part draws once. A touch hits the part
+/// <see cref="DrawSlot.Band"/> and <see cref="DrawSlot.Over"/> parts with its last, so each part draws once. A touch hits the part
 /// drawn on top (<see cref="PartAt"/>), ranked by <see cref="Rank"/> as the drawing ranks it.
 /// </summary>
 public sealed class DrawGroups
@@ -14,8 +14,8 @@ public sealed class DrawGroups
     /// <summary>The most draw groups a surface keeps apart; later links share the last group.</summary>
     public const int MaxGroups = 250;
 
-    /// <summary>How many ranks one surface has: every slot of every group, then the joints joined to no link.</summary>
-    public const int SurfaceRanks = (MaxGroups * DrawSlots.Count) + 1;
+    /// <summary>How many ranks one surface has: every slot of every group, then every slot of the joints joined to no link.</summary>
+    public const int SurfaceRanks = (MaxGroups + 1) * DrawSlots.Count;
 
     private readonly Dictionary<int, int> _links;
     private readonly Dictionary<int, (int First, int Last)> _joints = [];
@@ -42,14 +42,13 @@ public sealed class DrawGroups
 
     /// <summary>
     /// Where a part in <paramref name="slot"/> of draw <paramref name="group"/> sits on its surface,
-    /// back to front from 0: joints joined to no link (no group) over every group. A part on the
-    /// selected surface (<paramref name="selected"/>) ranks <see cref="SurfaceRanks"/> higher.
+    /// back to front from 0: joints joined to no link (no group) form one more group, over every
+    /// other, with slots of their own. A part on the selected surface (<paramref name="selected"/>)
+    /// ranks <see cref="SurfaceRanks"/> higher.
     /// </summary>
     public static int Rank(DrawSlot slot, int? group, bool selected)
     {
-        var onSurface = group is { } index
-            ? (Math.Clamp(index, 0, MaxGroups - 1) * DrawSlots.Count) + (int)slot
-            : MaxGroups * DrawSlots.Count;
+        var onSurface = ((group is { } index ? Math.Clamp(index, 0, MaxGroups - 1) : MaxGroups) * DrawSlots.Count) + (int)slot;
         return selected ? SurfaceRanks + onSurface : onSurface;
     }
 

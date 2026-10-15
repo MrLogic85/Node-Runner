@@ -20,6 +20,7 @@ public partial class PartVisual : Node2D
     private bool _selected;
     private bool _raised;
     private int? _group;
+    private readonly List<(Node2D Layer, DrawSlot Slot, int? Group)> _slotLayers = [];
 
     public PartVisual()
     {
@@ -48,15 +49,41 @@ public partial class PartVisual : Node2D
     public void Place(DrawGroups groups, int ownerId, bool raised)
     {
         ArgumentNullException.ThrowIfNull(groups);
-        _group = _slot switch
+        _group = _slot is { } own ? GroupOf(groups, ownerId, own) : null;
+        for (var i = 0; i < _slotLayers.Count; i++)
         {
-            DrawSlot.Link or DrawSlot.Sensor => groups.Link(ownerId),
-            { } slot => groups.Joint(ownerId, slot),
-            null => null,
-        };
+            _slotLayers[i] = _slotLayers[i] with { Group = GroupOf(groups, ownerId, _slotLayers[i].Slot) };
+        }
+
         _raised = raised;
         ApplyLayer();
     }
+
+    /// <summary>
+    /// Adds a child for a part that draws in a second <see cref="DrawSlot"/> as well as its own, such
+    /// as a joint's bands under the hinge part on it (#1269). The child keeps to
+    /// <paramref name="slot"/> of the part's draw group, and rises with the part to the selected
+    /// surface. The part draws on it from the child's <c>Draw</c> signal.
+    /// </summary>
+    protected Node2D AddSlotLayer(DrawSlot slot, string name)
+    {
+        if (_slot is null)
+        {
+            throw new InvalidOperationException("Only a part in a draw group has slots to draw in.");
+        }
+
+        var layer = new Node2D { Name = name };
+        _slotLayers.Add((layer, slot, null));
+        AddChild(layer);
+        ApplyLayer();
+        return layer;
+    }
+
+    private static int? GroupOf(DrawGroups groups, int ownerId, DrawSlot slot) => slot switch
+    {
+        DrawSlot.Link or DrawSlot.Sensor => groups.Link(ownerId),
+        _ => groups.Joint(ownerId, slot),
+    };
 
     public VisualTheme Theme
     {
@@ -80,8 +107,16 @@ public partial class PartVisual : Node2D
         }
     }
 
-    private void ApplyLayer() =>
-        ZIndex = _slot is { } slot ? CreatureLayers.Of(slot, _group, _selected || _raised) : _layer;
+    private void ApplyLayer()
+    {
+        var surface = _selected || _raised;
+        ZIndex = _slot is { } own ? CreatureLayers.Of(own, _group, surface) : _layer;
+        // A child's ZIndex adds to its part's.
+        foreach (var (layer, slot, group) in _slotLayers)
+        {
+            layer.ZIndex = CreatureLayers.Of(slot, group, surface) - ZIndex;
+        }
+    }
 
     /// <summary>Sets <paramref name="field"/> and redraws when the value changes.</summary>
     protected void Change<T>(ref T field, T value)

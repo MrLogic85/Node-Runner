@@ -24,6 +24,12 @@ public sealed class DrawLayersTests
         .Select(field => (int)field.GetRawConstantValue()!)
         .ToArray();
 
+    private static readonly int[] _arenaLayers = typeof(ArenaLayers)
+        .GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(field => field.IsLiteral)
+        .Select(field => (int)field.GetRawConstantValue()!)
+        .ToArray();
+
     [Fact]
     public void Creature_layers_stack_the_selected_surface_over_the_unselected()
     {
@@ -51,33 +57,49 @@ public sealed class DrawLayersTests
     {
         CreatureLayers.Of(DrawSlot.Under, 0, selected: false).ShouldBe(CreatureLayers.Parts);
         CreatureLayers.Of(DrawSlot.Over, DrawGroups.MaxGroups - 1, selected: false).ShouldBe(CreatureLayers.LooseJoints - 1);
-        CreatureLayers.Of(DrawSlot.Over, group: null, selected: false).ShouldBe(CreatureLayers.LooseJoints);
+        CreatureLayers.Of(DrawSlot.Under, group: null, selected: false).ShouldBe(CreatureLayers.LooseJoints);
+        CreatureLayers.Of(DrawSlot.Over, group: null, selected: false).ShouldBe(CreatureLayers.SelectedUnderlays - 1);
         CreatureLayers.Of(DrawSlot.Under, 0, selected: true).ShouldBe(CreatureLayers.SelectedParts);
-        CreatureLayers.Of(DrawSlot.Over, group: null, selected: true).ShouldBe(CreatureLayers.SelectedLooseJoints);
+        CreatureLayers.Of(DrawSlot.Under, group: null, selected: true).ShouldBe(CreatureLayers.SelectedLooseJoints);
+        CreatureLayers.Of(DrawSlot.Over, group: null, selected: true).ShouldBe(CreatureLayers.Overlays - 1);
         CreatureLayers.Of(DrawSlot.Link, 3, selected: true).ShouldBe(CreatureLayers.Of(DrawSlot.Link, 3, selected: false) + CreatureLayers.SelectedParts - CreatureLayers.Parts);
     }
 
-    // A joint's ring, Touch cushion and Rubber skin share DrawSlot.Over with the hinge part on it, so
-    // the scene tree orders them: the joints come first, and the part covers the cushion's inner edge.
+    // #1269: a joint's bands draw under its ring and the hinge part on it, by layer, not by the
+    // order the parts are made in, on either surface and for a joint joined to no link too.
     [Theory]
-    [InlineData("ui/widgets/CreatureParts.cs", "shape", "ShowJoints", "ShowServos", "ShowVelocityMotors", "ShowBrakes", "ShowSteppers", "ShowAngleSensors")]
-    [InlineData("creature/Creature.cs", "definition", "CreateNodes", "CreateServos", "CreateVelocityMotors", "CreateBrakes", "CreateSteppers", "CreateAngleSensors")]
-    public void Joints_are_made_before_the_hinge_parts_that_draw_over_them(string path, string argument, string joints, params string[] hingeParts)
+    [InlineData(0, false)]
+    [InlineData(DrawGroups.MaxGroups - 1, true)]
+    [InlineData(null, false)]
+    [InlineData(null, true)]
+    public void A_joints_bands_draw_over_its_links_and_under_its_ring_and_hinge_part(int? group, bool selected)
     {
-        var text = CSharpSources.Project.Single(source => source.Path == path).Tree.GetRoot().ToFullString();
-        var jointsAt = text.IndexOf($"{joints}({argument}", StringComparison.Ordinal);
+        CreatureLayers.Of(DrawSlot.Band, group, selected).ShouldBeGreaterThan(CreatureLayers.Of(DrawSlot.Sensor, group, selected));
+        CreatureLayers.Of(DrawSlot.Band, group, selected).ShouldBeLessThan(CreatureLayers.Of(DrawSlot.Over, group, selected));
+    }
 
-        jointsAt.ShouldBeGreaterThanOrEqualTo(0);
-        foreach (var hingePart in hingeParts)
-        {
-            text.IndexOf($"{hingePart}({argument}", StringComparison.Ordinal)
-                .ShouldBeGreaterThan(jointsAt, $"{hingePart} draws over its joint's cushion only if it is made after {joints}.");
-        }
+    // The bands are a layer of their own only while JointPart draws them on its Band child, not in
+    // its own _Draw, where the hinge part's slot is.
+    [Fact]
+    public void A_joint_draws_its_bands_and_their_marks_on_its_band_layer()
+    {
+        var joint = CSharpSources.Project.Single(source => source.Path == "theme/JointPart.cs").Tree.GetRoot()
+            .DescendantNodes().OfType<ClassDeclarationSyntax>().Single(type => type.Identifier.Text == nameof(JointPart));
+        var draw = joint.Members.OfType<MethodDeclarationSyntax>().Single(method => method.Identifier.Text == "_Draw");
+        var bandState = new[] { nameof(JointPart.Cushion), nameof(JointPart.Touch), nameof(JointPart.TouchSelected), nameof(JointPart.Skin), nameof(JointPart.SkinSelected), nameof(JointPart.WheelSelected), nameof(JointPart.Placing), nameof(JointPart.PlacingRadius) };
+
+        draw.DescendantNodes().OfType<IdentifierNameSyntax>().Select(name => name.Identifier.Text).Intersect(bandState)
+            .ShouldBeEmpty("The cushion, skin and the marks round the joint draw on its DrawSlot.Band layer, under the hinge part.");
+        joint.Members.OfType<ConstructorDeclarationSyntax>().Single().DescendantNodes().OfType<InvocationExpressionSyntax>()
+            .ShouldContain(call => call.Expression.ToString() == "AddSlotLayer" && call.ArgumentList.Arguments[0].ToString() == "DrawSlot.Band");
     }
 
     [Fact]
-    public void Every_drawn_layer_stays_within_godots_z_range() =>
+    public void Every_drawn_layer_stays_within_godots_z_range()
+    {
+        ((long)_arenaLayers.Min()).ShouldBeGreaterThanOrEqualTo(Godot.RenderingServer.CanvasItemZMin);
         ((long)(ArenaLayers.Followed + HighestCreatureLayer)).ShouldBeLessThanOrEqualTo(Godot.RenderingServer.CanvasItemZMax);
+    }
 
     [Fact]
     public void Arena_marks_and_ground_are_under_every_creature() =>
