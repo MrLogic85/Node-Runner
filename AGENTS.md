@@ -42,6 +42,10 @@ understanding of the project before starting to work.
    review broad, risky or ambiguous issues before implementing them
    (`docs/ISSUES.md` → "Reviewing an issue").
    Don't be afraid to suggest large refactors when they would benefit the code.
+7. **Keep code and project terms in English, whatever the chat language.**
+   Talk to the human in their language, but write identifiers, part and
+   concept names (`docs/GLOSSARY.md`), file names and quoted issue text
+   exactly as they are; translating them makes them hard to recognise.
 
 ## Repository map
 
