@@ -48,6 +48,13 @@ public sealed class ShadowStripPresentation
     /// <summary>The fewest places that still page: a "worse" button, one shadow and the last button.</summary>
     public const int FewestPlaces = 3;
 
+    /// <summary>
+    /// The least distance a full bar stands for, in world units: 1 m. A leader that has only
+    /// crept a few millimetres fills only a sliver of a bar, so the bars cannot swing between full
+    /// and empty (#1270).
+    /// </summary>
+    public const double LeastScale = Metres.WorldUnitsPerMetre;
+
     // Zero-based shadows, best (top) first.
     private int[] _ranking = [];
     private int _page;
@@ -73,8 +80,9 @@ public sealed class ShadowStripPresentation
 
     /// <summary>
     /// The strip for <paramref name="shadows"/> in <paramref name="generation"/>. Bars measure each
-    /// shadow's distance against this generation's leader, whose bar is full. Not against the
-    /// best ever: that may come from a run with another trial length (owner decision). Only the
+    /// shadow's distance against this generation's leader, whose bar is full, or against
+    /// <see cref="LeastScale"/> while the leader is short of it. Not against the best ever: that
+    /// may come from a run with another trial length (owner decision). Only the
     /// followed cell is capped when <paramref name="followedCrashed"/>: up to 100 caps would be noise.
     /// </summary>
     public ShadowStripView View(IReadOnlyList<ShadowStanding> shadows, int generation, bool followedCrashed = false)
@@ -149,7 +157,7 @@ public sealed class ShadowStripPresentation
 
     private static double Scale(IReadOnlyList<ShadowStanding> shadows)
     {
-        var scale = 0.0;
+        var scale = LeastScale;
         foreach (var shadow in shadows)
         {
             if (double.IsFinite(shadow.Distance))
@@ -162,5 +170,5 @@ public sealed class ShadowStripPresentation
     }
 
     private static double Fill(double distance, double scale) =>
-        scale > 0 && double.IsFinite(distance) ? Math.Clamp(distance / scale, 0, 1) : 0;
+        double.IsFinite(distance) ? Math.Clamp(distance / scale, 0, 1) : 0;
 }

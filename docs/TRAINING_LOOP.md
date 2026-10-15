@@ -146,8 +146,11 @@ the reference's "a training session has finished" (#369).
     again (#894). The camera frames the followed shadow.
   - **Shadow strip (#387):** cells ordered worst on the left to best on the
     right. A bar is the shown distance so far against this generation's
-    leader, whose bar is full; not against the best ever, which may come
-    from another run length. Only the followed cell is marked, since the
+    leader or 1 m, whichever is farther, so the leader's bar is full once
+    it passes 1 m. A leader that has crept a few millimetres fills only a
+    sliver, so the bars do not swing between full and empty (#1270). Bars
+    are not measured against the best ever, which may come from another
+    run length. Only the followed cell is marked, since the
     lead changes too often. Once the followed run has torn, its cell gets
     a `danger` cap across the top of its bar, where its distance froze
     (#1257); other cells are not marked, as up to 100 could be. The strip has as many places as fit its width,

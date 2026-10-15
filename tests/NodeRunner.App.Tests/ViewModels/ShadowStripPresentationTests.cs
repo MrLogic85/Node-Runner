@@ -22,8 +22,18 @@ public sealed class ShadowStripPresentationTests
     {
         var strip = new ShadowStripPresentation();
 
-        strip.View(Standings(5, 2), 0).Cells.Select(cell => cell.Fill).ShouldBe([0.4, 1]);
-        strip.View(Standings(20, 5), 0).Cells.Select(cell => cell.Fill).ShouldBe([0.25, 1]);
+        strip.View(Standings(5 * _metre, 2 * _metre), 0).Cells.Select(cell => cell.Fill).ShouldBe([0.4, 1]);
+        strip.View(Standings(20 * _metre, 5 * _metre), 0).Cells.Select(cell => cell.Fill).ShouldBe([0.25, 1]);
+    }
+
+    [Fact]
+    public void Bars_MeasureAgainstAMetreAtLeast_SoALeaderAFewMillimetresOutFillsOnlyASliver()
+    {
+        var strip = new ShadowStripPresentation();
+
+        strip.View(Standings(0.01 * _metre, 0.008 * _metre), 0).Cells.Select(cell => cell.Fill).ShouldBe([0.008, 0.01], tolerance: 1e-9);
+        strip.View(Standings(0, 0), 0).Cells.ShouldAllBe(cell => cell.Fill == 0);
+        strip.View(Standings(0.5 * _metre), 0).Cells.Single().Fill.ShouldBe(0.5);
     }
 
     [Fact]
@@ -42,8 +52,8 @@ public sealed class ShadowStripPresentationTests
         var strip = new ShadowStripPresentation();
         ShadowStanding[] shadows =
         [
-            new(1, 1, IsFollowed: true, IsLeader: false, IsPreviousBest: true),
-            new(2, 3, IsFollowed: false, IsLeader: true, IsPreviousBest: false),
+            new(1, _metre, IsFollowed: true, IsLeader: false, IsPreviousBest: true),
+            new(2, 3 * _metre, IsFollowed: false, IsLeader: true, IsPreviousBest: false),
         ];
 
         strip.View(shadows, 0).Cells.ShouldBe(
@@ -247,6 +257,8 @@ public sealed class ShadowStripPresentationTests
     {
         new ShadowStripPresentation().View([], 0).ShouldBe(ShadowStripView.Empty);
     }
+
+    private const double _metre = Metres.WorldUnitsPerMetre;
 
     private static ShadowStanding[] Standings(params double[] distances) => Standings((IEnumerable<double>)distances);
 
