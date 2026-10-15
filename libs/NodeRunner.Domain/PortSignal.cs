@@ -1,7 +1,7 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// What a <see cref="BrainPort"/> carries (#535). An input is a reading; an output says which
+/// What a <see cref="NetworkPort"/> carries (#535). An input is a reading; an output says which
 /// physical signal it drives, which fixes its activation and how a new port starts
 /// (<see cref="PortSignals"/>).
 /// </summary>

@@ -289,16 +289,16 @@ public sealed record CreatureDef
     /// <summary>The Rubbers (#1142): passive parts that make their node grip the ground.</summary>
     public IReadOnlyList<RubberDef> Rubbers => _rubbers;
 
-    /// <summary>The Velocity motors (#454): powered joint motors the brain drives at a speed.</summary>
+    /// <summary>The Velocity motors (#454): powered joint motors the network drives at a speed.</summary>
     public IReadOnlyList<VelocityMotorDef> VelocityMotors => _velocityMotors;
 
-    /// <summary>The Brakes (#1039): passive joint parts that resist their sides turning, with no brain ports.</summary>
+    /// <summary>The Brakes (#1039): passive joint parts that resist their sides turning, with no network ports.</summary>
     public IReadOnlyList<BrakeDef> Brakes => _brakes;
 
     /// <summary>The Angle sensors (#1204): joint sensors that read the angle between their sides and apply no force.</summary>
     public IReadOnlyList<AngleSensorDef> AngleSensors => _angleSensors;
 
-    /// <summary>The Steppers (#1036): joint motors that step their sides from notch to notch at the rate the brain picks.</summary>
+    /// <summary>The Steppers (#1036): joint motors that step their sides from notch to notch at the rate the network picks.</summary>
     public IReadOnlyList<StepperDef> Steppers => _steppers;
 
     /// <summary>

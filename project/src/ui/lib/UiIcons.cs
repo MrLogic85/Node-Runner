@@ -8,11 +8,11 @@ public enum UiIconId
 {
     None = -1,
     Back, Beam, Bolt, Build, Chart, Check, ChevronDown, ChevronRight, Copy, Core, Edit, Flag, Gear,
-    Height, Joint, Lock, Map, Menu, Model, More, Move, Mute, Pause, Phone, Play, Plus, Restart, Rotate,
+    Height, Joint, Lock, Map, Menu, Network, More, Move, Mute, Pause, Phone, Play, Plus, Restart, Rotate,
     Scale, Select, Shadow, Sound, Speed, Stop, Trash, Trophy, Unlock, Warn, Close, Eye, PartBattery,
     PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartCamera, PartNode, PartPiston,
     PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing, Distance, TopSpeed, Elevation,
-    MapFlat, MapHills, MapStairs, PartAccelerometer, ChevronLeft, Sort, Parts, Undo, Redo, PartPulse, PartTouch, BrainMark,
+    MapFlat, MapHills, MapStairs, PartAccelerometer, ChevronLeft, Sort, Parts, Undo, Redo, PartPulse, PartTouch, NetworkMark,
     Share, Paste, PartRubber, PartAngleSensor
 }
 
@@ -173,7 +173,7 @@ public static class UiIcons
         UiIconId.Lock => Icon("lock"),
         UiIconId.Map => Icon("map"),
         UiIconId.Menu => Icon("menu"),
-        UiIconId.Model => Icon("model"),
+        UiIconId.Network => Icon("network"),
         UiIconId.More => Icon("more"),
         UiIconId.Move => Icon("move"),
         UiIconId.Mute => Icon("mute"),
@@ -226,7 +226,7 @@ public static class UiIcons
         UiIconId.PartTouch => Part("touch"),
         UiIconId.PartRubber => Part("rubber"),
         UiIconId.PartAngleSensor => Part("angle_sensor"),
-        UiIconId.BrainMark => Mark("brain"),
+        UiIconId.NetworkMark => Mark("network"),
         UiIconId.Share => Icon("share"),
         UiIconId.Paste => Icon("paste"),
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),

@@ -213,7 +213,7 @@ sets no colour override outside `UiIcons`' tint helper (#338).
   no scene setting caps a text-sized width at the space left.
 - Layout widths a scene authors have no C# constant, since a scene cannot
   read one (#300). The reference values: `w-dialog` 300, `w-card` 326,
-  `w-sheet` 720, `w-sheet-wide` 880, `w-brain` 460, `w-well` 250, `h-well`
+  `w-sheet` 720, `w-sheet-wide` 880, `w-brain` (the network sheet) 460, `w-well` 250, `h-well`
   64, `w-tile` 156, `h-stage` 170, `h-thumb` 100, `w-col-xs` 40, `w-col-md`
   76, `w-col-lg` 96, `w-col-xl` 128.
 - `UiDialogContent.tscn` and `UiNotificationContent.tscn` are the runtime

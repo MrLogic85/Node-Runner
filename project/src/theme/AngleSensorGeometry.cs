@@ -9,7 +9,7 @@ namespace NodeRunner.Theme;
 /// and an arc round it between the Fixed side's direction and the Target side's that fills and empties
 /// with each turn (#1243, <see cref="Sweep"/>, <c>docs/WORLD_VISUALS.md</c> → Angle sensor).
 /// Angles are Godot rotations, clockwise on screen, as the sides' are (<c>HingePartSides.FixedRotation</c>);
-/// the brain's angle (<see cref="Mechanics.AngleSensor"/>) is counter-clockwise on screen, so it is
+/// the network's angle (<see cref="Mechanics.AngleSensor"/>) is counter-clockwise on screen, so it is
 /// the Fixed rotation minus the Target rotation.
 /// </summary>
 public static class AngleSensorGeometry
@@ -32,7 +32,7 @@ public static class AngleSensorGeometry
     private const float _fullTurnSlack = 0.00001f;
 
     /// <summary>
-    /// The angle the brain reads, the Target side's direction minus the Fixed side's, counter-clockwise
+    /// The angle the network reads, the Target side's direction minus the Fixed side's, counter-clockwise
     /// on screen, from 0 to just under a full turn.
     /// </summary>
     public static float Angle(float fixedRotation, float targetRotation) =>

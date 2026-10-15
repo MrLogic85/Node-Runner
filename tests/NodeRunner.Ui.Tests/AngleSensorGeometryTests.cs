@@ -223,7 +223,7 @@ public sealed class AngleSensorGeometryTests
         arc.ShouldAllBe(point => Mathf.IsEqualApprox(point.Length(), _bare, _tolerance));
     }
 
-    // The port bars show the sine and cosine of the brain's angle, the Target link's direction minus the Fixed
+    // The port bars show the sine and cosine of the network's angle, the Target link's direction minus the Fixed
     // link's, counter-clockwise (HingePartSideGeometry); the arc must span that same angle on screen.
     [Theory]
     [InlineData(0, -10)]
@@ -234,8 +234,8 @@ public sealed class AngleSensorGeometryTests
         var joint = new Vector2D(0, 0);
         var fixedFar = new Vector2D(10, 0);
         var targetFar = new Vector2D(targetX, targetY);
-        var brainAngle = HingePartSideGeometry.LinkAngle(joint, targetFar) - HingePartSideGeometry.LinkAngle(joint, fixedFar);
-        var (sin, cos) = AngleSensor.AngleInputs(brainAngle);
+        var networkAngle = HingePartSideGeometry.LinkAngle(joint, targetFar) - HingePartSideGeometry.LinkAngle(joint, fixedFar);
+        var (sin, cos) = AngleSensor.AngleInputs(networkAngle);
 
         var angle = AngleSensorGeometry.Angle(ScreenRotation(fixedFar), ScreenRotation(targetFar));
 

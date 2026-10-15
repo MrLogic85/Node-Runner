@@ -2,7 +2,7 @@ namespace NodeRunner.Domain;
 
 /// <summary>
 /// A Velocity motor (#454): a powered joint part on one node that turns its Target side against
-/// its Fixed side at the speed the brain chooses, with no end stops. Its sides follow the Servo's
+/// its Fixed side at the speed the network chooses, with no end stops. Its sides follow the Servo's
 /// rules (#1118): a link at the joint or the joint's Wheel, not both the same, either null once
 /// that part is deleted. It shares the joint's hinge-part slot with a Servo, a Brake and an Angle sensor (#1044); see
 /// <see cref="JointMotor"/>. Players know it as the Motor.
@@ -96,10 +96,10 @@ public sealed record VelocityMotorDef : IJointMotorDef
     /// <summary>The most torque the motor can apply, in world torque units.</summary>
     public double Strength { get; }
 
-    /// <summary>The fastest speed the brain can choose, in radians per second.</summary>
+    /// <summary>The fastest speed the network can choose, in radians per second.</summary>
     public double MaxSpeed { get; }
 
-    /// <summary>How long, in seconds, its torque takes to build up to the strength the brain chose.</summary>
+    /// <summary>How long, in seconds, its torque takes to build up to the strength the network chose.</summary>
     public double RiseTime { get; }
 
     PartKind IPartDef.PartKind => PartKind.VelocityMotor;

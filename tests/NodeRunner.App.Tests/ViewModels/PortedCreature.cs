@@ -3,7 +3,7 @@ using NodeRunner.ML;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>One creature with every part kind, and a direct brain that fits it.</summary>
+/// <summary>One creature with every part kind, and a direct network that fits it.</summary>
 internal static class PortedCreature
 {
     public const int Accelerometer = 8;
@@ -35,9 +35,9 @@ internal static class PortedCreature
         [new StepperDef(Stepper, 19, 20, 21, "Ratchet")],
         nextPartId: 23);
 
-    public static BrainPortLayout Layout { get; } = BrainPorts.Of(Def);
+    public static NetworkPortLayout Layout { get; } = NetworkPorts.Of(Def);
 
-    public static NeuralNetwork Brain()
+    public static NeuralNetwork Network()
     {
         int[] layers = [Layout.Inputs.Count, Layout.Outputs.Count];
         var genome = Enumerable.Range(0, NeuralNetwork.GenomeLength(layers)).Select(gene => Math.Sin(gene) * 0.5).ToArray();

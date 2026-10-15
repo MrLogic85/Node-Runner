@@ -6,7 +6,7 @@ using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
-using NodeRunner.ML.Brains;
+using NodeRunner.ML.Networks;
 using NodeRunner.Sim;
 using NodeRunner.Theme;
 using NodeRunner.Ui.Lib;
@@ -21,7 +21,7 @@ namespace NodeRunner.Hosts;
 /// line and ruler. This root builds the map's ground along that line, adds the creature to that
 /// world and points the camera and the ruler at it. To train, it adds the <see cref="Evolver"/>,
 /// resumes from the creation's last finished generation and saves every finished generation, so
-/// leaving drops only the one in progress. To simulate, it plays the saved brain on the creature in
+/// leaving drops only the one in progress. To simulate, it plays the saved network on the creature in
 /// one run that lasts until the player leaves, and saves nothing. Run on its own (F6) it trains the
 /// Walker example without saving.
 /// </summary>
@@ -35,23 +35,23 @@ public partial class TrainingHost : Node, IRoutedScene
     private readonly MapDef _map = Maps.Default;
     private readonly SelectionViewModel _selection = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
-    private readonly BrainFocusPresentationViewModel _brainFocus = new();
-    private readonly List<double> _brainInputs = [];
+    private readonly NetworkFocusPresentationViewModel _networkFocus = new();
+    private readonly List<double> _networkInputs = [];
     private TrainingRoute? _route;
     private ISceneNavigator? _navigator;
     private Guid? _creationId;
-    // The brain last saved, so the next save keeps its neuron ids and disabled genes.
+    // The network last saved, so the next save keeps its neuron ids and disabled genes.
     private TrainingStateDef? _saved;
     private Creature.Creature? _creature;
-    // The shadow drawn in full, read by signal flow, the brain and part selection (#385).
+    // The shadow drawn in full, read by signal flow, NetworkFocus and part selection (#385).
     private Creature.Creature? _followed;
     private Evolver? _evolver;
     // Simulate's one endless run (#702); null while training.
     private TrialController? _playback;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
-    // The last brain sample, taken once per signal refresh and read by both BrainFocus and the part callout (#1064).
-    private BrainPortValues _portValues = BrainPortValues.Empty;
+    // The last network sample, taken once per signal refresh and read by both NetworkFocus and the part callout (#1064).
+    private NetworkPortValues _portValues = NetworkPortValues.Empty;
     private double _signalRefreshElapsed;
     // Training's slow-motion chip (#318); null in Simulate, which races one shadow.
     private SlowMotionWatch? _slowMotion;
@@ -137,7 +137,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
     // Redraws the creatures' parts once the camera has zoomed them to a new pixel scale, also
     // while paused (a resize re-frames the camera). Moves the part callout's leader with the part
-    // every frame and hands the camera the shelf the callout needs. Refreshes the signal flow, brain focus and part callout from the creature's last
+    // every frame and hands the camera the shelf the callout needs. Refreshes the signal flow, network focus and part callout from the creature's last
     // physics tick at a fixed cadence: the numbers are for a person to read, so every rendered
     // frame is wasted work.
     public override void _Process(double delta)
@@ -167,13 +167,13 @@ public partial class TrainingHost : Node, IRoutedScene
         // Keep the remainder: zeroing it would make a refresh wait an extra frame whenever two
         // smoothed frames fall a microsecond short of the interval, about 20 a second instead of 30.
         _signalRefreshElapsed %= _signalRefreshIntervalSeconds;
-        _followed.ReadInputs(_brainInputs);
-        _signalFlow.Update(_brainInputs.Count, _followed.Brain is null ? 0 : _followed.MotorCount, FollowedDistance, FollowedCrashed);
+        _followed.ReadInputs(_networkInputs);
+        _signalFlow.Update(_networkInputs.Count, _followed.Network is null ? 0 : _followed.MotorCount, FollowedDistance, FollowedCrashed);
         ShowCrash();
 
-        // One sample of the brain's ports per refresh, read by both BrainFocus and the part callout (#1064).
-        _portValues = BrainPortValues.Sample(_followed.Ports, _followed.Brain, _brainInputs);
-        _brainFocus.Update(_portValues);
+        // One sample of the network's ports per refresh, read by both NetworkFocus and the part callout (#1064).
+        _portValues = NetworkPortValues.Sample(_followed.Ports, _followed.Network, _networkInputs);
+        _networkFocus.Update(_portValues);
         ShowPartCallout();
     }
 
@@ -230,7 +230,7 @@ public partial class TrainingHost : Node, IRoutedScene
         else if (_route.Mode == TrainingRunMode.Simulate && creation.Training is null)
         {
             // Train setup offers Simulate only for a trained creation; its training may be reset since.
-            GD.PrintErr($"Creation {_route.CreationId} has no brain to simulate.");
+            GD.PrintErr($"Creation {_route.CreationId} has no network to simulate.");
             Notify("Creations", "Train the creation before simulating it.");
         }
         else
@@ -248,7 +248,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private void Notify(string title, string message) =>
         UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, title, message));
 
-    // Android Back and Escape: the brain sheet closes first, then Back returns to the previous
+    // Android Back and Escape: the network sheet closes first, then Back returns to the previous
     // scene. Training is already saved up to the last finished generation.
     private void AddBackHandler()
     {
@@ -358,7 +358,7 @@ public partial class TrainingHost : Node, IRoutedScene
                 : TrainingHeaderPresentation.For(creation.Name, Mode, _map.Id),
             _trainingPresentation,
             _signalFlow,
-            _brainFocus);
+            _networkFocus);
         _screen.ShowPaused(GetTree().Paused);
         _screen.BackRequested += () => _navigator?.Back();
         _screen.PauseRequested += TogglePause;
@@ -374,7 +374,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _screen.ArenaPressed += SelectPartAt;
     }
 
-    // Evolves a population of brains in parallel physics slots, one generation after another.
+    // Evolves a population of networks in parallel physics slots, one generation after another.
     private void AddEvolver()
     {
         var evolver = new Evolver
@@ -393,7 +393,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _evolver = evolver;
     }
 
-    // Resumes from the creation's saved latest brain and generation (#479), or starts at generation 0
+    // Resumes from the creation's saved latest network and generation (#479), or starts at generation 0
     // (#537) without one.
     private void StartEvolution(CreationDef? creation)
     {
@@ -406,17 +406,17 @@ public partial class TrainingHost : Node, IRoutedScene
         var resume = creation?.Training;
         _saved = resume;
         var resumeBest = resume?.BestOn(_map.Id);
-        var disabledGenes = resume is null ? null : DirectBrain.DisabledGenes(resume.Brain, _creature.Ports);
-        _brainFocus.Configure(BrainPortLabels.For(definition), disabledGenes ?? []);
+        var disabledGenes = resume is null ? null : DirectNetwork.DisabledGenes(resume.Network, _creature.Ports);
+        _networkFocus.Configure(NetworkPortLabels.For(definition), disabledGenes ?? []);
         var setup = EvolutionSetup.For(creation?.TrainSettings, Engine.PhysicsTicksPerSecond);
         _evolver.Start(
             _creature,
             setup.Population,
-            DirectBrain.LayerSizes(_creature.Ports),
+            DirectNetwork.LayerSizes(_creature.Ports),
             setup.Algorithm,
             Rng.Random,
             GroundTopY,
-            resume is null ? null : DirectBrain.Compile(resume.Brain, _creature.Ports),
+            resume is null ? null : DirectNetwork.Compile(resume.Network, _creature.Ports),
             resume?.Generation ?? 0,
             resumeBestFitness: resumeBest?.Distance ?? double.NegativeInfinity,
             resumeBestShownDistance: resumeBest?.FrontDistance ?? double.NaN,
@@ -426,7 +426,7 @@ public partial class TrainingHost : Node, IRoutedScene
             disabledGenes: disabledGenes);
     }
 
-    // Simulate (#702) plays the saved brain on the creature in one run that lasts until the player
+    // Simulate (#702) plays the saved network on the creature in one run that lasts until the player
     // leaves: no Evolver, so no generation, nothing saved and nothing counted. The run measures how
     // far its front has got, for the Distance card.
     private void StartPlayback(CreationDef creation)
@@ -438,8 +438,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
         _trainingPresentation.Dispose();
         _trainingPresentation = TrainingPresentationViewModel.Saved(training, _map.Id);
-        _brainFocus.Configure(BrainPortLabels.For(definition), DirectBrain.DisabledGenes(training.Brain, _creature.Ports));
-        _creature.SetBrain(DirectBrain.Network(training.Brain, _creature.Ports));
+        _networkFocus.Configure(NetworkPortLabels.For(definition), DirectNetwork.DisabledGenes(training.Network, _creature.Ports));
+        _creature.SetNetwork(DirectNetwork.Build(training.Network, _creature.Ports));
         var playback = new TrialController
         {
             Name = "Playback",
@@ -512,7 +512,7 @@ public partial class TrainingHost : Node, IRoutedScene
     // reads the creation only once the queued saves have landed (#370).
     private void PersistTraining()
     {
-        // A generation without a valid trial has no latest brain, so it isn't saved.
+        // A generation without a valid trial has no latest network, so it isn't saved.
         if (_creationId is not { } id
             || _evolver?.LatestGenome is not { } genome
             || _evolver.LatestRun is not { } run
@@ -523,9 +523,9 @@ public partial class TrainingHost : Node, IRoutedScene
 
         var saves = Saves;
         var epoch = saves.CurrentTrainingEpoch(id);
-        var brain = DirectBrain.ToBrainDef(_creature.Ports, genome, _saved?.Brain);
+        var network = DirectNetwork.ToNeuralNetworkDef(_creature.Ports, genome, _saved?.Network);
         var latest = new TrainingRunDef(run.Distance, run.TopSpeed, run.Elevation, _map.Id, run.FrontDistance);
-        var training = TrainingStateDef.Record(_saved, brain, _evolver.Generation, latest);
+        var training = TrainingStateDef.Record(_saved, network, _evolver.Generation, latest);
         _saved = training;
         saves.PersistTrainingInBackground(id, epoch, training).ContinueWith(
             failed => ReportFailedSave(id, training.Generation, failed.Exception!),

@@ -113,8 +113,8 @@ public sealed class BuildAutosaveTests
         saved.Training.ShouldNotBeNull();
         saved.Training.Generation.ShouldBe(training.Generation);
         saved.Training.Best.ShouldBe(training.Best);
-        saved.Training.Brain.Neurons.ShouldBe(training.Brain.Neurons);
-        saved.Training.Brain.Connections.ShouldBe(training.Brain.Connections);
+        saved.Training.Network.Neurons.ShouldBe(training.Network.Neurons);
+        saved.Training.Network.Connections.ShouldBe(training.Network.Connections);
     }
 
     [Fact]

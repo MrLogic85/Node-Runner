@@ -129,18 +129,18 @@ public sealed class CreatureBuilderAngleSensorTests
         Should.Throw<ArgumentException>(() => builder.SetAngleSensorLink(sensor, fixedRole: true, linkId: 999));
     }
 
-    // Inputs only (#1204): a new one adds its three inputs and leaves the brain's outputs as they were.
+    // Inputs only (#1204): a new one adds its three inputs and leaves the network's outputs as they were.
     [Fact]
     public void AnAngleSensor_AddsThreeInputs_AndNoOutputs()
     {
         var builder = Joint(out var joint, out _, out _, out _);
         builder.AddServo(builder.AddNode(new Vector2D(300, 0)));
-        var before = BrainPorts.Of(builder.Build());
+        var before = NetworkPorts.Of(builder.Build());
 
         var sensor = builder.AddAngleSensor(joint);
 
-        var after = BrainPorts.Of(builder.Build());
-        after.Inputs.Except(before.Inputs).ShouldBe(BrainPorts.AngleSensorInputs(sensor));
+        var after = NetworkPorts.Of(builder.Build());
+        after.Inputs.Except(before.Inputs).ShouldBe(NetworkPorts.AngleSensorInputs(sensor));
         after.Outputs.ShouldBe(before.Outputs);
         before.Outputs.ShouldNotBeEmpty();
     }

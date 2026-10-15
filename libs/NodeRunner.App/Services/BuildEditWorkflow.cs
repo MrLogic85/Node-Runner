@@ -13,7 +13,7 @@ public sealed class BuildEditWorkflow : IBuildEditWorkflow
         _coordinator = coordinator;
     }
 
-    public CreationDef? PersistEdit(Guid activeCreationId, CreatureDef editedCreature, BrainDef? openedBrain = null)
+    public CreationDef? PersistEdit(Guid activeCreationId, CreatureDef editedCreature, NeuralNetworkDef? openedNetwork = null)
     {
         ArgumentNullException.ThrowIfNull(editedCreature);
         if (activeCreationId == Guid.Empty)
@@ -21,6 +21,6 @@ public sealed class BuildEditWorkflow : IBuildEditWorkflow
             throw new ArgumentException("An active Creation id is required.", nameof(activeCreationId));
         }
 
-        return _coordinator.ApplyEdit(activeCreationId, editedCreature, openedBrain);
+        return _coordinator.ApplyEdit(activeCreationId, editedCreature, openedNetwork);
     }
 }

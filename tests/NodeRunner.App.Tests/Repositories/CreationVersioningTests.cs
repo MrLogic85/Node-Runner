@@ -2,7 +2,7 @@ using System.Text.Json.Nodes;
 using NodeRunner.App.Builders;
 using NodeRunner.App.Repositories;
 using NodeRunner.Domain;
-using NodeRunner.ML.Brains;
+using NodeRunner.ML.Networks;
 
 namespace NodeRunner.App.Tests.Repositories;
 
@@ -64,8 +64,8 @@ public sealed class CreationVersioningTests : IDisposable
             sensor["range"] = null;
         }
 
-        // The brain's Piston length weights move too; Fixture013_ItsTrainedBrainDrivesItsPistonsAsBefore covers them.
-        written["training"]?.AsObject().Remove("brain");
+        // The network's Piston length weights move too; Fixture013_ItsTrainedNetworkDrivesItsPistonsAsBefore covers them.
+        written["training"]?.AsObject().Remove("network");
         expected["training"]?.AsObject().Remove("brain");
         JsonNode.DeepEquals(written, expected).ShouldBeTrue();
         new FileCreationRepository(new TestStorageLocation(_directory)).Get(loaded.Id).ShouldBe(loaded, _creationComparer);
@@ -118,7 +118,7 @@ public sealed class CreationVersioningTests : IDisposable
         var camera = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem().Creature.Sensors.ShouldHaveSingleItem();
 
         camera.ShouldBe(new SensorDef(8, 5, SensorKind.Camera, aim: 0.25, rays: 3, spread: Math.PI / 2, range: 220));
-        BrainPorts.SensorPorts(camera).Select(port => port.Channel).ShouldBe(["left1", "centre", "right1", "hit"]);
+        NetworkPorts.SensorPorts(camera).Select(port => port.Channel).ShouldBe(["left1", "centre", "right1", "hit"]);
     }
 
     [Fact]
@@ -236,29 +236,29 @@ public sealed class CreationVersioningTests : IDisposable
     }
 
     // #870: a Piston's length input went from −1…1 around its built length to 0…1 over its travel,
-    // and #1129: its target length output from tanh −1…1 to sigmoid 0…1. A migrated brain must ask
+    // and #1129: its target length output from tanh −1…1 to sigmoid 0…1. A migrated network must ask
     // for the same lengths and strengths in the same pose, and still compile to resume training.
     [Fact]
-    public void Fixture013_ItsTrainedBrainDrivesItsPistonsAsBefore()
+    public void Fixture013_ItsTrainedNetworkDrivesItsPistonsAsBefore()
     {
         var original = Fixture013("trained-walker.creation.json");
-        var oldBrain = SaveJson.Deserialize<BrainDef>(JsonNode.Parse(original)!["training"]!["brain"]!.ToJsonString(), "brain");
+        var oldNetwork = SaveJson.Deserialize<NeuralNetworkDef>(JsonNode.Parse(original)!["training"]!["brain"]!.ToJsonString(), "brain");
         WriteCreation(original);
         var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
-        var ports = BrainPorts.Of(creation.Creature);
+        var ports = NetworkPorts.Of(creation.Creature);
         var oldPorts = ports with
         {
             Outputs = [.. ports.Outputs.Select(port => port.Signal == PortSignal.Length ? port with { Signal = PortSignal.Position } : port)],
         };
-        var before = DirectBrain.Network(oldBrain, oldPorts);
-        var after = DirectBrain.Network(creation.Training!.Brain, ports);
+        var before = DirectNetwork.Build(oldNetwork, oldPorts);
+        var after = DirectNetwork.Build(creation.Training!.Network, ports);
         var random = new Random(870);
 
         for (var pose = 0; pose < 20; pose++)
         {
             var oldInputs = ports.Inputs.Select(_ => (random.NextDouble() * 2) - 1).ToArray();
             var newInputs = ports.Inputs
-                .Select((port, i) => port.Channel == BrainPorts.PistonLengthChannel ? (oldInputs[i] + 1) / 2 : oldInputs[i])
+                .Select((port, i) => port.Channel == NetworkPorts.PistonLengthChannel ? (oldInputs[i] + 1) / 2 : oldInputs[i])
                 .ToArray();
 
             var oldOutputs = before.Forward(oldInputs)
@@ -269,7 +269,7 @@ public sealed class CreationVersioningTests : IDisposable
         }
 
         ports.Outputs.ShouldContain(port => port.Signal == PortSignal.Length);
-        Should.NotThrow(() => DirectBrain.Compile(creation.Training.Brain, ports));
+        Should.NotThrow(() => DirectNetwork.Compile(creation.Training.Network, ports));
     }
 
     // #1129: version 7 saved a Piston's target length as tanh; version 8 doubles its bias and every
@@ -280,13 +280,13 @@ public sealed class CreationVersioningTests : IDisposable
         var current = CurrentTrainedWalker();
         var file = current.DeepClone().AsObject();
         file[_versionField] = 7;
-        var brain = file["training"]!["brain"]!;
-        brain["connections"]!.AsArray()[0]!["enabled"] = false;
-        current["training"]!["brain"]!["connections"]!.AsArray()[0]!["enabled"] = false;
+        var network = NetworkUnderItsOldKey(file);
+        network["connections"]!.AsArray()[0]!["enabled"] = false;
+        current["training"]!["network"]!["connections"]!.AsArray()[0]!["enabled"] = false;
         var targets = new HashSet<int>();
-        foreach (var neuron in brain["neurons"]!.AsArray())
+        foreach (var neuron in network["neurons"]!.AsArray())
         {
-            if (neuron!["channel"]!.GetValue<string>() == BrainPorts.PistonPositionChannel)
+            if (neuron!["channel"]!.GetValue<string>() == NetworkPorts.PistonPositionChannel)
             {
                 neuron["activation"] = "tanh";
                 neuron["bias"] = neuron["bias"]!.GetValue<double>() / 2;
@@ -294,19 +294,19 @@ public sealed class CreationVersioningTests : IDisposable
             }
         }
 
-        foreach (var connection in brain["connections"]!.AsArray().Where(connection => targets.Contains(connection!["to"]!.GetValue<int>())))
+        foreach (var connection in network["connections"]!.AsArray().Where(connection => targets.Contains(connection!["to"]!.GetValue<int>())))
         {
             connection!["weight"] = connection["weight"]!.GetValue<double>() / 2;
         }
 
         targets.Count.ShouldBe(2);
-        targets.ShouldContain(brain["connections"]![0]!["to"]!.GetValue<int>());
+        targets.ShouldContain(network["connections"]![0]!["to"]!.GetValue<int>());
         var path = WriteCreation(file.ToJsonString());
 
         new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
 
         var written = JsonNode.Parse(File.ReadAllText(path))!;
-        JsonNode.DeepEquals(written["training"]!["brain"], current["training"]!["brain"]).ShouldBeTrue();
+        JsonNode.DeepEquals(written["training"]!["network"], current["training"]!["network"]).ShouldBeTrue();
         written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
     }
 
@@ -318,6 +318,7 @@ public sealed class CreationVersioningTests : IDisposable
     {
         var file = CurrentTrainedWalker();
         file[_versionField] = 7;
+        NetworkUnderItsOldKey(file);
         var parent = field == "pistons" ? file["creature"]!.AsObject() : file;
         parent[field] = JsonNode.Parse(value);
         WriteCreation(file.ToJsonString());
@@ -348,6 +349,7 @@ public sealed class CreationVersioningTests : IDisposable
         var current = TrainedWalkerOnWheels();
         var file = current.DeepClone().AsObject();
         file[_versionField] = 8;
+        NetworkUnderItsOldKey(file);
         foreach (var wheel in file["creature"]!["wheels"]!.AsArray())
         {
             wheel!["grip"] = grip;
@@ -521,21 +523,21 @@ public sealed class CreationVersioningTests : IDisposable
     public void AVersion14Save_MakesAStepperPowerItsFrequency_AndDropsItsOldFrequencyNeurons()
     {
         var (expected, stepperId) = TrainedWalkerWithAStepper();
-        var brain = expected["training"]!["brain"]!.AsObject();
-        var inputs = NeuronIds(brain, "input");
-        var outputs = NeuronIds(brain, "output");
-        var next = brain["nextNeuronId"]!.GetValue<int>();
+        var network = expected["training"]!["network"]!.AsObject();
+        var inputs = NeuronIds(network, "input");
+        var outputs = NeuronIds(network, "output");
+        var next = network["nextNeuronId"]!.GetValue<int>();
         var (power, oldInput, oldFrequency) = (next, next + 1, next + 2);
-        brain["neurons"]!.AsArray().Add(Neuron(power, "output", stepperId, BrainPorts.StepperFrequencyChannel, -0.7, "tanh"));
+        network["neurons"]!.AsArray().Add(Neuron(power, "output", stepperId, NetworkPorts.StepperFrequencyChannel, -0.7, "tanh"));
         foreach (var input in inputs)
         {
-            brain["connections"]!.AsArray().Add(Connection(input, power, 0.1 * input));
+            network["connections"]!.AsArray().Add(Connection(input, power, 0.1 * input));
         }
 
-        brain["nextNeuronId"] = next + 3;
+        network["nextNeuronId"] = next + 3;
         var file = expected.DeepClone().AsObject();
         file[_versionField] = 14;
-        var old = file["training"]!["brain"]!.AsObject();
+        var old = NetworkUnderItsOldKey(file);
         old["neurons"]!.AsArray().Single(neuron => neuron!["id"]!.GetValue<int>() == power)!["channel"] = "power";
         old["neurons"]!.AsArray().Add(Neuron(oldInput, "input", stepperId, "frequency", 0, "identity"));
         old["neurons"]!.AsArray().Add(Neuron(oldFrequency, "output", stepperId, "frequency", 0.4, "sigmoid"));
@@ -554,9 +556,49 @@ public sealed class CreationVersioningTests : IDisposable
         var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
 
         var written = JsonNode.Parse(File.ReadAllText(path))!;
-        JsonNode.DeepEquals(written["training"]!["brain"], expected["training"]!["brain"]).ShouldBeTrue();
+        JsonNode.DeepEquals(written["training"]!["network"], expected["training"]!["network"]).ShouldBeTrue();
         written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
-        Should.NotThrow(() => DirectBrain.Compile(creation.Training!.Brain, BrainPorts.Of(creation.Creature)));
+        Should.NotThrow(() => DirectNetwork.Compile(creation.Training!.Network, NetworkPorts.Of(creation.Creature)));
+    }
+
+    // #1308: version 15 saved the network as training.brain; version 16 moves it, unchanged, to training.network.
+    [Fact]
+    public void AVersion15Save_MovesItsNetworkToItsNewKey_AndKeepsTheRestOfItsTraining()
+    {
+        var current = CurrentTrainedWalker();
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 15;
+        NetworkUnderItsOldKey(file);
+        var path = WriteCreation(file.ToJsonString());
+
+        var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        creation.Training!.Network.Connections.ShouldNotBeEmpty();
+        JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AVersion15Save_WithBothItsOldAndNewNetworkKeys_IsSkipped()
+    {
+        var file = CurrentTrainedWalker();
+        file[_versionField] = 15;
+        file["training"]!["brain"] = file["training"]!["network"]!.DeepClone();
+        WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void AVersion15Save_WithoutTraining_LoadsAsItWas()
+    {
+        var current = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 15;
+        var path = WriteCreation(file.ToJsonString());
+
+        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
     }
 
     [Fact]
@@ -564,6 +606,7 @@ public sealed class CreationVersioningTests : IDisposable
     {
         var (file, _) = TrainedWalkerWithAStepper();
         file[_versionField] = 14;
+        NetworkUnderItsOldKey(file);
         file["creature"]!.AsObject().Remove("steppers");
         WriteCreation(file.ToJsonString());
 
@@ -708,6 +751,7 @@ public sealed class CreationVersioningTests : IDisposable
     {
         var file = TrainedWalkerOnWheels();
         file[_versionField] = 8;
+        NetworkUnderItsOldKey(file);
         var parent = field == "wheels" ? file["creature"]!.AsObject() : file;
         parent[field] = JsonNode.Parse(value);
         WriteCreation(file.ToJsonString());
@@ -719,7 +763,7 @@ public sealed class CreationVersioningTests : IDisposable
     [InlineData("neurons", "\"many\"")]
     [InlineData("connections", "[{ \"from\": \"three\", \"to\": 7, \"weight\": 1, \"enabled\": true }]")]
     [InlineData("connections", "[{ \"from\": 3, \"to\": 7, \"weight\": \"heavy\", \"enabled\": true }]")]
-    public void Fixture013_WithABrainItCouldNotHaveSaved_IsSkipped(string field, string value)
+    public void Fixture013_WithANetworkItCouldNotHaveSaved_IsSkipped(string field, string value)
     {
         var file = JsonNode.Parse(Fixture013("trained-walker.creation.json"))!.AsObject();
         file["training"]!["brain"]![field] = JsonNode.Parse(value);
@@ -737,7 +781,7 @@ public sealed class CreationVersioningTests : IDisposable
 
         creation.Training.ShouldNotBeNull();
         creation.Training.Generation.ShouldBeGreaterThan(1);
-        creation.Training.Brain.Connections.ShouldNotBeEmpty();
+        creation.Training.Network.Connections.ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -945,7 +989,7 @@ public sealed class CreationVersioningTests : IDisposable
         return JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(wheels, walker.Training)))!.AsObject();
     }
 
-    // The trained walker with a Stepper its brain has no neurons for yet, as the current version writes it.
+    // The trained walker with a Stepper its network has no neurons for yet, as the current version writes it.
     private static (JsonObject File, int StepperId) TrainedWalkerWithAStepper()
     {
         var walker = LoadFixture013("trained-walker.creation.json");
@@ -956,8 +1000,18 @@ public sealed class CreationVersioningTests : IDisposable
         return (file, stepperId);
     }
 
-    private static int[] NeuronIds(JsonObject brain, string kind) =>
-        [.. brain["neurons"]!.AsArray().Where(neuron => neuron!["kind"]!.GetValue<string>() == kind).Select(neuron => neuron!["id"]!.GetValue<int>())];
+    // Moves a current file's network back under the key versions before 16 saved it in (#1308).
+    private static JsonObject NetworkUnderItsOldKey(JsonObject file)
+    {
+        var training = file["training"]!.AsObject();
+        var network = training["network"]!.AsObject();
+        training.Remove("network");
+        training["brain"] = network;
+        return network;
+    }
+
+    private static int[] NeuronIds(JsonObject network, string kind) =>
+        [.. network["neurons"]!.AsArray().Where(neuron => neuron!["kind"]!.GetValue<string>() == kind).Select(neuron => neuron!["id"]!.GetValue<int>())];
 
     private static JsonObject Neuron(int id, string kind, int partId, string channel, double bias, string activation) => new()
     {

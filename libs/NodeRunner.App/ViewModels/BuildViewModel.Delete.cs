@@ -5,13 +5,13 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The selection's Delete: the selected parts and what goes with them, refused on a locked Creation
-/// when it would change the model (#896, #987).
+/// when it would change the network (#896, #987).
 /// </summary>
 public sealed partial class BuildViewModel
 {
     /// <summary>
     /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
-    /// refuses a delete that would change its model: one that takes a part with brain ports, also by
+    /// refuses a delete that would change its network: one that takes a part with network ports, also by
     /// cascade (a joint's Piston, motor, Touch sensor or Angle sensor, a beam's sensor), or clears a motor's or an
     /// Angle sensor's Fixed or Target link,
     /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel,
@@ -62,8 +62,8 @@ public sealed partial class BuildViewModel
         RaiseAnatomyChanged();
     }
 
-    // On a locked Creation, a note on each part that makes the delete change the model, in id order
-    // within each kind: each part with brain ports it removes, and each kept motor or Angle sensor
+    // On a locked Creation, a note on each part that makes the delete change the network, in id order
+    // within each kind: each part with network ports it removes, and each kept motor or Angle sensor
     // whose Fixed or Target link it clears. It tries the delete on a copy of the body, so every cascade counts
     // exactly as the delete does it. Empty when the delete may go ahead.
     private List<CanvasNote> DeleteRefusalNotes()
@@ -147,7 +147,7 @@ public sealed partial class BuildViewModel
 
         static (int, int?, int?) MotorLinks(IHingePartDef motor) => (motor.Id, motor.FixedLinkId, motor.TargetLinkId);
         void AddNote(CreatureElementKind kind, int id) =>
-            notes.Add(new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), _wouldChangeModelNote));
+            notes.Add(new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), _wouldChangeNetworkNote));
     }
 
     private static void RemoveParts(CreatureBuilder builder, PartSet parts)

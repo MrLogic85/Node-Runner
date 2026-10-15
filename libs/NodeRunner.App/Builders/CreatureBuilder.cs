@@ -896,7 +896,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// The sensor as it would be on <paramref name="beamId"/> (#806): the same id, so the same brain
+    /// The sensor as it would be on <paramref name="beamId"/> (#806): the same id, so the same network
     /// ports, kind, name and settings. A Camera keeps the world direction it looks in as built, so
     /// its aim along the new beam changes.
     /// </summary>

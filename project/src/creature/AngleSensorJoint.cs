@@ -19,7 +19,7 @@ public sealed class AngleSensorJoint
     public HingePartSides Sides { get; }
 
     /// <summary>
-    /// Whether its Fixed or Target beam has torn at either end (#962): its brain inputs then keep the
+    /// Whether its Fixed or Target beam has torn at either end (#962): its network inputs then keep the
     /// values they last had (Creature.Tears).
     /// </summary>
     public bool IsPassive { get; private set; }

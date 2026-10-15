@@ -97,7 +97,7 @@ public sealed class TrainSetupPresentationViewModelTests
 
         setup.Mode.ShouldBe(TrainingRunMode.Train);
         setup.CanSimulate.ShouldBeFalse();
-        setup.ModeNote.ShouldBe(UiText.Plain("Shadows race and the brain keeps learning."));
+        setup.ModeNote.ShouldBe(UiText.Plain("Shadows race and the network keeps learning."));
         Should.Throw<InvalidOperationException>(() => setup.SetMode(TrainingRunMode.Simulate));
     }
 
@@ -107,7 +107,7 @@ public sealed class TrainSetupPresentationViewModelTests
         var setup = new TrainSetupPresentationViewModel(Creation(generation: 3));
 
         setup.CanSimulate.ShouldBeTrue();
-        setup.ModeNote.ShouldBe(UiText.Plain("Shadows race and the brain keeps learning."));
+        setup.ModeNote.ShouldBe(UiText.Plain("Shadows race and the network keeps learning."));
         setup.Shadows.Disabled.ShouldBeFalse();
         setup.RunLength.Disabled.ShouldBeFalse();
     }
@@ -124,7 +124,7 @@ public sealed class TrainSetupPresentationViewModelTests
 
         changes.ShouldBe(1);
         setup.Mode.ShouldBe(TrainingRunMode.Simulate);
-        setup.ModeNote.ShouldBe(UiText.Plain("Plays the trained brain with one shadow. Nothing is learned or saved."));
+        setup.ModeNote.ShouldBe(UiText.Plain("Plays the trained network with one shadow. Nothing is learned or saved."));
         setup.Shadows.ShouldBe(new SettingSlider(UiText.Plain("Shadows"), UiText.Number(1), null, setup.Shadows.Step, Disabled: true));
         setup.RunLength.ShouldBe(new SettingSlider(UiText.Plain("Run length"), UiText.Plain("Until you leave"), null, setup.RunLength.Step, Disabled: true));
         setup.Settings.ShouldBe(TrainSettingsDef.Default);
@@ -172,7 +172,7 @@ public sealed class TrainSetupPresentationViewModelTests
     }
 
     [Theory]
-    [InlineData(32, ShadowsLoad.Smooth, "The brain learns faster with more shadows.")]
+    [InlineData(32, ShadowsLoad.Smooth, "The network learns faster with more shadows.")]
     [InlineData(33, ShadowsLoad.Caution, "Phone may stutter above {0}.")]
     [InlineData(64, ShadowsLoad.Caution, "Phone may stutter above {0}.")]
     [InlineData(65, ShadowsLoad.TooMany, "Probably too many shadows.")]

@@ -396,7 +396,7 @@ public sealed class CreationRepositoryTests
                 [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
                 [new SensorDef(201, 101, SensorKind.Accelerometer), new SensorDef(202, 102, SensorKind.Camera)]),
             new TrainingStateDef(
-                TestTraining.Brain,
+                TestTraining.Network,
                 5,
                 new TrainingRunDef(40.25, 88.25, 12, MapIds.Flat),
                 new TrainingBestDef(2, 42.5, MapIds.Flat)));
@@ -411,9 +411,9 @@ public sealed class CreationRepositoryTests
         actual.Creature.Beams.ToArray().ShouldBe(expected.Creature.Beams.ToArray());
         actual.Creature.Sensors.ToArray().ShouldBe(expected.Creature.Sensors.ToArray());
         actual.Training.ShouldNotBeNull();
-        actual.Training.Brain.Neurons.ToArray().ShouldBe(expected.Training!.Brain.Neurons.ToArray());
-        actual.Training.Brain.Connections.ToArray().ShouldBe(expected.Training.Brain.Connections.ToArray());
-        actual.Training.Brain.NextNeuronId.ShouldBe(expected.Training.Brain.NextNeuronId);
+        actual.Training.Network.Neurons.ToArray().ShouldBe(expected.Training!.Network.Neurons.ToArray());
+        actual.Training.Network.Connections.ToArray().ShouldBe(expected.Training.Network.Connections.ToArray());
+        actual.Training.Network.NextNeuronId.ShouldBe(expected.Training.Network.NextNeuronId);
         actual.Training.Generation.ShouldBe(expected.Training.Generation);
         actual.Training.Latest.ShouldBe(expected.Training.Latest);
         actual.Training.Best.ShouldBe(expected.Training.Best);

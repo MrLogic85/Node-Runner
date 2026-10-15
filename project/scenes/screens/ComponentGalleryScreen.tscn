@@ -2974,7 +2974,7 @@ Collapsed = true
 [node name="Thinks" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556225 instance=ExtResource("23_stage_card")]
 layout_mode = 2
 NumberText = "2"
-Title = "Brain"
+Title = "Network"
 Note = "Decides"
 Selected = true
 

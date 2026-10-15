@@ -8,7 +8,7 @@ namespace NodeRunner.Creature;
 // Beams tear from their joints (#962): each tick, before anything senses or drives, every beam end still
 // pinned is checked by the rule in Mechanics.Tear, in beam order, end A before end B. A torn end's pin
 // lets go of both bodies and the end gets a collider so it lands (#1288); a beam torn at both ends leaves
-// the creature and falls on its own. Everything else keeps its slot, so brain ports and the arrays the
+// the creature and falls on its own. Everything else keeps its slot, so network ports and the arrays the
 // creature runs on never shift. How a tear looks (#1257) is docs/WORLD_VISUALS.md → Tear.
 public partial class Creature
 {

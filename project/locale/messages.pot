@@ -148,7 +148,7 @@ msgstr ""
 msgid "Angle {0}"
 msgstr ""
 
-#: project/scenes/widgets/BrainFocusSheet.tscn
+#: project/scenes/widgets/NetworkFocusSheet.tscn
 msgid "Back to Status"
 msgstr ""
 
@@ -187,14 +187,6 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Blocks"
-msgstr ""
-
-#: project/scenes/screens/TrainingScreen.tscn
-msgid "Brain"
-msgstr ""
-
-#: project/scenes/widgets/BrainFocusSheet.tscn
-msgid "BrainFocus · Decides"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
@@ -512,7 +504,7 @@ msgstr ""
 msgid "Import failed"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 #: project/scenes/screens/TrainingScreen.tscn
 msgid "Inputs"
 msgstr ""
@@ -562,7 +554,7 @@ msgid "Locked"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "Locked: would change the model"
+msgid "Locked: would change the network"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
@@ -644,6 +636,11 @@ msgstr ""
 msgid "Needs a battery or generator"
 msgstr ""
 
+#: project/scenes/screens/TrainingScreen.tscn
+#: project/scenes/widgets/NetworkFocusSheet.tscn
+msgid "Network"
+msgstr ""
+
 #: project/scenes/screens/CreationsScreen.tscn
 msgid "New"
 msgstr ""
@@ -653,7 +650,7 @@ msgid "New part unlocked"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartCalloutPresentation.cs
-msgid "No brain ports"
+msgid "No network ports"
 msgstr ""
 
 #: project/scenes/screens/CreationsScreen.tscn
@@ -729,7 +726,7 @@ msgstr ""
 msgid "One wheel per joint"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 #: project/scenes/screens/TrainingScreen.tscn
 msgid "Outputs"
 msgstr ""
@@ -788,7 +785,7 @@ msgid "Pistons"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
-msgid "Plays the trained brain with one shadow. Nothing is learned or saved."
+msgid "Plays the trained network with one shadow. Nothing is learned or saved."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -939,7 +936,7 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 #: project/scenes/screens/TrainSetupScreen.tscn
-msgid "Shadows race and the brain keeps learning."
+msgid "Shadows race and the network keeps learning."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -1028,8 +1025,8 @@ msgstr ""
 msgid "Start training"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
-msgid "Start training to see the live brain."
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
+msgid "Start training to see the live network."
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -1096,7 +1093,7 @@ msgstr ""
 msgid "Tap a part to pick it, or drag it onto the creature."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "Tap an input or an output to see what drives what."
 msgstr ""
 
@@ -1128,20 +1125,16 @@ msgstr ""
 msgid "The beam between joint {0} and joint {1} is too short. Move one of the joints apart."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
-msgid "The brain learns faster with more shadows."
+#: project/src/hosts/CreationActions.cs
+msgid "The creation and its trained network are removed for good. Copy it first if you might want it back."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs
-msgid "The creation and its trained brain are removed for good. Copy it first if you might want it back."
-msgstr ""
-
-#: project/src/hosts/CreationActions.cs
-msgid "The creation is locked so you do not change the size or values of its model by accident. Changes to how the model behaves are still allowed. Unlock to use every tool that changes the model. Adding or removing a part keeps the training, but adds or removes that part of the model. Removing a part and adding the same kind back does not bring its training back; use Undo instead."
+msgid "The creation is locked so you do not change the size or values of its network by accident. Changes to how its parts behave are still allowed. Unlock to use every tool that changes the network. Adding or removing a part keeps the training, but adds or removes that part's inputs and outputs in the network. Removing a part and adding the same kind back does not bring its training back; use Undo instead."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
-msgid "The creation is locked to avoid changes to the model, unlock to enable."
+msgid "The creation is locked to avoid changes to the network, unlock to enable."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1158,6 +1151,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "The most steps it takes each second"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
+msgid "The network learns faster with more shadows."
 msgstr ""
 
 #: libs/NodeRunner.App/Lifecycle/CreatureReadiness.cs
@@ -1271,7 +1268,7 @@ msgid "Unlock"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
-msgid "Unlock to add parts the brain uses."
+msgid "Unlock to add parts the network uses."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs
@@ -1290,8 +1287,8 @@ msgstr ""
 msgid "Update Node Runner to open this creation."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
-msgid "Waiting for a live brain"
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
+msgid "Waiting for a live network"
 msgstr ""
 
 #: libs/NodeRunner.App/Services/CreationExamples.cs
@@ -1302,7 +1299,7 @@ msgstr ""
 msgid "Warning"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "Warning, no powered parts added! There is nothing to train"
 msgstr ""
@@ -1469,15 +1466,15 @@ msgstr[1] ""
 msgid "{0} comes in version {1}"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} does not drive any output yet."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} drives {1} and {2} most."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} drives {1} most."
 msgstr ""
 
@@ -1493,17 +1490,17 @@ msgid_plural "{0} generations so far"
 msgstr[0] ""
 msgstr[1] ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} input"
 msgid_plural "{0} inputs"
 msgstr[0] ""
 msgstr[1] ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} is driven most by {1} and {2}."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} is driven most by {1}."
 msgstr ""
 
@@ -1511,7 +1508,7 @@ msgstr ""
 msgid "{0} is missing a side. Pick its Fixed and Target parts or delete it."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} is not driven by any input yet."
 msgstr ""
 
@@ -1552,7 +1549,7 @@ msgstr ""
 msgid "{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} output"
 msgid_plural "{0} outputs"
 msgstr[0] ""
@@ -1621,7 +1618,7 @@ msgid_plural "{0} springs too short"
 msgstr[0] ""
 msgstr[1] ""
 
-#: libs/NodeRunner.App/ViewModels/BrainFocusPresentationViewModel.cs
+#: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 msgid "{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger."
 msgstr ""
 

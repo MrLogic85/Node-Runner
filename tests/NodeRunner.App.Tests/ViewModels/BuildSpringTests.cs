@@ -119,7 +119,7 @@ public sealed class BuildSpringTests
         var creature = builder.Build();
 
         CreatureReadiness.Problems(creature).ShouldBeEmpty();
-        BrainPorts.Of(creature).Outputs.ShouldBeEmpty();
+        NetworkPorts.Of(creature).Outputs.ShouldBeEmpty();
         CreatureReadiness.CanTrain(creature).ShouldBeTrue();
     }
 

@@ -6,7 +6,7 @@ namespace NodeRunner.Domain;
 /// A Brake (#1039): a passive joint part on one node that resists its Target side turning against
 /// its Fixed side, up to its <see cref="Strength"/>. It fills the joint's hinge-part slot and
 /// takes its sides by the Servo's rules (<see cref="IHingePartDef"/>), but it is no joint motor:
-/// it has no brain ports and draws no power, so it is not in <see cref="CreatureDef.JointMotors"/>.
+/// it has no network ports and draws no power, so it is not in <see cref="CreatureDef.JointMotors"/>.
 /// </summary>
 public sealed record BrakeDef : IHingePartDef
 {

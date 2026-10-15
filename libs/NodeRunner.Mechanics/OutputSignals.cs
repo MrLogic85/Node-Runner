@@ -2,7 +2,7 @@ namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// How an output port's value becomes a physical demand (#535): a pose for a position output and a
-/// force for a strength output. Which activation each output uses is the brain's contract
+/// force for a strength output. Which activation each output uses is the network's contract
 /// (<see cref="NodeRunner.Domain.PortSignals"/>). Stateless. See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class OutputSignals

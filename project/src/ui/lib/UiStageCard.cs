@@ -82,7 +82,7 @@ public partial class UiStageCard : UiCard
     }
 
     /// <summary>
-    /// A stage whose tap opens something (Brain opens BrainFocus) uses the Raised surface, so it
+    /// A stage whose tap opens something (Network opens NetworkFocus) uses the Raised surface, so it
     /// reads as a button next to plain stages (#847).
     /// </summary>
     [Export]

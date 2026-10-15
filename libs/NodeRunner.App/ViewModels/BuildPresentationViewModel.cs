@@ -340,7 +340,7 @@ public sealed class BuildPresentationViewModel
     /// <summary>Whether the part and selection panels show their Advanced settings (#903).</summary>
     public bool AdvancedSettingsOpen => _build.AdvancedSettingsOpen;
 
-    /// <summary>True for a locked Creation: it refuses every edit that would change its model (#896).</summary>
+    /// <summary>True for a locked Creation: it refuses every edit that would change its network (#896).</summary>
     public bool IsLocked => _build.IsLocked;
 
     /// <summary>Whether the overflow's Undo can be tapped (#689).</summary>

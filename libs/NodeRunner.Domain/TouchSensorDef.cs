@@ -1,10 +1,10 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Touch sensor (#665): a sensor on one node that tells the brain how close that node is to
+/// A Touch sensor (#665): a sensor on one node that tells the network how close that node is to
 /// touching the ground (<c>NodeRunner.Mechanics.Touch.Reading</c>). It is the first sensor that does not sit on a
 /// beam, since a node is a body of its own (#127). It takes its own joint-part slot beside a Servo
-/// and a Wheel, adds no radius and has no settings. Its one input is <see cref="BrainPorts.TouchChannel"/>. See
+/// and a Wheel, adds no radius and has no settings. Its one input is <see cref="NetworkPorts.TouchChannel"/>. See
 /// docs/CREATURE_MODEL.md → "Touch sensor".
 /// </summary>
 public sealed record TouchSensorDef : IJointPartDef

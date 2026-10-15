@@ -110,7 +110,7 @@ public sealed class BuildPresentationViewModelTests
 
         groups.SelectMany(group => group.Rows).Where(row => row.Part is not (BuildPart.Brake or BuildPart.Wheel or BuildPart.Rubber)).ShouldAllBe(row => !row.IsAvailable);
         groups.SelectMany(group => group.Rows).Where(row => row.Part is BuildPart.Brake or BuildPart.Wheel or BuildPart.Rubber).ShouldAllBe(row => row.State == PartTrayRowState.Available);
-        tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts the brain uses."));
+        tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts the network uses."));
         tray.PickedInfo.ShouldBeNull();
         var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
         servo.State.ShouldBe(PartTrayRowState.CreationLocked);
@@ -518,11 +518,11 @@ public sealed class BuildPresentationViewModelTests
     [InlineData(SensorKind.Accelerometer, false)]
     [InlineData(SensorKind.Camera, false)]
     [InlineData(SensorKind.Camera, true)]
-    public void SensorNote_AvoidsBrainWording(SensorKind kind, bool aimable)
+    public void SensorNote_AvoidsNetworkWording(SensorKind kind, bool aimable)
     {
         var note = BuildPresentationViewModel.SensorNote(kind, aimable).Message.ToLowerInvariant();
 
-        foreach (var word in new[] { "brain", "port", "neuron", "input", "layer" })
+        foreach (var word in new[] { "network", "port", "neuron", "input", "layer" })
         {
             note.ShouldNotContain(word);
         }

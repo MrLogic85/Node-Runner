@@ -393,7 +393,7 @@ public partial class Creature
     // Damping coefficient, whatever they weigh (#801). Godot's spring has no stops of its own, so
     // it gets a Piston's end stops for its Stroke (#835); a coil length past a stop moves its rest
     // length there, so it starts pressed against it, and its SpringLink keeps that preload
-    // inside the stop. It has no collider and no brain ports; its picture is a child of the
+    // inside the stop. It has no collider and no network ports; its picture is a child of the
     // creature, on the Links layer over the beams.
     private void CreateSprings(CreatureDef definition)
     {

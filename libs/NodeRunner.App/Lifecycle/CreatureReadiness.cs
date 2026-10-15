@@ -155,7 +155,7 @@ public static class CreatureReadiness
 
     /// <summary>
     /// True when the creature can be simulated. It needs no powered part (#845): without one its
-    /// brain has nothing to drive and it stands still, and Train setup warns about that.
+    /// network has nothing to drive and it stands still, and Train setup warns about that.
     /// </summary>
     public static bool CanTrain(CreatureDef creature) => Problems(creature).Count == 0;
 

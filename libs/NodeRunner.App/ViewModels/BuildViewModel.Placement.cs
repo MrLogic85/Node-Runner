@@ -18,8 +18,8 @@ public sealed partial class BuildViewModel
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
         ArgumentNullException.ThrowIfNull(target);
-        // Every tray part but the Wheel, the Rubber and the Brake has brain ports (#896, #129, #1142, #1041).
-        if (_locked && PartTray.HasBrainPorts(part))
+        // Every tray part but the Wheel, the Rubber and the Brake has network ports (#896, #129, #1142, #1041).
+        if (_locked && PartTray.HasNetworkPorts(part))
         {
             reason = LockedReason;
             return false;
@@ -139,7 +139,7 @@ public sealed partial class BuildViewModel
         if (!CanPlacePart(part, target, out var reason))
         {
             // A locked Creation says why in a notification instead (#896).
-            if (!(_locked && PartTray.HasBrainPorts(part)))
+            if (!(_locked && PartTray.HasNetworkPorts(part)))
             {
                 PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target, reason);
             }
@@ -227,7 +227,7 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Whether the sensor dragged onto <paramref name="target"/> would move there (#806): onto a
     /// beam no other sensor sits on, its own included. If not, <paramref name="reason"/> says why.
-    /// A move keeps the sensor's brain ports, so a locked Creation moves sensors too. The sensor
+    /// A move keeps the sensor's network ports, so a locked Creation moves sensors too. The sensor
     /// must exist.
     /// </summary>
     public bool CanMoveSensor(int sensorId, [NotNullWhen(true)] CreatureElementSelection? target, [NotNullWhen(false)] out UiText? reason) =>

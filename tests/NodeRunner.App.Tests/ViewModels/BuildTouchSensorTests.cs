@@ -201,7 +201,7 @@ public sealed class BuildTouchSensorTests
         build.ReplaceSelection(PartSet.None with { Wheels = new HashSet<int> { _wheelId }, TouchSensors = new HashSet<int> { _touchId } });
 
         build.CanCopySelection.ShouldBeFalse();
-        build.CopyBlockers().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, _touch, UiText.Plain("Locked: would change the model"))]);
+        build.CopyBlockers().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, _touch, UiText.Plain("Locked: would change the network"))]);
     }
 
     [Fact]

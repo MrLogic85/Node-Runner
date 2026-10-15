@@ -13,10 +13,10 @@ sensor off are #960.
 ## Feedforward neural network
 
 - **What:** Layers of linear maps with a nonlinearity in between.
-- **Where:** `libs/NodeRunner.ML/NeuralNetwork.cs`; the direct brain
-  (`Brains/DirectBrain`, #536)
-- **How we show it:** The creature moves at all. The brain is direct, inputs
-  straight to outputs, and BrainFocus draws it with nodes and edges (#536).
+- **Where:** `libs/NodeRunner.ML/NeuralNetwork.cs`; the direct network
+  (`Networks/DirectNetwork`, #536)
+- **How we show it:** The creature moves at all. The network is direct, inputs
+  straight to outputs, and NetworkFocus draws it with nodes and edges (#536).
 
 ## Activation functions
 
@@ -25,7 +25,7 @@ sensor off are #960.
 - **Where:** `libs/NodeRunner.ML/Activation.cs` (`Tanh`, `ReLU`,
   `Sigmoid`); each output uses its signal's activation (#535; `docs/CREATURE_MODEL.md`
   → Output conventions).
-- **How we show it:** Swapping the activation of a trained brain and
+- **How we show it:** Swapping the activation of a trained network and
   watching its behaviour change (#960).
 
 ## Genetic algorithm (neuroevolution)
@@ -33,10 +33,10 @@ sensor off are #960.
 - **What:** Search weights by simulating a population, keeping the fit ones,
   recombining them, mutating a bit, repeating.
 - **Where:** `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`. Training resumes
-  from the saved brain (#538), and Shadows sets the population size per
-  Creation (#528). A part added to a trained brain is explored hard: every
+  from the saved network (#538), and Shadows sets the population size per
+  Creation (#528). A part added to a trained network is explored hard: every
   child redraws its genes as generation 0 would, while the elite keeps the
-  trained gait (`Brains/NewPortExploration.cs`, #1180).
+  trained gait (`Networks/NewPortExploration.cs`, #1180).
 - **How we show it:** Every candidate races at once as a shadow behind the
   followed creature, the best marker moves forward, and mutations produce
   weird outliers.
@@ -74,34 +74,34 @@ sensor off are #960.
   redundant inputs waste capacity.
 - **Where:** Sensor parts on beams (Accelerometer, Camera) and on joints
   (Touch, Angle sensor; `docs/CREATURE_MODEL.md`) and Servo, Motor,
-  Stepper and Piston readings. There is no speed or elevation input: the brain learns
+  Stepper and Piston readings. There is no speed or elevation input: the network learns
   movement from what its parts feel. Pulse, a rhythm input, is #527.
 - **Why a turning angle reads as sine and cosine (#454):** a Motor, a
   Stepper (#1036), or the joint under an Angle sensor (#1204), may turn round and round, so a plain angle would jump from one
-  end to the other after each full turn, and the brain would see a sudden
+  end to the other after each full turn, and the network would see a sudden
   change where nothing moved. Its sine and cosine change smoothly all the
   way round and together still say exactly where it is: where its Target
   side points relative to its Fixed side (#1207). A Motor at rest still
   reads its angle, so neither input means "nothing" the way the "nothing
   seen" 0 below does.
 - **Why "nothing seen" reads 0 (#604):** a zero input adds nothing to the
-  brain's weighted sum, so the weight on a camera ray only matters while
+  network's weighted sum, so the weight on a camera ray only matters while
   something is in view. Mutating that weight adds no noise while the
-  camera sees nothing, and the brain learns to react to something being
+  camera sees nothing, and the network learns to react to something being
   there. Reading 1 for "nothing" would act like an extra bias that vanishes
   the moment the ground appears. The reading is also linear and smooth at
   the range edge: something just inside range reads about 0, the same as
   nothing, so the input never jumps, and half the bar means half the
   range.
-- **How we show it:** BrainFocus lists every input by its part with its
+- **How we show it:** NetworkFocus lists every input by its part with its
   live value.
 
 ## Live activation visualization
 
 - **What:** Which neuron fires at which moment, and how strongly.
-- **Where:** BrainFocus for the direct brain (#536), and the selected
+- **Where:** NetworkFocus for the direct network (#536), and the selected
   parts' live input and output values in Training's part callout (#1064,
-  `docs/WORLD_VISUALS.md` → "Part callout" and "Port bars"); brain views
+  `docs/WORLD_VISUALS.md` → "Part callout" and "Port bars"); network views
   with hidden layers are #196, #197 and #548.
 - **How we show it:** Nodes glow. Edges pulse. You literally see the thought
   behind each step.
@@ -111,12 +111,12 @@ sensor off are #960.
 Each issue owns its hook; these lines say what the concept teaches.
 
 - **Network capacity (#543):** a hidden layer added on top of the kept
-  direct connections keeps the skill the brain had; too little capacity
+  direct connections keeps the skill the network had; too little capacity
   plateaus, a huge net learns slowly and erratically.
-- **Generalisation across maps (#540, #541):** a brain that only sees one
+- **Generalisation across maps (#540, #541):** a network that only sees one
   map overfits to it; Stats shows a learning curve per map.
 - **Cost of acting (#128, #458, #460):** a power budget that ends the run
-  when spent makes the brain trade force now against staying in the run.
+  when spent makes the network trade force now against staying in the run.
 - **Checkpoints (#256):** training is a path, not only its end point;
   restoring one rewinds the history.
 - **Gradient training (#955):** backprop, loss functions, optimizers and

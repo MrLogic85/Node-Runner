@@ -45,7 +45,7 @@ Where code lives and which way it may depend.
 ┌─────────────────────────────────────────────────────────────────┐
 │                      ML engine (pure C#)                         │
 │                       libs/NodeRunner.ML/                        │
-│          NeuralNetwork · Activation · Brains · Ga                │
+│          NeuralNetwork · Activation · Networks · Ga              │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -111,7 +111,7 @@ Node Runner/
 ├── libs/                           # pure C#, no Godot
 │   ├── NodeRunner.Domain/          # data records, enums, invariants
 │   ├── NodeRunner.Mechanics/       # pure part physics: sensors, servos, pistons, springs
-│   ├── NodeRunner.ML/              # neural nets, brains, GA
+│   ├── NodeRunner.ML/              # neural networks, GA
 │   └── NodeRunner.App/             # viewmodels, services, repositories
 ├── project/                        # Godot project (targets net9.0)
 │   ├── project.godot
@@ -142,14 +142,14 @@ Node Runner/
 
 At 60 Hz (`_physics_process`) the creature first lets go of any beam end
 past the tear limit (`docs/CREATURE_MODEL.md` → Beam → Tearing), then each
-Spring sets its rest length and each Brake holds its joint, brain or not
-(`Mechanics.Brake`). With no brain, each Stepper then keeps its notch locked
+Spring sets its rest length and each Brake holds its joint, network or not
+(`Mechanics.Brake`). With no network, each Stepper then keeps its notch locked
 (`Mechanics.Stepper`) and the tick ends; with one, the creature runs four
 steps:
 
 1. **Sense:** every part writes its readings into one `double[]` in
-   `BrainPorts` order (`docs/CREATURE_MODEL.md` → "Sensor–model contract").
-2. **Think:** `Brain.Forward` writes each output port's value into
+   `NetworkPorts` order (`docs/CREATURE_MODEL.md` → "Sensor–network contract").
+2. **Think:** `Network.Forward` writes each output port's value into
    caller-owned buffers, with no per-tick allocations.
 3. **Act:** each Servo, then each Motor, then each Piston, then each
    Stepper drives toward its outputs;

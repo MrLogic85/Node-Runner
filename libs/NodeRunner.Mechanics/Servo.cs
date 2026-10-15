@@ -3,10 +3,10 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The brain conventions and torque of a <see cref="ServoDef"/> (#452). Its angle is the direction
+/// The network conventions and torque of a <see cref="ServoDef"/> (#452). Its angle is the direction
 /// from the Servo joint to the target link's other joint minus the direction to the fixed link's
 /// other joint, relative to the built angle; a Wheel side (#1118) stands in a mark on its tyre for
-/// the other joint. The brain sees −1 at the lower end, 0 as built and
+/// the other joint. The network sees −1 at the lower end, 0 as built and
 /// +1 at the upper end, and drives an angle target plus a strength share. The motor chases a
 /// wanted speed towards that angle with <see cref="MotorLoop"/>, so it can hold a load up to its
 /// strength. It measures and turns its sides with <see cref="HingePartSideGeometry"/>, as a Velocity
@@ -99,7 +99,7 @@ public static class Servo
     /// <summary>
     /// The motor's next state from its last (<see cref="MotorLoop.Next"/>), chasing its
     /// <see cref="WantedSpeed"/>.
-    /// <c>position</c> is the brain's angle output (−1 lower end … +1 upper end) and <c>strength</c>
+    /// <c>position</c> is the network's angle output (−1 lower end … +1 upper end) and <c>strength</c>
     /// its share of Max strength (0…1).
     /// </summary>
     public static MotorState NextMotor(

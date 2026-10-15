@@ -19,13 +19,13 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// <see cref="CanConnectLink(BuildLink, int, int, out UiText?)"/>, and the link of another kind it
     /// would replace on its pair (#849, #1176). A locked Creation neither gains nor loses a link with
-    /// brain ports, which would change the model (#896); a Beam and a Spring may replace each other, since a motor
+    /// network ports, which would change the network (#896); a Beam and a Spring may replace each other, since a motor
     /// holding the link keeps its id (#1177).
     /// </summary>
     public bool CanConnectLink(BuildLink link, int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason, out int? replacedLinkId)
     {
         replacedLinkId = null;
-        if (_locked && BuildLinkList.HasBrainPorts(link))
+        if (_locked && BuildLinkList.HasNetworkPorts(link))
         {
             reason = LockedReason;
             return false;
@@ -43,7 +43,7 @@ public sealed partial class BuildViewModel
             replacedLinkId = _builder.LinkBetween(nodeIdA, nodeIdB);
         }
 
-        if (_locked && replacedLinkId is { } replaced && BuildLinkList.HasBrainPorts(KindOf(replaced)))
+        if (_locked && replacedLinkId is { } replaced && BuildLinkList.HasNetworkPorts(KindOf(replaced)))
         {
             replacedLinkId = null;
             reason = LockedReason;

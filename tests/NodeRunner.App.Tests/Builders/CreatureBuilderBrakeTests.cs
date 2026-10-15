@@ -111,17 +111,17 @@ public sealed class CreatureBuilderBrakeTests
         builder.CanAddServo(joint, out _).ShouldBeTrue();
     }
 
-    // A Brake has no brain ports (#1039): adding one leaves the brain as it was.
+    // A Brake has no network ports (#1039): adding one leaves the network as it was.
     [Fact]
     public void ABrake_DeclaresNoPorts()
     {
         var builder = Joint(out var joint, out _, out _, out _);
         builder.AddServo(builder.AddNode(new Vector2D(300, 0)));
-        var before = BrainPorts.Of(builder.Build());
+        var before = NetworkPorts.Of(builder.Build());
 
         builder.AddBrake(joint);
 
-        var after = BrainPorts.Of(builder.Build());
+        var after = NetworkPorts.Of(builder.Build());
         after.Inputs.ShouldBe(before.Inputs);
         after.Outputs.ShouldBe(before.Outputs);
         before.Outputs.ShouldNotBeEmpty();

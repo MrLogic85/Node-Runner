@@ -52,12 +52,12 @@ public interface ICreationUpdateCoordinator
 
     /// <summary>
     /// Saves a Build edit and invalidates any pending training snapshot. The training is kept with
-    /// its brain refitted to the edited creature's ports (#516, <c>DirectBrain.Refit</c>); generation,
-    /// latest and best are kept. When given, <paramref name="openedBrain"/> is refitted rather than
-    /// the saved brain (#689, docs/CREATURE_MODEL.md → "Build refits the brain it opened with").
+    /// its network refitted to the edited creature's ports (#516, <c>DirectNetwork.Refit</c>); generation,
+    /// latest and best are kept. When given, <paramref name="openedNetwork"/> is refitted rather than
+    /// the saved network (#689, docs/CREATURE_MODEL.md → "Build refits the network it opened with").
     /// Returns <c>null</c> if no such Creation exists.
     /// </summary>
-    CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, BrainDef? openedBrain = null);
+    CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, NeuralNetworkDef? openedNetwork = null);
 
     /// <summary>Deletes a Creation, invalidating any pending training snapshot.</summary>
     bool Delete(Guid id);

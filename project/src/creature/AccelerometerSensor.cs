@@ -7,7 +7,7 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// One accelerometer on its beam: each physics tick it measures the acceleration where its picture
 /// sits on the beam body (<see cref="SensorPicture.Centre"/>, #1086), turns it into specific force (at rest 1 g up), steps the Mechanics <see cref="Accelerometer"/> proof mass and
-/// writes its two readings. <see cref="CurrentProofMass"/> is what the brain reads.
+/// writes its two readings. <see cref="CurrentProofMass"/> is what the network reads.
 /// </summary>
 public sealed class AccelerometerSensor : IBeamSensor
 {
@@ -37,7 +37,7 @@ public sealed class AccelerometerSensor : IBeamSensor
 
     public int UpSign => _upSign;
 
-    public int ValueCount => BrainPorts.AccelerometerChannels.Count;
+    public int ValueCount => NetworkPorts.AccelerometerChannels.Count;
 
     public void Reset()
     {

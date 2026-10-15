@@ -155,7 +155,7 @@ public sealed class PartParametersTests
     }
 
     [Fact]
-    public void Rays_SnapToOneThreeOrFive_AndChangeTheBrainsPorts()
+    public void Rays_SnapToOneThreeOrFive_AndChangeTheNetworksPorts()
     {
         double[] stops = [1, 3, 5];
         stops.Select((stop, i) => PartParameters.ValueAt(PartParameterId.Rays, i / 2.0)).ShouldBe(stops);

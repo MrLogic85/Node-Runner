@@ -7,7 +7,7 @@ namespace NodeRunner.App.ViewModels;
 /// inside the same Creation. A part copies only with what it sits on: a link with both its joints
 /// and a sensor with its beam. A joint part, a Servo, a Velocity motor, a Brake (#1041), an Angle sensor (#1206), a Wheel, a Touch sensor (#1045) or a Rubber (#1142), is its joint
 /// to the player (#973), so it brings that joint along (#1000). A locked Creation copies no part with
-/// brain ports, since a copy would change its model; a Wheel, a Rubber and a Brake have none.
+/// network ports, since a copy would change its network; a Wheel, a Rubber and a Brake have none.
 /// </summary>
 public sealed partial class BuildViewModel
 {
@@ -19,7 +19,7 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// A danger note at each selected part a copy cannot take, in id order within each kind: on a
-    /// locked Creation a sensor, motor, Piston, Touch sensor or Angle sensor for its brain ports; a beam, Spring or Piston
+    /// locked Creation a sensor, motor, Piston, Touch sensor or Angle sensor for its network ports; a beam, Spring or Piston
     /// without both joints among <see cref="SelectedNodeIds"/>; a sensor without its beam.
     /// </summary>
     public IReadOnlyList<CanvasNote> CopyBlockers()
@@ -28,13 +28,13 @@ public sealed partial class BuildViewModel
         var joints = SelectedNodeIds;
         if (_locked)
         {
-            AddBrainPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
-            AddBrainPortNotes(CreatureElementKind.Servo, _selectedServoIds);
-            AddBrainPortNotes(CreatureElementKind.VelocityMotor, _selectedVelocityMotorIds);
-            AddBrainPortNotes(CreatureElementKind.Piston, _selectedPistonIds);
-            AddBrainPortNotes(CreatureElementKind.TouchSensor, _selectedTouchSensorIds);
-            AddBrainPortNotes(CreatureElementKind.AngleSensor, _selectedAngleSensorIds);
-            AddBrainPortNotes(CreatureElementKind.Stepper, _selectedStepperIds);
+            AddNetworkPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
+            AddNetworkPortNotes(CreatureElementKind.Servo, _selectedServoIds);
+            AddNetworkPortNotes(CreatureElementKind.VelocityMotor, _selectedVelocityMotorIds);
+            AddNetworkPortNotes(CreatureElementKind.Piston, _selectedPistonIds);
+            AddNetworkPortNotes(CreatureElementKind.TouchSensor, _selectedTouchSensorIds);
+            AddNetworkPortNotes(CreatureElementKind.AngleSensor, _selectedAngleSensorIds);
+            AddNetworkPortNotes(CreatureElementKind.Stepper, _selectedStepperIds);
         }
 
         foreach (var beam in Beams)
@@ -47,7 +47,7 @@ public sealed partial class BuildViewModel
             AddOpenLinkNote(CreatureElementKind.Spring, spring.Id, spring.NodeA, spring.NodeB);
         }
 
-        // A part with brain ports already has its note on a locked Creation.
+        // A part with network ports already has its note on a locked Creation.
         if (_locked)
         {
             return notes;
@@ -65,11 +65,11 @@ public sealed partial class BuildViewModel
 
         return notes;
 
-        void AddBrainPortNotes(CreatureElementKind kind, HashSet<int> selected)
+        void AddNetworkPortNotes(CreatureElementKind kind, HashSet<int> selected)
         {
             foreach (var id in selected.Order())
             {
-                notes.Add(Note(kind, id, _wouldChangeModelNote));
+                notes.Add(Note(kind, id, _wouldChangeNetworkNote));
             }
         }
 

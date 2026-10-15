@@ -7,7 +7,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
 /// A Stepper in Build (#1036, #1038): placing, its panel, undo, relinking, copying, deleting and box
-/// selecting work as they do for a Velocity motor, and its brain ports guard a locked Creation.
+/// selecting work as they do for a Velocity motor, and its network ports guard a locked Creation.
 /// </summary>
 public sealed class BuildStepperTests
 {
@@ -240,7 +240,7 @@ public sealed class BuildStepperTests
         build.DeleteSelectedParts();
 
         build.Steppers.ShouldBe([new StepperDef(_stepperId, 2, fixedLinkId: 4, targetLinkId: 5)]);
-        build.CanvasNotes().ShouldContain(new CanvasNote(CanvasNoteKind.Danger, _stepper, UiText.Plain("Locked: would change the model")));
+        build.CanvasNotes().ShouldContain(new CanvasNote(CanvasNoteKind.Danger, _stepper, UiText.Plain("Locked: would change the network")));
     }
 
     [Fact]
@@ -250,7 +250,7 @@ public sealed class BuildStepperTests
         build.Load(WithAStepper(), locked: true);
         build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1, 3 }, Beams = new HashSet<int> { 4, 5 }, Steppers = new HashSet<int> { _stepperId } });
 
-        build.CopyBlockers().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, _stepper, UiText.Plain("Locked: would change the model"))]);
+        build.CopyBlockers().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, _stepper, UiText.Plain("Locked: would change the network"))]);
         build.CopySelectedParts();
 
         build.Steppers.ShouldHaveSingleItem();

@@ -81,17 +81,17 @@ public sealed class PartTrayTests
         tray.HelpText.ShouldBe(PartTray.CreationLockedHelp);
     }
 
-    // A Wheel (#129) and a Rubber (#1142) have no brain ports, so a locked creation still takes one.
+    // A Wheel (#129) and a Rubber (#1142) have no network ports, so a locked creation still takes one.
     [Theory]
     [InlineData(BuildPart.Wheel)]
     [InlineData(BuildPart.Rubber)]
-    public void Create_OnALockedCreation_KeepsAPartWithoutBrainPortsAvailable_AndPicksIt(BuildPart part)
+    public void Create_OnALockedCreation_KeepsAPartWithoutNetworkPortsAvailable_AndPicksIt(BuildPart part)
     {
         var tray = PartTray.Create(part, creationLocked: true);
 
         tray.Groups.SelectMany(group => group.Rows).Single(row => row.Part == part).State.ShouldBe(PartTrayRowState.Selected);
         tray.PickedInfo.ShouldNotBeNull();
-        tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts the brain uses."));
+        tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts the network uses."));
         PartTray.CanPick(part, creationLocked: true).ShouldBeTrue();
         PartTray.CanPick(BuildPart.Servo, creationLocked: true).ShouldBeFalse();
     }

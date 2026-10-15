@@ -8,7 +8,7 @@ namespace NodeRunner.App.ViewModels;
 /// on several selected parts; the panel shows those with a <see cref="Slider"/>, and the canvas
 /// sets the rest, like a Camera's aim. <see cref="Advanced"/> settings sit in the panel's
 /// Advanced section (#903); the flag belongs to the setting, so it is the same on every part.
-/// A setting that <see cref="ChangesPorts"/> adds or removes brain ports, so a locked creation
+/// A setting that <see cref="ChangesPorts"/> adds or removes network ports, so a locked creation
 /// keeps it (#578, #896). <see cref="NoEffectReason"/> says why a setting that can do nothing
 /// as set now, like a one-ray Camera's Spread, shows disabled (#578).
 /// </summary>
@@ -179,7 +179,7 @@ public static class PartParameters
     public static PartParameter StepsPerTurn { get; } = new(
         PartParameterId.StepsPerTurn, MultiEditable: true, new(UiText.Plain("Notches"), UiText.Plain("How many notches make a full turn"), new(StepperDef.MinStepsPerTurn, StepperDef.MaxStepsPerTurn, 1), 0, "{0}", "{0}–{1}", value => value, value => value), Advanced: false);
 
-    // Starts at 1 Hz: slower stepping comes from the brain's Frequency output near 0, down to a stop (#1263, #1296).
+    // Starts at 1 Hz: slower stepping comes from the network's Frequency output near 0, down to a stop (#1263, #1296).
     // A saved value under 1 Hz still loads and reads as it is.
     public static PartParameter MaxFrequency { get; } = new(
         PartParameterId.MaxFrequency, MultiEditable: true, new(UiText.Plain("Max frequency"), UiText.Plain("The most steps it takes each second"), new(1, 5, 0.1), 1, "{0} Hz", "{0}–{1} Hz", value => value, value => value), Advanced: false);
@@ -225,7 +225,7 @@ public static class PartParameters
 
     public static PartParameter Aim { get; } = new(PartParameterId.Aim, MultiEditable: false, Slider: null, Advanced: false);
 
-    // Odd counts, so the centre ray is the aim; more rays add brain ports.
+    // Odd counts, so the centre ray is the aim; more rays add network ports.
     public static PartParameter Rays { get; } = new(
         PartParameterId.Rays, MultiEditable: true, new(UiText.Plain("Rays"), UiText.Plain("How many rays it looks along"), SettingRange.Of(1, 3, 5), 0, "{0}", "{0}–{1}", value => value, value => value), Advanced: false, ChangesPorts: true);
 

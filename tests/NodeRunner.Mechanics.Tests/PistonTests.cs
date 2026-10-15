@@ -210,7 +210,7 @@ public sealed class PistonTests
 
     // Light and heavy pairs at the slider ends where its force can brake in time. A light pair at
     // the shortest Rise time and a low Max speed still swings around its target; the user's
-    // settings, the brain and fitness (#546) handle that, not the force.
+    // settings, the network and fitness (#546) handle that, not the force.
     [Theory]
     [InlineData(2, 1, 0.2, 200)]
     [InlineData(0.3, 1, 0.2, 200)]

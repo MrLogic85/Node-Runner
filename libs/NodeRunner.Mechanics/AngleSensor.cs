@@ -4,7 +4,7 @@ namespace NodeRunner.Mechanics;
 /// The readings of a <see cref="Domain.AngleSensorDef"/> (#1204). Its angle is the one between its
 /// sides, measured with <see cref="HingePartSideGeometry"/> as a Velocity motor measures its own, so on the
 /// same sides both read the same sine and cosine. Its speed is scaled by <see cref="SpeedScale"/>, its
-/// own constant, so retuning any motor never changes what a trained brain reads. It applies no force.
+/// own constant, so retuning any motor never changes what a trained network reads. It applies no force.
 /// </summary>
 public static class AngleSensor
 {

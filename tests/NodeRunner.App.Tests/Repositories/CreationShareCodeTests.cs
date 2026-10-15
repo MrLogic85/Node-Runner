@@ -35,7 +35,7 @@ public sealed class CreationShareCodeTests
             CreationShareCode.Read(CreationShareCode.Create(new CreationDef(example.Id, "Example", example.Creature))).Refusal.ShouldBeNull();
         }
 
-        CreationShareCode.Read(Pack(Fixture013("trained-walker.creation.json"))).Refusal.ShouldBeNull();
+        CreationShareCode.Read(Pack(FileCreationRepository.Format.Serialize(LoadFixture013("trained-walker.creation.json")))).Refusal.ShouldBeNull();
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
-    // Numbered in the same order, the brain's ports keep theirs (BrainPorts).
+    // Numbered in the same order, the network's ports keep theirs (NetworkPorts).
     public void Code_OfPartsWithGapsInTheirIds_ReadsAsTheSameBuild_NumberedInTheSameOrder()
     {
         var builder = new CreatureBuilder();

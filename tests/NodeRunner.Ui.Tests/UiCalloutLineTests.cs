@@ -14,7 +14,7 @@ public sealed class UiCalloutLineTests
 
         UiCalloutLine.SameShape(live, later).ShouldBeTrue();
         UiCalloutLine.SameShape(live, longer).ShouldBeFalse();
-        UiCalloutLine.SameShape(live, [UiCalloutLine.OfNote("No brain ports")]).ShouldBeFalse();
+        UiCalloutLine.SameShape(live, [UiCalloutLine.OfNote("No network ports")]).ShouldBeFalse();
         UiCalloutLine.SameShape(null, []).ShouldBeTrue();
         UiCalloutLine.SameShape([], null).ShouldBeTrue();
     }

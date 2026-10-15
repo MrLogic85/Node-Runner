@@ -7,7 +7,7 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// One camera on its beam (#575, #604, #594, #578): a <see cref="RayCast2D"/> child per ray where its
 /// picture sits on the beam (<see cref="SensorPicture.Centre"/>, #1086), fanned around its aim by the Mechanics <see cref="CameraRays"/> so they turn with
-/// the beam. They see the ground only; <see cref="CameraRays.Read"/> turns their hits into the brain
+/// the beam. They see the ground only; <see cref="CameraRays.Read"/> turns their hits into the network
 /// inputs, relative to the camera's range.
 /// </summary>
 public sealed class CameraSensor : IBeamSensor
@@ -53,7 +53,7 @@ public sealed class CameraSensor : IBeamSensor
     /// <summary>Each ray's ground hit as of the last physics step, in global space; a ray that sees nothing has none.</summary>
     public IEnumerable<Vector2> GlobalHits => _rays.Where(ray => ray.IsColliding()).Select(ray => ray.GetCollisionPoint());
 
-    // One reading per ray, then hit (BrainPorts.CameraChannels).
+    // One reading per ray, then hit (NetworkPorts.CameraChannels).
     public int ValueCount => _rays.Length + 1;
 
     public void Read(double[] values, int startIndex, double dt)

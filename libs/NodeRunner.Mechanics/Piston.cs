@@ -3,8 +3,8 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The brain conventions and force of a <see cref="PistonDef"/> (#451). Its ports
-/// (<see cref="BrainPorts.PistonInputs"/>, <see cref="BrainPorts.PistonOutputs"/>) belong to the Piston part:
+/// The network conventions and force of a <see cref="PistonDef"/> (#451). Its ports
+/// (<see cref="NetworkPorts.PistonInputs"/>, <see cref="NetworkPorts.PistonOutputs"/>) belong to the Piston part:
 /// <list type="bullet">
 /// <item>Length input: where it is in its travel, 0 at its shortest and 1 at its longest; the drawn
 /// length reads its <see cref="PistonDef.Start"/> (#870).</item>
@@ -17,7 +17,7 @@ namespace NodeRunner.Mechanics;
 /// away once it moves at the speed it wants, using at most the chosen share of its Strength. It comes
 /// from the Piston's own settings and outputs only, not from the load it moves (#801). Its end stops
 /// are not powered: they are a hard limit in the sim (#701), so the force never needs more than the
-/// brain chose to stay inside its stroke. Pure: the caller keeps the force from one step to the next.
+/// network chose to stay inside its stroke. Pure: the caller keeps the force from one step to the next.
 /// </summary>
 public static class Piston
 {
@@ -96,15 +96,15 @@ public static class Piston
     /// lacks, not the distance left, so it brakes before the target rather than swinging past it.
     /// It knows nothing of the mass it moves: a force that builds up rather than jumps does not
     /// flip every step, but a light load at the shortest rise time and a low MaxSpeed can still
-    /// swing around its target. The user's settings, the brain and fitness (#546) handle that.
+    /// swing around its target. The user's settings, the network and fitness (#546) handle that.
     /// </remarks>
     /// <param name="piston">The Piston and its settings.</param>
     /// <param name="builtLength">Its length as built, centre to centre.</param>
     /// <param name="jointRadii">The radii its two ends leave out together, its hubs' (<see cref="Travel.HubRadii"/>): its travel is on the gap between them.</param>
     /// <param name="length">Its length now.</param>
     /// <param name="speed">How fast its length grows, in world units per second.</param>
-    /// <param name="position">The brain's position output, 0 fully in … 1 fully out (<see cref="TargetLength"/>).</param>
-    /// <param name="strength">The brain's strength output, 0…1 of its Strength setting.</param>
+    /// <param name="position">The network's position output, 0 fully in … 1 fully out (<see cref="TargetLength"/>).</param>
+    /// <param name="strength">The network's strength output, 0…1 of its Strength setting.</param>
     /// <param name="force">The force it pushed with last step; 0 as built.</param>
     /// <param name="step">The step length, in seconds.</param>
     public static double NextForce(

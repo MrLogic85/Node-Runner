@@ -511,7 +511,7 @@ public sealed class CreatureBuilderTests
         }
     }
 
-    // Every link change keeps the Servo's id, and so its brain ports and training (#1177).
+    // Every link change keeps the Servo's id, and so its network ports and training (#1177).
     [Fact]
     public void SetServoLink_KeepsItsId_ThroughEveryLinkChange()
     {

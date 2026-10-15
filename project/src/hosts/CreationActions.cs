@@ -70,7 +70,7 @@ internal static class CreationActions
         new(
             UiPopupType.Danger,
             string.Empty,
-            "The creation and its trained brain are removed for good. Copy it first if you might want it back.",
+            "The creation and its trained network are removed for good. Copy it first if you might want it back.",
             "Delete",
             () => Task.FromResult(delete()
                 ? UiDialogResult.Success
@@ -103,7 +103,7 @@ internal static class CreationActions
         new(
             UiPopupType.Default,
             string.Empty,
-            "The creation is locked so you do not change the size or values of its model by accident. Changes to how the model behaves are still allowed. Unlock to use every tool that changes the model. Adding or removing a part keeps the training, but adds or removes that part of the model. Removing a part and adding the same kind back does not bring its training back; use Undo instead.",
+            "The creation is locked so you do not change the size or values of its network by accident. Changes to how its parts behave are still allowed. Unlock to use every tool that changes the network. Adding or removing a part keeps the training, but adds or removes that part's inputs and outputs in the network. Removing a part and adding the same kind back does not bring its training back; use Undo instead.",
             "Unlock",
             () =>
             {

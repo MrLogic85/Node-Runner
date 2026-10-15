@@ -33,7 +33,7 @@ public sealed class PartKindDisplaysTests
     public void EachKind_HasItsTitle(PartKind kind, string title) =>
         PartKindDisplays.Of(kind).Title.ShouldBe(UiText.Plain(title));
 
-    // The port checks here and in BrainPortDisplayTests see only the kinds this creature holds.
+    // The port checks here and in NetworkPortDisplayTests see only the kinds this creature holds.
     [Fact]
     public void ThePortedCreature_HoldsEveryPartKind() =>
         PortedCreature.Def.Parts.Select(part => part.PartKind).Distinct().ShouldBe(Enum.GetValues<PartKind>(), ignoreOrder: true);
@@ -46,9 +46,9 @@ public sealed class PartKindDisplaysTests
     {
         var camera = PartKindDisplays.Of(PartKind.Camera);
 
-        foreach (var channel in BrainPorts.CameraChannels(rays))
+        foreach (var channel in NetworkPorts.CameraChannels(rays))
         {
-            Should.NotThrow(() => camera.Port(BrainPort.Input(PortedCreature.Camera, channel)), channel);
+            Should.NotThrow(() => camera.Port(NetworkPort.Input(PortedCreature.Camera, channel)), channel);
         }
     }
 

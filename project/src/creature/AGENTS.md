@@ -1,14 +1,14 @@
 # AGENTS.md — `src/creature/`
 
 The Godot side of a creature: bodies, joints, sensors, Servos, Velocity motors, Pistons,
-Springs, Wheels and the brain wiring. `docs/CREATURE_MODEL.md` owns the model; this
+Springs, Wheels and the network wiring. `docs/CREATURE_MODEL.md` owns the model; this
 file owns how Godot realises it.
 
 ## Rules
 
 1. **Built from `CreatureDef`.** The def is the source of truth; `Creature`
    turns it into bodies. No `[Export]` for anything a def sets.
-2. **No game logic.** No evolution, fitness or UI: given a def and a brain,
+2. **No game logic.** No evolution, fitness or UI: given a def and a network,
    become a physical thing that reacts to forces and drives its parts.
 3. **Bodies and joints.** Each node and each beam is its own `RigidBody2D`
    (`CanSleep = false`), and a `PinJoint2D` pins every beam to its two
@@ -63,8 +63,8 @@ file owns how Godot realises it.
    tick into specific force and steps the Mechanics
    `Accelerometer`, which substeps at most `Accelerometer.MaxSubstep`
    (1/60 s), so Build's longer frame steps stay stable.
-8. **Brain order is `BrainPorts.Of`.** The creature copies each part's value
-   to its port's place; never hand-order brain slots here.
+8. **Network order is `NetworkPorts.Of`.** The creature copies each part's value
+   to its port's place; never hand-order network slots here.
 9. **No allocations in the tick.** Reuse the sensor, output and scratch
    buffers; keep `_PhysicsProcess` a short sequence of named steps.
 10. **Every visual declares its shadow drawing.** Each visual implements
@@ -87,7 +87,7 @@ file owns how Godot realises it.
     collider (`Creature.Rubbers.cs` says how, #1142).
 14. **A Brake is friction on its `HingePartSides`, or a weld when Locked.** A
     `BrakeJoint` turns its sides (rule 6) by `Mechanics.Brake`'s torque
-    every tick, brain or not (#1040), using `HingePartSides.BrakeInertia`,
+    every tick, network or not (#1040), using `HingePartSides.BrakeInertia`,
     which must never read heavier than the joint. A Locked Brake is a
     second Godot joint instead, as no Godot angular joint can brake;
     `Creature.Links.cs` (Welder) says how, and when it stays friction.
@@ -95,7 +95,7 @@ file owns how Godot realises it.
     reads the angle and speed between its sides as a Motor does (#1204),
     and never applies torque or adds a joint.
 16. **A Stepper steps its `HingePartSides` by torque and holds them by a
-    weld.** A `StepperJoint` runs `Mechanics.Stepper` every tick, brain or
+    weld.** A `StepperJoint` runs `Mechanics.Stepper` every tick, network or
     not (#1037), reading `HingePartSides.BrakeInertia` as a Brake does. While
     it steps it turns its sides by torque (rule 6); while locked it welds them
     at the notch, with a Locked Brake's weld (`Creature.Links.cs`, Welder,
@@ -122,7 +122,7 @@ file owns how Godot realises it.
 
 - `Creature.cs`, `Creature.Links.cs`, `Creature.Wheels.cs`,
   `Creature.Rubbers.cs` — builds bodies, pins, sensors, links (each with its
-  end-stop cylinder), Wheels and Rubbers, and wires the brain
+  end-stop cylinder), Wheels and Rubbers, and wires the network
 - `Creature.Tears.cs` — the tear check, letting go, the main piece and the
   creature's `TearSample` for the trial (#1256), and the tear's look:
   torn ends, the pulse, the hatch fade and a free beam's fall (#1257)

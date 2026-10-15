@@ -100,16 +100,16 @@ public static class CameraRays
     }
 
     /// <summary>
-    /// One ray's brain input, its nearness relative to the camera's <paramref name="range"/>:
+    /// One ray's network input, its nearness relative to the camera's <paramref name="range"/>:
     /// <c>1 − distance / range</c> clamped to 0–1, and 0 with no hit, so nothing in view adds nothing
-    /// to the brain's weighted sum.
+    /// to the network's weighted sum.
     /// </summary>
     public static double Reading(double? hitDistance, double range) =>
         hitDistance is { } distance ? Math.Clamp(1 - (distance / range), 0, 1) : 0;
 
     /// <summary>
-    /// Writes the camera's brain inputs from each ray's <paramref name="hitDistances"/>, left to right
-    /// (null where it sees nothing), in <see cref="BrainPorts.CameraChannels"/> order: each ray's
+    /// Writes the camera's network inputs from each ray's <paramref name="hitDistances"/>, left to right
+    /// (null where it sees nothing), in <see cref="NetworkPorts.CameraChannels"/> order: each ray's
     /// <see cref="Reading"/> within <paramref name="range"/>, then hit, 1 when any ray sees the ground
     /// and else 0. Hit tells far ground from none: a hit at the very end of a ray reads nearness 0 but
     /// hit 1 (#1032).

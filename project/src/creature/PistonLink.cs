@@ -8,7 +8,7 @@ namespace NodeRunner.Creature;
 /// together along the line between them with <see cref="Mechanics.Piston.NextForce"/>, which
 /// builds up over its rise time, so it keeps the force it pushed with last step. It only applies the
 /// force: inside its stroke nothing holds its length, so it adds no rigidity. Its end stops (#701),
-/// a hidden cylinder body and groove, are built by <c>Creature.CreateEndStops</c>. Its brain conventions
+/// a hidden cylinder body and groove, are built by <c>Creature.CreateEndStops</c>. Its network conventions
 /// are <see cref="Mechanics.Piston"/>'s — see docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed class PistonLink
@@ -58,8 +58,8 @@ public sealed class PistonLink
 
     private Vector2 Axis => (NodeB.GlobalPosition - NodeA.GlobalPosition).Normalized();
 
-    /// <param name="position">The brain's position output, 0 fully in … 1 fully out.</param>
-    /// <param name="strength">The brain's strength output, 0…1 of its Strength setting.</param>
+    /// <param name="position">The network's position output, 0 fully in … 1 fully out.</param>
+    /// <param name="strength">The network's strength output, 0…1 of its Strength setting.</param>
     /// <param name="step">The physics step, in seconds.</param>
     public void Drive(double position, double strength, double step)
     {

@@ -19,9 +19,9 @@ public sealed class CreationDefTests
         roundTripped.Creature.Beams.ToArray().ShouldBe(original.Creature.Beams.ToArray());
         roundTripped.Creature.Sensors.ToArray().ShouldBe(original.Creature.Sensors.ToArray());
         roundTripped.Training.ShouldNotBeNull();
-        roundTripped.Training.Brain.Neurons.ToArray().ShouldBe(original.Training!.Brain.Neurons.ToArray());
-        roundTripped.Training.Brain.Connections.ToArray().ShouldBe(original.Training.Brain.Connections.ToArray());
-        roundTripped.Training.Brain.NextNeuronId.ShouldBe(original.Training.Brain.NextNeuronId);
+        roundTripped.Training.Network.Neurons.ToArray().ShouldBe(original.Training!.Network.Neurons.ToArray());
+        roundTripped.Training.Network.Connections.ToArray().ShouldBe(original.Training.Network.Connections.ToArray());
+        roundTripped.Training.Network.NextNeuronId.ShouldBe(original.Training.Network.NextNeuronId);
         roundTripped.Training.Generation.ShouldBe(original.Training.Generation);
         roundTripped.TrainSettings.ShouldBe(original.TrainSettings);
     }

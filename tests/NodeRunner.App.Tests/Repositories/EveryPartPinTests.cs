@@ -7,13 +7,16 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Tests.Repositories;
 
 /// <summary>
-/// Pins what one creature holding every part kind saves as, shares as and gives the brain (#1219),
+/// Pins what one creature holding every part kind saves as, shares as and gives the network (#1219),
 /// so a refactor of the part kinds (#1213) shows it changed none of them. The pins are the files in
 /// Repositories/Pins; docs/SAVE_FORMAT.md → "Pinned saves" owns when they change.
 /// </summary>
 public sealed class EveryPartPinTests
 {
     private static readonly CreationDef _creation = new(Guid.Parse("5b0e2f4c-8a3d-4e61-9c7b-1d2e3f405162"), "Every part", Creature());
+
+    // This build's code in version 15, before #1308 renamed training's network key. It must read for good.
+    private const string _codeInVersion15 = "NR15.lddBDoIwFEXRrRjGDvpb28ICSNwIEWbEgQm7V1DoK_-V4IwUUkyFw-1GYPvqntNlnLPiDINZYlf3Yaz2Wi1XEMI-30aKJhmeCbP8crfuPQrnfXZeGVinVe-HR1-hcHDs4FiuGZe_UZ-YxDm20QCjIdUWpTMmOmvEbuv9qp26lTiz-iZ46cxvyVz_f2zjzK4wM0wMlP9Gv3Yblu3q3a1Z06TXLuSBbiGCbVbBLk8roTJ7sgeLBzJL8XbiDbmhEjztIyMmPwheZ6Ft98mf285ot-c8R02EaW4hPMOR5bZsufozG1xcp_rYLc8LrKJj3N_KdS46LR3JSXR_j_P8vGmd6dejaH8oN7u233DtmzRH3P9Ehb0EtvE4yf8b12ywSg";
 
     [Fact]
     public void Creature_HoldsEveryPartKind_AndCouldBeBuiltAndPlayed()
@@ -48,10 +51,10 @@ public sealed class EveryPartPinTests
     }
 
     [Fact]
-    public void BrainPortsAndTheirLabels_MatchThePin()
+    public void NetworkPortsAndTheirLabels_MatchThePin()
     {
-        var layout = BrainPorts.Of(_creation.Creature);
-        var labels = BrainPortLabels.For(_creation.Creature);
+        var layout = NetworkPorts.Of(_creation.Creature);
+        var labels = NetworkPortLabels.For(_creation.Creature);
         labels.Inputs.Count.ShouldBe(layout.Inputs.Count);
         labels.Outputs.Count.ShouldBe(layout.Outputs.Count);
 
@@ -74,9 +77,19 @@ public sealed class EveryPartPinTests
         SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(_creation.Creature));
     }
 
+    [Fact]
+    public void ACodeFromVersion15_StillReadsAsTheSameBuild()
+    {
+        var read = CreationShareCode.Read(_codeInVersion15);
+
+        read.Refusal.ShouldBeNull();
+        read.UpdatedFrom.ShouldBe(15);
+        SaveJson.Serialize(read.Build.ShouldNotBeNull().Creature).ShouldBe(SaveJson.Serialize(_creation.Creature));
+    }
+
     // One line per port, in port order: its direction, part id, channel key, signal and label
     // (UiText's debug view, so its template and arguments are pinned, not a translation).
-    private static string Line(string direction, BrainPort port, UiText label) =>
+    private static string Line(string direction, NetworkPort port, UiText label) =>
         $"{direction,-3} {port.PartId,2} {port.Channel,-9} {port.Signal,-12} {label}";
 
     // Ids 1, 2, 3 … in the order the parts are listed, joints on whole units and settings on their

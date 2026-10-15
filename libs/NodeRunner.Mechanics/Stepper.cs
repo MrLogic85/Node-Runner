@@ -5,7 +5,7 @@ namespace NodeRunner.Mechanics;
 /// <summary>
 /// How a <see cref="StepperDef"/> steps (#1037), like a clock. It holds its joint locked at a notch,
 /// one of <see cref="StepperDef.StepsPerTurn"/> evenly spaced angles counted from the built angle. Its
-/// clock runs at the brain's frequency (#1263); each time it ticks it unlocks and drives the joint to the
+/// clock runs at the network's frequency (#1263); each time it ticks it unlocks and drives the joint to the
 /// neighbouring notch, the way the frequency's sign says, with at most Max strength: full torque, then
 /// braking just in time to arrive still. It has
 /// no top speed. It locks the joint the moment it is close enough to the notch, or as soon as it has
@@ -14,7 +14,7 @@ namespace NodeRunner.Mechanics;
 /// next steps on from that nearest notch. Locked, the host welds the joint rigid at its notch
 /// (<see cref="StepperState.Locked"/>); where it can't, <see cref="StepperState.Torque"/> holds it as
 /// endless friction, as a Locked Brake's does. Its
-/// angle is the one between its sides, as a <see cref="VelocityMotor"/>'s, and the brain sees it the
+/// angle is the one between its sides, as a <see cref="VelocityMotor"/>'s, and the network sees it the
 /// same way, as a sine and cosine, with a tick that shows when it steps next.
 /// </summary>
 public static class Stepper
@@ -47,8 +47,8 @@ public static class Stepper
     /// <summary>
     /// The Stepper's next state from its last. <paramref name="angle"/> is the angle between its sides
     /// from the built angle, counted on across whole turns; <paramref name="speed"/> its turning speed.
-    /// <paramref name="frequencyOutput"/> is the brain's Frequency output, −1…1 of Max frequency, its sign
-    /// the way to step, counter-clockwise positive. It takes effect at once. With no brain, pass 0: the
+    /// <paramref name="frequencyOutput"/> is the network's Frequency output, −1…1 of Max frequency, its sign
+    /// the way to step, counter-clockwise positive. It takes effect at once. With no network, pass 0: the
     /// Stepper then only holds its notch. <paramref name="welded"/> is whether the host
     /// welds the joint while <see cref="StepperState.Locked"/>; if not, the Stepper holds it by torque.
     /// </summary>

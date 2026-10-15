@@ -6,7 +6,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
-/// A sensor moves to another beam and keeps what the brain learned about it (#806): its id, so its
+/// A sensor moves to another beam and keeps what the network learned about it (#806): its id, so its
 /// ports and weights, on locked Creations too.
 /// </summary>
 public sealed class BuildSensorMoveTests
@@ -43,13 +43,13 @@ public sealed class BuildSensorMoveTests
 
         build.MoveSensor(20, _freeBeam).ShouldBeTrue();
         build.MoveSensor(21, new CreatureElementSelection(CreatureElementKind.Beam, 10)).ShouldBeTrue();
-        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!;
+        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
 
         updated.Creature.Sensors.Select(sensor => (sensor.Id, sensor.BeamId)).ShouldBe([(20, 11), (21, 10)]);
 
-        BrainPorts.Of(updated.Creature).Inputs.ShouldBe(BrainPorts.Of(creation.Creature).Inputs);
-        updated.Training!.Brain.Neurons.ShouldBe(creation.Training!.Brain.Neurons);
-        updated.Training.Brain.Connections.ShouldBe(creation.Training.Brain.Connections);
+        NetworkPorts.Of(updated.Creature).Inputs.ShouldBe(NetworkPorts.Of(creation.Creature).Inputs);
+        updated.Training!.Network.Neurons.ShouldBe(creation.Training!.Network.Neurons);
+        updated.Training.Network.Connections.ShouldBe(creation.Training.Network.Connections);
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public sealed class BuildSensorMoveTests
         new(Guid.NewGuid(), "Walker", Creature(), TestTraining.StateFor(Creature(), 3));
 
     // A Camera on beam 10, an Accelerometer on beam 12 and nothing on beam 11; Piston 30 gives the
-    // brain an output.
+    // network an output.
     private static CreatureDef Creature() => new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(100, 100)), new NodeDef(4, new Vector2D(200, 100))],
         [new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 3, 4)],

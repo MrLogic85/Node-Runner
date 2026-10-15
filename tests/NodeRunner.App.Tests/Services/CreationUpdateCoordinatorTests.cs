@@ -4,7 +4,7 @@ using NodeRunner.App.Services;
 using NodeRunner.App.Tests.ViewModels;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
-using NodeRunner.ML.Brains;
+using NodeRunner.ML.Networks;
 
 namespace NodeRunner.App.Tests.Services;
 
@@ -47,7 +47,7 @@ public sealed class CreationUpdateCoordinatorTests
     [Fact]
     public void TryPersistTraining_AfterCreatureEdit_DiscardsStaleSnapshot()
     {
-        // Regression guard: an edit can change brain topology, so a genome
+        // Regression guard: an edit can change network topology, so a genome
         // captured before the edit must not be written onto the new body.
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
@@ -91,29 +91,29 @@ public sealed class CreationUpdateCoordinatorTests
 
         updated.ShouldNotBeNull();
         updated.Creature.ShouldBe(moved);
-        updated.Training!.Brain.Neurons.ShouldBe(creation.Training!.Brain.Neurons);
-        updated.Training.Brain.Connections.ShouldBe(creation.Training.Brain.Connections);
+        updated.Training!.Network.Neurons.ShouldBe(creation.Training!.Network.Neurons);
+        updated.Training.Network.Connections.ShouldBe(creation.Training.Network.Connections);
         repository.Get(creation.Id).ShouldBe(updated);
     }
 
     [Fact]
-    public void ApplyEdit_WithTheOpenedBrain_RefitsIt_AndKeepsTheSavedRecords()
+    public void ApplyEdit_WithTheOpenedNetwork_RefitsIt_AndKeepsTheSavedRecords()
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
         var creation = Trained(PistonCreature(withSecondPiston: true, nodeX: 0));
         repository.Save(creation);
-        var opened = creation.Training!.Brain;
+        var opened = creation.Training!.Network;
         coordinator.ApplyEdit(creation.Id, PistonCreature(withSecondPiston: false, nodeX: 0));
         var saved = repository.Get(creation.Id)!;
         var training = saved.Training!;
-        repository.Save(saved.WithCreature(saved.Creature, new TrainingStateDef(training.Brain, 9, training.Latest, training.Best)));
+        repository.Save(saved.WithCreature(saved.Creature, new TrainingStateDef(training.Network, 9, training.Latest, training.Best)));
 
         var updated = coordinator.ApplyEdit(creation.Id, PistonCreature(withSecondPiston: true, nodeX: 0), opened)!;
 
         updated.Training!.Generation.ShouldBe(9);
-        updated.Training.Brain.Neurons.ShouldBe(opened.Neurons, ignoreOrder: true);
-        updated.Training.Brain.Connections.ShouldBe(opened.Connections, ignoreOrder: true);
+        updated.Training.Network.Neurons.ShouldBe(opened.Neurons, ignoreOrder: true);
+        updated.Training.Network.Connections.ShouldBe(opened.Connections, ignoreOrder: true);
     }
 
     [Fact]
@@ -123,14 +123,14 @@ public sealed class CreationUpdateCoordinatorTests
         var coordinator = new CreationUpdateCoordinator(repository);
         var creation = Trained(PistonCreature(withSecondPiston: false, nodeX: 0));
         repository.Save(creation);
-        var brain = creation.Training!.Brain;
+        var network = creation.Training!.Network;
         var build = new BuildViewModel();
         build.LoadCreation(creation);
         var updates = new List<CreationDef>();
         void Edit(Action edit)
         {
             edit();
-            updates.Add(coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!);
+            updates.Add(coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!);
         }
 
         var joint = 0;
@@ -159,8 +159,8 @@ public sealed class CreationUpdateCoordinatorTests
         updates.ShouldAllBe(update => update.Training!.Generation == creation.Training.Generation);
         foreach (var update in updates)
         {
-            update.Training!.Brain.Neurons.ShouldBe(brain.Neurons, ignoreOrder: true);
-            update.Training.Brain.Connections.ShouldBe(brain.Connections, ignoreOrder: true);
+            update.Training!.Network.Neurons.ShouldBe(network.Neurons, ignoreOrder: true);
+            update.Training.Network.Connections.ShouldBe(network.Connections, ignoreOrder: true);
         }
 
         updates[^1].Creature.Nodes.ShouldBe(creation.Creature.Nodes);
@@ -169,7 +169,7 @@ public sealed class CreationUpdateCoordinatorTests
         build.IsLocked.ShouldBeTrue();
     }
 
-    // A link change keeps the motor's id, so its brain ports keep their weights and biases (#1177).
+    // A link change keeps the motor's id, so its network ports keep their weights and biases (#1177).
     [Theory]
     [InlineData(CreatureElementKind.Servo)]
     [InlineData(CreatureElementKind.VelocityMotor)]
@@ -179,8 +179,8 @@ public sealed class CreationUpdateCoordinatorTests
         var coordinator = new CreationUpdateCoordinator(repository);
         var creation = Trained(MotorCreature(kind));
         repository.Save(creation);
-        var brain = creation.Training!.Brain;
-        brain.Neurons.ShouldContain(neuron => neuron.PartId == 9);
+        var network = creation.Training!.Network;
+        network.Neurons.ShouldContain(neuron => neuron.PartId == 9);
         var build = new BuildViewModel();
         build.LoadCreation(creation);
         build.Unlock();
@@ -189,11 +189,11 @@ public sealed class CreationUpdateCoordinatorTests
         build.SelectOnly(kind, 9);
         build.SetHingePartLink(9, fixedRole: true, linkId: 7);
 
-        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!;
+        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
 
         updated.Creature.JointMotors.Select(motor => (motor.Id, motor.FixedLinkId, motor.TargetLinkId)).ShouldBe([(9, 7, 6)]);
-        updated.Training!.Brain.Neurons.ShouldBe(brain.Neurons, ignoreOrder: true);
-        updated.Training.Brain.Connections.ShouldBe(brain.Connections, ignoreOrder: true);
+        updated.Training!.Network.Neurons.ShouldBe(network.Neurons, ignoreOrder: true);
+        updated.Training.Network.Connections.ShouldBe(network.Connections, ignoreOrder: true);
     }
 
     // A locked Creation changes a motor's sides without unlocking, and stays locked and trained (#1179).
@@ -213,12 +213,12 @@ public sealed class CreationUpdateCoordinatorTests
         build.SetHingePartLink(9, fixedRole: false, linkId: 7);
 
         build.IsLocked.ShouldBeTrue();
-        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedBrain)!;
+        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
         updated.Creature.JointMotors.Select(motor => (motor.Id, motor.FixedLinkId, motor.TargetLinkId)).ShouldBe([(9, 5, 7)]);
         CreationLock.IsLocked(updated).ShouldBeTrue();
         updated.Training!.Generation.ShouldBe(creation.Training!.Generation);
-        updated.Training.Brain.Neurons.ShouldBe(creation.Training.Brain.Neurons, ignoreOrder: true);
-        updated.Training.Brain.Connections.ShouldBe(creation.Training.Brain.Connections, ignoreOrder: true);
+        updated.Training.Network.Neurons.ShouldBe(creation.Training.Network.Neurons, ignoreOrder: true);
+        updated.Training.Network.Connections.ShouldBe(creation.Training.Network.Connections, ignoreOrder: true);
     }
 
     [Fact]
@@ -228,10 +228,10 @@ public sealed class CreationUpdateCoordinatorTests
         var coordinator = new CreationUpdateCoordinator(repository);
         var creation = Trained(PistonCreature(withSecondPiston: false, nodeX: 0));
         repository.Save(creation);
-        var oldPorts = BrainPorts.Of(creation.Creature);
-        var oldGenome = DirectBrain.Compile(creation.Training!.Brain, oldPorts);
+        var oldPorts = NetworkPorts.Of(creation.Creature);
+        var oldGenome = DirectNetwork.Compile(creation.Training!.Network, oldPorts);
         var rebuilt = PistonCreature(withSecondPiston: true, nodeX: 0);
-        var newPorts = BrainPorts.Of(rebuilt);
+        var newPorts = NetworkPorts.Of(rebuilt);
 
         var updated = coordinator.ApplyEdit(creation.Id, rebuilt)!;
 
@@ -239,7 +239,7 @@ public sealed class CreationUpdateCoordinatorTests
         training.Generation.ShouldBe(creation.Training.Generation);
         training.Latest.ShouldBe(creation.Training.Latest);
         training.Best.ShouldBe(creation.Training.Best);
-        var genome = DirectBrain.Compile(training.Brain, newPorts);
+        var genome = DirectNetwork.Compile(training.Network, newPorts);
         // The first piston's outputs keep their trained weights from its own two inputs and their biases.
         var biasStart = newPorts.Inputs.Count * newPorts.Outputs.Count;
         var oldBiasStart = oldPorts.Inputs.Count * oldPorts.Outputs.Count;
@@ -262,12 +262,12 @@ public sealed class CreationUpdateCoordinatorTests
         var coordinator = new CreationUpdateCoordinator(repository);
         var creation = Trained(CameraCreature(rays: 3));
         repository.Save(creation);
-        var oldPorts = BrainPorts.Of(creation.Creature);
-        var oldGenome = DirectBrain.Compile(creation.Training!.Brain, oldPorts);
+        var oldPorts = NetworkPorts.Of(creation.Creature);
+        var oldGenome = DirectNetwork.Compile(creation.Training!.Network, oldPorts);
         var rebuilt = CameraCreature(rays: 5);
-        var newPorts = BrainPorts.Of(rebuilt);
+        var newPorts = NetworkPorts.Of(rebuilt);
 
-        var genome = DirectBrain.Compile(coordinator.ApplyEdit(creation.Id, rebuilt)!.Training!.Brain, newPorts);
+        var genome = DirectNetwork.Compile(coordinator.ApplyEdit(creation.Id, rebuilt)!.Training!.Network, newPorts);
 
         newPorts.Inputs.Count.ShouldBe(oldPorts.Inputs.Count + 2);
         foreach (var channel in new[] { "left1", "centre", "right1", "hit" })
@@ -294,8 +294,8 @@ public sealed class CreationUpdateCoordinatorTests
             var updated = new CreationUpdateCoordinator(repository).ApplyEdit(creation.Id, PistonCreature(withSecondPiston: true, nodeX: 0))!;
 
             var reopened = new FileCreationRepository(new TestStorageLocation(directory)).Get(creation.Id).ShouldNotBeNull();
-            reopened.Training!.Brain.Neurons.ShouldBe(updated.Training!.Brain.Neurons);
-            reopened.Training.Brain.Connections.ShouldBe(updated.Training.Brain.Connections);
+            reopened.Training!.Network.Neurons.ShouldBe(updated.Training!.Network.Neurons);
+            reopened.Training.Network.Connections.ShouldBe(updated.Training.Network.Connections);
             reopened.Training.Generation.ShouldBe(creation.Training!.Generation);
         }
         finally
@@ -317,11 +317,11 @@ public sealed class CreationUpdateCoordinatorTests
 
         var updated = coordinator.ApplyEdit(creation.Id, PistonCreature(withSecondPiston: false, nodeX: 0))!;
 
-        var brain = updated.Training!.Brain;
-        brain.Neurons.ShouldAllBe(neuron => neuron.PartId == 10);
-        brain.Connections.Count.ShouldBe(4);
-        var kept = creation.Training!.Brain.Connections.Where(gene => brain.Connections.Any(other => other.From == gene.From && other.To == gene.To));
-        brain.Connections.ShouldBe(kept);
+        var network = updated.Training!.Network;
+        network.Neurons.ShouldAllBe(neuron => neuron.PartId == 10);
+        network.Connections.Count.ShouldBe(4);
+        var kept = creation.Training!.Network.Connections.Where(gene => network.Connections.Any(other => other.From == gene.From && other.To == gene.To));
+        network.Connections.ShouldBe(kept);
     }
 
     [Fact]

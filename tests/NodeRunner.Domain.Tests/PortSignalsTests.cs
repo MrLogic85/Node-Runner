@@ -32,5 +32,5 @@ public sealed class PortSignalsTests
 
     [Fact]
     public void Output_CannotCarryAReading() =>
-        Should.Throw<ArgumentOutOfRangeException>(() => BrainPort.Output(1, "x", PortSignal.Reading));
+        Should.Throw<ArgumentOutOfRangeException>(() => NetworkPort.Output(1, "x", PortSignal.Reading));
 }

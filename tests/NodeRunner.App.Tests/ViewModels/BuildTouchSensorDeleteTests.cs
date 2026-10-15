@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
-/// Delete and a joint's Touch sensor (#1043): the sensor has a brain port, so a locked Creation
+/// Delete and a joint's Touch sensor (#1043): the sensor has a network port, so a locked Creation
 /// keeps it, and it keeps its joint when the delete clears the joint's other parts.
 /// </summary>
 public sealed class BuildTouchSensorDeleteTests
@@ -22,7 +22,7 @@ public sealed class BuildTouchSensorDeleteTests
         build.DeleteLockedReason.ShouldNotBeNull();
         build.DeleteSelectedParts();
 
-        build.CanvasNotes().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, _touchJoint), UiText.Plain("Locked: would change the model"))]);
+        build.CanvasNotes().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, _touchJoint), UiText.Plain("Locked: would change the network"))]);
         build.Snapshot().TouchSensors.ShouldHaveSingleItem();
     }
 

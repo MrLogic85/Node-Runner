@@ -8,7 +8,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 /// <summary>
 /// The Angle sensor in Build (#1206): placed on a joint from the tray in its hinge-part slot,
 /// set up with the Motor's pickers, copied, deleted and stacked as the other joint parts are, and
-/// kept by a locked Creation as a part with brain ports.
+/// kept by a locked Creation as a part with network ports.
 /// </summary>
 public sealed class BuildAngleSensorTests
 {
@@ -408,7 +408,7 @@ public sealed class BuildAngleSensorTests
         build.Load(WithAnAngleSensor(), locked: true);
         build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1, 3 }, Beams = new HashSet<int> { 4, 5 }, AngleSensors = new HashSet<int> { _angleSensorId } });
 
-        build.CopyBlockers().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, _angleSensor, UiText.Plain("Locked: would change the model"))]);
+        build.CopyBlockers().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, _angleSensor, UiText.Plain("Locked: would change the network"))]);
         build.CopySelectedParts();
 
         build.AngleSensors.ShouldHaveSingleItem();
@@ -428,7 +428,7 @@ public sealed class BuildAngleSensorTests
         build.DeleteSelectedParts();
 
         build.AngleSensors.ShouldBe([new AngleSensorDef(_angleSensorId, 2, fixedLinkId: 4, targetLinkId: 5)]);
-        build.CanvasNotes().ShouldContain(new CanvasNote(CanvasNoteKind.Danger, _angleSensor, UiText.Plain("Locked: would change the model")));
+        build.CanvasNotes().ShouldContain(new CanvasNote(CanvasNoteKind.Danger, _angleSensor, UiText.Plain("Locked: would change the network")));
     }
 
     // Its ports do not depend on its sides, which keep its id, so a locked Creation renames and relinks it as a Motor (#1179).
@@ -453,10 +453,10 @@ public sealed class BuildAngleSensorTests
         var build = TwoBeams();
         var id = build.PlacePart(BuildPart.AngleSensor, _middleJoint)!.Value;
         var creature = build.Snapshot();
-        var layout = BrainPorts.Of(creature);
+        var layout = NetworkPorts.Of(creature);
         int[] layers = [layout.Inputs.Count, layout.Outputs.Count];
-        var brain = NeuralNetwork.FromGenome(layers, new double[NeuralNetwork.GenomeLength(layers)], Activation.Tanh);
-        var values = BrainPortValues.Sample(layout, brain, [0.5, -0.5, 0.25]);
+        var network = NeuralNetwork.FromGenome(layers, new double[NeuralNetwork.GenomeLength(layers)], Activation.Tanh);
+        var values = NetworkPortValues.Sample(layout, network, [0.5, -0.5, 0.25]);
 
         var callout = PartCalloutPresentation.For(creature, new CreatureElementSelection(CreatureElementKind.AngleSensor, id), values);
 

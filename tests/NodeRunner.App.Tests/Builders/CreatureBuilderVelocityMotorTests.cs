@@ -31,7 +31,7 @@ public sealed class CreatureBuilderVelocityMotorTests
         builder.VelocityMotors.Single().ShouldBe(new VelocityMotorDef(motor, joint, first, second));
     }
 
-    // Every link change keeps the motor's id, and so its brain ports and training (#1177).
+    // Every link change keeps the motor's id, and so its network ports and training (#1177).
     [Fact]
     public void SetVelocityMotorLink_KeepsItsId_ThroughEveryLinkChange()
     {

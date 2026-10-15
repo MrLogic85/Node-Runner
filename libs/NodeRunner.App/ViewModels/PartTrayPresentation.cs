@@ -29,7 +29,7 @@ public enum PartTrayRowState
     Selected,
     ComingLater,
 
-    /// <summary>Implemented, but the creation is locked and the part has brain ports, so adding it would change the model (#896, <see cref="PartTray.HasBrainPorts"/>).</summary>
+    /// <summary>Implemented, but the creation is locked and the part has network ports, so adding it would change the network (#896, <see cref="PartTray.HasNetworkPorts"/>).</summary>
     CreationLocked,
 }
 
@@ -67,7 +67,7 @@ public static class PartTray
     /// <summary>A Coming later part or link with the version that brings it (#992).</summary>
     public static UiText ComingIn(UiText name, string version) => UiText.Format("{0} comes in version {1}", name, version);
 
-    public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts the brain uses.");
+    public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts the network uses.");
 
     /// <summary>The tray's help line (#805).</summary>
     public static UiText PickHelp { get; } = UiText.Plain("Tap a part to pick it, or drag it onto the creature.");
@@ -76,7 +76,7 @@ public static class PartTray
 
     /// <summary>
     /// The tray with <paramref name="picked"/> selected (#805). On a locked creation each available
-    /// part with brain ports shows locked, so it does not look like it can be picked or dragged out,
+    /// part with network ports shows locked, so it does not look like it can be picked or dragged out,
     /// and the help says how to unlock (#896); a part without, like the Wheel, the Rubber or the Brake, stays available.
     /// </summary>
     public static PartTrayPresentation Create(BuildPart? picked, bool creationLocked = false)
@@ -88,14 +88,14 @@ public static class PartTray
             creationLocked ? CreationLockedHelp : PickHelp);
     }
 
-    /// <summary>Whether the part can be picked or dragged out now: available, and on a locked creation without brain ports (#896).</summary>
-    public static bool CanPick(BuildPart part, bool creationLocked) => IsAvailable(part) && !(creationLocked && HasBrainPorts(part));
+    /// <summary>Whether the part can be picked or dragged out now: available, and on a locked creation without network ports (#896).</summary>
+    public static bool CanPick(BuildPart part, bool creationLocked) => IsAvailable(part) && !(creationLocked && HasNetworkPorts(part));
 
-    /// <summary>Whether placing <paramref name="part"/> adds brain ports, so a locked creation refuses it (#896): every part but the Wheel (#129), the Rubber (#1142) and the Brake (#1041).</summary>
-    public static bool HasBrainPorts(BuildPart part) => part is not (BuildPart.Wheel or BuildPart.Rubber or BuildPart.Brake);
+    /// <summary>Whether placing <paramref name="part"/> adds network ports, so a locked creation refuses it (#896): every part but the Wheel (#129), the Rubber (#1142) and the Brake (#1041).</summary>
+    public static bool HasNetworkPorts(BuildPart part) => part is not (BuildPart.Wheel or BuildPart.Rubber or BuildPart.Brake);
 
     private static PartTrayRow Shown(PartTrayRow row, BuildPart? picked, bool creationLocked) =>
-        creationLocked && row.IsAvailable && HasBrainPorts(row.Part) ? row with { State = PartTrayRowState.CreationLocked }
+        creationLocked && row.IsAvailable && HasNetworkPorts(row.Part) ? row with { State = PartTrayRowState.CreationLocked }
         : row.Part == picked ? row with { State = PartTrayRowState.Selected }
         : row;
 

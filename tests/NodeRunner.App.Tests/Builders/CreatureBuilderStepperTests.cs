@@ -176,13 +176,13 @@ public sealed class CreatureBuilderStepperTests
     public void AStepper_AddsItsThreeInputs_AndItsTwoOutputs()
     {
         var builder = Joint(out var joint, out _, out _, out _);
-        var before = BrainPorts.Of(builder.Build());
+        var before = NetworkPorts.Of(builder.Build());
 
         var stepper = builder.AddStepper(joint);
 
-        var after = BrainPorts.Of(builder.Build());
-        after.Inputs.Except(before.Inputs).ShouldBe(BrainPorts.StepperInputs(stepper));
-        after.Outputs.Except(before.Outputs).ShouldBe(BrainPorts.StepperOutputs(stepper));
+        var after = NetworkPorts.Of(builder.Build());
+        after.Inputs.Except(before.Inputs).ShouldBe(NetworkPorts.StepperInputs(stepper));
+        after.Outputs.Except(before.Outputs).ShouldBe(NetworkPorts.StepperOutputs(stepper));
     }
 
     // A joint with two beams, to far and to a third node.

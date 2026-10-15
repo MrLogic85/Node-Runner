@@ -1846,22 +1846,22 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
-[node name="BrainMark" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+[node name="NetworkMark" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
 custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
-[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/BrainMark" groups=["inventory_icon"]]
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/NetworkMark" groups=["inventory_icon"]]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 40)
 script = ExtResource("cs_icon")
 IconId = 69
 IconSize = 3
 
-[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/BrainMark"]
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/NetworkMark"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "mark_brain"
+text = "mark_network"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
@@ -1886,22 +1886,22 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
-[node name="Model" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
+[node name="Network" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons"]
 layout_mode = 2
 custom_minimum_size = Vector2(112, 0)
 theme_override_constants/separation = 4
 
-[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Model" groups=["inventory_icon"]]
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Network" groups=["inventory_icon"]]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 40)
 script = ExtResource("cs_icon")
 IconId = 18
 IconSize = 3
 
-[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Model"]
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/UiIcons/Network"]
 layout_mode = 2
 horizontal_alignment = 1
-text = "icon_model"
+text = "icon_network"
 script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
@@ -3040,7 +3040,7 @@ TextColor = 8
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-text = "Shadows race and the brain keeps learning."
+text = "Shadows race and the network keeps learning."
 script = ExtResource("shell_4_label")
 TextStyle = 4
 TextColor = 7
@@ -3104,7 +3104,7 @@ TextColor = 8
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-text = "Replays the best brain."
+text = "Replays the best network."
 script = ExtResource("shell_4_label")
 TextStyle = 6
 TextColor = 7

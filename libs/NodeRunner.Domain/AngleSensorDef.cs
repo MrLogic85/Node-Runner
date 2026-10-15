@@ -1,7 +1,7 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// An Angle sensor (#1201, #1204): a joint sensor on one node that tells the brain the angle between
+/// An Angle sensor (#1201, #1204): a joint sensor on one node that tells the network the angle between
 /// its Fixed and Target sides and how fast it changes (<c>NodeRunner.Mechanics.AngleSensor</c>). It fills
 /// the joint's hinge-part slot and takes its sides by the Servo's rules (<see cref="IHingePartDef"/>),
 /// but it is no joint motor: it has inputs only and applies no force, so it is not in
