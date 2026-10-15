@@ -1,7 +1,7 @@
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Checks the agent-file rules in docs/REVIEW.md → "Agent and rule files": a broken one silently
+/// Checks the agent-file rules in docs/REVIEW.md → "Agent, rule and skill files": a broken one silently
 /// removes an agent from Copilot CLI or Claude Code (#1314, #1334). Reads only the frontmatter keys
 /// these files use; it is not a YAML parser.
 /// </summary>
@@ -152,7 +152,7 @@ internal static class AgentFiles
     }
 
     /// <summary>An unquoted <c>: </c> or <c> #</c> makes the line invalid YAML or cuts the value short.</summary>
-    private static void CheckScalar(string shown, string key, string value, List<string> problems)
+    internal static void CheckScalar(string shown, string key, string value, List<string> problems)
     {
         var quoted = value.Length >= 2 && value[0] is '"' or '\'' && value[^1] == value[0];
         if (!quoted && (value.Contains(": ", StringComparison.Ordinal) || value.Contains(" #", StringComparison.Ordinal)))

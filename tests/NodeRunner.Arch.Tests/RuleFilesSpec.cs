@@ -1,7 +1,7 @@
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Rule files load for the files they govern: docs/REVIEW.md → "Agent and rule files" (#1315). The
+/// Rule files load for the files they govern: docs/REVIEW.md → "Agent, rule and skill files" (#1315). The
 /// fixtures live in a temp directory, so neither tool loads them as rules.
 /// </summary>
 public sealed class RuleFilesSpec : IDisposable
@@ -25,7 +25,7 @@ public sealed class RuleFilesSpec : IDisposable
     {
         var problems = RuleFiles.Problems(RepositoryRoot.Find());
 
-        problems.ShouldBeEmpty("See docs/REVIEW.md → \"Agent and rule files\".");
+        problems.ShouldBeEmpty("See docs/REVIEW.md → \"Agent, rule and skill files\".");
     }
 
     [Fact]

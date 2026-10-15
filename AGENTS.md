@@ -23,25 +23,25 @@ understanding of the project before starting to work.
 ## Prime directives for agents
 
 1. **Follow the owning documents and keep them current.** Each topic has one
-   owner, listed in `README.md` → "Documentation"; write docs by
-   `docs/CODE_DESIGN_PRINCIPLES.md` §9.
+   owner, listed in `README.md` → "Documentation"; write docs with the
+   `write-docs` skill.
 2. **Godot first, always.** Write our own solution only when Godot cannot
    do it natively, and say why (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
-3. **Run the review agents before every commit or push.** `docs/REVIEW.md`
-   → "Review agents" says which and how; "Definition of Done" owns the
-   gate.
+3. **Run the review agents before every commit or push,** with the
+   `review-change` skill; then ship with the `ship-pr` skill.
+   `docs/REVIEW.md` → "Definition of Done" owns the gate.
 4. **Work autonomously.** Pause only when blocked by hardware or when a
    decision genuinely needs a human. Pick work from recent discussions with
-   a human or from GitHub, and break big issues into milestones or
+   a human or from GitHub, start or resume each issue with the
+   `start-issue` skill, and break big issues into milestones or
    sub-issues.
 5. **Prefer physical devices for Android checks.** Ask first whether they
    are free, and stop any emulator you start (`docs/MANUAL_TESTING.md` →
    "Android checks").
 6. **Record work and decisions on GitHub.** File new work, bugs and
-   decisions as issues, including improvements spotted along the way, per
-   `docs/ISSUES.md` → "Creating an issue", and
-   review broad, risky or ambiguous issues before implementing them
-   (`docs/ISSUES.md` → "Reviewing an issue").
+   decisions as issues, including improvements spotted along the way,
+   with the `create-issue` skill, and review broad, risky or ambiguous
+   issues before implementing them with the `review-issue` skill.
    Don't be afraid to suggest large refactors when they would benefit the code.
 7. **Keep code and project terms in English, whatever the chat language.**
    Talk to the human in their language, but write identifiers, part and
@@ -78,6 +78,10 @@ layer-specific rules live in `.claude/rules/`; each lists the files it
 governs in `paths`, and both tools load it when you read a matching file.
 Read the matching rules yourself before creating a file there, or when you
 work from a diff alone.
+
+Procedures live as skills in `.claude/skills/<name>/SKILL.md`. Both tools
+load one when the task matches its description, or by `/<name>`; when a
+directive above names a skill, use it even if it did not load by itself.
 
 ## Machine-local setup
 

@@ -55,11 +55,8 @@ sets, in the same step:
    **blocked-by** relationship. "Blocked by #N" in the body does not record
    it.
 
-Then check the tracker:
-
-```bash
-.github/scripts/issue-audit.sh   # lists open issues that break these rules
-```
+The `create-issue` skill runs these steps and checks the result with
+`.github/scripts/issue-audit.sh`.
 
 ## Type labels
 
@@ -130,6 +127,8 @@ Milestone with the Size sum shows each milestone's total.
 
 ## Status
 
+The `start-issue` skill takes the route each Status calls for.
+
 - **Idea** — Unshaped; not reviewed or implemented. When discussion gives
   it one clear outcome and acceptance criteria, set **Needs review**.
 - **Needs review** — Shaped; review it before implementation (see
@@ -178,11 +177,20 @@ implementation when it:
 - likely needs manual testing; or
 - is in **Needs review** or **Needs decision**.
 
-Give the `issue-reviewer` agent (`.github/agents/issue-reviewer.agent.md`)
-the issue URL or full text; the agent owns what to check and what each
-finding level means. Act on each finding as its level says. Post the
-review summary as an issue comment; if the review changes the issue, edit
-its body and say what changed in the comment.
+The `review-issue` skill runs the review with the `issue-reviewer` agent
+(`.github/agents/issue-reviewer.agent.md`), which owns what to check and
+what each finding level means. The review is recorded on the issue: the
+body holds what it changed, and a comment its summary.
+
+The result sets the Status:
+
+- A Major or Medium finding left open: **Needs decision** when it waits
+  on the owner's choice, otherwise **Needs review**; review it again once
+  the body is fixed.
+- Otherwise: **Needs design** if it changes what the user sees without an
+  approved design, else **Blocked** if it has an open blocker, else
+  **Ready**. Minor findings do not hold it back. A Size 8 issue is split
+  first; its sub-issues take this Status, and it follows "Parent issues".
 
 Each milestone that changes UI has a design brief that `design-lead`
 reviews before its screens are built.

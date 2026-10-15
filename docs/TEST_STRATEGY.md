@@ -53,11 +53,12 @@ versions.
 `NodeRunner.Arch.Tests` (`ArchitectureSpec.cs`) guards the layer graph
 (`docs/ARCHITECTURE.md`), the file-size limit
 (`docs/CODE_DESIGN_PRINCIPLES.md` §5) and the Android export
-(`docs/RELEASING.md` → "Android export"). `AgentFilesSpec.cs` and
-`RuleFilesSpec.cs` check the agent and rule files (`docs/REVIEW.md` →
-"Agent and rule files"), and the specs in `Hooks/` run the hooks against
-throwaway repositories (`docs/REVIEW.md` → "Hooks"). Add a fact when we
-decide to enforce a convention.
+(`docs/RELEASING.md` → "Android export"). `AgentFilesSpec.cs`,
+`RuleFilesSpec.cs` and `SkillFilesSpec.cs` check the agent, rule and
+skill files (`docs/REVIEW.md` → "Agent, rule and skill files"), and the
+specs in `Hooks/` run the hooks against throwaway repositories
+(`docs/REVIEW.md` → "Hooks"). Add a fact when we decide to enforce a
+convention.
 
 ## UI contracts
 
