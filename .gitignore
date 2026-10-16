@@ -47,7 +47,6 @@ coverage.*.xml
 /.claude/rules/local_*
 /.claude/hooks/local_*
 /.claude/agents/local_*
-/.github/agents/local_*
 
 # Editor tooling
 .npp-md-preview.html

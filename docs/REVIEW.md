@@ -55,10 +55,9 @@ not apply:
 ## Review agents
 
 Each review agent owns one focus and the documents it is judged against.
-Its definition lives in `.github/agents/<name>.agent.md`, and Claude Code
-finds the same file through a symlink in `.claude/agents/`. This section
-owns when the agents run, how they report and how their files are
-written.
+Its definition lives in `.claude/agents/<name>.md` (see "Agent, rule and
+skill files"). This section owns when the agents run, how they report
+and how their files are written.
 
 ### Choosing reviewers
 
@@ -158,10 +157,11 @@ with its reason; when the script is missing, it is allowed.
 
 ### Agent, rule and skill files
 
-- Each agent is one `.github/agents/<name>.agent.md`; `.claude/agents/`
-  holds a relative symlink `<name>.md` to it, so both tools load the same
-  file (#1314). Neither folder holds anything else, apart from git-ignored
-  `local_*` agents (`AGENTS.md` → "Machine-local setup").
+- Each agent is one `.claude/agents/<name>.md`, which both tools load
+  (#1314, #1359). The folder holds nothing else, apart from git-ignored
+  `local_*` agents (`AGENTS.md` → "Machine-local setup"), and there is no
+  `.github/agents/`: Copilot would load it first and Claude Code not at
+  all.
 - The frontmatter has only `name` (the file's `<name>`), a one-line
   `description`, `tools` and `hooks`; a reviewer (`*-reviewer`) has
   `tools: Read, Grep, Glob, Bash, LSP` and registers `reviewer-bash.sh`

@@ -87,7 +87,7 @@ write() {
   [ -n "$reviewers" ] || fail "name the reviewers that ran: --reviewers a,b"
   local name
   for name in ${reviewers//,/ }; do
-    [ -f "$script_dir/../agents/$name.agent.md" ] || fail "no review agent named $name in .github/agents"
+    [ -f "$script_dir/../../.claude/agents/$name.md" ] || fail "no review agent named $name in .claude/agents"
   done
   [ -f "$findings" ] && grep -q '[^[:space:]]' "$findings" \
     || fail "give the file with each finding and its disposition, or \"No findings\""

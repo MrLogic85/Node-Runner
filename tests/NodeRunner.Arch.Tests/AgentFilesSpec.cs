@@ -14,7 +14,6 @@ public sealed class AgentFilesSpec : IDisposable
     public AgentFilesSpec()
     {
         Directory.CreateDirectory(AgentsDirectory);
-        Directory.CreateDirectory(LinksDirectory);
         WriteAgent(_reviewer, $"""
             name: {_reviewer}
             description: Reviews a fixture diff — one focus, read-only.
@@ -36,9 +35,7 @@ public sealed class AgentFilesSpec : IDisposable
             """);
     }
 
-    private string AgentsDirectory => Path.Combine(_root, ".github", "agents");
-
-    private string LinksDirectory => Path.Combine(_root, ".claude", "agents");
+    private string AgentsDirectory => Path.Combine(_root, ".claude", "agents");
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
 
@@ -61,8 +58,7 @@ public sealed class AgentFilesSpec : IDisposable
     [Fact]
     public void Fixture_WithLocalAgents_SkipsThem()
     {
-        File.WriteAllText(Path.Combine(AgentsDirectory, "local_device.agent.md"), "No frontmatter.\n");
-        File.CreateSymbolicLink(Path.Combine(LinksDirectory, "local_device.md"), "../../.github/agents/local_device.agent.md");
+        File.WriteAllText(Path.Combine(AgentsDirectory, "local_device.md"), "No frontmatter.\n");
 
         var problems = AgentFiles.Problems(_root);
 
@@ -70,30 +66,26 @@ public sealed class AgentFilesSpec : IDisposable
     }
 
     [Theory]
-    [InlineData("missing link", $".claude/agents/{_reviewer}.md: missing")]
-    [InlineData("copied file", $".claude/agents/{_reviewer}.md: a copy, not a symlink")]
-    [InlineData("absolute link", $".claude/agents/{_reviewer}.md: links to /")]
-    [InlineData("stray link", ".claude/agents/old-reviewer.md: no matching")]
-    [InlineData("stray file in links", ".claude/agents/notes.txt: no matching")]
-    [InlineData("near-miss local name", ".claude/agents/localnotes.md: no matching")]
-    [InlineData("no agents folder", ".github/agents: missing")]
-    [InlineData("wrong suffix", ".github/agents/notes.md: holds only agent files")]
-    [InlineData("folder in agents", ".github/agents/old.agent.md: holds only agent files")]
-    [InlineData("no frontmatter", $".github/agents/{_reviewer}.agent.md: no frontmatter")]
-    [InlineData("no name", $".github/agents/{_reviewer}.agent.md: name must be {_reviewer}")]
-    [InlineData("wrong name", $".github/agents/{_reviewer}.agent.md: name must be {_reviewer}")]
-    [InlineData("no description", $".github/agents/{_reviewer}.agent.md: needs a one-line description")]
-    [InlineData("colon in description", $".github/agents/{_reviewer}.agent.md: description has an unquoted")]
-    [InlineData("folded description", $".github/agents/{_reviewer}.agent.md: description must be one line")]
-    [InlineData("duplicate key", $".github/agents/{_reviewer}.agent.md: sets description twice")]
-    [InlineData("model", $".github/agents/{_reviewer}.agent.md: sets model")]
-    [InlineData("reviewer tools", $".github/agents/{_reviewer}.agent.md: a reviewer has tools")]
-    [InlineData("no tools", $".github/agents/{_reviewer}.agent.md: a reviewer has tools")]
-    [InlineData("no reviewer hook", $".github/agents/{_reviewer}.agent.md: a reviewer registers reviewer-bash.sh")]
-    [InlineData("other reviewer hook", $".github/agents/{_reviewer}.agent.md: a reviewer registers reviewer-bash.sh")]
-    [InlineData("other reviewer LSP hook", $".github/agents/{_reviewer}.agent.md: a reviewer registers reviewer-bash.sh and reviewer-lsp.sh")]
-    [InlineData("empty hooks", $".github/agents/{_lead}.agent.md: hooks must use Claude Code's shape")]
-    [InlineData("flat hooks", $".github/agents/{_lead}.agent.md: hooks must use Claude Code's shape")]
+    [InlineData("old agents folder", ".github/agents: remove it")]
+    [InlineData("no agents folder", ".claude/agents: missing")]
+    [InlineData("wrong suffix", ".claude/agents/notes.txt: holds only agent files")]
+    [InlineData("folder in agents", ".claude/agents/old.md: holds only agent files")]
+    [InlineData("near-miss local name", ".claude/agents/localnotes.md: no frontmatter")]
+    [InlineData("no frontmatter", $".claude/agents/{_reviewer}.md: no frontmatter")]
+    [InlineData("no name", $".claude/agents/{_reviewer}.md: name must be {_reviewer}")]
+    [InlineData("wrong name", $".claude/agents/{_reviewer}.md: name must be {_reviewer}")]
+    [InlineData("no description", $".claude/agents/{_reviewer}.md: needs a one-line description")]
+    [InlineData("colon in description", $".claude/agents/{_reviewer}.md: description has an unquoted")]
+    [InlineData("folded description", $".claude/agents/{_reviewer}.md: description must be one line")]
+    [InlineData("duplicate key", $".claude/agents/{_reviewer}.md: sets description twice")]
+    [InlineData("model", $".claude/agents/{_reviewer}.md: sets model")]
+    [InlineData("reviewer tools", $".claude/agents/{_reviewer}.md: a reviewer has tools")]
+    [InlineData("no tools", $".claude/agents/{_reviewer}.md: a reviewer has tools")]
+    [InlineData("no reviewer hook", $".claude/agents/{_reviewer}.md: a reviewer registers reviewer-bash.sh")]
+    [InlineData("other reviewer hook", $".claude/agents/{_reviewer}.md: a reviewer registers reviewer-bash.sh")]
+    [InlineData("other reviewer LSP hook", $".claude/agents/{_reviewer}.md: a reviewer registers reviewer-bash.sh and reviewer-lsp.sh")]
+    [InlineData("empty hooks", $".claude/agents/{_lead}.md: hooks must use Claude Code's shape")]
+    [InlineData("flat hooks", $".claude/agents/{_lead}.md: hooks must use Claude Code's shape")]
     public void Fixture_WithOneRuleBroken_NamesTheFileAndRule(string broken, string expected)
     {
         Break(broken);
@@ -105,39 +97,24 @@ public sealed class AgentFilesSpec : IDisposable
 
     private void Break(string broken)
     {
-        var link = Path.Combine(LinksDirectory, _reviewer + ".md");
-        var agent = Path.Combine(AgentsDirectory, _reviewer + ".agent.md");
-        var lead = Path.Combine(AgentsDirectory, _lead + ".agent.md");
+        var agent = Path.Combine(AgentsDirectory, _reviewer + ".md");
+        var lead = Path.Combine(AgentsDirectory, _lead + ".md");
         switch (broken)
         {
-            case "missing link":
-                File.Delete(link);
-                break;
-            case "copied file":
-                File.Delete(link);
-                File.Copy(agent, link);
-                break;
-            case "absolute link":
-                File.Delete(link);
-                File.CreateSymbolicLink(link, agent);
-                break;
-            case "stray link":
-                File.CreateSymbolicLink(Path.Combine(LinksDirectory, "old-reviewer.md"), "../../.github/agents/old-reviewer.agent.md");
-                break;
-            case "stray file in links":
-                File.WriteAllText(Path.Combine(LinksDirectory, "notes.txt"), "Notes.\n");
-                break;
-            case "near-miss local name":
-                File.WriteAllText(Path.Combine(LinksDirectory, "localnotes.md"), "Notes.\n");
+            case "old agents folder":
+                Directory.CreateDirectory(Path.Combine(_root, ".github", "agents"));
                 break;
             case "no agents folder":
                 Directory.Delete(AgentsDirectory, recursive: true);
                 break;
-            case "folder in agents":
-                Directory.CreateDirectory(Path.Combine(AgentsDirectory, "old.agent.md"));
-                break;
             case "wrong suffix":
-                File.WriteAllText(Path.Combine(AgentsDirectory, "notes.md"), "Notes.\n");
+                File.WriteAllText(Path.Combine(AgentsDirectory, "notes.txt"), "Notes.\n");
+                break;
+            case "folder in agents":
+                Directory.CreateDirectory(Path.Combine(AgentsDirectory, "old.md"));
+                break;
+            case "near-miss local name":
+                File.WriteAllText(Path.Combine(AgentsDirectory, "localnotes.md"), "Notes.\n");
                 break;
             case "no frontmatter":
                 File.WriteAllText(agent, "You review fixtures.\n");
@@ -191,9 +168,8 @@ public sealed class AgentFilesSpec : IDisposable
 
     private void WriteAgent(string name, string frontmatter)
     {
-        File.WriteAllText(Path.Combine(AgentsDirectory, name + ".agent.md"),
+        File.WriteAllText(Path.Combine(AgentsDirectory, name + ".md"),
             $"---\n{frontmatter.ReplaceLineEndings("\n")}\n---\n\nYou are {name}.\n");
-        File.CreateSymbolicLink(Path.Combine(LinksDirectory, name + ".md"), $"../../.github/agents/{name}.agent.md");
     }
 
     private static void Replace(string path, string from, string to)

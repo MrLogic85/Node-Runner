@@ -93,7 +93,7 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 | Issues, labels and project fields | [`docs/ISSUES.md`](docs/ISSUES.md) |
 | Tools to install | `README.md` → "Tools" |
 | How a change lands, review agents, hooks | [`docs/REVIEW.md`](docs/REVIEW.md) |
-| What each review agent checks | [`.github/agents/`](.github/agents/) |
+| What each review agent checks | [`.claude/agents/`](.claude/agents/) |
 | Procedures (skills) | [`.claude/skills/`](.claude/skills/) |
 | Releasing | [`docs/RELEASING.md`](docs/RELEASING.md) |
 

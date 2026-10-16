@@ -19,7 +19,7 @@ internal static partial class SkillFiles
     private static readonly string[] _allowedKeys = ["name", "description"];
 
     // Where instructions name skills, as "the `<name>` skill".
-    private static readonly string[] _citingFolders = ["docs", ".claude/rules", ".claude/skills", ".github/agents"];
+    private static readonly string[] _citingFolders = ["docs", ".claude/rules", ".claude/skills", ".claude/agents"];
 
     /// <summary>Every broken skill under <paramref name="root"/>, each naming its file.</summary>
     internal static List<string> Problems(string root)
