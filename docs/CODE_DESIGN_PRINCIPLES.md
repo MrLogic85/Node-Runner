@@ -191,7 +191,7 @@ Changing a choice needs an issue. Test tools are in
 
 | Concern | Choice | Why |
 |---|---|---|
-| Solution format | **`.slnx`** (XML) | .NET 10 default; readable diffs, no GUIDs |
+| Solution format | **`.slnx`** (XML) | The SDK's default; readable diffs, no GUIDs |
 | Package versioning | **Central Package Management** (`Directory.Packages.props`) | One source of truth for versions. The Godot csproj opts out (SDK conflicts). |
 | Code style | **`.editorconfig` + `dotnet format`** | Editor-agnostic |
 | DI | **Hand-rolled constructor injection**, autoloads as composition root | |

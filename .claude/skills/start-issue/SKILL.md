@@ -26,9 +26,9 @@ what to do about it. Read `LOCAL_CONFIG.md` first for the `gh` login.
    | Idea or Needs decision | Ask the human the open question. Once answered, record the answer in the body, set Needs review and route again. If nobody answers, post the question as an issue comment and stop. |
    | Needs design | Run `design-lead` on it, post its proposal on the issue, and ask the human to approve it; the Status that follows is in `docs/ISSUES.md` → "Status". Stop until it is approved. |
    | Needs review | Run the `review-issue` skill. If the Status changed, route again; if it is still Needs review, report the open findings and stop. |
-   | Blocked with every blocker closed | Set Ready and route again. |
+   | Blocked with every blocker closed | Set Ready (`docs/ISSUES.md` → "Status") and route again. |
    | Blocked, or Ready or In progress with an open blocker | Set Blocked if it is not, report the blocker and stop. |
-   | Size 8 | Split it into sub-issues (`docs/ISSUES.md` → "Size"), each made with the `create-issue` skill, and stop. |
+   | Size 8 | Split it as `docs/ISSUES.md` → "Size" says, making each sub-issue with the `create-issue` skill, and stop. |
    | In progress | If it has a branch (`git branch -a --list "*/N-*"`), check the working copy (step 3), `git switch <type>/N-<slug>` and carry on from step 4; otherwise start it as Ready. |
    | Ready | Start it (step 3). |
 

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse on the LSP tool for the review agents (#1352), registered next to reviewer-bash.sh in
-# each *-reviewer's frontmatter: allows the lookups and denies the rest, since Copilot's rename
-# writes the files. docs/REVIEW.md → "Hooks".
+# PreToolUse on LSP in the review agents (#1352). See docs/REVIEW.md → "Hooks".
 . "${0%/*}/common.sh"
 
 operation=$(jq -r '.tool_input.operation // empty' <<<"$input")

@@ -500,8 +500,8 @@ a creature's links past `DrawGroups.MaxGroups` share the last group.
   Rubber's skin, or a Touch sensor's cushion round the joint's largest
   part; a refused joint's ring is round its own edge. Either is clear of an
   Angle sensor's arc (Angle sensor). Every dragged joint part also shows
-  itself on a free joint it would land on: a Servo, Motor, Stepper, Brake or Angle
-  sensor selected, with the sides it would take, a Wheel, a Rubber as its
+  itself on a free joint it would land on: a hinge part selected, with the
+  sides it would take, a Wheel, a Rubber as its
   skin and a Touch sensor as its cushion. A picked part (#1016) marks the same free and taken targets
   from the moment it is picked, so a tap can find them. The targets that
   take it rise over the other parts (Draw layers). A joint part's ring is

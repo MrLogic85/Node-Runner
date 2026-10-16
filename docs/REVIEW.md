@@ -12,11 +12,8 @@ How a change lands in `main`, for humans and AI agents alike.
    "Review receipts").
 3. Push, open a PR against `main` with the template, and enable squash
    auto-merge, with the `ship-pr` skill.
-4. Own the PR until it merges: fix failing checks, answer every review
-   comment with a fix or a reason, and don't resolve threads you didn't
-   address.
-5. Confirm the PR merged and `main` is green. The PR's closing keyword
-   closes the issue.
+4. Own the PR until it merges and `main` is green (see "Auto-merge"). The
+   PR's closing keyword closes the issue.
 
 A trivial change (typo, comment) still goes through a PR and CI; skip
 manual verification and say "trivial" in the PR.
@@ -53,7 +50,7 @@ not apply:
 - [ ] No secrets, credentials or personal data
 - [ ] PR title follows "PR title and commit hygiene"
 - [ ] Manual testing decided and done per `docs/MANUAL_TESTING.md`
-- [ ] Squash auto-merge enabled (a PR into `release/vX.Y` is merged by hand)
+- [ ] Squash auto-merge enabled (see "Auto-merge")
 
 ## Review agents
 
@@ -289,11 +286,12 @@ conflict.
 Every PR enables GitHub's squash auto-merge as soon as it opens (the
 `ship-pr` skill has the commands). GitHub owns the wait, so no local
 process has to outlive the session. The author still owns the PR while
-the session lasts, as "TL;DR" says, until it reached `MERGED` with `main`
-green. If auto-merge cannot be enabled, keep the PR open, report the
-blocker, and never bypass the required checks. The one exception is a PR
-into `release/vX.Y`, which is merged by hand (`docs/RELEASING.md` → "Fix
-releases").
+the session lasts, until it reached `MERGED` with `main` green: fix
+failing checks, answer every review comment with a fix or a reason, and
+don't resolve threads you didn't address. If auto-merge cannot be
+enabled, keep the PR open, report the blocker, and never bypass the
+required checks. The one exception is a PR into `release/vX.Y`, which is
+merged by hand (`docs/RELEASING.md` → "Fix releases").
 
 ## What does NOT block a merge
 

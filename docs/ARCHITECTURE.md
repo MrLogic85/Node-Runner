@@ -51,7 +51,7 @@ Where code lives and which way it may depend.
 
 The four libraries in `libs/` are .NET 8 class libraries with **no
 `Godot.*` references**. The Godot project (`project/`) targets .NET 9 for
-Godot 4.7's Android export templates, references the libraries, and provides
+Godot's Android export templates, references the libraries, and provides
 the runtime host: scenes, physics, input, rendering. `NodeRunner.App`
 references the System.Text.Json 9 package, the same version the host runs,
 for strict save loading (`docs/SAVE_FORMAT.md`).
@@ -104,7 +104,7 @@ Arrows only go **downward** across layer boundaries.
 
 ```
 Node Runner/
-├── NodeRunner.slnx                 # solution (new .NET 10 XML format)
+├── NodeRunner.slnx                 # solution (XML format)
 ├── Directory.Build.props           # shared C# settings
 ├── Directory.Packages.props        # central package versions (CPM)
 ├── .editorconfig                   # style rules
@@ -114,7 +114,7 @@ Node Runner/
 │   ├── NodeRunner.Mechanics/       # pure part physics: sensors, servos, pistons, springs
 │   ├── NodeRunner.ML/              # neural networks, GA
 │   └── NodeRunner.App/             # viewmodels, services, repositories
-├── project/                        # Godot project (targets net9.0)
+├── project/                        # Godot project
 │   ├── project.godot
 │   ├── NodeRunner.csproj           # references the four libs
 │   ├── NodeRunner.sln              # classic .sln required by Godot .NET export

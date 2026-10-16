@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse on the edit tools (#1320): denies writes into the read-only issues/ archive and
-# into /tmp, since scratch files go in .scratch/ (AGENTS.md → "Working copy").
+# PreToolUse on the edit tools (#1320). See docs/REVIEW.md → "Hooks".
 . "${0%/*}/common.sh"
 
 # Claude Code sends file_path, Copilot path, and Copilot's apply_patch the whole patch as a string.

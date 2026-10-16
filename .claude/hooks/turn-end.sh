@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Stop (#1320): when the agent ends a turn, reports once each emulator started and each APK
-# written to build/ since the session began. SessionEnd output reaches neither tool's agent or
-# user, so the report comes at the end of the turn that left them.
+# Stop (#1320). See docs/REVIEW.md → "Hooks".
+# SessionEnd output reaches neither tool's agent or user, so emulators and APKs are reported at
+# the end of the turn that left them.
 . "${0%/*}/common.sh"
 
 [ "$(jq -r '.stop_hook_active // false' <<<"$input")" = true ] && exit 0

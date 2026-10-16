@@ -53,8 +53,8 @@ issue by hand after the fix release unless its `main` PR closes it. CI runs
 on `release/**` as on `main`, but no ruleset protects those branches, so
 auto-merge is not available there: merge a PR into one by hand once its
 checks pass. For the same reason `release.sh` refuses to publish unless
-`Build`, `Test & coverage` and `Format check` passed on HEAD. The
-`fix-release` skill has the steps.
+the checks in its `required_checks` passed on HEAD. The `fix-release`
+skill has the steps.
 
 ## Publishing safeguards
 
@@ -128,9 +128,10 @@ environment variables. A release
 export is not a debug build, so `OS.IsDebugBuild()` is false and debug-only
 UI such as the Component library link is hidden (#808).
 
-Local prerequisites: Godot 4.7.2 Mono export templates, JDK 21, Android SDK
-platform 36 and build-tools 36.1, platform-tools, and a user-local debug
-keystore in the Godot editor settings. The first Gradle build downloads
+Local prerequisites: Godot's Mono export templates for the version
+`README.md` → "Tools" names, JDK 21, Android SDK platform 36 and
+build-tools 36.1, platform-tools, and a user-local debug keystore in the
+Godot editor settings. The first Gradle build downloads
 Gradle and its dependencies, so it needs a network. The committed preset
 holds no secrets; keystore paths and passwords stay in user-local Godot
 settings, ignored credential files or the macOS Keychain.

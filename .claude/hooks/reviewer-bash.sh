@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse on Bash for the review agents (#1321), registered in each *-reviewer's frontmatter
-# rather than in settings.json: allows only commands that read, and denies anything else with a
-# reason, so a reviewer cannot change files, git state or GitHub. docs/REVIEW.md → "Hooks".
+# PreToolUse on Bash in the review agents (#1321). See docs/REVIEW.md → "Hooks".
 . "${0%/*}/common.sh"
 
 refuse() {

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# SessionStart (#1320): tells the agent the branch and any uncommitted changes, records the
-# running emulators so turn-end.sh reports only those this session starts, and restores the
-# repository's dotnet tools (#1352).
+# SessionStart (#1320, #1352). See docs/REVIEW.md → "Hooks".
 command -v jq >/dev/null 2>&1 || {
   echo 'jq is not installed, so the repository hooks are off (README.md → "Tools").'
   exit 0

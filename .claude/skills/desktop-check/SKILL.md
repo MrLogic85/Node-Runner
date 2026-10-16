@@ -17,10 +17,10 @@ and UI sizes to try ("Desktop checks") and what counts as evidence
    ```
 
 2. Capture each screen the plan names with the `Screenshot` tool
-   (`.claude/rules/tools.md`). It runs a scene for some frames (60 if left
-   out), saves what the window shows and quits. `--resolution` sets the
-   window: 1280x720 (16:9), 1600x720 (20:9), 960x720 (4:3) or 720x720
-   (1:1). The runs share a throwaway `HOME`, so Godot's `user://` is
+   (`.claude/rules/tools.md`), which takes the scene, the image's absolute
+   path and a frame count (60 if left out). `--resolution` sets the
+   window to the size for a ratio "Desktop checks" names (16:9 1280x720,
+   20:9 1600x720, 4:3 960x720, 1:1 720x720). The runs share a throwaway `HOME`, so Godot's `user://` is
    `.scratch/home` and the human's saves are never read or changed; delete
    it before a new check. The block fails when no image was saved.
 
