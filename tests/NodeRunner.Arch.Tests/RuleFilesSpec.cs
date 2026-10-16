@@ -38,6 +38,16 @@ public sealed class RuleFilesSpec : IDisposable
         problems.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Fixture_WithAFinderDsStore_SkipsIt()
+    {
+        File.WriteAllText(Path.Combine(_root, ".claude", "rules", ".DS_Store"), "");
+
+        var problems = RuleFiles.Problems(_root);
+
+        problems.ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("---\n---\n# UI rules\n", ".claude/rules/ui.md: starts with frontmatter that has only paths:")]
     [InlineData("# UI rules\n", ".claude/rules/ui.md: starts with frontmatter that has only paths:")]

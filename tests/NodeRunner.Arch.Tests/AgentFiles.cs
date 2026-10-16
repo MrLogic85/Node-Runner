@@ -34,6 +34,14 @@ internal static class AgentFiles
 
     /// <summary>Git-ignored machine-local agents and rules: AGENTS.md → "Machine-local setup" (#1342).</summary>
     internal const string LocalPrefix = "local_";
+
+    /// <summary>
+    /// Entries the checks skip: machine-local files, and dot-files such as Finder's git-ignored
+    /// <c>.DS_Store</c>, which CI never sees (#1363).
+    /// </summary>
+    internal static bool IsSkipped(string name) =>
+        name.StartsWith(LocalPrefix, StringComparison.Ordinal) || name.StartsWith('.');
+
     private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks"];
 
     /// <summary>Every broken rule under <paramref name="root"/>, each naming its file.</summary>
@@ -56,7 +64,7 @@ internal static class AgentFiles
         foreach (var path in Directory.EnumerateFileSystemEntries(agents).Order(StringComparer.Ordinal))
         {
             var file = Path.GetFileName(path);
-            if (file.StartsWith(LocalPrefix, StringComparison.Ordinal))
+            if (IsSkipped(file))
             {
                 continue;
             }

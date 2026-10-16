@@ -34,7 +34,7 @@ internal static partial class SkillFiles
         foreach (var path in Directory.EnumerateFileSystemEntries(skills).Order(StringComparer.Ordinal))
         {
             var name = Path.GetFileName(path);
-            if (name.StartsWith(AgentFiles.LocalPrefix, StringComparison.Ordinal))
+            if (AgentFiles.IsSkipped(name))
             {
                 continue;
             }
