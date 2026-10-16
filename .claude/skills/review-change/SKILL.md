@@ -10,7 +10,8 @@ how they report, "Review receipts" owns when review runs and what a push
 needs, and "Definition of Done" owns the gate; this skill owns the steps.
 
 1. Fix the exact change under review, as "Review receipts" measures it:
-   - before the commit: `git add -A`, then
+   - before the commit: stage it with `git add -A`, or name its paths
+     when an untracked file that is not part of it must stay out, then
      `git diff --cached "$(.github/scripts/review-receipt.sh base)"`;
    - after it: `git diff "$(.github/scripts/review-receipt.sh base)" HEAD`;
    - someone else's PR: `gh pr diff N`.
@@ -24,7 +25,7 @@ needs, and "Definition of Done" owns the gate; this skill owns the steps.
    reviewers the corrective change selects ("Review receipts").
 6. For your own change, record the receipt. Write each reviewer's
    findings and their dispositions, or "No findings", to
-   `.scratch/review.md`, run `git add -A`, then run:
+   `.scratch/review.md`, stage the change as in step 1, then run:
 
    ```bash
    .github/scripts/review-receipt.sh write --reviewers docs-reviewer,tests-reviewer .scratch/review.md

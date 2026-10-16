@@ -308,6 +308,73 @@ public sealed class ReviewReceiptSpec : IDisposable
     }
 
     [Fact]
+    public void Write_WithAnUntrackedFileOutsideTheChange_RecordsTheStagedChange()
+    {
+        Commit("a.txt", "one");
+        Write("notes.txt", "not part of the change");
+
+        ReviewStaged();
+
+        DenyReason("git push -u origin HEAD").ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("git add -A && git commit -m Notes && git push")]
+    [InlineData("git add -A && git commit -am Notes && git push")]
+    [InlineData("git add -A && git commit --all -m Notes && git push")]
+    public void CommitAndPush_OfAnUntrackedFileLeftOutOfTheReview_IsDenied(string command)
+    {
+        Commit("a.txt", "one");
+        Write("notes.txt", "not part of the change");
+        ReviewStaged();
+
+        DenyReason(command).ShouldNotBeNull().ShouldStartWith(_noReceipt);
+    }
+
+    [Theory]
+    [InlineData(false, "git commit -m Fix && git push")]
+    [InlineData(true, "git commit -am Fix && git push")]
+    [InlineData(true, "git commit --all -m Fix && git push")]
+    public void CommitAndPush_OfTheReviewedChange_WithAnUntrackedFilePresent_IsAllowed(bool unstage, string command)
+    {
+        Commit("a.txt", "one");
+        Write("a.txt", "two");
+        HookFixture.Git(Root, "add", "a.txt");
+        Write("notes.txt", "not part of the change");
+        ReviewStaged();
+        if (unstage)
+        {
+            HookFixture.Git(Root, "reset", "-q");
+        }
+
+        DenyReason(command).ShouldBeNull();
+    }
+
+    [Fact]
+    public void Write_WhenGitCannotReadATrackedFile_SaysSo()
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        Commit("a.txt", "one");
+        File.WriteAllText(Findings, "No findings.\n");
+        Write("a.txt", "a longer second version");
+        File.SetUnixFileMode(Path.Combine(Root, "a.txt"), UnixFileMode.None);
+        if (CanRead(Path.Combine(Root, "a.txt")))
+        {
+            // The root user can still read it, so git cannot be made to fail this way.
+            return;
+        }
+
+        var (exitCode, output) = HookFixture.Script(Root, _script, "write", "--reviewers", "docs-reviewer", Findings);
+
+        exitCode.ShouldBe(2);
+        output.ShouldContain("cannot compare the working tree with the index");
+    }
+
+    [Fact]
     public void Base_PrintsWhereTheBranchLeftMain()
     {
         Commit("a.txt", "one");
@@ -355,6 +422,19 @@ public sealed class ReviewReceiptSpec : IDisposable
         exitCode.ShouldBe(2);
     }
 
+    private static bool CanRead(string path)
+    {
+        try
+        {
+            File.OpenRead(path).Dispose();
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
     private string? DenyReason(string command) => HookFixture.DenyReason(_fixture.Run(_hook, HookFixture.Bash(command)));
 
     private void Write(string path, string text) => File.WriteAllText(Path.Combine(Root, path), text + "\n");
@@ -369,6 +449,11 @@ public sealed class ReviewReceiptSpec : IDisposable
     private void Review()
     {
         HookFixture.Git(Root, "add", "-A");
+        ReviewStaged();
+    }
+
+    private void ReviewStaged()
+    {
         File.WriteAllText(Findings, "- docs-reviewer: Minor, new: dismissed, the wording is intended.\n- tests-reviewer: No findings.\n");
         var (exitCode, output) = HookFixture.Script(Root, _script, "write", "--reviewers", "docs-reviewer,tests-reviewer", Findings);
         exitCode.ShouldBe(0, output);
