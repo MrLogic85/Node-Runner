@@ -3,8 +3,9 @@ using System.ComponentModel;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The SignalFlow column's four stages at rest: 1 Inputs, 2 Network, 3 Outputs, 4 Distance. Each
-/// stage shows a short note; the pictures on the cards come with #196.
+/// The SignalFlow column's four stages at rest: 1 Inputs, 2 Network, 3 Outputs, 4 Distance. The
+/// first three show a short note and Distance a readout in its body; the pictures on the cards
+/// come with #196.
 /// </summary>
 public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 {
@@ -18,11 +19,17 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// How far the visible creature has got in this try, such as "12.4 m", or "Crash 3.4 m" once a
-    /// beam has torn and the distance froze (#1257); null when no try runs.
+    /// beam has torn and the distance froze (#1257); null when no try runs, so the card has no body.
     /// </summary>
-    public UiText? DistanceNote { get; private set; }
+    public UiText? DistanceReadout { get; private set; }
 
-    /// <summary>Refreshes the stage notes from this tick's network.</summary>
+    /// <summary>
+    /// Whether <see cref="DistanceReadout"/> says the distance froze at a tear, so the card shows it
+    /// in danger. It changes only together with the readout, so one notification covers both.
+    /// </summary>
+    public bool DistanceTorn { get; private set; }
+
+    /// <summary>Refreshes the stage notes and the distance readout from this tick.</summary>
     /// <param name="readings">How many readings the visible creature's network takes in.</param>
     /// <param name="parts">How many parts the network drives (Servos, Motors and Pistons); a part can have several outputs, so the note counts parts.</param>
     /// <param name="distance">How far the visible creature has got, in world units; NaN when no try runs.</param>
@@ -34,10 +41,11 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
         var inputsNote = readings > 0 ? UiText.Counted("{0} reading", "{0} readings", readings) : null;
         var outputsNote = parts > 0 ? UiText.Counted("{0} part", "{0} parts", parts) : null;
-        var distanceNote = !double.IsFinite(distance) ? null
+        var distanceReadout = !double.IsFinite(distance) ? null
             : crashed ? TrainingPresentationViewModel.CrashText(distance)
             : Metres.WithUnit(distance);
-        if (Equals(InputsNote, inputsNote) && Equals(OutputsNote, outputsNote) && Equals(DistanceNote, distanceNote))
+        var distanceTorn = crashed && distanceReadout is not null;
+        if (Equals(InputsNote, inputsNote) && Equals(OutputsNote, outputsNote) && Equals(DistanceReadout, distanceReadout))
         {
             return;
         }
@@ -46,7 +54,8 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         var onlyDistance = Equals(InputsNote, inputsNote) && Equals(OutputsNote, outputsNote);
         InputsNote = inputsNote;
         OutputsNote = outputsNote;
-        DistanceNote = distanceNote;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(onlyDistance ? nameof(DistanceNote) : null));
+        DistanceReadout = distanceReadout;
+        DistanceTorn = distanceTorn;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(onlyDistance ? nameof(DistanceReadout) : null));
     }
 }

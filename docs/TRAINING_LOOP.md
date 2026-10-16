@@ -236,8 +236,8 @@ the reference's "a training session has finished" (#369).
   - **Simulate (#702).** No `Evolver`: the creature plays the saved network
     in one trial that never ends, so there is no generation, shadow strip,
     save or count. The header reads "Simulating" with no generation
-    caption, the Distance card reads the run's front distance, and the best
-    marker stays at the saved best on this map.
+    caption, the Distance card reads the run's front distance as its
+    readout, and the best marker stays at the saved best on this map.
   - **Camera (#668, #675, #1169, #1190).** `ArenaCamera` frames the followed
     shadow through `ArenaFraming`, from its centre (Trial above) and its box. It moves on physics ticks, as the creatures do, so on a
     120 Hz screen the world never judders against it (#909). The other
@@ -367,8 +367,14 @@ the reference's "a training session has finished" (#369).
   Beside the arena a side panel titled "Status" shows the Inputs → Network →
   Outputs → Distance stages (`SignalFlowPresentationViewModel`, #813);
   Outputs counts the parts the network drives, Servos, Motors and Pistons
-  alike ("2 parts"). Once the followed run has torn, the Distance stage's
-  note reads "Crash 3.4 m" instead of the distance, in Simulate too (#1257). The stages count readings and parts (#196). Collapsing the panel widens the arena, and the camera refits.
+  alike ("2 parts"). The Distance stage has no note: its body is a
+  single-line readout (`DistanceReadout`, #1280) of the shown distance,
+  "12.4 m" in `ReadoutLarge` while the run is live. Once
+  the followed run has torn it reads "Crash 3.4 m" in `ReadoutMedium` and
+  `danger` (smaller so it fits the card; the word, not colour alone, carries
+  the state; #1257), in Simulate too. With no try the body is hidden. The
+  distance changes every tick, so it takes the distance-only update path.
+  The stages count readings and parts (#196). Collapsing the panel widens the arena, and the camera refits.
   Under the arena are Pause and the generation caption.
   - **Pause** freezes the trial mid-run and resumes exactly where it left
     off; the screen keeps responding. Each visit starts unpaused.

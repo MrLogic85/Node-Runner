@@ -68,7 +68,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
 
     /// <summary>
     /// What marks a run whose distance froze at a tear (#962, #1257), such as "Crash 3.4 m": the
-    /// arena flag at that distance and the Distance stage's note.
+    /// arena flag at that distance and the Distance stage's readout.
     /// </summary>
     public static UiText CrashText(double distance) => UiText.Format("Crash {0}", Metres.WithUnit(distance));
 
