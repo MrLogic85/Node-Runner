@@ -62,6 +62,7 @@ state goes in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
 | `jq` | Required: the same scripts and the hook tests; without it the agent hooks are off | `brew install jq` |
 | `adb` | Required: Android checks | `brew install --cask android-platform-tools` |
 | `rg` (ripgrep) | Recommended: fast search that skips build output | `brew install ripgrep` |
+| `csharp-ls` | Recommended: the agents' `LSP` tool for C# definitions and callers; without it they use `git grep` | Pinned in `dotnet-tools.json`; a new agent session runs `dotnet tool restore`, or run it yourself. Copilot CLI needs no other step; Claude Code loads it only in a trusted folder |
 | `gettext` | Recommended: adding a language; Poedit does the same | `brew install gettext` |
 
 The `dotnet-sdk` cask installs the newest SDK; the build needs 10.x. The

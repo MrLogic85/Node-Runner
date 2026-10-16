@@ -163,6 +163,74 @@ public sealed class SessionHooksSpec : IDisposable
     }
 
     [Fact]
+    public void SessionStart_WithAToolManifest_RestoresTheToolsFromTheRoot()
+    {
+        var log = StubDotnet("exit 0");
+
+        var context = StartSession(path: StubPath);
+
+        File.ReadAllText(log).ShouldBe($"{_fixture.Root} tool restore\n");
+        context.ShouldNotContain("dotnet tool restore");
+    }
+
+    [Fact]
+    public void SessionStart_WhenTheToolRestoreFails_SaysToUseGitGrep()
+    {
+        StubDotnet("exit 1");
+
+        var context = StartSession(path: StubPath);
+
+        context.ShouldEndWith("`dotnet tool restore` failed, so the LSP tool cannot start the C# language server; find callers and definitions with `git grep` instead.");
+    }
+
+    [Fact]
+    public void SessionStart_WhenTheToolRestoreStalls_StopsWaitingAndSaysToUseGitGrep()
+    {
+        // The hook leaves the stalled restore running, so it sleeps only as long as the bound below.
+        StubDotnet("exec sleep 6");
+        var clock = Stopwatch.StartNew();
+
+        var context = StartSession(path: StubPath, environment: new Dictionary<string, string> { ["NODE_RUNNER_RESTORE_WAIT"] = "1" });
+
+        clock.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(6));
+        context.ShouldEndWith("`dotnet tool restore` is still running, so the LSP tool may fail to start the C# language server for a while; find callers and definitions with `git grep` until it works.");
+    }
+
+    [Fact]
+    public void SessionStart_WithoutDotnet_SkipsTheRestoreQuietly()
+    {
+        File.WriteAllText(Path.Combine(_fixture.Root, "dotnet-tools.json"), "{}\n");
+
+        var context = StartSession(path: PathWithoutDotnet());
+
+        context.ShouldStartWith("Working copy at session start: branch feature/1320-hooks");
+        context.ShouldNotContain("dotnet tool restore");
+    }
+
+    [Fact]
+    public void SessionStart_WithoutAToolManifest_DoesNotRestore()
+    {
+        var log = StubDotnet("exit 1");
+        File.Delete(Path.Combine(_fixture.Root, "dotnet-tools.json"));
+
+        var context = StartSession(path: StubPath);
+
+        File.Exists(log).ShouldBeFalse();
+        context.ShouldNotContain("dotnet tool restore");
+    }
+
+    [Fact]
+    public void SessionStart_OnResume_DoesNotRestoreTheTools()
+    {
+        var log = StubDotnet("exit 1");
+
+        var context = StartSession("resume", StubPath);
+
+        File.Exists(log).ShouldBeFalse();
+        context.ShouldNotContain("dotnet tool restore");
+    }
+
+    [Fact]
     public void TurnEnd_WithQemuOnlyAsAnArgument_IsSilent()
     {
         StartSession();
@@ -244,10 +312,58 @@ public sealed class SessionHooksSpec : IDisposable
         return json["reason"]!.GetValue<string>();
     }
 
-    private string StartSession(string source = "startup")
+    private string StubBin => Path.Combine(_fixture.Root, ".git", "stub-bin");
+
+    private string StubPath => $"{StubBin}{Path.PathSeparator}{Environment.GetEnvironmentVariable("PATH")}";
+
+    /// <summary>
+    /// Adds a tool manifest and a stub <c>dotnet</c> that logs its folder and arguments, writes
+    /// to stdout and stderr as the real one does, then runs <paramref name="end"/>; returns the
+    /// log's path.
+    /// </summary>
+    private string StubDotnet(string end)
     {
-        var payload = new JsonObject { ["hook_event_name"] = "SessionStart", ["source"] = source };
-        var json = JsonNode.Parse(_fixture.Run("session-start.sh", payload))!;
+        File.WriteAllText(Path.Combine(_fixture.Root, "dotnet-tools.json"), "{}\n");
+        Directory.CreateDirectory(StubBin);
+        var log = Path.Combine(StubBin, "dotnet.log");
+        var stub = Path.Combine(StubBin, "dotnet");
+        File.WriteAllText(stub, $"#!/bin/sh\necho \"$PWD $*\" >'{log}'\necho Restoring\necho warning >&2\n{end}\n");
+        if (!OperatingSystem.IsWindows())
+        {
+            File.SetUnixFileMode(stub, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        }
+
+        return log;
+    }
+
+    /// <summary>
+    /// A PATH of one folder that links every program on the real PATH except <c>dotnet</c>.
+    /// </summary>
+    private string PathWithoutDotnet()
+    {
+        Directory.CreateDirectory(StubBin);
+        var linked = new HashSet<string>(StringComparer.Ordinal) { "dotnet" };
+        foreach (var folder in Environment.GetEnvironmentVariable("PATH")!.Split(Path.PathSeparator).Where(Directory.Exists))
+        {
+            foreach (var program in Directory.EnumerateFiles(folder).Where(program => linked.Add(Path.GetFileName(program))))
+            {
+                File.CreateSymbolicLink(Path.Combine(StubBin, Path.GetFileName(program)), program);
+            }
+        }
+
+        return StubBin;
+    }
+
+    private string StartSession(string source = "startup", string? path = null, IReadOnlyDictionary<string, string>? environment = null)
+    {
+        var payload = new JsonObject
+        {
+            ["hook_event_name"] = "SessionStart",
+            ["source"] = source,
+            ["session_id"] = HookFixture.SessionId,
+            ["cwd"] = _fixture.Root,
+        };
+        var json = JsonNode.Parse(_fixture.RunRaw("session-start.sh", payload.ToJsonString(), path, environment))!;
         var context = json["additionalContext"]!.GetValue<string>();
         json["hookSpecificOutput"]!["hookEventName"]!.GetValue<string>().ShouldBe("SessionStart");
         json["hookSpecificOutput"]!["additionalContext"]!.GetValue<string>().ShouldBe(context);

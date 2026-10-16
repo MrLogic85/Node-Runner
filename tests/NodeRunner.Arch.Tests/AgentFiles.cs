@@ -7,12 +7,18 @@ namespace NodeRunner.Arch.Tests;
 /// </summary>
 internal static class AgentFiles
 {
-    internal const string ReviewerTools = "Read, Grep, Glob, Bash";
+    internal const string ReviewerTools = "Read, Grep, Glob, Bash, LSP";
 
     /// <summary>The agent-scoped hook that keeps a reviewer's Bash to reading commands (#1321).</summary>
     internal const string ReviewerHookScript = "reviewer-bash.sh";
 
-    /// <summary>The frontmatter each reviewer registers <see cref="ReviewerHookScript"/> with, in Claude Code's shape.</summary>
+    /// <summary>The agent-scoped hook that keeps a reviewer's LSP tool to lookups (#1352).</summary>
+    internal const string ReviewerLspHookScript = "reviewer-lsp.sh";
+
+    /// <summary>
+    /// The frontmatter each reviewer registers its hooks with, in Claude Code's shape. The LSP tool
+    /// is <c>LSP</c> in Claude Code and <c>lsp</c> in Copilot, whose matchers are case-sensitive.
+    /// </summary>
     internal const string ReviewerHook = $$"""
         hooks:
           PreToolUse:
@@ -20,6 +26,10 @@ internal static class AgentFiles
               hooks:
                 - type: command
                   command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerHookScript}}'
+            - matcher: "LSP|lsp"
+              hooks:
+                - type: command
+                  command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerLspHookScript}}'
         """;
 
     private const string _agentSuffix = ".agent.md";
@@ -161,7 +171,7 @@ internal static class AgentFiles
         if (name.EndsWith("-reviewer", StringComparison.Ordinal)
             && !string.Join('\n', lines[1..end]).Contains(ReviewerHook.ReplaceLineEndings("\n"), StringComparison.Ordinal))
         {
-            problems.Add($"{shown}: a reviewer registers {ReviewerHookScript} with the hooks block in docs/REVIEW.md → \"Agent, rule and skill files\".");
+            problems.Add($"{shown}: a reviewer registers {ReviewerHookScript} and {ReviewerLspHookScript} with the hooks block in docs/REVIEW.md → \"Agent, rule and skill files\".");
         }
 
         if (values.ContainsKey("hooks"))

@@ -36,7 +36,9 @@ public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixtur
         }
 
         registered.Distinct().Order(StringComparer.Ordinal)
-            .ShouldBe(HookScripts().Where(script => script != AgentFiles.ReviewerHookScript).Order(StringComparer.Ordinal));
+            .ShouldBe(HookScripts()
+                .Where(script => script is not (AgentFiles.ReviewerHookScript or AgentFiles.ReviewerLspHookScript))
+                .Order(StringComparer.Ordinal));
         if (OperatingSystem.IsWindows())
         {
             return;

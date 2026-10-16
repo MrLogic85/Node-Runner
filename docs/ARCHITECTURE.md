@@ -108,6 +108,7 @@ Node Runner/
 ├── Directory.Build.props           # shared C# settings
 ├── Directory.Packages.props        # central package versions (CPM)
 ├── .editorconfig                   # style rules
+├── dotnet-tools.json               # local .NET tools: csharp-ls for the agents' LSP tool
 ├── libs/                           # pure C#, no Godot
 │   ├── NodeRunner.Domain/          # data records, enums, invariants
 │   ├── NodeRunner.Mechanics/       # pure part physics: sensors, servos, pistons, springs
