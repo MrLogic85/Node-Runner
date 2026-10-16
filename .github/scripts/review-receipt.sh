@@ -44,15 +44,21 @@ base_of() {
 # The tree `git add <mode>` would stage, without touching the index: -A for the whole working
 # tree, -u for its tracked files only, as `git commit -a` takes them.
 staged_tree() {
-  local index tmp tree
+  local index tmp tree status err
   index=$(git rev-parse --path-format=absolute --git-path index) || return 1
   tmp=$index.review-receipt.$$
   if [ -f "$index" ]; then
     # Keeping its mtime lets git spot a file changed within the same second as the index.
     cp -p "$index" "$tmp" || return 1
   fi
-  tree=$(GIT_INDEX_FILE=$tmp git add "$1" >/dev/null 2>&1 && GIT_INDEX_FILE=$tmp git write-tree)
-  local status=$?
+  # git's warnings stay out of a successful run; its reason for a failure goes to stderr.
+  if err=$(GIT_INDEX_FILE=$tmp git add "$1" 2>&1 >/dev/null); then
+    tree=$(GIT_INDEX_FILE=$tmp git write-tree)
+    status=$?
+  else
+    status=1
+    printf '%s\n' "$err" >&2
+  fi
   rm -f "$tmp"
   [ $status = 0 ] && echo "$tree"
 }
@@ -62,7 +68,7 @@ staged_tree() {
 measure() {
   local rev=HEAD diff
   case $1 in
-    --index) tree=$(git write-tree 2>/dev/null) || return 1 ;;
+    --index) tree=$(git write-tree) || return 1 ;;
     --tracked) tree=$(staged_tree -u) || return 1 ;;
     --worktree) tree=$(staged_tree -A) || return 1 ;;
     *) rev=$1; tree=$(git rev-parse -q --verify "$rev^{tree}") || return 1 ;;
