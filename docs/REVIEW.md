@@ -101,6 +101,10 @@ Every review agent must:
 - Classify each finding by level, mark it **new** or **preexisting**, and
   give file, lines, evidence, impact and a suggested direction.
 - Return "No findings" when nothing clears that bar.
+- Find a C# symbol's definition, callers or implementations with the
+  `LSP` tool when the agent has it, since it resolves overloads and `?.`
+  calls that a text search misses; otherwise, or when it fails to start,
+  use `git grep` (#1352).
 
 The levels rank findings:
 
@@ -160,13 +164,15 @@ with its reason; when the script is missing, it is allowed.
   `local_*` agents (`AGENTS.md` → "Machine-local setup").
 - The frontmatter has only `name` (the file's `<name>`), a one-line
   `description`, `tools` and `hooks`; a reviewer (`*-reviewer`) has
-  `tools: Read, Grep, Glob, Bash` and registers `reviewer-bash.sh` (see
-  "Hooks") with the block below, and no agent sets `model`. A value
-  with `: ` or ` #` is invalid YAML unless quoted; prefer ` — `.
+  `tools: Read, Grep, Glob, Bash, LSP` and registers `reviewer-bash.sh`
+  and `reviewer-lsp.sh` (see "Hooks") with the block below, and no agent
+  sets `model`. A value with `: ` or ` #` is invalid YAML unless quoted;
+  prefer ` — `.
 - A hook in an agent's frontmatter uses Claude Code's shape: each entry
   holds an inner `hooks` list, with a `matcher` where the event takes
   one. Claude Code drops the whole agent if it finds Copilot's flat shape.
-  A reviewer's block:
+  The LSP tool is `LSP` in Claude Code and `lsp` in Copilot, whose
+  matchers are case-sensitive. A reviewer's block:
 
   ```yaml
   hooks:
@@ -175,7 +181,16 @@ with its reason; when the script is missing, it is allowed.
         hooks:
           - type: command
             command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
+      - matcher: "LSP|lsp"
+        hooks:
+          - type: command
+            command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
   ```
+- The `LSP` tool runs `csharp-ls` through `dotnet tool run`, pinned in
+  `dotnet-tools.json`: Copilot reads `.github/lsp.json`, and Claude Code
+  the `node-runner-csharp` plugin, which `.claude/settings.json` enables
+  from the marketplace in `.claude/marketplace/` (#1352). `LspConfigSpec`
+  checks that these agree; `README.md` → "Tools" owns the setup.
 - A rule in `.claude/rules/<topic>.md` starts with frontmatter that has
   only `paths`: at least one quoted glob, one per line, each an existing
   file or `<folder>/**` (#1315).
@@ -198,16 +213,18 @@ with its reason; when the script is missing, it is allowed.
 ## Hooks
 
 `.claude/settings.json` registers the scripts in `.claude/hooks/`, and both
-tools run them for every agent, not only reviewers (#1320). The exception
-is `reviewer-bash.sh`, which each reviewer's frontmatter registers (see
-"Agent, rule and skill files"), so it runs only in reviewers (#1321). They
-hold what an instruction alone does not reliably hold:
+tools run them for every agent, not only reviewers (#1320). The exceptions
+are `reviewer-bash.sh` and `reviewer-lsp.sh`, which each reviewer's
+frontmatter registers (see "Agent, rule and skill files"), so they run only
+in reviewers (#1321, #1352). They hold what an instruction alone does not
+reliably hold:
 
 | Event | Script | Does |
 | --- | --- | --- |
-| `SessionStart` | `session-start.sh` | Tells the agent the branch and any uncommitted changes, and records the user's running emulators |
+| `SessionStart` | `session-start.sh` | Tells the agent the branch and any uncommitted changes, records the user's running emulators, and in a new session runs `dotnet tool restore` for the `LSP` tool, waiting at most `NODE_RUNNER_RESTORE_WAIT` seconds (10 by default) and saying so when it fails or is still running |
 | `PreToolUse` on `Bash` | `guard-bash.sh` | Denies the git commands `AGENTS.md` → "Working copy" forbids, a commit or push to `main`, a push without a review receipt (see "Review receipts"), `gh pr create` without `--title`, and a literal PR title CI would reject in `gh pr create` or `gh pr edit` |
 | `PreToolUse` on `Bash`, in reviewers | `reviewer-bash.sh` | Allows only commands that read or build: read-only `git` and `gh` commands, `rg`, `grep`, `ls`, `cat`, `sed -n` with line ranges, `find` without actions, `bash -n`, `shellcheck`, `review-receipt.sh check` and `base`, `dotnet build`, `dotnet test` and similar; denies the rest, and every redirect into a file, with a reason |
+| `PreToolUse` on `LSP`, in reviewers | `reviewer-lsp.sh` | Allows only lookups such as `findReferences` and `goToDefinition`; denies the rest, since Copilot's `rename` writes the files |
 | `PreToolUse` on edits | `guard-edit.sh` | Denies writes into `/tmp` and `issues/` |
 | `Stop` | `turn-end.sh` | Blocks the turn's end once for each emulator or APK in `build/` that appeared during the session |
 | `SessionEnd` | `session-end.sh` | Removes the session's state in `.git/agent-hooks/`; a session start also prunes state idle for over two days |
@@ -237,12 +254,14 @@ session, including another session's but not one whose path holds a
 space, and the APK a release (`docs/RELEASING.md`) leaves in `build/`;
 say why it stays.
 
-A hook is a bash script that needs only bash, `git`, `jq` and POSIX tools.
-It writes its verdict in both tools' JSON shapes, always exits 0, and
-allows the call when `jq` is missing, `reviewer-bash.sh` included,
-because both tools block the call when a `PreToolUse` hook fails;
-`session-start.sh` then says the hooks are off, as it does when it cannot
-record the session's state for `Stop`. The settings command is
+A hook is a bash script that needs only bash, `git`, `jq` and POSIX
+tools, plus a fractional `sleep`, which macOS and GNU accept;
+`session-start.sh` also runs `dotnet` when it is installed, and skips it
+otherwise. It writes its verdict in both tools' JSON shapes, always
+exits 0, and allows the call when `jq` is missing, the reviewer hooks
+included, because both tools block the call when a `PreToolUse` hook
+fails; `session-start.sh` then says the hooks are off, as it does when it
+cannot record the session's state for `Stop`. The settings command is
 `"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/<name>.sh`:
 quoted, since the checkout path may hold spaces, and found from the
 repository root when `CLAUDE_PROJECT_DIR` is unset, so a session started

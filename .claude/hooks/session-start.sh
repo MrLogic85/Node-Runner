@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# SessionStart (#1320): tells the agent the branch and any uncommitted changes, and records the
-# running emulators so turn-end.sh reports only those this session starts.
+# SessionStart (#1320): tells the agent the branch and any uncommitted changes, records the
+# running emulators so turn-end.sh reports only those this session starts, and restores the
+# repository's dotnet tools (#1352).
 command -v jq >/dev/null 2>&1 || {
   echo 'jq is not installed, so the repository hooks are off (README.md → "Tools").'
   exit 0
@@ -21,6 +22,25 @@ fi
 [ -n "$state" ] && [ -f "$state/started" ] \
   || note="
 Could not record the session's state, so the end-of-turn check for emulators and APKs is off."
+
+# The C# language server the LSP tool starts is a local dotnet tool (#1352). Restoring it takes a
+# fraction of a second once it is in the NuGet cache, but a download can stall, so the hook waits
+# at most NODE_RUNNER_RESTORE_WAIT seconds and leaves the restore running after that.
+if [ $fresh = 1 ] && [ -f "$root/dotnet-tools.json" ] && command -v dotnet >/dev/null 2>&1; then
+  (cd "$root" && exec dotnet tool restore) </dev/null >/dev/null 2>&1 &
+  restore=$! tenths=0 limit=$((${NODE_RUNNER_RESTORE_WAIT:-10} * 10))
+  while kill -0 $restore 2>/dev/null && [ $tenths -lt $limit ]; do
+    sleep 0.1
+    tenths=$((tenths + 1))
+  done
+  if kill -0 $restore 2>/dev/null; then
+    note="${note:-}
+\`dotnet tool restore\` is still running, so the LSP tool may fail to start the C# language server for a while; find callers and definitions with \`git grep\` until it works."
+  elif ! wait $restore; then
+    note="${note:-}
+\`dotnet tool restore\` failed, so the LSP tool cannot start the C# language server; find callers and definitions with \`git grep\` instead."
+  fi
+fi
 
 if ! changes=$(git -C "$root" status --porcelain 2>/dev/null); then
   context="Could not read the working copy (git status failed in $root). Ask the human before starting work (AGENTS.md → \"Working copy\")."

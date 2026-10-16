@@ -1,0 +1,12 @@
+{
+  "name": "node-runner",
+  "owner": { "name": "Node Runner" },
+  "description": "Plugins the Node Runner repository turns on for Claude Code",
+  "plugins": [
+    {
+      "name": "node-runner-csharp",
+      "source": "./node-runner-csharp",
+      "description": "C# language server (csharp-ls, pinned in dotnet-tools.json) for code navigation"
+    }
+  ]
+}

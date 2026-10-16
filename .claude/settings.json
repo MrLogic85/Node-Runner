@@ -1,4 +1,8 @@
 {
+  "extraKnownMarketplaces": {
+    "node-runner": { "source": { "source": "directory", "path": "./.claude/marketplace" } }
+  },
+  "enabledPlugins": { "node-runner-csharp@node-runner": true },
   "hooks": {
     "SessionStart": [
       {

@@ -66,10 +66,10 @@ public sealed class HookFixture : IDisposable
     }
 
     /// <summary>
-    /// Runs the hook through bash with raw stdin and, when given, only that PATH; requires exit
-    /// code 0 and returns its stdout.
+    /// Runs the hook through bash with raw stdin, when given only that PATH, and any extra
+    /// environment variables; requires exit code 0 and returns its stdout.
     /// </summary>
-    internal string RunRaw(string hook, string stdin, string? path = null)
+    internal string RunRaw(string hook, string stdin, string? path = null, IReadOnlyDictionary<string, string>? environment = null)
     {
         var start = new ProcessStartInfo("bash")
         {
@@ -84,6 +84,11 @@ public sealed class HookFixture : IDisposable
         if (path is not null)
         {
             start.Environment["PATH"] = path;
+        }
+
+        foreach (var (name, value) in environment ?? new Dictionary<string, string>())
+        {
+            start.Environment[name] = value;
         }
 
         using var process = Process.Start(start)!;

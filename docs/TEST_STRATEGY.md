@@ -27,7 +27,7 @@ Test-code conventions (layout, naming, AAA) are in
 | Mechanics | `libs/NodeRunner.Mechanics/` | xUnit + Shouldly | Part physics on hand-checkable numbers |
 | ML | `libs/NodeRunner.ML/` | xUnit + Shouldly | Forward pass, GA operators, activation math, genome round-trips |
 | App | `libs/NodeRunner.App/` | xUnit + Shouldly + NSubstitute | View-models, repositories, services |
-| Architecture | `libs/`, `project/`, agent files and hooks | xUnit + NetArchTest | Layer graph, source conventions, Android export, agent files, hooks |
+| Architecture | `libs/`, `project/`, agent files, LSP config and hooks | xUnit + NetArchTest | Layer graph, source conventions, Android export, agent files, LSP config, hooks |
 | Static Godot contracts | `project/src/`, `project/scenes/`, theme files | xUnit + Shouldly + Roslyn | See "UI contracts" and "Physics setup guards" |
 | Godot Nodes | `project/src/` | Manual (`docs/MANUAL_TESTING.md`) | Node lifecycle, physics behaviour, input |
 | End-to-end | full app on device | Manual, decided per change | Feel, latency, battery |
@@ -54,8 +54,9 @@ versions.
 (`docs/ARCHITECTURE.md`), the file-size limit
 (`docs/CODE_DESIGN_PRINCIPLES.md` §5) and the Android export
 (`docs/RELEASING.md` → "Android export"). `AgentFilesSpec.cs`,
-`RuleFilesSpec.cs` and `SkillFilesSpec.cs` check the agent, rule and
-skill files (`docs/REVIEW.md` → "Agent, rule and skill files"), and the
+`RuleFilesSpec.cs`, `SkillFilesSpec.cs` and `LspConfigSpec.cs` check the
+agent, rule and skill files and the LSP configuration (`docs/REVIEW.md` →
+"Agent, rule and skill files"), and the
 specs in `Hooks/` run the hooks against throwaway repositories
 (`docs/REVIEW.md` → "Hooks"). Add a fact when we decide to enforce a
 convention.

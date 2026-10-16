@@ -91,6 +91,7 @@ public sealed class AgentFilesSpec : IDisposable
     [InlineData("no tools", $".github/agents/{_reviewer}.agent.md: a reviewer has tools")]
     [InlineData("no reviewer hook", $".github/agents/{_reviewer}.agent.md: a reviewer registers reviewer-bash.sh")]
     [InlineData("other reviewer hook", $".github/agents/{_reviewer}.agent.md: a reviewer registers reviewer-bash.sh")]
+    [InlineData("other reviewer LSP hook", $".github/agents/{_reviewer}.agent.md: a reviewer registers reviewer-bash.sh and reviewer-lsp.sh")]
     [InlineData("empty hooks", $".github/agents/{_lead}.agent.md: hooks must use Claude Code's shape")]
     [InlineData("flat hooks", $".github/agents/{_lead}.agent.md: hooks must use Claude Code's shape")]
     public void Fixture_WithOneRuleBroken_NamesTheFileAndRule(string broken, string expected)
@@ -173,6 +174,9 @@ public sealed class AgentFilesSpec : IDisposable
                 break;
             case "other reviewer hook":
                 Replace(agent, AgentFiles.ReviewerHookScript, "guard-bash.sh");
+                break;
+            case "other reviewer LSP hook":
+                Replace(agent, AgentFiles.ReviewerLspHookScript, "guard-edit.sh");
                 break;
             case "empty hooks":
                 Replace(lead, "\n    Stop:\n    - hooks:\n        - type: command\n          command: \"./done.sh\"", "");

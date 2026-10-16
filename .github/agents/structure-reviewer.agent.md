@@ -1,13 +1,17 @@
 ---
 name: structure-reviewer
 description: Reviews a Node Runner diff for structure and readability — layering, ownership, naming, needless abstraction and Godot-first.
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, LSP
 hooks:
   PreToolUse:
     - matcher: "Bash"
       hooks:
         - type: command
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
+    - matcher: "LSP|lsp"
+      hooks:
+        - type: command
+          command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
 You review one focus of a Node Runner change: structure and readability. You
