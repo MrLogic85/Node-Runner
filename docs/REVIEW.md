@@ -233,7 +233,7 @@ reliably hold:
 | `PreToolUse` on `Bash`, in reviewers | `reviewer-bash.sh` | Allows only commands that read or build: read-only `git` and `gh` commands, `rg`, `grep`, `ls`, `cat`, `sed -n` with line ranges, `find` without actions, `bash -n`, `shellcheck`, `review-receipt.sh check` and `base`, `dotnet build`, `dotnet test` and similar; denies the rest, and every redirect into a file, with a reason |
 | `PreToolUse` on `LSP`, in reviewers | `reviewer-lsp.sh` | Allows only lookups such as `findReferences` and `goToDefinition`; denies the rest, since Copilot's `rename` writes the files |
 | `PreToolUse` on edits | `guard-edit.sh` | Denies writes into `/tmp` and `issues/` |
-| `Stop` | `turn-end.sh` | Blocks the turn's end once for each emulator or APK in `build/` that appeared during the session |
+| `PostToolUse` on `Bash` | `after-push.sh` | After a `git push`, reminds the agent once of each emulator or APK in `build/` that appeared during the session, as context on the push's result: Copilot shows a `Stop` hook's reason as a user message (#1356) |
 | `SessionEnd` | `session-end.sh` | Removes the session's state in `.git/agent-hooks/`; a session start also prunes state idle for over two days |
 
 The hooks guard against mistakes, not intent. `guard-bash.sh` reads simple
@@ -256,7 +256,9 @@ quiet the run, and it does not hide the environment or readable files.
 saves screenshots outside the repository.
 `guard-edit.sh` sees only the edit tools and only `/tmp` itself, so a
 shell redirect into `/tmp` or a write into macOS's `$TMPDIR` passes.
-The `Stop` hook reports any emulator the user starts during the
+`after-push.sh` finds a push by reading simple commands the same way,
+but not inside `bash -c`, and counts one whose pipeline or `||` hides
+a failure. It reports any emulator the user starts during the
 session, including another session's but not one whose path holds a
 space, and the APK a release (`docs/RELEASING.md`) leaves in `build/`;
 say why it stays.
@@ -268,7 +270,7 @@ otherwise. It writes its verdict in both tools' JSON shapes, always
 exits 0, and allows the call when `jq` is missing, the reviewer hooks
 included, because both tools block the call when a `PreToolUse` hook
 fails; `session-start.sh` then says the hooks are off, as it does when it
-cannot record the session's state for `Stop`. The settings command is
+cannot record the session's state for `after-push.sh`. The settings command is
 `"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/<name>.sh`:
 quoted, since the checkout path may hold spaces, and found from the
 repository root when `CLAUDE_PROJECT_DIR` is unset, so a session started

@@ -31,3 +31,52 @@ state_dir() {
 emulator_pids() {
   ps -U "$(id -u)" -o pid=,args= | awk '{ pid = $1; sub(/^ *[0-9]+ +/, ""); if (/^([^ ]*\/)?qemu-system[^\/ ]*( |$)/) print pid }'
 }
+
+path_in() {
+  case $2 in
+    /*) echo "$2" ;;
+    *) echo "$1/$2" ;;
+  esac
+}
+
+# Drops the words before a simple command's program from the caller's array w, as read by
+# words.awk: assignments, prefixes such as command or if, and env with its options. env -C
+# changes the caller's here, the directory, for its one command only.
+skip_prefixes() {
+  local dir=$here
+  while [ ${#w[@]} -gt 0 ]; do
+    case ${w[0]} in
+      [A-Za-z_]*=*) [[ ${w[0]} =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] || break ;;
+      command | builtin | exec | nohup | time | sudo | if | then | else | elif | do | while | until | '!' | '{') ;;
+      env)
+        while [ ${#w[@]} -gt 1 ]; do
+          case ${w[1]} in
+            -u | --unset) w=("${w[@]:1}") ;;
+            -C | --chdir) here=$(path_in "$dir" "${w[2]}"); w=("${w[@]:1}") ;;
+            --chdir=*) here=$(path_in "$dir" "${w[1]#--chdir=}") ;;
+            -C?*) here=$(path_in "$dir" "${w[1]#-C}") ;;
+            -* | [A-Za-z_]*=*) ;;
+            *) break ;;
+          esac
+          w=("${w[@]:1}")
+        done
+        ;;
+      *) break ;;
+    esac
+    w=("${w[@]:1}")
+  done
+}
+
+# Skips git's global options in the caller's array args, the words after git, leaving i at the
+# subcommand; git -C changes the caller's dir.
+skip_git_options() {
+  i=0
+  while [ $i -lt ${#args[@]} ]; do
+    case ${args[$i]} in
+      -C) dir=$(path_in "$dir" "${args[$((i + 1))]}"); i=$((i + 2)) ;;
+      -c | --git-dir | --work-tree | --namespace | --exec-path | --config-env | --super-prefix) i=$((i + 2)) ;;
+      -*) i=$((i + 1)) ;;
+      *) break ;;
+    esac
+  done
+}
