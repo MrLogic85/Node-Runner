@@ -3,6 +3,12 @@
 Guidance for AI coding agents (Copilot CLI, Claude Code, Cursor, etc.) and
 human contributors working in the **Node Runner** repository.
 
+Comment: "Det har skett en stor ändring i hur vi jobbar. Mycket av det som
+tidigare stod i AGENTS.md och annan dokumentation har flyttats till agents,
+skills och hooks. Så håll ögonen öppna för om vi behöver justera något,
+framförallt om det känns som att inställningarna kräver för mycket eller
+gör arbetet för stelt"
+
 ## What this project is
 
 Node Runner is a **learning-by-playing Android app**: the user draws a 2D
