@@ -4,8 +4,8 @@
 # "Review receipts" owns the rules.
 #
 #   review-receipt.sh [-C <dir>] write --reviewers <a,b,...> <findings.md>
-#       Records a receipt for the reviewed change, staged in full with `git add -A`.
-#   review-receipt.sh [-C <dir>] check <rev> | --index | --worktree
+#       Records a receipt for the reviewed change as staged; untracked files stay out.
+#   review-receipt.sh [-C <dir>] check <rev> | --index | --tracked | --worktree
 #       Exits 0 when a receipt matches or the change is empty, 1 when none matches, and 2
 #       when it cannot tell.
 #   review-receipt.sh [-C <dir>] base
@@ -41,8 +41,9 @@ base_of() {
   git merge-base "$1" "${mains[@]}"
 }
 
-# The tree of the working tree as `git add -A` would stage it, without touching the index.
-worktree_tree() {
+# The tree `git add <mode>` would stage, without touching the index: -A for the whole working
+# tree, -u for its tracked files only, as `git commit -a` takes them.
+staged_tree() {
   local index tmp tree
   index=$(git rev-parse --path-format=absolute --git-path index) || return 1
   tmp=$index.review-receipt.$$
@@ -50,19 +51,20 @@ worktree_tree() {
     # Keeping its mtime lets git spot a file changed within the same second as the index.
     cp -p "$index" "$tmp" || return 1
   fi
-  tree=$(GIT_INDEX_FILE=$tmp git add -A >/dev/null 2>&1 && GIT_INDEX_FILE=$tmp git write-tree)
+  tree=$(GIT_INDEX_FILE=$tmp git add "$1" >/dev/null 2>&1 && GIT_INDEX_FILE=$tmp git write-tree)
   local status=$?
   rm -f "$tmp"
   [ $status = 0 ] && echo "$tree"
 }
 
-# Sets base, tree and key for: a revision, --index or --worktree. An empty key means an empty
+# Sets base, tree and key for: a revision, --index, --tracked or --worktree. An empty key means an empty
 # change.
 measure() {
   local rev=HEAD diff
   case $1 in
     --index) tree=$(git write-tree 2>/dev/null) || return 1 ;;
-    --worktree) tree=$(worktree_tree) || return 1 ;;
+    --tracked) tree=$(staged_tree -u) || return 1 ;;
+    --worktree) tree=$(staged_tree -A) || return 1 ;;
     *) rev=$1; tree=$(git rev-parse -q --verify "$rev^{tree}") || return 1 ;;
   esac
   base=$(base_of "$rev") || return 1
@@ -89,10 +91,14 @@ write() {
   done
   [ -f "$findings" ] && grep -q '[^[:space:]]' "$findings" \
     || fail "give the file with each finding and its disposition, or \"No findings\""
-  measure --worktree || fail "cannot measure the working tree against main"
-  local staged
-  staged=$(git write-tree 2>/dev/null) || fail "cannot read the index"
-  [ "$staged" = "$tree" ] || fail "stage the reviewed change in full with git add -A, so the receipt matches what was reviewed"
+  measure --index || fail "cannot measure the index against main"
+  # Untracked files stay out, as they stay out of the commit; a tracked file must be staged.
+  git diff --quiet
+  case $? in
+    0) ;;
+    1) fail "stage every change to tracked files (git add -A, or name the paths), so the receipt matches what was reviewed" ;;
+    *) fail "cannot compare the working tree with the index" ;;
+  esac
   if [ -z "$key" ]; then
     echo "review-receipt: the change from main is empty; nothing to record."
     return 0
@@ -121,7 +127,7 @@ write() {
 }
 
 check() {
-  [ $# = 1 ] || fail "usage: check <rev> | --index | --worktree"
+  [ $# = 1 ] || fail "usage: check <rev> | --index | --tracked | --worktree"
   measure "$1" || fail "cannot measure $1 against main"
   [ -z "$key" ] || [ -f "$receipts/$key.md" ] || exit 1
 }
@@ -130,5 +136,5 @@ case ${1:-} in
   write) shift; write "$@" ;;
   check) shift; check "$@" ;;
   base) base_of HEAD || fail "cannot find where HEAD left main" ;;
-  *) fail "usage: review-receipt.sh [-C <dir>] write --reviewers <a,b> <findings.md> | check <rev> | --index | --worktree | base" ;;
+  *) fail "usage: review-receipt.sh [-C <dir>] write --reviewers <a,b> <findings.md> | check <rev> | --index | --tracked | --worktree | base" ;;
 esac

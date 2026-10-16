@@ -117,12 +117,14 @@ in its own format and finding levels.
 
 ### Review receipts
 
-Review runs before the commit, on the change `git add -A` stages,
-measured from where the branch left `main`; after a commit it runs the
-same way with a clean working tree. When no new finding is left
-unaddressed, the `review-change` skill records a receipt for your own
-change with `.github/scripts/review-receipt.sh write`, which refuses
-unless the index holds the whole working tree. The receipt,
+Review runs before the commit, on the change the index stages, measured
+from where the branch left `main`; after a commit it runs the same way
+with no uncommitted change to a tracked file. When no new finding is
+left unaddressed, the `review-change` skill records a receipt for your
+own change with `.github/scripts/review-receipt.sh write`, which refuses
+while a tracked file has unstaged changes. Untracked files stay out of
+the receipt, as they stay out of the commit, so a human's untracked work
+need not be staged or moved (#1360). The receipt,
 `.git/review-receipts/<key>.md`, holds the date, branch, base and tree,
 the reviewers that ran, and each finding with its result or disposition
 (#1321).
@@ -137,8 +139,9 @@ receipts older than 30 days are pruned.
 
 `guard-bash.sh` denies `git push` of a branch or commit of this
 repository unless a receipt matches what it holds. A commit earlier in
-the same line is measured from the index, or from the working tree after
-`git add -A` (or `--all`, `.` at the top, `:/`) or with `commit -a`.
+the same line is measured from the index, from the working tree's
+tracked files with `commit -a` (or `--all`), or from the whole working
+tree after `git add -A` (or `--all`, `.` at the top, `:/`).
 After a git command earlier in the line that changes what the push sends
 in a way the hook cannot measure, the push must be its own command: a
 `git add` or `commit` of some paths, or a `merge`, `rebase`, `pull`,

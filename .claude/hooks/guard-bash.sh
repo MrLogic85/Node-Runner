@@ -17,7 +17,7 @@ receipt_script=$hooks_dir/../../.github/scripts/review-receipt.sh
 switches=''
 
 # What a commit earlier in the line will commit, as review-receipt.sh check measures it:
-# --index, or --worktree after a `git add -A` or with `commit -a`; empty without a commit.
+# --index, --tracked with `commit -a`, or --worktree after a `git add -A`; empty without a commit.
 committed=''
 added=0
 # The last git command earlier in the line that changes what a push sends in a way the hook
@@ -148,7 +148,7 @@ check_git() {
           continue
         fi
         case $a in
-          --all) committed=--worktree ;;
+          --all) [ "$committed" = --worktree ] || committed=--tracked ;;
           # Paths, or --only and --include, commit some files from the working tree.
           --only | --include | --pathspec-from-file*) moved=commit ;;
           --message | --file | --reuse-message | --reedit-message | --template | --author | --date \
@@ -158,7 +158,7 @@ check_git() {
           -*)
             # Short options combine, as in -sam; letters after one that takes a value are its value.
             a=${a#-}
-            case ${a%%[mFCctuS]*} in *a*) committed=--worktree ;; esac
+            case ${a%%[mFCctuS]*} in *a*) [ "$committed" = --worktree ] || committed=--tracked ;; esac
             case ${a%%[mFCctuS]*} in *[oi]*) moved=commit ;; esac
             # A value letter takes the next argument only when nothing follows it.
             case ${a#"${a%%[mFCctuS]*}"} in [mFCct]) value=1 ;; esac
@@ -168,7 +168,8 @@ check_git() {
       done
       ;;
     add)
-      # Only `git add -A`, `.` or `:/` from the top stages what review-receipt.sh measures.
+      # Only `git add -A`, `.` or `:/` from the top stages what `review-receipt.sh check --worktree`
+      # measures, so the hook can measure the commit that follows.
       local whole=0 paths=0
       for a in "${args[@]}"; do
         case $a in
