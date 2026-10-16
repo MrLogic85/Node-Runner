@@ -59,7 +59,7 @@ understanding of the project before starting to work.
 - Work only in the checkout the session started in. Do not create git
   worktrees, extra clones or copies of the repository.
 - Do each change on a feature branch (`git switch -c ...`), and switch back
-  to `main` once it is merged. `main` changes only through a merged PR
+  to `main` once its PR is open. `main` changes only through a merged PR
   (`docs/REVIEW.md` → "Merge gates").
 - If the checkout has uncommitted changes or is on another branch when work
   should start, stop and ask the human. Never stash, reset or discard them,

@@ -19,12 +19,15 @@ needs, and "Definition of Done" owns the gate; this skill owns the steps.
 3. Run the selected agents in parallel as subagents. Give each the
    repository path, the exact diff command and the issue URL, and give
    `design-lead` the evidence "Choosing reviewers" names.
-4. Act on each finding as "Definition of Done" says, filing any issue it
-   asks for with the `create-issue` skill.
-5. After a fix, repeat steps 1, 3 and 4 on the new diff with only the
-   reviewers the corrective change selects ("Review receipts").
+4. Judge each finding as "Definition of Done" says: fix it, or dismiss it
+   with a short reason. File an issue with the `create-issue` skill only
+   where it asks for one.
+5. After a fix that changes behaviour or design, repeat steps 1, 3 and 4
+   on the new diff with only the reviewers the corrective change selects
+   ("Review receipts"). A simple, local fix needs no new review.
 6. For your own change, record the receipt. Write each reviewer's
-   findings and their dispositions, or "No findings", to
+   findings and their dispositions, or "No findings", and for each fix
+   whether it was re-reviewed or simple, to
    `.scratch/review.md`, stage the change as in step 1, then run:
 
    ```bash
