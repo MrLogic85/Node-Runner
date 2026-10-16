@@ -37,14 +37,15 @@ What comes next is in [`docs/ROADMAP.md`](docs/ROADMAP.md) and the
 
 ## Building
 
-Built with Godot 4.7 (.NET/C#) for Android.
+Built with Godot (.NET/C#) for Android. Install the tools in "Tools"
+below, then:
 
 ```bash
-# Prereqs: .NET 10 SDK, Godot 4.7 (Mono/.NET build); see "Tools" below
 dotnet build NodeRunner.slnx     # builds all libs + tests + Godot csproj
-dotnet test  NodeRunner.slnx     # runs xUnit + architecture tests
 # Open project/project.godot in Godot and hit F5
 ```
+
+Running the tests: `docs/TEST_STRATEGY.md` → "Running the suite".
 
 Android export: `docs/RELEASING.md` → "Android export".
 
@@ -56,7 +57,7 @@ state goes in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
 | Tool | Required or recommended for | macOS install |
 | --- | --- | --- |
 | .NET 10 SDK | Required: building and testing | `brew install --cask dotnet-sdk` |
-| Godot 4.7, .NET build | Required: running the app | `brew install --cask godot-mono` |
+| Godot 4.7.2, .NET build | Required: running the app | `brew install --cask godot-mono` |
 | `git` 2.31+ | Required: the hooks and `.github/scripts/review-receipt.sh` | Xcode Command Line Tools, or `brew install git` |
 | `gh` 2.94+ | Required: scripts in `.github/scripts/` and the skills | `brew install gh` |
 | `jq` | Required: the same scripts and the hook tests; without it the agent hooks are off | `brew install jq` |
@@ -93,7 +94,7 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 | Tools to install | `README.md` → "Tools" |
 | How a change lands, review agents, hooks | [`docs/REVIEW.md`](docs/REVIEW.md) |
 | What each review agent checks | [`.github/agents/`](.github/agents/) |
-| Procedures (skills): `start-issue`, `create-issue`, `review-issue`, `review-change`, `ship-pr`, `write-docs`, `plan-manual-tests`, `desktop-check`, `android-check`, `release-milestone`, `fix-release`, `write-release-notes`, `change-saved-shape`, `add-language`, `change-app-icon` | [`.claude/skills/`](.claude/skills/) |
+| Procedures (skills) | [`.claude/skills/`](.claude/skills/) |
 | Releasing | [`docs/RELEASING.md`](docs/RELEASING.md) |
 
 ## Contributing

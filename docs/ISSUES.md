@@ -46,17 +46,12 @@ Do it right away, while the evidence is at hand, and tell the human its
 number. A remark in a reply, PR or review is not enough. The issue is
 worked on separately, not folded into the current change.
 
-Automation only sets Status **Needs review**. Whoever creates the issue
-sets, in the same step:
-
-1. The rest of the "Required metadata". Use **Idea** instead of Needs
-   review if the issue is not shaped yet.
-2. Its parent as a sub-issue, and every issue it waits on as a GitHub
-   **blocked-by** relationship. "Blocked by #N" in the body does not record
-   it.
-
-The `create-issue` skill runs these steps and checks the result with
-`.github/scripts/issue-audit.sh`.
+Automation only sets Status **Needs review**, so whoever creates the issue
+sets the rest of the "Required metadata" at once, with **Idea** instead of
+Needs review if the issue is not shaped yet. Record its parent as a GitHub
+sub-issue relationship and each issue it waits on as a **blocked-by** one;
+"Blocked by #N" in the body does not record them. The `create-issue` skill has the
+steps.
 
 ## Type labels
 
@@ -189,8 +184,9 @@ The result sets the Status:
   the body is fixed.
 - Otherwise: **Needs design** if it changes what the user sees without an
   approved design, else **Blocked** if it has an open blocker, else
-  **Ready**. Minor findings do not hold it back. A Size 8 issue is split
-  first; its sub-issues take this Status, and it follows "Parent issues".
+  **Ready**. Minor findings do not hold it back. A Size 8 issue's
+  sub-issues (see "Size") take this Status, and it follows "Parent
+  issues".
 
 Each milestone that changes UI has a design brief that `design-lead`
 reviews before its screens are built.

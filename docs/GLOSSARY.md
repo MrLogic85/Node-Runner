@@ -91,9 +91,9 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   the reference, and Target turns against it, driven by a joint motor or
   resisted by a Brake, or read by an Angle sensor. Each is a link, or the Wheel on its joint as a one-sided link
   (#1118). See: `docs/CREATURE_MODEL.md` → "Servo".
-- **Hinge part** — What fills a joint's hinge-part slot, one per joint: a
-  Servo, Motor, Stepper, Brake or Angle sensor, each with a Fixed and a Target side
-  (`IHingePartDef`, `CreatureDef.HingeParts`). See: `docs/CREATURE_MODEL.md`
+- **Hinge part** — A joint motor, Brake or Angle sensor that works
+  between a Fixed and a Target side, one per joint (`IHingePartDef`,
+  `CreatureDef.HingeParts`). See: `docs/CREATURE_MODEL.md`
   → Node → One part per slot.
 - **Hub** — The `NodeDef.HubRadius` circle at every joint's centre where
   links end and a Piston's or Spring's travel is measured from, whatever

@@ -11,7 +11,7 @@ network is generated from it, and the user watches it learn to move through
 neuroevolution. The primary goal is **pedagogical**: to make ML concepts
 visible, tangible and interactive.
 
-- **Engine:** Godot 4.7 (.NET)
+- **Engine:** Godot (.NET), the version in `README.md` → "Tools"
 - **Language:** C# for everything
 - **Target:** Android, with desktop for development
 - **Stage:** `docs/ROADMAP.md` → "Project stage"; it decides whether
@@ -73,15 +73,13 @@ format, in both tools (`docs/REVIEW.md` → "Hooks").
 - `docs/`: design, process and teaching documents.
 - `issues/`: a read-only archive of the old file-based tracker.
 
-`docs/ARCHITECTURE.md` owns the layers and solution layout. Folder- and
-layer-specific rules live in `.claude/rules/`; each lists the files it
-governs in `paths`, and both tools load it when you read a matching file.
-Read the matching rules yourself before creating a file there, or when you
-work from a diff alone.
-
-Procedures live as skills in `.claude/skills/<name>/SKILL.md`. Both tools
-load one when the task matches its description, or by `/<name>`; when a
-directive above names a skill, use it even if it did not load by itself.
+`docs/ARCHITECTURE.md` owns the layers and solution layout, and
+`docs/CODE_DESIGN_PRINCIPLES.md` §9 where rules and procedures live. Both
+tools load a `.claude/rules/` file when you read a file its `paths`
+match; read the matching rules yourself before creating a file there, or
+when you work from a diff alone. Both load a skill when the task matches
+its description, or by `/<name>`; when a directive above names a skill,
+use it even if it did not load by itself.
 
 ## Machine-local setup
 

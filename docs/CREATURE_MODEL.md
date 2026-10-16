@@ -24,9 +24,10 @@ thinks" (the network) stay separate; this is the most important rule here:
 
 **A part sits on what it senses or moves** (#127): a sensor senses one body,
 so it sits on a beam, or on a joint, a body of its own (Touch sensor); a
-part acting or sensing between two beams, or on the ground around a joint, sits on that
-joint (Servo, Motor, Stepper, Brake, Angle sensor, Wheel, Rubber); one joining two nodes is a link (Piston, Spring). Each sensor is
-one clear idea, the way real sensors are.
+part acting or sensing between two beams, or on the ground around a joint,
+sits on that joint (a hinge part, a Wheel or a Rubber; Node → One part per
+slot lists the hinge parts); one joining two nodes is a link (Piston,
+Spring). Each sensor is one clear idea, the way real sensors are.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
 identity only: not display, draw or network-port order, and not names.
@@ -58,8 +59,8 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶ network
   or Spring's travel measures from hub to hub, `NodeDef.HubRadius` (15)
   from each joint's centre, whatever sits on the joint.
 - **One part per slot** (#1044): a joint holds at most one Wheel, one
-  hinge part (a Servo, Motor, Stepper, Brake or Angle sensor, #1204, #1036), one Rubber (#1142) and one Touch sensor
-  (#1043), so a Servo can drive the links of a Wheel's joint while the
+  hinge part (a Servo, Motor, Stepper, Brake or Angle sensor, #1204,
+  #1036), one Rubber (#1142) and one Touch sensor (#1043), so a Servo can drive the links of a Wheel's joint while the
   Wheel turns freely between them, or drive the Wheel itself (see Servo),
   and a Rubber and a Touch sensor may share its joint with both.
 - **Degree rules** (links touching a node, counting Beams, Pistons and
@@ -120,10 +121,10 @@ CreatureDef  ──build──▶  physical body  ──sensors──▶ network
     point count only the main piece (One piece above), so the camera and
     the trial follow it, and a joint or Wheel that came loose falls or rolls
     away on its own.
-  - **Joint motors and sensors:** a Servo, Motor, Stepper, Brake or Angle
-    sensor whose Fixed or Target beam has let go at either end goes passive
-    in the same tick: it stops its torque, a Brake or Stepper lets go of its
-    weld, and its inputs keep the last values read before the tear. A sensor on a beam
+  - **Hinge parts** (Node → One part per slot): a hinge part whose Fixed or
+    Target beam has let go at either end goes passive in the same tick: it stops
+    its torque, a Brake or Stepper lets go of its weld, and its inputs keep
+    the last values read before the tear. A sensor on a beam
     that has let go at one end keeps sensing; on a beam gone at both ends,
     its inputs keep their last values.
   - The trial's score freezes at the first tear (`docs/TRAINING_LOOP.md` →

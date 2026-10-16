@@ -5,10 +5,10 @@ paths:
 
 # Test rules — `tests/`
 
-CLI xUnit tests, run with `dotnet test NodeRunner.slnx`. This file owns
-test-code conventions; tools, projects and what each layer tests are in
-`docs/TEST_STRATEGY.md`, and each library's test focus is in its rule in
-`.claude/rules/` (`domain.md`, `mechanics.md`, `ml.md`, `app.md`).
+CLI xUnit tests. This file owns test-code conventions; how to run them,
+tools, projects and what each layer tests are in `docs/TEST_STRATEGY.md`,
+and each library's test focus is in its rule in `.claude/rules/`
+(`domain.md`, `mechanics.md`, `ml.md`, `app.md`).
 
 ## Rules
 
@@ -19,9 +19,8 @@ test-code conventions; tools, projects and what each layer tests are in
 - **Names describe behaviour:** `Forward_WithZeroInput_ReturnsZeroesForTanh`,
   not `Test1`.
 - **AAA layout:** Arrange, blank line, Act, blank line, Assert.
-- **Global usings live in each `*.Tests.csproj`** (`Xunit`, `Shouldly`;
-  `NSubstitute` in App.Tests, `NetArchTest.Rules` in Arch.Tests); don't
-  import them per file.
+- **Global usings live in each `*.Tests.csproj`;** don't import them per
+  file.
 - **Disk I/O only in a per-test temp directory.** The exceptions are committed
   fixtures, pins and share dictionaries, which a test may read from the
   checkout (`TestRepository.Root`). It rewrites them only when its opt-in

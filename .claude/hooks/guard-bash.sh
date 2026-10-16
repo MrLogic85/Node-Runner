@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# PreToolUse on Bash (#1320): denies the git commands AGENTS.md → "Working copy" forbids, a
-# commit on main or a push that updates it, a push of a branch without a review receipt
-# (#1321), and a PR title CI's `PR title` check would fail.
+# PreToolUse on Bash (#1320, #1321). See docs/REVIEW.md → "Hooks".
 # Each check_* function returns to allow, and denies through deny(), which ends the script.
 . "${0%/*}/common.sh"
 

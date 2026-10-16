@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SessionEnd (#1320): removes the state session-start.sh recorded.
+# SessionEnd (#1320). See docs/REVIEW.md → "Hooks".
 . "${0%/*}/common.sh"
 
 state=$(state_dir) && rm -rf "$state"
