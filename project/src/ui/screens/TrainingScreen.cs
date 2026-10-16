@@ -280,7 +280,7 @@ public partial class TrainingScreen : Control
     private void OnTrainingChanged(object? sender, PropertyChangedEventArgs args) => ApplyGeneration();
 
     private void OnSignalFlowChanged(object? sender, PropertyChangedEventArgs args) =>
-        ApplySignalFlow(counts: args.PropertyName != nameof(SignalFlowPresentationViewModel.DistanceNote));
+        ApplySignalFlow(counts: args.PropertyName != nameof(SignalFlowPresentationViewModel.DistanceReadout));
 
     private void Apply()
     {
@@ -322,6 +322,17 @@ public partial class TrainingScreen : Control
             GetNode<UiStageCard>("%OutputsStage").NoteSource = UiTextTranslation.Source(signalFlow.OutputsNote);
         }
 
-        GetNode<UiStageCard>("%DistanceStage").NoteSource = UiTextTranslation.Source(signalFlow.DistanceNote);
+        ApplyDistanceReadout(signalFlow);
+    }
+
+    // A tear shows smaller and in danger: "Crash 3.4 m" does not fit the card at the live size.
+    private void ApplyDistanceReadout(SignalFlowPresentationViewModel signalFlow)
+    {
+        var readout = GetNode<UiLabel>("%DistanceReadout");
+        var source = UiTextTranslation.Source(signalFlow.DistanceReadout);
+        GetNode<UiStageCard>("%DistanceStage").Collapsed = source is null;
+        readout.TextStyle = signalFlow.DistanceTorn ? UiTokens.Typography.ReadoutMedium : UiTokens.Typography.ReadoutLarge;
+        readout.TextColor = signalFlow.DistanceTorn ? UiTokens.Color.Danger : UiTokens.Color.Ink;
+        readout.TextSource = source;
     }
 }

@@ -166,7 +166,7 @@ public sealed class UiTextTranslationTests
     [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.CreationCardTraining training) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, training.GenerationsText);")]
     [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText? text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text ?? NodeRunner.App.ViewModels.UiText.Plain(\"Delete\"));")]
     [InlineData("void M(UiStageCard card, NodeRunner.App.ViewModels.UiText? text, bool show) => card.NoteSource = NodeRunner.Ui.Widgets.UiTextTranslation.Source(show ? text : null);")]
-    [InlineData("string M() => nameof(NodeRunner.App.ViewModels.SignalFlowPresentationViewModel.DistanceNote);")]
+    [InlineData("string M() => nameof(NodeRunner.App.ViewModels.SignalFlowPresentationViewModel.DistanceReadout);")]
     [InlineData("bool M(NodeRunner.App.ViewModels.BuildViewModel build) => build.CanPlacePart(NodeRunner.App.ViewModels.BuildPart.Camera, default, out _);")]
     public void Showing_ui_text_passes(string member) =>
         Bypasses(member).ShouldBeEmpty();

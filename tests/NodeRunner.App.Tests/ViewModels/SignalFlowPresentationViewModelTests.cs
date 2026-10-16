@@ -15,7 +15,8 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.InputsNote.ShouldBe(Readings(4));
         viewModel.OutputsNote.ShouldBe(Parts(2));
-        viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(42.3, 1)));
+        viewModel.DistanceReadout.ShouldBe(UiText.Format("{0} m", new FixedNumber(42.3, 1)));
+        viewModel.DistanceTorn.ShouldBeFalse();
         changed.ShouldBe([null], "The counts changed, so every note is new.");
     }
 
@@ -28,19 +29,67 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.InputsNote.ShouldBe(Readings(1));
         viewModel.OutputsNote.ShouldBe(Parts(1));
-        viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(0, 1)));
+        viewModel.DistanceReadout.ShouldBe(UiText.Format("{0} m", new FixedNumber(0, 1)));
     }
 
     [Fact]
-    public void Update_AfterATear_NotesWhereTheDistanceFroze()
+    public void Update_AfterATear_ReadsWhereTheDistanceFroze()
     {
         var viewModel = new SignalFlowPresentationViewModel();
 
         viewModel.Update(0, 1, 340, crashed: true);
 
-        viewModel.DistanceNote.ShouldBe(UiText.Format("Crash {0}", UiText.Format("{0} m", new FixedNumber(3.4, 1))));
+        viewModel.DistanceReadout.ShouldBe(UiText.Format("Crash {0}", UiText.Format("{0} m", new FixedNumber(3.4, 1))));
+        viewModel.DistanceTorn.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Update_WithNoTry_HasNoReadout()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+        viewModel.Update(0, 1, 340, crashed: true);
+
         viewModel.Update(0, 1, double.NaN, crashed: true);
-        viewModel.DistanceNote.ShouldBeNull("No try runs.");
+
+        viewModel.DistanceReadout.ShouldBeNull("No try runs.");
+        viewModel.DistanceTorn.ShouldBeFalse("There is nothing to show in danger.");
+    }
+
+    [Fact]
+    public void Update_WithALiveDistance_ReadsTheDistanceWithoutACrash()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+
+        viewModel.Update(readings: 2, parts: 1, distance: 1240);
+
+        viewModel.DistanceReadout.ShouldBe(UiText.Format("{0} m", new FixedNumber(12.4, 1)));
+        viewModel.DistanceTorn.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Update_WhenANewTryFollowsATear_ReadsLiveAgain()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+        viewModel.Update(0, 1, 340, crashed: true);
+
+        viewModel.Update(0, 1, 100);
+
+        viewModel.DistanceReadout.ShouldBe(UiText.Format("{0} m", new FixedNumber(1, 1)));
+        viewModel.DistanceTorn.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Update_WhenTheRunTearsAtTheSameDistance_NotifiesThatOnlyTheDistanceChanged()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+        viewModel.Update(0, 1, 340);
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
+
+        viewModel.Update(0, 1, 340, crashed: true);
+
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.DistanceReadout)]);
+        viewModel.DistanceTorn.ShouldBeTrue();
     }
 
     [Fact]
@@ -61,7 +110,7 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.InputsNote.ShouldBeNull();
         viewModel.OutputsNote.ShouldBeNull();
-        viewModel.DistanceNote.ShouldBeNull();
+        viewModel.DistanceReadout.ShouldBeNull();
     }
 
     [Fact]
@@ -87,8 +136,8 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.Update(0, 1, 400);
 
-        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.DistanceNote)]);
-        viewModel.DistanceNote.ShouldBe(UiText.Format("{0} m", new FixedNumber(4, 1)));
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.DistanceReadout)]);
+        viewModel.DistanceReadout.ShouldBe(UiText.Format("{0} m", new FixedNumber(4, 1)));
     }
 
     [Fact]
