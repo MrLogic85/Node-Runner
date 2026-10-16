@@ -32,8 +32,6 @@ internal static class AgentFiles
                   command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerLspHookScript}}'
         """;
 
-    private const string _agentSuffix = ".agent.md";
-
     /// <summary>Git-ignored machine-local agents and rules: AGENTS.md → "Machine-local setup" (#1342).</summary>
     internal const string LocalPrefix = "local_";
     private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks"];
@@ -42,12 +40,17 @@ internal static class AgentFiles
     internal static List<string> Problems(string root)
     {
         var problems = new List<string>();
-        var agents = Path.Combine(root, ".github", "agents");
-        var links = Path.Combine(root, ".claude", "agents");
-        var names = new HashSet<string>(StringComparer.Ordinal);
+        var agents = Path.Combine(root, ".claude", "agents");
+        if (Directory.Exists(Path.Combine(root, ".github", "agents")))
+        {
+            // Copilot would load it first, and Claude Code not at all.
+            problems.Add(".github/agents: remove it; every agent lives in .claude/agents (#1359).");
+        }
+
         if (!Directory.Exists(agents))
         {
-            return [".github/agents: missing; the review agents live there."];
+            problems.Add(".claude/agents: missing; the review agents live there.");
+            return problems;
         }
 
         foreach (var path in Directory.EnumerateFileSystemEntries(agents).Order(StringComparer.Ordinal))
@@ -58,53 +61,16 @@ internal static class AgentFiles
                 continue;
             }
 
-            if (!file.EndsWith(_agentSuffix, StringComparison.Ordinal) || Directory.Exists(path))
+            if (!file.EndsWith(".md", StringComparison.Ordinal) || Directory.Exists(path))
             {
-                problems.Add($".github/agents/{file}: holds only agent files ending in {_agentSuffix}.");
+                problems.Add($".claude/agents/{file}: holds only agent files ending in .md.");
                 continue;
             }
 
-            var name = file[..^_agentSuffix.Length];
-            names.Add(name);
-            CheckFrontmatter($".github/agents/{file}", name, File.ReadAllLines(path), problems);
-            CheckLink(links, name, problems);
-        }
-
-        if (Directory.Exists(links))
-        {
-            foreach (var path in Directory.EnumerateFileSystemEntries(links).Order(StringComparer.Ordinal))
-            {
-                var file = Path.GetFileName(path);
-                if (!file.StartsWith(LocalPrefix, StringComparison.Ordinal)
-                    && (!file.EndsWith(".md", StringComparison.Ordinal) || !names.Contains(file[..^".md".Length])))
-                {
-                    problems.Add($".claude/agents/{file}: no matching .github/agents/*{_agentSuffix}.");
-                }
-            }
+            CheckFrontmatter($".claude/agents/{file}", file[..^".md".Length], File.ReadAllLines(path), problems);
         }
 
         return problems;
-    }
-
-    private static void CheckLink(string links, string name, List<string> problems)
-    {
-        var link = new FileInfo(Path.Combine(links, name + ".md"));
-        var shown = $".claude/agents/{name}.md";
-        var expected = $"../../.github/agents/{name}{_agentSuffix}";
-
-        if (link.LinkTarget is { } target)
-        {
-            if (target != expected)
-            {
-                problems.Add($"{shown}: links to {target}, not the relative {expected}.");
-            }
-        }
-        else
-        {
-            problems.Add(link.Exists
-                ? $"{shown}: a copy, not a symlink to {expected}."
-                : $"{shown}: missing; add a symlink to {expected}.");
-        }
     }
 
     /// <summary>The index of the line closing the frontmatter, or -1 when the file has none.</summary>

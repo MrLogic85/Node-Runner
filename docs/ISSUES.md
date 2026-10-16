@@ -173,7 +173,7 @@ implementation when it:
 - is in **Needs review** or **Needs decision**.
 
 The `review-issue` skill runs the review with the `issue-reviewer` agent
-(`.github/agents/issue-reviewer.agent.md`), which owns what to check and
+(`.claude/agents/issue-reviewer.md`), which owns what to check and
 what each finding level means. The review is recorded on the issue: the
 body holds what it changed, and a comment its summary.
 

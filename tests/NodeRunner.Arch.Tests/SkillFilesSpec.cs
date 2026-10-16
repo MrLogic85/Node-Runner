@@ -117,6 +117,17 @@ public sealed class SkillFilesSpec : IDisposable
     }
 
     [Fact]
+    public void Fixture_WhenAnAgentNamesAMissingSkill_NamesTheAgent()
+    {
+        Directory.CreateDirectory(Path.Combine(_root, ".claude", "agents"));
+        File.WriteAllText(Path.Combine(_root, ".claude", "agents", "fixture-lead.md"), "Run the `ship-it` skill.\n");
+
+        var problems = SkillFiles.Problems(_root);
+
+        problems.ShouldHaveSingleItem().ShouldBe(".claude/agents/fixture-lead.md: names the ship-it skill, which has no .claude/skills/ship-it/SKILL.md.");
+    }
+
+    [Fact]
     public void Fixture_WithAFolderWithoutSkillFile_NamesIt()
     {
         Directory.CreateDirectory(Path.Combine(_root, ".claude", "skills", "empty"));
