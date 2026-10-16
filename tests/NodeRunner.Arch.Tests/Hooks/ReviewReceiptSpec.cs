@@ -353,18 +353,11 @@ public sealed class ReviewReceiptSpec : IDisposable
     [Fact]
     public void Write_WhenGitCannotReadATrackedFile_SaysSo()
     {
-        if (OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
         Commit("a.txt", "one");
         File.WriteAllText(Findings, "No findings.\n");
         Write("a.txt", "a longer second version");
-        File.SetUnixFileMode(Path.Combine(Root, "a.txt"), UnixFileMode.None);
-        if (CanRead(Path.Combine(Root, "a.txt")))
+        if (!TryMakeUnreadable("a.txt"))
         {
-            // The root user can still read it, so git cannot be made to fail this way.
             return;
         }
 
@@ -372,6 +365,54 @@ public sealed class ReviewReceiptSpec : IDisposable
 
         exitCode.ShouldBe(2);
         output.ShouldContain("cannot compare the working tree with the index");
+    }
+
+    [Fact]
+    public void Check_WhenGitCannotReadATrackedFile_ShowsGitsReason()
+    {
+        Commit("a.txt", "one");
+        Write("a.txt", "a longer second version");
+        if (!TryMakeUnreadable("a.txt"))
+        {
+            return;
+        }
+
+        var (exitCode, output) = HookFixture.Script(Root, _script, "check", "--worktree");
+
+        exitCode.ShouldBe(2);
+        output.ShouldContain("cannot measure --worktree against main");
+        output.ShouldContain("a.txt");
+        output.ShouldContain("Permission denied");
+    }
+
+    [Fact]
+    public void Check_WhenGitWarnsWhileStaging_PrintsNothing()
+    {
+        Commit("a.txt", "one");
+        HookFixture.Git(Root, "config", "core.autocrlf", "true");
+        Write("a.txt", "two\n");
+        HookFixture.Git(Root, "add", "a.txt");
+        ReviewStaged();
+        // A newer timestamp makes git re-read the unchanged file, and warn again, when check stages it.
+        File.SetLastWriteTimeUtc(Path.Combine(Root, "a.txt"), DateTime.UtcNow.AddMinutes(1));
+
+        var (exitCode, output) = HookFixture.Script(Root, _script, "check", "--worktree");
+
+        exitCode.ShouldBe(0);
+        output.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Check_WhenGitCannotWriteATreeFromTheIndex_ShowsGitsReason()
+    {
+        Commit("a.txt", "one");
+        File.WriteAllText(Path.Combine(Root, ".git", "index"), "not an index");
+
+        var (exitCode, output) = HookFixture.Script(Root, _script, "check", "--index");
+
+        exitCode.ShouldBe(2);
+        output.ShouldContain("cannot measure --index against main");
+        output.ShouldContain("index file");
     }
 
     [Fact]
@@ -420,6 +461,20 @@ public sealed class ReviewReceiptSpec : IDisposable
         })]);
 
         exitCode.ShouldBe(2);
+    }
+
+    /// <summary>Takes every permission from a file in the fixture; false where that cannot stop git
+    /// reading it: on Windows, and for the root user.</summary>
+    private bool TryMakeUnreadable(string name)
+    {
+        if (OperatingSystem.IsWindows())
+        {
+            return false;
+        }
+
+        var path = Path.Combine(Root, name);
+        File.SetUnixFileMode(path, UnixFileMode.None);
+        return !CanRead(path);
     }
 
     private static bool CanRead(string path)
