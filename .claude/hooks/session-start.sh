@@ -19,7 +19,7 @@ if state=$(state_dir); then
 fi
 [ -n "$state" ] && [ -f "$state/started" ] \
   || note="
-Could not record the session's state, so the end-of-turn check for emulators and APKs is off."
+Could not record the session's state, so the after-push check for emulators and APKs is off."
 
 # The C# language server the LSP tool starts is a local dotnet tool (#1352). Restoring it takes a
 # fraction of a second once it is in the NuGet cache, but a download can stall, so the hook waits

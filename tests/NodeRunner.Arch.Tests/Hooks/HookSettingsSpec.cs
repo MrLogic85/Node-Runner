@@ -62,11 +62,11 @@ public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixtur
 
         registered.ShouldBe(
         [
+            "PostToolUse Bash after-push.sh",
             "PreToolUse Bash guard-bash.sh",
             "PreToolUse Write|Edit|MultiEdit|NotebookEdit guard-edit.sh",
             "SessionEnd * session-end.sh",
             "SessionStart * session-start.sh",
-            "Stop * turn-end.sh",
         ]);
     }
 

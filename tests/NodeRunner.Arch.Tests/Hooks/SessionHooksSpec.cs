@@ -5,8 +5,9 @@ using System.Text.Json.Nodes;
 namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
-/// session-start.sh tells the agent the branch and uncommitted changes; turn-end.sh reports,
-/// once, the emulators and APKs a session left behind, compared with its start (#1320).
+/// session-start.sh tells the agent the branch and uncommitted changes; after-push.sh reports,
+/// once after a git push, the emulators and APKs a session left behind, compared with its start
+/// (#1320, #1356).
 /// </summary>
 public sealed class SessionHooksSpec : IDisposable
 {
@@ -89,7 +90,7 @@ public sealed class SessionHooksSpec : IDisposable
         var context = StartSession("startup");
 
         context.ShouldNotContain("stop and ask");
-        Block(EndTurn()).ShouldContain($"emulator pid {during.Id}");
+        Reminder(Push()).ShouldContain($"emulator pid {during.Id}");
     }
 
     [Fact]
@@ -112,7 +113,7 @@ public sealed class SessionHooksSpec : IDisposable
 
         context.ShouldStartWith("Could not read the working copy");
         context.ShouldContain("Ask the human");
-        context.ShouldEndWith("the end-of-turn check for emulators and APKs is off.");
+        context.ShouldEndWith("the after-push check for emulators and APKs is off.");
     }
 
     [Fact]
@@ -130,36 +131,44 @@ public sealed class SessionHooksSpec : IDisposable
         Directory.Exists(live).ShouldBeTrue();
     }
 
-    [Fact]
-    public void TurnEnd_KeepsALongSessionFromLookingStale()
+    [Theory]
+    [InlineData("git push")]
+    [InlineData("git status")]
+    public void AfterPush_OfAnyCommand_KeepsALongSessionFromLookingStale(string command)
     {
         StartSession();
         Directory.SetLastWriteTimeUtc(State, DateTime.UtcNow.AddDays(-4));
 
-        EndTurn();
+        Push(command);
 
         Directory.GetLastWriteTimeUtc(State).ShouldBeGreaterThan(DateTime.UtcNow.AddMinutes(-1));
     }
 
     [Theory]
-    [InlineData("turn-end.sh")]
+    [InlineData("after-push.sh")]
     [InlineData("session-end.sh")]
     public void WithoutASessionId_IsSilent(string hook)
     {
         StartSession();
         StartEmulator();
 
-        _fixture.RunRaw(hook, new JsonObject { ["cwd"] = _fixture.Root }.ToJsonString()).ShouldBeEmpty();
+        var input = new JsonObject
+        {
+            ["cwd"] = _fixture.Root,
+            ["tool_input"] = new JsonObject { ["command"] = "git push" },
+        };
+
+        _fixture.RunRaw(hook, input.ToJsonString()).ShouldBeEmpty();
         Directory.Exists(State).ShouldBeTrue();
     }
 
     [Fact]
-    public void SessionStart_WithoutASessionId_SaysTheTurnEndCheckIsOff()
+    public void SessionStart_WithoutASessionId_SaysTheAfterPushCheckIsOff()
     {
         var output = _fixture.RunRaw("session-start.sh", new JsonObject { ["cwd"] = _fixture.Root }.ToJsonString());
 
         JsonNode.Parse(output)!["additionalContext"]!.GetValue<string>()
-            .ShouldEndWith("the end-of-turn check for emulators and APKs is off.");
+            .ShouldEndWith("the after-push check for emulators and APKs is off.");
     }
 
     [Fact]
@@ -231,7 +240,7 @@ public sealed class SessionHooksSpec : IDisposable
     }
 
     [Fact]
-    public void TurnEnd_WithQemuOnlyAsAnArgument_IsSilent()
+    public void AfterPush_WithQemuOnlyAsAnArgument_IsSilent()
     {
         StartSession();
         var start = new ProcessStartInfo("bash");
@@ -243,19 +252,19 @@ public sealed class SessionHooksSpec : IDisposable
         _emulators.Add(Process.Start(start)!);
         Thread.Sleep(100);
 
-        EndTurn().ShouldBeEmpty();
+        Push().ShouldBeEmpty();
     }
 
     [Fact]
-    public void TurnEnd_WithNothingLeft_IsSilent()
+    public void AfterPush_WithNothingLeft_IsSilent()
     {
         StartSession();
 
-        EndTurn().ShouldBeEmpty();
+        Push().ShouldBeEmpty();
     }
 
     [Fact]
-    public void TurnEnd_WithANewApk_ReportsItOnce()
+    public void AfterPush_WithANewApk_ReportsItOnce()
     {
         Directory.CreateDirectory(Build);
         var old = Path.Combine(Build, "node-runner-0.14.2.apk");
@@ -265,33 +274,59 @@ public sealed class SessionHooksSpec : IDisposable
         File.WriteAllText(Path.Combine(Build, "node-runner-0.14.3.apk"), "");
         File.SetLastWriteTimeUtc(Path.Combine(Build, "node-runner-0.14.3.apk"), DateTime.UtcNow.AddMinutes(1));
 
-        var first = Block(EndTurn());
+        var first = Reminder(Push());
 
         first.ShouldContain("build/node-runner-0.14.3.apk");
         first.ShouldNotContain("0.14.2");
-        EndTurn().ShouldBeEmpty();
+        Push().ShouldBeEmpty();
     }
 
     [Fact]
-    public void TurnEnd_WithAnEmulatorStartedThisSession_ReportsOnlyThatOne()
+    public void AfterPush_WithAnEmulatorStartedThisSession_ReportsOnlyThatOne()
     {
         var before = StartEmulator();
         StartSession();
         var during = StartEmulator();
 
-        var reason = Block(EndTurn());
+        var reminder = Reminder(Push());
 
-        reason.ShouldContain($"emulator pid {during.Id}");
-        reason.ShouldNotContain($"emulator pid {before.Id}");
+        reminder.ShouldContain($"emulator pid {during.Id}");
+        reminder.ShouldNotContain($"emulator pid {before.Id}");
     }
 
-    [Fact]
-    public void TurnEnd_WhenAlreadyContinuing_IsSilent()
+    [Theory]
+    [InlineData("git status")]
+    [InlineData("echo legit push")]
+    [InlineData("git log --grep push")]
+    [InlineData("git commit -m \"Remind after git push instead\"")]
+    [InlineData("gh pr comment 1 --body 'then git push it'")]
+    [InlineData("git push --dry-run")]
+    [InlineData("git push -n origin main")]
+    [InlineData("git push -nu origin main")]
+    [InlineData("git push --help")]
+    public void AfterPush_OfAnotherCommand_IsSilent(string command)
     {
         StartSession();
         StartEmulator();
 
-        EndTurn(stopHookActive: true).ShouldBeEmpty();
+        Push(command).ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData("git -C sub push -u origin feature/1320-hooks")]
+    [InlineData("cd sub && git push")]
+    [InlineData("git -c core.sshCommand=ssh push")]
+    [InlineData("git --no-pager push; echo done")]
+    [InlineData("GIT_TRACE=0 /usr/bin/git push 2>&1 | tail -5")]
+    [InlineData("if git --git-dir .git push -u origin main; then :; fi")]
+    [InlineData("env -C sub GIT_SSH_COMMAND=ssh git push")]
+    [InlineData("{ time git push --force-with-lease; }")]
+    public void AfterPush_OfAPushInALine_Reminds(string command)
+    {
+        StartSession();
+        var during = StartEmulator();
+
+        Reminder(Push(command)).ShouldContain($"emulator pid {during.Id}");
     }
 
     [Fact]
@@ -305,11 +340,14 @@ public sealed class SessionHooksSpec : IDisposable
         Directory.Exists(State).ShouldBeFalse();
     }
 
-    private static string Block(string output)
+    private static string Reminder(string output)
     {
         var json = JsonNode.Parse(output)!;
-        json["decision"]!.GetValue<string>().ShouldBe("block");
-        return json["reason"]!.GetValue<string>();
+        var context = json["additionalContext"]!.GetValue<string>();
+        json["hookSpecificOutput"]!["hookEventName"]!.GetValue<string>().ShouldBe("PostToolUse");
+        json["hookSpecificOutput"]!["additionalContext"]!.GetValue<string>().ShouldBe(context);
+        context.ShouldStartWith("Hook after-push.sh (#1356)");
+        return context;
     }
 
     private string StubBin => Path.Combine(_fixture.Root, ".git", "stub-bin");
@@ -370,8 +408,13 @@ public sealed class SessionHooksSpec : IDisposable
         return context;
     }
 
-    private string EndTurn(bool stopHookActive = false) =>
-        _fixture.Run("turn-end.sh", new JsonObject { ["hook_event_name"] = "Stop", ["stop_hook_active"] = stopHookActive });
+    private string Push(string command = "git push") =>
+        _fixture.Run("after-push.sh", new JsonObject
+        {
+            ["hook_event_name"] = "PostToolUse",
+            ["tool_name"] = "Bash",
+            ["tool_input"] = new JsonObject { ["command"] = command },
+        });
 
     /// <summary>
     /// A sleep whose program name is the emulator's, which is what the hooks look for. A real

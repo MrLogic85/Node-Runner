@@ -92,26 +92,11 @@ $(top_of "$dir")	$target"
   return 0
 }
 
-path_in() {
-  case $2 in
-    /*) echo "$2" ;;
-    *) echo "$1/$2" ;;
-  esac
-}
-
 check_git() {
   local dir=$1 i=0 sub a
   shift
   local -a args=("$@")
-  while [ $i -lt ${#args[@]} ]; do
-    a=${args[$i]}
-    case $a in
-      -C) dir=$(path_in "$dir" "${args[$((i + 1))]}"); i=$((i + 2)) ;;
-      -c | --git-dir | --work-tree | --namespace | --exec-path | --config-env | --super-prefix) i=$((i + 2)) ;;
-      -*) i=$((i + 1)) ;;
-      *) break ;;
-    esac
-  done
+  skip_git_options
   sub=${args[$i]}
   args=("${args[@]:$((i + 1))}")
   case $sub in
@@ -320,29 +305,8 @@ check_line() {
   local dir=$2 depth=$3 name here
   local -a w
   while IFS=$'\037' read -r -a w; do
-    # env -C changes the directory for its one command only.
     here=$dir
-    while [ ${#w[@]} -gt 0 ]; do
-      case ${w[0]} in
-        [A-Za-z_]*=*) [[ ${w[0]} =~ ^[A-Za-z_][A-Za-z0-9_]*= ]] || break ;;
-        command | builtin | exec | nohup | time | sudo | if | then | else | elif | do | while | until | '!' | '{') ;;
-        env)
-          while [ ${#w[@]} -gt 1 ]; do
-            case ${w[1]} in
-              -u | --unset) w=("${w[@]:1}") ;;
-              -C | --chdir) here=$(path_in "$dir" "${w[2]}"); w=("${w[@]:1}") ;;
-              --chdir=*) here=$(path_in "$dir" "${w[1]#--chdir=}") ;;
-              -C?*) here=$(path_in "$dir" "${w[1]#-C}") ;;
-              -* | [A-Za-z_]*=*) ;;
-              *) break ;;
-            esac
-            w=("${w[@]:1}")
-          done
-          ;;
-        *) break ;;
-      esac
-      w=("${w[@]:1}")
-    done
+    skip_prefixes
     [ ${#w[@]} -gt 0 ] || continue
     name=${w[0]##*/}
     case $name in
