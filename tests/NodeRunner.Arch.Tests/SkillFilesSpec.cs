@@ -49,6 +49,16 @@ public sealed class SkillFilesSpec : IDisposable
         problems.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Fixture_WithAFinderDsStore_SkipsIt()
+    {
+        File.WriteAllText(Path.Combine(_root, ".claude", "skills", ".DS_Store"), "");
+
+        var problems = SkillFiles.Problems(_root);
+
+        problems.ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("# Fixture\n", "no frontmatter")]
     [InlineData($"---\nname: other\ndescription: Does fixtures.\n---\n", "name must be fixture-skill")]

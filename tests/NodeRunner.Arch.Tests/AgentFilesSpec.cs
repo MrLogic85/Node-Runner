@@ -65,6 +65,16 @@ public sealed class AgentFilesSpec : IDisposable
         problems.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Fixture_WithAFinderDsStore_SkipsIt()
+    {
+        File.WriteAllText(Path.Combine(AgentsDirectory, ".DS_Store"), "");
+
+        var problems = AgentFiles.Problems(_root);
+
+        problems.ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("old agents folder", ".github/agents: remove it")]
     [InlineData("no agents folder", ".claude/agents: missing")]

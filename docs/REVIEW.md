@@ -159,7 +159,8 @@ with its reason; when the script is missing, it is allowed.
 
 - Each agent is one `.claude/agents/<name>.md`, which both tools load
   (#1314, #1359). The folder holds nothing else, apart from git-ignored
-  `local_*` agents (`AGENTS.md` → "Machine-local setup"), and there is no
+  `local_*` agents (`AGENTS.md` → "Machine-local setup") and dot-files
+  such as Finder's `.DS_Store`, and there is no
   `.github/agents/`: Copilot would load it first and Claude Code not at
   all.
 - The frontmatter has only `name` (the file's `<name>`), a one-line

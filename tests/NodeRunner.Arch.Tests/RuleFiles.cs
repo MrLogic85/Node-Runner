@@ -21,7 +21,7 @@ internal static class RuleFiles
         foreach (var path in Directory.EnumerateFileSystemEntries(rules).Order(StringComparer.Ordinal))
         {
             var file = Path.GetFileName(path);
-            if (file.StartsWith(AgentFiles.LocalPrefix, StringComparison.Ordinal))
+            if (AgentFiles.IsSkipped(file))
             {
                 continue;
             }
