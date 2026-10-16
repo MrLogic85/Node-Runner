@@ -37,6 +37,8 @@ what to do about it. Read `LOCAL_CONFIG.md` first for the `gh` login.
      clean and on `main`, or on this issue's branch when resuming. If not,
      stop and ask the human.
    - `.github/scripts/issue-fields.sh N --status "In progress"`.
+   - Follow up your earlier PRs and `main`'s runs (the `ship-pr` skill,
+     step 6).
    - `git pull --ff-only`, then branch with the name in `docs/REVIEW.md`
      → "TL;DR".
 4. Implement; if the issue has no manual testing decision, make one with

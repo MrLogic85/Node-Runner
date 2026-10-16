@@ -12,8 +12,9 @@ How a change lands in `main`, for humans and AI agents alike.
    "Review receipts").
 3. Push, open a PR against `main` with the template, and enable squash
    auto-merge, with the `ship-pr` skill.
-4. Own the PR until it merges and `main` is green (see "Auto-merge"). The
-   PR's closing keyword closes the issue.
+4. Go on to the next task without waiting for the merge, and fix the PR
+   if it fails (see "Auto-merge"). The PR's closing keyword closes the
+   issue.
 
 A trivial change (typo, comment) still goes through a PR and CI; skip
 manual verification and say "trivial" in the PR.
@@ -32,10 +33,13 @@ not apply:
       `dotnet build NodeRunner.slnx -warnaserror` is clean: CI does not
       fail on warnings in `project/`
 - [ ] New logic in `libs/NodeRunner.{Domain,Mechanics,ML}/` has unit tests
-- [ ] Review agents (see "Review agents") ran on the final diff, and
-      every new finding is fixed or dismissed with a written reason. Each
-      preexisting finding has an issue (`docs/ISSUES.md` → "Creating an
-      issue"). For a UI-touching change, `design-lead`'s "insufficient
+- [ ] Review agents (see "Review agents") ran on the final diff, and the
+      author judged every new finding: a Major one is fixed, and any
+      other is fixed or dismissed with a short reason, such as a Minor
+      fix not worth its cost. Each preexisting finding of Medium or
+      higher has an issue (`docs/ISSUES.md` → "Creating an issue"); a
+      lower one may be noted in the PR instead.
+      For a UI-touching change, `design-lead`'s "insufficient
       evidence" result blocks until live app access, screenshots or
       recordings, or a human waiver is recorded in the PR.
 - [ ] Docs and the matching `.claude/rules/` files updated where behaviour,
@@ -109,8 +113,7 @@ The levels rank findings:
 - **Medium**: a risk or gap worth fixing now.
 - **Minor**: a small, actionable fix.
 
-The level does not change how a finding gates a commit: "Definition of
-Done" treats every new finding alike. Issue reviews use
+"Definition of Done" says how each level gates a commit. Issue reviews use
 `issue-reviewer` (`docs/ISSUES.md` → "Reviewing an issue"), which reports
 in its own format and finding levels.
 
@@ -132,9 +135,12 @@ The key hashes the raw diff (modes, blob ids and paths) from the newest
 common ancestor with `main` or `origin/main` to the reviewed tree.
 Committing that same content, or rebasing it onto a newer `main` without
 touching its files, keeps the receipt valid. Any other change, such as a
-fix after a finding, needs the reviewers the corrective change selects to
-run again, and then a new receipt. An empty change needs none, and
-receipts older than 30 days are pruned.
+fix after a finding, needs a new receipt. A simple, local fix, such as a
+rename, a reworded line or a test the finding spelled out, needs no new
+review; a fix that changes behaviour or design runs the reviewers the
+corrective change selects again. The receipt says which applied. An
+empty change needs no receipt, and receipts older than 30 days are
+pruned.
 
 `guard-bash.sh` denies `git push` of a branch or commit of this
 repository unless a receipt matches what it holds. A commit earlier in
@@ -288,14 +294,15 @@ conflict.
 ## Auto-merge
 
 Every PR enables GitHub's squash auto-merge as soon as it opens (the
-`ship-pr` skill has the commands). GitHub owns the wait, so no local
-process has to outlive the session. The author still owns the PR while
-the session lasts, until it reached `MERGED` with `main` green: fix
-failing checks, answer every review comment with a fix or a reason, and
-don't resolve threads you didn't address. If auto-merge cannot be
-enabled, keep the PR open, report the blocker, and never bypass the
-required checks. The one exception is a PR into `release/vX.Y`, which is
-merged by hand (`docs/RELEASING.md` → "Fix releases").
+`ship-pr` skill has the commands). GitHub owns the wait, so the author
+does not watch the checks, the merge or `main`'s run, and goes on to the
+next task. The author still owns the PR: when the next task starts, and
+before the session ends, check the PRs it opened and the latest run on
+`main`; fix failing checks, answer every review comment with a fix or a
+reason, and don't resolve threads you didn't address. If auto-merge
+cannot be enabled, keep the PR open, report the blocker, and never bypass
+the required checks. The one exception is a PR into `release/vX.Y`, which
+is merged by hand (`docs/RELEASING.md` → "Fix releases").
 
 ## What does NOT block a merge
 

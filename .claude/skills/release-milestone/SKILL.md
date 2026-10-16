@@ -18,8 +18,21 @@ titles and what `release.sh` does; this skill owns the steps. Read
    ```
 
 2. Write the notes with the `write-release-notes` skill and ship them as
-   the notes PR with the `ship-pr` skill, which waits until the merge
-   commit's checks pass on `main`; `release.sh` needs them.
+   the notes PR with the `ship-pr` skill. Unlike other PRs, wait for this
+   one, `P` being the number `gh pr create` printed: `release.sh` needs
+   its merge commit's checks to pass on `main`. If a check fails, fix it
+   as `ship-pr` step 6 says and wait again; if it reports no checks yet,
+   wait and run it again.
+
+   ```bash
+   gh pr checks P --watch --fail-fast || exit 1
+   until s=$(gh pr view P --json state -q .state) && [ "$s" != OPEN ]; do sleep 15; done
+   [ "$s" = MERGED ] || exit 1   # closed unmerged: stop and ask the human
+   sha=$(gh pr view P --json mergeCommit -q .mergeCommit.oid)
+   until id=$(gh run list --commit "$sha" --limit 1 --json databaseId -q '.[0].databaseId') && [ -n "$id" ]; do sleep 10; done
+   gh run watch "$id" --exit-status
+   ```
+
 3. Dry-run the release from an up-to-date `main`. It exports and checks
    the APK, but tags and publishes nothing:
 
