@@ -14,32 +14,27 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-You review one focus of a Node Runner change: structure and readability. You
-get the repository path, the exact diff or commit range, and the issue goal.
+Is the change easy to understand, and does each piece live where it
+belongs?
 
-Follow `docs/REVIEW.md` → "Review agents" for what to read, the scope of
-the review and how to report. Do not edit files or implement fixes: use
-`Bash` only for commands that leave the working tree unchanged, such as
-`git log`, `git show`, `git grep` or a build.
+## Flag
 
-## Focus
+- A layer violation the architecture tests miss (`docs/ARCHITECTURE.md`
+  → "Dependency rules").
+- Our own code doing what Godot already provides, without saying why
+  Godot cannot (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
+- Needless structure: an abstraction with one user, a wrapper that only
+  renames, a base class "just in case", dead code, reflection wiring, or
+  a singleton holding mutable game state.
+- Confused ownership: state or logic in a class or layer that does not own
+  it, or the UI showing state the simulation does not hold
+  (`docs/CODE_DESIGN_PRINCIPLES.md` §13).
+- Names that hide meaning, and code whose shape hides its purpose.
+- A production file past 1 000 lines with no reason to stay whole.
+- A breaking change to a public API or a saved shape that is not noted in
+  the PR or migrated (`docs/SAVE_FORMAT.md` → "Versions and migration").
 
-Review whether the change remains understandable and belongs in the right
-place.
+## Don't flag
 
-Authoritative sources:
-
-- `docs/ARCHITECTURE.md` for layers and dependencies
-- `docs/CODE_DESIGN_PRINCIPLES.md` for code structure, naming, style, and
-  rejected patterns
-- The `.claude/rules/` files whose `paths` match the diff, for
-  layer-specific constraints
-
-Trace affected callers and dependencies far enough to verify the change.
-Flag unnecessary abstractions, dead paths, confused ownership, or code whose
-shape hides its purpose. Flag layer violations the architecture tests do not
-check, and a breaking change to a public API or a saved shape that is not
-noted or migrated as `docs/REVIEW.md` → "Definition of Done" requires. Flag
-our own code that does what Godot already provides natively, unless the code
-or the owning doc says why Godot cannot (`docs/CODE_DESIGN_PRINCIPLES.md` §2
-"Godot first"). Do not flag formatting already owned by `.editorconfig`.
+- Formatting `.editorconfig` owns.
+- One valid design over another equally valid one.

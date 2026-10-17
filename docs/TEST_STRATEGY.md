@@ -18,6 +18,8 @@ Test-code conventions (layout, naming, AAA) are in
    Domain, Mechanics and ML. Compiler-checked things (record equality, enum
    switches) get one canary test at most. We chase "the tricky parts are
    pinned down", not 100% coverage.
+5. **A few tests that cover a lot.** A test that can only fail when
+   another one does is merged or deleted.
 
 ## Layers
 
@@ -97,7 +99,8 @@ source or `project.godot`:
 ## What we do NOT test
 
 - Compiler-generated record members (`Equals`, `GetHashCode`, `ToString`)
-- Trivial getters and setters
+- Trivial getters and setters, or setting a value and reading it back
+  through code with no logic
 - .NET BCL or Godot engine behaviour
 - A scene's arrangement: component choice, order and layout sizes belong to
   the scene and change freely in the editor

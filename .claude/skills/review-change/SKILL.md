@@ -5,9 +5,9 @@ description: Review a Node Runner change with the review agents before it is com
 
 # Review a change
 
-`docs/REVIEW.md` → "Review agents" owns which reviewer a diff selects and
-how they report, "Review receipts" owns when review runs and what a push
-needs, and "Definition of Done" owns the gate; this skill owns the steps.
+`docs/REVIEW.md` → "Choosing reviewers" owns which reviewer a diff
+selects, "Review receipts" owns when review runs and what a push needs,
+and "Definition of Done" owns the gate; this skill owns the steps.
 
 1. Fix the exact change under review, as "Review receipts" measures it:
    - before the commit: stage it with `git add -A`, or name its paths
@@ -16,9 +16,21 @@ needs, and "Definition of Done" owns the gate; this skill owns the steps.
    - after it: `git diff "$(.github/scripts/review-receipt.sh base)" HEAD`;
    - someone else's PR: `gh pr diff N`.
 2. Select the reviewers by "Choosing reviewers".
-3. Run the selected agents in parallel as subagents. Give each the
-   repository path, the exact diff command and the issue URL, and give
-   `design-lead` the evidence "Choosing reviewers" names.
+3. Run the selected agents in parallel as subagents, each with this
+   prompt, and give `design-lead` the evidence "Choosing reviewers" names:
+
+   ```text
+   Review `<diff command>` for <issue URL>.
+   Report only problems in your focus worth acting on, judged by this
+   repository's rules, not stricter ones of your own. Read the
+   `.claude/rules/` files whose `paths` match the changed files. For each: its level
+   (Major: wrong behaviour, a wrong statement or a broken rule; Medium: a
+   risk or gap worth fixing now; Minor: a small fix), new or preexisting
+   (outside the diff), file and lines, evidence, impact and a direction.
+   Find C# definitions and callers with the LSP tool when you have it,
+   otherwise with git grep. Prefer fixing code to documenting a limit.
+   If nothing qualifies, say "No findings".
+   ```
 4. Judge each finding as "Definition of Done" says: fix it, or dismiss it
    with a short reason. File an issue with the `create-issue` skill only
    where it asks for one.

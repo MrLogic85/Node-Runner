@@ -57,7 +57,9 @@ in-memory fakes. The bridge between the Godot side and the pure layers.
 
 `tests/NodeRunner.App.Tests/`:
 
-- View-models fire `INotifyPropertyChanged` in the expected order; fake
-  their dependencies with `Substitute.For<...>()`.
+- View-models: assert the state an action leaves, and a
+  `PropertyChanged` event only where a view relies on it. Fake
+  repositories with the in-memory ones and other services with
+  `Substitute.For<...>()`.
 - File repositories run against a per-test temp directory
   (`Path.GetTempPath()`, cleaned up in `Dispose`).

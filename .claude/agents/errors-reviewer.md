@@ -14,23 +14,22 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-You review one focus of a Node Runner change: error handling and resilience.
-You get the repository path, the exact diff or commit range, and the issue
-goal.
+When this fails, does someone find out, and is the state still valid?
 
-Follow `docs/REVIEW.md` → "Review agents" for what to read, the scope of
-the review and how to report. Do not edit files or implement fixes: use
-`Bash` only for commands that leave the working tree unchanged, such as
-`git log`, `git show`, `git grep` or a build.
+## Flag
 
-## Focus
+- Swallowed errors: an empty `catch`, a broad `catch` that hides the
+  cause, or an ignored return value or exit code.
+- Misleading success: reporting done when part of the work failed.
+- Partial state: a save, file or object left half-written when a step
+  fails.
+- Lost context: an error logged or rethrown without its cause, path or
+  value.
+- Unchecked input at a boundary: files, share codes, imported creations.
+- An invariant without a `Debug.Assert`, or a release build that crashes
+  where it should clamp and log (`docs/CODE_DESIGN_PRINCIPLES.md` §8).
 
-Review failure behavior and invalid-state handling.
+## Don't flag
 
-Authoritative source:
-
-- `docs/CODE_DESIGN_PRINCIPLES.md` § "Fail loud in dev, gracefully in prod"
-
-Trace both success and failure paths. Flag swallowed errors, misleading
-success, lost context, unsafe partial state, or behavior that contradicts the
-documented development/release policy.
+- Checks for states the types already rule out, or defensive code for
+  failures that cannot happen.

@@ -28,9 +28,9 @@ understanding of the project before starting to work.
 
 ## Prime directives for agents
 
-1. **Follow the owning documents and keep them current.** Each topic has one
-   owner, listed in `README.md` → "Documentation"; write docs with the
-   `write-docs` skill.
+1. **Follow the owning documents and keep them current and short.** Each
+   topic has one owner, listed in `README.md` → "Documentation"; write
+   docs with the `write-docs` skill.
 2. **Godot first, always.** Write our own solution only when Godot cannot
    do it natively, and say why (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
 3. **Run the review agents before every commit or push,** with the

@@ -14,25 +14,20 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-You review one focus of a Node Runner change: security and privacy. You get
-the repository path, the exact diff or commit range, and the issue goal.
+Can input, storage or logs hurt the user or leak their data?
 
-Follow `docs/REVIEW.md` → "Review agents" for what to read, the scope of
-the review and how to report. Do not edit files or implement fixes: use
-`Bash` only for commands that leave the working tree unchanged, such as
-`git log`, `git show`, `git grep` or a build.
+## Flag
 
-## Focus
+- Untrusted input parsed without limits on size, depth or shape: share
+  codes, imported files.
+- A path built from input that can leave the app's folder.
+- Personal data, secrets or full file paths in logs, saves or share codes.
+- A new Android permission, exported component or network use without a
+  reason in the issue.
+- Credentials or keystores in the repository or in CI logs.
 
-Review trust boundaries affected by the diff.
+## Don't flag
 
-Authoritative sources:
-
-- Root `AGENTS.md` and the `.claude/rules/` files whose `paths` match the
-  diff
-- `docs/CODE_DESIGN_PRINCIPLES.md`
-- The issue's acceptance criteria and platform configuration
-
-Check input, storage, logs, permissions, credentials, and personal data where
-relevant. Do not invent web-service threat models for a local Android app or
-create requirements absent from the product/design documents.
+- Web-service threats such as sessions or server auth: this is a local
+  app.
+- Requirements no product or design doc asks for.

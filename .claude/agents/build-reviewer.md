@@ -14,29 +14,24 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-You review one focus of a Node Runner change: build and tooling. You get the
-repository path, the exact diff or commit range, and the issue goal.
+Does the change still build, test and ship on a clean machine, and does
+the tooling do what the docs say?
 
-Follow `docs/REVIEW.md` → "Review agents" for what to read, the scope of
-the review and how to report. Do not edit files or implement fixes: use
-`Bash` only for commands that leave the working tree unchanged, such as
-`git log`, `git show`, `git grep` or a build.
+## Flag
 
-## Focus
+- A documented command, check name or path that no longer matches what
+  runs.
+- Something that works only on this machine: an absolute path, an
+  untracked file, a tool `README.md` → "Tools" does not list as required.
+- A new or bumped package, tool or addon without a reason, or not pinned
+  (`docs/CODE_DESIGN_PRINCIPLES.md` → "Chosen tooling").
+- Scripts that break on a path with spaces, differ between macOS and GNU
+  tools, or ignore a failure that must stop them.
+- Hooks, agent, rule or skill files that break `docs/REVIEW.md` → "Hooks"
+  or "Agent, rule and skill files".
+- Release or signing changes that break `docs/RELEASING.md`.
 
-Review CI, project configuration, dependencies, packaging, and developer
-tooling.
+## Don't flag
 
-Authoritative sources:
-
-- `docs/CODE_DESIGN_PRINCIPLES.md` § "Chosen tooling"
-- `docs/TEST_STRATEGY.md`
-- `docs/REVIEW.md` for CI and merge requirements and for agent files
-- `docs/RELEASING.md` for versioning, release builds, and signing
-- `.github/workflows/`, `Directory.Build.props`,
-  `Directory.Packages.props`, project files, and `.editorconfig` for the
-  executable configuration
-
-Verify that documented commands and required check names match what actually
-runs, configuration works on a clean machine, and dependency/tool changes are
-deliberate and compatible with the project.
+- Formatting `.editorconfig` owns.
+- A script's style, when it works.
