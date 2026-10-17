@@ -4,63 +4,29 @@ namespace NodeRunner.Domain.Tests;
 
 public sealed class CreationDefTests
 {
+    private static readonly CreationDef _creation = new(Guid.NewGuid(), "Worm", EveryPartKind.Creature, TestTraining.State(7, 1, TestTraining.Run), new TrainSettingsDef(12, 20));
+
     [Fact]
-    public void JsonRoundTrip_PreservesAnatomyAndTraining()
+    public void JsonRoundTrip_KeepsTheCreatureTrainingAndSettings()
     {
-        var original = CreateCreation();
+        var loaded = JsonSerializer.Deserialize<CreationDef>(JsonSerializer.Serialize(_creation))!;
 
-        var json = JsonSerializer.Serialize(original);
-        var roundTripped = JsonSerializer.Deserialize<CreationDef>(json);
-
-        roundTripped.ShouldNotBeNull();
-        roundTripped.Id.ShouldBe(original.Id);
-        roundTripped.Name.ShouldBe(original.Name);
-        roundTripped.Creature.Nodes.ToArray().ShouldBe(original.Creature.Nodes.ToArray());
-        roundTripped.Creature.Beams.ToArray().ShouldBe(original.Creature.Beams.ToArray());
-        roundTripped.Creature.Sensors.ToArray().ShouldBe(original.Creature.Sensors.ToArray());
-        roundTripped.Training.ShouldNotBeNull();
-        roundTripped.Training.Network.Neurons.ToArray().ShouldBe(original.Training!.Network.Neurons.ToArray());
-        roundTripped.Training.Network.Connections.ToArray().ShouldBe(original.Training.Network.Connections.ToArray());
-        roundTripped.Training.Network.NextNeuronId.ShouldBe(original.Training.Network.NextNeuronId);
-        roundTripped.Training.Generation.ShouldBe(original.Training.Generation);
-        roundTripped.TrainSettings.ShouldBe(original.TrainSettings);
+        (loaded.Id, loaded.Name, loaded.TrainSettings).ShouldBe((_creation.Id, "Worm", new TrainSettingsDef(12, 20)));
+        loaded.Creature.Parts.ShouldBe(_creation.Creature.Parts);
+        loaded.Training!.Network.Neurons.ShouldBe(_creation.Training!.Network.Neurons);
+        loaded.Training.Network.Connections.ShouldBe(_creation.Training.Network.Connections);
+        (loaded.Training.Network.NextNeuronId, loaded.Training.Generation, loaded.Training.Latest, loaded.Training.Best)
+            .ShouldBe((3, 7, TestTraining.Run, _creation.Training.Best));
     }
 
     [Fact]
-    public void WithHelpers_KeepTheTrainSettings()
+    public void WithHelpers_KeepTheTrainSettings_AndAnIdIsRequired()
     {
-        var original = CreateCreation();
-
-        original.WithName("Crawler").TrainSettings.ShouldBe(original.TrainSettings);
-        original.WithTraining(null).TrainSettings.ShouldBe(original.TrainSettings);
-        original.WithCreature(CreateCreature(), null).TrainSettings.ShouldBe(original.TrainSettings);
-        original.CopyAs(Guid.NewGuid(), "Copy").TrainSettings.ShouldBe(original.TrainSettings);
-        original.WithTrainSettings(new TrainSettingsDef(4, 30)).TrainSettings.ShouldBe(new TrainSettingsDef(4, 30));
-    }
-
-    [Fact]
-    public void Constructor_WithEmptyId_Throws()
-    {
-        var action = () => new CreationDef(Guid.Empty, "Worm", CreateCreature());
-
-        action.ShouldThrow<ArgumentException>();
-    }
-
-    private static CreationDef CreateCreation()
-    {
-        return new CreationDef(
-            Guid.NewGuid(),
-            "Worm",
-            CreateCreature(),
-            TestTraining.State(7, 1, TestTraining.Run),
-            new TrainSettingsDef(12, 20));
-    }
-
-    private static CreatureDef CreateCreature()
-    {
-        return new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
-            [new BeamDef(101, 1, 2)],
-            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
+        _creation.WithName("Crawler").TrainSettings.ShouldBe(_creation.TrainSettings);
+        _creation.WithTraining(null).TrainSettings.ShouldBe(_creation.TrainSettings);
+        _creation.WithCreature(new CreatureDef([], [], []), null).TrainSettings.ShouldBe(_creation.TrainSettings);
+        _creation.CopyAs(Guid.NewGuid(), "Copy").TrainSettings.ShouldBe(_creation.TrainSettings);
+        _creation.WithTrainSettings(new TrainSettingsDef(4, 30)).TrainSettings.ShouldBe(new TrainSettingsDef(4, 30));
+        Refuses.Invalid(() => new CreationDef(Guid.Empty, "Worm", EveryPartKind.Creature));
     }
 }

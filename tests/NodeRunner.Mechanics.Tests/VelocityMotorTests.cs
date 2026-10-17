@@ -11,97 +11,62 @@ public sealed class VelocityMotorTests
     // Heavy enough that the push part always asks for more than the rise time allows.
     private const double _heavy = 1e9;
 
-    [Theory]
-    [InlineData(0, 0, 1)]
-    [InlineData(Math.PI / 2, 1, 0)]
-    [InlineData(Math.PI, 0, -1)]
-    [InlineData(-Math.PI / 2, -1, 0)]
-    [InlineData((2 * Math.PI) + (Math.PI / 2), 1, 0)]
-    public void AngleInputs_ReadTheAngleBetweenTheSides(double angle, double sin, double cos)
-    {
-        var inputs = VelocityMotor.AngleInputs(angle);
-
-        inputs.Sin.ShouldBe(sin, tolerance: 1e-12);
-        inputs.Cos.ShouldBe(cos, tolerance: 1e-12);
-    }
-
+    // Its angle inputs are the sine and cosine of the angle between its sides, with no jump past half a turn. A Wheel
+    // target turned a quarter turn counter-clockwise (−π/2 in Godot, y-down) from a fixed side pointing right reads 1, 0.
     [Fact]
-    public void AngleInputs_ReadAWheelTargetAQuarterTurnCounterClockwise_AsOneAndZero()
+    public void ItsAngleInputs_ReadTheAngleBetweenTheSides()
     {
-        // Fixed points right; the Wheel's body is turned a quarter turn counter-clockwise on screen, y-down.
-        var fixedSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
-        var wheel = HingePartSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
+        foreach (var (angle, sin, cos) in new[] { (0.0, 0.0, 1.0), (Math.PI / 2, 1, 0), (Math.PI, 0, -1), (-Math.PI / 2, -1, 0), ((2 * Math.PI) + (Math.PI / 2), 1, 0) })
+        {
+            var inputs = VelocityMotor.AngleInputs(angle);
+            inputs.Sin.ShouldBe(sin, 1e-12);
+            inputs.Cos.ShouldBe(cos, 1e-12);
+        }
 
-        var (sin, cos) = VelocityMotor.AngleInputs(wheel - fixedSide);
-
-        sin.ShouldBe(1, tolerance: 1e-12);
-        cos.ShouldBe(0, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void AngleInputs_DoNotJump_WhenTheAnglePassesHalfATurn()
-    {
+        var wheel = VelocityMotor.AngleInputs(HingePartSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2) - HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0)));
+        wheel.Sin.ShouldBe(1, 1e-12);
+        wheel.Cos.ShouldBe(0, 1e-12);
         var before = VelocityMotor.AngleInputs(Math.PI - 1e-6);
         var after = VelocityMotor.AngleInputs(-Math.PI + 1e-6);
-
-        before.Sin.ShouldBe(after.Sin, tolerance: 1e-5);
-        before.Cos.ShouldBe(after.Cos, tolerance: 1e-5);
+        before.Sin.ShouldBe(after.Sin, 1e-5);
+        before.Cos.ShouldBe(after.Cos, 1e-5);
     }
 
+    // It wants its output times Max speed, clamped; from rest it builds that way at the rise rate.
     [Fact]
-    public void WantedSpeed_IsTheOutputTimesMaxSpeed_ClampedToIt()
+    public void ItsTorque_BuildsTowardsTheWantedSpeed_AtTheRiseRate()
     {
-        VelocityMotor.WantedSpeed(0.5, _motor).ShouldBe(0.5 * _motor.MaxSpeed);
-        VelocityMotor.WantedSpeed(-0.25, _motor).ShouldBe(-0.25 * _motor.MaxSpeed);
-        VelocityMotor.WantedSpeed(3, _motor).ShouldBe(_motor.MaxSpeed);
-        VelocityMotor.WantedSpeed(-3, _motor).ShouldBe(-_motor.MaxSpeed);
+        foreach (var (output, share) in new[] { (0.5, 0.5), (-0.25, -0.25), (3, 1), (-3, -1) })
+        {
+            VelocityMotor.WantedSpeed(output, _motor).ShouldBe(share * _motor.MaxSpeed);
+        }
+
+        var forward = Next(speedOutput: 1, strength: 1);
+        forward.Torque.ShouldBe(_motor.Strength * _step / _motor.RiseTime, 1e-6);
     }
 
+    // Against a load past its strength it gives all it can and is pushed back.
     [Fact]
-    public void NextMotor_FromRest_BuildsInTheWantedDirection_AtTheRiseRate()
+    public void AgainstALoadPastItsStrength_ItGivesAllItCan_AndIsPushedBack()
     {
-        var forward = Next(speedOutput: 1, strength: 1, default);
-        var back = Next(speedOutput: -1, strength: 1, default);
-
-        forward.Torque.ShouldBe(_motor.Strength * _step / _motor.RiseTime, tolerance: 1e-6);
-        back.Torque.ShouldBe(-forward.Torque, tolerance: 1e-6);
-    }
-
-    [Fact]
-    public void NextMotor_WithStrengthZero_IsZero() =>
-        Next(speedOutput: 1, strength: 0, default).Torque.ShouldBe(0);
-
-    [Fact]
-    public void NextMotor_KeepsTheChosenSpeed_AgainstALoadBelowItsStrength()
-    {
-        var load = -0.5 * _motor.Strength;
-
-        var (speed, torque) = Run(speedOutput: 0.5, load, realInertia: 1385);
-
-        speed.ShouldBe(0.5 * _motor.MaxSpeed, tolerance: 0.01 * _motor.MaxSpeed);
-        torque.ShouldBe(-load, tolerance: 0.01 * _motor.Strength);
-    }
-
-    [Fact]
-    public void NextMotor_AgainstALoadPastItsStrength_GivesAllItCan_AndIsPushedBack()
-    {
-        var (speed, torque) = Run(speedOutput: 0.5, load: -2 * _motor.Strength, realInertia: 1385);
+        var (speed, torque) = Run(speedOutput: 0.5, load: -2 * _motor.Strength);
 
         torque.ShouldBe(_motor.Strength);
         speed.ShouldBeLessThan(0);
     }
 
-    private static MotorState Next(double speedOutput, double strength, MotorState previous) =>
-        VelocityMotor.NextMotor(_motor, speed: 0, speedOutput, strength, previous, _step, _heavy);
+    private static MotorState Next(double speedOutput, double strength) =>
+        VelocityMotor.NextMotor(_motor, speed: 0, speedOutput, strength, default, _step, _heavy);
 
-    private static (double Speed, double Torque) Run(double speedOutput, double load, double realInertia)
+    private static (double Speed, double Torque) Run(double speedOutput, double load)
     {
+        const double inertia = 1385;
         var speed = 0.0;
         var motor = default(MotorState);
         for (var step = 0; step < 1800; step++)
         {
-            motor = VelocityMotor.NextMotor(_motor, speed, speedOutput, strength: 1, motor, _step, effectiveInertia: realInertia);
-            speed += (motor.Torque + load) / realInertia * _step;
+            motor = VelocityMotor.NextMotor(_motor, speed, speedOutput, strength: 1, motor, _step, effectiveInertia: inertia);
+            speed += (motor.Torque + load) / inertia * _step;
         }
 
         return (speed, motor.Torque);

@@ -13,10 +13,12 @@ Test-code conventions. What each layer tests is in `docs/TEST_STRATEGY.md`
 - **Follow `docs/TEST_STRATEGY.md` → "Guiding principles"** and test
   nothing its "What we do NOT test" lists.
 - **Mirror the production layout:** `libs/NodeRunner.ML/Networks/DirectNetwork.cs`
-  is tested in `tests/NodeRunner.ML.Tests/Networks/DirectNetworkTests.cs`,
-  one test class per production class. Test files have no size limit.
+  is tested in `tests/NodeRunner.ML.Tests/Networks/DirectNetworkTests.cs`.
+  A test class is named for the class it tests, or for the family, owner
+  or contract (such as a scene or `project.godot` rule) it covers.
 - **Names describe behaviour:** `Forward_WithZeroInput_ReturnsZeroesForTanh`.
-- **AAA layout:** Arrange, blank line, Act, blank line, Assert.
+- **Arrange, then steps:** a scenario test arranges once, then runs its
+  steps in paragraphs, each an act followed by its asserts.
 - **Global usings live in each `*.Tests.csproj`,** not in each file.
 - **Disk I/O only in a per-test temp directory.** Committed fixtures, pins
   and share dictionaries are read from the checkout

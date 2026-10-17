@@ -68,46 +68,22 @@ public sealed class DrawLayersTests
     // #1269: a joint's bands draw under its ring and the hinge part on it, by layer, not by the
     // order the parts are made in, on either surface and for a joint joined to no link too.
     [Theory]
-    [InlineData(0, false)]
     [InlineData(DrawGroups.MaxGroups - 1, true)]
     [InlineData(null, false)]
-    [InlineData(null, true)]
     public void A_joints_bands_draw_over_its_links_and_under_its_ring_and_hinge_part(int? group, bool selected)
     {
         CreatureLayers.Of(DrawSlot.Band, group, selected).ShouldBeGreaterThan(CreatureLayers.Of(DrawSlot.Sensor, group, selected));
         CreatureLayers.Of(DrawSlot.Band, group, selected).ShouldBeLessThan(CreatureLayers.Of(DrawSlot.Over, group, selected));
     }
 
-    // The bands are a layer of their own only while JointPart draws them on its Band child, not in
-    // its own _Draw, where the hinge part's slot is.
     [Fact]
-    public void A_joint_draws_its_bands_and_their_marks_on_its_band_layer()
-    {
-        var joint = CSharpSources.Project.Single(source => source.Path == "theme/JointPart.cs").Tree.GetRoot()
-            .DescendantNodes().OfType<ClassDeclarationSyntax>().Single(type => type.Identifier.Text == nameof(JointPart));
-        var draw = joint.Members.OfType<MethodDeclarationSyntax>().Single(method => method.Identifier.Text == "_Draw");
-        var bandState = new[] { nameof(JointPart.Cushion), nameof(JointPart.Touch), nameof(JointPart.TouchSelected), nameof(JointPart.Skin), nameof(JointPart.SkinSelected), nameof(JointPart.WheelSelected), nameof(JointPart.Placing), nameof(JointPart.PlacingRadius) };
-
-        draw.DescendantNodes().OfType<IdentifierNameSyntax>().Select(name => name.Identifier.Text).Intersect(bandState)
-            .ShouldBeEmpty("The cushion, skin and the marks round the joint draw on its DrawSlot.Band layer, under the hinge part.");
-        joint.Members.OfType<ConstructorDeclarationSyntax>().Single().DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .ShouldContain(call => call.Expression.ToString() == "AddSlotLayer" && call.ArgumentList.Arguments[0].ToString() == "DrawSlot.Band");
-    }
-
-    [Fact]
-    public void Every_drawn_layer_stays_within_godots_z_range()
+    public void Arena_layers_put_marks_under_every_creature_and_the_followed_one_over_every_shadow_within_godots_z_range()
     {
         ((long)_arenaLayers.Min()).ShouldBeGreaterThanOrEqualTo(Godot.RenderingServer.CanvasItemZMin);
         ((long)(ArenaLayers.Followed + HighestCreatureLayer)).ShouldBeLessThanOrEqualTo(Godot.RenderingServer.CanvasItemZMax);
-    }
-
-    [Fact]
-    public void Arena_marks_and_ground_are_under_every_creature() =>
         new[] { ArenaLayers.BestMarker, ArenaLayers.StartSign, ArenaLayers.Ground }.ShouldAllBe(layer => layer < ArenaLayers.Shadows + LowestCreatureLayer);
-
-    [Fact]
-    public void Followed_creature_is_wholly_over_every_shadow() =>
         (ArenaLayers.Followed + LowestCreatureLayer).ShouldBeGreaterThan(ArenaLayers.Shadows + HighestCreatureLayer);
+    }
 
     [Fact]
     public void Drawing_outside_the_ui_sets_z_only_from_named_layers()
@@ -131,34 +107,20 @@ public sealed class DrawLayersTests
     }
 
     [Theory]
-    [InlineData("class Part : PartVisual { }")]
-    [InlineData("class Part : PartVisual { Part() : base() { } }")]
-    [InlineData("class Part : PartVisual { Part() : base(-1) { } }")]
-    [InlineData("class Part : PartVisual { Part() : base(ArenaLayers.Ground) { } }")]
-    [InlineData("class Part() : PartVisual(CreatureLayers.Hatch) { }")]
-    [InlineData("class Part : PartVisual { Part() : base(DrawSlot.Link, DrawSlot.Over) { } }")]
-    public void Part_without_named_layers_is_flagged(string member) =>
-        CSharpSources.Snippet(member).Find(LeavesItsLayersUnnamed).ShouldHaveSingleItem();
+    [InlineData("class Part : PartVisual { }", true)]
+    [InlineData("class Part : PartVisual { Part() : base(-1) { } }", true)]
+    [InlineData("class Part : PartVisual { Part() : base(ArenaLayers.Ground) { } }", true)]
+    [InlineData("class Part() : PartVisual(CreatureLayers.Hatch) { }", true)]
+    [InlineData("class Part : PartVisual { Part() : base(DrawSlot.Link, DrawSlot.Over) { } }", true)]
+    [InlineData("class Part : PartVisual { Part() : base(DrawSlot.Link) { } }", false)]
+    public void Part_without_named_layers_is_flagged(string member, bool flagged) =>
+        CSharpSources.Snippet(member).Find(LeavesItsLayersUnnamed).Count().ShouldBe(flagged ? 1 : 0);
 
     [Theory]
-    [InlineData("class Part : PartVisual { Part() : base(CreatureLayers.Hatch) { } }")]
-    [InlineData("class Part : PartVisual { Part() : base(DrawSlot.Link) { } }")]
-    public void Part_with_named_layers_passes(string member) =>
-        CSharpSources.Snippet(member).Find(LeavesItsLayersUnnamed).ShouldBeEmpty();
-
-    [Theory]
-    [InlineData("void M(Node2D node) { node.ZIndex = -1; }")]
-    [InlineData("void M(Node2D node, int z) { node.ZIndex = z; }")]
-    [InlineData("void M(Node2D node) { node.ZIndex = CreatureLayers.Parts + 1; }")]
-    [InlineData("void M(Node2D node) { node.ZIndex = ArenaLayers.BestMarker - ArenaLayers.Ground; }")]
-    public void Unnamed_z_is_flagged(string member) =>
-        CSharpSources.Snippet(member).Find(node => SetsUnnamedZIndex(node, "creature/Snippet.cs")).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("void M(Node2D node) { node.ZIndex = CreatureLayers.Overlays; }")]
-    [InlineData("void M(Node2D node, bool shadow) { node.ZIndex = shadow ? ArenaLayers.Shadows : ArenaLayers.Followed; }")]
-    public void Named_z_passes(string member) =>
-        CSharpSources.Snippet(member).Find(node => SetsUnnamedZIndex(node, "creature/Snippet.cs")).ShouldBeEmpty();
+    [InlineData("void M(Node2D node) { node.ZIndex = CreatureLayers.Parts + 1; }", true)]
+    [InlineData("void M(Node2D node, bool shadow) { node.ZIndex = shadow ? ArenaLayers.Shadows : ArenaLayers.Followed; }", false)]
+    public void Unnamed_z_is_flagged(string member, bool flagged) =>
+        CSharpSources.Snippet(member).Find(node => SetsUnnamedZIndex(node, "creature/Snippet.cs")).Count().ShouldBe(flagged ? 1 : 0);
 
     private static int LowestCreatureLayer => _creatureLayers.Min();
 

@@ -5,35 +5,21 @@ namespace NodeRunner.App.Tests.Services;
 
 public sealed class EvolutionSetupTests
 {
-    [Fact]
-    public void For_NoSettings_UsesTheDefault()
-    {
-        var setup = EvolutionSetup.For(null, 60);
-
-        setup.Population.ShouldBe(TrainSettingsDef.Default.Shadows);
-        setup.TrialTicks.ShouldBe(TrainSettingsDef.Default.RunLengthSeconds * 60);
-    }
-
-    [Fact]
-    public void For_Settings_SetsThePopulationAndTrialTicks()
-    {
-        var setup = EvolutionSetup.For(new TrainSettingsDef(TrainSettingsDef.MaxShadows, 30), 60);
-
-        setup.Population.ShouldBe(TrainSettingsDef.MaxShadows);
-        setup.TrialTicks.ShouldBe(1800);
-    }
-
     [Theory]
-    [InlineData(TrainSettingsDef.MinShadows)]
-    [InlineData(TrainSettingsDef.MaxShadows)]
-    public void For_AnyShadowsCount_BreedsANextGeneration(int shadows)
+    [InlineData(null, null)]
+    [InlineData(TrainSettingsDef.MinShadows, 30)]
+    [InlineData(TrainSettingsDef.MaxShadows, 10)]
+    public void For_SetsThePopulationAndTrialTicks_AndBreedsANextGeneration(int? shadows, int? seconds)
     {
-        var setup = EvolutionSetup.For(new TrainSettingsDef(shadows, 10), 60);
-        var genomes = Enumerable.Range(0, shadows).Select(i => new[] { (double)i, -i }).ToArray();
-        var fitness = Enumerable.Range(0, shadows).Select(i => (double)i).ToArray();
+        var settings = shadows is { } count ? new TrainSettingsDef(count, seconds!.Value) : null;
+        var expected = settings ?? TrainSettingsDef.Default;
 
-        var next = setup.Algorithm.NextGeneration(genomes, fitness, new Random(1));
+        var setup = EvolutionSetup.For(settings, 60);
 
-        next.Length.ShouldBe(shadows);
+        setup.Population.ShouldBe(expected.Shadows);
+        setup.TrialTicks.ShouldBe(expected.RunLengthSeconds * 60);
+        var genomes = Enumerable.Range(0, expected.Shadows).Select(i => new[] { (double)i, -i }).ToArray();
+        var fitness = Enumerable.Range(0, expected.Shadows).Select(i => (double)i).ToArray();
+        setup.Algorithm.NextGeneration(genomes, fitness, new Random(1)).Length.ShouldBe(expected.Shadows);
     }
 }

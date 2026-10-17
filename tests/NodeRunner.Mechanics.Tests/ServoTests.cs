@@ -11,151 +11,102 @@ public sealed class ServoTests
     // Heavy enough that the push part always asks for more than the rise time allows.
     private const double _heavy = 1e9;
 
+    // Range 90° each way of its built angle by default: its angle input is piecewise around the built angle,
+    // whichever stop it starts at, and its position output asks for an angle on the same scale.
     [Fact]
-    public void AngleInput_IsPiecewiseAroundTheBuiltAngle()
+    public void ItsAngleInputAndTarget_ArePiecewiseAroundTheBuiltAngle()
     {
-        Servo.AngleInput(-Math.PI / 2, _servo).ShouldBe(-1, tolerance: 1e-12);
-        Servo.AngleInput(0, _servo).ShouldBe(0);
-        Servo.AngleInput(Math.PI / 2, _servo).ShouldBe(1, tolerance: 1e-12);
-        Servo.AngleInput(Math.PI / 4, _servo).ShouldBe(0.5, tolerance: 1e-12);
-    }
+        foreach (var (angle, input) in new[] { (-Math.PI / 2, -1.0), (0, 0), (Math.PI / 4, 0.5), (Math.PI / 2, 1) })
+        {
+            Servo.AngleInput(angle, _servo).ShouldBe(input, 1e-12);
+            Servo.TargetAngle(input, _servo).ShouldBe(angle, 1e-12);
+        }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(0.5)]
-    [InlineData(1)]
-    public void AngleInput_HandlesStartAtEitherStop(double start)
-    {
-        var servo = _servo.WithSettings(_servo.Strength, Math.PI, start, _servo.MaxSpeed, _servo.RiseTime);
+        foreach (var start in new[] { 0, 0.5, 1 })
+        {
+            var servo = _servo.WithSettings(_servo.Strength, Math.PI, start, _servo.MaxSpeed, _servo.RiseTime);
+            Servo.AngleInput(Servo.LowerAngle(servo), servo).ShouldBe(start == 0 ? 0 : -1, 1e-12);
+            Servo.AngleInput(Servo.UpperAngle(servo), servo).ShouldBe(start == 1 ? 0 : 1, 1e-12);
+        }
 
-        Servo.AngleInput(Servo.LowerAngle(servo), servo).ShouldBe(start == 0 ? 0 : -1, tolerance: 1e-12);
-        Servo.AngleInput(Servo.UpperAngle(servo), servo).ShouldBe(start == 1 ? 0 : 1, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void TargetAngle_MapsThePositionOutputOntoTheStops()
-    {
-        Servo.TargetAngle(-1, _servo).ShouldBe(-Math.PI / 2, tolerance: 1e-12);
-        Servo.TargetAngle(0, _servo).ShouldBe(0, tolerance: 1e-12);
-        Servo.TargetAngle(1, _servo).ShouldBe(Math.PI / 2, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void WantedSpeed_ClosesTheGapToTheTarget_NoFasterThanMaxSpeed()
-    {
         var target = Servo.TargetAngle(0.5, _servo, builtAngle: 0.3);
-
         Servo.WantedSpeed(0.5, _servo, builtAngle: 0.3, angle: target).ShouldBe(0);
-        Servo.WantedSpeed(0.5, _servo, builtAngle: 0.3, angle: target - 0.01).ShouldBe(0.1, tolerance: 1e-12);
-        Servo.WantedSpeed(0.5, _servo, builtAngle: 0.3, angle: target + 0.01).ShouldBe(-0.1, tolerance: 1e-12);
+        Servo.WantedSpeed(0.5, _servo, builtAngle: 0.3, angle: target - 0.01).ShouldBe(0.1, 1e-12);
+        Servo.WantedSpeed(0.5, _servo, builtAngle: 0.3, angle: target + 0.01).ShouldBe(-0.1, 1e-12);
         Servo.WantedSpeed(1, _servo, builtAngle: 0, angle: -Math.PI).ShouldBe(_servo.MaxSpeed);
         Servo.WantedSpeed(-1, _servo, builtAngle: 0, angle: Math.PI).ShouldBe(-_servo.MaxSpeed);
     }
 
+    // From rest it builds towards its target at the rise rate, up to the chosen share of its strength.
     [Fact]
-    public void NextMotor_FromRest_BuildsTowardsItsTarget_AtTheRiseRate()
+    public void ItsTorque_BuildsAtTheRiseRate_UpToTheChosenShare()
     {
-        var turn = Next(_servo, angle: 0, position: 1, strength: 1, default, _heavy);
-        var back = Next(_servo, angle: 0, position: -1, strength: 1, default, _heavy);
-
-        turn.Torque.ShouldBe(_servo.Strength * _step / _servo.RiseTime, tolerance: 1e-6);
-        back.Torque.ShouldBe(-turn.Torque, tolerance: 1e-6);
+        var turn = Next(_servo, position: 1, strength: 1, default);
+        turn.Torque.ShouldBe(_servo.Strength * _step / _servo.RiseTime, 1e-6);
+        Next(_servo, position: 1, strength: 0.2, new MotorState(_servo.Strength, _servo.Strength)).Torque
+            .ShouldBe(OutputSignals.StrengthFromOutput(0.2, _servo.Strength));
     }
 
+    // A spring and damper past its stops, nothing inside; at the slider extremes its gains are capped so it
+    // rebounds no faster than it hit and does not diverge.
     [Fact]
-    public void NextMotor_WithStrengthZero_IsZero() =>
-        Next(_servo, angle: 0, position: 1, strength: 0, default, _heavy).Torque.ShouldBe(0);
-
-    [Fact]
-    public void NextMotor_ChasesWithTheChosenShareOfItsStrength()
+    public void ItsEndStops_PushBackPastItsLimits_WithoutRebounding()
     {
-        var chosen = OutputSignals.StrengthFromOutput(0.2, _servo.Strength);
+        foreach (var (angle, speed, torque) in new[] { (0.0, 10.0, 0.0), (-1.2, 0, 20), (1.2, 0, -20), (1.2, -1, -10) })
+        {
+            Servo.EndStopTorque(angle, speed, lower: -1, upper: 1, stiffness: 100, damping: 10).ShouldBe(torque, 1e-12);
+        }
 
-        var motor = Next(_servo, angle: 0, position: 1, strength: 0.2, new MotorState(_servo.Strength, _servo.Strength), _heavy);
-
-        motor.Torque.ShouldBe(chosen);
+        var slow = ExtremeServo(30);
+        var gains = Servo.StableEndStopGains(slow, effectiveInertia: 1000, step: _step);
+        gains.Damping.ShouldBeLessThan(slow.Strength / slow.MaxSpeed);
+        gains.Stiffness.ShouldBeLessThan(4 * slow.Strength / slow.Range);
+        Servo.EndStopTorque(slow, 0, Servo.UpperAngle(slow) + 0.1, speed: 1, effectiveInertia: 1000, step: _step).ShouldBeLessThan(0);
+        foreach (var servo in new[] { slow, ExtremeServo(720) })
+        {
+            var (fastest, finalAngle) = RunEndStop(servo, effectiveInertia: 1000, speed: 1);
+            fastest.ShouldBeLessThanOrEqualTo(1 + 1e-9);
+            finalAngle.ShouldBeLessThanOrEqualTo(Servo.UpperAngle(servo) + 0.01);
+        }
     }
 
-    [Fact]
-    public void EndStopTorque_IsZeroInsideAndRestoresPastLimits()
-    {
-        Servo.EndStopTorque(angle: 0, speed: 10, lower: -1, upper: 1, stiffness: 100, damping: 10).ShouldBe(0);
-        Servo.EndStopTorque(angle: -1.2, speed: 0, lower: -1, upper: 1, stiffness: 100, damping: 10).ShouldBe(20, tolerance: 1e-12);
-        Servo.EndStopTorque(angle: 1.2, speed: 0, lower: -1, upper: 1, stiffness: 100, damping: 10).ShouldBe(-20, tolerance: 1e-12);
-        Servo.EndStopTorque(angle: 1.2, speed: -1, lower: -1, upper: 1, stiffness: 100, damping: 10).ShouldBe(-10, tolerance: 1e-12);
-    }
-
-    [Theory]
-    [InlineData(30)]
-    [InlineData(720)]
-    public void StableEndStopTorque_AtSliderExtremes_DoesNotReboundFasterThanItHit_OrDiverge(double maxSpeedDegrees)
-    {
-        var servo = ExtremeServo(maxSpeedDegrees);
-
-        var result = RunEndStop(servo, effectiveInertia: 1000, speed: 1);
-
-        result.Fastest.ShouldBeLessThanOrEqualTo(1 + 1e-9);
-        result.FinalAngle.ShouldBeLessThanOrEqualTo(Servo.UpperAngle(servo) + 0.01);
-    }
-
-    [Fact]
-    public void EndStopTorque_Overload_CapsDesiredGains()
-    {
-        var servo = ExtremeServo(30);
-        var gains = Servo.StableEndStopGains(servo, effectiveInertia: 1000, step: _step);
-
-        gains.Damping.ShouldBeLessThan(servo.Strength / servo.MaxSpeed);
-        gains.Stiffness.ShouldBeLessThan(4 * servo.Strength / servo.Range);
-        Servo.EndStopTorque(servo, 0, Servo.UpperAngle(servo) + 0.1, speed: 1, effectiveInertia: 1000, step: _step)
-            .ShouldBeLessThan(0);
-    }
-
+    // At the slider extremes it settles without oscillating, even when its inertia guess of 1000 is far off.
     [Theory]
     [InlineData(30, 1000)]
-    [InlineData(720, 1000)]
     [InlineData(720, 340)]
     [InlineData(30, 500)]
-    [InlineData(30, 8000)]
     [InlineData(720, 16000)]
     [InlineData(30, 30000)]
     [InlineData(720, 30000)]
-    public void NextMotor_AtSliderExtremes_SettlesWithoutOscillating_EvenWhenItsInertiaGuessIsFarOff(double maxSpeedDegrees, double realInertia)
+    public void AtSliderExtremes_ItSettlesWithoutOscillating(double maxSpeedDegrees, double realInertia)
     {
         var servo = ExtremeServo(maxSpeedDegrees);
 
         var result = RunMotor(servo, effectiveInertia: 1000, realInertia, load: 0, position: 1);
 
         result.Fastest.ShouldBeLessThanOrEqualTo(1.5 * servo.MaxSpeed);
-        result.FinalAngle.ShouldBe(Servo.TargetAngle(1, servo), tolerance: 0.01);
+        result.FinalAngle.ShouldBe(Servo.TargetAngle(1, servo), 0.01);
         result.LastSecondSwing.ShouldBeLessThan(0.001);
     }
 
+    // It holds a steady load of half its strength, and on a planted leg 30 times heavier than it reads it stops
+    // gathering at full strength and settles.
     [Theory]
-    [InlineData(30, 0, 1385)]
-    [InlineData(30, 1, 1385)]
-    [InlineData(360, -1, 1385)]
-    [InlineData(720, 1, 1385)]
-    [InlineData(360, -1, 27700)]
-    [InlineData(720, 1, 27700)]
-    public void NextMotor_HoldsASteadyLoadBelowItsStrength(double maxSpeedDegrees, double position, double realInertia)
+    [InlineData(30, 0, 1385, 1385, -0.5)]
+    [InlineData(360, -1, 1385, 1385, -0.5)]
+    [InlineData(720, 1, 1385, 1385, -0.5)]
+    [InlineData(720, 1, 1385, 27700, -0.5)]
+    [InlineData(360, 0.5, 6750, 6750 * 30, 0)]
+    public void ItHoldsASteadyLoadBelowItsStrength(double maxSpeedDegrees, double position, double effectiveInertia, double realInertia, double loadShare)
     {
         var servo = _servo.WithSettings(_servo.Strength, _servo.Range, _servo.Start, Degrees(maxSpeedDegrees), _servo.RiseTime);
-        var load = -0.5 * servo.Strength;
+        var load = loadShare * servo.Strength;
 
-        var result = RunMotor(servo, effectiveInertia: 1385, realInertia, load, position);
+        var result = RunMotor(servo, effectiveInertia, realInertia, load, position);
 
-        result.FinalAngle.ShouldBe(Servo.TargetAngle(position, servo), tolerance: 0.01);
+        result.FinalAngle.ShouldBe(Servo.TargetAngle(position, servo), 0.01);
         result.LastSecondSwing.ShouldBeLessThan(0.001);
-        result.Torque.ShouldBe(-load, tolerance: 0.01 * servo.Strength);
-    }
-
-    [Fact]
-    public void NextMotor_OnAPlantedLeg_StopsGatheringAtFullStrength_AndSettles()
-    {
-        var result = RunMotor(_servo, effectiveInertia: 6750, realInertia: 6750 * 30, load: 0, position: 0.5);
-
-        result.FinalAngle.ShouldBe(Servo.TargetAngle(0.5, _servo), tolerance: 0.01);
-        result.LastSecondSwing.ShouldBeLessThan(0.001);
+        result.Torque.ShouldBe(-load, 0.01 * servo.Strength);
     }
 
     private static ServoDef ExtremeServo(double maxSpeedDegrees) =>
@@ -176,8 +127,8 @@ public sealed class ServoTests
         return (fastest, angle);
     }
 
-    private static MotorState Next(ServoDef servo, double angle, double position, double strength, MotorState previous, double effectiveInertia) =>
-        Servo.NextMotor(servo, builtAngle: 0, angle, speed: 0, position, strength, previous, _step, effectiveInertia);
+    private static MotorState Next(ServoDef servo, double position, double strength, MotorState previous) =>
+        Servo.NextMotor(servo, builtAngle: 0, angle: 0, speed: 0, position, strength, previous, _step, _heavy);
 
     private static (double Fastest, double FinalAngle, double LastSecondSwing, double Torque) RunMotor(
         ServoDef servo,

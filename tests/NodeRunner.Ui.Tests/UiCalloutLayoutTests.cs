@@ -46,30 +46,20 @@ public sealed class UiCalloutLayoutTests
     }
 
     [Fact]
-    public void Arrange_NeverJoinsACalloutWithLinesUnderItsCaption()
+    public void Arrange_NeverJoinsACalloutWithLinesOrSectionsUnderItsCaption()
     {
         IReadOnlyList<UiCalloutLine> lines = [UiCalloutLine.OfMeters(UiTokens.Color.Accent, [new UiCalloutMeter("speed", 0.5, Centred: true)])];
         var withLines = Placement(new Vector2(0, 0), Vector2.Up) with { Lines = lines };
-
-        var arranged = UiCalloutLayout.Arrange(
-            [withLines, withLines with { Anchor = new Vector2(30, 0) }, Placement(new Vector2(0, 0), Vector2.Up)],
-            [_size, _size, _size],
-            _bounds);
-
-        arranged.ShouldAllBe(callout => !callout.Joined);
-    }
-
-    [Fact]
-    public void Arrange_NeverJoinsACalloutWithSectionsUnderItsCaption()
-    {
         var withSections = Placement(new Vector2(0, 0), Vector2.Up) with { Sections = [new UiCalloutSection(UiIconId.None, "Wheel")] };
 
-        var arranged = UiCalloutLayout.Arrange(
-            [withSections, withSections with { Anchor = new Vector2(30, 0) }, Placement(new Vector2(0, 0), Vector2.Up)],
-            [_size, _size, _size],
-            _bounds);
-
-        arranged.ShouldAllBe(callout => !callout.Joined);
+        foreach (var placement in new[] { withLines, withSections })
+        {
+            UiCalloutLayout.Arrange(
+                    [placement, placement with { Anchor = new Vector2(30, 0) }, Placement(new Vector2(0, 0), Vector2.Up)],
+                    [_size, _size, _size],
+                    _bounds)
+                .ShouldAllBe(callout => !callout.Joined);
+        }
     }
 
     [Fact]
@@ -85,17 +75,13 @@ public sealed class UiCalloutLayoutTests
             new Rect2(-50, _above - UiSize.Space.S1 - 20, 100, 20),
             arranged[1].LeaderEnd));
         arranged[1].Joined.ShouldBeFalse();
-    }
 
-    [Fact]
-    public void Arrange_StacksDownwardForAPartWhoseClearSideIsBelow()
-    {
-        var arranged = UiCalloutLayout.Arrange(
+        // A part whose clear side is below stacks downward.
+        var below = UiCalloutLayout.Arrange(
             [Placement(new Vector2(0, 0), Vector2.Down), Placement(new Vector2(30, 0), Vector2.Down, "Other")],
             [_size, _size],
             _bounds);
-
-        arranged[1].Rect.Position.Y.ShouldBe(arranged[0].Rect.End.Y + UiSize.Space.S1);
+        below[1].Rect.Position.Y.ShouldBe(below[0].Rect.End.Y + UiSize.Space.S1);
     }
 
     [Fact]
@@ -148,25 +134,17 @@ public sealed class UiCalloutLayoutTests
         rect.Position.ShouldBe(new Vector2(-30 + UiSize.Space.S1, -20 + UiSize.Space.S1));
     }
 
-    [Theory]
-    [InlineData(0, 300)]
-    [InlineData(-80, 20)]
-    public void Dock_PutsTheTopAtTheBoundsAndCentresWhereverThePartIs(float anchorX, float anchorY)
+    /// <summary>Docked, the top sits at the bounds and the box is centred wherever the part is; a taller one grows down.</summary>
+    [Fact]
+    public void Dock_PutsTheTopAtTheBounds_AndRunsTheLeaderFromThePart()
     {
         var arena = new Rect2(0, 0, 600, 240);
 
-        var docked = UiCalloutLayout.Dock(new Vector2(anchorX, anchorY), _size, 258, arena);
-
+        var docked = UiCalloutLayout.Dock(new Vector2(258, 200), _size, 258, arena);
         docked.Rect.ShouldBe(new Rect2(208, UiSize.Space.S1, 100, 20));
-        docked.Joined.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Dock_RunsTheLeaderFromThePartToTheBox()
-    {
-        var docked = UiCalloutLayout.Dock(new Vector2(258, 200), _size, 258, new Rect2(0, 0, 600, 240));
-
         docked.LeaderEnd.ShouldBe(new Vector2(258, UiSize.Space.S1 + 20));
+        docked.Joined.ShouldBeFalse();
+        UiCalloutLayout.Dock(new Vector2(-80, 20), new Vector2(100, 90), 258, arena).Rect.Position.ShouldBe(docked.Rect.Position);
     }
 
     [Theory]
@@ -180,27 +158,9 @@ public sealed class UiCalloutLayoutTests
         var docked = UiCalloutLayout.Dock(Vector2.Zero, _size, centreX, bounds);
 
         docked.Rect.Position.X.ShouldBe(expectedLeft);
-    }
 
-    [Fact]
-    public void Dock_GrowsATallerCalloutDownward()
-    {
-        var arena = new Rect2(0, 0, 600, 240);
-
-        var small = UiCalloutLayout.Dock(Vector2.Zero, _size, 258, arena);
-        var tall = UiCalloutLayout.Dock(Vector2.Zero, new Vector2(100, 90), 258, arena);
-
-        tall.Rect.Position.ShouldBe(small.Rect.Position);
-    }
-
-    [Fact]
-    public void Dock_PutsACalloutWiderThanTheBoundsAgainstTheirLeft()
-    {
-        var bounds = new Rect2(120, 0, 80, 240);
-
-        var docked = UiCalloutLayout.Dock(Vector2.Zero, _size, 160, bounds);
-
-        docked.Rect.Position.X.ShouldBe(120 + UiSize.Space.S1);
+        // A callout wider than the bounds goes against their left.
+        UiCalloutLayout.Dock(Vector2.Zero, _size, 160, new Rect2(120, 0, 80, 240)).Rect.Position.X.ShouldBe(120 + UiSize.Space.S1);
     }
 
     [Fact]
@@ -211,12 +171,7 @@ public sealed class UiCalloutLayoutTests
         var share = UiCalloutLayout.DockedShare(docked, 240);
 
         share.ShouldBe((UiSize.Space.S1 + 20 + UiCalloutLayout.LeaderLength + UiSize.Space.S1) / 240f, 1e-6f);
-    }
-
-    [Fact]
-    public void DockedShare_IsNoneForAnEmptyView()
-    {
-        UiCalloutLayout.DockedShare(new Rect2(0, 0, 100, 20), 0).ShouldBe(0);
+        UiCalloutLayout.DockedShare(docked, 0).ShouldBe(0);
     }
 
     [Theory]

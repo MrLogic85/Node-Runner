@@ -8,89 +8,49 @@ public sealed class PartCalloutPresentationTests
     private static NetworkPortValues Live() =>
         NetworkPortValues.Sample(PortedCreature.Layout, PortedCreature.Network(), PortedCreature.Readings());
 
-    private static PartCalloutPresentation For(CreatureElementKind kind, int id, NetworkPortValues values) =>
-        PartCalloutPresentation.For(PortedCreature.Def, new CreatureElementSelection(kind, id), values);
+    private static PartCalloutPresentation For(int id, NetworkPortValues values) =>
+        PartCalloutPresentation.For(PortedCreature.Def, new CreatureElementSelection(PartKinds.Of(PortedCreature.Def.FindPart(id)!.PartKind).Element, id), values);
 
     [Fact]
-    public void AServo_ShowsItsGlyphNameInputsAndOutputs_WithLiveValues()
+    public void APartWithNetworkPorts_ShowsItsGlyphNameAndEachPort_WithLiveValues()
     {
         var values = Live();
 
-        var callout = For(CreatureElementKind.Servo, PortedCreature.Servo, values);
+        foreach (var part in PortedCreature.Ports.GroupBy(entry => entry.Port.PartId))
+        {
+            var callout = For(part.Key, values);
 
-        callout.Kind.ShouldBe(PartKind.Servo);
-        callout.Name.ShouldBe(UiText.AsWritten("Hip"));
-        callout.ShowsGlyph.ShouldBeTrue();
-        callout.Note.ShouldBeNull();
-        callout.Inputs.Select(port => (port.Label, port.Range)).ShouldBe(
-        [
-            (UiText.Plain("angle"), PortRange.MinusOneToOne),
-            (UiText.Plain("speed"), PortRange.MinusOneToOne),
-        ]);
-        callout.Outputs.Select(port => (port.Label, port.Range)).ShouldBe(
-        [
-            (UiText.Plain("angle"), PortRange.MinusOneToOne),
-            (UiText.Plain("strength"), PortRange.ZeroToOne),
-        ]);
-        callout.Inputs.Concat(callout.Outputs).Select(port => port.Value)
-            .ShouldBe(values.Of(PortedCreature.Servo).Select(value => value.Value));
+            callout.Kind.ShouldBe(part.First().Kind);
+            callout.Name.ShouldBe(part.First().Name);
+            callout.ShowsGlyph.ShouldBeTrue();
+            callout.Note.ShouldBeNull();
+            callout.Inputs.Concat(callout.Outputs).ShouldBe(part.Select(entry =>
+                new PartCalloutPort(entry.Port, UiText.Plain(entry.Reading), entry.Range, values.ValueOf(entry.Port))));
+            callout.Inputs.Concat(callout.Outputs).ShouldAllBe(port => port.Value != null);
+            callout.Inputs.ShouldAllBe(port => port.Port.Direction == PortDirection.Input);
+            callout.Outputs.ShouldAllBe(port => port.Port.Direction == PortDirection.Output);
+        }
+
+        For(PortedCreature.Piston, NetworkPortValues.Sample(PortedCreature.Layout, null, [])).Inputs.ShouldAllBe(port => port.Value == null);
     }
 
+    // A wheel, rubber or brake says it has no network ports; a joint, beam or spring shows only its name.
     [Theory]
-    [InlineData(CreatureElementKind.Sensor, PortedCreature.Accelerometer, PartKind.Accelerometer, 2, 0)]
-    [InlineData(CreatureElementKind.Sensor, PortedCreature.Camera, PartKind.Camera, 6, 0)]
-    [InlineData(CreatureElementKind.Piston, PortedCreature.Piston, PartKind.Piston, 2, 2)]
-    [InlineData(CreatureElementKind.VelocityMotor, PortedCreature.VelocityMotor, PartKind.VelocityMotor, 3, 2)]
-    [InlineData(CreatureElementKind.AngleSensor, PortedCreature.AngleSensor, PartKind.AngleSensor, 3, 0)]
-    [InlineData(CreatureElementKind.TouchSensor, PortedCreature.Touch, PartKind.TouchSensor, 1, 0)]
-    public void APartWithNetworkPorts_ShowsEachOfThem(CreatureElementKind element, int id, PartKind kind, int inputs, int outputs)
+    [InlineData(PortedCreature.Wheel, PartKind.Wheel, true)]
+    [InlineData(PortedCreature.Rubber, PartKind.Rubber, true)]
+    [InlineData(PortedCreature.Brake, PartKind.Brake, true)]
+    [InlineData(1, PartKind.Node, false)]
+    [InlineData(5, PartKind.Beam, false)]
+    [InlineData(PortedCreature.Spring, PartKind.Spring, false)]
+    public void APartWithoutNetworkPorts_ShowsNoPorts(int id, PartKind kind, bool showsGlyph)
     {
-        var callout = For(element, id, Live());
+        var callout = For(id, Live());
 
         callout.Kind.ShouldBe(kind);
-        callout.ShowsGlyph.ShouldBeTrue();
-        callout.Inputs.Count.ShouldBe(inputs);
-        callout.Outputs.Count.ShouldBe(outputs);
-        callout.Inputs.Concat(callout.Outputs).ShouldAllBe(port => port.Value != null);
-    }
-
-    [Theory]
-    [InlineData(CreatureElementKind.Wheel, PortedCreature.Wheel, PartKind.Wheel)]
-    [InlineData(CreatureElementKind.Rubber, PortedCreature.Rubber, PartKind.Rubber)]
-    [InlineData(CreatureElementKind.Brake, PortedCreature.Brake, PartKind.Brake)]
-    public void AWheelRubberOrBrake_SaysItHasNoNetworkPorts(CreatureElementKind element, int id, PartKind kind)
-    {
-        var callout = For(element, id, Live());
-
-        callout.Kind.ShouldBe(kind);
-
-        callout.ShowsGlyph.ShouldBeTrue();
-        callout.Note.ShouldBe(UiText.Plain("No network ports"));
+        callout.ShowsGlyph.ShouldBe(showsGlyph);
+        callout.Note.ShouldBe(showsGlyph ? UiText.Plain("No network ports") : null);
         callout.Inputs.ShouldBeEmpty();
         callout.Outputs.ShouldBeEmpty();
-    }
-
-    [Theory]
-    [InlineData(CreatureElementKind.Node, 1)]
-    [InlineData(CreatureElementKind.Beam, 5)]
-    [InlineData(CreatureElementKind.Spring, PortedCreature.Spring)]
-    public void AJointBeamOrSpring_ShowsOnlyItsName(CreatureElementKind kind, int id)
-    {
-        var callout = For(kind, id, Live());
-
-        callout.ShowsGlyph.ShouldBeFalse();
-        callout.Note.ShouldBeNull();
-        callout.Inputs.ShouldBeEmpty();
-        callout.Outputs.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void WithNoLiveNetwork_ThePortsShowNoValues()
-    {
-        var callout = For(CreatureElementKind.Piston, PortedCreature.Piston, NetworkPortValues.Sample(PortedCreature.Layout, null, []));
-
-        callout.Inputs.Count.ShouldBe(2);
-        callout.Inputs.Concat(callout.Outputs).ShouldAllBe(port => port.Value == null);
     }
 
     [Fact]
@@ -101,7 +61,7 @@ public sealed class PartCalloutPresentationTests
         networkFocus.Configure(NetworkPortLabels.For(PortedCreature.Def), []);
 
         networkFocus.Update(values);
-        var callout = For(CreatureElementKind.Piston, PortedCreature.Piston, values);
+        var callout = For(PortedCreature.Piston, values);
 
         var layout = PortedCreature.Layout;
         foreach (var port in callout.Inputs)

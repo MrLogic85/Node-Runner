@@ -35,79 +35,21 @@ public sealed class PartNamesTests
     }
 
     [Fact]
-    public void Default_Sensors_AreNumberedAmongTheirOwnKind()
+    public void Default_NumbersAPartAmongItsOwnKind_AndDisplayShowsItsOwnNameInstead()
     {
         var nodes = Enumerable.Range(1, 4).Select(id => new NodeDef(id, new Vector2D(id * 80, 0))).ToArray();
         var beams = new[] { new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 3, 4) };
         var sensors = new[] { new SensorDef(20, 10, SensorKind.Accelerometer), new SensorDef(21, 11, SensorKind.Camera), new SensorDef(22, 12, SensorKind.Accelerometer) };
+        var servos = new[] { new ServoDef(30, 2, 10, 11, "Hip") };
+        var touchSensors = new[] { new TouchSensorDef(40, 3), new TouchSensorDef(41, 1, "Toe") };
+        IPartDef[] parts = [.. nodes, .. beams, .. sensors, .. servos, .. touchSensors];
 
-        PartNames.Default([.. nodes, .. beams, .. sensors], 20).ShouldBe(UiText.Format("Accel {0}", 1));
-        PartNames.Default([.. nodes, .. beams, .. sensors], 21).ShouldBe(UiText.Format("Camera {0}", 1));
-        PartNames.Default([.. nodes, .. beams, .. sensors], 22).ShouldBe(UiText.Format("Accel {0}", 2));
-    }
-
-    [Fact]
-    public void TouchSensors_AreNumberedAmongThemselves_AndShowTheirOwnName()
-    {
-        var nodes = Enumerable.Range(1, 3).Select(id => new NodeDef(id, new Vector2D(id * 80, 0))).ToArray();
-        var touchSensors = new[] { new TouchSensorDef(20, 3), new TouchSensorDef(21, 1, "Toe") };
-
-        PartNames.Default([.. nodes, .. touchSensors], 20).ShouldBe(UiText.Format("Touch {0}", 1));
-        PartNames.Default([.. nodes, .. touchSensors], 21).ShouldBe(UiText.Format("Touch {0}", 2));
-        PartNames.Display([.. nodes, .. touchSensors], 21).ShouldBe(UiText.AsWritten("Toe"));
-    }
-
-    [Fact]
-    public void Rubbers_AreNumberedAmongThemselves_AndShowTheirOwnName()
-    {
-        var nodes = Enumerable.Range(1, 3).Select(id => new NodeDef(id, new Vector2D(id * 80, 0))).ToArray();
-        var rubbers = new[] { new RubberDef(20, 3), new RubberDef(21, 1, "Sole") };
-
-        PartNames.Default([.. nodes, .. rubbers], 20).ShouldBe(UiText.Format("Rubber {0}", 1));
-        PartNames.Default([.. nodes, .. rubbers], 21).ShouldBe(UiText.Format("Rubber {0}", 2));
-        PartNames.Display([.. nodes, .. rubbers], 21).ShouldBe(UiText.AsWritten("Sole"));
-    }
-
-    [Fact]
-    public void VelocityMotors_AreNumberedAmongThemselves_AndShowTheirOwnName()
-    {
-        var nodes = Enumerable.Range(1, 3).Select(id => new NodeDef(id, new Vector2D(id * 80, 0))).ToArray();
-        var velocityMotors = new[] { new VelocityMotorDef(20, 3), new VelocityMotorDef(21, 1, name: "Drive") };
-
-        PartNames.Default([.. nodes, .. velocityMotors], 20).ShouldBe(UiText.Format("Motor {0}", 1));
-        PartNames.Default([.. nodes, .. velocityMotors], 21).ShouldBe(UiText.Format("Motor {0}", 2));
-        PartNames.Display([.. nodes, .. velocityMotors], 21).ShouldBe(UiText.AsWritten("Drive"));
-    }
-
-    [Fact]
-    public void Brakes_AreNumberedAmongThemselves_AndShowTheirOwnName()
-    {
-        var nodes = Enumerable.Range(1, 3).Select(id => new NodeDef(id, new Vector2D(id * 80, 0))).ToArray();
-        var brakes = new[] { new BrakeDef(20, 3), new BrakeDef(21, 1, name: "Hold") };
-
-        PartNames.Default([.. nodes, .. brakes], 20).ShouldBe(UiText.Format("Brake {0}", 1));
-        PartNames.Default([.. nodes, .. brakes], 21).ShouldBe(UiText.Format("Brake {0}", 2));
-        PartNames.Display([.. nodes, .. brakes], 21).ShouldBe(UiText.AsWritten("Hold"));
-    }
-
-    [Fact]
-    public void AngleSensors_AreNumberedAmongThemselves_AndShowTheirOwnName()
-    {
-        var nodes = Enumerable.Range(1, 3).Select(id => new NodeDef(id, new Vector2D(id * 80, 0))).ToArray();
-        var angleSensors = new[] { new AngleSensorDef(20, 3), new AngleSensorDef(21, 1, name: "Knee") };
-
-        PartNames.Default([.. nodes, .. angleSensors], 20).ShouldBe(UiText.Format("Angle {0}", 1));
-        PartNames.Default([.. nodes, .. angleSensors], 21).ShouldBe(UiText.Format("Angle {0}", 2));
-        PartNames.Display([.. nodes, .. angleSensors], 21).ShouldBe(UiText.AsWritten("Knee"));
-    }
-
-    [Fact]
-    public void Display_WithANamedServo_ReturnsTheServoName()
-    {
-        var nodes = new[] { new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(80, 0)), new NodeDef(3, new Vector2D(0, 80)) };
-        var beams = new[] { new BeamDef(10, 1, 2), new BeamDef(11, 1, 3) };
-        var servos = new[] { new ServoDef(20, 1, 10, 11, "Hip") };
-
-        PartNames.Display([.. nodes, .. beams, .. servos], 20).ShouldBe(UiText.AsWritten("Hip"));
+        PartNames.Default(parts, 20).ShouldBe(UiText.Format("Accel {0}", 1));
+        PartNames.Default(parts, 21).ShouldBe(UiText.Format("Camera {0}", 1));
+        PartNames.Default(parts, 22).ShouldBe(UiText.Format("Accel {0}", 2));
+        PartNames.Display(parts, 40).ShouldBe(UiText.Format("Touch {0}", 1));
+        PartNames.Default(parts, 41).ShouldBe(UiText.Format("Touch {0}", 2));
+        PartNames.Display(parts, 41).ShouldBe(UiText.AsWritten("Toe"));
+        PartNames.Display(parts, 30).ShouldBe(UiText.AsWritten("Hip"));
     }
 }

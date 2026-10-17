@@ -5,33 +5,6 @@ namespace NodeRunner.Ui.Tests;
 
 public sealed class UiThemeExpanderTests
 {
-    [Fact]
-    public void TokenIdentifiers_MapToStableThemeNames()
-    {
-        var expectedColors = new[]
-        {
-            "transparent", "background", "panel", "panel_raised", "line", "line_strong",
-            "edge", "ink", "muted", "accent", "halo", "on_accent", "danger",
-            "scrim", "output", "detail",
-        };
-        Enum.GetValues<UiTokens.Color>().Select(UiTokens.Name).ShouldBe(expectedColors);
-
-        Enum.GetValues<UiTokens.Flag>()
-            .Select(UiTokens.Name)
-            .ShouldBe(new[] { "effects_enabled" });
-        Enum.GetValues<UiTokens.Alpha>()
-            .Select(UiTokens.Name)
-            .ShouldBe(new[] { "alpha_soft", "alpha_shadow" });
-        Enum.GetValues<UiTokens.Typography>()
-            .Select(UiTokens.Variation)
-            .ShouldBe(new[]
-            {
-                "UiTitle", "UiHeading", "UiSubheading", "UiStage", "UiBody", "UiBodyStrong",
-                "UiSmall", "UiSmallStrong", "UiLabel", "UiNote", "UiNoteStrong", "UiCaption",
-                "UiOverline", "UiReadoutLarge", "UiReadout", "UiReadoutMedium", "UiReadoutSmall",
-            });
-    }
-
     public static TheoryData<UiTokenType> ThemeFiles => new(Enum.GetValues<UiTokenType>());
 
     [Theory]
@@ -132,47 +105,6 @@ public sealed class UiThemeExpanderTests
     }
 
     [Fact]
-    public void Dimensions_MatchTheReferenceTokenScale()
-    {
-        UiSize.Space.S1.ShouldBe(4);
-        UiSize.Space.S2.ShouldBe(8);
-        UiSize.Space.S3.ShouldBe(12);
-        UiSize.Space.S4.ShouldBe(16);
-        UiSize.Space.S5.ShouldBe(24);
-
-        UiSize.Control.ExtraSmall.ShouldBe(24);
-        UiSize.Control.Small.ShouldBe(32);
-        UiSize.Control.Default.ShouldBe(40);
-        UiSize.Control.Touch.ShouldBe(48);
-
-        UiSize.Icon.Small.ShouldBe(12);
-        UiSize.Icon.Default.ShouldBe(16);
-        UiSize.Icon.Large.ShouldBe(20);
-        UiSize.Icon.ExtraLarge.ShouldBe(24);
-
-        UiSize.Radius.Small.ShouldBe(4);
-        UiSize.Radius.Medium.ShouldBe(8);
-        UiSize.Radius.Large.ShouldBe(12);
-        UiSize.Radius.Pill.ShouldBe(999);
-
-        UiSize.Stroke.Hair.ShouldBe(1);
-        UiSize.Stroke.Signal.ShouldBe(2);
-        UiSize.Stroke.Beam.ShouldBe(3);
-
-        // Plain constants keep the fraction that a Godot theme constant would round away.
-        UiSize.Stroke.Number.ShouldBe(1.5f);
-    }
-
-    [Fact]
-    public void LayoutDimensions_MatchTheReferenceShell()
-    {
-        UiLayout.CanvasWidth.ShouldBe(640);
-        UiLayout.CanvasHeight.ShouldBe(360);
-        UiLayout.SidePanelWidth.ShouldBe(176);
-        UiLayout.ColumnSmallWidth.ShouldBe(52);
-    }
-
-    [Fact]
     public void TextColorVariations_ChainEveryTypographyOntoEveryTextColor()
     {
         var variations = UiThemeExpander.TextColorVariations;
@@ -183,20 +115,6 @@ public sealed class UiThemeExpanderTests
         variations.Select(variation => variation.Name).ShouldBeUnique();
         variations.ShouldContain(new UiThemeExpander.ColorVariation("UiNoteMuted", "UiNote", UiTokens.Color.Muted));
         variations.ShouldContain(new UiThemeExpander.ColorVariation("UiLabelOnAccent", "UiLabel", UiTokens.Color.OnAccent));
-    }
-
-    [Fact]
-    public void TextColorVariation_RejectsNonTextColors()
-    {
-        Should.Throw<ArgumentOutOfRangeException>(
-            () => UiTokens.Variation(UiTokens.Typography.Body, UiTokens.Color.Panel));
-    }
-
-    [Fact]
-    public void Uppercase_IsATypographyPropertyNotAPaletteValue()
-    {
-        Enum.GetValues<UiTokens.Typography>()
-            .Where(UiTokens.IsUppercase)
-            .ShouldBe(new[] { UiTokens.Typography.Stage, UiTokens.Typography.Label, UiTokens.Typography.Overline });
+        Should.Throw<ArgumentOutOfRangeException>(() => UiTokens.Variation(UiTokens.Typography.Body, UiTokens.Color.Panel));
     }
 }

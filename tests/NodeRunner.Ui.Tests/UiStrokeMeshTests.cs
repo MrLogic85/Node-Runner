@@ -9,7 +9,7 @@ public sealed class UiStrokeMeshTests
     private const float _feather = 1;
 
     [Fact]
-    public void Build_AStraightStroke_HasASolidCoreAsWideAsTheStroke_AndAClearFeather()
+    public void Build_AStraightStroke_HasASolidCoreAsWideAsTheStroke_AClearFeather_AndRoundEnds()
     {
         var (points, solid, _) = UiStrokeMesh.Build([[new Vector2(0, 0), new Vector2(10, 0)]], _half, _feather);
 
@@ -17,13 +17,8 @@ public sealed class UiStrokeMeshTests
         points[..4].Select(point => Math.Abs(point.Y)).ShouldBe([_half + _feather, _half, _half, _half + _feather]);
         (points[0].Y * points[3].Y).ShouldBeLessThan(0);
         solid[..4].ShouldBe([false, true, true, false]);
-    }
 
-    [Fact]
-    public void Build_RoundsBothEnds_ReachingHalfTheWidthPastThem()
-    {
-        var (points, solid, _) = UiStrokeMesh.Build([[new Vector2(0, 0), new Vector2(10, 0)]], _half, _feather);
-
+        // Both ends are round, reaching half the width past them.
         var solidX = points.Where((_, index) => solid[index]).Select(point => point.X).ToArray();
         solidX.Min().ShouldBe(-_half, 1e-4f);
         solidX.Max().ShouldBe(10 + _half, 1e-4f);

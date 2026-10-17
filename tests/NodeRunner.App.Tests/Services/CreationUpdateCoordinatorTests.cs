@@ -10,59 +10,59 @@ namespace NodeRunner.App.Tests.Services;
 
 public sealed class CreationUpdateCoordinatorTests
 {
-    [Fact]
-    public void TryPersistTraining_EpochUnchanged_WritesTraining()
+    // A snapshot taken before a reset (#113), an edit that may change the network, or a delete must not
+    // be written over what came after, nor may an older or equal generation queued out of order.
+    [Theory]
+    [InlineData("nothing", true)]
+    [InlineData("reset", false)]
+    [InlineData("edit", false)]
+    [InlineData("delete", false)]
+    [InlineData("generation 10", false)]
+    [InlineData("generation 7", false)]
+    public void TryPersistTraining_WritesOnlyASnapshotNothingHasOvertaken(string since, bool applied)
     {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = CreateCreation("Alpha");
-        repository.Save(creation);
-        var epoch = coordinator.CurrentTrainingEpoch(creation.Id);
-
-        var applied = coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(3, 1, TestTraining.Run));
-
-        applied.ShouldBeTrue();
-        repository.Get(creation.Id)!.Training!.Generation.ShouldBe(3);
-    }
-
-    [Fact]
-    public void TryPersistTraining_AfterReset_DiscardsStaleSnapshotInstead_OfResurrectingTraining()
-    {
-        // Regression guard for #113: a training snapshot captured before a
-        // reset (and delivered afterward, e.g. from a background thread)
-        // must not resurrect the training the reset just cleared.
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
         var creation = CreateCreation("Alpha", withTraining: true);
         repository.Save(creation);
-        var epochBeforeReset = coordinator.CurrentTrainingEpoch(creation.Id);
+        var epoch = coordinator.CurrentTrainingEpoch(creation.Id);
+        switch (since)
+        {
+            case "reset":
+                coordinator.ResetTraining(creation.Id);
+                break;
+            case "edit":
+                coordinator.ApplyEdit(creation.Id, creation.Creature);
+                break;
+            case "delete":
+                coordinator.Delete(creation.Id).ShouldBeTrue();
+                break;
+            case "generation 10":
+                coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(10, 1, TestTraining.Run));
+                break;
+            case "generation 7":
+                coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(7, 2, TestTraining.Run));
+                break;
+        }
 
-        coordinator.ResetTraining(creation.Id);
-        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeReset, TestTraining.State(5, 1, TestTraining.Run));
+        var before = repository.Get(creation.Id);
 
-        applied.ShouldBeFalse();
-        repository.Get(creation.Id)!.Training.ShouldBeNull();
+        coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(7, 3, TestTraining.Run)).ShouldBe(applied);
+
+        var after = repository.Get(creation.Id);
+        if (applied)
+        {
+            after!.Training!.Generation.ShouldBe(7);
+            after.Training.Best.Distance.ShouldBe(3);
+        }
+        else
+        {
+            after.ShouldBe(before);
+        }
     }
 
     [Fact]
-    public void TryPersistTraining_AfterCreatureEdit_DiscardsStaleSnapshot()
-    {
-        // Regression guard: an edit can change network topology, so a genome
-        // captured before the edit must not be written onto the new body.
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = CreateCreation("Alpha");
-        repository.Save(creation);
-        var epochBeforeEdit = coordinator.CurrentTrainingEpoch(creation.Id);
-
-        coordinator.ApplyEdit(creation.Id, creation.Creature);
-        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeEdit, TestTraining.State(5, 1, TestTraining.Run));
-
-        applied.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Updates_KeepTheTrainSettings()
+    public void Updates_KeepTheTrainSettings_AndAMissingCreationIsNullOrKeyNotFound()
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
@@ -76,24 +76,41 @@ public sealed class CreationUpdateCoordinatorTests
         repository.Get(creation.Id)!.TrainSettings.ShouldBe(settings);
         coordinator.ResetTraining(creation.Id);
         repository.Get(creation.Id)!.TrainSettings.ShouldBe(settings);
+        coordinator.ApplyEdit(creation.Id, creation.Creature).ShouldNotBeNull().Training.ShouldBeNull();
+        var saved = repository.Get(creation.Id);
+        coordinator.DeleteAndCapture(creation.Id).ShouldBe(saved);
+        repository.Get(creation.Id).ShouldBeNull();
+        coordinator.Delete(creation.Id).ShouldBeFalse();
+        coordinator.ApplyEdit(creation.Id, creation.Creature).ShouldBeNull();
+        coordinator.UpdateIfPresent(creation.Id, source => source).ShouldBeNull();
+
+        // KeyNotFoundException, not InvalidOperationException, so callers treating a missing Creation as
+        // recoverable (#114) cannot also swallow a genuine lifecycle bug.
+        Should.Throw<KeyNotFoundException>(() => coordinator.ResetTraining(creation.Id));
+        repository.List().ShouldBeEmpty();
     }
 
+    // Moving a joint keeps the network; removing a part drops only its ports.
     [Fact]
-    public void ApplyEdit_GeometryOnly_KeepsTheTrainingUnchanged()
+    public void ApplyEdit_KeepsTheNetworkThroughGeometry_AndDropsOnlyARemovedPartsPorts()
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = Trained(PistonCreature(withSecondPiston: false, nodeX: 0));
+        var creation = Trained(PistonCreature(withSecondPiston: true, nodeX: 0));
         repository.Save(creation);
-        var moved = PistonCreature(withSecondPiston: false, nodeX: 3);
+        var moved = PistonCreature(withSecondPiston: true, nodeX: 3);
 
-        var updated = coordinator.ApplyEdit(creation.Id, moved);
+        var updated = coordinator.ApplyEdit(creation.Id, moved)!;
+        var removed = coordinator.ApplyEdit(creation.Id, PistonCreature(withSecondPiston: false, nodeX: 3))!;
 
-        updated.ShouldNotBeNull();
         updated.Creature.ShouldBe(moved);
         updated.Training!.Network.Neurons.ShouldBe(creation.Training!.Network.Neurons);
         updated.Training.Network.Connections.ShouldBe(creation.Training.Network.Connections);
-        repository.Get(creation.Id).ShouldBe(updated);
+        var network = removed.Training!.Network;
+        network.Neurons.ShouldAllBe(neuron => neuron.PartId == 10);
+        network.Connections.Count.ShouldBe(4);
+        network.Connections.ShouldBe(creation.Training.Network.Connections.Where(gene => network.Connections.Any(other => other.From == gene.From && other.To == gene.To)));
+        repository.Get(creation.Id).ShouldBe(removed);
     }
 
     [Fact]
@@ -114,6 +131,81 @@ public sealed class CreationUpdateCoordinatorTests
         updated.Training!.Generation.ShouldBe(9);
         updated.Training.Network.Neurons.ShouldBe(opened.Neurons, ignoreOrder: true);
         updated.Training.Network.Connections.ShouldBe(opened.Connections, ignoreOrder: true);
+    }
+
+    [Fact]
+    public void ApplyEdit_Rebuild_KeepsMatchedPortsAndTheTrainingRecords_ThroughARestart()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
+        try
+        {
+            var repository = new FileCreationRepository(new TestStorageLocation(directory));
+            var creation = Trained(PistonCreature(withSecondPiston: false, nodeX: 0));
+            repository.Save(creation);
+            var oldPorts = NetworkPorts.Of(creation.Creature);
+            var oldGenome = DirectNetwork.Compile(creation.Training!.Network, oldPorts);
+            var rebuilt = PistonCreature(withSecondPiston: true, nodeX: 0);
+            var newPorts = NetworkPorts.Of(rebuilt);
+
+            var updated = new CreationUpdateCoordinator(repository).ApplyEdit(creation.Id, rebuilt)!;
+
+            var training = updated.Training!;
+            training.Generation.ShouldBe(creation.Training.Generation);
+            training.Latest.ShouldBe(creation.Training.Latest);
+            training.Best.ShouldBe(creation.Training.Best);
+            var genome = DirectNetwork.Compile(training.Network, newPorts);
+
+            // The first piston's outputs keep their trained weights from its own two inputs and their biases.
+            var biasStart = newPorts.Inputs.Count * newPorts.Outputs.Count;
+            var oldBiasStart = oldPorts.Inputs.Count * oldPorts.Outputs.Count;
+            for (var o = 0; o < oldPorts.Outputs.Count; o++)
+            {
+                genome[o * newPorts.Inputs.Count].ShouldBe(oldGenome[o * oldPorts.Inputs.Count]);
+                genome[(o * newPorts.Inputs.Count) + 1].ShouldBe(oldGenome[(o * oldPorts.Inputs.Count) + 1]);
+                genome[biasStart + o].ShouldBe(oldGenome[oldBiasStart + o]);
+            }
+
+            // The new piston starts almost passive.
+            genome[biasStart + 3].ShouldBe(PortSignals.PassiveStrengthBias);
+            var reopened = new FileCreationRepository(new TestStorageLocation(directory)).Get(creation.Id).ShouldNotBeNull();
+            reopened.Training!.Network.Neurons.ShouldBe(training.Network.Neurons);
+            reopened.Training.Network.Connections.ShouldBe(training.Network.Connections);
+            reopened.Training.Generation.ShouldBe(creation.Training.Generation);
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void ApplyEdit_FiveRaysForThree_KeepsTheWeightsOfTheRaysBothHave()
+    {
+        // #578: rays keep their keys, so port matching (#516) keeps left1, centre and right1.
+        var repository = new InMemoryCreationRepository();
+        var coordinator = new CreationUpdateCoordinator(repository);
+        var creation = Trained(CameraCreature(rays: 3));
+        repository.Save(creation);
+        var oldPorts = NetworkPorts.Of(creation.Creature);
+        var oldGenome = DirectNetwork.Compile(creation.Training!.Network, oldPorts);
+        var rebuilt = CameraCreature(rays: 5);
+        var newPorts = NetworkPorts.Of(rebuilt);
+
+        var genome = DirectNetwork.Compile(coordinator.ApplyEdit(creation.Id, rebuilt)!.Training!.Network, newPorts);
+
+        newPorts.Inputs.Count.ShouldBe(oldPorts.Inputs.Count + 2);
+        foreach (var channel in new[] { "left1", "centre", "right1", "hit" })
+        {
+            var oldInput = oldPorts.Inputs.ToList().FindIndex(port => port.Channel == channel);
+            var newInput = newPorts.Inputs.ToList().FindIndex(port => port.Channel == channel);
+            for (var o = 0; o < oldPorts.Outputs.Count; o++)
+            {
+                genome[(o * newPorts.Inputs.Count) + newInput].ShouldBe(oldGenome[(o * oldPorts.Inputs.Count) + oldInput], channel);
+            }
+        }
     }
 
     [Fact]
@@ -169,11 +261,12 @@ public sealed class CreationUpdateCoordinatorTests
         build.IsLocked.ShouldBeTrue();
     }
 
-    // A link change keeps the motor's id, so its network ports keep their weights and biases (#1177).
+    // A link change keeps the motor's id, so its network ports keep their weights and biases (#1177);
+    // a locked Creation changes a motor's sides without unlocking, and stays locked and trained (#1179).
     [Theory]
-    [InlineData(CreatureElementKind.Servo)]
-    [InlineData(CreatureElementKind.VelocityMotor)]
-    public void ApplyEdit_AfterAMotorLosesItsLinkAndPicksAnother_KeepsEveryWeight(CreatureElementKind kind)
+    [InlineData(CreatureElementKind.Servo, true)]
+    [InlineData(CreatureElementKind.VelocityMotor, false)]
+    public void ApplyEdit_AfterAMotorPicksAnotherLink_KeepsEveryWeight(CreatureElementKind kind, bool unlockAndDeleteItsFixedLink)
     {
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
@@ -183,216 +276,24 @@ public sealed class CreationUpdateCoordinatorTests
         network.Neurons.ShouldContain(neuron => neuron.PartId == 9);
         var build = new BuildViewModel();
         build.LoadCreation(creation);
-        build.Unlock();
-        build.SelectOnly(CreatureElementKind.Beam, 5);
-        build.DeleteSelectedParts();
+        if (unlockAndDeleteItsFixedLink)
+        {
+            build.Unlock();
+            build.SelectOnly(CreatureElementKind.Beam, 5);
+            build.DeleteSelectedParts();
+        }
+
         build.SelectOnly(kind, 9);
-        build.SetHingePartLink(9, fixedRole: true, linkId: 7);
+        build.SetHingePartLink(9, fixedRole: unlockAndDeleteItsFixedLink, linkId: 7);
 
+        build.IsLocked.ShouldBe(!unlockAndDeleteItsFixedLink);
         var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
-
-        updated.Creature.JointMotors.Select(motor => (motor.Id, motor.FixedLinkId, motor.TargetLinkId)).ShouldBe([(9, 7, 6)]);
-        updated.Training!.Network.Neurons.ShouldBe(network.Neurons, ignoreOrder: true);
-        updated.Training.Network.Connections.ShouldBe(network.Connections, ignoreOrder: true);
-    }
-
-    // A locked Creation changes a motor's sides without unlocking, and stays locked and trained (#1179).
-    [Theory]
-    [InlineData(CreatureElementKind.Servo)]
-    [InlineData(CreatureElementKind.VelocityMotor)]
-    public void ApplyEdit_AfterALockedMotorPicksAnotherLink_KeepsTheTrainingAndTheLock(CreatureElementKind kind)
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = Trained(MotorCreature(kind));
-        repository.Save(creation);
-        var build = new BuildViewModel();
-        build.LoadCreation(creation);
-        build.SelectOnly(kind, 9);
-
-        build.SetHingePartLink(9, fixedRole: false, linkId: 7);
-
-        build.IsLocked.ShouldBeTrue();
-        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
-        updated.Creature.JointMotors.Select(motor => (motor.Id, motor.FixedLinkId, motor.TargetLinkId)).ShouldBe([(9, 5, 7)]);
+        updated.Creature.JointMotors.Select(motor => (motor.Id, motor.FixedLinkId, motor.TargetLinkId))
+            .ShouldBe([unlockAndDeleteItsFixedLink ? (9, 7, 6) : (9, 5, 7)]);
         CreationLock.IsLocked(updated).ShouldBeTrue();
-        updated.Training!.Generation.ShouldBe(creation.Training!.Generation);
-        updated.Training.Network.Neurons.ShouldBe(creation.Training.Network.Neurons, ignoreOrder: true);
-        updated.Training.Network.Connections.ShouldBe(creation.Training.Network.Connections, ignoreOrder: true);
-    }
-
-    [Fact]
-    public void ApplyEdit_Rebuild_KeepsMatchedPorts_AndTheTrainingRecords()
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = Trained(PistonCreature(withSecondPiston: false, nodeX: 0));
-        repository.Save(creation);
-        var oldPorts = NetworkPorts.Of(creation.Creature);
-        var oldGenome = DirectNetwork.Compile(creation.Training!.Network, oldPorts);
-        var rebuilt = PistonCreature(withSecondPiston: true, nodeX: 0);
-        var newPorts = NetworkPorts.Of(rebuilt);
-
-        var updated = coordinator.ApplyEdit(creation.Id, rebuilt)!;
-
-        var training = updated.Training!;
-        training.Generation.ShouldBe(creation.Training.Generation);
-        training.Latest.ShouldBe(creation.Training.Latest);
-        training.Best.ShouldBe(creation.Training.Best);
-        var genome = DirectNetwork.Compile(training.Network, newPorts);
-        // The first piston's outputs keep their trained weights from its own two inputs and their biases.
-        var biasStart = newPorts.Inputs.Count * newPorts.Outputs.Count;
-        var oldBiasStart = oldPorts.Inputs.Count * oldPorts.Outputs.Count;
-        for (var o = 0; o < oldPorts.Outputs.Count; o++)
-        {
-            genome[o * newPorts.Inputs.Count].ShouldBe(oldGenome[o * oldPorts.Inputs.Count]);
-            genome[(o * newPorts.Inputs.Count) + 1].ShouldBe(oldGenome[(o * oldPorts.Inputs.Count) + 1]);
-            genome[biasStart + o].ShouldBe(oldGenome[oldBiasStart + o]);
-        }
-
-        // The new piston starts almost passive.
-        genome[biasStart + 3].ShouldBe(PortSignals.PassiveStrengthBias);
-    }
-
-    [Fact]
-    public void ApplyEdit_FiveRaysForThree_KeepsTheWeightsOfTheRaysBothHave()
-    {
-        // #578: rays keep their keys, so port matching (#516) keeps left1, centre and right1.
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = Trained(CameraCreature(rays: 3));
-        repository.Save(creation);
-        var oldPorts = NetworkPorts.Of(creation.Creature);
-        var oldGenome = DirectNetwork.Compile(creation.Training!.Network, oldPorts);
-        var rebuilt = CameraCreature(rays: 5);
-        var newPorts = NetworkPorts.Of(rebuilt);
-
-        var genome = DirectNetwork.Compile(coordinator.ApplyEdit(creation.Id, rebuilt)!.Training!.Network, newPorts);
-
-        newPorts.Inputs.Count.ShouldBe(oldPorts.Inputs.Count + 2);
-        foreach (var channel in new[] { "left1", "centre", "right1", "hit" })
-        {
-            var oldInput = oldPorts.Inputs.ToList().FindIndex(port => port.Channel == channel);
-            var newInput = newPorts.Inputs.ToList().FindIndex(port => port.Channel == channel);
-            for (var o = 0; o < oldPorts.Outputs.Count; o++)
-            {
-                genome[(o * newPorts.Inputs.Count) + newInput].ShouldBe(oldGenome[(o * oldPorts.Inputs.Count) + oldInput], channel);
-            }
-        }
-    }
-
-    [Fact]
-    public void ApplyEdit_Rebuild_SurvivesARestart()
-    {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
-        try
-        {
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-            var creation = Trained(PistonCreature(withSecondPiston: false, nodeX: 0));
-            repository.Save(creation);
-
-            var updated = new CreationUpdateCoordinator(repository).ApplyEdit(creation.Id, PistonCreature(withSecondPiston: true, nodeX: 0))!;
-
-            var reopened = new FileCreationRepository(new TestStorageLocation(directory)).Get(creation.Id).ShouldNotBeNull();
-            reopened.Training!.Network.Neurons.ShouldBe(updated.Training!.Network.Neurons);
-            reopened.Training.Network.Connections.ShouldBe(updated.Training.Network.Connections);
-            reopened.Training.Generation.ShouldBe(creation.Training!.Generation);
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void ApplyEdit_RemovingAPart_DropsOnlyItsPorts()
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = Trained(PistonCreature(withSecondPiston: true, nodeX: 0));
-        repository.Save(creation);
-
-        var updated = coordinator.ApplyEdit(creation.Id, PistonCreature(withSecondPiston: false, nodeX: 0))!;
-
-        var network = updated.Training!.Network;
-        network.Neurons.ShouldAllBe(neuron => neuron.PartId == 10);
-        network.Connections.Count.ShouldBe(4);
-        var kept = creation.Training!.Network.Connections.Where(gene => network.Connections.Any(other => other.From == gene.From && other.To == gene.To));
-        network.Connections.ShouldBe(kept);
-    }
-
-    [Fact]
-    public void ApplyEdit_WhenMissing_ReturnsNull()
-    {
-        var coordinator = new CreationUpdateCoordinator(new InMemoryCreationRepository());
-
-        coordinator.ApplyEdit(Guid.NewGuid(), MovedCreature()).ShouldBeNull();
-    }
-
-    [Fact]
-    public void TryPersistTraining_AfterDelete_DoesNotResurrectCreation()
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = CreateCreation("Alpha");
-        repository.Save(creation);
-        var epochBeforeDelete = coordinator.CurrentTrainingEpoch(creation.Id);
-
-        coordinator.Delete(creation.Id).ShouldBeTrue();
-        var applied = coordinator.TryPersistTraining(creation.Id, epochBeforeDelete, TestTraining.State(5, 1, TestTraining.Run));
-
-        applied.ShouldBeFalse();
-        repository.Get(creation.Id).ShouldBeNull();
-    }
-
-    [Fact]
-    public void DeleteAndCapture_ReturnsDeletedCreationAndRemovesIt()
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = CreateCreation("Alpha", withTraining: true);
-        repository.Save(creation);
-
-        var deleted = coordinator.DeleteAndCapture(creation.Id);
-
-        deleted.ShouldBe(creation);
-        repository.Get(creation.Id).ShouldBeNull();
-    }
-
-    [Fact]
-    public void TryPersistTraining_OlderGeneration_NeverRegressesNewerPersistedGeneration()
-    {
-        // Two snapshots queued out of order must not let the older one win.
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = CreateCreation("Alpha");
-        repository.Save(creation);
-        var epoch = coordinator.CurrentTrainingEpoch(creation.Id);
-        coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(10, 1, TestTraining.Run));
-
-        var applied = coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(4, 1, TestTraining.Run));
-
-        applied.ShouldBeFalse();
-        repository.Get(creation.Id)!.Training!.Generation.ShouldBe(10);
-    }
-
-    [Fact]
-    public void TryPersistTraining_EqualGeneration_DoesNotRewriteAlreadyPersistedGeneration()
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = CreateCreation("Alpha");
-        repository.Save(creation);
-        var epoch = coordinator.CurrentTrainingEpoch(creation.Id);
-        coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(7, 2, TestTraining.Run));
-
-        var applied = coordinator.TryPersistTraining(creation.Id, epoch, TestTraining.State(7, 3, TestTraining.Run));
-
-        applied.ShouldBeFalse();
-        repository.Get(creation.Id)!.Training!.Best.Distance.ShouldBe(2);
+        updated.Training!.Generation.ShouldBe(creation.Training.Generation);
+        updated.Training.Network.Neurons.ShouldBe(network.Neurons, ignoreOrder: true);
+        updated.Training.Network.Connections.ShouldBe(network.Connections, ignoreOrder: true);
     }
 
     [Fact]
@@ -430,28 +331,6 @@ public sealed class CreationUpdateCoordinatorTests
         queued.IsFaulted.ShouldBeTrue();
     }
 
-    [Fact]
-    public void UpdateIfPresent_MissingCreation_ReturnsNullWithoutWriting()
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-
-        coordinator.UpdateIfPresent(Guid.NewGuid(), source => source).ShouldBeNull();
-    }
-
-    [Fact]
-    public void ResetTraining_MissingCreation_Throws()
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-
-        // KeyNotFoundException (not InvalidOperationException), so callers
-        // treating "missing Creation" as a recoverable condition (#114)
-        // can't also swallow a genuine InvalidOperationException lifecycle
-        // bug elsewhere in the call chain.
-        Should.Throw<KeyNotFoundException>(() => coordinator.ResetTraining(Guid.NewGuid()));
-    }
-
     private static CreationDef Trained(CreatureDef creature) =>
         new(Guid.NewGuid(), "Pair", creature, TestTraining.StateFor(creature, 6, bestDistance: 300, new TrainingRunDef(250, 1, 0, MapIds.Flat)));
 
@@ -485,11 +364,6 @@ public sealed class CreationUpdateCoordinatorTests
         [new SensorDef(5, 4, SensorKind.Camera, rays: rays)],
         [new PistonDef(10, 1, 2)],
         nextPartId: 12);
-
-    private static CreatureDef MovedCreature() => new(
-        [new NodeDef(1, new Vector2D(5, 0)), new NodeDef(2, new Vector2D(7, 0))],
-        [new BeamDef(3, 1, 2)],
-        [new SensorDef(4, 3, SensorKind.Accelerometer)]);
 
     private static CreationDef CreateCreation(string name, bool withTraining = false)
     {

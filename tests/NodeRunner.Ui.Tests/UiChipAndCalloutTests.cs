@@ -4,28 +4,25 @@ namespace NodeRunner.Ui.Tests;
 
 public sealed class UiChipAndCalloutTests
 {
-    // Reference: a chip's border and its text/icon are always the same colour, whatever the kind.
+    // Reference: a chip's border and its text/icon are the same colour, except Neutral's ink on line-strong;
+    // the content is always a text colour.
     [Theory]
-    [InlineData(UiChip.ChipKind.Warning, UiTokens.Color.Halo)]
-    [InlineData(UiChip.ChipKind.Danger, UiTokens.Color.Danger)]
-    [InlineData(UiChip.ChipKind.Ok, UiTokens.Color.Accent)]
-    public void ChipKinds_ColourBorderAndContentAlike(UiChip.ChipKind kind, UiTokens.Color expected)
+    [InlineData(UiChip.ChipKind.Warning, UiTokens.Color.Halo, UiTokens.Color.Halo)]
+    [InlineData(UiChip.ChipKind.Danger, UiTokens.Color.Danger, UiTokens.Color.Danger)]
+    [InlineData(UiChip.ChipKind.Ok, UiTokens.Color.Accent, UiTokens.Color.Accent)]
+    [InlineData(UiChip.ChipKind.Neutral, UiTokens.Color.LineStrong, UiTokens.Color.Ink)]
+    public void ChipKinds_ColourBorderAndContent(UiChip.ChipKind kind, UiTokens.Color border, UiTokens.Color content)
     {
-        UiChip.ColorsFor(kind).ShouldBe((expected, expected));
+        UiChip.ColorsFor(kind).ShouldBe((border, content));
+        UiTokens.IsTextColor(content).ShouldBeTrue();
     }
 
     [Fact]
-    public void NeutralChip_IsInkOnLineStrong()
+    public void CalloutKinds_ShareChipBorderColours()
     {
-        UiChip.ColorsFor(UiChip.ChipKind.Neutral).ShouldBe((UiTokens.Color.LineStrong, UiTokens.Color.Ink));
-    }
-
-    [Fact]
-    public void ChipContentColours_AreTextColours()
-    {
-        foreach (var kind in Enum.GetValues<UiChip.ChipKind>())
+        foreach (var kind in Enum.GetValues<UiCallout.CalloutKind>())
         {
-            UiTokens.IsTextColor(UiChip.ColorsFor(kind).Content).ShouldBeTrue(kind.ToString());
+            UiCallout.BorderFor(kind).ShouldBe(UiChip.ColorsFor(Enum.Parse<UiChip.ChipKind>(kind.ToString())).Border, kind.ToString());
         }
     }
 
@@ -35,21 +32,5 @@ public sealed class UiChipAndCalloutTests
         UiChip.IconSizeFor(UiIconId.Bolt, glyphSized: false).ShouldBe(UiIconSize.Small);
         UiChip.IconSizeFor(UiIconId.PartSpring, glyphSized: false).ShouldBe(UiIconSize.Standard);
         UiChip.IconSizeFor(UiIconId.MapHills, glyphSized: true).ShouldBe(UiIconSize.Standard);
-    }
-
-
-    [Theory]
-    [InlineData(UiCallout.CalloutKind.Warning, UiTokens.Color.Halo)]
-    [InlineData(UiCallout.CalloutKind.Danger, UiTokens.Color.Danger)]
-    [InlineData(UiCallout.CalloutKind.Ok, UiTokens.Color.Accent)]
-    public void CalloutKinds_ShareChipBorderColours(UiCallout.CalloutKind kind, UiTokens.Color expected)
-    {
-        UiCallout.BorderFor(kind).ShouldBe(expected);
-    }
-
-    [Fact]
-    public void Callout_DefaultsToWarning()
-    {
-        default(UiCallout.CalloutKind).ShouldBe(UiCallout.CalloutKind.Warning);
     }
 }

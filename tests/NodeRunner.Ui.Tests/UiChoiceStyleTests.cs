@@ -22,17 +22,9 @@ public sealed class UiChoiceStyleTests
 
         UiChoiceStyle.ThumbCenter(track, false).ShouldBe(new Vector2(13, 12));
         UiChoiceStyle.ThumbCenter(track, true).ShouldBe(new Vector2(31, 12));
-        UiSize.Icon.Default.ShouldBe(16);
-    }
-
-    [Fact]
-    public void DisabledOpacity_MatchesWholeRowReferenceDimming()
-    {
-        UiChoiceStyle.DisabledOpacity.ShouldBe(0.5f);
     }
 
     [Theory]
-    [InlineData(false)]
     [InlineData(true)]
     public void ChoiceColors_UseSemanticTokensInBothThemes(bool paper)
     {

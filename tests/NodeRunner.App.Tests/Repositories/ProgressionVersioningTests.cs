@@ -26,7 +26,7 @@ public sealed class ProgressionVersioningTests : IDisposable
     }
 
     [Fact]
-    public void Fixture013_LoadsWithoutAResetAndIsWrittenBackInTheCurrentVersion()
+    public void Fixture013_LoadsWithoutAReset_IsWrittenBackInTheCurrentVersion_AndThenLeftAlone()
     {
         var original = Fixture013();
         WriteProgression(original);
@@ -40,89 +40,66 @@ public sealed class ProgressionVersioningTests : IDisposable
         written[_versionField]!.GetValue<int>().ShouldBe(FileProgressionRepository.Format.CurrentVersion);
         written.Remove(_versionField);
         JsonNode.DeepEquals(written, JsonNode.Parse(original)).ShouldBeTrue();
-        new FileProgressionRepository(new TestStorageLocation(_directory)).Load().ShouldBe(progression);
-    }
-
-    [Fact]
-    public void Save_WritesTheVersionFirst()
-    {
-        new FileProgressionRepository(new TestStorageLocation(_directory)).Save(new ProgressionDef(DefaultCreationsSeeded: true));
-
-        var written = JsonNode.Parse(File.ReadAllText(ProgressionPath))!.AsObject();
-        written.First().Key.ShouldBe(_versionField);
-        written[_versionField]!.GetValue<int>().ShouldBe(FileProgressionRepository.Format.CurrentVersion);
-    }
-
-    [Fact]
-    public void Load_InTheCurrentVersion_LeavesTheFileAlone()
-    {
-        var repository = new FileProgressionRepository(new TestStorageLocation(_directory));
-        repository.Save(new ProgressionDef(DefaultCreationsSeeded: true));
         var stamp = File.GetLastWriteTimeUtc(ProgressionPath).AddHours(-1);
         File.SetLastWriteTimeUtc(ProgressionPath, stamp);
-
-        repository.Load().DefaultCreationsSeeded.ShouldBeTrue();
-
+        new FileProgressionRepository(new TestStorageLocation(_directory)).Load().ShouldBe(progression);
         File.GetLastWriteTimeUtc(ProgressionPath).ShouldBe(stamp);
     }
 
-    [Fact]
-    public void Load_WritesAMigratedFileBackInTheNewVersion()
+    // A migrated file is written back in the new version; a write-back that fails (a folder in the file's
+    // place) still loads; a file newer than the app, or whose migration fails, is quarantined.
+    [Theory]
+    [InlineData("migrated", true)]
+    [InlineData("write-back fails", true)]
+    [InlineData("newer", false)]
+    [InlineData("migration fails", false)]
+    public void Load_OfAnOlderOrNewerFile_WritesItBackOrQuarantinesIt(string file, bool loads)
     {
-        var format = new VersionedSaveFile<ProgressionDef>([file =>
+        var json = file == "migrated" ? """{ "seeded": true }""" : Fixture013();
+        if (file == "newer")
         {
-            file["defaultCreationsSeeded"] = file["seeded"]!.DeepClone();
-            file.Remove("seeded");
-        }]);
-        WriteProgression("""{ "seeded": true }""");
+            var newer = JsonNode.Parse(json)!.AsObject();
+            newer.Insert(0, _versionField, FileProgressionRepository.Format.CurrentVersion + 1);
+            json = newer.ToJsonString();
+        }
 
-        new FileProgressionRepository(new TestStorageLocation(_directory), format).Load().DefaultCreationsSeeded.ShouldBeTrue();
-
-        var written = JsonNode.Parse(File.ReadAllText(ProgressionPath))!.AsObject();
-        written[_versionField]!.GetValue<int>().ShouldBe(2);
-        written.ContainsKey("seeded").ShouldBeFalse();
-        QuarantinedFiles().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Load_OfAFileNewerThanTheApp_QuarantinesItAndStartsFresh()
-    {
-        var file = JsonNode.Parse(Fixture013())!.AsObject();
-        file.Insert(0, _versionField, FileProgressionRepository.Format.CurrentVersion + 1);
-        WriteProgression(file.ToJsonString());
-
-        new FileProgressionRepository(new TestStorageLocation(_directory)).Load().ShouldBe(new ProgressionDef());
-
-        File.Exists(ProgressionPath).ShouldBeFalse();
-        File.ReadAllText(QuarantinedFiles().ShouldHaveSingleItem()).ShouldBe(file.ToJsonString());
-    }
-
-    [Fact]
-    public void Load_OfAFileWhoseMigrationFails_QuarantinesItAndStartsFresh()
-    {
-        var format = new VersionedSaveFile<ProgressionDef>([_ => throw new InvalidDataException("Cannot migrate.")]);
-        WriteProgression(Fixture013());
-
-        new FileProgressionRepository(new TestStorageLocation(_directory), format).Load().ShouldBe(new ProgressionDef());
-
-        File.Exists(ProgressionPath).ShouldBeFalse();
-        File.ReadAllText(QuarantinedFiles().ShouldHaveSingleItem()).ShouldBe(Fixture013());
-    }
-
-    [Fact]
-    public void WriteBack_ThatFails_StillLoadsTheProgression()
-    {
-        // The migration runs before the write-back; a folder in the file's place makes the write fail.
-        var format = new VersionedSaveFile<ProgressionDef>([_ =>
+        var format = new VersionedSaveFile<ProgressionDef>([progression =>
         {
-            File.Delete(ProgressionPath);
-            Directory.CreateDirectory(ProgressionPath);
+            switch (file)
+            {
+                case "migrated":
+                    progression["defaultCreationsSeeded"] = progression["seeded"]!.DeepClone();
+                    progression.Remove("seeded");
+                    break;
+                case "write-back fails":
+                    File.Delete(ProgressionPath);
+                    Directory.CreateDirectory(ProgressionPath);
+                    break;
+                case "migration fails":
+                    throw new InvalidDataException("Cannot migrate.");
+            }
         }]);
-        WriteProgression(Fixture013());
+        WriteProgression(json);
 
-        new FileProgressionRepository(new TestStorageLocation(_directory), format).Load().DefaultCreationsSeeded.ShouldBeTrue();
+        var loaded = new FileProgressionRepository(new TestStorageLocation(_directory), file == "newer" ? FileProgressionRepository.Format : format).Load();
 
-        QuarantinedFiles().ShouldBeEmpty();
+        loaded.ShouldBe(loads ? new ProgressionDef(DefaultCreationsSeeded: true) : new ProgressionDef());
+        if (loads)
+        {
+            QuarantinedFiles().ShouldBeEmpty();
+        }
+        else
+        {
+            File.Exists(ProgressionPath).ShouldBeFalse();
+            File.ReadAllText(QuarantinedFiles().ShouldHaveSingleItem()).ShouldBe(json);
+        }
+
+        if (file == "migrated")
+        {
+            var written = JsonNode.Parse(File.ReadAllText(ProgressionPath))!.AsObject();
+            written[_versionField]!.GetValue<int>().ShouldBe(2);
+            written.ContainsKey("seeded").ShouldBeFalse();
+        }
     }
 
     private static string Fixture013() =>

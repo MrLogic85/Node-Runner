@@ -6,12 +6,10 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class MapNamesTests
 {
     [Fact]
-    public void Of_NamesEveryMap() =>
+    public void Of_NamesEveryMap_AndThrowsForAnUnknownOne()
+    {
         Maps.All.ShouldAllBe(map => !string.IsNullOrWhiteSpace(MapNames.Of(map.Id).Message));
-
-    [Fact]
-    public void Of_Flat_IsFlatGround() => MapNames.Of(MapIds.Flat).ShouldBe(UiText.Plain("Flat ground"));
-
-    [Fact]
-    public void Of_AnUnknownMap_Throws() => Should.Throw<ArgumentOutOfRangeException>(() => MapNames.Of("moon"));
+        MapNames.Of(MapIds.Flat).ShouldBe(UiText.Plain("Flat ground"));
+        Should.Throw<ArgumentOutOfRangeException>(() => MapNames.Of("moon"));
+    }
 }

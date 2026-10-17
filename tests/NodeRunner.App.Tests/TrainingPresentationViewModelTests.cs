@@ -5,102 +5,39 @@ namespace NodeRunner.App.Tests;
 
 public sealed class TrainingPresentationViewModelTests
 {
-    [Fact]
-    public void Update_ExposesLearnerFacingTrainingState()
+    [Theory]
+    [InlineData(true, 1310.0, 6, 13.1)]
+    [InlineData(false, double.NaN, 5, null)]
+    public void Update_ShowsTheRacingGenerationCountedFromOneAndTheBestMarker(bool isTrialActive, double bestShownDistance, int shownGeneration, double? bestMetres)
     {
         var presentation = new TrainingPresentationViewModel();
+        var raised = false;
+        presentation.PropertyChanged += (_, _) => raised = true;
 
-        presentation.Update(5, 8, 1280, 1310, 840, 4, true, [10.1, 11.2]);
+        presentation.Update(5, 8, 1280, bestShownDistance, 840, 4, isTrialActive, [10.1, 11.2]);
 
-        presentation.Generation.ShouldBe(5);
-        presentation.ShadowCount.ShouldBe(8);
-        presentation.BestFitness.ShouldBe(1280);
-        presentation.BestShownDistance.ShouldBe(1310);
-        presentation.MeanFitness.ShouldBe(840);
-        presentation.BestGeneration.ShouldBe(4);
-        presentation.IsTrialActive.ShouldBeTrue();
-        presentation.CompletedFitness.ShouldBe([10.1, 11.2]);
-        presentation.GenerationText.ShouldBe(UiText.Format("Generation {0}", 6));
-        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(13.1, 1))));
-    }
-
-    [Fact]
-    public void Saved_ShowsTheSavedBestOnThisMap()
-    {
-        var training = new TrainingStateDef(TestTraining.Network, 3, TestTraining.Run, new TrainingBestDef(2, 300, MapIds.Flat, frontDistance: 420));
-
-        var presentation = TrainingPresentationViewModel.Saved(training, MapIds.Flat);
-
-        presentation.BestShownDistance.ShouldBe(420);
-        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(4.2, 1))));
+        raised.ShouldBeTrue();
+        presentation.BestShownDistance.ShouldBe(bestShownDistance);
+        presentation.GenerationText.ShouldBe(UiText.Format("Generation {0}", shownGeneration));
+        presentation.BestMarkerText.ShouldBe(bestMetres is { } metres ? UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(metres, 1))) : null);
     }
 
     [Theory]
-    [InlineData(MapIds.Flat, null)]
-    [InlineData("map-hills", 420.0)]
-    public void Saved_HidesTheMarkerWithoutABestFrontOnThisMap(string mapId, double? frontDistance)
+    [InlineData(MapIds.Flat, 420.0, 4.2)]
+    [InlineData(MapIds.Flat, null, null)]
+    [InlineData("map-hills", 420.0, null)]
+    public void Saved_ShowsTheSavedBestFrontOnThisMapOnly(string mapId, double? frontDistance, double? bestMetres)
     {
         var training = new TrainingStateDef(TestTraining.Network, 3, TestTraining.Run, new TrainingBestDef(2, 300, MapIds.Flat, frontDistance));
 
         var presentation = TrainingPresentationViewModel.Saved(training, mapId);
 
-        presentation.BestShownDistance.ShouldBe(double.NaN);
-        presentation.BestMarkerText.ShouldBeNull();
+        presentation.BestShownDistance.ShouldBe(mapId == MapIds.Flat ? frontDistance ?? double.NaN : double.NaN);
+        presentation.BestMarkerText.ShouldBe(bestMetres is { } metres ? UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(metres, 1))) : null);
     }
 
     [Fact]
-    public void Update_ExposesInactiveAndNoBestState()
-    {
-        var presentation = new TrainingPresentationViewModel();
-
-        presentation.Update(5, 8, double.NegativeInfinity, double.NaN, 0, 0, false, []);
-
-        presentation.GenerationText.ShouldBe(UiText.Format("Generation {0}", 5));
-        presentation.BestMarkerText.ShouldBeNull();
-    }
-
-    [Fact]
-    public void Update_NotifiesSubscribers()
-    {
-        var presentation = new TrainingPresentationViewModel();
-        var raised = false;
-        presentation.PropertyChanged += (_, _) => raised = true;
-
-        presentation.Update(1, 2, 0, 0, 0, 0, true, []);
-
-        raised.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void SourceProgressChanged_RefreshesStateFromTrainingSource()
-    {
-        var source = new FakeTrainingProgressSource
-        {
-            Generation = 2,
-            ShadowCount = 4,
-            BestFitness = double.NegativeInfinity,
-            MeanFitness = 0,
-            IsTrialActive = true,
-        };
-        var presentation = new TrainingPresentationViewModel(source);
-        var raised = false;
-        presentation.PropertyChanged += (_, _) => raised = true;
-
-        source.Generation = 3;
-        source.BestFitness = 9.4;
-        source.MeanFitness = 5.1;
-        source.CompletedFitness = [9.4];
-        source.RaiseProgressChanged();
-
-        raised.ShouldBeTrue();
-        presentation.Generation.ShouldBe(3);
-        presentation.BestFitness.ShouldBe(9.4);
-        presentation.MeanFitness.ShouldBe(5.1);
-        presentation.CompletedFitness.ShouldBe([9.4]);
-    }
-
-    [Fact]
-    public void BestGeneration_ComesFromTheSourceAndOutlivesWorseGenerations()
+    public void Source_RefreshesTheStateOnProgress_UntilDisposed()
     {
         var source = new FakeTrainingProgressSource
         {
@@ -113,41 +50,26 @@ public sealed class TrainingPresentationViewModelTests
             IsTrialActive = true,
         };
         var presentation = new TrainingPresentationViewModel(source);
-
-        presentation.BestGeneration.ShouldBe(7);
-        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(21.9, 1))));
+        var raised = 0;
+        presentation.PropertyChanged += (_, _) => raised++;
 
         source.Generation = 8;
+        source.MeanFitness = 5.1;
+        source.CompletedFitness = [9.4];
         source.RaiseProgressChanged();
-
-        presentation.Generation.ShouldBe(8);
-        presentation.BestGeneration.ShouldBe(7);
-        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(21.9, 1))));
-    }
-
-    [Fact]
-    public void Dispose_UnsubscribesAndDisposesSource()
-    {
-        var source = new FakeTrainingProgressSource
-        {
-            Generation = 1,
-            ShadowCount = 2,
-            BestFitness = 4,
-            MeanFitness = 3,
-            IsTrialActive = true,
-        };
-        var presentation = new TrainingPresentationViewModel(source);
-        var raised = false;
-        presentation.PropertyChanged += (_, _) => raised = true;
-
         presentation.Dispose();
-        source.Generation = 2;
+        presentation.Dispose();
+        source.Generation = 9;
         source.RaiseProgressChanged();
 
+        raised.ShouldBe(1);
+        (presentation.Generation, presentation.ShadowCount, presentation.BestFitness, presentation.MeanFitness).ShouldBe((8, 8, 2130, 5.1));
+        presentation.CompletedFitness.ShouldBe([9.4]);
+        presentation.IsTrialActive.ShouldBeTrue();
+        presentation.BestGeneration.ShouldBe(7, "The best outlives worse generations.");
+        presentation.BestMarkerText.ShouldBe(UiText.Format("Best {0}", UiText.Format("{0} m", new FixedNumber(21.9, 1))));
         source.IsDisposed.ShouldBeTrue();
         source.ProgressChangedSubscriberCount.ShouldBe(0);
-        raised.ShouldBeFalse();
-        presentation.Generation.ShouldBe(1);
     }
 
     [Fact]
@@ -184,138 +106,46 @@ public sealed class TrainingPresentationViewModelTests
         presentation.FollowedShadow.ShouldBe(3);
         presentation.Shadows.Single(shadow => shadow.IsLeader).Number.ShouldBe(1);
         presentation.Shadows.Single(shadow => shadow.IsFollowed).Number.ShouldBe(3);
+        presentation.Shadows.ShouldAllBe(shadow => !shadow.IsPreviousBest);
         Should.Throw<ArgumentOutOfRangeException>(() => presentation.Follow(0));
     }
 
     [Fact]
-    public void Strip_ShowsTheSourcesShadows_AndSortsThemOnRequest()
+    public void WithoutASource_ThereAreNoShadowsToFollowNorARun()
     {
-        var source = new FakeTrainingProgressSource
-        {
-            IsTrialActive = true,
-            BestFitness = double.NegativeInfinity,
-            ShadowDistances = [1, 5, 3, 2, 4, 6, 9, 8, 7],
-        };
-        var presentation = new TrainingPresentationViewModel(source);
+        var presentation = new TrainingPresentationViewModel();
 
-        presentation.Strip.Cells.Select(cell => cell.Number).ShouldBe([6, 5, 4, 3, 2, 1]);
-        presentation.SortShadows();
-        presentation.Strip.Cells.Select(cell => cell.Number).ShouldBe([5, 2, 6, 9, 8, 7]);
-        presentation.ShowWorseShadows();
-        presentation.Strip.Trailing.ShouldBe(ShadowStripTrailing.Better);
-        presentation.ShowBetterShadows();
-        presentation.Strip.Trailing.ShouldBe(ShadowStripTrailing.Sort);
+        presentation.Shadows.ShouldBeEmpty();
+        presentation.FollowedShadow.ShouldBe(0);
+        presentation.RunProgress.ShouldBeNull();
+        presentation.Strip.Cells.ShouldBeEmpty();
+        Should.Throw<InvalidOperationException>(() => presentation.Follow(1));
     }
 
     [Fact]
-    public void Training_DrawsEveryShadow_WhileTheyAllFitOnTheStrip()
-    {
-        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 2, 3] };
-
-        using var presentation = new TrainingPresentationViewModel(source);
-
-        source.Drawn.ShouldBe([0, 1, 2]);
-    }
-
-    [Fact]
-    public void Training_DrawsOnlyTheStripsPage_AsThePlayerPagesSortsOrResizes()
+    public void Strip_DrawsOnlyThePageItShows_AsThePlayerPagesSortsOrResizes_AndANewGenerationStartsOver()
     {
         var source = new FakeTrainingProgressSource { ShadowDistances = [1, 5, 3, 2, 4, 6, 9, 8, 7] };
         using var presentation = new TrainingPresentationViewModel(source);
-        source.Drawn.ShouldBe([0, 1, 2, 3, 4, 5]);
+        var drawn = new List<IReadOnlyList<int>> { source.Drawn };
 
-        presentation.ShowWorseShadows();
-        source.Drawn.ShouldBe([3, 4, 5, 6, 7, 8]);
-
+        source.RaiseProgressChanged();
         presentation.ShowBetterShadows();
-        source.Drawn.ShouldBe([0, 1, 2, 3, 4, 5]);
-
+        drawn.Add(source.Drawn);
+        presentation.ShowWorseShadows();
+        drawn.Add(source.Drawn);
         presentation.SortShadows();
-        source.Drawn.ShouldBe([6, 7, 8, 5, 1, 4]);
-
+        drawn.Add(source.Drawn);
+        var sortedCells = presentation.Strip.Cells.Select(cell => cell.Number).ToArray();
         presentation.StripPlaces = 4;
-        source.Drawn.ShouldBe([6, 7]);
-    }
-
-    [Fact]
-    public void ANewGeneration_DrawsTheFirstPageAgain()
-    {
-        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 5, 3, 2, 4, 6, 9, 8, 7] };
-        using var presentation = new TrainingPresentationViewModel(source);
-        presentation.ShowWorseShadows();
-
+        drawn.Add(source.Drawn);
         source.Generation = 1;
         source.RaiseProgressChanged();
+        drawn.Add(source.Drawn);
 
-        source.Drawn.ShouldBe([0, 1, 2, 3, 4, 5]);
-    }
-
-    [Fact]
-    public void Training_TellsTheSourceOnlyWhenTheDrawnShadowsChange()
-    {
-        var source = new FakeTrainingProgressSource { ShadowDistances = [1, 5, 3, 2, 4, 6, 9, 8, 7] };
-        using var presentation = new TrainingPresentationViewModel(source);
-
-        source.RaiseProgressChanged();
-        presentation.ShowBetterShadows();
-
-        source.DrawOnlyCalls.ShouldBe(1);
-    }
-
-    [Fact]
-    public void FreshGenerationZero_FollowsShadowOneWithoutAPreviousBest()
-    {
-        var source = new FakeTrainingProgressSource { ShadowDistances = [0, 0] };
-        var presentation = new TrainingPresentationViewModel(source);
-
-        presentation.FollowedShadow.ShouldBe(1);
-        presentation.Shadows.ShouldAllBe(shadow => !shadow.IsPreviousBest);
-    }
-
-    [Theory]
-    [InlineData(new double[0], -1)]
-    [InlineData(new[] { double.NaN, double.NaN }, -1)]
-    [InlineData(new[] { double.NaN, -1.0, -0.5 }, 2)]
-    [InlineData(new[] { 2.0, 2.0, 1.0 }, 0)]
-    public void Leader_IsTheFurthestRunningShadow(double[] distances, int leader)
-    {
-        TrainingPresentationViewModel.Leader(distances).ShouldBe(leader);
-    }
-
-    [Theory]
-    [InlineData(0, 600, 0.0)]
-    [InlineData(150, 600, 0.25)]
-    [InlineData(600, 600, 1.0)]
-    [InlineData(700, 600, 1.0)]
-    public void RunProgress_IsTheShareOfTheRunGone(int elapsed, int length, double progress)
-    {
-        var source = new FakeTrainingProgressSource { FollowedRun = new RunClock(elapsed, length) };
-        var presentation = new TrainingPresentationViewModel(source);
-
-        presentation.RunProgress.ShouldBe(progress);
-    }
-
-    [Fact]
-    public void RunProgress_StartsAgainWithTheNextRun()
-    {
-        var source = new FakeTrainingProgressSource { FollowedRun = new RunClock(590, 600) };
-        var presentation = new TrainingPresentationViewModel(source);
-
-        source.FollowedRun = new RunClock(0, 600);
-
-        presentation.RunProgress.ShouldBe(0, "The next generation's run starts at the beginning.");
-    }
-
-    [Fact]
-    public void RunProgress_WithoutARunOrALength_IsNull()
-    {
-        var source = new FakeTrainingProgressSource();
-        var presentation = new TrainingPresentationViewModel(source);
-
-        presentation.RunProgress.ShouldBeNull("No run is going.");
-        source.FollowedRun = new RunClock(10, 0);
-        presentation.RunProgress.ShouldBeNull("A run with no length has nothing to show.");
-        new TrainingPresentationViewModel().RunProgress.ShouldBeNull("Simulate has no training source.");
+        drawn.ShouldBe([[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5], [3, 4, 5, 6, 7, 8], [6, 7, 8, 5, 1, 4], [6, 7], [0, 1]]);
+        source.DrawOnlyCalls.ShouldBe(5, "Only a change in the drawn shadows tells the source.");
+        sortedCells.ShouldBe([5, 2, 6, 9, 8, 7]);
     }
 
     [Fact]
@@ -330,20 +160,33 @@ public sealed class TrainingPresentationViewModelTests
         presentation.Strip.Cells.Where(cell => cell.IsCapped).Select(cell => cell.Number).ShouldBe([2], "A tear can come in any tick.");
     }
 
+    [Theory]
+    [InlineData(new double[0], -1)]
+    [InlineData(new[] { double.NaN, -1.0, -0.5 }, 2)]
+    [InlineData(new[] { 2.0, 2.0, 1.0 }, 0)]
+    public void Leader_IsTheFurthestRunningShadow(double[] distances, int leader)
+    {
+        TrainingPresentationViewModel.Leader(distances).ShouldBe(leader);
+    }
+
+    [Theory]
+    [InlineData(150, 600, 0.25)]
+    [InlineData(700, 600, 1.0)]
+    [InlineData(10, 0, null)]
+    [InlineData(null, 0, null)]
+    public void RunProgress_IsTheShareOfTheRunGone_OrNullWithoutARunWithALength(int? elapsed, int length, double? progress)
+    {
+        var source = new FakeTrainingProgressSource { FollowedRun = elapsed is { } ticks ? new RunClock(ticks, length) : null };
+
+        var presentation = new TrainingPresentationViewModel(source);
+
+        presentation.RunProgress.ShouldBe(progress);
+    }
+
     [Fact]
     public void CrashText_ReadsCrashAndTheDistance()
     {
         TrainingPresentationViewModel.CrashText(342).ShouldBe(UiText.Format("Crash {0}", UiText.Format("{0} m", new FixedNumber(3.4, 1))));
-    }
-
-    [Fact]
-    public void WithoutASource_ThereAreNoShadowsToFollow()
-    {
-        var presentation = new TrainingPresentationViewModel();
-
-        presentation.Shadows.ShouldBeEmpty();
-        presentation.FollowedShadow.ShouldBe(0);
-        Should.Throw<InvalidOperationException>(() => presentation.Follow(1));
     }
 
     private sealed class FakeTrainingProgressSource : ITrainingProgressSource

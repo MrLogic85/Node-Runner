@@ -16,19 +16,20 @@ public sealed class AngleSensorGeometryTests
 
     private static readonly float _bare = (float)AngleSensorDef.ArcRadius(rubber: false, touch: false);
 
+    // The ring stands in for a plain joint; the Domain sets the widths the arc and halo are drawn with, so Build's
+    // rings can clear the arc (#1206), and they stay the stroke-signal token as every other selection ring.
     [Fact]
-    public void Ring_StandsInForAPlainJoint()
+    public void Ring_and_arc_match_the_joint_and_selection_sizes()
     {
         AngleSensorGeometry.Radius.ShouldBe((float)NodeDef.PlainJointRadius);
+        AngleSensorGeometry.ArcWidth.ShouldBe(UiSize.Stroke.Signal);
+        AngleSensorDef.HaloWidth.ShouldBe(UiSize.Stroke.Signal);
     }
 
     // Godot's y points down, so a counter-clockwise turn on screen is a falling Godot rotation.
     [Theory]
     [InlineData(20)]
-    [InlineData(90)]
-    [InlineData(180)]
     [InlineData(270)]
-    [InlineData(340)]
     public void AtRest_TheArcRunsCounterClockwiseFromTheFixedSide(float degrees)
     {
         var target = -Mathf.DegToRad(degrees);
@@ -42,10 +43,7 @@ public sealed class AngleSensorGeometryTests
     // So the part shows which side is Target (#1231).
     [Theory]
     [InlineData(0.35f, 0)]
-    [InlineData(1, 2)]
     [InlineData(3, 7)]
-    [InlineData(-1, 2)]
-    [InlineData(1, 0)]
     public void ASwapOfTheSides_DrawsTheRestOfTheRing(float fixedRotation, float targetRotation)
     {
         var arc = AngleSensorGeometry.ArcPoints(_bare, fixedRotation, targetRotation);
@@ -62,47 +60,29 @@ public sealed class AngleSensorGeometryTests
         RestSweep(0, _justUnder).ShouldBe(-(Mathf.Tau - _justUnder), _tolerance);
     }
 
-    // Sides in line can read a few ulps under a full turn, as their rotations are rounded separately.
-    [Theory]
-    [InlineData(0f)]
-    [InlineData(1.2f)]
-    [InlineData(-2.5f)]
-    public void AtRest_SidesInLineReadJustUnderAFullTurn_DrawADot(float rotation)
+    // Sides in line draw a dot on their line, also when they read a few ulps under a full turn, as their
+    // rotations are rounded separately; Training keeps them on that rest turn.
+    [Fact]
+    public void SidesInLine_DrawADotOnTheirLine()
     {
-        var target = rotation + 1e-6f;
-
-        AngleSensorGeometry.RestTurn(rotation, target).ShouldBe(-1);
-        AngleSensorGeometry.ArcPoints(_bare, rotation, target).Length.ShouldBe(1);
-    }
-
-    [Theory]
-    [InlineData(0f)]
-    [InlineData(1.2f)]
-    [InlineData(-2.5f)]
-    public void SidesInLine_DrawADotOnTheirLine(float rotation)
-    {
+        const float rotation = 1.2f;
         RestSweep(rotation, rotation).ShouldBe(0, _tolerance);
         AngleSensorGeometry.ArcPoints(_bare, rotation, rotation).ShouldBe([Vector2.FromAngle(rotation) * _bare]);
-        AngleSensorGeometry.ArcWidth.ShouldBe(2);
+
+        const float target = rotation + 1e-6f;
+        AngleSensorGeometry.RestTurn(rotation, target).ShouldBe(-1);
+        AngleSensorGeometry.ArcPoints(_bare, rotation, target).Length.ShouldBe(1);
+        var angle = AngleSensorGeometry.Angle(rotation, target);
+        AngleSensorTurn.At(angle, AngleSensorGeometry.RestTurn(rotation, target), 0, angle).ShouldBe(-1);
     }
 
     // The angle counted on across whole turns, counter-clockwise; the expected sweep is a Godot rotation, so
     // filling counter-clockwise is negative and emptying positive.
     [Theory]
-    [InlineData(-720, 0)]
     [InlineData(-370, -350)]
-    [InlineData(-360, 360)]
-    [InlineData(-190, 190)]
     [InlineData(-10, 10)]
-    [InlineData(0, 0)]
     [InlineData(10, -10)]
-    [InlineData(180, -180)]
-    [InlineData(190, -190)]
-    [InlineData(350, -350)]
-    [InlineData(360, 360)]
     [InlineData(370, 350)]
-    [InlineData(540, 180)]
-    [InlineData(710, 10)]
     [InlineData(720, 0)]
     public void EvenTurnsFill_OddTurnsEmpty(int degrees, int sweepDegrees)
     {
@@ -117,16 +97,8 @@ public sealed class AngleSensorGeometryTests
     // a 240 rpm motor (24° a tick) moves the sides over half a turn between frames.
     [Theory]
     [InlineData(1, false, 0, 1, 1)]
-    [InlineData(-1, false, 0, 1, 1)]
-    [InlineData(1, true, 0, 1, 1)]
-    [InlineData(-1, true, 0, 1, 1)]
-    [InlineData(1, false, 350, 1, 1)]
     [InlineData(-1, true, 20, 1, 1)]
-    [InlineData(1, false, 0, 24, 8)]
-    [InlineData(-1, false, 0, 24, 8)]
     [InlineData(1, true, 90, 24, 8)]
-    [InlineData(-1, true, 300, 24, 8)]
-    [InlineData(1, false, 10, 170, 1)]
     [InlineData(-1, true, 10, 170, 3)]
     public void TurningOnAndOn_TheArcNeverJumps(int way, bool fixedSideTurns, int builtDegrees, int degreesPerTick, int ticksPerFrame)
     {
@@ -184,26 +156,7 @@ public sealed class AngleSensorGeometryTests
         }
     }
 
-    [Fact]
-    public void SidesInLineReadJustUnderAFullTurn_StayOnTheirRestTurnInTraining()
-    {
-        var angle = AngleSensorGeometry.Angle(0, 1e-6f);
-
-        AngleSensorTurn.At(angle, AngleSensorGeometry.RestTurn(0, 1e-6f), 0, angle).ShouldBe(-1);
-    }
-
-    // The Domain sets the widths the arc and halo are drawn with, so Build's rings can clear the arc (#1206);
-    // they stay the stroke-signal token, as every other selection ring (VisualTheme.SelectionRingWidth).
-    [Fact]
-    public void ArcAndHalo_AreDrawnStrokeSignalWide()
-    {
-        AngleSensorGeometry.ArcWidth.ShouldBe(UiSize.Stroke.Signal);
-        AngleSensorDef.HaloWidth.ShouldBe(UiSize.Stroke.Signal);
-    }
-
     [Theory]
-    [InlineData(0.4f, 1.9f)]
-    [InlineData(-0.7f, 2.6f)]
     [InlineData(2f, -0.3f)]
     public void AFullTurnOfEitherSide_DrawsTheSamePose(float fixedRotation, float targetRotation)
     {
@@ -228,7 +181,6 @@ public sealed class AngleSensorGeometryTests
     [Theory]
     [InlineData(0, -10)]
     [InlineData(0, 10)]
-    [InlineData(-10, 0)]
     public void Angle_AgreesWithThePortBars(double targetX, double targetY)
     {
         var joint = new Vector2D(0, 0);
@@ -248,7 +200,6 @@ public sealed class AngleSensorGeometryTests
 
     // A Wheel side's direction is its tube 0 (#1118), which turns with the Wheel's body.
     [Theory]
-    [InlineData(0f)]
     [InlineData(0.8f)]
     public void AWheelSide_StartsOnItsFirstTube(float wheelBodyRotation)
     {

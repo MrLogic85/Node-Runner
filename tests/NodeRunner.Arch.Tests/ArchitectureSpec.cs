@@ -18,62 +18,22 @@ public sealed partial class ArchitectureSpec
     private static readonly Assembly _app = typeof(NodeRunner.App.AssemblyMarker).Assembly;
 
     [Fact]
-    public void Domain_HasNoDependenciesOnOtherProjectAssemblies()
+    public void EachLayer_ReferencesOnlyTheLayersBelowItAndNoGodot()
     {
-        var referenced = _domain.GetReferencedAssemblies().Select(a => a.Name).ToArray();
+        var forbidden = new Dictionary<Assembly, string[]>
+        {
+            [_domain] = ["NodeRunner.Mechanics", "NodeRunner.ML", "NodeRunner.App"],
+            [_mechanics] = ["NodeRunner.ML", "NodeRunner.App"],
+            [_ml] = ["NodeRunner.Mechanics", "NodeRunner.App"],
+            [_app] = [],
+        };
 
-        referenced.ShouldNotContain("NodeRunner.Mechanics");
-        referenced.ShouldNotContain("NodeRunner.ML");
-        referenced.ShouldNotContain("NodeRunner.App");
-    }
+        var offenders = forbidden.SelectMany(layer => layer.Key.GetReferencedAssemblies()
+            .Select(reference => reference.Name ?? "")
+            .Where(name => layer.Value.Contains(name) || name.StartsWith("Godot", StringComparison.Ordinal))
+            .Select(name => $"{layer.Key.GetName().Name} -> {name}"));
 
-    [Fact]
-    public void Mechanics_DependsOnlyOnDomain()
-    {
-        var referenced = _mechanics.GetReferencedAssemblies().Select(a => a.Name).ToArray();
-
-        referenced.ShouldNotContain("NodeRunner.ML");
-        referenced.ShouldNotContain("NodeRunner.App");
-    }
-
-    [Fact]
-    public void Mechanics_DoesNotReferenceGodot()
-    {
-        AssertNoGodotReference(_mechanics);
-    }
-
-    [Fact]
-    public void Domain_DoesNotReferenceGodot()
-    {
-        AssertNoGodotReference(_domain);
-    }
-
-    [Fact]
-    public void Ml_DoesNotReferenceGodot()
-    {
-        AssertNoGodotReference(_ml);
-    }
-
-    [Fact]
-    public void App_DoesNotReferenceGodot()
-    {
-        AssertNoGodotReference(_app);
-    }
-
-    [Fact]
-    public void Ml_DoesNotReferenceApp()
-    {
-        _ml.GetReferencedAssemblies()
-            .Select(a => a.Name)
-            .ShouldNotContain("NodeRunner.App");
-    }
-
-    [Fact]
-    public void Ml_DoesNotReferenceMechanics()
-    {
-        _ml.GetReferencedAssemblies()
-            .Select(a => a.Name)
-            .ShouldNotContain("NodeRunner.Mechanics");
+        offenders.ShouldBeEmpty("See docs/ARCHITECTURE.md and docs/CODE_DESIGN_PRINCIPLES.md §3.");
     }
 
     [Fact]
@@ -108,7 +68,7 @@ public sealed partial class ArchitectureSpec
     }
 
     [Fact]
-    public void AndroidBuildNumber_IsDerivedFromProjectVersion()
+    public void AndroidVersion_IsDerivedFromProjectVersion()
     {
         var version = VersionPattern().Match(ProjectSetting("project.godot", "config/version"));
         version.Success.ShouldBeTrue("application/config/version must be a quoted X.Y.Z.");
@@ -118,12 +78,9 @@ public sealed partial class ArchitectureSpec
         code.ShouldBe(
             (VersionPart(version, "major") * 1_000_000) + (VersionPart(version, "minor") * 1_000) + VersionPart(version, "patch"),
             "The build number is 1000000·major + 1000·minor + patch (#809); run .github/scripts/set-version.sh.");
-    }
-
-    [Fact]
-    public void AndroidVersionName_FallsBackToProjectVersion() =>
         ProjectSetting("export_presets.cfg", "version/name")
             .ShouldBe("\"\"", "An empty name makes the export read application/config/version (#809).");
+    }
 
     [Fact]
     public void AndroidPreset_BuildsWithGradleAndGivesTheDebugBuildItsOwnIdentity()
@@ -198,16 +155,4 @@ public sealed partial class ArchitectureSpec
 
     [GeneratedRegex(@"buildTypes\s*\{\s*debug\s*\{[^}]*\n[ \t]*applicationIdSuffix\s+""\.debug""")]
     private static partial Regex DebugIdSuffix();
-
-    private static void AssertNoGodotReference(Assembly assembly)
-    {
-        var offenders = assembly.GetReferencedAssemblies()
-            .Select(a => a.Name)
-            .Where(n => n is not null && n.StartsWith("Godot", StringComparison.Ordinal))
-            .ToArray();
-
-        offenders.ShouldBeEmpty(
-            $"{assembly.GetName().Name} must not depend on any Godot assembly. " +
-            "See docs/CODE_DESIGN_PRINCIPLES.md §3.");
-    }
 }

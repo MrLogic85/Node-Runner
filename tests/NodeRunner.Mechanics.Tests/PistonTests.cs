@@ -13,197 +13,95 @@ public sealed class PistonTests
 
     private static readonly PistonDef _piston = new(1, 2, 3);
 
-    // The table in #870: drawn 1 m, Stroke 100%.
-    [Theory]
-    [InlineData(0, 100, 200)]
-    [InlineData(0.5, 200.0 / 3, 400.0 / 3)]
-    [InlineData(1, 50, 100)]
-    public void ShortestAndLongest_GrowFromTheShortestByTheStroke_WithTheDrawnLengthAtItsStart(double start, double shortest, double longest)
-    {
-        var piston = new PistonDef(1, 2, 3, stroke: 1, start: start);
-
-        Piston.ShortestLength(piston, _built, _pointJoints).ShouldBe(shortest, tolerance: 1e-9);
-        Piston.LongestLength(piston, _built, _pointJoints).ShouldBe(longest, tolerance: 1e-9);
-    }
-
-    // Drawn 1 m between joints of radius 20, so a gap of 60 between their edges that the stroke grows.
-    [Theory]
-    [InlineData(0, 100, 160)]
-    [InlineData(1, 70, 100)]
-    public void ShortestAndLongest_GrowTheGapBetweenItsJointsEdges(double start, double shortest, double longest)
-    {
-        var piston = new PistonDef(1, 2, 3, stroke: 1, start: start);
-
-        Piston.ShortestLength(piston, _built, 40).ShouldBe(shortest, tolerance: 1e-9);
-        Piston.LongestLength(piston, _built, 40).ShouldBe(longest, tolerance: 1e-9);
-    }
-
+    // Drawn 1 m: the #870 table on point joints, then joints of radius 20 (a gap of 60), the #1211 example on
+    // plain hubs (a gap of 70 that Stroke 200% triples), a new Piston, and joints touching, which cannot move.
     [Fact]
-    public void WithItsJointsTouching_ItCannotMove()
+    public void ItsTravel_GrowsTheGapBetweenItsJoints_ByItsStroke_WithTheDrawnLengthAtItsStart()
     {
-        Piston.ShortestLength(_piston, _built, 120).ShouldBe(_built);
-        Piston.LongestLength(_piston, _built, 120).ShouldBe(_built);
+        foreach (var (stroke, start, radii, shortest, longest) in new[]
+        {
+            (1.0, 0.0, 0.0, 100.0, 200.0), (1, 0.5, 0, 200.0 / 3, 400.0 / 3), (1, 1, 0, 50, 100),
+            (1, 0, 40, 100, 160), (1, 1, 40, 70, 100),
+            (PistonDef.MaxStroke, 0, Travel.HubRadii, 100, 240), (2, 0.5, Travel.HubRadii, 65, 135), (2, 1, Travel.HubRadii, 30 + (70.0 / 3), 100),
+            (PistonDef.DefaultStroke, PistonDef.DefaultStart, 0, 80, 120), (0.5, 0.5, 120, 100, 100),
+        })
+        {
+            var piston = new PistonDef(1, 2, 3, stroke: stroke, start: start);
+            var row = $"stroke {stroke}, start {start}, radii {radii}";
+
+            Piston.ShortestLength(piston, _built, radii).ShouldBe(shortest, 1e-9, row);
+            Piston.LongestLength(piston, _built, radii).ShouldBe(longest, 1e-9, row);
+            if (shortest != longest)
+            {
+                Piston.LengthInput(piston, _built, radii, shortest).ShouldBe(0, 1e-12, row);
+                Piston.LengthInput(piston, _built, radii, longest).ShouldBe(1, 1e-12, row);
+                Piston.LengthInput(piston, _built, radii, _built).ShouldBe(start, 1e-12, row);
+                Piston.TargetLength(piston, _built, radii, Piston.DrawnPosition(piston)).ShouldBe(_built, 1e-9, row);
+            }
+        }
     }
 
     // A real telescope's stage and rod are each at most as long as the shortest gap between the hubs,
     // so the gap can at most triple (#870, #1086, #1211).
-    [Theory]
-    [InlineData(0.1, 0)]
-    [InlineData(2, 0)]
-    [InlineData(2, 1)]
-    [InlineData(0.5, 0.5)]
-    public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastHalfItsTravel(double stroke, double start)
+    [Fact]
+    public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastHalfItsTravel()
     {
-        var piston = new PistonDef(1, 2, 3, stroke: stroke, start: start);
-        var radii = Travel.HubRadii;
-
-        var shortest = Piston.ShortestLength(piston, _built, radii);
-        (shortest - radii).ShouldBeGreaterThanOrEqualTo(((Piston.LongestLength(piston, _built, radii) - shortest) / 2) - 1e-9);
-    }
-
-    // The example in #1211: two plain joints drawn 1 m apart leave a gap of 70, which Stroke 200% triples.
-    [Theory]
-    [InlineData(0, 100, 240)]
-    [InlineData(0.5, 65, 135)]
-    [InlineData(1, 30 + (70.0 / 3), 100)]
-    public void AtStroke200_TheGapBetweenItsJointsHubs_Triples(double start, double shortest, double longest)
-    {
-        var piston = new PistonDef(1, 2, 3, stroke: PistonDef.MaxStroke, start: start);
-        var radii = Travel.HubRadii;
-
-        Piston.ShortestLength(piston, _built, radii).ShouldBe(shortest, tolerance: 1e-9);
-        Piston.LongestLength(piston, _built, radii).ShouldBe(longest, tolerance: 1e-9);
-        Piston.LengthInput(piston, _built, radii, shortest).ShouldBe(0, tolerance: 1e-12);
-        Piston.LengthInput(piston, _built, radii, longest).ShouldBe(1, tolerance: 1e-12);
+        foreach (var (stroke, start) in new[] { (0.1, 0.0), (2, 0), (2, 1), (0.5, 0.5) })
+        {
+            var piston = new PistonDef(1, 2, 3, stroke: stroke, start: start);
+            var shortest = Piston.ShortestLength(piston, _built, Travel.HubRadii);
+            (shortest - Travel.HubRadii).ShouldBeGreaterThanOrEqualTo(((Piston.LongestLength(piston, _built, Travel.HubRadii) - shortest) / 2) - 1e-9);
+        }
     }
 
     [Fact]
-    public void ShortestAndLongest_ForANewPiston_SpanEightyToOneHundredAndTwentyPercent()
-    {
-        Piston.ShortestLength(_piston, _built, _pointJoints).ShouldBe(80, tolerance: 1e-9);
-        Piston.LongestLength(_piston, _built, _pointJoints).ShouldBe(120, tolerance: 1e-9);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(0.25)]
-    [InlineData(1)]
-    public void LengthInput_IsZeroAtTheShortest_OneAtTheLongest_AndItsStartAsDrawn(double start)
-    {
-        var piston = new PistonDef(1, 2, 3, stroke: 0.6, start: start);
-
-        Piston.LengthInput(piston, _built, _pointJoints, Piston.ShortestLength(piston, _built, _pointJoints)).ShouldBe(0, tolerance: 1e-12);
-        Piston.LengthInput(piston, _built, _pointJoints, Piston.LongestLength(piston, _built, _pointJoints)).ShouldBe(1, tolerance: 1e-12);
-        Piston.LengthInput(piston, _built, _pointJoints, _built).ShouldBe(start, tolerance: 1e-12);
-        Piston.LengthInput(piston, _built, 40, Piston.ShortestLength(piston, _built, 40)).ShouldBe(0, tolerance: 1e-12);
-        Piston.LengthInput(piston, _built, 40, Piston.LongestLength(piston, _built, 40)).ShouldBe(1, tolerance: 1e-12);
-        Piston.LengthInput(piston, _built, 40, _built).ShouldBe(start, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void SpeedInput_IsPositiveWhileExtending_AndSaturatesSoftly()
+    public void ItsInputsAndTarget_ReadAndAskOnItsTravel()
     {
         Piston.SpeedInput(0, 200).ShouldBe(0);
-        Piston.SpeedInput(200, 200).ShouldBe(Math.Tanh(1), tolerance: 1e-12);
-        Piston.SpeedInput(-20000, 200).ShouldBe(-1, tolerance: 1e-9);
-    }
+        Piston.SpeedInput(200, 200).ShouldBe(Math.Tanh(1), 1e-12);
+        Piston.SpeedInput(-20000, 200).ShouldBe(-1, 1e-9);
 
-    [Fact]
-    public void TargetLength_MapsThePositionOutputStraightOntoItsTravel()
-    {
         var piston = new PistonDef(1, 2, 3, stroke: 1, start: 0);
+        foreach (var (position, length) in new[] { (-1.0, 100.0), (0, 100), (0.5, 150), (1, 200), (3, 200) })
+        {
+            Piston.TargetLength(piston, _built, _pointJoints, position).ShouldBe(length, 1e-9);
+        }
 
-        Piston.TargetLength(piston, _built, _pointJoints, -1).ShouldBe(100, tolerance: 1e-9);
-        Piston.TargetLength(piston, _built, _pointJoints, 0).ShouldBe(100, tolerance: 1e-9);
-        Piston.TargetLength(piston, _built, _pointJoints, 0.5).ShouldBe(150, tolerance: 1e-9);
-        Piston.TargetLength(piston, _built, _pointJoints, 1).ShouldBe(200, tolerance: 1e-9);
-        Piston.TargetLength(piston, _built, _pointJoints, 3).ShouldBe(200, tolerance: 1e-9);
-    }
-
-    [Theory]
-    [InlineData(0, 0)]
-    [InlineData(0.25, 0.25)]
-    [InlineData(0.5, 0.5)]
-    [InlineData(1, 1)]
-    public void DrawnPosition_AsksForItsDrawnLength(double start, double position)
-    {
-        var piston = new PistonDef(1, 2, 3, stroke: 0.4, start: start);
-
-        Piston.DrawnPosition(piston).ShouldBe(position, tolerance: 1e-12);
-        Piston.TargetLength(piston, _built, _pointJoints, Piston.DrawnPosition(piston)).ShouldBe(_built, tolerance: 1e-9);
-    }
-
-    [Fact]
-    public void DrawnPositions_ListsEachPistonsDrawnPosition_ById()
-    {
         var creature = new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(0, 100))],
             [],
             [],
-            [new PistonDef(4, 1, 2, start: 0), new PistonDef(5, 1, 3, start: 1)],
+            [new PistonDef(4, 1, 2, start: 0.25), new PistonDef(5, 1, 3, start: 1)],
             nextPartId: 6);
-
-        Piston.DrawnPositions(creature).ShouldBe(new Dictionary<int, double> { [4] = 0, [5] = 1 });
+        Piston.DrawnPositions(creature).ShouldBe(new Dictionary<int, double> { [4] = 0.25, [5] = 1 });
     }
 
+    // From rest a whole stroke away: tanh(3) of the rate, through a gate that is nearly open. Held still, it reaches
+    // its whole chosen share within about its rise time and no more; it dies away once it moves as fast as it wants.
     [Fact]
-    public void NextForce_AtItsTarget_AndStill_FromRest_IsZero() =>
+    public void ItsForce_BuildsTowardsItsTarget_OverItsRiseTime_UpToTheChosenShare()
+    {
         Next(length: _built, speed: 0, position: 0.5, force: 0).ShouldBe(0);
-
-    [Fact]
-    public void NextForce_FromRest_BuildsTowardsItsTarget_AtItsTargetForceOverItsRiseTime()
-    {
+        Next(length: _built, speed: -1000, position: 1, force: 0, strength: 0).ShouldBe(0);
         var push = Next(length: _built, speed: 0, position: 1, force: 0);
-        var pull = Next(length: _built, speed: 0, position: 0, force: 0);
+        push.ShouldBe(_piston.Strength * _step / _piston.RiseTime * Math.Tanh(3) / (1 + Math.Exp(-10)), 1e-9);
+        Next(length: _built, speed: 0, position: 0, force: 0).ShouldBe(-push, 1e-9);
 
-        // A whole stroke away, at rest: tanh(3) of the rate, through a gate that is nearly open.
-        var rate = _piston.Strength * _step / _piston.RiseTime;
-        push.ShouldBe(rate * Math.Tanh(3) / (1 + Math.Exp(-10)), tolerance: 1e-9);
-        pull.ShouldBe(-push, tolerance: 1e-9);
-    }
-
-    [Fact]
-    public void NextForce_HeldStill_FarFromItsTarget_ReachesItsWholeShareWithinAboutItsRiseTime_AndNoMore()
-    {
         var forces = Hold(strength: 1, riseTime: _piston.RiseTime);
-
         forces[(int)(0.9 * _piston.RiseTime / _step)].ShouldBeLessThan(_piston.Strength);
         forces[(int)(1.1 * _piston.RiseTime / _step)].ShouldBe(_piston.Strength);
         forces.ShouldAllBe(force => force <= _piston.Strength);
         Hold(strength: 0.2, riseTime: _piston.RiseTime).Max().ShouldBe(OutputSignals.StrengthFromOutput(0.2, _piston.Strength));
-    }
+        Hold(strength: 1, riseTime: 0.5)[3].ShouldBe(Hold(strength: 1, riseTime: 0.1)[3] / 5, 1e-6);
 
-    [Fact]
-    public void NextForce_ALongerRiseTime_BuildsUpMoreSlowly()
-    {
-        var quick = Hold(strength: 1, riseTime: 0.1);
-        var slow = Hold(strength: 1, riseTime: 0.5);
-
-        slow[3].ShouldBe(quick[3] / 5, tolerance: 1e-6);
-    }
-
-    [Fact]
-    public void NextForce_DiesAway_OnceItMovesAsFastAsItWants_AndFasterStillCutsIt()
-    {
         var pushing = _piston.Strength / 2;
         var atSpeed = Next(length: _built, speed: _piston.MaxSpeed, position: 1, force: pushing);
-        var tooFast = Next(length: _built, speed: 2 * _piston.MaxSpeed, position: 1, force: pushing);
-        var tooSlow = Next(length: _built, speed: 0, position: 1, force: pushing);
-
         atSpeed.ShouldBeLessThan(pushing);
-        tooFast.ShouldBeLessThan(atSpeed / 1000);
-        tooSlow.ShouldBeGreaterThan(pushing);
-    }
+        Next(length: _built, speed: 2 * _piston.MaxSpeed, position: 1, force: pushing).ShouldBeLessThan(atSpeed / 1000);
+        Next(length: _built, speed: 0, position: 1, force: pushing).ShouldBeGreaterThan(pushing);
 
-    [Fact]
-    public void NextForce_WithStrengthZero_IsZero() =>
-        Next(length: _built, speed: -1000, position: 1, force: 0, strength: 0).ShouldBe(0);
-
-    [Fact]
-    public void NextForce_PastTheEndOfItsStroke_PullsBackWithAtMostTheChosenShare_TheEndStopsAreNotPowered()
-    {
-        var share = OutputSignals.StrengthFromOutput(0.2, _piston.Strength);
-        Next(length: 150, speed: 0, position: 1, force: -_piston.Strength, strength: 0.2).ShouldBe(-share);
+        // Past the end of its stroke it pulls back with at most the chosen share: the end stops are not powered.
+        Next(length: 150, speed: 0, position: 1, force: -_piston.Strength, strength: 0.2).ShouldBe(-OutputSignals.StrengthFromOutput(0.2, _piston.Strength));
         Next(length: 150, speed: 0, position: 1, force: 0, strength: 0.2).ShouldBeLessThan(0);
         Next(length: 50, speed: 0, position: 0, force: 0, strength: 0.2).ShouldBeGreaterThan(0);
     }

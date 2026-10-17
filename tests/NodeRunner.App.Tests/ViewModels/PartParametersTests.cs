@@ -7,7 +7,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class PartParametersTests
 {
     [Fact]
-    public void EverySetting_IsBasicOrAdvanced_AsDesigned()
+    public void EverySetting_IsBasicOrAdvanced_AsDesigned_AndEveryPanelSettingHasAHelpTextOfItsOwn()
     {
         // #903, #989, #1189, #1296: the split docs/BUILD_MODE.md → "Parameters" owns.
         PartParameterId[] advanced =
@@ -23,190 +23,80 @@ public sealed class PartParametersTests
 
         foreach (var id in Enum.GetValues<PartParameterId>())
         {
+            PartParameters.Of(id).Id.ShouldBe(id);
             PartParameters.Of(id).Advanced.ShouldBe(advanced.Contains(id), id.ToString());
         }
-    }
 
-    [Fact]
-    public void ANewPiston_ShowsTheDefaultsInNewtonsPercentAndMetresPerSecond()
-    {
-        var piston = new PistonDef(3, 1, 2);
-
-        PartParameters.SliderOver(PartParameterId.Strength, [piston.Strength])
-            .ShouldBe(new ParameterSlider(PartParameterId.Strength, UiText.Plain("Max strength"), UiText.Format("{0} N", new FixedNumber(150, 0)), Position(PartParameters.Strength, 150), Position(PartParameters.Strength, 150), 10.0 / 380));
-        PartParameters.SliderOver(PartParameterId.Stroke, [piston.Stroke]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(50, 0)));
-        PartParameters.SliderOver(PartParameterId.StartPosition, [piston.Start]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(50, 0)));
-        PartParameters.SliderOver(PartParameterId.MaxSpeed, [piston.MaxSpeed]).Readout.ShouldBe(UiText.Format("{0} m/s", new FixedNumber(2, 1)));
-        PartParameters.SliderOver(PartParameterId.RiseTime, [piston.RiseTime]).Readout.ShouldBe(UiText.Format("{0} s", new FixedNumber(0.2, 1)));
-    }
-
-    // #1211: the three-part telescope lets the gap triple.
-    [Fact]
-    public void Stroke_RunsFromTenToTwoHundredPercent_InStepsOfFive()
-    {
-        PartParameters.Stroke.Slider!.Range.ShouldBe(new SettingRange(10, 200, 5));
-        PartParameters.SliderOver(PartParameterId.Stroke, [PistonDef.MaxStroke])
-            .ShouldBe(new ParameterSlider(PartParameterId.Stroke, UiText.Plain("Stroke"), UiText.Format("{0}%", new FixedNumber(200, 0)), 1, 1, 5.0 / 190));
-        PartParameters.SliderOver(PartParameterId.Stroke, [0.3, SpringDef.MaxStroke]).Readout
-            .ShouldBe(UiText.Format("{0}–{1}%", new FixedNumber(30, 0), new FixedNumber(200, 0)));
-    }
-
-    [Fact]
-    public void RiseTime_SnapsToItsFourStops_EvenlySpacedAlongTheSlider()
-    {
-        // 0.1 and 0.2 s get as much slider as 0.5 and 1 s (#801).
-        double[] stops = [0.1, 0.2, 0.5, 1];
-        stops.Select((stop, i) => PartParameters.ValueAt(PartParameterId.RiseTime, i / 3.0)).ShouldBe(stops);
-        PartParameters.ValueAt(PartParameterId.RiseTime, 0.2).ShouldBe(0.2);
-        PartParameters.ValueAt(PartParameterId.RiseTime, 0.9).ShouldBe(1);
-        PartParameters.SliderOver(PartParameterId.RiseTime, [0.5]).High.ShouldBe(2.0 / 3, tolerance: 1e-9);
-        PartParameters.SliderOver(PartParameterId.RiseTime, [0.5]).Step.ShouldBe(1.0 / 3, tolerance: 1e-9);
-    }
-
-    [Fact]
-    public void ASteppedSlider_PlacesAValueBetweenTwoStopsBetweenTheirPositions()
-    {
-        var range = SettingRange.Of(0.1, 0.2, 0.5, 1);
-
-        range.Position(0.35).ShouldBe((1 + 0.5) / 3, tolerance: 1e-9);
-        range.Position(0.05).ShouldBe(0);
-        range.Position(3).ShouldBe(1);
-    }
-
-    [Theory]
-    [InlineData(new[] { 0.5 })]
-    [InlineData(new[] { 0.1, 0.5, 0.2 })]
-    [InlineData(new[] { 0.1, 0.1 })]
-    public void ASteppedSlider_RejectsFewerThanTwoOrNonIncreasingStops(double[] stops)
-    {
-        Should.Throw<ArgumentException>(() => SettingRange.Of(stops));
-    }
-
-    [Fact]
-    public void ASpring_ShowsItsStiffnessInNewtonsPerMetreAndDampingInNewtonSecondsPerMetre()
-    {
-        var spring = new SpringDef(4, 1, 2);
-
-        PartParameters.SliderOver(PartParameterId.Stiffness, [SpringDef.DefaultStiffness]).Readout.ShouldBe(UiText.Format("{0} N/m", new FixedNumber(400, 0)));
-        PartParameters.SliderOver(PartParameterId.Damping, [SpringDef.DefaultDamping]).Readout.ShouldBe(UiText.Format("{0} N·s/m", new FixedNumber(10, 0)));
-        PartParameters.ValueAt(PartParameterId.Stiffness, 0).ShouldBe(50);
-        PartParameters.ValueAt(PartParameterId.Stiffness, 1).ShouldBe(2000);
-        PartParameters.ValueAt(PartParameterId.Damping, 0).ShouldBe(0);
-        PartParameters.ValueAt(PartParameterId.Damping, 1).ShouldBe(100);
-        PartParameters.SliderOver(PartParameterId.Stroke, [spring.Stroke]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(100, 0)));
-        PartParameters.SliderOver(PartParameterId.CoilLength, [spring.CoilLength]).Readout.ShouldBe(UiText.Format("{0}%", new FixedNumber(67, 0)));
-    }
-
-    [Fact]
-    public void ANewWheel_ShowsItsRadiusInMetres()
-    {
-        var wheel = new WheelDef(5, 1);
-
-        PartParameters.SliderOver(PartParameterId.WheelRadius, [wheel.Radius]).Readout.ShouldBe(UiText.Format("{0} m", new FixedNumber(0.4, 1)));
-        PartParameters.WheelRadius.Slider!.Help.ShouldBe(UiText.Plain("Bigger wheels roll over bumps but weigh more"));
-    }
-
-    [Fact]
-    public void WheelRadius_RunsFromFortyCentimetresToAMetre_InStepsOfTen()
-    {
-        PartParameters.ValueAt(PartParameterId.WheelRadius, 0).ShouldBe(WheelDef.MinRadius);
-        PartParameters.ValueAt(PartParameterId.WheelRadius, 1).ShouldBe(WheelDef.MaxRadius);
-        PartParameters.ValueAt(PartParameterId.WheelRadius, 0.26).ShouldBe(60, tolerance: 1e-9);
-    }
-
-    [Fact]
-    public void CoilLength_RunsFromZeroToAHundredPercent_InStepsOfOne()
-    {
-        PartParameters.ValueAt(PartParameterId.CoilLength, 0).ShouldBe(SpringDef.MinCoilLength);
-        PartParameters.ValueAt(PartParameterId.CoilLength, 1).ShouldBe(SpringDef.MaxCoilLength);
-        PartParameters.ValueAt(PartParameterId.CoilLength, 0.334).ShouldBe(0.33, tolerance: 1e-9);
-    }
-
-    [Fact]
-    public void SliderPositions_GiveWholeStepsInWorldUnits()
-    {
-        PartParameters.ValueAt(PartParameterId.Strength, 0).ShouldBe(2000);
-        PartParameters.ValueAt(PartParameterId.Strength, 1).ShouldBe(40000);
-        PartParameters.ValueAt(PartParameterId.Stroke, 0).ShouldBe(0.1);
-        PartParameters.ValueAt(PartParameterId.Stroke, 0.51).ShouldBe(1.05);
-        PartParameters.ValueAt(PartParameterId.Stroke, 1).ShouldBe(PistonDef.MaxStroke);
-        PartParameters.ValueAt(PartParameterId.MaxSpeed, 0.5).ShouldBe(230, tolerance: 1e-9);
-    }
-
-    [Theory]
-    [InlineData(PartParameterId.Strength, 15000)]
-    [InlineData(PartParameterId.Stroke, 0.45)]
-    [InlineData(PartParameterId.MaxSpeed, 120)]
-    [InlineData(PartParameterId.Stiffness, 650)]
-    [InlineData(PartParameterId.Damping, 45)]
-    [InlineData(PartParameterId.RiseTime, 0.5)]
-    [InlineData(PartParameterId.CoilLength, 0.35)]
-    [InlineData(PartParameterId.WheelRadius, 70)]
-    [InlineData(PartParameterId.Rays, 5)]
-    [InlineData(PartParameterId.Spread, Math.PI / 4)]
-    [InlineData(PartParameterId.CameraRange, 220)]
-    [InlineData(PartParameterId.CameraRange, 370)]
-    public void ASharedValue_RoundTripsThroughItsSlider(PartParameterId id, double value)
-    {
-        var slider = PartParameters.SliderOver(id, [value, value]);
-
-        slider.ValuesDiffer.ShouldBeFalse();
-        PartParameters.ValueAt(id, slider.High).ShouldBe(value, tolerance: 1e-9);
-    }
-
-    [Fact]
-    public void Rays_SnapToOneThreeOrFive_AndChangeTheNetworksPorts()
-    {
-        double[] stops = [1, 3, 5];
-        stops.Select((stop, i) => PartParameters.ValueAt(PartParameterId.Rays, i / 2.0)).ShouldBe(stops);
-        PartParameters.ValueAt(PartParameterId.Rays, 0.2).ShouldBe(1);
-        PartParameters.ValueAt(PartParameterId.Rays, 0.3).ShouldBe(3);
-        PartParameters.SliderOver(PartParameterId.Rays, [3]).Readout.ShouldBe(UiText.Format("{0}", new FixedNumber(3, 0)));
-        PartParameters.Rays.ChangesPorts.ShouldBeTrue();
-        PartParameters.Rays.MultiEditable.ShouldBeTrue();
+        // Touching a slider shows this text (#867).
+        var scales = Enum.GetValues<PartParameterId>().Select(PartParameters.Of).Where(parameter => parameter.InPanel).Select(parameter => parameter.Slider!).ToArray();
+        scales.Length.ShouldBe(Enum.GetValues<PartParameterId>().Length - 1);
+        scales.ShouldAllBe(scale => !string.IsNullOrWhiteSpace(scale.Help.Message) && scale.Help.Message != scale.Label.Message);
         Enum.GetValues<PartParameterId>().Where(id => PartParameters.Of(id).ChangesPorts).ShouldBe([PartParameterId.Rays]);
     }
 
     [Fact]
-    public void Spread_RunsFrom15To90Degrees_InStepsOf5()
+    public void Aim_IsSetOnTheCanvas_OnePartAtATime()
     {
-        PartParameters.ValueAt(PartParameterId.Spread, 0).ShouldBe(15 * Math.PI / 180, tolerance: 1e-12);
-        PartParameters.ValueAt(PartParameterId.Spread, 1).ShouldBe(Math.PI / 2, tolerance: 1e-12);
-        PartParameters.SliderOver(PartParameterId.Spread, [SensorDef.DefaultSpread]).Readout.ShouldBe(UiText.Format("{0}°", new FixedNumber(90, 0)));
-        PartParameters.SliderOver(PartParameterId.Spread, [SensorDef.DefaultSpread]).Step.ShouldBe(5.0 / 75, tolerance: 1e-12);
+        PartParameters.Aim.InPanel.ShouldBeFalse();
+        PartParameters.Aim.MultiEditable.ShouldBeFalse();
+        Should.Throw<ArgumentOutOfRangeException>(() => PartParameters.SliderOver(PartParameterId.Aim, [0.0]));
+    }
+
+    // Each setting reads in its unit and runs between its ends; the value read sits on a step, so
+    // it comes back from the slider unchanged.
+    [Fact]
+    public void EverySlider_ReadsInItsUnit_RunsBetweenItsEnds_AndGivesBackAValueOnAStep()
+    {
+        var rpm = Math.Tau / 60;
+        var degrees = Math.PI / 180;
+        (PartParameterId Id, double Value, UiText Readout, double Min, double Max)[] sliders =
+        [
+            (PartParameterId.Strength, PistonDef.DefaultStrength, UiText.Format("{0} N", new FixedNumber(150, 0)), 2000, 40000),
+            (PartParameterId.ServoStrength, StepperDef.DefaultStrength, UiText.Format("{0} N·m", new FixedNumber(150, 0)), 50000, 2000000),
+            (PartParameterId.MotorStrength, VelocityMotorDef.DefaultStrength, UiText.Format("{0} N·m", new FixedNumber(40, 0)), 50000, 400000),
+            (PartParameterId.BrakeStrength, BrakeDef.DefaultStrength, UiText.Format("{0} N·m", new FixedNumber(200, 0)), 200000, BrakeDef.LockedStrength),
+            (PartParameterId.StepsPerTurn, StepperDef.DefaultStepsPerTurn, UiText.Format("{0}", new FixedNumber(8, 0)), 2, 24),
+            (PartParameterId.MaxFrequency, StepperDef.DefaultMaxFrequency, UiText.Format("{0} Hz", new FixedNumber(2, 1)), 1, 5),
+            (PartParameterId.Stroke, PistonDef.DefaultStroke, UiText.Format("{0}%", new FixedNumber(50, 0)), 0.1, PistonDef.MaxStroke),
+            (PartParameterId.Range, ServoDef.DefaultRange, UiText.Format("{0}°", new FixedNumber(180, 0)), 20 * degrees, 2 * Math.PI),
+            (PartParameterId.StartPosition, PistonDef.DefaultStart, UiText.Format("{0}%", new FixedNumber(50, 0)), 0, 1),
+            (PartParameterId.ServoStartPosition, ServoDef.DefaultStart, UiText.Format("{0}%", new FixedNumber(50, 0)), 0, 1),
+            (PartParameterId.MaxSpeed, PistonDef.DefaultMaxSpeed, UiText.Format("{0} m/s", new FixedNumber(2, 1)), 50, 400),
+            (PartParameterId.AngularMaxSpeed, ServoDef.DefaultMaxSpeed, UiText.Format("{0} rpm", new FixedNumber(60, 0)), 5 * rpm, 120 * rpm),
+            (PartParameterId.MotorMaxSpeed, VelocityMotorDef.DefaultMaxSpeed, UiText.Format("{0} rpm", new FixedNumber(60, 0)), 10 * rpm, 240 * rpm),
+            (PartParameterId.RiseTime, PistonDef.DefaultRiseTime, UiText.Format("{0} s", new FixedNumber(0.2, 1)), 0.1, 1),
+            (PartParameterId.Stiffness, SpringDef.DefaultStiffness, UiText.Format("{0} N/m", new FixedNumber(400, 0)), 50, 2000),
+            (PartParameterId.Damping, SpringDef.DefaultDamping, UiText.Format("{0} N·s/m", new FixedNumber(10, 0)), 0, 100),
+            (PartParameterId.CoilLength, 0.35, UiText.Format("{0}%", new FixedNumber(35, 0)), SpringDef.MinCoilLength, SpringDef.MaxCoilLength),
+            (PartParameterId.WheelRadius, WheelDef.DefaultRadius, UiText.Format("{0} m", new FixedNumber(0.4, 1)), WheelDef.MinRadius, WheelDef.MaxRadius),
+            (PartParameterId.Rays, 3, UiText.Format("{0}", new FixedNumber(3, 0)), 1, 5),
+            (PartParameterId.Spread, SensorDef.DefaultSpread, UiText.Format("{0}°", new FixedNumber(90, 0)), 15 * degrees, 90 * degrees),
+            (PartParameterId.CameraRange, SensorDef.DefaultRange, UiText.Format("{0} m", new FixedNumber(2.2, 1)), 100, 1000),
+        ];
+        sliders.Select(slider => slider.Id).ShouldBe(Enum.GetValues<PartParameterId>().Where(id => PartParameters.Of(id).InPanel), ignoreOrder: true);
+
+        foreach (var (id, value, readout, min, max) in sliders)
+        {
+            var slider = PartParameters.SliderOver(id, [value, value]);
+            slider.Readout.ShouldBe(readout, id.ToString());
+            slider.ValuesDiffer.ShouldBeFalse(id.ToString());
+            PartParameters.ValueAt(id, slider.High).ShouldBe(value, tolerance: 1e-6, id.ToString());
+            (slider.High / slider.Step).ShouldBe(Math.Round(slider.High / slider.Step), tolerance: 1e-9, id.ToString());
+            PartParameters.ValueAt(id, 0).ShouldBe(min, tolerance: 1e-9, id.ToString());
+            (PartParameters.ValueAt(id, 1) is var top && (top == max || Math.Abs(top - max) < 1e-9)).ShouldBeTrue(id.ToString());
+        }
     }
 
     [Fact]
-    public void ASteppersDefaultStrength_SitsOnAMaxStrengthStep()
+    public void ALinearSlider_SnapsToWholeSteps_AndShowsWhereEachEndOfASpanSits()
     {
-        var slider = PartParameters.SliderOver(PartParameterId.ServoStrength, [StepperDef.DefaultStrength]);
-        slider.Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(150, 0)));
-        PartParameters.ValueAt(PartParameterId.ServoStrength, slider.High).ShouldBe(StepperDef.DefaultStrength, tolerance: 1e-6);
-    }
-
-    [Fact]
-    public void StepsPerTurn_ReadsNotches_RunsFrom2To24_InWholeSteps_WithTheDefaultOnAStep()
-    {
-        PartParameters.StepsPerTurn.Slider!.Label.ShouldBe(UiText.Plain("Notches"));
-        PartParameters.StepsPerTurn.Slider!.Range.ShouldBe(new SettingRange(StepperDef.MinStepsPerTurn, StepperDef.MaxStepsPerTurn, 1));
-        PartParameters.StepsPerTurn.ChangesPorts.ShouldBeFalse();
-        PartParameters.ValueAt(PartParameterId.StepsPerTurn, 0).ShouldBe(2);
-        PartParameters.ValueAt(PartParameterId.StepsPerTurn, 1).ShouldBe(24);
-        var slider = PartParameters.SliderOver(PartParameterId.StepsPerTurn, [StepperDef.DefaultStepsPerTurn]);
-        slider.Readout.ShouldBe(UiText.Format("{0}", new FixedNumber(8, 0)));
-        PartParameters.ValueAt(PartParameterId.StepsPerTurn, slider.High).ShouldBe(StepperDef.DefaultStepsPerTurn, tolerance: 1e-9);
-    }
-
-    [Fact]
-    public void MaxFrequency_RunsFrom1To5Hertz_InTenths_Basic_WithTheDefaultOnAStep()
-    {
-        PartParameters.MaxFrequency.Slider!.Range.ShouldBe(new SettingRange(1, 5, 0.1));
-        PartParameters.MaxFrequency.Advanced.ShouldBeFalse();
-        PartParameters.ValueAt(PartParameterId.MaxFrequency, 0).ShouldBe(1, tolerance: 1e-9);
-        PartParameters.ValueAt(PartParameterId.MaxFrequency, 1).ShouldBe(5, tolerance: 1e-9);
-        var slider = PartParameters.SliderOver(PartParameterId.MaxFrequency, [StepperDef.DefaultMaxFrequency]);
-        slider.Readout.ShouldBe(UiText.Format("{0} Hz", new FixedNumber(2, 1)));
-        PartParameters.ValueAt(PartParameterId.MaxFrequency, slider.High).ShouldBe(StepperDef.DefaultMaxFrequency, tolerance: 1e-9);
+        PartParameters.SliderOver(PartParameterId.Strength, [PistonDef.DefaultStrength, 30000])
+            .ShouldBe(new ParameterSlider(PartParameterId.Strength, UiText.Plain("Max strength"), UiText.Format("{0}–{1} N", new FixedNumber(150, 0), new FixedNumber(300, 0)), 13.0 / 38, 28.0 / 38, 10.0 / 380));
+        PartParameters.ValueAt(PartParameterId.Stroke, 0.51).ShouldBe(1.05);
+        PartParameters.ValueAt(PartParameterId.WheelRadius, 0.26).ShouldBe(60, tolerance: 1e-9);
+        PartParameters.Stroke.Slider!.Range.ShouldBe(new SettingRange(10, 200, 5));
+        PartParameters.SliderOver(PartParameterId.Stroke, [0.3, SpringDef.MaxStroke]).Readout
+            .ShouldBe(UiText.Format("{0}–{1}%", new FixedNumber(30, 0), new FixedNumber(200, 0)));
     }
 
     // The old slider reached 0.2 Hz (#1296): such a saved value reads as it is, at the slider's low end.
@@ -220,142 +110,57 @@ public sealed class PartParametersTests
     }
 
     [Fact]
-    public void CameraRange_RunsFrom1To10Metres_InStepsOfATenth_WithTheDefaultOnAStep()
+    public void ASteppedSlider_SnapsToItsStops_EvenlySpacedAlongTheSlider_AndPlacesAValueBetweenTwoStopsBetweenThem()
     {
-        PartParameters.ValueAt(PartParameterId.CameraRange, 0).ShouldBe(100, tolerance: 1e-9);
-        PartParameters.ValueAt(PartParameterId.CameraRange, 1).ShouldBe(1000, tolerance: 1e-9);
-        PartParameters.SliderOver(PartParameterId.CameraRange, [SensorDef.DefaultRange]).Step.ShouldBe(0.1 / 9, tolerance: 1e-12);
-        var slider = PartParameters.SliderOver(PartParameterId.CameraRange, [SensorDef.DefaultRange]);
-        slider.Readout.ShouldBe(UiText.Format("{0} m", new FixedNumber(2.2, 1)));
-        PartParameters.ValueAt(PartParameterId.CameraRange, slider.High).ShouldBe(SensorDef.DefaultRange, tolerance: 1e-9);
-        (slider.High / slider.Step).ShouldBe(Math.Round(slider.High / slider.Step), tolerance: 1e-9);
+        // 0.1 and 0.2 s get as much slider as 0.5 and 1 s (#801).
+        double[] stops = [0.1, 0.2, 0.5, 1];
+        stops.Select((stop, i) => PartParameters.ValueAt(PartParameterId.RiseTime, i / 3.0)).ShouldBe(stops);
+        PartParameters.ValueAt(PartParameterId.RiseTime, 0.2).ShouldBe(0.2);
+        PartParameters.ValueAt(PartParameterId.RiseTime, 0.9).ShouldBe(1);
+        PartParameters.SliderOver(PartParameterId.RiseTime, [0.5]).Step.ShouldBe(1.0 / 3, tolerance: 1e-9);
+        var range = SettingRange.Of(stops);
+        range.Position(0.35).ShouldBe((1 + 0.5) / 3, tolerance: 1e-9);
+        range.Position(0.05).ShouldBe(0);
+        range.Position(3).ShouldBe(1);
     }
 
-    [Fact]
-    public void ServoMaxSpeed_RunsFrom5To120Rpm_InStepsOf5_WithTheDefaultOnAStep()
+    [Theory]
+    [InlineData(new[] { 0.5 })]
+    [InlineData(new[] { 0.1, 0.5, 0.2 })]
+    public void ASteppedSlider_RejectsFewerThanTwoOrNonIncreasingStops(double[] stops)
     {
-        PartParameters.ValueAt(PartParameterId.AngularMaxSpeed, 0).ShouldBe(5 * Math.Tau / 60, tolerance: 1e-12);
-        PartParameters.ValueAt(PartParameterId.AngularMaxSpeed, 1).ShouldBe(120 * Math.Tau / 60, tolerance: 1e-12);
-        var slider = PartParameters.SliderOver(PartParameterId.AngularMaxSpeed, [ServoDef.DefaultMaxSpeed]);
-        slider.Readout.ShouldBe(UiText.Format("{0} rpm", new FixedNumber(60, 0)));
-        slider.Step.ShouldBe(5.0 / 115, tolerance: 1e-12);
-        (slider.High / slider.Step).ShouldBe(Math.Round(slider.High / slider.Step), tolerance: 1e-9);
-        PartParameters.ValueAt(PartParameterId.AngularMaxSpeed, slider.High).ShouldBe(ServoDef.DefaultMaxSpeed, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void AnOldServoMaxSpeed_StaysWithinItsRpmSlider()
-    {
-        // The old 30–720°/s are exactly 5–120 rpm, so every saved Servo still fits.
-        CreatureBuilder.IsOnItsSlider(PartParameterId.AngularMaxSpeed, 30 * Math.PI / 180).ShouldBeTrue();
-        CreatureBuilder.IsOnItsSlider(PartParameterId.AngularMaxSpeed, 105 * Math.PI / 180).ShouldBeTrue();
-        CreatureBuilder.IsOnItsSlider(PartParameterId.AngularMaxSpeed, 720 * Math.PI / 180).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void MotorMaxSpeed_RunsFrom10To240Rpm_InStepsOf10_WithTheDefaultOnAStep()
-    {
-        PartParameters.ValueAt(PartParameterId.MotorMaxSpeed, 0).ShouldBe(10 * Math.Tau / 60, tolerance: 1e-12);
-        PartParameters.ValueAt(PartParameterId.MotorMaxSpeed, 1).ShouldBe(240 * Math.Tau / 60, tolerance: 1e-12);
-        var slider = PartParameters.SliderOver(PartParameterId.MotorMaxSpeed, [VelocityMotorDef.DefaultMaxSpeed]);
-        slider.Readout.ShouldBe(UiText.Format("{0} rpm", new FixedNumber(60, 0)));
-        slider.Step.ShouldBe(10.0 / 230, tolerance: 1e-12);
-        (slider.High / slider.Step).ShouldBe(Math.Round(slider.High / slider.Step), tolerance: 1e-9);
-        PartParameters.ValueAt(PartParameterId.MotorMaxSpeed, slider.High).ShouldBe(VelocityMotorDef.DefaultMaxSpeed, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void MotorStrength_RunsFrom5To40NewtonMetres_InStepsOf5_WeakerThanAServo()
-    {
-        PartParameters.ValueAt(PartParameterId.MotorStrength, 0).ShouldBe(50000);
-        PartParameters.ValueAt(PartParameterId.MotorStrength, 1).ShouldBe(400000);
-        PartParameters.SliderOver(PartParameterId.MotorStrength, [VelocityMotorDef.DefaultStrength]).Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(40, 0)));
-        PartParameters.SliderOver(PartParameterId.MotorStrength, [VelocityMotorDef.DefaultStrength]).High.ShouldBe(1);
-        PartParameters.ValueAt(PartParameterId.ServoStrength, 1).ShouldBe(2000000);
+        Should.Throw<ArgumentException>(() => SettingRange.Of(stops));
     }
 
     // 20–400 N·m in steps of 20, then one step more that reads Locked: an infinite Strength (#1041).
     [Fact]
-    public void BrakeStrength_RunsFrom20To400NewtonMetres_InStepsOf20_ThenLocked()
-    {
-        PartParameters.Of(PartParameterId.BrakeStrength).ShouldBe(PartParameters.BrakeStrength);
-        PartParameters.BrakeStrength.MultiEditable.ShouldBeTrue();
-        PartParameters.BrakeStrength.Advanced.ShouldBeFalse();
-        PartParameters.BrakeStrength.ChangesPorts.ShouldBeFalse();
-        PartParameters.BrakeStrength.Slider!.Label.ShouldBe(UiText.Plain("Strength"));
-        PartParameters.ValueAt(PartParameterId.BrakeStrength, 0).ShouldBe(200000);
-        var steps = PartParameters.SliderOver(PartParameterId.BrakeStrength, [BrakeDef.DefaultStrength]).Step;
-        steps.ShouldBe(1.0 / 20, tolerance: 1e-12);
-        PartParameters.ValueAt(PartParameterId.BrakeStrength, 1 - steps).ShouldBe(4000000, tolerance: 1e-6);
-        PartParameters.ValueAt(PartParameterId.BrakeStrength, 1).ShouldBe(BrakeDef.LockedStrength);
-    }
-
-    [Fact]
-    public void BrakeStrength_ReadsLocked_AtItsTopStep_AndTheDefaultSitsOnAStep()
+    public void BrakeStrength_ReadsLocked_AtItsTopStep_AlsoAtTheTopOfASpan()
     {
         var locked = PartParameters.SliderOver(PartParameterId.BrakeStrength, [BrakeDef.LockedStrength]);
         locked.Readout.ShouldBe(UiText.Plain("Locked"));
         locked.High.ShouldBe(1);
-
-        var top = PartParameters.SliderOver(PartParameterId.BrakeStrength, [4000000]);
-        top.Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(400, 0)));
-
-        var standard = PartParameters.SliderOver(PartParameterId.BrakeStrength, [BrakeDef.DefaultStrength]);
-        standard.Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(200, 0)));
-        (standard.High / standard.Step).ShouldBe(Math.Round(standard.High / standard.Step), tolerance: 1e-9);
-        PartParameters.ValueAt(PartParameterId.BrakeStrength, standard.High).ShouldBe(BrakeDef.DefaultStrength, tolerance: 1e-6);
-    }
-
-    [Fact]
-    public void BrakeStrength_OverASpanUpToLocked_ReadsFromItsLowestToLocked()
-    {
+        locked.Step.ShouldBe(1.0 / 20, tolerance: 1e-12);
+        PartParameters.ValueAt(PartParameterId.BrakeStrength, 1 - locked.Step).ShouldBe(4000000, tolerance: 1e-6);
+        PartParameters.SliderOver(PartParameterId.BrakeStrength, [4000000]).Readout.ShouldBe(UiText.Format("{0} N·m", new FixedNumber(400, 0)));
         var span = PartParameters.SliderOver(PartParameterId.BrakeStrength, [BrakeDef.LockedStrength, 600000]);
-
         span.Readout.ShouldBe(UiText.Format("{0} N·m–Locked", new FixedNumber(60, 0)));
         span.High.ShouldBe(1);
         PartParameters.SliderOver(PartParameterId.BrakeStrength, [600000, 4000000]).Readout
             .ShouldBe(UiText.Format("{0}–{1} N·m", new FixedNumber(60, 0), new FixedNumber(400, 0)));
     }
 
+    // The old 30–720°/s are exactly 5–120 rpm, so every saved Servo still fits; a Brake fits up to
+    // 400 N·m or Locked.
     [Theory]
-    [InlineData(200000.0, true)]
-    [InlineData(4000000.0, true)]
-    [InlineData(BrakeDef.LockedStrength, true)]
-    [InlineData(4100000.0, false)]
-    [InlineData(4200000.0, false)]
-    [InlineData(199999.0, false)]
-    public void BrakeStrength_IsOnItsSlider_UpTo400NewtonMetres_OrLocked(double strength, bool onIt)
+    [InlineData(PartParameterId.AngularMaxSpeed, 30 * Math.PI / 180, true)]
+    [InlineData(PartParameterId.AngularMaxSpeed, 720 * Math.PI / 180, true)]
+    [InlineData(PartParameterId.BrakeStrength, 200000.0, true)]
+    [InlineData(PartParameterId.BrakeStrength, 4000000.0, true)]
+    [InlineData(PartParameterId.BrakeStrength, BrakeDef.LockedStrength, true)]
+    [InlineData(PartParameterId.BrakeStrength, 4100000.0, false)]
+    [InlineData(PartParameterId.BrakeStrength, 199999.0, false)]
+    public void IsOnItsSlider_KeepsEverySavedValueTheSliderCanShow(PartParameterId id, double value, bool onIt)
     {
-        CreatureBuilder.IsOnItsSlider(PartParameterId.BrakeStrength, strength).ShouldBe(onIt);
+        CreatureBuilder.IsOnItsSlider(id, value).ShouldBe(onIt);
     }
-
-    [Fact]
-    public void Aim_IsSetOnTheCanvas_OnePartAtATime()
-    {
-        PartParameters.Aim.InPanel.ShouldBeFalse();
-        PartParameters.Aim.MultiEditable.ShouldBeFalse();
-        Should.Throw<ArgumentOutOfRangeException>(() => PartParameters.SliderOver(PartParameterId.Aim, [0.0]));
-    }
-
-    [Fact]
-    public void EveryId_HasItsParameter()
-    {
-        Enum.GetValues<PartParameterId>().ShouldAllBe(id => PartParameters.Of(id).Id == id);
-    }
-
-    [Fact]
-    public void EveryPanelSetting_HasAHelpTextOfItsOwn()
-    {
-        // Touching a slider shows this text (#867).
-        var scales = Enum.GetValues<PartParameterId>()
-            .Select(PartParameters.Of)
-            .Where(parameter => parameter.InPanel)
-            .Select(parameter => parameter.Slider!)
-            .ToArray();
-
-        scales.ShouldNotBeEmpty();
-        scales.ShouldAllBe(scale => !string.IsNullOrWhiteSpace(scale.Help.Message) && scale.Help.Message != scale.Label.Message);
-    }
-
-    private static double Position(PartParameter parameter, double shown) => parameter.Slider!.Range.Position(shown);
 }

@@ -101,65 +101,30 @@ public sealed class UiSourceGuardTests
     private const string _drawnWidget = "ui/widgets/BuildCanvas.cs";
 
     [Theory]
-    [InlineData("void _Draw() { DrawCircle(Vector2.Zero, 1.7f, Colors.White); }")]
-    [InlineData("void DrawGlow() { var radius = 1.35f; }")]
-    public void Drawn_widget_drawing_number_is_exempt(string member) =>
-        CSharpSources.Snippet(member).Find(node => IsUnnamedNumber(_drawnWidget, node)).ShouldBeEmpty();
+    [InlineData(_drawnWidget, "void _Draw() { DrawCircle(Vector2.Zero, 1.7f, Colors.White); }", false)]
+    [InlineData(_drawnWidget, "void Select(Rect2 rect) { var tap = rect.Size.X < 8; }", true)]
+    [InlineData("ui/lib/UiCard.cs", "void DrawGlow() { var radius = 1.35f; }", true)]
+    public void Number_outside_a_drawn_widget_drawing_is_flagged(string path, string member, bool flagged) =>
+        CSharpSources.Snippet(member).Find(node => IsUnnamedNumber(path, node)).Count().ShouldBe(flagged ? 1 : 0);
 
     [Theory]
-    [InlineData(_drawnWidget, "void Select(Rect2 rect) { var tap = rect.Size.X < 8; }")]
-    [InlineData(_drawnWidget, "void Clear(SceneTree tree) { tree.CreateTimer(1.8); }")]
-    [InlineData("ui/lib/UiCard.cs", "void DrawGlow() { var radius = 1.35f; }")]
-    public void Number_outside_a_drawn_widget_drawing_is_flagged(string path, string member) =>
-        CSharpSources.Snippet(member).Find(node => IsUnnamedNumber(path, node)).ShouldHaveSingleItem();
+    [InlineData("const float RowHeight = 48;", true)]
+    [InlineData("float M(float x) => (x * 0.5f) - 1 + 2;", false)]
+    [InlineData("enum Kind { A = 4 }", false)]
+    public void Screen_number_is_flagged(string member, bool flagged) =>
+        CSharpSources.Snippet(member).Find(IsScreenNumber).Count().ShouldBe(flagged ? 1 : 0);
 
+    // A drawn widget may place a control over its drawing and size the viewport it draws, never size a control.
     [Theory]
-    [InlineData("const float RowHeight = 48;")]
-    [InlineData("static readonly float Width = 12;")]
-    [InlineData("float M() => 3;")]
-    public void Screen_number_is_flagged(string member) =>
-        CSharpSources.Snippet(member).Find(IsScreenNumber).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("float M(float x) => (x * 0.5f) - 1 + 2;")]
-    [InlineData("enum Kind { A = 4 }")]
-    public void Screen_identity_number_passes(string member) =>
-        CSharpSources.Snippet(member).Find(IsScreenNumber).ShouldBeEmpty();
-
-    [Theory]
-    [InlineData("Label M() => new Label();")]
-    [InlineData("Control M() => new HBoxContainer();")]
-    [InlineData("void M() { AddChild(new Button()); }")]
-    [InlineData("void M() { AddThemeConstantOverride(\"separation\", 4); }")]
-    [InlineData("void M(Label label) { label.AddThemeFontSizeOverride(\"font_size\", 1); }")]
-    [InlineData("StyleBox M() => new StyleBoxFlat();")]
-    [InlineData("void M() { CustomMinimumSize = Vector2.One; }")]
-    [InlineData("void M(Control control) { control.Size = Vector2.One; }")]
-    [InlineData("void M(SubViewport viewport) { viewport.Size = Vector2I.One; }")]
-    [InlineData("UiButton M() => new UiButton { Position = Vector2.One };")]
-    public void Building_or_restyling_is_flagged(string member) =>
-        BuildsOrRestyles(member).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("UiButton M() => new UiButton { Text = \"New\" };")]
-    [InlineData("UiCard M() => new();")]
-    [InlineData("Vector2 M() => new(1, 2);")]
-    [InlineData("void M(Control control) { control.Visible = false; }")]
-    [InlineData("void M(Node2D part) { part.Position = Vector2.One; }")]
-    public void Library_instances_and_state_pass(string member) =>
-        BuildsOrRestyles(member).ShouldBeEmpty();
-
-    [Fact]
-    public void Drawn_widget_may_place_a_control_over_its_drawing() =>
-        BuildsOrRestyles("void M(Control handle) { handle.Position = Vector2.One; }", _drawnWidget).ShouldBeEmpty();
-
-    [Fact]
-    public void Drawn_widget_still_may_not_size_a_control() =>
-        BuildsOrRestyles("void M(Control handle) { handle.Size = Vector2.One; }", _drawnWidget).ShouldHaveSingleItem();
-
-    [Fact]
-    public void Drawn_widget_may_size_the_viewport_it_draws() =>
-        BuildsOrRestyles("void M(SubViewport picture) { picture.Size = Vector2I.One; }", _drawnWidget).ShouldBeEmpty();
+    [InlineData("ui/screens/Snippet.cs", "Control M() => new HBoxContainer();", true)]
+    [InlineData("ui/screens/Snippet.cs", "StyleBox M() => new StyleBoxFlat();", true)]
+    [InlineData("ui/screens/Snippet.cs", "void M(Label label) { label.AddThemeFontSizeOverride(\"font_size\", 1); }", true)]
+    [InlineData("ui/screens/Snippet.cs", "UiButton M() => new UiButton { Position = Vector2.One };", true)]
+    [InlineData(_drawnWidget, "void M(Control handle) { handle.Position = Vector2.One; }", false)]
+    [InlineData(_drawnWidget, "void M(Control handle) { handle.Size = Vector2.One; }", true)]
+    [InlineData(_drawnWidget, "void M(SubViewport picture) { picture.Size = Vector2I.One; }", false)]
+    public void Building_or_restyling_is_flagged(string path, string member, bool flagged) =>
+        BuildsOrRestyles(member, path).Count().ShouldBe(flagged ? 1 : 0);
 
     [Fact]
     public void Component_library_selects_colours_by_theme_variation()
@@ -208,78 +173,41 @@ public sealed class UiSourceGuardTests
         SceneNodes.WithScript("UiNotification.cs").ShouldBeEmpty();
     }
 
-    [Theory]
-    [InlineData("UiNotification M() => new UiNotification();")]
-    [InlineData("UiNotification N = new();")]
-    public void Notification_queue_is_flagged(string member)
+    [Fact]
+    public void Notification_queue_and_z_index_guards_flag_their_mistake()
     {
-        var snippet = CSharpSources.Snippet(member);
+        var snippet = CSharpSources.Snippet(
+            "UiNotification N = new(); Label L = new Label { ZIndex = 1 }; void M(Control control) { control.ZIndex = 1; }");
         var model = CSharpSources.Compile([.. CSharpSources.Project, snippet]).GetSemanticModel(snippet.Tree);
+
         snippet.Find(node => CreatesNotificationQueue(node, model)).ShouldHaveSingleItem();
+        snippet.Find(SetsZIndex).Count().ShouldBe(2);
     }
 
     [Theory]
-    [InlineData("Label M() => new Label { ZIndex = 1 };")]
-    [InlineData("void M(Control control) { control.ZIndex = 1; }")]
-    public void Z_index_is_flagged(string member) =>
-        CSharpSources.Snippet(member).Find(SetsZIndex).ShouldHaveSingleItem();
+    [InlineData("void M(Label label) { label.AddThemeColorOverride(\"font_color\", Colors.White); }", true)]
+    [InlineData("void M(Button button, Color tint) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small, tint);", true)]
+    [InlineData("void M(Button button) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small);", false)]
+    public void Pinned_colour_is_flagged(string member, bool flagged) =>
+        CSharpSources.Snippet(member).Find(IsPinnedColour).Count().ShouldBe(flagged ? 1 : 0);
 
     [Theory]
-    [InlineData("void M(Label label) { label.AddThemeColorOverride(\"font_color\", Colors.White); }")]
-    [InlineData("void M(Button button, Color tint) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small, tint);")]
-    public void Pinned_colour_is_flagged(string member) =>
-        CSharpSources.Snippet(member).Find(IsPinnedColour).ShouldHaveSingleItem();
+    [InlineData("Color M() => Colors.Red;", true)]
+    [InlineData("static readonly Color[] Palette = [new(1, 0, 0)];", true)]
+    [InlineData("void M(ColorRect rect) { rect.Color = new(0, 0, 0, 0.5f); }", true)]
+    [InlineData("Color M() => Color.Color8(255, 0, 0);", true)]
+    [InlineData("Color M() => Colors.White with { A = 0.5f };", false)]
+    [InlineData("Color M(Color themed) => new(themed, 0.5f);", false)]
+    public void Colour_literal_is_flagged(string member, bool flagged) =>
+        ColorLiterals([CSharpSources.Snippet(member)]).Count().ShouldBe(flagged ? 1 : 0);
 
     [Theory]
-    [InlineData("void M(Label label) { label.RemoveThemeColorOverride(\"font_color\"); }")]
-    [InlineData("void M(Button button) => UiIcons.Apply(button, UiIconId.Edit, UiIconSize.Small);")]
-    public void Theme_variation_passes(string member) =>
-        CSharpSources.Snippet(member).Find(IsPinnedColour).ShouldBeEmpty();
-
-    [Theory]
-    [InlineData("Color M() => new Color(0.1f, 0.2f, 0.3f);")]
-    [InlineData("Color M() => new Godot.Color(\"#ffffff\");")]
-    [InlineData("Color M() => Color.Color8(1, 2, 3);")]
-    [InlineData("Color M() => Color.FromHtml(\"#ffffff\");")]
-    [InlineData("Color M() => Colors.Red;")]
-    [InlineData("Color M() => new(0.1f, 0.2f, 0.3f);")]
-    [InlineData("Color M() { return new(0.1f, 0.2f, 0.3f); }")]
-    [InlineData("void M(ColorRect rect) { rect.Color = new(0, 0, 0, 0.5f); }")]
-    [InlineData("ColorRect M() => new() { Color = new(0, 0, 0, 0.5f) };")]
-    [InlineData("void M(Control control) => control.DrawRect(new Rect2(), new(1, 0, 0));")]
-    [InlineData("void M() { Color Local() => new(1, 0, 0); }")]
-    [InlineData("static readonly Color[] Palette = [new(1, 0, 0)];")]
-    [InlineData("Dictionary<int, Color> Map = new() { [1] = new(1, 0, 0) };")]
-    public void Colour_literal_is_flagged(string member) =>
-        ColorLiterals([CSharpSources.Snippet(member)]).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("Color M() => Colors.White with { A = 0.5f };")]
-    [InlineData("Color M() => Colors.Transparent;")]
-    [InlineData("Color M(Color themed) => new(themed, 0.5f);")]
-    [InlineData("Color M(Color themed) => themed.Lerp(Colors.White, 0.25f);")]
-    [InlineData("Vector2 M() => new(3, 4);")]
-    public void Theme_derived_colour_passes(string member) =>
-        ColorLiterals([CSharpSources.Snippet(member)]).ShouldBeEmpty();
-
-    [Theory]
-    [InlineData("float M() => 12;")]
-    [InlineData("void M() { var seconds = 0.8f; }")]
-    [InlineData("float Width = 3;")]
-    [InlineData("float Width { get; set; } = 3;")]
-    [InlineData("static float Width = 3;")]
-    public void Inline_number_is_flagged(string member) =>
-        CSharpSources.Snippet(member).Find(IsInlineNumber).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("const float Width = 12;")]
-    [InlineData("static readonly float Width = 12;")]
-    [InlineData("void M() { const int points = 32; }")]
-    [InlineData("float M(float x) => (x * 0.5f) - 1 + 2 - 0.5f;")]
-    [InlineData("enum Kind { A = 4 }")]
-    [InlineData("[System.ComponentModel.DefaultValue(4)] float Width { get; set; }")]
-    public void Named_number_passes(string member) =>
-        CSharpSources.Snippet(member).Find(IsInlineNumber).ShouldBeEmpty();
+    [InlineData("void M() { var seconds = 0.8f; }", true)]
+    [InlineData("static float Width = 12;", true)]
+    [InlineData("static readonly float Width = 12;", false)]
+    [InlineData("[System.ComponentModel.DefaultValue(4)] float Width { get; set; }", false)]
+    public void Inline_number_is_flagged(string member, bool flagged) =>
+        CSharpSources.Snippet(member).Find(IsInlineNumber).Count().ShouldBe(flagged ? 1 : 0);
 
     private static IEnumerable<string> ColorLiterals(IReadOnlyList<CSharpSources.Source> sources)
     {

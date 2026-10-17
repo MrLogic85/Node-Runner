@@ -9,59 +9,40 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class CreationDuplicateWorkflowTests
 {
     [Fact]
-    public void Duplicate_CreatesNewCreationWithTraining_NamedACopyInThePlayersLanguage()
+    public void Duplicate_SavesATrainedCopy_NamedACopyInThePlayersLanguage()
     {
         var repository = new InMemoryCreationRepository();
-        var source = CreateCreation("Walker", generation: 8);
-        var copyId = Guid.NewGuid();
+        var source = Creation("Walker");
         repository.Save(source);
-        var workflow = new CreationDuplicateWorkflow(repository, () => copyId);
+        var copyId = Guid.NewGuid();
         UiText? asked = null;
 
-        var copy = workflow.Duplicate(source.Id, text =>
+        var copy = new CreationDuplicateWorkflow(repository, () => copyId).Duplicate(source.Id, text =>
         {
             asked = text;
             return "Kopia av Walker";
         });
 
         asked.ShouldBe(UiText.Format("Copy of {0}", "Walker"));
-        copy.Id.ShouldBe(copyId);
-        copy.Name.ShouldBe("Kopia av Walker");
-        copy.Creature.ShouldBe(source.Creature);
-        copy.Creature.NextPartId.ShouldBe(source.Creature.NextPartId);
-        copy.Training.ShouldBe(source.Training);
+        copy.ShouldBe(new CreationDef(copyId, "Kopia av Walker", source.Creature, source.Training));
         repository.Get(copyId).ShouldBe(copy);
+        Should.Throw<KeyNotFoundException>(() => new CreationDuplicateWorkflow(repository).Duplicate(Guid.NewGuid(), TestLanguage.Untranslated));
     }
 
     [Fact]
     public void Duplicate_ALongName_CutsTheCopyNameToTheCreationLimit()
     {
         var repository = new InMemoryCreationRepository();
-        var source = CreateCreation(new string('W', NameLimits.Creation), generation: 1);
+        var source = Creation(new string('W', NameLimits.Creation));
         repository.Save(source);
-        var workflow = new CreationDuplicateWorkflow(repository);
 
-        var copy = workflow.Duplicate(source.Id, text => string.Format(CultureInfo.InvariantCulture, text.Message, [.. text.Args]));
+        var copy = new CreationDuplicateWorkflow(repository).Duplicate(source.Id, text => string.Format(CultureInfo.InvariantCulture, text.Message, [.. text.Args]));
 
         copy.Name.ShouldBe("Copy of " + new string('W', NameLimits.Creation - "Copy of ".Length));
         repository.Get(source.Id)!.Name.ShouldBe(source.Name);
     }
 
-    [Fact]
-    public void Duplicate_MissingCreation_Throws()
-    {
-        var workflow = new CreationDuplicateWorkflow(new InMemoryCreationRepository());
-
-        Should.Throw<KeyNotFoundException>(() => workflow.Duplicate(Guid.NewGuid(), TestLanguage.Untranslated));
-    }
-
-    [Fact]
-    public void Constructor_WithNullRepository_Throws()
-    {
-        Should.Throw<ArgumentNullException>(() => new CreationDuplicateWorkflow(null!));
-    }
-
-    private static CreationDef CreateCreation(string name, int generation) =>
+    private static CreationDef Creation(string name) =>
         new(
             Guid.NewGuid(),
             name,
@@ -69,5 +50,5 @@ public sealed class CreationDuplicateWorkflowTests
                 [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
                 [new BeamDef(101, 1, 2)],
                 [new SensorDef(201, 101, SensorKind.Accelerometer)]),
-            TestTraining.State(generation, 1, TestTraining.Run));
+            TestTraining.State(8, 1, TestTraining.Run));
 }

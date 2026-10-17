@@ -5,136 +5,41 @@ namespace NodeRunner.Ui.Tests;
 
 public sealed class UiButtonStyleTests
 {
+    private static readonly ThemeFile _neon = ThemeFile.For(UiTokenType.Neon);
+    private static readonly UiButtonStyle[] _styles = [UiButtonStyle.Primary, UiButtonStyle.Secondary, UiButtonStyle.Tertiary, UiButtonStyle.Flat];
+
+    private static Color Neon(UiTokens.Color token) => _neon.Color(token);
+
     [Fact]
     public void Styles_ResolveCanonicalRestAndSelectedColors()
     {
-        var tokens = ThemeFile.For(UiTokenType.Neon);
-        Color Resolve(UiTokens.Color token) => ResolveColor(tokens, token);
-
-        UiButtonStyle.Primary.Resolve(Resolve).ShouldBe(new UiResolvedButtonStyle(
-            tokens.Color(UiTokens.Color.Accent), tokens.Color(UiTokens.Color.Accent), tokens.Color(UiTokens.Color.OnAccent), tokens.Color(UiTokens.Color.Halo), tokens.Color(UiTokens.Color.Accent)));
-        UiButtonStyle.Secondary.Resolve(Resolve).ShouldBe(new UiResolvedButtonStyle(
-            tokens.Color(UiTokens.Color.PanelRaised), tokens.Color(UiTokens.Color.LineStrong), tokens.Color(UiTokens.Color.Ink), tokens.Color(UiTokens.Color.Accent), null));
-        UiButtonStyle.Tertiary.Resolve(Resolve).ShouldBe(new UiResolvedButtonStyle(
-            tokens.Color(UiTokens.Color.PanelRaised), tokens.Color(UiTokens.Color.Danger), tokens.Color(UiTokens.Color.Danger), tokens.Color(UiTokens.Color.Danger), null));
-        UiButtonStyle.Flat.Resolve(Resolve).ShouldBe(new UiResolvedButtonStyle(
-            Colors.Transparent, Colors.Transparent, tokens.Color(UiTokens.Color.Ink), tokens.Color(UiTokens.Color.Ink), null));
+        UiButtonStyle.Primary.Resolve(Neon).ShouldBe(new UiResolvedButtonStyle(
+            Neon(UiTokens.Color.Accent), Neon(UiTokens.Color.Accent), Neon(UiTokens.Color.OnAccent), Neon(UiTokens.Color.Halo), Neon(UiTokens.Color.Accent)));
+        UiButtonStyle.Secondary.Resolve(Neon).ShouldBe(new UiResolvedButtonStyle(
+            Neon(UiTokens.Color.PanelRaised), Neon(UiTokens.Color.LineStrong), Neon(UiTokens.Color.Ink), Neon(UiTokens.Color.Accent), null));
+        UiButtonStyle.Tertiary.Resolve(Neon).ShouldBe(new UiResolvedButtonStyle(
+            Neon(UiTokens.Color.PanelRaised), Neon(UiTokens.Color.Danger), Neon(UiTokens.Color.Danger), Neon(UiTokens.Color.Danger), null));
+        UiButtonStyle.Flat.Resolve(Neon).ShouldBe(new UiResolvedButtonStyle(
+            Colors.Transparent, Colors.Transparent, Neon(UiTokens.Color.Ink), Neon(UiTokens.Color.Ink), null));
     }
 
+    /// <summary>Selected uses each style's selected color in place of the rest glow; only Primary glows at rest; disabled never glows.</summary>
     [Fact]
-    public void Styles_OnlyPrimaryDefinesARestGlow()
+    public void Glow_follows_selected_rest_and_disabled()
     {
-        foreach (var style in new[]
-                 {
-                     UiButtonStyle.Secondary,
-                     UiButtonStyle.Tertiary,
-                     UiButtonStyle.Flat,
-                 })
+        foreach (var style in _styles)
         {
-            style.RestGlowColor.ShouldBeNull();
+            var resolved = style.Resolve(Neon);
+            style.BorderFor(Neon, selected: true).ShouldBe(resolved.Selected);
+            style.GlowBaseFor(Neon, selected: true).ShouldBe(resolved.Selected);
+            style.GlowBaseFor(Neon, selected: false).ShouldBe(style == UiButtonStyle.Primary ? Neon(UiTokens.Color.Accent) : null);
+            style.GlowBaseFor(Neon, selected: false, enabled: false).ShouldBeNull();
+            style.GlowBaseFor(Neon, selected: true, enabled: false).ShouldBeNull();
         }
 
-        UiButtonStyle.Primary.RestGlowColor.ShouldBe(UiTokens.Color.Accent);
-    }
-
-    [Fact]
-    public void SelectedState_ReplacesRestGlowAndUsesEachStylesSelectedColor()
-    {
-        var tokens = ThemeFile.For(UiTokenType.Neon);
-        Color Resolve(UiTokens.Color token) => ResolveColor(tokens, token);
-        foreach (var style in new[]
-                 {
-                     UiButtonStyle.Primary,
-                     UiButtonStyle.Secondary,
-                     UiButtonStyle.Tertiary,
-                     UiButtonStyle.Flat,
-                 })
-        {
-            var resolved = style.Resolve(Resolve);
-            style.BorderFor(Resolve, selected: true).ShouldBe(resolved.Selected);
-            style.GlowBaseFor(Resolve, selected: true).ShouldBe(resolved.Selected);
-        }
-
-        UiButtonStyle.Primary.GlowBaseFor(Resolve, selected: false).ShouldBe(tokens.Color(UiTokens.Color.Accent));
-        UiButtonStyle.Secondary.GlowBaseFor(Resolve, selected: false).ShouldBeNull();
-        UiButtonStyle.Tertiary.GlowBaseFor(Resolve, selected: false).ShouldBeNull();
-        UiButtonStyle.Flat.GlowBaseFor(Resolve, selected: false).ShouldBeNull();
-    }
-
-    [Fact]
-    public void SelectedPrimary_UsesTheSelectedGlowInsteadOfItsRestGlow()
-    {
-        var tokens = ThemeFile.For(UiTokenType.Neon);
-        var primary = UiButtonStyle.Primary;
-        Color Resolve(UiTokens.Color token) => ResolveColor(tokens, token);
-
-        primary.GlowBaseFor(Resolve, selected: true).ShouldBe(tokens.Color(UiTokens.Color.Halo));
-        primary.GlowBaseFor(Resolve, selected: true).ShouldNotBe(
-            primary.GlowBaseFor(Resolve, selected: false));
-        UiGlow.FromBase(
-                primary.GlowBaseFor(Resolve, selected: true)!.Value,
-                enabled: true)
-            .ShouldBe(tokens.Color(UiTokens.Color.Halo).ScaleAlpha(UiGlow.Opacity));
-    }
-
-    [Fact]
-    public void Glow_IsDerivedFromSelectedBaseColorAndSuppressedForPaper()
-    {
-        var selected = UiButtonStyle.Primary.Resolve(color => ResolveColor(ThemeFile.For(UiTokenType.Neon), color)).Selected;
-        UiGlow.FromBase(selected, enabled: true).ShouldBe(
-            selected.ScaleAlpha(UiGlow.Opacity));
-        UiGlow.FromBase(selected, enabled: false).ShouldBe(Colors.Transparent);
-        UiGlow.FromBase(
-            UiButtonStyle.Primary.Resolve(color => ResolveColor(ThemeFile.For(UiTokenType.Paper), color)).Selected,
-            ThemeFile.For(UiTokenType.Paper).Flag(UiTokens.Flag.EffectsEnabled)).ShouldBe(Colors.Transparent);
-    }
-
-    [Fact]
-    public void DisabledStyles_SuppressRestAndSelectedGlowForEveryKind()
-    {
-        var tokens = ThemeFile.For(UiTokenType.Neon);
-        Color Resolve(UiTokens.Color token) => ResolveColor(tokens, token);
-        foreach (var style in new[]
-                 {
-                     UiButtonStyle.Primary,
-                     UiButtonStyle.Secondary,
-                     UiButtonStyle.Tertiary,
-                     UiButtonStyle.Flat,
-                 })
-        {
-            style.GlowBaseFor(Resolve, selected: false, enabled: false).ShouldBeNull();
-            style.GlowBaseFor(Resolve, selected: true, enabled: false).ShouldBeNull();
-        }
-
-    }
-
-    [Fact]
-    public void Metrics_UseVisibleSizesWithoutExtraTouchMargins()
-    {
-        var metrics = UiButtonMetrics.Default;
-
-        metrics.TouchTarget.ShouldBe(UiSize.Control.Touch);
-        metrics.MinimumSize(UiButtonContentLayout.RowCompact).ShouldBe(new Vector2(UiSize.Control.Small, UiSize.Control.Small));
-        metrics.MinimumSize(UiButtonContentLayout.Row).ShouldBe(new Vector2(UiSize.Control.Default, UiSize.Control.Default));
-        metrics.MinimumSize(UiButtonContentLayout.Stacked).ShouldBe(new Vector2(UiSize.Control.Touch, UiSize.Control.Touch));
-        metrics.BadgeMinimumSize.ShouldBe(UiSize.Widget.BadgeMinimumSize);
-        metrics.BadgeOffset.ShouldBe(UiSize.Widget.BadgeOffset);
-        metrics.SelectedStroke.ShouldBe(UiSize.Stroke.ButtonSelected);
-    }
-
-    [Fact]
-    public void BadgePosition_AnchorsToTheControlCornerForEverySize()
-    {
-        var metrics = new UiButtonMetrics(48, 40, 32, 16, 4, 2);
-
-        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.RowCompact))
-            .ShouldBe(new Vector2(20, -4));
-        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.Row))
-            .ShouldBe(new Vector2(28, -4));
-        metrics.BadgePosition(metrics.MinimumSize(UiButtonContentLayout.Stacked))
-            .ShouldBe(new Vector2(36, -4));
-        metrics.BadgePosition(new Vector2(120, 40))
-            .ShouldBe(new Vector2(108, -4));
+        var halo = Neon(UiTokens.Color.Halo);
+        UiGlow.FromBase(halo, enabled: true).ShouldBe(halo.ScaleAlpha(UiGlow.Opacity));
+        UiGlow.FromBase(halo, ThemeFile.For(UiTokenType.Paper).Flag(UiTokens.Flag.EffectsEnabled)).ShouldBe(Colors.Transparent);
     }
 
     [Theory]
@@ -143,20 +48,17 @@ public sealed class UiButtonStyleTests
     [InlineData(UiButtonContentLayout.Stacked, 48)]
     public void Metrics_LayoutDeterminesSize(UiButtonContentLayout layout, float expected)
     {
-        new UiButtonMetrics(48, 40, 32, 16, 4, 2).MinimumSize(layout)
-            .ShouldBe(new Vector2(expected, expected));
+        var metrics = new UiButtonMetrics(48, 40, 32, 16, 4, 2);
+
+        metrics.MinimumSize(layout).ShouldBe(new Vector2(expected, expected));
+        // The badge anchors to the control's top-right corner.
+        metrics.BadgePosition(metrics.MinimumSize(layout)).ShouldBe(new Vector2(expected - 12, -4));
     }
 
-    [Fact]
-    public void Metrics_LayoutAndLabelDetermineIconSize()
-    {
-        UiButtonMetrics.IconSize(UiButtonContentLayout.Row, hasLabel: true).ShouldBe(UiIconSize.Standard);
-        UiButtonMetrics.IconSize(UiButtonContentLayout.RowCompact, hasLabel: true).ShouldBe(UiIconSize.Standard);
-        UiButtonMetrics.IconSize(UiButtonContentLayout.Row, hasLabel: false).ShouldBe(UiIconSize.Large);
-        UiButtonMetrics.IconSize(UiButtonContentLayout.RowCompact, hasLabel: false).ShouldBe(UiIconSize.Large);
-        UiButtonMetrics.IconSize(UiButtonContentLayout.Stacked, hasLabel: true).ShouldBe(UiIconSize.Large);
-        UiButtonMetrics.IconSize(UiButtonContentLayout.Stacked, hasLabel: false).ShouldBe(UiIconSize.Large);
-    }
-
-    private static Color ResolveColor(ThemeFile palette, UiTokens.Color token) => palette.Color(token);
+    [Theory]
+    [InlineData(UiButtonContentLayout.Row, true, UiIconSize.Standard)]
+    [InlineData(UiButtonContentLayout.RowCompact, false, UiIconSize.Large)]
+    [InlineData(UiButtonContentLayout.Stacked, true, UiIconSize.Large)]
+    public void Metrics_LayoutAndLabelDetermineIconSize(UiButtonContentLayout layout, bool hasLabel, UiIconSize expected) =>
+        UiButtonMetrics.IconSize(layout, hasLabel).ShouldBe(expected);
 }

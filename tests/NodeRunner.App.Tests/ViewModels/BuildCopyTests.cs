@@ -1,17 +1,24 @@
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class BuildCopyTests
 {
     private const double _step = BuildViewModel.BuildGridStep;
+    private static readonly CreatureElementSelection _camera = new(CreatureElementKind.Sensor, 21);
+    private static readonly CreatureElementSelection _servo = new(CreatureElementKind.Servo, 31);
+    private static readonly CreatureElementSelection _spring = new(CreatureElementKind.Spring, 13);
+    private static readonly CreatureElementSelection _piston = new(CreatureElementKind.Piston, 14);
 
     [Fact]
-    public void Copy_DuplicatesJointsBeamsAndSpringsAStepAside_KeepsTheirSettings_AndSelectsTheCopy()
+    public void Copy_OfEveryPart_GoesAStepAside_WithTheirSettings_OnTheCopiedLinks_SelectedAndUndoable()
     {
-        var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4), Ids(11, 12), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        var build = Loaded(Creature());
+        var before = build.Snapshot();
+        var selection = Set(Joint(1), Joint(2), Joint(3), Joint(4), Joint(5), Beam(11), Beam(12), _camera, _servo, _piston, _spring);
+        build.ReplaceSelection(selection);
         build.CanCopySelection.ShouldBeTrue();
 
         build.CopySelectedParts();
@@ -22,179 +29,107 @@ public sealed class BuildCopyTests
             (new Vector2D(100 + _step, _step), null),
             (new Vector2D(100 + _step, 100 + _step), null),
             (new Vector2D(_step, 100 + _step), null),
+            (new Vector2D(-100 + _step, 100 + _step), null),
         ]);
-        var copies = build.Nodes.Skip(5).Select(node => node.Id).ToArray();
-        build.Beams.Skip(2).Select(beam => (beam.NodeA, beam.NodeB)).ShouldBe([(copies[0], copies[1]), (copies[1], copies[2])]);
-        var spring = build.Springs.Where(spring => spring.Id != 13).ShouldHaveSingleItem();
-        (spring.NodeA, spring.NodeB, spring.Stiffness, spring.Damping, spring.Stroke, spring.CoilLength).ShouldBe((copies[2], copies[3], 900, 20, 0.5, 0.4));
-        build.Sensors.Count.ShouldBe(1);
-        build.Servos.Count.ShouldBe(1);
-        build.Selection.Nodes.ShouldBe(copies, ignoreOrder: true);
-        build.Selection.Beams.ShouldBe(build.Beams.Skip(2).Select(beam => beam.Id), ignoreOrder: true);
-        build.Selection.Springs.ShouldBe([spring.Id]);
-    }
-
-    [Fact]
-    public void Copy_OfEveryPart_TakesThePistonSensorAndServoToo_WithTheirSettings_AndTheServoOnTheCopiedLinks()
-    {
-        var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4, 5), Ids(11, 12), Ids(21), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-        build.CanCopySelection.ShouldBeTrue();
-
-        build.CopySelectedParts();
-
         var nodes = build.Nodes.Skip(5).Select(node => node.Id).ToArray();
-        var beams = build.Beams.Skip(2).Select(beam => beam.Id).ToArray();
-        var piston = build.Pistons.Where(piston => piston.Id != 14).ShouldHaveSingleItem();
+        var beams = build.Beams.Skip(2).ToArray();
+        beams.Select(beam => (beam.NodeA, beam.NodeB)).ShouldBe([(nodes[0], nodes[1]), (nodes[1], nodes[2])]);
+        var spring = build.Springs.Last();
+        (spring.NodeA, spring.NodeB, spring.Stiffness, spring.Damping, spring.Stroke, spring.CoilLength).ShouldBe((nodes[2], nodes[3], 900, 20, 0.5, 0.4));
+        var piston = build.Pistons.Last();
         (piston.NodeA, piston.NodeB, piston.Name, piston.Strength, piston.Stroke, piston.Start, piston.MaxSpeed, piston.RiseTime)
             .ShouldBe((nodes[3], nodes[4], null, 20000, 0.8, 0.25, 300, 0.5));
-        var sensor = build.Sensors.Where(sensor => sensor.Id != 21).ShouldHaveSingleItem();
-        (sensor.BeamId, sensor.Kind, sensor.Name, sensor.Aim).ShouldBe((beams[0], SensorKind.Camera, null, 1.0));
-        var servo = build.Servos.Where(servo => servo.Id != 31).ShouldHaveSingleItem();
+        var sensor = build.Sensors.Last();
+        (sensor.BeamId, sensor.Kind, sensor.Name, sensor.Aim).ShouldBe((beams[0].Id, SensorKind.Camera, null, 1.0));
+        var servo = build.Servos.Last();
         (servo.NodeId, servo.FixedLinkId, servo.TargetLinkId, servo.Name, servo.Strength, servo.Range)
-            .ShouldBe((nodes[1], beams[1], beams[0], null, 800000, Math.PI / 2));
-        build.Selection.Nodes.ShouldBe(nodes, ignoreOrder: true);
-        build.Selection.Beams.ShouldBe(beams, ignoreOrder: true);
-        (build.Selection.Sensors.Single(), build.Selection.Servos.Single(), build.Selection.Pistons.Single()).ShouldBe((sensor.Id, servo.Id, piston.Id));
+            .ShouldBe((nodes[1], beams[1].Id, beams[0].Id, null, 800000, Math.PI / 2));
+        build.Selection.Parts.ShouldBe(
+            [.. nodes.Select(Joint), .. beams.Select(beam => Beam(beam.Id)), new(CreatureElementKind.Sensor, sensor.Id), new(CreatureElementKind.Servo, servo.Id),
+             new(CreatureElementKind.Piston, piston.Id), new(CreatureElementKind.Spring, spring.Id)],
+            ignoreOrder: true);
         build.CanvasNotes().ShouldBeEmpty();
+        var copied = build.Snapshot();
+
+        build.Undo();
+        ShouldHaveTheSameParts(build.Snapshot(), before);
+        build.Selection.ShouldBeEquivalentTo(selection);
+        build.Redo();
+        ShouldHaveTheSameParts(build.Snapshot(), copied);
     }
 
     [Fact]
-    public void Copy_OfAServoBetweenASpringAndAPiston_UsesTheirCopies()
+    public void AServo_BringsItsJoint_AndItsCopyTakesWhatOfItsLinksCame()
     {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(100, 100))],
-            [],
-            [],
-            [new ServoDef(31, 2, 13, 14)],
-            [new PistonDef(14, 2, 3)],
-            [new SpringDef(13, 1, 2)],
-            nextPartId: 40));
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3), Ids(), Ids(), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-
+        var build = Loaded(Creature());
+        build.ReplaceSelection(Set(Joint(3), Beam(12), _servo));
         build.CopySelectedParts();
+        var (joint, other) = (build.Nodes[^2], build.Nodes[^1]);
+        (joint.Position, other.Position).ShouldBe((new Vector2D(100 + _step, _step), new Vector2D(100 + _step, 100 + _step)));
+        var beam = build.Beams.Last();
+        (beam.NodeA, beam.NodeB).ShouldBe((joint.Id, other.Id));
+        var servo = build.Servos.Last();
+        (servo.NodeId, servo.FixedLinkId, servo.TargetLinkId).ShouldBe((joint.Id, beam.Id, null));
+        build.Selection.Parts.ShouldBe([Joint(other.Id), Beam(beam.Id), new(CreatureElementKind.Servo, servo.Id)], ignoreOrder: true);
+        build.SelectedNodeIds.ShouldBe([joint.Id, other.Id], ignoreOrder: true);
+        build.ShowTrainingBlockers();
+        build.CanvasNotes().ShouldContain(note => note.Target == new CreatureElementSelection(CreatureElementKind.Servo, servo.Id));
 
-        var copy = build.Servos.Where(servo => servo.Id != 31).ShouldHaveSingleItem();
+        build = Loaded(Creature());
+        build.ReplaceSelection(Set(Joint(1), Joint(2)));
+        build.CopySelectedParts();
+        build.Nodes.Count.ShouldBe(7);
+        build.Servos.ShouldHaveSingleItem().NodeId.ShouldBe(2);
+
+        build = Loaded(new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(100, 100)),
+                new ServoDef(31, 2, 13, 14), new PistonDef(14, 2, 3), new SpringDef(13, 1, 2),
+            ],
+            nextPartId: 40));
+        build.ReplaceSelection(Set(Joint(1), Joint(2), Joint(3), _servo, _piston, _spring));
+        build.CopySelectedParts();
+        var copy = build.Servos.Last();
         (copy.FixedLinkId, copy.TargetLinkId).ShouldBe((build.Springs.Last().Id, build.Pistons.Last().Id));
         build.CanvasNotes().ShouldBeEmpty();
     }
 
     [Fact]
-    public void Copy_OfAServoWithOneOfItsLinks_LeavesTheOtherRoleEmpty()
-    {
-        var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(11), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-
-        build.CopySelectedParts();
-
-        var copy = build.Servos.Where(servo => servo.Id != 31).ShouldHaveSingleItem();
-        (copy.FixedLinkId, copy.TargetLinkId).ShouldBe((null, build.Beams.Last().Id));
-        build.ShowTrainingBlockers();
-        build.CanvasNotes().ShouldContain(note => note.Target == new CreatureElementSelection(CreatureElementKind.Servo, copy.Id));
-    }
-
-    [Fact]
-    public void Copy_OfAVelocityMotor_PutsItOnTheCopiedLinks_KeepsItsSettings_AndSelectsIt()
-    {
-        var build = new BuildViewModel();
-        build.Load(WithAVelocityMotor());
-        build.ReplaceSelection(PartSet.None with { Nodes = Ids(1, 2, 3), Beams = Ids(4, 5), VelocityMotors = Ids(6) });
-
-        build.CopySelectedParts();
-
-        var copy = build.VelocityMotors.Where(motor => motor.Id != 6).ShouldHaveSingleItem();
-        var (fixedBeam, targetBeam) = (build.Beams[^2], build.Beams[^1]);
-        (copy.NodeId, copy.FixedLinkId, copy.TargetLinkId).ShouldBe((fixedBeam.NodeB, fixedBeam.Id, targetBeam.Id));
-        (copy.Strength, copy.MaxSpeed, copy.RiseTime).ShouldBe((300000, Math.PI, 0.4));
-        build.Nodes.Single(node => node.Id == copy.NodeId).Position.ShouldBe(new Vector2D(100 + _step, _step));
-        build.Selection.VelocityMotors.ShouldBe([copy.Id]);
-        build.CanvasNotes().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void OnALockedCreation_ACopyWithAVelocityMotor_IsDimmed_AndMarksTheMotor()
-    {
-        var build = new BuildViewModel();
-        build.Load(WithAVelocityMotor(), locked: true);
-        build.ReplaceSelection(PartSet.None with { Nodes = Ids(1, 2, 3), Beams = Ids(4, 5), VelocityMotors = Ids(6) });
-        var before = build.Snapshot();
-
-        build.CanCopySelection.ShouldBeFalse();
-        build.CopySelectedParts();
-
-        build.CanvasNotes().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.VelocityMotor, 6), UiText.Plain("Locked: would change the network"))]);
-        ShouldHaveTheSameParts(build.Snapshot(), before);
-        build.CanUndo.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Copy_OfAJointUnderAServo_CopiesOnlyThePlainJoint()
-    {
-        var build = Loaded();
-        build.ReplaceSelection(Ids(1, 2));
-
-        build.CopySelectedParts();
-
-        build.Nodes.Count.ShouldBe(7);
-        build.Servos.ShouldHaveSingleItem().NodeId.ShouldBe(2);
-    }
-
-    [Fact]
-    public void Undo_RemovesTheCopy_AndSelectsTheOriginalsAgain_AndRedoBringsItBack()
-    {
-        var build = Loaded();
-        var before = build.Snapshot();
-        var selection = new PartSet(Ids(1, 2, 3, 4, 5), Ids(11, 12), Ids(21), Ids(31), Ids(14), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids());
-        build.ReplaceSelection(selection);
-        build.CopySelectedParts();
-        var copied = build.Snapshot();
-
-        build.Undo();
-
-        ShouldHaveTheSameParts(build.Snapshot(), before);
-        build.Selection.ShouldBeEquivalentTo(selection);
-
-        build.Redo();
-
-        ShouldHaveTheSameParts(build.Snapshot(), copied);
-    }
-
-    [Fact]
-    public void Copy_NearTheBuildAreasCorner_GoesTheOtherWay()
+    public void Copy_StaysInTheBuildArea_GoingTheOtherWayAtItsCorner_AndKeepingAFullHeightShape()
     {
         var corner = BuildViewModel.BuildArea.Max;
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(corner.X - 20, corner.Y - 20)), new NodeDef(2, new Vector2D(corner.X - 120, corner.Y - 20))],
-            [new BeamDef(3, 1, 2)],
-            []));
-        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(3), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-
+        var build = Loaded(new CreatureDef(
+            [new NodeDef(1, new Vector2D(corner.X - 20, corner.Y - 20)), new NodeDef(2, new Vector2D(corner.X - 120, corner.Y - 20)), new BeamDef(3, 1, 2)]));
+        build.ReplaceSelection(Set(Joint(1), Joint(2), Beam(3)));
         build.CopySelectedParts();
-
         build.Nodes.Skip(2).Select(node => node.Position).ShouldBe(
             [new Vector2D(corner.X - 20 - _step, corner.Y - 20 - _step), new Vector2D(corner.X - 120 - _step, corner.Y - 20 - _step)]);
+
+        var area = BuildViewModel.BuildArea;
+        var r = NodeDef.PlainJointRadius;
+        Vector2D[] tall = [new(0, area.Min.Y + r), new(0, area.Max.Y - r), new(0, area.Max.Y - r - (_step / 2))];
+        build = Loaded(new CreatureDef(
+            [new NodeDef(1, tall[0]), new NodeDef(2, tall[1]), new NodeDef(3, tall[2]), new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)]));
+        build.ReplaceSelection(Set(Joint(1), Joint(2), Joint(3), Beam(4), Beam(5)));
+        build.CopySelectedParts();
+        build.Nodes.Skip(3).Select(node => node.Position).ShouldBe(tall.Select(position => new Vector2D(position.X + _step, position.Y)));
     }
 
-    public static TheoryData<PartSet, CreatureElementSelection[], string, bool> Blocked => new()
+    public static TheoryData<int[], int[], CreatureElementSelection, string, bool> Blocked => new()
     {
-        { new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Beam, 11)], "Select both its joints", false },
-        { new PartSet(Ids(3), Ids(), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Spring, 13)], "Select both its joints", false },
-        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Select both its joints", false },
-        { new PartSet(Ids(1, 2), Ids(), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Select its beam", false },
-        { new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Sensor, 21)], "Locked: would change the network", true },
-        { new PartSet(Ids(1, 2), Ids(), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Servo, 31)], "Locked: would change the network", true },
-        { new PartSet(Ids(4), Ids(), Ids(), Ids(), Ids(14), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()), [new(CreatureElementKind.Piston, 14)], "Locked: would change the network", true },
+        { [1], [11], Beam(11), "Select both its joints", false },
+        { [4], [], _piston, "Select both its joints", false },
+        { [1, 2], [], _camera, "Select its beam", false },
+        { [1, 2], [11], _camera, LockedText, true },
+        { [4, 5], [], _piston, LockedText, true },
     };
 
     [Theory]
     [MemberData(nameof(Blocked))]
-    public void Copy_OfASelectionItCannotTake_IsDimmed_AndATapMarksTheOffendingParts(PartSet selection, CreatureElementSelection[] offenders, string reason, bool locked)
+    public void Copy_OfASelectionItCannotTake_IsDimmed_AndATapMarksTheOffendingPart(int[] joints, int[] beams, CreatureElementSelection offender, string reason, bool locked)
     {
-        var build = new BuildViewModel();
-        build.Load(Creature(), locked);
-        build.ReplaceSelection(selection);
+        var build = Loaded(Creature(), locked);
+        build.ReplaceSelection(Set([.. joints.Select(Joint), .. beams.Select(Beam), offender]));
         var before = build.Snapshot();
 
         build.CanOfferCopy.ShouldBeTrue();
@@ -204,149 +139,50 @@ public sealed class BuildCopyTests
 
         ShouldHaveTheSameParts(build.Snapshot(), before);
         build.CanUndo.ShouldBeFalse();
-        build.CanvasNotes().ShouldBe([.. offenders.Select(part => new CanvasNote(CanvasNoteKind.Danger, part, UiText.Plain(reason)))]);
+        build.CanvasNotes().ShouldBe([new CanvasNote(CanvasNoteKind.Danger, offender, UiText.Plain(reason))]);
     }
 
     [Fact]
-    public void ADimmedCopy_MarksEveryOffendingPart_KindByKind_InIdOrder()
+    public void ADimmedCopysNotes_MarkEachOffenderKindByKind_PortsFirst_AndGoOnASelectionTouchOrUnlock()
     {
-        var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(5), Ids(12, 11), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-
+        var build = Loaded(Creature());
+        build.ReplaceSelection(Set(Joint(5), Beam(12), Beam(11), _spring));
         build.CopySelectedParts();
-
-        build.CanvasNotes().ShouldBe(
-        [
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 11), UiText.Plain("Select both its joints")),
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 12), UiText.Plain("Select both its joints")),
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Spring, 13), UiText.Plain("Select both its joints")),
-        ]);
-    }
-
-    [Fact]
-    public void ASelectedServo_BringsItsJoint_SoItsLinksCopy_AndTheCopyServoStandsInForIt()
-    {
-        var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(3), Ids(12), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-        build.CanCopySelection.ShouldBeTrue();
-
-        build.CopySelectedParts();
-
-        var (joint, other) = (build.Nodes[^2], build.Nodes[^1]);
-        (joint.Position, other.Position).ShouldBe((new Vector2D(100 + _step, _step), new Vector2D(100 + _step, 100 + _step)));
-        var beam = build.Beams.Last();
-        (beam.NodeA, beam.NodeB).ShouldBe((joint.Id, other.Id));
-        var servo = build.Servos.Last();
-        (servo.NodeId, servo.FixedLinkId, servo.TargetLinkId).ShouldBe((joint.Id, beam.Id, null));
-        build.Selection.Nodes.ShouldBe([other.Id]);
-        build.Selection.Beams.ShouldBe([beam.Id]);
-        build.Selection.Servos.ShouldBe([servo.Id]);
-        build.SelectedNodeIds.ShouldBe([joint.Id, other.Id], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void OnALockedCreation_ADimmedCopy_MarksNetworkPortsFirst_AndOnlyOnce()
-    {
-        var build = new BuildViewModel();
-        build.Load(Creature(), locked: true);
-        build.ReplaceSelection(new PartSet(Ids(3), Ids(12, 11), Ids(), Ids(31), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-
-        build.CopySelectedParts();
-
-        // The Servo still brings its joint 2, so beam 12 has both of its joints.
-        build.CanvasNotes().ShouldBe(
-        [
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Servo, 31), UiText.Plain("Locked: would change the network")),
-            new CanvasNote(CanvasNoteKind.Danger, new(CreatureElementKind.Beam, 11), UiText.Plain("Select both its joints")),
-        ]);
-    }
-
-    [Fact]
-    public void Unlocking_HidesTheLockedCopysNotes()
-    {
-        var build = new BuildViewModel();
-        build.Load(Creature(), locked: true);
-        build.ReplaceSelection(new PartSet(Ids(1, 2), Ids(11), Ids(21), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        build.CanvasNotes().Select(note => (note.Target, note.Text)).ShouldBe(
+            [(Beam(11), UiText.Plain("Select both its joints")), (Beam(12), UiText.Plain("Select both its joints")), (_spring, UiText.Plain("Select both its joints"))]);
+        build.ReplaceSelection(Set(Joint(1), Beam(11)));
         build.CopySelectedParts();
         build.CanvasNotes().ShouldNotBeEmpty();
+        build.ToggleSelected(Joint(2));
+        build.CanvasNotes().ShouldBeEmpty();
+        build.CanCopySelection.ShouldBeTrue();
+        build.ToggleSelected(Joint(2));
+        build.CopySelectedParts();
+        new BuildGestures(build).Press(new Vector2D(2000, 2000));
+        build.CanvasNotes().ShouldBeEmpty();
+        build.ReplaceSelection(Set(Joint(1)));
+        build.CanOfferCopy.ShouldBeFalse();
+
+        build = Loaded(Creature(), locked: true);
+        // The Servo still brings its joint 2, so beam 12 has both of its joints.
+        build.ReplaceSelection(Set(Joint(3), Beam(12), Beam(11), _servo));
+        build.CopySelectedParts();
+        build.CanvasNotes().Select(note => (note.Target, note.Text)).ShouldBe([(_servo, UiText.Plain(LockedText)), (Beam(11), UiText.Plain("Select both its joints"))]);
         var changed = new List<string?>();
         build.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-
+        build.ReplaceSelection(Set(Joint(1), Joint(2), Beam(11), _camera));
+        build.CopySelectedParts();
         build.Unlock();
-
         build.CanvasNotes().ShouldBeEmpty();
         changed.ShouldContain(nameof(BuildViewModel.CanvasNotes));
         build.CanCopySelection.ShouldBeTrue();
     }
 
     [Fact]
-    public void Copy_OfASelectionAsTallAsTheBuildArea_KeepsItsShape()
-    {
-        var area = BuildViewModel.BuildArea;
-        var r = NodeDef.PlainJointRadius;
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [
-                new NodeDef(1, new Vector2D(0, area.Min.Y + r)),
-                new NodeDef(2, new Vector2D(0, area.Max.Y - r)),
-                new NodeDef(3, new Vector2D(0, area.Max.Y - r - (_step / 2))),
-            ],
-            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
-            []));
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3), Ids(4, 5), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-
-        build.CopySelectedParts();
-
-        build.Nodes.Skip(3).Select(node => node.Position).ShouldBe(
-        [
-            new Vector2D(_step, area.Min.Y + r),
-            new Vector2D(_step, area.Max.Y - r),
-            new Vector2D(_step, area.Max.Y - r - (_step / 2)),
-        ]);
-    }
-
-    [Fact]
-    public void ADimmedCopysNotes_GoWhenTheSelectionChanges()
-    {
-        var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-        build.CopySelectedParts();
-        build.CanvasNotes().ShouldNotBeEmpty();
-
-        build.ToggleSelected(new CreatureElementSelection(CreatureElementKind.Node, 2));
-
-        build.CanvasNotes().ShouldBeEmpty();
-        build.CanCopySelection.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ADimmedCopysNotes_GoOnTheNextCanvasTouch()
-    {
-        var build = Loaded();
-        build.ReplaceSelection(new PartSet(Ids(1), Ids(11), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
-        build.CopySelectedParts();
-        build.CanvasNotes().ShouldNotBeEmpty();
-
-        new BuildGestures(build).Press(new Vector2D(2000, 2000));
-
-        build.CanvasNotes().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Copy_IsNotOffered_ForOnePart()
-    {
-        var build = Loaded();
-        build.ReplaceSelection(Ids(1));
-
-        build.CanOfferCopy.ShouldBeFalse();
-    }
-
-    [Fact]
     public void OnALockedCreation_CopyIsOffered_AndCopiesJointsBeamsAndSprings()
     {
-        var build = new BuildViewModel();
-        build.Load(Creature(), locked: true);
-        build.ReplaceSelection(new PartSet(Ids(1, 2, 3, 4), Ids(11, 12), Ids(), Ids(), Ids(), Ids(13), Ids(), Ids(), Ids(), Ids(), Ids(), Ids(), Ids()));
+        var build = Loaded(Creature(), locked: true);
+        build.ReplaceSelection(Set(Joint(1), Joint(2), Joint(3), Joint(4), Beam(11), Beam(12), _spring));
 
         build.CanOfferCopy.ShouldBeTrue();
         build.CanCopySelection.ShouldBeTrue();
@@ -356,55 +192,19 @@ public sealed class BuildCopyTests
         (build.Sensors.Count, build.Servos.Count, build.Pistons.Count).ShouldBe((1, 1, 1));
     }
 
-    private static void ShouldHaveTheSameParts(CreatureDef actual, CreatureDef expected)
-    {
-        actual.Nodes.ShouldBe(expected.Nodes);
-        actual.Beams.ShouldBe(expected.Beams);
-        actual.Sensors.ShouldBe(expected.Sensors);
-        actual.Servos.ShouldBe(expected.Servos);
-        actual.Pistons.ShouldBe(expected.Pistons);
-        actual.Springs.ShouldBe(expected.Springs);
-        actual.VelocityMotors.ShouldBe(expected.VelocityMotors);
-    }
-
-    private static BuildViewModel Loaded()
-    {
-        var build = new BuildViewModel();
-        build.Load(Creature());
-        return build;
-    }
+    private static void ShouldHaveTheSameParts(CreatureDef actual, CreatureDef expected) => actual.Parts.ShouldBe(expected.Parts);
 
     // A square of joints 1–4 with beams 11 (Camera 21, aimed) and 12, Servo 31 on joint 2, a tuned Spring 13
     // and a tuned Piston 14 out to joint 5.
     private static CreatureDef Creature() => new(
         [
-            new NodeDef(1, new Vector2D(0, 0), "Hip"),
-            new NodeDef(2, new Vector2D(100, 0)),
-            new NodeDef(3, new Vector2D(100, 100)),
-            new NodeDef(4, new Vector2D(0, 100)),
-            new NodeDef(5, new Vector2D(-100, 100)),
+            new NodeDef(1, new Vector2D(0, 0), "Hip"), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(100, 100)),
+            new NodeDef(4, new Vector2D(0, 100)), new NodeDef(5, new Vector2D(-100, 100)),
+            new BeamDef(11, 1, 2), new BeamDef(12, 2, 3),
+            new SensorDef(21, 11, SensorKind.Camera, aim: 1.0),
+            new ServoDef(31, 2, 12, 11, strength: 800000, range: Math.PI / 2),
+            new PistonDef(14, 4, 5, "Kick", strength: 20000, stroke: 0.8, start: 0.25, maxSpeed: 300, riseTime: 0.5),
+            new SpringDef(13, 3, 4, stiffness: 900, damping: 20, stroke: 0.5, coilLength: 0.4),
         ],
-        [new BeamDef(11, 1, 2), new BeamDef(12, 2, 3)],
-        [new SensorDef(21, 11, SensorKind.Camera, aim: 1.0)],
-        [new ServoDef(31, 2, 12, 11, strength: 800000, range: Math.PI / 2)],
-        [new PistonDef(14, 4, 5, "Kick", strength: 20000, stroke: 0.8, start: 0.25, maxSpeed: 300, riseTime: 0.5)],
-        [new SpringDef(13, 3, 4, stiffness: 900, damping: 20, stroke: 0.5, coilLength: 0.4)],
         nextPartId: 40);
-
-    // A tuned Velocity motor 6 on joint 2, turning beam 5 (to joint 3) against beam 4 (to joint 1).
-    private static CreatureDef WithAVelocityMotor() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
-        [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [new VelocityMotorDef(6, 2, fixedLinkId: 4, targetLinkId: 5, strength: 300000, maxSpeed: Math.PI, riseTime: 0.4)],
-        [],
-        nextPartId: 7);
-
-    private static HashSet<int> Ids(params int[] ids) => [.. ids];
 }

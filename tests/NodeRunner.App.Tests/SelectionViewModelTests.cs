@@ -24,108 +24,42 @@ public sealed class SelectionViewModelTests
     private static readonly CreatureElementSelection[] _stackTopDown =
         [new(CreatureElementKind.Servo, _servoId), new(CreatureElementKind.Wheel, _wheelId), new(CreatureElementKind.Rubber, _rubberId), new(CreatureElementKind.TouchSensor, _touchId)];
 
+    public static TheoryData<CreatureDef, CreatureElementSelection, CreatureElementSelection[]> Taps => new()
+    {
+        { _creature, new(CreatureElementKind.Wheel, _wheelId), _stackTopDown },
+        { _creature, new(CreatureElementKind.Node, _stackedJoint), _stackTopDown },
+        { _brakedCreature, new(CreatureElementKind.Brake, _brakeId), [new(CreatureElementKind.Brake, _brakeId), .. _stackTopDown.Skip(1)] },
+        { _creature, new(CreatureElementKind.Node, _loneTouchJoint), [new(CreatureElementKind.TouchSensor, _loneTouchId)] },
+        { _creature, new(CreatureElementKind.Node, 2), [new(CreatureElementKind.Node, 2)] },
+        { _creature, new(CreatureElementKind.Spring, 8), [new(CreatureElementKind.Spring, 8)] },
+        { _creature, new(CreatureElementKind.Servo, 99), [new(CreatureElementKind.Servo, 99)] },
+    };
+
+    [Theory]
+    [MemberData(nameof(Taps))]
+    public void Select_ATappedJointOrJointPart_SelectsItsWholeStackTopDown_AnyOtherPartAlone(CreatureDef creature, CreatureElementSelection tapped, CreatureElementSelection[] expected)
+    {
+        var viewModel = new SelectionViewModel();
+
+        viewModel.Select(creature, tapped);
+
+        viewModel.SelectedParts.ShouldBe(expected);
+    }
+
     [Fact]
-    public void Select_WithNewElement_SetsSelectionAndRaisesPropertyChanged()
+    public void SelectedParts_IsRaisedOnlyWhenTheSelectionChanges()
     {
         var viewModel = new SelectionViewModel();
         var changedProperties = new List<string?>();
         viewModel.PropertyChanged += (_, eventArgs) => changedProperties.Add(eventArgs.PropertyName);
 
         viewModel.Select(_creature, new CreatureElementSelection(CreatureElementKind.Beam, 6));
-
-        viewModel.SelectedParts.ShouldBe([new CreatureElementSelection(CreatureElementKind.Beam, 6)]);
-        changedProperties.ShouldBe(new[] { nameof(SelectionViewModel.SelectedParts) });
-    }
-
-    [Theory]
-    [InlineData(CreatureElementKind.Servo, _servoId)]
-    [InlineData(CreatureElementKind.Wheel, _wheelId)]
-    [InlineData(CreatureElementKind.Rubber, _rubberId)]
-    [InlineData(CreatureElementKind.TouchSensor, _touchId)]
-    [InlineData(CreatureElementKind.Node, _stackedJoint)]
-    public void Select_OnAStackedJoint_SelectsEveryPartTopDown(CreatureElementKind kind, int id)
-    {
-        var viewModel = new SelectionViewModel();
-
-        viewModel.Select(_creature, new CreatureElementSelection(kind, id));
-
-        viewModel.SelectedParts.ShouldBe(_stackTopDown);
-    }
-
-    [Theory]
-    [InlineData(CreatureElementKind.Brake, _brakeId)]
-    [InlineData(CreatureElementKind.Wheel, _wheelId)]
-    [InlineData(CreatureElementKind.Node, _stackedJoint)]
-    public void Select_OnAStackedJointWithABrake_SelectsEveryPartTopDown_TheBrakeFirst(CreatureElementKind kind, int id)
-    {
-        var viewModel = new SelectionViewModel();
-
-        viewModel.Select(_brakedCreature, new CreatureElementSelection(kind, id));
-
-        viewModel.SelectedParts.ShouldBe([new(CreatureElementKind.Brake, _brakeId), .. _stackTopDown.Skip(1)]);
-    }
-
-    [Theory]
-    [InlineData(CreatureElementKind.Wheel, _loneWheelId)]
-    [InlineData(CreatureElementKind.TouchSensor, _loneTouchId)]
-    [InlineData(CreatureElementKind.Node, 2)]
-    [InlineData(CreatureElementKind.Spring, 8)]
-    public void Select_OnASinglePart_SelectsItAlone(CreatureElementKind kind, int id)
-    {
-        var viewModel = new SelectionViewModel();
-
-        viewModel.Select(_creature, new CreatureElementSelection(kind, id));
-
-        viewModel.SelectedParts.ShouldBe([new CreatureElementSelection(kind, id)]);
-    }
-
-    [Fact]
-    public void Select_OnAJointWithATouchSensorAlone_SelectsTheSensor()
-    {
-        var viewModel = new SelectionViewModel();
-
-        viewModel.Select(_creature, new CreatureElementSelection(CreatureElementKind.Node, _loneTouchJoint));
-
-        viewModel.SelectedParts.ShouldBe([new CreatureElementSelection(CreatureElementKind.TouchSensor, _loneTouchId)]);
-    }
-
-    [Fact]
-    public void Select_APartTheCreatureLacks_SelectsTheTappedPartAlone()
-    {
-        var viewModel = new SelectionViewModel();
-        var tapped = new CreatureElementSelection(CreatureElementKind.Servo, 99);
-
-        viewModel.Select(_creature, tapped);
-
-        viewModel.SelectedParts.ShouldBe([tapped]);
-    }
-
-    [Fact]
-    public void Select_AnotherPartOfTheSelectedStack_RaisesNothing()
-    {
-        var viewModel = new SelectionViewModel();
         viewModel.Select(_creature, new CreatureElementSelection(CreatureElementKind.Servo, _servoId));
-        var changedProperties = new List<string?>();
-        viewModel.PropertyChanged += (_, eventArgs) => changedProperties.Add(eventArgs.PropertyName);
-
         viewModel.Select(_creature, new CreatureElementSelection(CreatureElementKind.Wheel, _wheelId));
-
-        viewModel.SelectedParts.ShouldBe(_stackTopDown);
-        changedProperties.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Clear_WithSelection_ClearsSelectionAndRaisesPropertyChanged()
-    {
-        var viewModel = new SelectionViewModel();
-        viewModel.Select(_creature, new CreatureElementSelection(CreatureElementKind.Node, 2));
-        var changedProperties = new List<string?>();
-        viewModel.PropertyChanged += (_, eventArgs) => changedProperties.Add(eventArgs.PropertyName);
-
         viewModel.Clear();
 
         viewModel.SelectedParts.ShouldBeEmpty();
-        changedProperties.ShouldBe(new[] { nameof(SelectionViewModel.SelectedParts) });
+        changedProperties.ShouldBe([nameof(SelectionViewModel.SelectedParts), nameof(SelectionViewModel.SelectedParts), nameof(SelectionViewModel.SelectedParts)]);
     }
 
     private static CreatureDef Creature(ServoDef[] servos, BrakeDef[] brakes) => new(

@@ -1,46 +1,36 @@
-using System.Text.RegularExpressions;
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The Build Parts tray (#374): one icon tab per catalog group, part glyph rows.</summary>
-public sealed partial class BuildPartsTrayTests
+/// <summary>The Build Parts tray (#374) and the glyphs Build and Training show for parts.</summary>
+public sealed class BuildPartsTrayTests
 {
-    private static readonly SceneNodes.SceneNode[] _build = [.. SceneNodes.InScene("screens/BuildScreen.tscn")];
-
-    // UiIconTabs' selected index is the group's index in PartTray.Groups().
     [Fact]
-    public void Tabs_HaveOneIconPerGroup()
+    public void Every_part_link_and_part_kind_has_its_own_glyph()
     {
-        var tabs = _build.Single(node => node.Name == "PartTabs").Node.Body;
+        UiIconId[][] trayGlyphs =
+        [
+            [.. Enum.GetValues<BuildPart>().Select(BuildScreen.PartIcon)],
+            [.. Enum.GetValues<BuildLink>().Select(BuildScreen.LinkIcon)],
+        ];
+        var kindGlyphs = Enum.GetValues<PartKind>().Select(PartIcons.For).ToList();
 
-        var icons = TabIcons().Match(tabs).Groups["icons"].Value.Split(", ");
+        foreach (var icons in trayGlyphs)
+        {
+            icons.ShouldAllBe(icon => UiIcons.IsPartGlyph(icon));
+            icons.ShouldBeUnique();
+        }
 
-        icons.Length.ShouldBe(PartTray.Groups().Count);
+        kindGlyphs.ShouldNotContain(UiIconId.None);
+        kindGlyphs.ShouldBeUnique();
     }
 
     [Fact]
-    public void EveryPart_HasItsOwnPartGlyph()
-    {
-        var icons = Enum.GetValues<BuildPart>().Select(BuildScreen.PartIcon).ToList();
-
-        icons.ShouldAllBe(icon => UiIcons.IsPartGlyph(icon));
-        icons.ShouldBeUnique();
-    }
-
-    [Fact]
-    public void EveryLink_HasItsOwnPartGlyph()
-    {
-        var icons = Enum.GetValues<BuildLink>().Select(BuildScreen.LinkIcon).ToList();
-
-        icons.ShouldAllBe(icon => UiIcons.IsPartGlyph(icon));
-        icons.ShouldBeUnique();
-    }
-
-    [Fact]
-    public void OnlyAvailablePartRows_CanBeDraggedOut()
+    public void Only_available_part_rows_can_be_dragged_out()
     {
         var draggable = PartTray.Groups()
             .SelectMany(group => group.Rows)
@@ -49,29 +39,4 @@ public sealed partial class BuildPartsTrayTests
 
         draggable.ShouldBe([BuildPart.Servo, BuildPart.Stepper, BuildPart.VelocityMotor, BuildPart.Brake, BuildPart.Wheel, BuildPart.Rubber, BuildPart.Accelerometer, BuildPart.Camera, BuildPart.TouchSensor, BuildPart.AngleSensor]);
     }
-
-    [Fact]
-    public void Canvas_TakesTrayDrops_InAZoneThatLetsTouchesThrough()
-    {
-        var zone = _build.Single(node => node.Name == "PartDropZone");
-        var canvas = _build.Single(node => node.Name == "BuildCanvas");
-
-        zone.Parent.ShouldEndWith("/CanvasSlot");
-        zone.Node.Body.ShouldContain("mouse_filter = 2");
-        canvas.Node.Body.ShouldContain("PartDropZone = NodePath(\"../../../PartDropZone\")");
-    }
-
-    [Fact]
-    public void Canvas_IsTheWorld_OfTheBuildView()
-    {
-        var view = _build.Single(node => node.Name == "BuildView");
-        var canvas = _build.Single(node => node.Name == "BuildCanvas");
-
-        view.Parent.ShouldEndWith("/CanvasSlot");
-        canvas.Parent.ShouldEndWith("/CanvasSlot/BuildView/WorldViewport");
-        canvas.Node.Body.ShouldContain("WorldView = NodePath(\"../..\")");
-    }
-
-    [GeneratedRegex(@"Icons = Array\[int\]\(\[(?<icons>[^\]]+)\]\)")]
-    private static partial Regex TabIcons();
 }

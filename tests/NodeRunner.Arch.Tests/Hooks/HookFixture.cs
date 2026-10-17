@@ -130,6 +130,19 @@ public sealed class HookFixture : IDisposable
         return reason;
     }
 
+    /// <summary>Asserts the hook allowed the call when reason is null, or denied it for that reason.</summary>
+    internal static void ShouldDecide(string output, string? reason)
+    {
+        if (reason is null)
+        {
+            DenyReason(output).ShouldBeNull();
+        }
+        else
+        {
+            DenyReason(output).ShouldNotBeNull().ShouldStartWith(reason);
+        }
+    }
+
     internal static JsonObject Bash(string command) =>
         new() { ["tool_name"] = "Bash", ["tool_input"] = new JsonObject { ["command"] = command } };
 

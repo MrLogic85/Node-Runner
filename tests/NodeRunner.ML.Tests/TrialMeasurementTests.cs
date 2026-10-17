@@ -6,414 +6,176 @@ public sealed class TrialMeasurementTests
 {
     // Ten ticks per second gives a five-tick half-second window, easy to count by hand.
     private const int _ticksPerSecond = 10;
+    private const double _maxStep = TrialMeasurement.MaxPlausibleSpeed / _ticksPerSecond;
 
+    // Distance and the score are the centre's furthest forward, never below 0; the front distance is where the
+    // front ends up, not its furthest, never below 0.
     [Fact]
-    public void Distance_IsTheFurthestForwardPositionFromTheStart()
+    public void Distance_IsTheCentresFurthestForward_AndTheFrontWhereItEndsUp()
     {
-        var measurement = Start(100);
+        foreach (var (centre, front, distance, frontDistance) in new[]
+        {
+            (new[] { 110.0, 130, 120, 90 }, new[] { 160.0, 180, 170, 140 }, 30.0, 0.0),
+            ([90, 80], [140, 130], 0, 0),
+            ([110, 105], [170, 160], 10, 10),
+            ([130, 120], [200, 170], 30, 20),
+        })
+        {
+            var measurement = new TrialMeasurement(_ticksPerSecond);
+            measurement.Reset(100, 150);
+            for (var tick = 0; tick < centre.Length; tick++)
+            {
+                measurement.Record(centre[tick], front[tick], 0);
+            }
 
-        Record(measurement, 110, 130, 120, 90);
-
-        measurement.Result.Distance.ShouldBe(30);
+            (measurement.Result.Distance, measurement.Result.Fitness, measurement.Result.FrontDistance, measurement.Result.IsValid)
+                .ShouldBe((distance, distance, frontDistance, true));
+        }
     }
 
-    [Fact]
-    public void Distance_IsZeroWhenTheCreatureOnlyGoesBackward()
-    {
-        var measurement = Start(100);
-
-        Record(measurement, 90, 80);
-
-        measurement.Result.Distance.ShouldBe(0);
-    }
-
-    [Fact]
-    public void FrontDistance_IsWhereTheFrontEndsUpNotItsFurthest()
-    {
-        var measurement = new TrialMeasurement(_ticksPerSecond);
-        measurement.Reset(100, 150);
-
-        measurement.Record(110, 170, 0);
-        measurement.Record(105, 160, 0);
-
-        measurement.Result.FrontDistance.ShouldBe(10);
-    }
-
-    [Fact]
-    public void FrontDistance_IsZeroWhenTheFrontEndsBehindItsStart()
-    {
-        var measurement = new TrialMeasurement(_ticksPerSecond);
-        measurement.Reset(100, 150);
-
-        measurement.Record(100, 140, 0);
-
-        measurement.Result.FrontDistance.ShouldBe(0);
-    }
-
-    [Fact]
-    public void Fitness_StaysTheCentresFurthestWhateverTheFrontDoes()
-    {
-        var measurement = new TrialMeasurement(_ticksPerSecond);
-        measurement.Reset(100, 150);
-
-        measurement.Record(130, 200, 0);
-        measurement.Record(120, 170, 0);
-
-        measurement.Result.Fitness.ShouldBe(30);
-        measurement.Result.FrontDistance.ShouldBe(20);
-    }
-
+    // Forward progress averaged over half a second: 2 units a tick for five ticks is 20 units/s; a 5-unit jolt in one
+    // tick only 10 over the window. It needs a full window and counts only forward motion.
     [Fact]
     public void TopSpeed_AveragesForwardProgressOverHalfASecond()
     {
-        var measurement = Start(0);
-
-        // 2 units a tick for five ticks = 10 units in 0.5 s = 20 units/s; then it stops.
-        Record(measurement, 2, 4, 6, 8, 10, 10, 10);
-
-        measurement.Result.TopSpeed.ShouldBe(20, tolerance: 1e-9);
+        foreach (var (positions, topSpeed) in new[]
+        {
+            (new[] { 2.0, 4, 6, 8, 10, 10, 10 }, 20.0),
+            ([0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5], 10),
+            ([10, 20, 30, 40], 0),
+            ([-2, -4, -6, -8, -10, -12], 0),
+        })
+        {
+            Run(positions).Result.TopSpeed.ShouldBe(topSpeed, 1e-9, string.Join(", ", positions));
+        }
     }
 
+    // The largest ground clearance once it has landed (at most 0.5 up), so the starting drop does not count, a
+    // crawler sinking in scores 0, and a new trial starts the drop again.
     [Fact]
-    public void TopSpeed_SpreadsASingleTickJoltOverTheWindow()
+    public void Elevation_IsTheLargestClearanceOnceLanded()
     {
-        var measurement = Start(0);
+        foreach (var (clearances, elevation) in new[]
+        {
+            (new[] { 0.0, 14, 3, -2 }, 14.0),
+            ([5, 2, 0.25, 3], 3),
+            ([5, 4], 0),
+            ([-0.5, -0.25], 0),
+        })
+        {
+            var measurement = Run([]);
+            foreach (var clearance in clearances)
+            {
+                measurement.Record(0, 0, clearance);
+            }
 
-        // A 5-unit jolt in one tick is 50 units/s for that tick, but only 10 units/s over half a second.
-        Record(measurement, 0, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5);
+            measurement.Result.Elevation.ShouldBe(elevation, string.Join(", ", clearances));
+        }
 
-        measurement.Result.TopSpeed.ShouldBe(10, tolerance: 1e-9);
+        var again = Run([0]);
+        again.Reset(0, 0);
+        again.Record(0, 0, 5);
+        again.Result.Elevation.ShouldBe(0);
     }
 
+    // A non-finite sample, or one that moves further in a tick than anything can, is a physics blow-up: the trial
+    // scores −∞ until the next starts fresh. The first clearance has nothing to compare with, so a high start is fine.
     [Fact]
-    public void TopSpeed_NeedsAFullWindow()
+    public void ABlowUp_MakesTheTrialInvalid_UntilTheNextStartsFresh()
     {
-        var measurement = Start(0);
+        foreach (var (centre, front, clearance) in new[]
+        {
+            (double.NaN, 0.0, 0.0), (double.PositiveInfinity, 0, 0), (0, double.NaN, 0), (0, double.PositiveInfinity, 0),
+            (0, 0, double.NaN), (0, 0, double.NegativeInfinity), ((2 * _maxStep) + 1, 0, 0), (0, (2 * _maxStep) + 1, 0),
+        })
+        {
+            var measurement = Run([]);
+            measurement.Record(_maxStep, _maxStep, 0);
+            measurement.Result.IsValid.ShouldBeTrue();
+            measurement.Record(centre, front, clearance);
+            (measurement.Result.IsValid, measurement.Result.Fitness).ShouldBe((false, double.NegativeInfinity), $"{centre}, {front}, {clearance}");
+            measurement.Record(_maxStep + 1, _maxStep + 1, 0);
+            measurement.Result.IsValid.ShouldBeFalse();
+        }
 
-        Record(measurement, 10, 20, 30, 40);
+        var lowest = Run([]);
+        lowest.Record(0, 0, 5 * _maxStep);
+        lowest.Record(0, 0, 4 * _maxStep);
+        lowest.Result.IsValid.ShouldBeTrue();
+        lowest.Record(0, 0, (5 * _maxStep) + 1);
+        lowest.Result.IsValid.ShouldBeFalse();
 
-        measurement.Result.TopSpeed.ShouldBe(0);
+        var fresh = Run([10, 20, 30, 40, 50, 60, double.NaN]);
+        fresh.Reset(500, 500);
+        fresh.Record(501, 501, 0);
+        fresh.Result.ShouldBe(new TrialResult(1, 0, 0, 1));
     }
 
+    // A tear (#962) keeps every value as it was, so a loose part thrown forward scores nothing. At ten ticks a second
+    // the five samples before the tear give a top speed. The next sample is checked against the tear's sample, as each
+    // later tear's against its own; a blow-up after it still makes the trial invalid. A new trial starts whole.
     [Fact]
-    public void TopSpeed_CountsOnlyForwardMotion()
-    {
-        var measurement = Start(0);
-
-        Record(measurement, -2, -4, -6, -8, -10, -12);
-
-        measurement.Result.TopSpeed.ShouldBe(0);
-    }
-
-    [Fact]
-    public void Elevation_IsTheLargestGroundClearance()
-    {
-        var measurement = Start(0);
-
-        measurement.Record(0, 0, 0);
-        measurement.Record(0, 0, 14);
-        measurement.Record(0, 0, 3);
-        measurement.Record(0, 0, -2);
-
-        measurement.Result.Elevation.ShouldBe(14);
-    }
-
-    [Fact]
-    public void Elevation_IgnoresTheStartingDropUntilTheCreatureLands()
-    {
-        var measurement = Start(0);
-
-        measurement.Record(0, 0, 5);
-        measurement.Record(0, 0, 2);
-        measurement.Record(0, 0, 0.25);
-        measurement.Record(0, 0, 3);
-
-        measurement.Result.Elevation.ShouldBe(3);
-    }
-
-    [Fact]
-    public void Elevation_IsZeroWhileTheCreatureHasNotLanded()
-    {
-        var measurement = Start(0);
-
-        measurement.Record(0, 0, 5);
-        measurement.Record(0, 0, 4);
-
-        measurement.Result.Elevation.ShouldBe(0);
-    }
-
-    [Fact]
-    public void Reset_StartsTheDropAgain()
-    {
-        var measurement = Start(0);
-        measurement.Record(0, 0, 0);
-
-        measurement.Reset(0, 0);
-        measurement.Record(0, 0, 5);
-
-        measurement.Result.Elevation.ShouldBe(0);
-    }
-
-    [Fact]
-    public void Elevation_IsZeroForACrawlerThatSinksSlightlyIntoTheGround()
-    {
-        var measurement = Start(0);
-
-        measurement.Record(1, 1, -0.5);
-        measurement.Record(2, 2, -0.25);
-
-        measurement.Result.Elevation.ShouldBe(0);
-    }
-
-    [Fact]
-    public void Result_IsValidForAnOrdinaryTrial()
-    {
-        var measurement = Start(0);
-
-        Record(measurement, 1, 2, 3);
-
-        measurement.Result.IsValid.ShouldBeTrue();
-        measurement.Result.Fitness.ShouldBe(3);
-    }
-
-    [Theory]
-    [InlineData(double.NaN, 0, 0)]
-    [InlineData(double.PositiveInfinity, 0, 0)]
-    [InlineData(0, double.NaN, 0)]
-    [InlineData(0, double.PositiveInfinity, 0)]
-    [InlineData(0, 0, double.NaN)]
-    [InlineData(0, 0, double.NegativeInfinity)]
-    public void Result_IsInvalidAfterANonFiniteSample(double centerX, double frontX, double groundClearance)
-    {
-        var measurement = Start(0);
-        measurement.Record(1, 1, 0);
-
-        measurement.Record(centerX, frontX, groundClearance);
-
-        measurement.Result.IsValid.ShouldBeFalse();
-        measurement.Result.Fitness.ShouldBe(double.NegativeInfinity);
-    }
-
-    [Fact]
-    public void Result_IsInvalidWhenTheCentreJumpsFurtherThanAnythingCanMoveInOneTick()
-    {
-        var maxStep = TrialMeasurement.MaxPlausibleSpeed / _ticksPerSecond;
-        var measurement = Start(0);
-
-        measurement.Record(maxStep, 0, 0);
-        measurement.Result.IsValid.ShouldBeTrue();
-
-        measurement.Record((2 * maxStep) + 1, 0, 0);
-        measurement.Result.IsValid.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Result_IsInvalidWhenTheFrontJumpsFurtherThanAnythingCanMoveInOneTick()
-    {
-        var maxStep = TrialMeasurement.MaxPlausibleSpeed / _ticksPerSecond;
-        var measurement = Start(0);
-
-        measurement.Record(0, maxStep, 0);
-        measurement.Result.IsValid.ShouldBeTrue();
-
-        measurement.Record(0, (2 * maxStep) + 1, 0);
-        measurement.Result.IsValid.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Result_IsInvalidWhenTheLowestPointJumpsFurtherThanAnythingCanMoveInOneTick()
-    {
-        var maxStep = TrialMeasurement.MaxPlausibleSpeed / _ticksPerSecond;
-        var measurement = Start(0);
-
-        // The first clearance has nothing to compare with, so a high start is fine.
-        measurement.Record(0, 0, 5 * maxStep);
-        measurement.Record(0, 0, 4 * maxStep);
-        measurement.Result.IsValid.ShouldBeTrue();
-
-        measurement.Record(0, 0, (5 * maxStep) + 1);
-        measurement.Result.IsValid.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Result_StaysInvalidWhenTheTrialCarriesOn()
-    {
-        var measurement = Start(0);
-
-        measurement.Record(double.NaN, double.NaN, 0);
-        Record(measurement, 1, 2, 3);
-
-        measurement.Result.IsValid.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Reset_MakesTheNextTrialValidAgain()
-    {
-        var measurement = Start(0);
-        measurement.Record(double.NaN, double.NaN, 0);
-
-        measurement.Reset(0, 0);
-        measurement.Record(1, 1, 0);
-
-        measurement.Result.ShouldBe(new TrialResult(1, 0, 0, 1));
-    }
-
-    [Fact]
-    public void Reset_StartsAFreshTrial()
-    {
-        var measurement = Start(0);
-        Record(measurement, 10, 20, 30, 40, 50, 60);
-        measurement.Record(60, 60, 9);
-
-        measurement.Reset(500, 500);
-        measurement.Record(501, 501, 0);
-
-        measurement.Result.ShouldBe(new TrialResult(1, 0, 0, 1));
-    }
-
-    // A tear (#962) keeps every value as it was, so a loose part thrown forward scores nothing. At ten ticks
-    // a second the speed window is half a second, so the five samples before the tear give a top speed.
-    [Fact]
-    public void Freeze_KeepsEveryValueAsItWas()
+    public void ATear_FreezesEveryValue_ButStillChecksForABlowUp()
     {
         var measurement = new TrialMeasurement(_ticksPerSecond);
         measurement.Reset(0, 50);
-        Record(measurement, 10, 20, 30, 40);
+        measurement.IsFrozen.ShouldBeFalse();
+        foreach (var x in new[] { 10.0, 20, 30, 40 })
+        {
+            measurement.Record(x, x, 0);
+        }
+
         measurement.Record(50, 90, 5);
         var before = measurement.Result;
-        before.TopSpeed.ShouldBeGreaterThan(0);
-        before.Elevation.ShouldBeGreaterThan(0);
-        before.FrontDistance.ShouldBeGreaterThan(0);
-
+        (before.TopSpeed, before.Elevation, before.FrontDistance).ShouldBe((100, 5, 40));
         measurement.Freeze(50, 90, 5);
+        measurement.IsFrozen.ShouldBeTrue();
         measurement.Record(300, 400, 80);
         measurement.Record(600, 700, 160);
-
         measurement.Result.ShouldBe(before);
-    }
-
-    [Fact]
-    public void IsFrozen_FromAFreezeUntilTheNextTrial()
-    {
-        var measurement = Start(0);
+        measurement.Reset(0, 0);
         measurement.IsFrozen.ShouldBeFalse();
-
-        measurement.Freeze(0, 0, 0);
-        measurement.IsFrozen.ShouldBeTrue();
-        measurement.Reset(0, 0);
-        measurement.IsFrozen.ShouldBeFalse("A new trial starts whole.");
-    }
-
-    // At ten ticks a second a step over 1000 units is a blow-up; after a tear the next sample is checked
-    // against the tear's sample, not the last.
-    [Fact]
-    public void Freeze_LetsTheTrackedValuesJumpToTheTearSample()
-    {
-        var measurement = Start(0);
         measurement.Record(10, 10, 0);
-
-        measurement.Freeze(-3000, 2000, 400);
-        measurement.Record(-2990, 2010, 390);
-
-        measurement.Result.IsValid.ShouldBeTrue();
-        measurement.Result.Distance.ShouldBe(10);
-    }
-
-    // A later tear moves the main piece again, so each tear's sample is the next one's check.
-    [Fact]
-    public void Freeze_AgainAtALaterTear_ChecksFromThatTearsSample()
-    {
-        var measurement = Start(0);
-        measurement.Record(10, 10, 0);
-
-        measurement.Freeze(-3000, 2000, 400);
-        measurement.Record(-2990, 2010, 390);
-        measurement.Freeze(4000, 6000, 100);
-        measurement.Record(4010, 6010, 90);
-
         measurement.Result.ShouldBe(new TrialResult(10, 0, 0, 10));
-    }
 
-    // The tear's own tick: a sample close to the last one but implausibly far from the tear's is a blow-up.
-    [Fact]
-    public void Freeze_MakesABlowUpFromTheTearSampleInvalid()
-    {
-        var measurement = Start(0);
-        measurement.Record(10, 10, 0);
+        foreach (var (tears, after, valid) in new (double[][], double[], bool)[]
+        {
+            ([[-3000, 2000, 400]], [-2990, 2010, 390], true),
+            ([[-3000, 2000, 400], [4000, 6000, 100]], [4010, 6010, 90], true),
+            ([[-3000, 2000, 400]], [10, 10, 0], false),
+            ([[10, 10, 0]], [5000, 20, 0], false),
+            ([[10, 10, 0]], [double.NaN, 10, 0], false),
+            ([[10, 10, 0]], [double.PositiveInfinity, 10, 0], false),
+            ([[double.NaN, 0, 0]], [10, 10, 0], false),
+            ([[double.NegativeInfinity, 0, 0]], [10, 10, 0], false),
+        })
+        {
+            var torn = Run([10]);
+            for (var index = 0; index < tears.Length; index++)
+            {
+                torn.Freeze(tears[index][0], tears[index][1], tears[index][2]);
+                if (index < tears.Length - 1)
+                {
+                    torn.Record(tears[index][0] + 10, tears[index][1] + 10, tears[index][2] - 10);
+                }
+            }
 
-        measurement.Freeze(-3000, 2000, 400);
-        measurement.Record(10, 10, 0);
+            torn.Record(after[0], after[1], after[2]);
+            torn.Result.ShouldBe(new TrialResult(10, 0, 0, 10, valid), string.Join(", ", after));
+        }
 
-        measurement.Result.ShouldBe(new TrialResult(10, 0, 0, 10, IsValid: false));
-    }
-
-    [Fact]
-    public void Freeze_StillMakesALaterBlowUpInvalid()
-    {
-        var measurement = Start(0);
-        measurement.Record(10, 10, 0);
-
-        measurement.Freeze(10, 10, 0);
-        measurement.Record(20, 20, 0);
-        measurement.Record(5000, 20, 0);
-
-        measurement.Result.ShouldBe(new TrialResult(10, 0, 0, 10, IsValid: false));
-    }
-
-    [Theory]
-    [InlineData(double.NaN)]
-    [InlineData(double.PositiveInfinity)]
-    public void Freeze_StillMakesANonFiniteSampleInvalid(double x)
-    {
-        var measurement = Start(0);
-        measurement.Record(10, 10, 0);
-
-        measurement.Freeze(10, 10, 0);
-        measurement.Record(x, 10, 0);
-
-        measurement.Result.ShouldBe(new TrialResult(10, 0, 0, 10, IsValid: false));
-    }
-
-    [Theory]
-    [InlineData(double.NaN)]
-    [InlineData(double.NegativeInfinity)]
-    public void Freeze_MakesTheTrialInvalidForANonFiniteTearSample(double x)
-    {
-        var measurement = Start(0);
-
-        measurement.Freeze(x, 0, 0);
-
-        measurement.Result.IsValid.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Reset_UnfreezesTheNextTrial()
-    {
-        var measurement = Start(0);
-        measurement.Freeze(0, 0, 0);
-
-        measurement.Reset(0, 0);
-        measurement.Record(10, 10, 0);
-
-        measurement.Result.Distance.ShouldBe(10);
-    }
-
-    [Fact]
-    public void Constructor_RejectsANonPositiveTickRate() =>
         Should.Throw<ArgumentOutOfRangeException>(() => new TrialMeasurement(0));
+    }
 
-    private static TrialMeasurement Start(double startX)
+    private static TrialMeasurement Run(double[] positions)
     {
         var measurement = new TrialMeasurement(_ticksPerSecond);
-        measurement.Reset(startX, startX);
-        return measurement;
-    }
-
-    private static void Record(TrialMeasurement measurement, params double[] positions)
-    {
+        measurement.Reset(0, 0);
         foreach (var x in positions)
         {
             measurement.Record(x, x, 0);
         }
+
+        return measurement;
     }
 }

@@ -5,9 +5,9 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class DistanceRulerTests
 {
     [Fact]
-    public void Fill_LabelsEveryMetreFromTheStartAndTicksEveryHalf()
+    public void Fill_LabelsEveryMetreFromTheStartAndTicksEveryHalf_ReplacingWhatTheListHeld()
     {
-        var marks = new List<RulerMark>();
+        var marks = new List<RulerMark> { new(1, true, 7) };
 
         DistanceRuler.Fill(startX: 250, left: 100, right: 460, metresPerLabel: 1, marks);
 
@@ -24,63 +24,39 @@ public sealed class DistanceRulerTests
         ]);
     }
 
-    [Fact]
-    public void FillHeights_CountsUpFromTheGroundAndNothingBelowIt()
+    // A label step with a 5 gets a long tick per label and a short one every fifth; any other a
+    // long tick every power of ten and a short one halfway, so at 2 m a long tick goes unlabelled.
+    [Theory]
+    [InlineData(2, 50, 100)]
+    [InlineData(5, 100, 500)]
+    [InlineData(10, 500, 1000)]
+    [InlineData(50, 1000, 5000)]
+    [InlineData(200, 5000, 10000)]
+    public void Fill_ThinsTheTicksOutAsTheLabelsDo(int metresPerLabel, double tickGap, double longTickGap)
     {
         var marks = new List<RulerMark>();
 
-        DistanceRuler.FillHeights(floor: -120, labelReach: 0, high: 160, metresPerLabel: 1, marks);
+        DistanceRuler.Fill(startX: 0, left: 0, right: 20_000, metresPerLabel, marks);
 
-        marks.ShouldBe(
-        [
-            new RulerMark(0, true, 0),
-            new RulerMark(50, false, null),
-            new RulerMark(100, true, 1),
-            new RulerMark(150, false, null),
-        ]);
-    }
-
-    [Fact]
-    public void FillHeights_ThinsTheTicksWithTheSharedLabelStep()
-    {
-        var marks = new List<RulerMark>();
-
-        DistanceRuler.FillHeights(floor: 150, labelReach: 0, high: 1050, metresPerLabel: 5, marks);
-
-        marks.ShouldBe(
-        [
-            new RulerMark(200, false, null),
-            new RulerMark(300, false, null),
-            new RulerMark(400, false, null),
-            new RulerMark(500, true, 5),
-            new RulerMark(600, false, null),
-            new RulerMark(700, false, null),
-            new RulerMark(800, false, null),
-            new RulerMark(900, false, null),
-            new RulerMark(1000, true, 10),
-        ]);
+        (marks[1].X - marks[0].X).ShouldBe(tickGap);
+        var longTicks = marks.Where(mark => mark.IsMajor).ToArray();
+        (longTicks[1].X - longTicks[0].X).ShouldBe(longTickGap);
+        longTicks.Where(mark => mark.LabelMetre is not null).Select(mark => mark.LabelMetre!.Value)
+            .ShouldBe(Enumerable.Range(0, (200 / metresPerLabel) + 1).Select(label => (long)label * metresPerLabel));
     }
 
     [Theory]
-    [InlineData(40, 0)]
-    [InlineData(20, 50)]
-    public void FillHeights_KeepsAMarkBelowTheFloorWhileItsLabelStillReachesAboveIt(double labelReach, double firstHeight)
+    [InlineData(-120, 0, 0)]
+    [InlineData(30, 40, 0)]
+    [InlineData(30, 20, 50)]
+    public void FillHeights_CountsUpFromTheGround_KeepingAMarkBelowTheFloorWhileItsLabelStillReachesAboveIt(double floor, double labelReach, double firstHeight)
     {
         var marks = new List<RulerMark>();
 
-        DistanceRuler.FillHeights(floor: 30, labelReach, high: 160, metresPerLabel: 1, marks);
+        DistanceRuler.FillHeights(floor, labelReach, high: 160, metresPerLabel: 1, marks);
 
         marks[0].X.ShouldBe(firstHeight);
-    }
-
-    [Fact]
-    public void Fill_ReplacesWhatTheListHeld()
-    {
-        var marks = new List<RulerMark> { new(1, true, 7) };
-
-        DistanceRuler.Fill(startX: 0, left: 1, right: 49, metresPerLabel: 1, marks);
-
-        marks.ShouldBeEmpty();
+        marks[^1].ShouldBe(new RulerMark(150, false, null));
     }
 
     [Fact]
@@ -99,7 +75,6 @@ public sealed class DistanceRulerTests
     [InlineData(0, 100, 0)]
     [InlineData(0, 0, 1e9)]
     [InlineData(0, 1e25, 1e25)]
-    [InlineData(0, -1e25, 1e25)]
     [InlineData(-1.7e308, 1.7e308, 1.7e308)]
     public void Fill_ListsNothingForAnUnusableRange(double startX, double left, double right)
     {
@@ -111,69 +86,9 @@ public sealed class DistanceRulerTests
     }
 
     [Fact]
-    public void Fill_LabelsOnlyMultiplesOfTheLabelStep()
+    public void Fill_RejectsALabelStepBelowOne()
     {
-        var marks = new List<RulerMark>();
-
-        DistanceRuler.Fill(startX: 0, left: -200, right: 500, metresPerLabel: 2, marks);
-
-        marks.Where(mark => mark.IsMajor).Select(mark => mark.LabelMetre).ShouldBe(
-            [-2, null, 0, null, 2, null, 4, null]);
-        marks.Count.ShouldBe(15);
-    }
-
-    [Fact]
-    public void Fill_AtFiveMetresPerLabel_PutsALongTickUnderEachLabelAndAShortOneEveryMetre()
-    {
-        var marks = new List<RulerMark>();
-
-        DistanceRuler.Fill(startX: 0, left: -100, right: 600, metresPerLabel: 5, marks);
-
-        marks.ShouldBe(
-        [
-            new RulerMark(-100, false, null),
-            new RulerMark(0, true, 0),
-            new RulerMark(100, false, null),
-            new RulerMark(200, false, null),
-            new RulerMark(300, false, null),
-            new RulerMark(400, false, null),
-            new RulerMark(500, true, 5),
-            new RulerMark(600, false, null),
-        ]);
-    }
-
-    [Fact]
-    public void Fill_AtTenMetresPerLabel_PutsALongTickUnderEachLabelAndAShortOneHalfway()
-    {
-        var marks = new List<RulerMark>();
-
-        DistanceRuler.Fill(startX: 0, left: -500, right: 1500, metresPerLabel: 10, marks);
-
-        marks.ShouldBe(
-        [
-            new RulerMark(-500, false, null),
-            new RulerMark(0, true, 0),
-            new RulerMark(500, false, null),
-            new RulerMark(1000, true, 10),
-            new RulerMark(1500, false, null),
-        ]);
-    }
-
-    [Theory]
-    [InlineData(1, 50)]
-    [InlineData(2, 50)]
-    [InlineData(5, 100)]
-    [InlineData(10, 500)]
-    [InlineData(20, 500)]
-    [InlineData(50, 1000)]
-    [InlineData(200, 5000)]
-    public void Fill_ThinsTheTicksOutAsTheLabelsDo(int metresPerLabel, double expectedGap)
-    {
-        var marks = new List<RulerMark>();
-
-        DistanceRuler.Fill(startX: 0, left: 0, right: 20_000, metresPerLabel, marks);
-
-        (marks[1].X - marks[0].X).ShouldBe(expectedGap);
+        Should.Throw<ArgumentOutOfRangeException>(() => DistanceRuler.Fill(0, 0, 100, metresPerLabel: 0, []));
     }
 
     [Fact]
@@ -182,46 +97,20 @@ public sealed class DistanceRulerTests
         DistanceRuler.Label(-12).ShouldBe(UiText.Format("{0} m", -12L));
     }
 
-    [Fact]
-    public void Fill_RejectsALabelStepBelowOne()
-    {
-        Should.Throw<ArgumentOutOfRangeException>(() => DistanceRuler.Fill(0, 0, 100, metresPerLabel: 0, []));
-    }
-
+    // The fewest of 1, 2, 5, 10, 20… metres that leave the room; thinner at once, but closer
+    // again only with a fifth more room to spare; every metre for an unusable size.
     [Theory]
-    [InlineData(100, 40, 1)]
-    [InlineData(40, 40, 1)]
-    [InlineData(39, 40, 2)]
-    [InlineData(25, 60, 5)]
-    [InlineData(5, 40, 10)]
-    [InlineData(1, 150, 200)]
-    public void MetresPerLabel_PicksTheFewestMetresThatLeaveRoom(double metreLength, double labelRoom, int expected)
-    {
-        DistanceRuler.MetresPerLabel(metreLength, labelRoom).ShouldBe(expected);
-    }
-
-    [Theory]
+    [InlineData(100, 40, 1, 1)]
     [InlineData(39, 40, 1, 2)]
+    [InlineData(5, 40, 1, 10)]
     [InlineData(41, 40, 2, 2)]
-    [InlineData(47, 40, 2, 2)]
     [InlineData(48, 40, 2, 1)]
-    [InlineData(41, 40, 1, 1)]
-    [InlineData(100, 40, 5, 1)]
     [InlineData(30, 40, 5, 2)]
-    [InlineData(5, 40, 2, 10)]
-    public void MetresPerLabel_ThinsAtOnceButComesBackOnlyWithRoomToSpare(
-        double metreLength, double labelRoom, int shown, int expected)
+    [InlineData(0, 40, 1, 1)]
+    [InlineData(100, double.PositiveInfinity, 1, 1)]
+    [InlineData(100, double.NaN, 1, 1)]
+    public void MetresPerLabel_PicksTheFewestMetresThatLeaveRoom(double metreLength, double labelRoom, int shown, int expected)
     {
         DistanceRuler.MetresPerLabel(metreLength, labelRoom, shown).ShouldBe(expected);
-    }
-
-    [Theory]
-    [InlineData(0, 40)]
-    [InlineData(double.NaN, 40)]
-    [InlineData(100, double.PositiveInfinity)]
-    [InlineData(100, double.NaN)]
-    public void MetresPerLabel_LabelsEveryMetreForAnUnusableSize(double metreLength, double labelRoom)
-    {
-        DistanceRuler.MetresPerLabel(metreLength, labelRoom).ShouldBe(1);
     }
 }

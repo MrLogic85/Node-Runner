@@ -4,24 +4,22 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Repositories;
 
-public sealed class CreationRepositoryTests
+public sealed class CreationRepositoryTests : IDisposable
 {
-    [Fact]
-    public void InMemory_SaveListAndDelete_UsesCreationIdentity()
+    private readonly string _directory = Path.Combine(Path.GetTempPath(), $"node-runner-repository-{Guid.NewGuid():N}");
+
+    private string ProgressionPath => Path.Combine(_directory, "progression.json");
+
+    public void Dispose()
     {
-        var repository = new InMemoryCreationRepository();
-        var creation = CreateCreation("Alpha");
-
-        repository.Save(creation);
-
-        repository.Get(creation.Id).ShouldBe(creation);
-        repository.List().ShouldContain(creation);
-        repository.Delete(creation.Id).ShouldBeTrue();
-        repository.Get(creation.Id).ShouldBeNull();
+        if (Directory.Exists(_directory))
+        {
+            Directory.Delete(_directory, recursive: true);
+        }
     }
 
     [Fact]
-    public void InMemory_SaveSameId_ReplacesExistingCreation()
+    public void InMemory_SavesByCreationIdentity()
     {
         var repository = new InMemoryCreationRepository();
         var original = CreateCreation("Alpha");
@@ -31,364 +29,113 @@ public sealed class CreationRepositoryTests
         repository.Save(replacement);
 
         repository.List().ShouldBe([replacement]);
+        repository.Get(original.Id).ShouldBe(replacement);
+        repository.Delete(original.Id).ShouldBeTrue();
+        repository.Get(original.Id).ShouldBeNull();
     }
 
     [Fact]
-    public void InMemory_DuplicatePattern_CanCopyTrainingStateWithNewIdentity()
+    public void File_SaveListGetAndDelete_RoundTripTheCreation_WithNamesAndRetiredIds()
     {
-        var repository = new InMemoryCreationRepository();
-        var original = CreateCreation("Alpha");
-        var copy = new CreationDef(Guid.NewGuid(), "Alpha Copy", original.Creature, original.Training);
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        repository.List().ShouldBeEmpty();
+        var builder = new CreatureBuilder();
+        var left = builder.AddNode(new Vector2D(0, 0));
+        var beam = builder.AddBeam(left, builder.AddNode(new Vector2D(2, 0)));
+        var extra = builder.AddNode(new Vector2D(4, 0));
+        builder.Rename(left, "Hip");
+        builder.Rename(beam, "Thigh");
+        builder.RemoveNode(extra);
+        var named = new CreationDef(Guid.NewGuid(), "Named", builder.Build(), null);
+        var creation = CreateCreation("Persistent");
 
-        repository.Save(original);
-        repository.Save(copy);
+        repository.Save(creation);
+        repository.Save(named);
 
-        repository.List().Count.ShouldBe(2);
-        copy.Training.ShouldBe(original.Training);
-        copy.Id.ShouldNotBe(original.Id);
+        var listed = repository.List();
+        listed.Select(saved => saved.Name).ShouldBe(["Named", "Persistent"]);
+        AssertEquivalent(listed[1], creation);
+        AssertEquivalent(repository.Get(creation.Id), creation);
+        var reloaded = repository.Get(named.Id)!.Creature;
+        reloaded.Nodes[reloaded.NodeIndexOf(left)].Name.ShouldBe("Hip");
+        reloaded.Beams[reloaded.BeamIndexOf(beam)].Name.ShouldBe("Thigh");
+        reloaded.NextPartId.ShouldBe(extra + 1);
+        repository.Delete(named.Id).ShouldBeTrue();
+        repository.Delete(named.Id).ShouldBeFalse();
+        repository.Get(named.Id).ShouldBeNull();
     }
 
+    // #114: one corrupt file must not empty the Creations list, nor throw out of Get for the open Creation.
     [Fact]
-    public void File_SaveAndList_RoundTripsCreation()
+    public void File_ACorruptCreationFile_IsSkippedByListAndNullFromGet()
     {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
-        try
-        {
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-            var creation = CreateCreation("Persistent");
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        var healthy = CreateCreation("Healthy");
+        repository.Save(healthy);
+        var corruptId = Guid.NewGuid();
+        var corruptFolder = Path.Combine(_directory, corruptId.ToString("N"));
+        Directory.CreateDirectory(corruptFolder);
+        File.WriteAllText(Path.Combine(corruptFolder, FileCreationRepository.CreationFileName), "{ this is not valid json");
 
-            repository.Save(creation);
+        var listed = repository.List();
 
-            var listed = repository.List();
-            listed.Count.ShouldBe(1);
-            AssertEquivalent(listed[0], creation);
-            AssertEquivalent(repository.Get(creation.Id), creation);
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
+        listed.Select(creation => creation.Id).ShouldBe([healthy.Id]);
+        repository.Get(corruptId).ShouldBeNull();
     }
 
+    // #113 and #114: overlapping writers, from one instance or several, must never leave a corrupt,
+    // missing or quarantined file.
     [Fact]
-    public void File_ConcurrentSaves_NeverLeaveACorruptOrMissingFile()
+    public void File_ConcurrentSavesAndLoads_NeverLeaveACorruptOrMissingFile()
     {
-        // Regression guard for #113: persistence now runs off the main
-        // thread, so overlapping writers must not corrupt the shared
-        // `.tmp` write-then-rename sequence for the same Creation id.
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
-        try
+        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
+        var creation = CreateCreation("Concurrent");
+        var storageLocation = new TestStorageLocation(_directory);
+        new FileProgressionRepository(storageLocation).Save(new ProgressionDef(DefaultCreationsSeeded: true));
+
+        Parallel.For(0, 16, i =>
         {
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-            var creation = CreateCreation("Concurrent");
+            repository.Save(new CreationDef(creation.Id, creation.Name, creation.Creature, TestTraining.State(i + 1, 1, TestTraining.Run)));
 
-            Parallel.For(0, 16, i =>
-            {
-                var withGeneration = new CreationDef(
-                    creation.Id,
-                    creation.Name,
-                    creation.Creature,
-                    TestTraining.State(i + 1, 1, TestTraining.Run));
-                repository.Save(withGeneration);
-            });
+            // A fresh instance per iteration exercises the cross-instance path.
+            var progression = new FileProgressionRepository(storageLocation);
+            progression.Save(new ProgressionDef(DefaultCreationsSeeded: true));
+            progression.Load();
+        });
 
-            var result = repository.Get(creation.Id);
-            result.ShouldNotBeNull();
-            result.Training!.Generation.ShouldBeInRange(1, 16);
+        repository.Get(creation.Id).ShouldNotBeNull().Training!.Generation.ShouldBeInRange(1, 16);
+        Directory.EnumerateFiles(_directory, "progression.json.corrupt-*").ShouldBeEmpty();
+        new FileProgressionRepository(storageLocation).Load().DefaultCreationsSeeded.ShouldBeTrue();
+    }
+
+    // #114: a missing file is a fresh progression; a corrupt one, including "{}" that the constructor's
+    // defaults would read as fresh, is quarantined and reset rather than crashing.
+    [Theory]
+    [InlineData(null)]
+    [InlineData("""{ "removedFlag": true, "defaultCreationsSeeded": true }""")]
+    [InlineData("{ not valid json")]
+    [InlineData("{}")]
+    [InlineData("[]")]
+    public void FileProgression_LoadOfAMissingOrCorruptFile_StartsFresh(string? json)
+    {
+        if (json is not null)
+        {
+            Directory.CreateDirectory(_directory);
+            File.WriteAllText(ProgressionPath, json);
         }
-        finally
+
+        new FileProgressionRepository(new TestStorageLocation(_directory)).Load().ShouldBe(new ProgressionDef());
+
+        File.Exists(ProgressionPath).ShouldBeFalse();
+        Directory.Exists(_directory).ShouldBe(json is not null);
+        if (json is not null)
         {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
+            Directory.EnumerateFiles(_directory, "progression.json.corrupt-*").ShouldHaveSingleItem();
         }
     }
 
-    [Fact]
-    public void File_ListWithOneCorruptCreationFile_SkipsItButReturnsTheRest()
-    {
-        // Regression guard for #114: a single unreadable/corrupt file must
-        // not empty the whole Creations list.
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
-        try
-        {
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-            var healthy = CreateCreation("Healthy");
-            repository.Save(healthy);
-
-            var corruptFolder = Path.Combine(directory, Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(corruptFolder);
-            File.WriteAllText(Path.Combine(corruptFolder, FileCreationRepository.CreationFileName), "{ this is not valid json");
-
-            var listed = repository.List();
-
-            listed.Count.ShouldBe(1);
-            listed[0].Id.ShouldBe(healthy.Id);
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void File_GetWithCorruptCreationFile_ReturnsNullInsteadOfThrowing()
-    {
-        // Regression guard for #114: Get() must handle a corrupt file for
-        // the currently active Creation the same way List() does, instead
-        // of throwing out of a caller like LoadRouteCreation.
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
-        try
-        {
-            var id = Guid.NewGuid();
-            var folder = Path.Combine(directory, id.ToString("N"));
-            Directory.CreateDirectory(folder);
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-            File.WriteAllText(Path.Combine(folder, FileCreationRepository.CreationFileName), "{ this is not valid json");
-
-            repository.Get(id).ShouldBeNull();
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void File_DeleteMissingCreation_ReturnsFalse()
-    {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-{Guid.NewGuid():N}");
-        var repository = new FileCreationRepository(new TestStorageLocation(directory));
-
-        repository.Delete(Guid.NewGuid()).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void InMemoryProgression_SaveAndLoad_RoundTripsSeeding()
-    {
-        var repository = new InMemoryProgressionRepository();
-        var progression = new ProgressionDef(DefaultCreationsSeeded: true);
-
-        repository.Save(progression);
-
-        repository.Load().ShouldBe(progression);
-    }
-
-    [Fact]
-    public void FileProgression_SaveAndLoad_RoundTripsSeeding()
-    {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
-        try
-        {
-            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
-            var progression = new ProgressionDef(DefaultCreationsSeeded: true);
-
-            repository.Save(progression);
-
-            repository.Load().ShouldBe(progression);
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void FileProgression_LoadWithUnknownField_TreatsItAsCorrupt()
-    {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
-        try
-        {
-            Directory.CreateDirectory(directory);
-            var path = Path.Combine(directory, "progression.json");
-            File.WriteAllText(path, """{ "removedFlag": true, "defaultCreationsSeeded": true }""");
-            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
-
-            repository.Load().ShouldBe(new ProgressionDef());
-
-            File.Exists(path).ShouldBeFalse();
-            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldNotBeEmpty();
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void FileProgression_LoadWithTruncatedJson_ResetsToDefaultsAndQuarantinesFile()
-    {
-        // Regression guard for #114: a genuinely malformed file must not
-        // crash the reader that runs on nearly every generation completion.
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
-        try
-        {
-            Directory.CreateDirectory(directory);
-            var path = Path.Combine(directory, "progression.json");
-            File.WriteAllText(path, "{ not valid json");
-            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
-
-            var progression = repository.Load();
-
-            progression.ShouldBe(new ProgressionDef());
-            File.Exists(path).ShouldBeFalse();
-            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldNotBeEmpty();
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void FileProgression_ConcurrentLoadAndSaveAcrossInstances_NeverQuarantinesAValidFile()
-    {
-        // Regression guard for #114: the per-path lock must be shared
-        // across FileProgressionRepository instances (not just within a
-        // single instance), otherwise one instance's Load() could race a
-        // different instance's Save() and quarantine away a file that was
-        // actually just written successfully.
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
-        try
-        {
-            var storageLocation = new TestStorageLocation(directory);
-            new FileProgressionRepository(storageLocation).Save(new ProgressionDef(DefaultCreationsSeeded: true));
-
-            Parallel.For(0, 16, i =>
-            {
-                // A fresh instance per iteration exercises the cross-instance
-                // path, not just cross-call reuse of the same object.
-                var repository = new FileProgressionRepository(storageLocation);
-                repository.Save(new ProgressionDef(DefaultCreationsSeeded: true));
-                repository.Load();
-            });
-
-            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldBeEmpty();
-            new FileProgressionRepository(storageLocation).Load().DefaultCreationsSeeded.ShouldBeTrue();
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void FileProgression_LoadWithMissingFields_TreatsItAsCorruptRatherThanFresh()
-    {
-        // Regression guard for #114: ProgressionDef's constructor defaults
-        // make "{}" a *valid* fresh progression, so structurally incomplete
-        // JSON must be distinguished from a genuinely fresh install instead
-        // of silently resetting the unlock state.
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
-        try
-        {
-            Directory.CreateDirectory(directory);
-            var path = Path.Combine(directory, "progression.json");
-            File.WriteAllText(path, "{}");
-            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
-
-            var progression = repository.Load();
-
-            progression.ShouldBe(new ProgressionDef());
-            File.Exists(path).ShouldBeFalse();
-            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldNotBeEmpty();
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void FileProgression_LoadWithNonObjectJson_TreatsItAsCorruptRatherThanCrashing()
-    {
-        // Regression guard for #114: valid-but-non-object JSON (e.g. a bare
-        // array) must not throw when checking for required fields.
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-progression-{Guid.NewGuid():N}");
-        try
-        {
-            Directory.CreateDirectory(directory);
-            var path = Path.Combine(directory, "progression.json");
-            File.WriteAllText(path, "[]");
-            var repository = new FileProgressionRepository(new TestStorageLocation(directory));
-
-            var progression = repository.Load();
-
-            progression.ShouldBe(new ProgressionDef());
-            File.Exists(path).ShouldBeFalse();
-            Directory.EnumerateFiles(directory, "progression.json.corrupt-*").ShouldNotBeEmpty();
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    [Fact]
-    public void FileCreation_SaveAndReload_KeepsNamesAndRetiredIds()
-    {
-        var directory = Path.Combine(Path.GetTempPath(), $"node-runner-ids-{Guid.NewGuid():N}");
-        try
-        {
-            var builder = new CreatureBuilder();
-            var left = builder.AddNode(new Vector2D(0, 0));
-            var right = builder.AddNode(new Vector2D(2, 0));
-            var beam = builder.AddBeam(left, right);
-            var extra = builder.AddNode(new Vector2D(4, 0));
-            builder.Rename(left, "Hip");
-            builder.Rename(beam, "Thigh");
-            builder.RemoveNode(extra);
-            var creation = new CreationDef(Guid.NewGuid(), "Named", builder.Build(), null);
-            var repository = new FileCreationRepository(new TestStorageLocation(directory));
-
-            repository.Save(creation);
-            var reloaded = repository.Get(creation.Id)!.Creature;
-
-            reloaded.Nodes[reloaded.NodeIndexOf(left)].Name.ShouldBe("Hip");
-            reloaded.Beams[reloaded.BeamIndexOf(beam)].Name.ShouldBe("Thigh");
-            reloaded.NextPartId.ShouldBe(extra + 1);
-            new CreatureBuilder(reloaded).AddNode(new Vector2D(6, 0)).ShouldBeGreaterThan(extra);
-        }
-        finally
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
-    }
-
-    private static CreationDef CreateCreation(string name)
-    {
-        return new CreationDef(
+    private static CreationDef CreateCreation(string name) =>
+        new(
             Guid.NewGuid(),
             name,
             new CreatureDef(
@@ -400,19 +147,16 @@ public sealed class CreationRepositoryTests
                 5,
                 new TrainingRunDef(40.25, 88.25, 12, MapIds.Flat),
                 new TrainingBestDef(2, 42.5, MapIds.Flat)));
-    }
 
     private static void AssertEquivalent(CreationDef? actual, CreationDef expected)
     {
         actual.ShouldNotBeNull();
         actual.Id.ShouldBe(expected.Id);
         actual.Name.ShouldBe(expected.Name);
-        actual.Creature.Nodes.ToArray().ShouldBe(expected.Creature.Nodes.ToArray());
-        actual.Creature.Beams.ToArray().ShouldBe(expected.Creature.Beams.ToArray());
-        actual.Creature.Sensors.ToArray().ShouldBe(expected.Creature.Sensors.ToArray());
+        actual.Creature.Parts.ShouldBe(expected.Creature.Parts);
         actual.Training.ShouldNotBeNull();
-        actual.Training.Network.Neurons.ToArray().ShouldBe(expected.Training!.Network.Neurons.ToArray());
-        actual.Training.Network.Connections.ToArray().ShouldBe(expected.Training.Network.Connections.ToArray());
+        actual.Training.Network.Neurons.ShouldBe(expected.Training!.Network.Neurons);
+        actual.Training.Network.Connections.ShouldBe(expected.Training.Network.Connections);
         actual.Training.Network.NextNeuronId.ShouldBe(expected.Training.Network.NextNeuronId);
         actual.Training.Generation.ShouldBe(expected.Training.Generation);
         actual.Training.Latest.ShouldBe(expected.Training.Latest);

@@ -115,21 +115,14 @@ public sealed class RewrittenSceneTests
     }
 
     [Theory]
-    [InlineData("""[node name="Row" type="HBoxContainer" parent="."]""", null, null)]
-    [InlineData("""[node name="Title" type="Label" parent="."]""", "res://src/ui/lib/UiLabel.cs", null)]
-    [InlineData("""[node name="Toolbar" parent="." instance=ExtResource("1")]""", null, "res://scenes/ui/UiToolbar.tscn")]
-    [InlineData("""[node name="Back" parent="Toolbar/Row"]""", null, null)]
-    [InlineData("""[node name="Screen" type="Control"]""", "res://src/ui/screens/CreationsScreen.cs", null)]
-    public void Library_node_passes(string header, string? script, string? instance) =>
-        IsLibraryNode(Node(header, script, instance)).ShouldBeTrue();
-
-    [Theory]
-    [InlineData("""[node name="Title" type="Label" parent="."]""", null, null)]
-    [InlineData("""[node name="Panel" type="PanelContainer" parent="."]""", null, null)]
-    [InlineData("""[node name="Card" type="Control" parent="."]""", "res://src/ui/screens/CreationsScreen.cs", null)]
-    [InlineData("""[node name="Other" parent="." instance=ExtResource("1")]""", null, "res://scenes/Creature.tscn")]
-    public void Raw_node_is_flagged(string header, string? script, string? instance) =>
-        IsLibraryNode(Node(header, script, instance)).ShouldBeFalse();
+    [InlineData("""[node name="Row" type="HBoxContainer" parent="."]""", null, null, true)]
+    [InlineData("""[node name="Title" type="Label" parent="."]""", "res://src/ui/lib/UiLabel.cs", null, true)]
+    [InlineData("""[node name="Back" parent="Toolbar/Row"]""", null, null, true)]
+    [InlineData("""[node name="Title" type="Label" parent="."]""", null, null, false)]
+    [InlineData("""[node name="Card" type="Control" parent="."]""", "res://src/ui/screens/CreationsScreen.cs", null, false)]
+    [InlineData("""[node name="Other" parent="." instance=ExtResource("1")]""", null, "res://scenes/Creature.tscn", false)]
+    public void Only_library_nodes_and_plain_containers_pass(string header, string? script, string? instance, bool passes) =>
+        IsLibraryNode(Node(header, script, instance)).ShouldBe(passes);
 
     [Fact]
     public void Rewritten_scripts_bind_nodes_their_scene_declares()

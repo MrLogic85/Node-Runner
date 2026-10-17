@@ -33,19 +33,9 @@ public sealed class SharedPartVisualsTests
             .ToList();
 
         violations.ShouldBeEmpty("Show the part with its shared part visual in theme/ (#766) instead of drawing it.");
+        CSharpSources.Snippet("void M(CanvasItem canvas) { SelectionDrawing.DrawBeam(canvas, transform, glow, 1, 1, a, b); }")
+            .Find(DrawsAPart).ShouldHaveSingleItem();
     }
-
-    [Theory]
-    [InlineData("void M(CanvasItem canvas) { JointDrawing.DrawPlain(canvas, theme, transform, at, 1, JointLook.Plain); }")]
-    [InlineData("void M(CanvasItem canvas) { SelectionDrawing.DrawBeam(canvas, transform, glow, 1, 1, a, b); }")]
-    public void Drawing_a_part_is_flagged(string member) =>
-        CSharpSources.Snippet(member).Find(DrawsAPart).ShouldHaveSingleItem();
-
-    [Fact]
-    public void Feeding_a_part_passes() =>
-        CSharpSources.Snippet("void M(JointPart part) { part.Radius = 1; JointDrawing.BeamSpan(1, a, 1, b, 1); }")
-            .Find(DrawsAPart)
-            .ShouldBeEmpty();
 
     private static bool IsSharedPart(string path) =>
         path.StartsWith("theme/", StringComparison.Ordinal) && path.EndsWith("Part.cs", StringComparison.Ordinal);

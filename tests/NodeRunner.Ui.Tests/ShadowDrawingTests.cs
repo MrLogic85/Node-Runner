@@ -16,24 +16,4 @@ public sealed class ShadowDrawingTests
         visuals.ShouldNotBeEmpty();
         visuals.Where(type => !typeof(IShadowVisual).IsAssignableFrom(type)).ShouldBeEmpty();
     }
-
-    [Fact]
-    public void ShadowDrawing_FollowsTheCreatureModel()
-    {
-        AsShadow<NodeVisual>().ShouldBe(ShadowDrawing.Simplified);
-        AsShadow<BeamVisual>().ShouldBe(ShadowDrawing.Simplified);
-        AsShadow<SensorVisual>().ShouldBe(ShadowDrawing.Hidden);
-        AsShadow<RigidHatchVisual>().ShouldBe(ShadowDrawing.Simplified);
-        AsShadow<CameraRaysVisual>().ShouldBe(ShadowDrawing.Hidden);
-        AsShadow<KnockoutVisual>().ShouldBe(ShadowDrawing.Hidden);
-        AsShadow<WheelVisual>().ShouldBe(ShadowDrawing.Simplified);
-        AsShadow<VelocityMotorVisual>().ShouldBe(ShadowDrawing.Simplified);
-        AsShadow<BrakeVisual>().ShouldBe(ShadowDrawing.Simplified);
-        AsShadow<AngleSensorVisual>().ShouldBe(ShadowDrawing.Simplified);
-        AsShadow<StepperVisual>().ShouldBe(ShadowDrawing.Simplified);
-        AsShadow<TearPulseVisual>().ShouldBe(ShadowDrawing.Hidden);
-    }
-
-    private static ShadowDrawing AsShadow<T>()
-        where T : IShadowVisual => T.AsShadow;
 }

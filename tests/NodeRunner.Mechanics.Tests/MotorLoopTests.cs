@@ -10,42 +10,24 @@ public sealed class MotorLoopTests
     // Heavy enough that the push part always asks for more than the rise time allows.
     private const double _heavy = 1e9;
 
+    // From rest it builds towards the wanted speed at the rise rate, reaching full within about its rise time and
+    // never more than the chosen torque; past its target it drops its push at once.
     [Fact]
-    public void SpeedInput_IsPositiveCounterClockwise_AndSaturatesSoftly()
+    public void ItsTorque_BuildsAtTheRiseRate_UpToTheChosenTorque()
     {
         MotorLoop.SpeedInput(0, _maxSpeed).ShouldBe(0);
-        MotorLoop.SpeedInput(_maxSpeed, _maxSpeed).ShouldBe(Math.Tanh(1), tolerance: 1e-12);
-        MotorLoop.SpeedInput(-1000 * _maxSpeed, _maxSpeed).ShouldBe(-1, tolerance: 1e-9);
-    }
+        MotorLoop.SpeedInput(_maxSpeed, _maxSpeed).ShouldBe(Math.Tanh(1), 1e-12);
+        MotorLoop.SpeedInput(-1000 * _maxSpeed, _maxSpeed).ShouldBe(-1, 1e-9);
 
-    [Fact]
-    public void Next_FromRest_BuildsTowardsTheWantedSpeed_AtTheRiseRate()
-    {
         var forward = Next(wantedSpeed: 1, _strength, _riseTime, default);
-        var back = Next(wantedSpeed: -1, _strength, _riseTime, default);
-
-        forward.Torque.ShouldBe(_strength * _step / _riseTime, tolerance: 1e-6);
-        back.Torque.ShouldBe(-forward.Torque, tolerance: 1e-6);
-    }
-
-    [Fact]
-    public void Next_WithNoChosenTorque_IsZero() =>
+        forward.Torque.ShouldBe(_strength * _step / _riseTime, 1e-6);
+        Next(wantedSpeed: -1, _strength, _riseTime, default).Torque.ShouldBe(-forward.Torque, 1e-6);
+        Next(wantedSpeed: 1, _strength, riseTime: 0.5, default).Torque.ShouldBe(Next(wantedSpeed: 1, _strength, riseTime: 0.1, default).Torque / 5, 1e-6);
         Next(wantedSpeed: 1, chosenTorque: 0, _riseTime, default).Torque.ShouldBe(0);
+        var capped = Next(wantedSpeed: 1, 0.2 * _strength, _riseTime, new MotorState(_strength, _strength));
+        Math.Abs(capped.Torque).ShouldBeLessThanOrEqualTo(0.2 * _strength);
+        Math.Abs(capped.Holding).ShouldBeLessThanOrEqualTo(0.2 * _strength);
 
-    [Fact]
-    public void Next_NeverExceedsTheChosenTorque()
-    {
-        var chosen = 0.2 * _strength;
-
-        var motor = Next(wantedSpeed: 1, chosen, _riseTime, new MotorState(_strength, _strength));
-
-        Math.Abs(motor.Torque).ShouldBeLessThanOrEqualTo(chosen);
-        Math.Abs(motor.Holding).ShouldBeLessThanOrEqualTo(chosen);
-    }
-
-    [Fact]
-    public void Next_ReachesFullWithinAboutRiseTime()
-    {
         var motor = default(MotorState);
         for (var step = 0; step < (int)(1.1 * _riseTime / _step); step++)
         {
@@ -53,26 +35,9 @@ public sealed class MotorLoopTests
         }
 
         motor.Torque.ShouldBe(_strength);
-    }
 
-    [Fact]
-    public void Next_ALongerRiseTime_BuildsMoreSlowly()
-    {
-        var quickTorque = Next(wantedSpeed: 1, _strength, riseTime: 0.1, default).Torque;
-        var slowTorque = Next(wantedSpeed: 1, _strength, riseTime: 0.5, default).Torque;
-
-        slowTorque.ShouldBe(quickTorque / 5, tolerance: 1e-6);
-    }
-
-    [Fact]
-    public void Next_PastItsTarget_DropsItsPushAtOnce()
-    {
-        var pushing = new MotorState(_strength, 0);
-
-        var motor = MotorLoop.Next(wantedSpeed: -_maxSpeed, speed: 0, _strength, _riseTime, pushing, _step, effectiveInertia: 1000);
-
-        motor.Torque.ShouldBeLessThan(0);
-        motor.Torque.ShouldBeGreaterThanOrEqualTo(-_strength * _step / _riseTime);
+        var past = MotorLoop.Next(wantedSpeed: -_maxSpeed, speed: 0, _strength, _riseTime, new MotorState(_strength, 0), _step, effectiveInertia: 1000);
+        past.Torque.ShouldBeInRange(-_strength * _step / _riseTime, -double.Epsilon);
     }
 
     [Theory]
@@ -91,24 +56,22 @@ public sealed class MotorLoopTests
             speed += (motor.Torque + load) / realInertia * _step;
         }
 
-        speed.ShouldBe(wantedSpeed, tolerance: 0.01 * _maxSpeed);
-        motor.Torque.ShouldBe(-load, tolerance: 0.01 * _strength);
+        speed.ShouldBe(wantedSpeed, 0.01 * _maxSpeed);
+        motor.Torque.ShouldBe(-load, 0.01 * _strength);
     }
 
-    [Theory]
-    [InlineData(0, _step, "effectiveInertia")]
-    [InlineData(-1, _step, "effectiveInertia")]
-    [InlineData(double.NaN, _step, "effectiveInertia")]
-    [InlineData(double.PositiveInfinity, _step, "effectiveInertia")]
-    [InlineData(1000, 0, "step")]
-    [InlineData(1000, -_step, "step")]
-    [InlineData(1000, double.NaN, "step")]
-    public void Next_WithoutAFinitePositiveInertiaAndStep_Throws(double effectiveInertia, double step, string parameter)
+    [Fact]
+    public void ItRefuses_AnInertiaOrStepThatIsNotFiniteAndPositive()
     {
-        var exception = Should.Throw<ArgumentOutOfRangeException>(
-            () => MotorLoop.Next(wantedSpeed: 1, speed: 0, _strength, _riseTime, default, step, effectiveInertia));
-
-        exception.ParamName.ShouldBe(parameter);
+        foreach (var (effectiveInertia, step, parameter) in new[]
+        {
+            (0, _step, "effectiveInertia"), (-1, _step, "effectiveInertia"), (double.NaN, _step, "effectiveInertia"),
+            (double.PositiveInfinity, _step, "effectiveInertia"), (1000, 0, "step"), (1000, -_step, "step"), (1000, double.NaN, "step"),
+        })
+        {
+            Should.Throw<ArgumentOutOfRangeException>(() => MotorLoop.Next(wantedSpeed: 1, speed: 0, _strength, _riseTime, default, step, effectiveInertia))
+                .ParamName.ShouldBe(parameter);
+        }
     }
 
     private static MotorState Next(double wantedSpeed, double chosenTorque, double riseTime, MotorState previous) =>

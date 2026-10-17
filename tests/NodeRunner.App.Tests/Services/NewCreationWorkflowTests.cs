@@ -25,17 +25,6 @@ public sealed class NewCreationWorkflowTests
         created.Creature.Nodes.ShouldBeEmpty();
         created.Training.ShouldBeNull();
         repository.Get(id).ShouldBe(created);
-    }
-
-    [Fact]
-    public void Create_EachTimeMakesAnotherCreation()
-    {
-        var repository = new InMemoryCreationRepository();
-        var workflow = new NewCreationWorkflow(repository);
-
-        workflow.Create(TestLanguage.Untranslated);
-        workflow.Create(TestLanguage.Untranslated);
-
-        repository.List().Count.ShouldBe(2);
+        new NewCreationWorkflow(repository).Create(_ => "Second").Id.ShouldNotBe(id);
     }
 }

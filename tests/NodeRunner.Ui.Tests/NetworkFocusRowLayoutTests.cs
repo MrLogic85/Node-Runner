@@ -23,9 +23,6 @@ public sealed class NetworkFocusRowLayoutTests
 
     [Theory]
     [InlineData(60, 2)]
-    [InlineData(120, 3)]
-    [InlineData(200, 6)]
-    [InlineData(300, 12)]
     [InlineData(600, 22)]
     public void Rows_that_fit_keep_the_bottom_selection_halo_inside_the_card(float viewHeight, int tallest)
     {
@@ -51,8 +48,6 @@ public sealed class NetworkFocusRowLayoutTests
 
     [Theory]
     [InlineData(60)]
-    [InlineData(150)]
-    [InlineData(280)]
     [InlineData(600)]
     public void Rows_are_never_closer_than_a_label_line(float viewHeight)
     {

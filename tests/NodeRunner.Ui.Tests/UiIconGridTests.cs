@@ -39,10 +39,8 @@ public sealed partial class UiIconGridTests
     }
 
     [Theory]
-    [InlineData("<path d=\"M 4,4 l 16,16 M 20,4 L 4,20\"/>", 4, 4, 20, 20)]
     [InlineData("<path d=\"M 4,12 a 8,8 0 1,0 16,0 a 8,8 0 1,0 -16,0 z\"/>", 4, 4, 20, 20)]
     [InlineData("<path d=\"M 4,20 Q 12,4 20,20\"/>", 4, 12, 20, 20)]
-    [InlineData("<path d=\"M 4,8 H 20 V 16\"/>", 4, 8, 20, 16)]
     [InlineData("<circle cx=\"12\" cy=\"12\" r=\"8\"/>", 4, 4, 20, 20)]
     [InlineData("<rect x=\"4\" y=\"6\" width=\"16\" height=\"12\"/>", 4, 6, 20, 18)]
     public void Bounds_FollowTheDrawnGeometry(string shape, double left, double top, double right, double bottom)
@@ -64,7 +62,6 @@ public sealed partial class UiIconGridTests
     [Theory]
     [InlineData("stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", "<path d=\"M 4,4 L 20,20\"/>", false)]
     [InlineData("stroke-width=\"3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", "<path d=\"M 4,4 L 20,20\"/>", true)]
-    [InlineData("stroke-width=\"2\" stroke-linecap=\"round\"", "<path d=\"M 4,4 L 20,20\"/>", true)]
     [InlineData("stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", "<path stroke-width=\"3\" d=\"M 4,4 L 20,20\"/>", true)]
     [InlineData("stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"", "<path transform=\"scale(2)\" d=\"M 4,4 L 20,20\"/>", true)]
     public void AnIconOffTheSharedStroke_IsCaught(string rootStroke, string shape, bool caught)

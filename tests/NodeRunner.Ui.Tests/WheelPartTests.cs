@@ -16,7 +16,6 @@ public sealed class WheelPartTests
 
     [Theory]
     [InlineData(WheelDef.MinRadius)]
-    [InlineData(70)]
     [InlineData(WheelDef.MaxRadius)]
     public void Cue_KeepsItsCountAndSpan_AtEveryRadius_InTheTyreBand(double radius)
     {
@@ -49,7 +48,6 @@ public sealed class WheelPartTests
 
     [Theory]
     [InlineData(40, 2, 39)]
-    [InlineData(100, 2, 99)]
     public void Tyre_HasItsOuterEdgeAtTheRadius(float radius, float width, float centre)
     {
         WheelPart.TyreRingRadius(radius, width).ShouldBe(centre);

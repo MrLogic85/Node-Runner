@@ -61,14 +61,20 @@ public sealed class ShareDictionaryTests
             $"Format version {version} has no share dictionary. Run the App tests with {_updateVariable}=1, then again to build it in.");
     }
 
+    // Its first line is the template, and its second the sample as a code in that version holds it,
+    // which still reads, with its 0.6 m Wheel.
     [Theory]
     [MemberData(nameof(Versions))]
-    public void EachShareDictionary_StartsWithACreationFileInItsVersion(int version)
+    public void EachShareDictionary_StartsWithACreationFileInItsVersion_AndItsSampleReads(int version)
     {
-        var json = Encoding.UTF8.GetString(CreationShareCode.Dictionary(version).ShouldNotBeNull()).Split('\n')[0];
+        var lines = Encoding.UTF8.GetString(CreationShareCode.Dictionary(version).ShouldNotBeNull()).Split('\n');
 
-        JsonNode.Parse(json)![VersionedSaveFile<CreationDef>.VersionField]!.GetValue<int>().ShouldBe(version);
-        FileCreationRepository.Format.Deserialize(json, CreationShareCode.DictionaryName(version)).Value.Creature.Nodes.ShouldNotBeEmpty();
+        JsonNode.Parse(lines[0])![VersionedSaveFile<CreationDef>.VersionField]!.GetValue<int>().ShouldBe(version);
+        FileCreationRepository.Format.Deserialize(lines[0], CreationShareCode.DictionaryName(version)).Value.Creature.Nodes.ShouldNotBeEmpty();
+        var read = CreationShareCode.Read(CreationShareCode.Pack(version, Encoding.UTF8.GetBytes(lines[1])));
+        read.Refusal.ShouldBeNull();
+        read.UpdatedFrom.ShouldBe(version < FileCreationRepository.Format.CurrentVersion ? version : null);
+        read.Build.ShouldNotBeNull().Creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(60);
     }
 
     [Fact]
@@ -86,91 +92,33 @@ public sealed class ShareDictionaryTests
         read.UpdatedFrom.ShouldBe(_firstVersion < FileCreationRepository.Format.CurrentVersion ? _firstVersion : null);
     }
 
-    [Fact]
-    public void ACodeFromVersion8_WithAGrippyWheel_StillReads_WithoutItsGrip()
+    // Each pinned code was made just before the next version added a kind of part (or #1144 dropped
+    // Grip); it reads as the build it was made from, other than its nodes and beams.
+    public static TheoryData<string, int, string?, Vector2D[], IPartDef[]> OldCodes() => new()
     {
-        var read = CreationShareCode.Read(_rollerInVersion8);
+        { _rollerInVersion8, 8, null, [new(0, 0), new(100, 0)], [new WheelDef(4, 1, radius: 70)] },
+        { _feelerInVersion9, 9, "Feeler", [new(0, 0), new(100, 0)], [new TouchSensorDef(4, 1), new WheelDef(5, 2)] },
+        { _spinnerInVersion10, 10, "Spinner", [new(0, 0), new(100, 0)], [new WheelDef(4, 1), new ServoDef(5, 1, 3, 4), new RubberDef(6, 2)] },
+        { _rollerInVersion11, 11, "Roller", [new(0, 0), new(100, 0), new(0, 100)], [new WheelDef(6, 2), new VelocityMotorDef(7, 1, 4, 5)] },
+        { _benderInVersion12, 12, "Bender", [new(0, 0), new(100, 0), new(0, 100)], [new BrakeDef(6, 1, 4, 5)] },
+        { _benderInVersion13, 13, "Bender", [new(0, 0), new(100, 0), new(0, 100)], [new AngleSensorDef(6, 1, 4, 5)] },
+    };
 
-        var creature = read.Build.ShouldNotBeNull().Creature;
-        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
-        creature.Beams.ShouldHaveSingleItem().Id.ShouldBe(3);
-        var wheel = creature.Wheels.ShouldHaveSingleItem();
-        (wheel.Id, wheel.NodeId, wheel.Radius).ShouldBe((4, 1, 70.0));
-        read.UpdatedFrom.ShouldBe(8);
-    }
-
-    [Fact]
-    public void ACodeFromVersion9_StillReads_WithoutRubbers()
+    [Theory]
+    [MemberData(nameof(OldCodes))]
+    public void APinnedCodeFromAnOlderVersion_StillReads(string code, int version, string? name, Vector2D[] nodes, IPartDef[] otherParts)
     {
-        var read = CreationShareCode.Read(_feelerInVersion9);
+        var read = CreationShareCode.Read(code);
 
         var build = read.Build.ShouldNotBeNull();
-        build.Name.ShouldBe("Feeler");
-        var creature = build.Creature;
-        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
-        creature.TouchSensors.ShouldBe([new TouchSensorDef(4, 1)]);
-        creature.Wheels.ShouldBe([new WheelDef(5, 2)]);
-        creature.Rubbers.ShouldBeEmpty();
-        read.UpdatedFrom.ShouldBe(9);
-    }
+        if (name is not null)
+        {
+            build.Name.ShouldBe(name);
+        }
 
-    [Fact]
-    public void ACodeFromVersion10_StillReads_WithoutVelocityMotors()
-    {
-        var read = CreationShareCode.Read(_spinnerInVersion10);
-
-        var build = read.Build.ShouldNotBeNull();
-        build.Name.ShouldBe("Spinner");
-        var creature = build.Creature;
-        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
-        creature.Wheels.ShouldBe([new WheelDef(4, 1)]);
-        creature.Servos.ShouldBe([new ServoDef(5, 1, 3, 4)]);
-        creature.Rubbers.ShouldBe([new RubberDef(6, 2)]);
-        creature.VelocityMotors.ShouldBeEmpty();
-        read.UpdatedFrom.ShouldBe(10);
-    }
-
-    [Fact]
-    public void ACodeFromVersion11_StillReads_WithoutBrakes()
-    {
-        var read = CreationShareCode.Read(_rollerInVersion11);
-
-        var build = read.Build.ShouldNotBeNull();
-        build.Name.ShouldBe("Roller");
-        var creature = build.Creature;
-        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0), new Vector2D(0, 100)]);
-        creature.Wheels.ShouldBe([new WheelDef(6, 2)]);
-        creature.VelocityMotors.ShouldBe([new VelocityMotorDef(7, 1, 4, 5)]);
-        creature.Brakes.ShouldBeEmpty();
-        read.UpdatedFrom.ShouldBe(11);
-    }
-
-    [Fact]
-    public void ACodeFromVersion12_StillReads_WithoutAngleSensors()
-    {
-        var read = CreationShareCode.Read(_benderInVersion12);
-
-        var build = read.Build.ShouldNotBeNull();
-        build.Name.ShouldBe("Bender");
-        var creature = build.Creature;
-        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0), new Vector2D(0, 100)]);
-        creature.Brakes.ShouldBe([new BrakeDef(6, 1, 4, 5)]);
-        creature.AngleSensors.ShouldBeEmpty();
-        read.UpdatedFrom.ShouldBe(12);
-    }
-
-    [Fact]
-    public void ACodeFromVersion13_StillReads_WithoutSteppers()
-    {
-        var read = CreationShareCode.Read(_benderInVersion13);
-
-        var build = read.Build.ShouldNotBeNull();
-        build.Name.ShouldBe("Bender");
-        var creature = build.Creature;
-        creature.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0), new Vector2D(0, 100)]);
-        creature.AngleSensors.ShouldBe([new AngleSensorDef(6, 1, 4, 5)]);
-        creature.Steppers.ShouldBeEmpty();
-        read.UpdatedFrom.ShouldBe(13);
+        build.Creature.Nodes.Select(node => node.Position).ShouldBe(nodes);
+        build.Creature.Parts.Where(part => part is not NodeDef and not BeamDef).OrderBy(part => part.Id).ShouldBe(otherParts);
+        read.UpdatedFrom.ShouldBe(version);
     }
 
     // A walker with every kind of part at its settings as Build adds it and named as a new creation

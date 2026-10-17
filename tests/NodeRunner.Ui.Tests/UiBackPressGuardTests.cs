@@ -28,20 +28,13 @@ public sealed class UiBackPressGuardTests
     }
 
     [Theory]
-    [InlineData("void N(long what) { switch (what) { case NotificationWMGoBackRequest: Hide(); break; } }")]
-    [InlineData("void N(long what) { if (Node.NotificationWMGoBackRequest == what) { Hide(); } if (UiBackPress.TryTake(this)) { Show(); } }")]
-    [InlineData("Window _w; void A() { _w.GoBackRequested += OnBack; } void OnBack() { Hide(); } void B() { UiBackPress.TryTake(this); }")]
-    [InlineData("Window _w; void A() { _w.Connect(Window.SignalName.GoBackRequested, Callable.From(Hide)); }")]
-    public void Guard_reports_a_listener_that_does_not_take_the_press(string member) =>
-        Snippet(member).ShouldHaveSingleItem().TakesPress.ShouldBeFalse();
-
-    [Theory]
-    [InlineData("void N(long what) { switch (what) { case NotificationWMGoBackRequest: if (UiBackPress.TryTake(this)) { Hide(); } break; } }")]
-    [InlineData("void N(long what) { if (what == NotificationWMGoBackRequest && UiBackPress.TryTake(this)) { Hide(); } }")]
-    [InlineData("Window _w; void A() { _w.GoBackRequested += OnBack; _w.GoBackRequested -= OnBack; } void OnBack() { if (UiBackPress.TryTake(this)) { Hide(); } }")]
-    [InlineData("Window _w; void A() { _w.GoBackRequested += () => { if (UiBackPress.TryTake(this)) { Hide(); } }; }")]
-    public void Guard_accepts_a_listener_that_takes_the_press(string member) =>
-        Snippet(member).ShouldHaveSingleItem().TakesPress.ShouldBeTrue();
+    [InlineData("void N(long what) { if (Node.NotificationWMGoBackRequest == what) { Hide(); } if (UiBackPress.TryTake(this)) { Show(); } }", false)]
+    [InlineData("Window _w; void A() { _w.Connect(Window.SignalName.GoBackRequested, Callable.From(Hide)); }", false)]
+    [InlineData("Window _w; void A() { _w.GoBackRequested += OnBack; } void OnBack() { Hide(); } void B() { UiBackPress.TryTake(this); }", false)]
+    [InlineData("void N(long what) { switch (what) { case NotificationWMGoBackRequest: if (UiBackPress.TryTake(this)) { Hide(); } break; } }", true)]
+    [InlineData("Window _w; void A() { _w.GoBackRequested += OnBack; _w.GoBackRequested -= OnBack; } void OnBack() { if (UiBackPress.TryTake(this)) { Hide(); } }", true)]
+    public void Guard_tells_whether_a_listener_takes_the_press(string member, bool takes) =>
+        Snippet(member).ShouldHaveSingleItem().TakesPress.ShouldBe(takes);
 
     private static List<Listener> Snippet(string member)
     {

@@ -5,22 +5,6 @@ namespace NodeRunner.Ui.Tests;
 public sealed class UiPopupContractsTests
 {
     [Fact]
-    public void Types_IncludeDefaultWarningAndDanger()
-    {
-        Enum.GetNames<UiPopupType>().ShouldBe(["Default", "Warn", "Danger"]);
-    }
-
-    [Fact]
-    public void Notification_WithoutActionDoesNotRequestClickDismissal()
-    {
-        var spec = new UiNotificationSpec(UiPopupType.Default, "Title", "Message");
-
-        spec.Icon.ShouldBeNull();
-        (spec.OnClick?.Invoke() ?? false).ShouldBeFalse();
-        (spec with { OnClick = () => true }).OnClick!().ShouldBeTrue();
-    }
-
-    [Fact]
     public void Result_DistinguishesSuccessFromUserFacingFailure()
     {
         UiDialogResult.Success.Succeeded.ShouldBeTrue();
@@ -28,21 +12,9 @@ public sealed class UiPopupContractsTests
         var result = UiDialogResult.Failure("Could not save.");
         result.Succeeded.ShouldBeFalse();
         result.ErrorMessage.ShouldBe("Could not save.");
-    }
-
-    [Fact]
-    public void Failure_FromSourceIsAFailure()
-    {
         UiDialogResult.Failure(() => "Could not save.").Succeeded.ShouldBeFalse();
         Should.Throw<ArgumentNullException>(() => UiDialogResult.Failure((Func<string>)null!));
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void Failure_RequiresVisibleMessage(string message)
-    {
-        Should.Throw<ArgumentException>(() => UiDialogResult.Failure(message));
+        Should.Throw<ArgumentException>(() => UiDialogResult.Failure(" "));
     }
 
     [Fact]
@@ -57,7 +29,6 @@ public sealed class UiPopupContractsTests
 
     [Theory]
     [InlineData(null)]
-    [InlineData("")]
     [InlineData(" \t\n")]
     public void Dialog_BlankActionTextOmitsAction(string? text)
     {

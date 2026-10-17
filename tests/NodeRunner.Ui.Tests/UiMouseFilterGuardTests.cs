@@ -21,17 +21,13 @@ public sealed class UiMouseFilterGuardTests
     }
 
     [Theory]
-    [InlineData("Snippet() => MouseFilter = MouseFilterEnum.Pass;")]
-    [InlineData("public override void _Ready() { this.MouseFilter = MouseFilterEnum.Ignore; }")]
-    public void Guard_FlagsAnOwnAssignment(string member) =>
-        CSharpSources.Snippet(member).Find(AssignsOwnMouseFilter).ShouldNotBeEmpty();
-
-    [Theory]
-    [InlineData("public override void _Ready() { UiMouseFilter.Prefer(this, MouseFilterEnum.Pass); }")]
-    [InlineData("void Make() { var label = new Label { MouseFilter = MouseFilterEnum.Ignore }; }")]
-    [InlineData("void Make(Control child) { child.MouseFilter = MouseFilterEnum.Ignore; }")]
-    public void Guard_AllowsOtherControlsAndPrefer(string member) =>
-        CSharpSources.Snippet(member).Find(AssignsOwnMouseFilter).ShouldBeEmpty();
+    [InlineData("public override void _Ready() { this.MouseFilter = MouseFilterEnum.Ignore; }", true)]
+    [InlineData("public override void _Ready() { MouseFilter = MouseFilterEnum.Ignore; }", true)]
+    [InlineData("public override void _Ready() { UiMouseFilter.Prefer(this, MouseFilterEnum.Pass); }", false)]
+    [InlineData("void Make() { var label = new Label { MouseFilter = MouseFilterEnum.Ignore }; }", false)]
+    [InlineData("void Make(Control child) { child.MouseFilter = MouseFilterEnum.Ignore; }", false)]
+    public void Guard_flags_only_an_own_assignment(string member, bool flagged) =>
+        CSharpSources.Snippet(member).Find(AssignsOwnMouseFilter).Count().ShouldBe(flagged ? 1 : 0);
 
     private static bool AssignsOwnMouseFilter(SyntaxNode node) =>
         node is AssignmentExpressionSyntax assignment

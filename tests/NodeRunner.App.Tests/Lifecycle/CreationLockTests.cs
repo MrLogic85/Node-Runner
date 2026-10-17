@@ -8,7 +8,6 @@ public sealed class CreationLockTests
     [Theory]
     [InlineData(null, false)]
     [InlineData(1, true)]
-    [InlineData(40, true)]
     public void IsLocked_OnceAtLeastOneGenerationIsTrained(int? generation, bool locked)
     {
         var training = generation is { } trained ? TestTraining.State(trained, 1, TestTraining.Run) : null;

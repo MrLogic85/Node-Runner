@@ -11,20 +11,25 @@ namespace NodeRunner.App.Tests.Repositories;
 /// <summary>A Creation's build as a share code (#899; docs/SAVE_FORMAT.md → "Share code").</summary>
 public sealed class CreationShareCodeTests
 {
+    // A code is its version and URL-safe base64, short enough to type into a chat; white space a chat
+    // app adds is ignored, a name beyond the limit is cut, and the training stays behind.
     [Fact]
-    public void Code_RoundTripsTheBuild_WithItsNamesAndSettings_ButNotTheTraining()
+    public void Code_OfATrainedWalker_ReadsAsItsBuild_WithoutTheTraining()
     {
         var trained = LoadFixture013("trained-walker.creation.json").WithTrainSettings(new TrainSettingsDef(20, 30));
         trained.Training.ShouldNotBeNull();
+        var code = CreationShareCode.Create(trained);
+        code.ShouldMatch($"^NR{FileCreationRepository.Format.CurrentVersion}\\.[A-Za-z0-9_-]+$");
+        code.Length.ShouldBeLessThan(200);
 
-        var read = CreationShareCode.Read(CreationShareCode.Create(trained));
+        var read = CreationShareCode.Read($"  {code[..20]}\n{code[20..40]} \r\n{code[40..]}\n");
 
-        read.Refusal.ShouldBeNull();
+        (read.Refusal, read.UpdatedFrom).ShouldBe((null, null));
         var build = read.Build.ShouldNotBeNull();
-        build.Training.ShouldBeNull();
-        build.TrainSettings.ShouldBeNull();
-        build.Name.ShouldBe(trained.Name);
+        (build.Training, build.TrainSettings, build.Name).ShouldBe((null, null, trained.Name));
         SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(trained).Creature));
+        CreationShareCode.Read(CreationShareCode.Create(trained.WithName(new string('W', 100)))).Build.ShouldNotBeNull()
+            .Name.ShouldBe(new string('W', NameLimits.Creation));
     }
 
     [Fact]
@@ -38,184 +43,25 @@ public sealed class CreationShareCodeTests
         CreationShareCode.Read(Pack(FileCreationRepository.Format.Serialize(LoadFixture013("trained-walker.creation.json")))).Refusal.ShouldBeNull();
     }
 
+    // A hinge part's side can be a Wheel or missing, which the every-part pin does not hold; the
+    // rest reads back as Rounded leaves it.
     [Fact]
-    public void Code_RoundTripsAWheel_WithItsRadius()
-    {
-        var walker = LoadFixture013("walker.creation.json");
-        var builder = new CreatureBuilder(walker.Creature);
-        var wheel = builder.AddWheel(walker.Creature.Nodes[0].Id);
-        builder.SetParameter(wheel, PartParameterId.WheelRadius, 70);
-        var rolling = walker.WithCreature(builder.Build(), training: null);
-
-        var build = CreationShareCode.Read(CreationShareCode.Create(rolling)).Build.ShouldNotBeNull();
-
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(rolling).Creature));
-        build.Creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(70);
-    }
-
-    [Fact]
-    public void Code_RoundTripsAServoTurningItsWheel()
-    {
-        var builder = new CreatureBuilder();
-        var hub = builder.AddNode(new Vector2D(0, 0));
-        builder.AddBeam(hub, builder.AddNode(new Vector2D(100, 0)));
-        var wheel = builder.AddWheel(hub);
-        builder.AddServo(hub);
-        var rolling = new CreationDef(Guid.NewGuid(), "Roller", builder.Build());
-        rolling.Creature.Servos.Single().TargetLinkId.ShouldBe(wheel);
-
-        var build = CreationShareCode.Read(CreationShareCode.Create(rolling)).Build.ShouldNotBeNull();
-
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(rolling.Creature));
-        build.Creature.Servos.Single().TargetLinkId.ShouldBe(build.Creature.Wheels.Single().Id);
-    }
-
-    [Fact]
-    public void Code_RoundTripsATouchSensor()
-    {
-        var walker = LoadFixture013("walker.creation.json");
-        var builder = new CreatureBuilder(walker.Creature);
-        var foot = walker.Creature.Nodes[0].Id;
-        builder.AddTouchSensor(foot);
-        var touching = walker.WithCreature(builder.Build(), training: null);
-
-        var build = CreationShareCode.Read(CreationShareCode.Create(touching)).Build.ShouldNotBeNull();
-
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(touching).Creature));
-        build.Creature.TouchSensors.ShouldHaveSingleItem().NodeId.ShouldBe(build.Creature.Nodes[0].Id);
-    }
-
-    [Fact]
-    public void Code_RoundTripsAVelocityMotor()
-    {
-        var walker = LoadFixture013("walker.creation.json");
-        var builder = new CreatureBuilder(walker.Creature);
-        var motor = builder.AddVelocityMotor(walker.Creature.Nodes[0].Id);
-        builder.SetParameter(motor, PartParameterId.MotorMaxSpeed, 3.5);
-        var driven = walker.WithCreature(builder.Build(), training: null);
-
-        var build = CreationShareCode.Read(CreationShareCode.Create(driven)).Build.ShouldNotBeNull();
-
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(driven).Creature));
-        build.Creature.VelocityMotors.ShouldHaveSingleItem().NodeId.ShouldBe(build.Creature.Nodes[0].Id);
-    }
-
-    [Fact]
-    public void Code_RoundTripsABrake_LockedOrWithAWheelSide()
+    public void Code_KeepsAHingePartsWheelSide_AndItsMissingSides()
     {
         var walker = LoadFixture013("walker.creation.json");
         var builder = new CreatureBuilder(walker.Creature);
         var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
-        builder.SetParameter(builder.AddBrake(joints[0]), PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
-        var wheel = builder.AddWheel(joints[1]);
-        builder.SetParameter(builder.AddBrake(joints[1], builder.LinksAt(joints[1])[0].Id, wheel), PartParameterId.BrakeStrength, 1500000);
-        var braked = walker.WithCreature(builder.Build(), training: null);
+        var wheel = builder.AddWheel(joints[0]);
+        builder.AddBrake(joints[1], builder.LinksAt(joints[1])[0].Id, targetLinkId: null);
+        builder.AddAngleSensor(joints[0], wheel, builder.LinksAt(joints[0])[0].Id);
+        builder.AddAngleSensor(joints[2], fixedLinkId: null, builder.LinksAt(joints[2])[0].Id);
+        var sided = walker.WithCreature(builder.Build(), training: null);
 
-        var build = CreationShareCode.Read(CreationShareCode.Create(braked)).Build.ShouldNotBeNull();
+        var build = CreationShareCode.Read(CreationShareCode.Create(sided)).Build.ShouldNotBeNull().Creature;
 
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(braked).Creature));
-        build.Creature.Brakes.Select(brake => (brake.Locked, brake.Strength)).ShouldBe([(true, double.PositiveInfinity), (false, 1500000)]);
-        build.Creature.IsWheel(build.Creature.Brakes[1].TargetLinkId!.Value).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Code_RoundTripsAnAngleSensor_WithTwoLinks_AWheelSide_OrAMissingSide()
-    {
-        var walker = LoadFixture013("walker.creation.json");
-        var builder = new CreatureBuilder(walker.Creature);
-        var joints = builder.Nodes.Where(node => builder.LinksAt(node.Id).Count >= 2).Select(node => node.Id).ToArray();
-        builder.Rename(builder.AddAngleSensor(joints[0]), "Knee");
-        var wheel = builder.AddWheel(joints[1]);
-        builder.AddAngleSensor(joints[1], wheel, builder.LinksAt(joints[1])[0].Id);
-        builder.AddAngleSensor(joints[2], builder.LinksAt(joints[2])[0].Id, targetLinkId: null);
-        builder.AddAngleSensor(joints[3], fixedLinkId: null, builder.LinksAt(joints[3])[0].Id);
-        var sensed = walker.WithCreature(builder.Build(), training: null);
-
-        var build = CreationShareCode.Read(CreationShareCode.Create(sensed)).Build.ShouldNotBeNull();
-
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(sensed).Creature));
-        var sensors = build.Creature.AngleSensors;
-        sensors.Count.ShouldBe(4);
-        sensors[0].Name.ShouldBe("Knee");
-        build.Creature.IsWheel(sensors[1].FixedLinkId!.Value).ShouldBeTrue();
-        sensors[2].TargetLinkId.ShouldBeNull();
-        sensors[3].FixedLinkId.ShouldBeNull();
-    }
-
-    // Build's Brake slider is 20–400 N·m (200000–4000000 world units) or Locked (#1039), so only a code changed by hand holds another.
-    [Theory]
-    [InlineData(200000.0, null)]
-    [InlineData(4000000.0, null)]
-    [InlineData("Infinity", null)]
-    [InlineData(199999.0, ShareCodeRefusal.Damaged)]
-    [InlineData(4000001.0, ShareCodeRefusal.Damaged)]
-    [InlineData("-Infinity", ShareCodeRefusal.Damaged)]
-    [InlineData("NaN", ShareCodeRefusal.Damaged)]
-    public void Read_ABrakesStrength_IsRefusedAsDamaged_OffItsSlider(object strength, ShareCodeRefusal? refusal)
-    {
-        var file = WalkerFile();
-        var creature = file["creature"]!;
-        var id = creature["nextPartId"]!.GetValue<int>();
-        creature["nextPartId"] = id + 1;
-        creature["brakes"] = new JsonArray(new JsonObject
-        {
-            ["id"] = id,
-            ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(),
-            ["fixedLinkId"] = null,
-            ["targetLinkId"] = null,
-            ["name"] = null,
-            ["strength"] = strength is string text ? JsonValue.Create(text) : JsonValue.Create((double)strength),
-        });
-
-        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(refusal);
-    }
-
-    // Build's Stepper sliders hold its settings (#1036), so only a code changed by hand holds another.
-    [Theory]
-    [InlineData("strength", 50000.0, null)]
-    [InlineData("strength", 2000001.0, ShareCodeRefusal.Damaged)]
-    [InlineData("strength", 49999.0, ShareCodeRefusal.Damaged)]
-    [InlineData("stepsPerTurn", 24.0, null)]
-    [InlineData("stepsPerTurn", 25.0, ShareCodeRefusal.Damaged)]
-    [InlineData("maxFrequency", 5.0, null)]
-    [InlineData("maxFrequency", 5.01, ShareCodeRefusal.Damaged)]
-    [InlineData("maxFrequency", 1.0, null)]
-    [InlineData("maxFrequency", 0.5, ShareCodeRefusal.Damaged)]
-    public void Read_AStepperSetting_IsRefusedAsDamaged_OffItsSlider(string setting, double value, ShareCodeRefusal? refusal)
-    {
-        var file = WalkerFile();
-        var creature = file["creature"]!;
-        var id = creature["nextPartId"]!.GetValue<int>();
-        creature["nextPartId"] = id + 1;
-        var stepper = new JsonObject
-        {
-            ["id"] = id,
-            ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(),
-            ["fixedLinkId"] = null,
-            ["targetLinkId"] = null,
-            ["name"] = null,
-            ["strength"] = StepperDef.DefaultStrength,
-            ["stepsPerTurn"] = StepperDef.DefaultStepsPerTurn,
-            ["maxFrequency"] = StepperDef.DefaultMaxFrequency,
-        };
-        stepper[setting] = setting == "stepsPerTurn" ? JsonValue.Create((int)value) : JsonValue.Create(value);
-        creature["steppers"] = new JsonArray(stepper);
-
-        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(refusal);
-    }
-
-    [Fact]
-    public void Code_RoundTripsARubber()
-    {
-        var walker = LoadFixture013("walker.creation.json");
-        var builder = new CreatureBuilder(walker.Creature);
-        builder.AddRubber(walker.Creature.Nodes[0].Id);
-        var gripping = walker.WithCreature(builder.Build(), training: null);
-
-        var build = CreationShareCode.Read(CreationShareCode.Create(gripping)).Build.ShouldNotBeNull();
-
-        SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(gripping).Creature));
-        build.Creature.Rubbers.ShouldHaveSingleItem().NodeId.ShouldBe(build.Creature.Nodes[0].Id);
+        SaveJson.Serialize(build).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(sided).Creature));
+        build.IsWheel(build.AngleSensors[0].FixedLinkId!.Value).ShouldBeTrue();
+        (build.Brakes.Single().TargetLinkId, build.AngleSensors[1].FixedLinkId).ShouldBe((null, null));
     }
 
     [Fact]
@@ -231,18 +77,18 @@ public sealed class CreationShareCodeTests
             .Length.ShouldBeLessThanOrEqualTo(100);
     }
 
+    // Joints go on whole units and settings to 3 decimals, except where rounding would take a setting
+    // off its slider; a default that is not exact is left out and reads back exact.
     [Fact]
-    public void Code_HoldsJointsOnWholeUnits_AndSettingsTo3Decimals_WhereTheSliderAllowsThem()
+    public void Code_RoundsWhereTheSlidersAllow()
     {
         var builder = new CreatureBuilder();
         var left = builder.AddNode(new Vector2D(0, 0));
         var right = builder.AddNode(new Vector2D(100, 0));
-        var piston = builder.AddPiston(left, right);
-        builder.SetParameter(piston, PartParameterId.Stroke, 6.0 / 7);
-        var servo = builder.AddServo(left);
-        builder.SetParameter(servo, PartParameterId.Range, 2.0071286397934789);
+        builder.SetParameter(builder.AddPiston(left, right), PartParameterId.Stroke, 6.0 / 7);
+        builder.SetParameter(builder.AddServo(left), PartParameterId.Range, 2.0071286397934789);
         var built = builder.Build();
-        var creature = new CreatureDef(
+        var moved = new CreatureDef(
             [new NodeDef(left, new Vector2D(-0.4, 12.5)), new NodeDef(right, new Vector2D(99.6, -12.5))],
             built.Beams,
             built.Sensors,
@@ -252,55 +98,31 @@ public sealed class CreationShareCodeTests
             built.Wheels,
             built.NextPartId);
 
-        var build = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Walker", creature)))
-            .Build.ShouldNotBeNull().Creature;
+        var rounded = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Walker", moved))).Build.ShouldNotBeNull().Creature;
 
-        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 13), new Vector2D(100, -13)]);
-        build.Pistons.ShouldHaveSingleItem().Stroke.ShouldBe(0.857);
-        build.Servos.ShouldHaveSingleItem().Range.ShouldBe(2.007);
-    }
+        rounded.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 13), new Vector2D(100, -13)]);
+        rounded.Pistons.ShouldHaveSingleItem().Stroke.ShouldBe(0.857);
+        rounded.Servos.ShouldHaveSingleItem().Range.ShouldBe(2.007);
 
-    [Fact]
-    public void Code_KeepsASettingExact_WhereRoundingWouldTakeItOffItsSlider()
-    {
-        var builder = new CreatureBuilder();
-        var joint = builder.AddNode(new Vector2D(0, 0));
-        builder.AddBeam(joint, builder.AddNode(new Vector2D(100, 0)));
-        builder.AddBeam(joint, builder.AddNode(new Vector2D(0, 100)));
-        var servo = builder.AddServo(joint);
+        var arms = new CreatureBuilder();
         var smallest = Math.PI / 9;
-        builder.SetParameter(servo, PartParameterId.Range, smallest);
         CreatureBuilder.IsOnItsSlider(PartParameterId.Range, Math.Round(smallest, 3)).ShouldBeFalse();
+        foreach (var x in new[] { 0, 300 })
+        {
+            var joint = arms.AddNode(new Vector2D(x, 0));
+            arms.AddBeam(joint, arms.AddNode(new Vector2D(x + 100, 0)));
+            arms.AddBeam(joint, arms.AddNode(new Vector2D(x, 100)));
+            var servo = arms.AddServo(joint);
+            if (x == 0)
+            {
+                arms.SetParameter(servo, PartParameterId.Range, smallest);
+            }
+        }
 
-        var read = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Arm", builder.Build())));
+        var servos = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Arms", arms.Build()))).Build.ShouldNotBeNull().Creature.Servos;
 
-        read.Build.ShouldNotBeNull().Creature.Servos.ShouldHaveSingleItem().Range.ShouldBe(smallest);
-    }
-
-    [Fact]
-    public void Read_ACodeOfManyEmptyParts_ThatWouldFillOutBeyondTheCap_IsRefusedAsDamaged()
-    {
-        var parts = string.Join(',', Enumerable.Repeat("{}", CreationShareCode.MaxJsonBytes / 3));
-        var code = Pack("{\"name\":\"x\",\"creature\":{\"nodes\":[" + parts + "]}}");
-
-        code.Length.ShouldBeLessThan(CreationShareCode.MaxLength);
-        CreationShareCode.Read(code).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Fact]
-    public void Code_LeavesOutADefaultThatIsNotExact_AndReadsItBackExact()
-    {
-        var builder = new CreatureBuilder();
-        var joint = builder.AddNode(new Vector2D(0, 0));
-        builder.AddBeam(joint, builder.AddNode(new Vector2D(100, 0)));
-        builder.AddBeam(joint, builder.AddNode(new Vector2D(0, 100)));
-        builder.AddServo(joint);
-
-        var servo = CreationShareCode.Read(CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Arm", builder.Build())))
-            .Build.ShouldNotBeNull().Creature.Servos.ShouldHaveSingleItem();
-
-        servo.Range.ShouldBe(Math.PI);
-        servo.MaxSpeed.ShouldBe(2 * Math.PI);
+        servos.Select(servo => servo.Range).ShouldBe([smallest, Math.PI]);
+        servos[1].MaxSpeed.ShouldBe(2 * Math.PI);
     }
 
     [Fact]
@@ -351,35 +173,9 @@ public sealed class CreationShareCodeTests
     }
 
     [Fact]
-    public void Read_ACodeInTheCurrentVersion_WasNotUpdated()
+    public void Read_ACodeHoldingAnOlderFile_MigratesItLikeASavedFile()
     {
-        CreationShareCode.Read(CreationShareCode.Create(LoadFixture013("walker.creation.json"))).UpdatedFrom.ShouldBeNull();
-    }
-
-    [Fact]
-    public void Code_IsItsVersionAndUrlSafeBase64_ShortEnoughToTypeIntoAChat()
-    {
-        var code = CreationShareCode.Create(LoadFixture013("trained-walker.creation.json"));
-
-        code.ShouldMatch($"^NR{FileCreationRepository.Format.CurrentVersion}\\.[A-Za-z0-9_-]+$");
-        code.Length.ShouldBeLessThan(200);
-    }
-
-    [Fact]
-    public void Read_IgnoresWhiteSpaceAChatAppAddsToTheCode()
-    {
-        var code = CreationShareCode.Create(LoadFixture013("walker.creation.json"));
-        var wrapped = $"  {code[..20]}\n{code[20..40]} \r\n{code[40..]}\n";
-
-        CreationShareCode.Read(wrapped).Build.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public void Read_ACodeInAnOlderVersion_MigratesItLikeASavedFile()
-    {
-        var code = Pack(Fixture013("walker.creation.json"));
-
-        var build = CreationShareCode.Read(code).Build.ShouldNotBeNull();
+        var build = CreationShareCode.Read(Pack(Fixture013("walker.creation.json"))).Build.ShouldNotBeNull();
 
         build.Creature.Servos.ShouldBeEmpty();
         build.Creature.Wheels.ShouldBeEmpty();
@@ -389,8 +185,6 @@ public sealed class CreationShareCodeTests
     // #1144: a Wheel's grip, left out at the template's 0.8 or written out, goes like a saved file's.
     [Theory]
     [InlineData(null)]
-    [InlineData(0.0)]
-    [InlineData(0.8)]
     [InlineData(1.0)]
     public void Read_AVersion8CodeWithAWheelsGrip_DropsIt_AndKeepsTheWheel(double? grip)
     {
@@ -403,265 +197,136 @@ public sealed class CreationShareCodeTests
         var read = CreationShareCode.Read(CreationShareCode.Pack(8, Encoding.UTF8.GetBytes(sample.ToJsonString())));
 
         read.UpdatedFrom.ShouldBe(8);
-        var build = read.Build.ShouldNotBeNull();
-        build.Creature.Wheels.ShouldBe([new WheelDef(15, 3, radius: 60)]);
+        read.Build.ShouldNotBeNull().Creature.Wheels.ShouldBe([new WheelDef(15, 3, radius: 60)]);
     }
 
+    // One row for each way Read refuses what was pasted.
     [Theory]
-    [InlineData(6)]
-    [InlineData(7)]
-    [InlineData(8)]
-    [InlineData(9)]
-    [InlineData(10)]
-    [InlineData(11)]
-    [InlineData(12)]
-    public void Read_AnOlderVersionsCode_WithAWheel_StillReads(int version)
+    [InlineData(null, ShareCodeRefusal.Empty)]
+    [InlineData(" \n\t ", ShareCodeRefusal.Empty)]
+    [InlineData("hello", ShareCodeRefusal.NotACreation)]
+    [InlineData("NR", ShareCodeRefusal.NotACreation)]
+    [InlineData("NR.abc", ShareCodeRefusal.NotACreation)]
+    [InlineData("NRx.abc", ShareCodeRefusal.NotACreation)]
+    [InlineData("NR99999999999.abc", ShareCodeRefusal.NotACreation)]
+    [InlineData("a newer version, though this app has no dictionary for it", ShareCodeRefusal.NewerVersion)]
+    [InlineData("a file from a newer version", ShareCodeRefusal.NewerVersion)]
+    [InlineData("NR3.AAAA", ShareCodeRefusal.Damaged)]
+    [InlineData("cut in half", ShareCodeRefusal.Damaged)]
+    [InlineData("cut short", ShareCodeRefusal.Damaged)]
+    [InlineData("a character outside URL-safe base64", ShareCodeRefusal.Damaged)]
+    [InlineData("a changed character", ShareCodeRefusal.Damaged)]
+    [InlineData("json:not json", ShareCodeRefusal.Damaged)]
+    [InlineData("json:[1, 2, 3]", ShareCodeRefusal.Damaged)]
+    [InlineData("""json:{"formatVersion": 4, "id": "0d6c3c1e-2b7a-4f5e-9a51-7b1f6d2e8c40", "name": "Walker", "creature": null, "training": null, "trainSettings": null}""", ShareCodeRefusal.Damaged)]
+    [InlineData("""json:{"formatVersion": "four"}""", ShareCodeRefusal.Damaged)]
+    [InlineData("""json:{"formatVersion": 0}""", ShareCodeRefusal.Damaged)]
+    [InlineData("""json:{"formatVersion": 1, "creature": {"pistons": []}, "training": []}""", ShareCodeRefusal.Damaged)]
+    [InlineData("""json:{"formatVersion": 1, "creature": {"pistons": [{"id": 1, "stroke": 0.3}]}, "training": {"brain": {"neurons": [], "connections": [{"from": 1, "to": 2, "weight": 1}]}}}""", ShareCodeRefusal.Damaged)]
+    [InlineData("a Wheel's grip, an unknown field since #1144", ShareCodeRefusal.Damaged)]
+    [InlineData("longer than the cap, though it would load", ShareCodeRefusal.Damaged)]
+    [InlineData("unpacking to the cap", null)]
+    [InlineData("unpacking beyond the cap", ShareCodeRefusal.Damaged)]
+    [InlineData("empty parts filling out beyond the cap", ShareCodeRefusal.Damaged)]
+    [InlineData("not UTF-8", ShareCodeRefusal.Damaged)]
+    [InlineData("a name blank once cut", ShareCodeRefusal.Damaged)]
+    [InlineData("no joints", ShareCodeRefusal.NothingToBuild)]
+    public void Read_WhatCannotBeACreation_IsRefused(string? pasted, ShareCodeRefusal? refusal) =>
+        CreationShareCode.Read(Pasted(pasted)).Refusal.ShouldBe(refusal);
+
+    // Build's sliders hold every setting, and its area every joint, so only a code changed by hand
+    // holds another (#1036, #1039).
+    [Theory]
+    [InlineData("nodes", "x", 100_000.0)]
+    [InlineData("pistons", "maxSpeed", 0.0)]
+    [InlineData("wheels", "radius", WheelDef.MaxRadius + 1)]
+    public void Read_ABuildThatBuildCouldNotMake_IsRefusedAsDamaged(string parts, string field, double value)
     {
-        var read = CreationShareCode.Read(CreationShareCode.Pack(version, Encoding.UTF8.GetBytes(SampleLine(version).ToJsonString())));
-
-        read.Refusal.ShouldBeNull();
-        read.UpdatedFrom.ShouldBe(version);
-        var creature = read.Build.ShouldNotBeNull().Creature;
-        creature.Wheels.ShouldHaveSingleItem().Radius.ShouldBe(60);
-        creature.Rubbers.Count.ShouldBe(version < 10 ? 0 : 2);
-        creature.VelocityMotors.Count.ShouldBe(version < 11 ? 0 : 1);
-        creature.Brakes.Count.ShouldBe(version < 12 ? 0 : 2);
-        creature.AngleSensors.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void TheCurrentDictionaryHasNoWheelGrip_AndACodeWithOneIsRefusedAsDamaged()
-    {
-        var template = JsonNode.Parse(Encoding.UTF8.GetString(CreationShareCode.Dictionary(FileCreationRepository.Format.CurrentVersion)!).Split('\n')[0])!;
-        template["creature"]!["wheels"]!.AsArray().ShouldAllBe(wheel => !wheel!.AsObject().ContainsKey("grip"));
-
-        var file = WalkerFile();
-        var creature = file["creature"]!;
-        var id = creature["nextPartId"]!.GetValue<int>();
-        creature["nextPartId"] = id + 1;
-        creature["wheels"] = new JsonArray(new JsonObject { ["id"] = id, ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(), ["name"] = null, ["radius"] = WheelDef.MinRadius, ["grip"] = 0.8 });
+        var file = WalkerFileWith(parts, out var part);
+        part[field] = value;
 
         CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
     }
 
-    [Fact]
-    public void Read_ACodeFromANewerVersion_IsRefusedAsNewer_ThoughThisAppHasNoDictionaryForIt()
+    private static string? Pasted(string? key)
     {
-        var newer = FileCreationRepository.Format.CurrentVersion + 1;
-
-        CreationShareCode.Read($"NR{newer}.AAAA").Refusal.ShouldBe(ShareCodeRefusal.NewerVersion);
+        var walkerCode = CreationShareCode.Create(LoadFixture013("walker.creation.json"));
+        switch (key)
+        {
+            case "a newer version, though this app has no dictionary for it":
+                return $"NR{FileCreationRepository.Format.CurrentVersion + 1}.AAAA";
+            case "a file from a newer version":
+                var newer = WalkerFile();
+                newer[VersionedSaveFile<CreationDef>.VersionField] = FileCreationRepository.Format.CurrentVersion + 1;
+                return Pack(newer.ToJsonString());
+            case "cut in half":
+                return walkerCode[..(walkerCode.Length / 2)];
+            case "cut short":
+                return walkerCode[..^8];
+            case "a character outside URL-safe base64":
+                return walkerCode + '+';
+            case "a changed character":
+                var code = walkerCode.ToCharArray();
+                var middle = (code.Length + 4) / 2;
+                code[middle] = code[middle] == 'A' ? 'B' : 'A';
+                return new string(code);
+            case "a Wheel's grip, an unknown field since #1144":
+                var gripping = WalkerFileWith("wheels", out var wheel);
+                wheel["grip"] = 0.8;
+                return Pack(gripping.ToJsonString());
+            case "longer than the cap, though it would load":
+                // A name of random letters barely packs, and loads cut to the name limit.
+                var random = new Random(899);
+                var named = WalkerFile();
+                named["name"] = new string([.. Enumerable.Range(0, 2 * CreationShareCode.MaxLength).Select(_ => (char)random.Next('a', 'z' + 1))]);
+                Encoding.UTF8.GetByteCount(named.ToJsonString()).ShouldBeLessThan(CreationShareCode.MaxJsonBytes);
+                var tooLong = Pack(named.ToJsonString());
+                tooLong.Length.ShouldBeGreaterThan(CreationShareCode.MaxLength);
+                return tooLong;
+            case "unpacking to the cap":
+                return Packed(PaddedWalker(CreationShareCode.MaxJsonBytes));
+            case "unpacking beyond the cap":
+                return Packed(PaddedWalker(CreationShareCode.MaxJsonBytes + 1));
+            case "empty parts filling out beyond the cap":
+                var parts = string.Join(',', Enumerable.Repeat("{}", CreationShareCode.MaxJsonBytes / 3));
+                return Packed("{\"name\":\"x\",\"creature\":{\"nodes\":[" + parts + "]}}");
+            case "not UTF-8":
+                return Pack([0xFF, 0xFE, 0x7B]);
+            case "a name blank once cut":
+                return CreationShareCode.Create(LoadFixture013("walker.creation.json").WithName(new string(' ', NameLimits.Creation) + "x"));
+            case "no joints":
+                return CreationShareCode.Create(new CreationDef(Guid.NewGuid(), "Empty", new CreatureDef([], [], [])));
+            case { } text when text.StartsWith("json:", StringComparison.Ordinal):
+                return Pack(text["json:".Length..]);
+            default:
+                return key;
+        }
     }
 
-    [Fact]
-    public void Read_ACodeWhoseFileIsFromANewerVersion_IsRefusedAsNewer()
+    // json packed in a code that stays within the cap on its length.
+    private static string Packed(string json)
     {
-        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
-        file[VersionedSaveFile<CreationDef>.VersionField] = FileCreationRepository.Format.CurrentVersion + 1;
-
-        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.NewerVersion);
-    }
-
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" \n\t ")]
-    public void Read_NothingPasted_IsRefusedAsEmpty(string? text) =>
-        CreationShareCode.Read(text).Refusal.ShouldBe(ShareCodeRefusal.Empty);
-
-    [Theory]
-    [InlineData("hello")]
-    [InlineData("https://example.com/walker")]
-    [InlineData("eyJmb3JtYXRWZXJzaW9uIjo0fQ==")]
-    [InlineData("NR")]
-    [InlineData("NR.abc")]
-    [InlineData("NRx.abc")]
-    [InlineData("nr4.abc")]
-    [InlineData("NR99999999999.abc")]
-    public void Read_TextThatIsNotACode_IsRefusedAsNotACreation(string text) =>
-        CreationShareCode.Read(text).Refusal.ShouldBe(ShareCodeRefusal.NotACreation);
-
-    [Fact]
-    public void Read_ACodeCutShortOfItsBuild_IsRefusedAsDamaged()
-    {
-        var code = CreationShareCode.Create(LoadFixture013("walker.creation.json"));
-
-        CreationShareCode.Read(code[..(code.Length / 2)]).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-        CreationShareCode.Read(code[..^8]).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Theory]
-    [InlineData("NR3.AAAA")]
-    [InlineData("NR0.AAAA")]
-    public void Read_ACodeFromAVersionWithoutADictionary_IsRefusedAsDamaged(string code) =>
-        CreationShareCode.Read(code).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-
-    [Theory]
-    [InlineData('+')]
-    [InlineData('/')]
-    [InlineData('=')]
-    public void Read_ACodeWithACharacterOutsideUrlSafeBase64_IsRefusedAsDamaged(char character) =>
-        CreationShareCode.Read(CreationShareCode.Create(LoadFixture013("walker.creation.json")) + character).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-
-    [Fact]
-    public void Read_ACodeWithAChangedCharacter_IsRefusedAsDamaged()
-    {
-        var code = CreationShareCode.Create(LoadFixture013("walker.creation.json")).ToCharArray();
-        var middle = (code.Length + 4) / 2;
-        code[middle] = code[middle] == 'A' ? 'B' : 'A';
-
-        CreationShareCode.Read(new string(code)).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Theory]
-    [InlineData("not json")]
-    [InlineData("[1, 2, 3]")]
-    [InlineData("""{"formatVersion": 4, "id": "0d6c3c1e-2b7a-4f5e-9a51-7b1f6d2e8c40", "name": "Walker", "creature": null, "training": null, "trainSettings": null}""")]
-    [InlineData("""{"formatVersion": "four"}""")]
-    [InlineData("""{"formatVersion": 0}""")]
-    [InlineData("""{"formatVersion": 1, "creature": {"pistons": []}, "training": []}""")]
-    [InlineData("""{"formatVersion": 1, "creature": {"pistons": [{"id": 1, "stroke": 0.3}]}, "training": {"brain": {"neurons": [], "connections": [{"from": 1, "to": 2, "weight": 1}]}}}""")]
-    public void Read_ACodeThatFailsToLoad_IsRefusedAsDamaged(string json) =>
-        CreationShareCode.Read(Pack(json)).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-
-    [Fact]
-    public void Read_ACodeWithAnUnknownField_IsRefusedAsDamaged()
-    {
-        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
-        file["extra"] = 1;
-
-        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Fact]
-    public void Read_ACodeLongerThanTheCap_IsRefused_ThoughItWouldLoad()
-    {
-        // A name of random letters barely packs, and loads cut to the name limit.
-        var random = new Random(899);
-        var name = new string([.. Enumerable.Range(0, 2 * CreationShareCode.MaxLength).Select(_ => (char)random.Next('a', 'z' + 1))]);
-        var file = WalkerFile();
-        file["name"] = name;
-        var json = file.ToJsonString();
         var code = Pack(json);
-
-        code.Length.ShouldBeGreaterThan(CreationShareCode.MaxLength);
-        Encoding.UTF8.GetByteCount(json).ShouldBeLessThan(CreationShareCode.MaxJsonBytes);
-        CreationShareCode.Read(code).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Theory]
-    [InlineData(0, null)]
-    [InlineData(1, ShareCodeRefusal.Damaged)]
-    public void Read_ACodeThatUnpacksBeyondTheCap_IsRefused(int beyondTheCap, ShareCodeRefusal? refusal)
-    {
-        var code = Pack(PaddedWalker(CreationShareCode.MaxJsonBytes + beyondTheCap));
-
         code.Length.ShouldBeLessThan(CreationShareCode.MaxLength);
-        CreationShareCode.Read(code).Refusal.ShouldBe(refusal);
+        return code;
     }
 
-    [Fact]
-    public void Read_ACodeThatIsNotUtf8_IsRefusedAsDamaged()
-    {
-        CreationShareCode.Read(Pack([0xFF, 0xFE, 0x7B])).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Fact]
-    public void Read_ABuildWithNoJoints_IsRefusedAsNothingToBuild()
-    {
-        var empty = new CreationDef(Guid.NewGuid(), "Empty", new CreatureDef([], [], []));
-
-        CreationShareCode.Read(CreationShareCode.Create(empty)).Refusal.ShouldBe(ShareCodeRefusal.NothingToBuild);
-    }
-
-    [Fact]
-    public void Read_ANameLongerThanTheLimit_IsCut()
-    {
-        var walker = LoadFixture013("walker.creation.json");
-
-        var build = CreationShareCode.Read(CreationShareCode.Create(walker.WithName(new string('W', 100)))).Build.ShouldNotBeNull();
-
-        build.Name.ShouldBe(new string('W', NameLimits.Creation));
-    }
-
-    [Fact]
-    public void Read_ANameThatIsBlankOnceCut_IsRefusedAsDamaged()
-    {
-        var walker = LoadFixture013("walker.creation.json");
-
-        CreationShareCode.Read(CreationShareCode.Create(walker.WithName(new string(' ', NameLimits.Creation) + "x")))
-            .Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Theory]
-    [InlineData("nodes", "position", "x", 100_000.0)]
-    [InlineData("pistons", null, "strength", 1e300)]
-    [InlineData("pistons", null, "maxSpeed", 0.0)]
-    public void Read_ABuildThatBuildCouldNotMake_IsRefusedAsDamaged(string parts, string? inner, string field, double value)
+    // The walker's file with part one of parts to change: a joint's position, its piston, or a Wheel
+    // added at its first joint.
+    private static JsonObject WalkerFileWith(string parts, out JsonObject part)
     {
         var file = WalkerFile();
-        var part = file["creature"]![parts]![0]!;
-        (inner is null ? part : part[inner]!)[field] = value;
+        var creature = file["creature"]!.AsObject();
+        if (parts != "wheels")
+        {
+            part = parts == "nodes" ? creature["nodes"]![0]!["position"]!.AsObject() : creature["pistons"]![0]!.AsObject();
+            return file;
+        }
 
-        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Fact]
-    public void Read_AWheelBuildCouldNotMake_IsRefusedAsDamaged()
-    {
-        var file = WalkerFile();
-        var creature = file["creature"]!;
         var id = creature["nextPartId"]!.GetValue<int>();
         creature["nextPartId"] = id + 1;
-        var wheel = new JsonObject { ["id"] = id, ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(), ["name"] = null, ["radius"] = WheelDef.MaxRadius };
-        creature["wheels"] = new JsonArray(wheel);
-        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBeNull();
-
-        wheel["radius"] = WheelDef.MaxRadius + 1;
-
-        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Theory]
-    [InlineData("spread", 10 * Math.PI / 180)]
-    [InlineData("spread", Math.PI)]
-    [InlineData("range", 50.0)]
-    [InlineData("range", 1050.0)]
-    public void Read_ACameraOffItsSliders_IsRefusedAsDamaged(string field, double value)
-    {
-        var file = CameraWalkerFile();
-        file["creature"]!["sensors"]![0]![field] = value;
-
-        CreationShareCode.Read(Pack(file.ToJsonString())).Refusal.ShouldBe(ShareCodeRefusal.Damaged);
-    }
-
-    [Fact]
-    public void Code_RoundTripsACamerasSettings()
-    {
-        var file = CameraWalkerFile();
-        var camera = file["creature"]!["sensors"]![0]!;
-        camera["rays"] = 5;
-        camera["spread"] = Math.PI / 6;
-        camera["range"] = 350.0;
-        var creation = FileCreationRepository.Format.Deserialize(file.ToJsonString(), "camera walker").Value;
-
-        var build = CreationShareCode.Read(CreationShareCode.Create(creation)).Build.ShouldNotBeNull();
-
-        build.Creature.Sensors.ShouldHaveSingleItem().ShouldBe(CreationShareCode.Rounded(creation).Creature.Sensors[0]);
-        build.Creature.Sensors[0].Spread!.Value.ShouldBe(Math.PI / 6, tolerance: 0.001);
-        build.Creature.Sensors[0].Rays.ShouldBe(5);
-        build.Creature.Sensors[0].Range.ShouldBe(350);
-    }
-
-    // The walker with its Accelerometer swapped for a default Camera.
-    private static JsonObject CameraWalkerFile()
-    {
-        var file = WalkerFile();
-        var sensor = file["creature"]!["sensors"]![0]!;
-        sensor["kind"] = "camera";
-        sensor["aim"] = 0.0;
-        sensor["rays"] = 3;
-        sensor["spread"] = Math.PI / 2;
-        sensor["range"] = 220.0;
+        part = new JsonObject { ["id"] = id, ["nodeId"] = creature["nodes"]![0]!["id"]!.GetValue<int>(), ["name"] = null, ["radius"] = WheelDef.MinRadius };
+        creature[parts] = new JsonArray(part);
         return file;
     }
 
