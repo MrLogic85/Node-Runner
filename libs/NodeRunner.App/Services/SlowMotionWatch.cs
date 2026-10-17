@@ -1,7 +1,7 @@
 namespace NodeRunner.App.Services;
 
 /// <summary>
-/// Tells when training runs in slow motion (#318). Physics always steps a fixed tick, so a phone that
+/// Tells when training runs in slow motion. Physics always steps a fixed tick, so a phone that
 /// cannot keep up runs fewer ticks than real time asks for: the results stay right, but everything
 /// moves slowly. Fed every rendered frame, it warns once physics has stayed below
 /// <see cref="BehindRatio"/> of real time for <see cref="WarnAfterSeconds"/>, and keeps warning until

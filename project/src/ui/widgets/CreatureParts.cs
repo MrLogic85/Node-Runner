@@ -8,7 +8,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// A creature shown still, made of the same part visuals Training draws (#769, #770): one
+/// A creature shown still, made of the same part visuals Training draws: one
 /// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="VelocityMotorPart"/>, <see cref="BrakePart"/>, <see cref="StepperPart"/>, <see cref="AngleSensorPart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
 /// <see cref="SpringPart"/> and <see cref="SensorPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
 /// its <see cref="CreatureLayers"/> layer. Its points are creature units; its owner places it and
@@ -114,18 +114,18 @@ public partial class CreatureParts : Node2D
     private static bool HasWheel(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         shape.Wheels.Any(wheel => wheel.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.Wheel) == nodeId;
 
-    // A Wheel's hub is drawn by its joint, over the links (#1086); a hinge part, placed or previewed, covers it.
+    // A Wheel's hub is drawn by its joint, over the links; a hinge part, placed or previewed, covers it.
     private static bool HasWheelAndNoHingePart(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         HasWheel(shape, marks, nodeId) && !HasHingePart(shape, marks, nodeId);
 
-    // A Servo, Velocity motor (#454), Stepper (#1067), Brake (#1041) or Angle sensor (#1205), placed or previewed, stands in for its joint's ring.
+    // A Servo, Velocity motor, Stepper, Brake or Angle sensor, placed or previewed, stands in for its joint's ring.
     private static bool HasHingePart(CreatureShape shape, CreatureMarks marks, int nodeId) =>
         shape.HingeParts.Any(part => part.NodeId == nodeId) || PreviewsMotor(marks, nodeId) || marks.PreviewNodeOf(BuildPart.Brake) == nodeId || marks.PreviewNodeOf(BuildPart.AngleSensor) == nodeId;
 
     private static bool PreviewsMotor(CreatureMarks marks, int nodeId) =>
         marks.PreviewNodeOf(BuildPart.Servo) == nodeId || marks.PreviewNodeOf(BuildPart.VelocityMotor) == nodeId || marks.PreviewNodeOf(BuildPart.Stepper) == nodeId;
 
-    // A Wheel stands in for its joint (#129), so it shows the joint's loose mark too. Build shows it
+    // A Wheel stands in for its joint, so it shows the joint's loose mark too. Build shows it
     // unturned; a tray drag previews the smallest Wheel on the joint it would take.
     private void ShowWheels(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
     {
@@ -276,7 +276,7 @@ public partial class CreatureParts : Node2D
         shape.TouchSensors.Any(touch => touch.NodeId == nodeId) || marks.PreviewNodeOf(BuildPart.TouchSensor) == nodeId;
 
     // The rim takes the Fixed side's built direction and the pawl the Target's, so notch 0 sits on the
-    // Target; with a side missing, both take the one there is (#1067).
+    // Target; with a side missing, both take the one there is.
     private static void ShowStepperPart(
         StepperPart part,
         CreatureShape shape,
@@ -374,7 +374,7 @@ public partial class CreatureParts : Node2D
     }
 
     // A side is a link at the joint, pointing to its far joint, or the joint's Wheel, a one-sided
-    // link pointing along its turn (#1118), which is 0 in Build.
+    // link pointing along its turn, which is 0 in Build.
     private static bool TrySide(CreatureShape shape, Dictionary<int, NodeDef> nodes, int nodeId, int? sideId, out LinkRef? link, out float angle)
     {
         link = null;
@@ -427,7 +427,7 @@ public partial class CreatureParts : Node2D
     private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, LinkRef link) =>
         ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => CreatureDef.CoveredRadius(nodeId, shape.JointMotors), link, SensorLength(shape, link));
 
-    // A Servo's housing is drawn over its Fixed link, so a Piston's or Spring's telescope starts past it (#1210).
+    // A Servo's housing is drawn over its Fixed link, so a Piston's or Spring's telescope starts past it.
     private static float LinkCover(CreatureShape shape, Dictionary<int, NodeDef> nodes, LinkRef link, int nodeId) =>
         ServoGeometry.LinkCover(nodes.Values.ToArray(), id => CreatureDef.CoveredRadius(id, shape.JointMotors), shape.Servos, link, nodeId);
 
@@ -449,7 +449,7 @@ public partial class CreatureParts : Node2D
             part.B = ToGodot(nodeB.Position);
             part.RadiusA = (float)NodeRadius(shape, nodeA.Id);
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
-            // A beam too short for training (#593, #1212) is drawn in danger until its joints move apart.
+            // A beam too short for training is drawn in danger until its joints move apart.
             part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Beam, nodeA, nodeB, shape.JointMotors);
             part.HaloA = selected.Nodes.Contains(beam.NodeA);
             part.HaloB = selected.Nodes.Contains(beam.NodeB);
@@ -512,11 +512,9 @@ public partial class CreatureParts : Node2D
         }
     }
 
-    /// <summary>
-    /// Each sensor as a picture on its beam (#576, <see cref="SensorPicture.Centre"/>), upright on the beam's built up
-    /// side: the Accelerometer with its weight where <see cref="CreatureMarks.WeightOffset"/> has
-    /// it (at rest by default), and the camera looking along its rays.
-    /// </summary>
+    // Each sensor as a picture on its beam (SensorPicture.Centre), upright on the beam's built up
+    // side: the Accelerometer with its weight where CreatureMarks.WeightOffset has
+    // it (at rest by default), and the camera looking along its rays.
     private void ShowSensors(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
     {
         Prune(_sensors, shape.Sensors.Select(sensor => sensor.Id));
@@ -529,7 +527,7 @@ public partial class CreatureParts : Node2D
             part.Selected = marks.Selected.Sensors.Contains(sensor.Id);
         }
 
-        // The sensor a tray drag would place, or a sensor drag would move, on the beam under the finger (#376, #806).
+        // The sensor a tray drag would place, or a sensor drag would move, on the beam under the finger.
         _previewSensor.Visible = marks.PreviewSensor is not null;
         _previewSensor.Theme = Theme;
         if (marks.PreviewSensor is ({ } previewBeam, var kind, var aim))
@@ -551,10 +549,8 @@ public partial class CreatureParts : Node2D
         part.CameraAim = Vector2.FromAngle((float)(aim ?? SensorDef.DefaultAim(nodeA, nodeB)) + beamRotation - pictureRotation);
     }
 
-    /// <summary>
-    /// Puts each part in its draw group (#1107) and on the surface <see cref="CreatureMarks.Raised"/>
-    /// gives it, so it is drawn where Build's touches hit it.
-    /// </summary>
+    // Puts each part in its draw group and on the surface CreatureMarks.Raised
+    // gives it, so it is drawn where Build's touches hit it.
     private void ShowDrawGroups(CreatureShape shape, CreatureMarks marks)
     {
         var groups = DrawGroups.Of(shape.Nodes, Links(shape));

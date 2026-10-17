@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Brake's caliper and disc in Training (#1041): its caliper's layer turns with the Fixed side and
+/// A Brake's caliper and disc in Training: its caliper's layer turns with the Fixed side and
 /// its disc's layer with the Target side, each by its rotation alone, so it is never redrawn as the
 /// creature moves and a slip shows as the hand sweeping past the pads.
 /// </summary>

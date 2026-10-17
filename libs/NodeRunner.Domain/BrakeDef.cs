@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Brake (#1039): a passive joint part on one node that resists its Target side turning against
+/// A Brake: a passive joint part on one node that resists its Target side turning against
 /// its Fixed side, up to its <see cref="Strength"/>. It fills the joint's hinge-part slot and
 /// takes its sides by the Servo's rules (<see cref="IHingePartDef"/>), but it is no joint motor:
 /// it has no network ports and draws no power, so it is not in <see cref="CreatureDef.JointMotors"/>.
@@ -66,10 +66,10 @@ public sealed record BrakeDef : IHingePartDef
 
     public int NodeId { get; }
 
-    /// <summary>The side held: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side held: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? FixedLinkId { get; }
 
-    /// <summary>The side braked against it: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side braked against it: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? TargetLinkId { get; }
 
     public string? Name { get; }

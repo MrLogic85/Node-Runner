@@ -48,9 +48,9 @@ public partial class SaveManager : Node
     // Delete/ResetTraining/ApplyEdit/UpdateIfPresent/Get/
     // CurrentTrainingEpoch/PersistTrainingInBackground all delegate to
     // UpdateCoordinator, which serializes mutations per Creation id,
-    // invalidates queued background training snapshots (see #113) that a
+    // invalidates queued background training snapshots that a
     // reset, edit, or delete has superseded, and reads a Creation only once
-    // its queued snapshots have landed (#370).
+    // its queued snapshots have landed.
     public bool Delete(Guid id) => UpdateCoordinator.Delete(id);
 
     public CreationDef? Get(Guid id) => UpdateCoordinator.Get(id);
@@ -71,8 +71,8 @@ public partial class SaveManager : Node
     public IBuildEditWorkflow BuildEditWorkflow =>
         _buildEditWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
 
-    // The default names these save are put into the player's language once, as they are saved
-    // (#759). The caller passes the translation: managers hold no UI.
+    // The default names these save are put into the player's language once, as they are saved.
+    // The caller passes the translation: managers hold no UI.
     public CreationDef Duplicate(Guid id, Func<UiText, string> inPlayerLanguage) =>
         CreationDuplicateWorkflow.Duplicate(id, inPlayerLanguage);
 

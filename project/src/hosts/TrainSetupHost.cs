@@ -9,9 +9,9 @@ using NodeRunner.Ui.Screens;
 namespace NodeRunner.Hosts;
 
 /// <summary>
-/// The Train setup scene (#194): wires <see cref="TrainSetupScreen"/> to the saved creation. Start
+/// The Train setup scene: wires <see cref="TrainSetupScreen"/> to the saved creation. Start
 /// opens Training in place of Train setup, so Back from Training returns to Build. To train, it
-/// first saves the Shadows and Run length on the creation (#617); Simulate (#702) saves nothing.
+/// first saves the Shadows and Run length on the creation; Simulate saves nothing.
 /// Back discards the changes.
 /// </summary>
 public partial class TrainSetupHost : Node, IRoutedScene

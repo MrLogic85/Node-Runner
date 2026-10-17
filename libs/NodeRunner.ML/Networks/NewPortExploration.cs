@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.ML.Networks;
 
 /// <summary>
-/// Explores the ports a trained network gained (#1180): every child of a generation that opens with an
+/// Explores the ports a trained network gained: every child of a generation that opens with an
 /// elite redraws the new ports' genes as <see cref="GenerationZero"/> draws them, while the elites
 /// keep the trained gait. Which ports are new is read from the best elite's values, so nothing is
 /// stored; docs/TRAINING_LOOP.md → "New ports are explored" owns the rules. Stateless and
@@ -80,7 +80,7 @@ public static class NewPortExploration
         var biasStart = inputs * outputs;
 
         // A part is new while an output whose passive bias is not 0, a strength, still has it exactly, or
-        // while a Stepper's frequency (#1263) still has bias 0 and no weight: training has not moved it yet.
+        // while a Stepper's frequency still has bias 0 and no weight: training has not moved it yet.
         var newParts = Enumerable.Range(0, outputs)
             .Where(o => IsStillPassive(ports.Outputs[o].Signal, elite[biasStart + o], Enumerable.Range(0, inputs).All(i => elite[(o * inputs) + i] == 0)))
             .Select(o => ports.Outputs[o].PartId)

@@ -7,8 +7,8 @@ using NodeRunner.Mechanics;
 namespace NodeRunner.App.Builders;
 
 /// <summary>
-/// Mutable, in-progress creature anatomy driven by Build-mode UI
-/// (0.3.0). Add/move/remove nodes, beams, sensors, joint parts, Pistons and Springs here; <see cref="Build"/>
+/// Mutable, in-progress creature anatomy driven by Build-mode UI.
+/// Add/move/remove nodes, beams, sensors, joint parts, Pistons and Springs here; <see cref="Build"/>
 /// returns the drawing as an immutable <see cref="CreatureDef"/> for saving, and
 /// <see cref="TryBuild"/> returns it only once it can be simulated. See
 /// docs/CREATURE_MODEL.md for the vocabulary and docs/BUILD_MODE.md for
@@ -23,43 +23,43 @@ public sealed partial class CreatureBuilder
     /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
     public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
 
-    /// <summary>Why a hinge part, a Servo, a Stepper, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one (#1044).</summary>
+    /// <summary>Why a hinge part, a Servo, a Stepper, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one.</summary>
     public static UiText OneHingePartPerJointReason { get; } = UiText.Plain("One Servo, Stepper, Motor, Brake or Angle sensor per joint");
 
     /// <summary>Why a Servo dropped on anything but a joint is refused.</summary>
     public static UiText ServosGoOnAJointReason { get; } = UiText.Plain("Servos go on a joint");
 
-    /// <summary>Why a Wheel cannot be added to a node that already has one (#129).</summary>
+    /// <summary>Why a Wheel cannot be added to a node that already has one.</summary>
     public static UiText OneWheelPerJointReason { get; } = UiText.Plain("One wheel per joint");
 
-    /// <summary>Why a Wheel dropped on anything but a joint is refused (#129).</summary>
+    /// <summary>Why a Wheel dropped on anything but a joint is refused.</summary>
     public static UiText WheelsGoOnAJointReason { get; } = UiText.Plain("Wheels go on a joint");
 
-    /// <summary>Why a Touch sensor cannot be added to a node that already has one (#1043).</summary>
+    /// <summary>Why a Touch sensor cannot be added to a node that already has one.</summary>
     public static UiText OneSensorPerJointReason { get; } = UiText.Plain("One Touch sensor per joint");
 
-    /// <summary>Why a Touch sensor dropped on anything but a joint is refused (#1043).</summary>
+    /// <summary>Why a Touch sensor dropped on anything but a joint is refused.</summary>
     public static UiText TouchSensorsGoOnAJointReason { get; } = UiText.Plain("Touch sensors go on a joint");
 
-    /// <summary>Why a Rubber cannot be added to a node that already has one (#1142).</summary>
+    /// <summary>Why a Rubber cannot be added to a node that already has one.</summary>
     public static UiText OneRubberPerJointReason { get; } = UiText.Plain("One rubber per joint");
 
-    /// <summary>Why a Rubber dropped on anything but a joint is refused (#1142).</summary>
+    /// <summary>Why a Rubber dropped on anything but a joint is refused.</summary>
     public static UiText RubberGoesOnAJointReason { get; } = UiText.Plain("Rubber goes on a joint");
 
-    /// <summary>Why a Servo cannot work yet: its joint has fewer than two sides, links or a Wheel (#1118).</summary>
+    /// <summary>Why a Servo cannot work yet: its joint has fewer than two sides, links or a Wheel.</summary>
     public static UiText ServoNeedsTwoSidesReason { get; } = UiText.Plain("A Servo needs two links, or a link and a Wheel");
 
-    /// <summary>Why another beam cannot join two nodes a beam already holds rigid (#877); a Piston or Spring replaces it instead (#849).</summary>
+    /// <summary>Why another beam cannot join two nodes a beam already holds rigid; a Piston or Spring replaces it instead.</summary>
     public static UiText BeamJoinsTheseNodesReason { get; } = UiText.Plain("A beam already joins these joints");
 
-    /// <summary>Why another Piston cannot join two nodes a Piston already links; a Beam or Spring replaces it instead (#1176).</summary>
+    /// <summary>Why another Piston cannot join two nodes a Piston already links; a Beam or Spring replaces it instead.</summary>
     public static UiText PistonJoinsTheseNodesReason { get; } = UiText.Plain("These joints already have a piston");
 
-    /// <summary>Why another Spring cannot join two nodes a Spring already links (#453); a Beam or Piston replaces it instead (#1176).</summary>
+    /// <summary>Why another Spring cannot join two nodes a Spring already links; a Beam or Piston replaces it instead.</summary>
     public static UiText SpringJoinsTheseNodesReason { get; } = UiText.Plain("These joints already have a spring");
 
-    /// <summary>Why a Piston or Spring cannot replace the beam between two nodes (#849): the sensor on it is never deleted silently.</summary>
+    /// <summary>Why a Piston or Spring cannot replace the beam between two nodes: the sensor on it is never deleted silently.</summary>
     public static UiText SensorSitsOnThisBeamReason { get; } = UiText.Plain("A sensor sits on this beam");
 
     private readonly List<NodeDef> _nodes = [];
@@ -114,10 +114,10 @@ public sealed partial class CreatureBuilder
 
     public IReadOnlyList<RubberDef> Rubbers => _rubbers;
 
-    /// <summary>Every part on a joint's slots (#1221): the <see cref="HingeParts"/>, Wheels, Touch sensors and Rubbers.</summary>
+    /// <summary>Every part on a joint's slots: the <see cref="HingeParts"/>, Wheels, Touch sensors and Rubbers.</summary>
     public IReadOnlyList<IJointPartDef> JointParts => [.. HingeParts, .. _wheels, .. _touchSensors, .. _rubbers];
 
-    /// <summary>Every part (#1223), each kind in its list order: what <see cref="Build"/> builds the creature from.</summary>
+    /// <summary>Every part, each kind in its list order: what <see cref="Build"/> builds the creature from.</summary>
     public IReadOnlyList<IPartDef> Parts => [.. _nodes, .. _beams, .. _sensors, .. _pistons, .. _springs, .. JointParts];
 
     public int NextPartId => _nextPartId;
@@ -139,7 +139,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// <paramref name="position"/> rounded to whole world units, 1 cm (#1094). Every joint Build places
+    /// <paramref name="position"/> rounded to whole world units, 1 cm. Every joint Build places
     /// or moves sits on one, so its save and share code hold a short number rather than 17 digits.
     /// A half rounds away from 0, so a build mirrored about 0 stays mirrored.
     /// </summary>
@@ -178,7 +178,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Adds a beam between two distinct, existing nodes, in place of a Piston or Spring there (#1176), and
+    /// Adds a beam between two distinct, existing nodes, in place of a Piston or Spring there, and
     /// returns its id; see <see cref="CanAddBeam"/>. Throws if either node id is invalid or the pair is refused.
     /// </summary>
     public int AddBeam(int nodeIdA, int nodeIdB)
@@ -198,8 +198,8 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Whether <see cref="AddBeam"/> would accept this pair (#877): two distinct, existing nodes
-    /// with no beam yet; a Piston or Spring there is replaced (#1176). If not, <paramref name="reason"/> says why.
+    /// Whether <see cref="AddBeam"/> would accept this pair: two distinct, existing nodes
+    /// with no beam yet; a Piston or Spring there is replaced. If not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddBeam(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
     {
@@ -214,8 +214,8 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Whether <see cref="AddPiston"/> would accept this pair (#451): two distinct, existing nodes
-    /// with no Piston yet. A beam or Spring there is replaced (#849, #1176), unless a sensor sits on the
+    /// Whether <see cref="AddPiston"/> would accept this pair: two distinct, existing nodes
+    /// with no Piston yet. A beam or Spring there is replaced, unless a sensor sits on the
     /// beam; if not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddPiston(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
@@ -231,8 +231,8 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Whether <see cref="AddSpring"/> would accept this pair (#453): two distinct, existing nodes with
-    /// no Spring yet. A beam or Piston there is replaced (#849, #1176), unless a sensor sits on the beam;
+    /// Whether <see cref="AddSpring"/> would accept this pair: two distinct, existing nodes with
+    /// no Spring yet. A beam or Piston there is replaced, unless a sensor sits on the beam;
     /// if not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddSpring(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
@@ -247,13 +247,13 @@ public sealed partial class CreatureBuilder
         return reason is null;
     }
 
-    // A link of another kind on the pair is replaced (#849, #1176), but never a sensor's beam.
+    // A link of another kind on the pair is replaced, but never a sensor's beam.
     private UiText? ReplacedLinkReason(int nodeIdA, int nodeIdB) =>
         BeamBetween(nodeIdA, nodeIdB) is { } beamId && _sensors.Any(sensor => sensor.BeamId == beamId) ? SensorSitsOnThisBeamReason : null;
 
     /// <summary>
     /// The Beam, Piston or Spring joining two nodes, or null. A pair has at most one, and a link of
-    /// another kind placed there replaces it (#849, #1176).
+    /// another kind placed there replaces it.
     /// </summary>
     public int? LinkBetween(int nodeIdA, int nodeIdB) =>
         BeamBetween(nodeIdA, nodeIdB) ?? PistonBetween(nodeIdA, nodeIdB) ?? SpringBetween(nodeIdA, nodeIdB);
@@ -267,7 +267,7 @@ public sealed partial class CreatureBuilder
     private int? SpringBetween(int nodeIdA, int nodeIdB) =>
         _springs.FirstOrDefault(spring => IsSamePair(spring.NodeA, spring.NodeB, nodeIdA, nodeIdB))?.Id;
 
-    /// <summary>Adds a Piston between two nodes with the default settings, in place of a beam or Spring there (#849, #1176), and returns its id; see <see cref="CanAddPiston"/>.</summary>
+    /// <summary>Adds a Piston between two nodes with the default settings, in place of a beam or Spring there, and returns its id; see <see cref="CanAddPiston"/>.</summary>
     public int AddPiston(int nodeIdA, int nodeIdB)
     {
         ValidateNodeId(nodeIdA);
@@ -284,7 +284,7 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    /// <summary>Adds a Spring between two nodes with the default settings, in place of a beam or Piston there (#849, #1176), and returns its id; see <see cref="CanAddSpring"/>.</summary>
+    /// <summary>Adds a Spring between two nodes with the default settings, in place of a beam or Piston there, and returns its id; see <see cref="CanAddSpring"/>.</summary>
     public int AddSpring(int nodeIdA, int nodeIdB)
     {
         ValidateNodeId(nodeIdA);
@@ -301,7 +301,7 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    // The new link takes the replaced one's place (#849, #1176) and its hinge-part roles. A replaced
+    // The new link takes the replaced one's place and its hinge-part roles. A replaced
     // beam never carries a sensor (ReplacedLinkReason).
     private void ReplaceLink(int? replacedId, int linkId)
     {
@@ -343,7 +343,7 @@ public sealed partial class CreatureBuilder
         }
     }
 
-    /// <summary>The settings part <paramref name="partId"/> has (#704), in panel order; a joint and a beam have none.</summary>
+    /// <summary>The settings part <paramref name="partId"/> has, in panel order; a joint and a beam have none.</summary>
     public IReadOnlyList<PartParameterId> ParametersOf(int partId) =>
         _pistons.Any(piston => piston.Id == partId) ? _pistonParameters
         : _servos.Any(servo => servo.Id == partId) ? _servoParameters
@@ -356,9 +356,9 @@ public sealed partial class CreatureBuilder
         : [];
 
     /// <summary>
-    /// Whether the drawing is one Build lets a player make (#899): every joint inside
+    /// Whether the drawing is one Build lets a player make: every joint inside
     /// <see cref="BuildViewModel.BuildArea"/> and every panel setting inside its slider's range, a
-    /// Locked Brake's top step included (#1041). A creature from outside the app, like a share code,
+    /// Locked Brake's top step included. A creature from outside the app, like a share code,
     /// is checked with this.
     /// </summary>
     public bool IsWithinBuildLimits() =>
@@ -383,7 +383,7 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Whether <paramref name="parameter"/> does anything on part <paramref name="partId"/> as it is
-    /// set now: a one-ray Camera has no Spread (#578).
+    /// set now: a one-ray Camera has no Spread.
     /// </summary>
     public bool ParameterHasEffect(int partId, PartParameterId parameter) =>
         parameter != PartParameterId.Spread || Camera(partId).Rays > 1;
@@ -589,10 +589,9 @@ public sealed partial class CreatureBuilder
         ClearSides(pistonId);
     }
 
-    /// <summary>Removes a Servo by id.</summary>
     public void RemoveServo(int servoId) => _servos.RemoveAt(ServoIndexOf(servoId));
 
-    /// <summary>Removes a Wheel by id, leaving any hinge part that used it incomplete until the player picks another side (#1118).</summary>
+    /// <summary>Removes a Wheel by id, leaving any hinge part that used it incomplete until the player picks another side.</summary>
     public void RemoveWheel(int wheelId)
     {
         _wheels.RemoveAt(WheelIndexOf(wheelId));
@@ -615,7 +614,7 @@ public sealed partial class CreatureBuilder
         ClearSides(beamId);
     }
 
-    // A deleted link or Wheel leaves each hinge part that used it as a side without that side (#1118).
+    // A deleted link or Wheel leaves each hinge part that used it as a side without that side.
     private void ClearSides(int linkId) => ReplaceSides(linkId, null);
 
     /// <summary>Whether a Servo can sit on this node; if not, <paramref name="reason"/> says why.</summary>
@@ -638,8 +637,8 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Whether a Wheel can sit on this node (#129); if not, <paramref name="reason"/> says why. A
-    /// joint holds one Wheel next to its hinge part (#1044).
+    /// Whether a Wheel can sit on this node; if not, <paramref name="reason"/> says why. A
+    /// joint holds one Wheel next to its hinge part.
     /// </summary>
     public bool CanAddWheel(int nodeId, [NotNullWhen(false)] out UiText? reason)
     {
@@ -673,7 +672,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Whether a Touch sensor can sit on this node (#1043); if not, <paramref name="reason"/> says
+    /// Whether a Touch sensor can sit on this node; if not, <paramref name="reason"/> says
     /// why. A joint holds one, in its own joint-part slot next to a Servo and a Wheel.
     /// </summary>
     public bool CanAddTouchSensor(int nodeId, [NotNullWhen(false)] out UiText? reason)
@@ -707,11 +706,10 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    /// <summary>Removes a Touch sensor by id.</summary>
     public void RemoveTouchSensor(int touchSensorId) => _touchSensors.RemoveAt(TouchSensorIndexOf(touchSensorId));
 
     /// <summary>
-    /// Whether a Rubber can sit on this node (#1142); if not, <paramref name="reason"/> says why. A
+    /// Whether a Rubber can sit on this node; if not, <paramref name="reason"/> says why. A
     /// joint holds one, in its own joint-part slot next to a Servo, a Wheel and a Touch sensor.
     /// </summary>
     public bool CanAddRubber(int nodeId, [NotNullWhen(false)] out UiText? reason)
@@ -745,14 +743,13 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    /// <summary>Removes a Rubber by id.</summary>
     public void RemoveRubber(int rubberId) => _rubbers.RemoveAt(RubberIndexOf(rubberId));
 
     public bool ServoNeedsTwoSides(int nodeId) => HasNode(nodeId) && !JointMotor.HasTwoSides(LinksAt(nodeId), WheelAt(nodeId) is not null);
 
     /// <summary>
     /// Adds a Servo with the first two links at the joint as Fixed and Target. On a joint with a
-    /// Wheel and fewer than two links, the Wheel is its Target (#1118). A joint with fewer sides
+    /// Wheel and fewer than two links, the Wheel is its Target. A joint with fewer sides
     /// leaves the missing roles empty, so the Servo waits in its error state for a link.
     /// </summary>
     public int AddServo(int nodeId)
@@ -761,7 +758,7 @@ public sealed partial class CreatureBuilder
         return AddServo(nodeId, fixedSide, targetSide);
     }
 
-    /// <summary>Adds a Servo with the given Fixed and Target links, each at the joint or empty, as a copied Servo has (#990).</summary>
+    /// <summary>Adds a Servo with the given Fixed and Target links, each at the joint or empty, as a copied Servo has.</summary>
     public int AddServo(int nodeId, int? fixedLinkId, int? targetLinkId)
     {
         if (!CanAddServo(nodeId, out var reason))
@@ -796,7 +793,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Changes the Servo's fixed or target side, a link at its joint or its Wheel (#1118). Picking the
+    /// Changes the Servo's fixed or target side, a link at its joint or its Wheel. Picking the
     /// other role swaps them. The Servo keeps its id (<see cref="ServoDef.WithLinks"/>).
     /// </summary>
     public void SetServoLink(int servoId, bool fixedRole, int linkId) =>
@@ -863,7 +860,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Moves a sensor to another beam unless that beam already has a sensor (#806), as
+    /// Moves a sensor to another beam unless that beam already has a sensor, as
     /// <see cref="SensorMovedTo"/> shows it.
     /// </summary>
     public bool MoveSensor(int sensorId, int beamId, [NotNullWhen(false)] out UiText? reason)
@@ -880,7 +877,7 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Whether a sensor can sit on <paramref name="beamId"/>: one sensor per beam, not counting
-    /// <paramref name="movingSensorId"/>, the one being moved (#806).
+    /// <paramref name="movingSensorId"/>, the one being moved.
     /// </summary>
     public bool CanMountSensor(int beamId, int? movingSensorId, [NotNullWhen(false)] out UiText? reason)
     {
@@ -896,7 +893,7 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// The sensor as it would be on <paramref name="beamId"/> (#806): the same id, so the same network
+    /// The sensor as it would be on <paramref name="beamId"/>: the same id, so the same network
     /// ports, kind, name and settings. A Camera keeps the world direction it looks in as built, so
     /// its aim along the new beam changes.
     /// </summary>
@@ -921,7 +918,6 @@ public sealed partial class CreatureBuilder
         return (_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
 
-    /// <summary>Removes a sensor by id.</summary>
     public void RemoveSensor(int sensorId)
     {
         var sensorIndex = SensorIndexOf(sensorId);

@@ -1,16 +1,16 @@
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// Saved scenes hold only what their author set (#309). Styling comes from the Theme or from
+/// Saved scenes hold only what their author set. Styling comes from the Theme or from
 /// component code, and each component keeps the values it derives out of the scene through
 /// <c>UiUnsavedState</c>; a baked value would pin one theme's look or a stale computed size.
 /// </summary>
 public sealed class SceneDerivedStateTests
 {
-    // UiIcons builds icons as DPITextures at runtime; a saved one is a generated icon baked into the scene (#288).
+    // UiIcons builds icons as DPITextures at runtime; a saved one is a generated icon baked into the scene.
     private static readonly string[] _generatedTextureTypes = ["Image", "ImageTexture", "DPITexture"];
 
-    // UiLabel derives these only while it stands on another label's baseline (#1232); a plain label authors them.
+    // UiLabel derives these only while it stands on another label's baseline; a plain label authors them.
     private static readonly string[] _baselineDerived = ["custom_minimum_size", "size_flags_vertical", "vertical_alignment"];
 
     // Component script → properties its code derives on its own node.

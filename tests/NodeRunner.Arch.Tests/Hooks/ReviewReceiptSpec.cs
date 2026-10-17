@@ -2,7 +2,7 @@ namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
 /// guard-bash.sh denies the push of a branch whose change has no receipt from
-/// .github/scripts/review-receipt.sh, and any change after the review needs a new one (#1321).
+/// .github/scripts/review-receipt.sh, and any change after the review needs a new one.
 /// See docs/REVIEW.md → "Review receipts". Each spec gets its own repository on a feature branch.
 /// </summary>
 public sealed class ReviewReceiptSpec : IDisposable

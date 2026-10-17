@@ -2,7 +2,7 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// The back-to-front draw groups of a creature's parts (#1107), from its built shape so the order
+/// The back-to-front draw groups of a creature's parts, from its built shape so the order
 /// never changes while it moves. Each link is a group; the link whose lower end (larger y) sits
 /// highest draws first, so what is lower on screen is nearer, and ties keep link id order. A
 /// joint's <see cref="DrawSlot.Under"/> parts draw with its first link and its
@@ -63,12 +63,12 @@ public sealed class DrawGroups
         _joints.TryGetValue(nodeId, out var span) ? slot == DrawSlot.Under ? span.First : span.Last : null;
 
     /// <summary>
-    /// What rises to the selected surface (#1107): the <paramref name="selected"/> joints, a motor
-    /// (a Servo or Velocity motor) or Brake (#1041), Wheel, Touch sensor (#1045) or Rubber (#1142) as its joint, with their links; the selected links; the joints at the ends of all
+    /// What rises to the selected surface: the <paramref name="selected"/> joints, a motor
+    /// (a Servo or Velocity motor) or Brake, Wheel, Touch sensor or Rubber as its joint, with their links; the selected links; the joints at the ends of all
     /// those links, so a link never covers the ring, hub or motor at its end; every link whose ends
     /// both rose with its sensor, so a raised motor never hides it; and the selected sensors. A
     /// Wheel's face, under its links, rises only with a selected joint, so a raised link never makes
-    /// it cover the Wheel's other links (#1086). The <paramref name="targetLinks"/> and
+    /// it cover the Wheel's other links. The <paramref name="targetLinks"/> and
     /// <paramref name="targetJoints"/> a placed part can take rise alone, without what they join,
     /// and a target joint's Wheel face stays down.
     /// </summary>
@@ -115,11 +115,11 @@ public sealed class DrawGroups
     }
 
     /// <summary>
-    /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees,
-    /// in Build and Training alike: a joint's ring, hinge part (#1041), or a Wheel's hub, each out to its halo
+    /// The part drawn on top at <paramref name="position"/>, so a touch hits what it sees,
+    /// in Build and Training alike: a joint's ring, hinge part, or a Wheel's hub, each out to its halo
     /// (<see cref="SelectionMarks.JointHalo"/>); a sensor's picture; or a link within its drawn body
-    /// (<see cref="SelectionMarks.LinkBody"/>), outside its ends' hubs, since it is drawn hub to hub
-    /// (#1086), under a ring, hub or motor. A Wheel is hit only at its hub (#1086); its tyre and its
+    /// (<see cref="SelectionMarks.LinkBody"/>), outside its ends' hubs, since it is drawn hub to hub,
+    /// under a ring, hub or motor. A Wheel is hit only at its hub; its tyre and its
     /// see-through middle are left to a tap's last fallback, <see cref="WheelDiscAt"/>. Parts rank by <see cref="Rank"/>, the <paramref name="raised"/> ones on
     /// the selected surface. A motor (a Servo or Velocity motor), Brake or Wheel is hit as itself; a Brake is drawn at a
     /// plain joint's size in place of the ring or the Wheel's hub, so it is hit there instead of them. An Angle sensor's
@@ -202,7 +202,7 @@ public sealed class DrawGroups
 
     /// <summary>
     /// The Wheel whose disc, face and tyre out to its <see cref="WheelDef.Radius"/>, holds
-    /// <paramref name="position"/> (#1143): where discs overlap, the one whose hub is nearest, then the
+    /// <paramref name="position"/>: where discs overlap, the one whose hub is nearest, then the
     /// lower id. A touch asks last, after every part <see cref="PartAt"/> and a finger's reach find,
     /// so a disc covers nothing but other discs. Null outside every disc.
     /// </summary>

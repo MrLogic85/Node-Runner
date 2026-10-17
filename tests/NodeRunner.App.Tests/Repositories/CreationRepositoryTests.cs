@@ -65,7 +65,7 @@ public sealed class CreationRepositoryTests : IDisposable
         repository.Get(named.Id).ShouldBeNull();
     }
 
-    // #114: one corrupt file must not empty the Creations list, nor throw out of Get for the open Creation.
+    // One corrupt file must not empty the Creations list, nor throw out of Get for the open Creation.
     [Fact]
     public void File_ACorruptCreationFile_IsSkippedByListAndNullFromGet()
     {
@@ -83,7 +83,7 @@ public sealed class CreationRepositoryTests : IDisposable
         repository.Get(corruptId).ShouldBeNull();
     }
 
-    // #113 and #114: overlapping writers, from one instance or several, must never leave a corrupt,
+    // Overlapping writers, from one instance or several, must never leave a corrupt,
     // missing or quarantined file.
     [Fact]
     public void File_ConcurrentSavesAndLoads_NeverLeaveACorruptOrMissingFile()
@@ -108,7 +108,7 @@ public sealed class CreationRepositoryTests : IDisposable
         new FileProgressionRepository(storageLocation).Load().DefaultCreationsSeeded.ShouldBeTrue();
     }
 
-    // #114: a missing file is a fresh progression; a corrupt one, including "{}" that the constructor's
+    // A missing file is a fresh progression; a corrupt one, including "{}" that the constructor's
     // defaults would read as fresh, is quarantined and reset rather than crashing.
     [Theory]
     [InlineData(null)]

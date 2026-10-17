@@ -7,7 +7,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// A creature fitted to its rectangle, as on a Creations card, drawn with the same part visuals as
-/// Build (#770): beams, links, joints, sensors and the rigid hatch, with no edit marks. The parts
+/// Build: beams, links, joints, sensors and the rigid hatch, with no edit marks. The parts
 /// live in their own still world (<see cref="UiWorldView.RequestRender"/>), which renders again
 /// only when the creature, the size or the pixel density changes, so scrolling a list of cards
 /// moves finished pictures. Its top corners round to the card's, because it sits at the top of a flush card.
@@ -20,13 +20,13 @@ public partial class CreatureThumbnail : Control
 
     private CreatureDef? _creature;
 
-    /// <summary>The largest scale the creature draws at: half Build's 1:1 on a card, 1 on Import's preview (#899).</summary>
+    /// <summary>The largest scale the creature draws at: half Build's 1:1 on a card, 1 on Import's preview.</summary>
     [Export]
     public float LargestScale { get; set; } = (float)CreatureThumbnailFit.LargestScale;
 
     /// <summary>
     /// Draws Build's <see cref="BuildGrid"/> behind the creature, at its scale, as Import's preview
-    /// does (#899). The grid runs past the thumbnail, so set <c>clip_contents</c> with it.
+    /// does. The grid runs past the thumbnail, so set <c>clip_contents</c> with it.
     /// </summary>
     [Export]
     public bool ShowsBuildGrid { get; set; }

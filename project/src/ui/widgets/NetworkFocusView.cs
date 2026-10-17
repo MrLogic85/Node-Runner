@@ -8,7 +8,7 @@ namespace NodeRunner.Ui.Widgets;
 /// Draws the live direct network: labelled inputs and outputs under their column headings, weighted connections and the selected neuron.
 /// With a selection, connections that don't touch it fade and its strongest partners light up. Neurons shrink to fit tall columns, and
 /// every row keeps its label: when the rows would get closer than a label line, the network scrolls under its pinned headings
-/// (<see cref="NetworkFocusRowLayout"/>, #908). The rows sit in the scene's ScrollContainer, which owns the drag, fling and wheel;
+/// (<see cref="NetworkFocusRowLayout"/>). The rows sit in the scene's ScrollContainer, which owns the drag, fling and wheel;
 /// a tap on a row selects on release unless the drag scrolled, as the creation cards do.
 /// </summary>
 public partial class NetworkFocusView : Control
@@ -195,7 +195,7 @@ public partial class NetworkFocusView : Control
 
     private sealed record ColumnText(string Heading, string[] Labels);
 
-    // In window pixels, so the edges, dots and halo are smooth at any UI size (#733).
+    // In window pixels, so the edges, dots and halo are smooth at any UI size.
     private void DrawNetwork(CanvasItem canvas, Transform2D drawTransform)
     {
         using var pen = UiPixelPen.Begin(canvas, drawTransform);
@@ -280,7 +280,7 @@ public partial class NetworkFocusView : Control
         }
     }
 
-    // Every row keeps its label in both columns (#908); the layout keeps rows a label line apart.
+    // Every row keeps its label in both columns; the layout keeps rows a label line apart.
     private void DrawLabels(CanvasItem canvas, ColumnText[] texts, Font font, int fontSize, (float Input, float Output) labelWidths)
     {
         var layers = _viewModel!.Layers;

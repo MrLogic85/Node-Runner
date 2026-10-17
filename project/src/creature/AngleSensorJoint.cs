@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// An Angle sensor (#1204) between the two <see cref="HingePartSides"/> at its joint: it reads the
+/// An Angle sensor between the two <see cref="HingePartSides"/> at its joint: it reads the
 /// angle between the sides and how fast it changes, as a Velocity motor does, and applies no force.
 /// </summary>
 public sealed class AngleSensorJoint
@@ -19,7 +19,7 @@ public sealed class AngleSensorJoint
     public HingePartSides Sides { get; }
 
     /// <summary>
-    /// Whether its Fixed or Target beam has torn at either end (#962): its network inputs then keep the
+    /// Whether its Fixed or Target beam has torn at either end: its network inputs then keep the
     /// values they last had (Creature.Tears).
     /// </summary>
     public bool IsPassive { get; private set; }

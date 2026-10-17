@@ -31,7 +31,7 @@ public sealed class StepperTests
         }
     }
 
-    // #1263: a sawtooth tick, rising from 0 as it steps to 1 just before the next; its clock never starts over,
+    // A sawtooth tick, rising from 0 as it steps to 1 just before the next; its clock never starts over,
     // whatever the rate or way, and stands still, with no step, at frequency 0.
     [Fact]
     public void ItsClock_KeepsTime_AndItsTickRisesToTheNextStep()

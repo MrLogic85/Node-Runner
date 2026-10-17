@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Stepper's detent wheel and pawl in Training (#1067): its rim's layer turns with the Fixed side and
+/// A Stepper's detent wheel and pawl in Training: its rim's layer turns with the Fixed side and
 /// its pawl's with the Target side, each by its rotation alone, so it is not redrawn while it holds. Each
 /// frame it shows its <see cref="StepperJoint"/>'s state through <see cref="StepperLooks"/>.
 /// </summary>

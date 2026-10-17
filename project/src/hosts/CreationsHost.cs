@@ -28,7 +28,7 @@ public partial class CreationsHost : Node, IRoutedScene
         var screen = GetNode<CreationsScreen>("%CreationsScreen");
         screen.ShowComponentLibraryLink = OS.IsDebugBuild()
             && ProjectSettings.GetSetting("ui/show_component_library_link", true).AsBool();
-        // Here, not in SaveManager: the Walker's name is saved in the player's language (#759).
+        // Here, not in SaveManager: the Walker's name is saved in the player's language.
         CreationActions.TryRunFileOperation(
             () => Saves.SeedDefaultCreations(UiTextTranslation.Now), "Copying the Walker on the first start");
         screen.Setup(Saves.CreationsPresentation);
@@ -74,7 +74,7 @@ public partial class CreationsHost : Node, IRoutedScene
         Navigate(new BuildRoute(id));
     }
 
-    // + New saves an empty creation and opens it; Build removes it again if it is left empty (#368).
+    // + New saves an empty creation and opens it; Build removes it again if it is left empty.
     private void CreateCreation()
     {
         CreationDef creation = null!;

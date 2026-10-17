@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Servo (#452) between the two <see cref="HingePartSides"/> at its joint: it drives the Target
+/// A Servo between the two <see cref="HingePartSides"/> at its joint: it drives the Target
 /// toward the network's angle, with a soft stop outside its range.
 /// </summary>
 public sealed class ServoJoint
@@ -21,7 +21,7 @@ public sealed class ServoJoint
     public HingePartSides Sides { get; }
 
     /// <summary>
-    /// Whether its Fixed or Target beam has torn at either end (#962): it then drives nothing, and its
+    /// Whether its Fixed or Target beam has torn at either end: it then drives nothing, and its
     /// network inputs keep the values they last had (Creature.Tears).
     /// </summary>
     public bool IsPassive { get; private set; }

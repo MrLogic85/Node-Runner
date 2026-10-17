@@ -5,7 +5,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// What the best run of a creation's latest finished generation achieved, and on which map. The
 /// Creations card shows these values; they are measured during training, never recomputed.
-/// <see cref="Distance"/> is the score; <see cref="ShownDistance"/> is the distance the player sees (#725).
+/// <see cref="Distance"/> is the score; <see cref="ShownDistance"/> is the distance the player sees.
 /// </summary>
 public sealed record TrainingRunDef
 {
@@ -29,7 +29,7 @@ public sealed record TrainingRunDef
 
     /// <summary>
     /// The furthest the creature's centre got forward from its start; also the GA's score while
-    /// distance is the only fitness (#137).
+    /// distance is the only fitness.
     /// </summary>
     public double Distance { get; }
 
@@ -42,7 +42,7 @@ public sealed record TrainingRunDef
     public string MapId { get; }
 
     /// <summary>
-    /// How far ahead of its start the creature's front-most point was when the run ended (#725);
+    /// How far ahead of its start the creature's front-most point was when the run ended;
     /// null in a save from before it.
     /// </summary>
     public double? FrontDistance { get; }

@@ -2,7 +2,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>Every part the Build tray lists, implemented or not (#374).</summary>
+/// <summary>Every part the Build tray lists, implemented or not.</summary>
 public enum BuildPart
 {
     Brake,
@@ -25,15 +25,15 @@ public enum PartTrayRowState
 {
     Available,
 
-    /// <summary>Available and picked: a canvas tap places it (#805).</summary>
+    /// <summary>Available and picked: a canvas tap places it.</summary>
     Selected,
     ComingLater,
 
-    /// <summary>Implemented, but the creation is locked and the part has network ports, so adding it would change the network (#896, <see cref="PartTray.HasNetworkPorts"/>).</summary>
+    /// <summary>Implemented, but the creation is locked and the part has network ports, so adding it would change the network (<see cref="PartTray.HasNetworkPorts"/>).</summary>
     CreationLocked,
 }
 
-/// <summary>A tray row; <c>Version</c> is the version that brings a Coming later row's part (#992), null for the other rows.</summary>
+/// <summary>A tray row; <c>Version</c> is the version that brings a Coming later row's part, null for the other rows.</summary>
 public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState State, string? Version)
 {
     public bool IsAvailable => State is PartTrayRowState.Available or PartTrayRowState.Selected;
@@ -42,7 +42,7 @@ public sealed record PartTrayRow(BuildPart Part, UiText Name, PartTrayRowState S
 public sealed record PartTrayGroup(UiText Name, IReadOnlyList<PartTrayRow> Rows);
 
 /// <summary>
-/// The Parts tray (#805): its tabs, what the picked part does and where it goes (<see cref="PickedInfo"/>,
+/// The Parts tray: its tabs, what the picked part does and where it goes (<see cref="PickedInfo"/>,
 /// right under its row as in the Links list, so it is on screen however long the tab), and one help line.
 /// </summary>
 public sealed record PartTrayPresentation(
@@ -51,33 +51,32 @@ public sealed record PartTrayPresentation(
     UiText HelpText);
 
 /// <summary>
-/// The Build Parts tray: three tabs of reference parts (#374). Implemented rows are available;
+/// The Build Parts tray: three tabs of reference parts. Implemented rows are available;
 /// a part not yet implemented is a locked row; <see cref="ComingLater"/> is the reason a drag of one is refused.
 /// </summary>
 public static class PartTray
 {
     public static UiText ComingLater { get; } = UiText.Plain("Coming later");
 
-    /// <summary>What a tap on a Coming later row says (#992): the part and the version that brings it.</summary>
+    /// <summary>What a tap on a Coming later row says: the part and the version that brings it.</summary>
     public static UiText ComingLaterReason(BuildPart part) =>
         Catalog().SelectMany(group => group.Rows).Single(row => row.Part == part) is { State: PartTrayRowState.ComingLater } row
             ? ComingIn(row.Name, row.Version!)
             : throw new ArgumentOutOfRangeException(nameof(part), part, "Only a Coming later part has a version.");
 
-    /// <summary>A Coming later part or link with the version that brings it (#992).</summary>
+    /// <summary>A Coming later part or link with the version that brings it.</summary>
     public static UiText ComingIn(UiText name, string version) => UiText.Format("{0} comes in version {1}", name, version);
 
     public static UiText CreationLockedHelp { get; } = UiText.Plain("Unlock to add parts the network uses.");
 
-    /// <summary>The tray's help line (#805).</summary>
     public static UiText PickHelp { get; } = UiText.Plain("Tap a part to pick it, or drag it onto the creature.");
 
     public static IReadOnlyList<PartTrayGroup> Groups() => Catalog();
 
     /// <summary>
-    /// The tray with <paramref name="picked"/> selected (#805). On a locked creation each available
+    /// The tray with <paramref name="picked"/> selected. On a locked creation each available
     /// part with network ports shows locked, so it does not look like it can be picked or dragged out,
-    /// and the help says how to unlock (#896); a part without, like the Wheel, the Rubber or the Brake, stays available.
+    /// and the help says how to unlock; a part without, like the Wheel, the Rubber or the Brake, stays available.
     /// </summary>
     public static PartTrayPresentation Create(BuildPart? picked, bool creationLocked = false)
     {
@@ -88,10 +87,10 @@ public static class PartTray
             creationLocked ? CreationLockedHelp : PickHelp);
     }
 
-    /// <summary>Whether the part can be picked or dragged out now: available, and on a locked creation without network ports (#896).</summary>
+    /// <summary>Whether the part can be picked or dragged out now: available, and on a locked creation without network ports.</summary>
     public static bool CanPick(BuildPart part, bool creationLocked) => IsAvailable(part) && !(creationLocked && HasNetworkPorts(part));
 
-    /// <summary>Whether placing <paramref name="part"/> adds network ports, so a locked creation refuses it (#896): every part but the Wheel (#129), the Rubber (#1142) and the Brake (#1041).</summary>
+    /// <summary>Whether placing <paramref name="part"/> adds network ports, so a locked creation refuses it.</summary>
     public static bool HasNetworkPorts(BuildPart part) => part is not (BuildPart.Wheel or BuildPart.Rubber or BuildPart.Brake);
 
     private static PartTrayRow Shown(PartTrayRow row, BuildPart? picked, bool creationLocked) =>
@@ -118,13 +117,13 @@ public static class PartTray
         _ => null,
     };
 
-    /// <summary>Where a picked part goes, per part rather than per tab, as a tab can mix placements (#805).</summary>
+    /// <summary>Where a picked part goes, per part rather than per tab, as a tab can mix placements.</summary>
     public static UiText Placement(BuildPart part) => IsJointPart(part)
         ? UiText.Plain("Drag onto a joint, or tap a joint to place it.")
         : UiText.Plain("Drag onto a beam, or tap a beam to place it.");
 
     /// <summary>
-    /// The tab the tray opens on: the first with a part the player can place (#887), so a
+    /// The tab the tray opens on: the first with a part the player can place, so a
     /// tab of padlocks never reads as every part being locked. The first tab when none has one.
     /// </summary>
     public static int OpeningGroup()
@@ -145,14 +144,14 @@ public static class PartTray
         _ => null,
     };
 
-    /// <summary>Whether a tray part goes on a joint (a Servo, a Stepper, #1038, a Velocity motor, #454, a Brake, #1041, a Wheel, #129, a Touch sensor, #1045, a Rubber, #1142, or an Angle sensor, #1206) rather than on a beam.</summary>
+    /// <summary>Whether a tray part goes on a joint rather than on a beam.</summary>
     public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Stepper or BuildPart.VelocityMotor or BuildPart.Brake or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber or BuildPart.AngleSensor;
 
     /// <summary>
     /// The radius of the joint part <paramref name="placing"/> as placed on a joint drawn
     /// <paramref name="jointRadius"/> wide, round which the canvas marks that joint while it is
-    /// placed (#1055); see <see cref="IsJointPart"/>. A Brake (#1041) and an Angle sensor's ring (#1205) are drawn at a hub's size; a Touch
-    /// sensor's cushion (#1045) and a Rubber's skin (#1142) go round the joint's largest part. An Angle sensor's
+    /// placed; see <see cref="IsJointPart"/>. A Brake and an Angle sensor's ring are drawn at a hub's size; a Touch
+    /// sensor's cushion and a Rubber's skin go round the joint's largest part. An Angle sensor's
     /// arc lies further out, so its joint's ring moves past it (<see cref="BuildViewModel.RingRadiusAt"/>).
     /// </summary>
     public static double PlacingRingRadius(BuildPart placing, double jointRadius) => placing switch
@@ -194,6 +193,6 @@ public static class PartTray
 
     private static PartTrayRow Available(BuildPart part, UiText name) => new(part, name, PartTrayRowState.Available, Version: null);
 
-    // The version is the part's GitHub milestone (#992): moving the part to another milestone means updating it here.
+    // The version is the part's GitHub milestone: moving the part to another milestone means updating it here.
     private static PartTrayRow Locked(BuildPart part, UiText name, string version) => new(part, name, PartTrayRowState.ComingLater, version);
 }

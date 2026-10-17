@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A Velocity motor (#454): an electric motor in section that stands in for its joint's hub
+/// A Velocity motor: an electric motor in section that stands in for its joint's hub
 /// (<see cref="HubMotorGeometry"/>). Its magnets turn with the Target side and its coils with the
 /// Fixed side; nothing else moves. Each is drawn once on its own layer behind the part, which
 /// turns it by <see cref="TargetAngle"/> or <see cref="FixedAngle"/>, so a moving creature never
@@ -67,7 +67,7 @@ public partial class VelocityMotorPart : PartVisual
         set => Change(ref _simplified, value);
     }
 
-    /// <summary>A motor missing a link cannot train, so the whole part draws in danger (#1111).</summary>
+    // A motor missing a link cannot train, so the whole part draws in danger.
     private bool Missing => !HasFixed || !HasTarget;
 
     private Color Line => Missing ? Theme.Danger : Theme.MotorAccent;

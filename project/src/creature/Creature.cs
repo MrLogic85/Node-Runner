@@ -9,25 +9,25 @@ namespace NodeRunner.Creature;
 
 public partial class Creature : Node2D
 {
-    /// <summary>The most shadows a generation runs at once (#384).</summary>
+    /// <summary>The most shadows a generation runs at once.</summary>
     public const int MaximumShadows = TrainSettingsDef.MaxShadows;
 
     // Ground is layer 1. Every creature body, in every shadow, shares layer 2 and masks only the
-    // ground, so shadows never touch each other or their own parts (#384).
+    // ground, so shadows never touch each other or their own parts.
     private const uint _groundLayer = 1u;
     private const uint _creatureLayer = 1u << 1;
 
     // A Piston's or Spring's weight is simulated as half on each of its end nodes. A beam's is split
-    // half on its own body and a quarter on each end node (#794), so a creature weighs the same.
+    // half on its own body and a quarter on each end node, so a creature weighs the same.
     private const float _beamWeight = 1.2f;
 
-    // A Piston's or Spring's end-stop cylinder weighs half a beam on top (#731, #835), so Godot's
+    // A Piston's or Spring's end-stop cylinder weighs half a beam on top, so Godot's
     // joints can hold it on its node A.
     private const float _cylinderMass = _beamWeight / 2;
 
-    // The beam body carries half its beam's weight (#794): Godot's solver cannot hold a nearly
-    // massless body pinned between heavy nodes, so under Piston load its pins gave way and rigid
-    // triangles folded inside out.
+    // The beam body carries half its beam's weight: Godot's solver cannot hold a nearly
+    // massless body pinned between heavy nodes, so under Piston load its pins give way and rigid
+    // triangles fold inside out.
     private const float _beamBodyMass = _beamWeight / 2;
 
     // Godot needs some mass on every body; a node joined to nothing still weighs this.
@@ -39,7 +39,7 @@ public partial class Creature : Node2D
     private const float _beamInertiaThickness = 12f;
 
     // How near a tap must land to a part, on screen, at least: a part drawn smaller when the
-    // Training camera zooms out (#675) still takes a finger.
+    // Training camera zooms out still takes a finger.
     private const float _hitTolerancePixels = 16;
 
     private RigidBody2D[] _beamBodies = [];
@@ -94,13 +94,13 @@ public partial class Creature : Node2D
     /// <summary>The network driving the creature; <c>null</c> until training or Simulate sets one.</summary>
     public NeuralNetwork? Network { get; private set; }
 
-    /// <summary>The network's ports in runtime order (#534); empty when the creature has no network.</summary>
+    /// <summary>The network's ports in runtime order; empty when the creature has no network.</summary>
     public NetworkPortLayout Ports { get; private set; } = NetworkPortLayout.Empty;
 
     /// <summary>
-    /// True for every shadow except the followed one (#385): each visual draws as it declares in
+    /// True for every shadow except the followed one: each visual draws as it declares in
     /// <see cref="IShadowVisual.AsShadow"/>, and the creature is drawn with the other shadows behind
-    /// the followed creature, all faded together to the theme's shadow alpha (#818). The followed
+    /// the followed creature, all faded together to the theme's shadow alpha. The followed
     /// creature has a knock-out outline in the arena's background colour instead.
     /// </summary>
     public bool IsShadow
@@ -251,7 +251,7 @@ public partial class Creature : Node2D
     }
 
     // Whether the arena's viewport or the shadows' draws this creature is up to its root
-    // (ApplyShadow, #818), so every item under it is on both, as is the world above it.
+    // (ApplyShadow), so every item under it is on both, as is the world above it.
     private static void ShowInEitherArenaView(Node parent)
     {
         foreach (var child in parent.GetChildren())
@@ -273,8 +273,8 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
-    /// Assigns the network to drive the creature, e.g. a candidate genome from a trial or the saved
-    /// network in Simulate. The network's layer sizes must match this creature's network ports.
+    /// Assigns the network to drive the creature. The network's layer sizes must match this
+    /// creature's network ports.
     /// </summary>
     public void SetNetwork(NeuralNetwork network)
     {
@@ -295,12 +295,11 @@ public partial class Creature : Node2D
 
     /// <summary>
     /// Starts the creature over in its built shape at rest, lowered or raised so its lowest point
-    /// is at <paramref name="lowestPointY"/>. Every body and joint is built afresh (#798): Godot's
+    /// is at <paramref name="lowestPointY"/>. Every body and joint is built afresh: Godot's
     /// solver remembers the last pushes of joints and contacts and applies them again on the next
     /// step, so bodies merely moved back would start each run a little differently, and a
-    /// creature's motion is chaotic enough that the same network then ends somewhere else. Fresh
-    /// bodies make the same network run the same way every time. The network, the selection and the
-    /// shadow look are kept. This is plain physical reset, not evolution/fitness logic.
+    /// creature's motion is chaotic enough that the same network then ends somewhere else. The
+    /// network, the selection and the shadow look are kept.
     /// </summary>
     public void ResetPose(float lowestPointY)
     {
@@ -405,7 +404,7 @@ public partial class Creature : Node2D
         ApplySelection();
     }
 
-    // Every body senses the ground; the followed creature's cushions show its readings (#1045), a shadow draws none.
+    // Every body senses the ground; the followed creature's cushions show its readings, a shadow draws none.
     private void SenseTouches()
     {
         for (var i = 0; i < _touchSensors.Length; i++)
@@ -490,7 +489,7 @@ public partial class Creature : Node2D
     // A node is its own body with a circle collider, weighing a quarter of each beam and half of each
     // link it joins (see _beamWeight). Its rotation is locked:
     // a free-spinning circle pinned at its centre would roll like a wheel and give
-    // the creature no grip on the ground. A joint with a Wheel is that wheel on purpose (#129, MakeWheel).
+    // the creature no grip on the ground. A joint with a Wheel is that wheel on purpose (MakeWheel).
     private void CreateNodes(CreatureDef definition)
     {
         var count = definition.Nodes.Count;
@@ -528,7 +527,7 @@ public partial class Creature : Node2D
             var position = ToGodot(definition.Nodes[i].Position);
             var radius = ToGodotFloat(definition.NodeRadius(definition.Nodes[i].Id), nameof(JointMotor.Radius));
 
-            // No CCD (#1171; why: .claude/rules/creature.md rule 3).
+            // No CCD (.claude/rules/creature.md rule 3).
             var body = new RigidBody2D
             {
                 Name = $"Node{i}",
@@ -557,7 +556,7 @@ public partial class Creature : Node2D
                 Skin = hasRubber,
             };
 
-            // The knock-out runs past a cushion or skin, so it breaks the ground edge round a touching foot (#1045, #1142).
+            // The knock-out runs past a cushion or skin, so it breaks the ground edge round a touching foot.
             var knockout = hasTouch ? radius + (float)TouchSensorDef.Cushion : hasRubber ? radius + (float)RubberDef.Skin : radius;
             body.AddChild(CreateKnockout(Vector2.Zero, Vector2.Zero, knockout));
             body.AddChild(visual);
@@ -682,7 +681,7 @@ public partial class Creature : Node2D
             .ToArray();
     }
 
-    // Each sensor's picture rides its beam body (#576).
+    // Each sensor's picture rides its beam body.
     private void CreateSensorVisuals(CreatureDef definition)
     {
         _sensorVisuals = new SensorVisual[_sensors.Length];
@@ -709,7 +708,7 @@ public partial class Creature : Node2D
             _sensorVisuals[i] = visual;
         }
 
-        // On the overlay layer, over the whole creature (#623).
+        // On the overlay layer, over the whole creature.
         _cameraRaysVisual = null;
         var cameras = _sensors.OfType<CameraSensor>().ToArray();
         if (cameras.Length > 0)
@@ -727,7 +726,7 @@ public partial class Creature : Node2D
         return new AccelerometerSensor(_beamBodies[beamIndex], SensorOnBeam(definition, beamIndex), Accelerometer.UpSign(nodeA, nodeB), gravity);
     }
 
-    // Where a sensor sits on its beam's body, whose +x runs from node A to node B: see SensorPicture.Shift (#1086).
+    // Where a sensor sits on its beam's body, whose +x runs from node A to node B: see SensorPicture.Shift.
     private static Vector2 SensorOnBeam(CreatureDef definition, int beamIndex)
     {
         var beam = definition.Beams[beamIndex];
@@ -737,7 +736,7 @@ public partial class Creature : Node2D
 
     private void ConfigureNetworkBuffers(CreatureDef definition)
     {
-        // A creature with nothing to drive still has its senses: its network runs with no outputs (#845).
+        // A creature with nothing to drive still has its senses: its network runs with no outputs.
         Ports = NetworkPorts.Of(definition);
         _inputPortOf = PortPositions(
             [
@@ -794,7 +793,7 @@ public partial class Creature : Node2D
     // cosine and its speed, each Servo its angle and speed,
     // each Velocity motor its angle's sine and cosine and its speed, each Piston its length and speed, and each Stepper its angle's
     // sine and cosine and its tick, into the raw buffer in sim order; they are then copied into the network's port order (NetworkPorts).
-    // After a tear (#962) a sensor on a beam gone from the world and a passive part write nothing, so
+    // After a tear a sensor on a beam gone from the world and a passive part write nothing, so
     // their inputs keep the values they last had.
     private void ReadSensors(double[] values, double delta)
     {
@@ -882,9 +881,8 @@ public partial class Creature : Node2D
     }
 
     /// <summary>
-    /// The network's inputs as of the last physics step, in its port order (<see cref="NetworkPorts"/>),
-    /// for NetworkFocus and the stage notes; empty while no network drives a part. Read-only: never
-    /// changes the simulation.
+    /// The network's inputs as of the last physics step, in its port order (<see cref="NetworkPorts"/>);
+    /// empty while no network drives a part. Read-only: never changes the simulation.
     /// </summary>
     public void ReadInputs(List<double> inputs)
     {

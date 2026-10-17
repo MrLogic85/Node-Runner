@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// The Velocity motor's hub motor in section (#454), at rotation 0: magnets that turn with the
+/// The Velocity motor's hub motor in section, at rotation 0: magnets that turn with the
 /// Target side and coils that turn with the Fixed side. The coils end inside the magnets' inner
 /// edge, so the two can turn apart on their own layers without either redrawing.
 /// </summary>
@@ -20,7 +20,6 @@ public static class HubMotorGeometry
     public const float MagnetInnerRadius = 19.5f;
     public const float MagnetOuterRadius = 23;
 
-    /// <summary>Half the angle each magnet spans.</summary>
     public const float MagnetHalfSpan = 20 * Mathf.Pi / 180;
 
     public const int CoilCount = 6;

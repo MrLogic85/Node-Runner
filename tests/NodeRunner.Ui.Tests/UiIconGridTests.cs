@@ -6,7 +6,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// Enforces <c>docs/UI_DIRECTION.md</c> → "Icon files" (#1029) and "Icon drawing" (#1010, #1018): a file's
+/// Enforces <c>docs/UI_DIRECTION.md</c> → "Buttons and icons" (its Icon files and Icon drawing rules): a file's
 /// prefix names its kind, and the kind sets its grid and drawn size. Bounds are the geometry alone, which holds because every
 /// UI icon and mark shares one stroke, untransformed.
 /// </summary>

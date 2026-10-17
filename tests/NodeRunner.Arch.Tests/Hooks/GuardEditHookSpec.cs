@@ -4,7 +4,7 @@ namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
 /// .claude/hooks/guard-edit.sh denies edit-tool writes into /tmp and the issues/ archive, in
-/// each payload shape the tools send (#1320).
+/// each payload shape the tools send.
 /// </summary>
 public sealed class GuardEditHookSpec(HookFixture fixture) : IClassFixture<HookFixture>
 {

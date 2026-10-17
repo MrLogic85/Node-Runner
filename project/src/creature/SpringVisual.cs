@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Spring's <see cref="SpringPart"/> in Training (#453), its ends following its two node bodies
+/// A Spring's <see cref="SpringPart"/> in Training, its ends following its two node bodies
 /// every frame, so the coil stretches and squeezes live.
 /// </summary>
 public partial class SpringVisual : SpringPart, IShadowVisual

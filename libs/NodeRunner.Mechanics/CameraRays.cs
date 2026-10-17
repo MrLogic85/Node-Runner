@@ -3,16 +3,15 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The camera's pure math (#575, #604, #594, #578): its rays leave where it sits on its beam, evenly
+/// The camera's pure math: its rays leave where it sits on its beam, evenly
 /// spaced around its aim, the outer ones <see cref="SensorDef.Spread"/> apart, and reach
 /// <see cref="SensorDef.Range"/>. The aim is an angle relative to its beam's direction (from its
 /// first node to its second), so the camera turns with the beam. A placed camera looks level, at
-/// the world's forward as built (<see cref="SensorDef.DefaultAim"/>, #622), so its default three
+/// the world's forward as built (<see cref="SensorDef.DefaultAim"/>), so its default three
 /// rays look forward-up, forward and forward-down. Rays are named symmetrically around the centre
 /// ray, seen from the camera looking along them, and run left to right. Each ray reads how near the
 /// ground is relative to its range: 0 when nothing is in range, rising linearly to 1 at contact,
-/// and one more input says whether any ray sees the ground at all (#1032). Stateless and shared by
-/// the sim, Build and the sensor picture, like <see cref="Accelerometer"/>. See
+/// and one more input says whether any ray sees the ground at all. Stateless. See
 /// docs/CREATURE_MODEL.md.
 /// </summary>
 public static class CameraRays
@@ -112,7 +111,7 @@ public static class CameraRays
     /// (null where it sees nothing), in <see cref="NetworkPorts.CameraChannels"/> order: each ray's
     /// <see cref="Reading"/> within <paramref name="range"/>, then hit, 1 when any ray sees the ground
     /// and else 0. Hit tells far ground from none: a hit at the very end of a ray reads nearness 0 but
-    /// hit 1 (#1032).
+    /// hit 1.
     /// </summary>
     public static void Read(ReadOnlySpan<double?> hitDistances, double range, Span<double> values)
     {

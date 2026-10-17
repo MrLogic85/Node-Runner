@@ -4,10 +4,10 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Piston between two node bodies (#451): each physics tick it pushes them apart or pulls them
+/// A Piston between two node bodies: each physics tick it pushes them apart or pulls them
 /// together along the line between them with <see cref="Mechanics.Piston.NextForce"/>, which
 /// builds up over its rise time, so it keeps the force it pushed with last step. It only applies the
-/// force: inside its stroke nothing holds its length, so it adds no rigidity. Its end stops (#701),
+/// force: inside its stroke nothing holds its length, so it adds no rigidity. Its end stops,
 /// a hidden cylinder body and groove, are built by <c>Creature.CreateEndStops</c>. Its network conventions
 /// are <see cref="Mechanics.Piston"/>'s — see docs/CREATURE_MODEL.md.
 /// </summary>
@@ -21,7 +21,7 @@ public sealed class PistonLink
         BuiltLength = Math.Max(nodeA.Position.DistanceTo(nodeB.Position), 1f);
     }
 
-    // The force it pushed with last step. Creature.ResetPose builds a fresh link each trial (#798),
+    // The force it pushed with last step. Creature.ResetPose builds a fresh link each trial,
     // so a run starts from rest.
     private double _force;
 

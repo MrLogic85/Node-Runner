@@ -1,13 +1,13 @@
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The torque of a <see cref="Domain.BrakeDef"/> (#1040): passive friction between its two sides.
+/// The torque of a <see cref="Domain.BrakeDef"/>: passive friction between its two sides.
 /// Each step it asks for the torque that stops the turning between them and holds against what
 /// the rest of the creature and the world push with, and gives at most its Strength of it. Within
 /// Strength the joint grips and stays put; past it the joint slips, braked by the full Strength.
 /// It has no preferred angle: it holds wherever the joint stopped. Godot welds a Locked Brake's
 /// sides instead, unless no Godot joint can, and then it comes here with an infinite Strength
-/// (project/src/creature/Creature.Links.cs, Welder). A <see cref="Stepper"/> (#1037) drives and
+/// (project/src/creature/Creature.Links.cs, Welder). A <see cref="Stepper"/> drives and
 /// holds its joint with the same loop (<see cref="Toward"/>), so a change here changes it too.
 /// </summary>
 public static class Brake
@@ -29,7 +29,7 @@ public static class Brake
     /// past that, so give a lower bound (Creature's HingePartSides.BrakeInertia); a lighter one only
     /// makes the joint give more, and swing back a little, before it holds. Each Brake reads its own
     /// joint alone, so Brakes on a shared link also read each other's torque as load; in Godot a
-    /// straight chain of them only jitters by a fraction of a degree (#1040).
+    /// straight chain of them only jitters by a fraction of a degree.
     /// </remarks>
     public static BrakeState Next(double speed, double strength, BrakeState? previous, double step, double effectiveInertia)
     {
@@ -43,7 +43,7 @@ public static class Brake
 
     /// <summary>
     /// As <see cref="Next"/>, but it takes the turning to <paramref name="wantedSpeed"/> instead of to
-    /// a stop, with at most <paramref name="strength"/>, which may be 0. A Stepper (#1037) steps its
+    /// a stop, with at most <paramref name="strength"/>, which may be 0. A Stepper steps its
     /// joint and pulls it onto a notch with it.
     /// </summary>
     internal static BrakeState Toward(double wantedSpeed, double speed, double strength, BrakeState? previous, double step, double effectiveInertia)

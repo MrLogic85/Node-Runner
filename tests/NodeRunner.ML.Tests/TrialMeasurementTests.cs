@@ -111,7 +111,7 @@ public sealed class TrialMeasurementTests
         fresh.Result.ShouldBe(new TrialResult(1, 0, 0, 1));
     }
 
-    // A tear (#962) keeps every value as it was, so a loose part thrown forward scores nothing. At ten ticks a second
+    // A tear keeps every value as it was, so a loose part thrown forward scores nothing. At ten ticks a second
     // the five samples before the tear give a top speed. The next sample is checked against the tear's sample, as each
     // later tear's against its own; a blow-up after it still makes the trial invalid. A new trial starts whole.
     [Fact]

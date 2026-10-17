@@ -134,7 +134,7 @@ public sealed class PartDefsTests
         Should.NotThrow(() => new SensorDef(3, 2, SensorKind.Camera, rays: SensorDef.MaxRays, spread: 0));
     }
 
-    // #1036: generation 0 runs a Stepper at half its Max frequency, so 2 Hz starts it at a step a second.
+    // Generation 0 runs a Stepper at half its Max frequency, so 2 Hz starts it at a step a second.
     [Fact]
     public void NewParts_GetTheDesignedSettings()
     {

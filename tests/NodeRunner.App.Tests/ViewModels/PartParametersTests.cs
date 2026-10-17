@@ -9,7 +9,7 @@ public sealed class PartParametersTests
     [Fact]
     public void EverySetting_IsBasicOrAdvanced_AsDesigned_AndEveryPanelSettingHasAHelpTextOfItsOwn()
     {
-        // #903, #989, #1189, #1296: the split docs/BUILD_MODE.md → "Parameters" owns.
+        // docs/BUILD_MODE.md → "Parameters" owns which settings are Advanced.
         PartParameterId[] advanced =
         [
             PartParameterId.StartPosition,
@@ -27,7 +27,7 @@ public sealed class PartParametersTests
             PartParameters.Of(id).Advanced.ShouldBe(advanced.Contains(id), id.ToString());
         }
 
-        // Touching a slider shows this text (#867).
+        // Touching a slider shows this text.
         var scales = Enum.GetValues<PartParameterId>().Select(PartParameters.Of).Where(parameter => parameter.InPanel).Select(parameter => parameter.Slider!).ToArray();
         scales.Length.ShouldBe(Enum.GetValues<PartParameterId>().Length - 1);
         scales.ShouldAllBe(scale => !string.IsNullOrWhiteSpace(scale.Help.Message) && scale.Help.Message != scale.Label.Message);
@@ -99,7 +99,7 @@ public sealed class PartParametersTests
             .ShouldBe(UiText.Format("{0}–{1}%", new FixedNumber(30, 0), new FixedNumber(200, 0)));
     }
 
-    // The old slider reached 0.2 Hz (#1296): such a saved value reads as it is, at the slider's low end.
+    // The old slider reached 0.2 Hz: such a saved value reads as it is, at the slider's low end.
     [Fact]
     public void MaxFrequency_UnderTheSlider_ReadsAsSaved_AtTheLowEnd()
     {
@@ -112,7 +112,7 @@ public sealed class PartParametersTests
     [Fact]
     public void ASteppedSlider_SnapsToItsStops_EvenlySpacedAlongTheSlider_AndPlacesAValueBetweenTwoStopsBetweenThem()
     {
-        // 0.1 and 0.2 s get as much slider as 0.5 and 1 s (#801).
+        // 0.1 and 0.2 s get as much slider as 0.5 and 1 s.
         double[] stops = [0.1, 0.2, 0.5, 1];
         stops.Select((stop, i) => PartParameters.ValueAt(PartParameterId.RiseTime, i / 3.0)).ShouldBe(stops);
         PartParameters.ValueAt(PartParameterId.RiseTime, 0.2).ShouldBe(0.2);
@@ -132,7 +132,7 @@ public sealed class PartParametersTests
         Should.Throw<ArgumentException>(() => SettingRange.Of(stops));
     }
 
-    // 20–400 N·m in steps of 20, then one step more that reads Locked: an infinite Strength (#1041).
+    // 20–400 N·m in steps of 20, then one step more that reads Locked: an infinite Strength.
     [Fact]
     public void BrakeStrength_ReadsLocked_AtItsTopStep_AlsoAtTheTopOfASpan()
     {

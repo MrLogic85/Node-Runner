@@ -28,7 +28,7 @@ public sealed class CreationVersioningTests : IDisposable
         }
     }
 
-    // Loading the 0.13.0 files runs every migration but #1263's and #1308's, and writes them back
+    // Loading the 0.13.0 files runs every migration and writes them back
     // version first; a file in the current version is then left alone.
     [Theory]
     [InlineData("walker.creation.json")]
@@ -52,7 +52,7 @@ public sealed class CreationVersioningTests : IDisposable
             piston["start"] = 0.5;
         }
 
-        // Its sensor is an Accelerometer, which has no Camera settings (#578).
+        // Its sensor is an Accelerometer, which has no Camera settings.
         foreach (var sensor in expected["creature"]!["sensors"]!.AsArray())
         {
             sensor!["rays"] = null;
@@ -70,8 +70,8 @@ public sealed class CreationVersioningTests : IDisposable
         File.GetLastWriteTimeUtc(path).ShouldBe(writtenAt);
     }
 
-    // #870: ±s of the built length becomes 2s / (1 − s) of the shortest, from the middle; a Piston
-    // can now at most double, so ±50% becomes 100%. A Piston without a stroke had ±30%.
+    // ±s of the built length becomes 2s / (1 − s) of the shortest, from the middle; the migrated
+    // Stroke is capped at 100%, a doubling, so ±50% becomes 100%. A Piston without a stroke had ±30%.
     [Theory]
     [InlineData(0.1, 2.0 / 9)]
     [InlineData(0.5, 1)]
@@ -88,7 +88,7 @@ public sealed class CreationVersioningTests : IDisposable
         pistons.ShouldAllBe(piston => piston.Start == 0.5);
     }
 
-    // #835: a Spring had no travel; it gets the widest one with its drawn length in the middle.
+    // A Spring had no travel; it gets the widest one with its drawn length in the middle.
     [Fact]
     public void Fixture013_WithASpring_GivesItTheWidestTravelAroundItsDrawnLength()
     {
@@ -102,7 +102,7 @@ public sealed class CreationVersioningTests : IDisposable
         spring.ShouldBe(new SpringDef(50, 3, 4, null, 300, 5, stroke: 1, coilLength: 0.55));
     }
 
-    // #578: a Camera saved before it had settings keeps today's fan; an Accelerometer gets none.
+    // A Camera saved before it had settings keeps today's fan; an Accelerometer gets none.
     [Fact]
     public void AVersion5Save_GivesACameraTodaysFan_AndAnAccelerometerNoCameraSettings()
     {
@@ -122,8 +122,8 @@ public sealed class CreationVersioningTests : IDisposable
         (accelerometer.Rays, accelerometer.Spread, accelerometer.Range).ShouldBe((null, null, null));
     }
 
-    // #870: a Piston's length input went from −1…1 around its built length to 0…1 over its travel,
-    // and #1129: its target length output from tanh −1…1 to sigmoid 0…1. A migrated network must ask
+    // A Piston's length input went from −1…1 around its built length to 0…1 over its travel,
+    // and its target length output from tanh −1…1 to sigmoid 0…1. A migrated network must ask
     // for the same lengths and strengths in the same pose, and still compile to resume training.
     [Fact]
     public void Fixture013_ItsTrainedNetworkDrivesItsPistonsAsBefore()
@@ -160,7 +160,7 @@ public sealed class CreationVersioningTests : IDisposable
         Should.NotThrow(() => DirectNetwork.Compile(creation.Training.Network, ports));
     }
 
-    // #1129: version 7 saved a Piston's target length as tanh; version 8 doubles its bias and every
+    // Version 7 saved a Piston's target length as tanh; version 8 doubles its bias and every
     // weight into it, enabled or not, under sigmoid. Its other neurons and connections are untouched.
     [Fact]
     public void AVersion7Save_TurnsItsPistonTargetLengthsSigmoid_WithTheirBiasAndWeightsDoubled()
@@ -198,7 +198,7 @@ public sealed class CreationVersioningTests : IDisposable
         written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
     }
 
-    // The network migrations (#1129, #1263, #1308) pass over a save without training.
+    // The network migrations (to versions 8, 15 and 16) pass over a save without training.
     [Fact]
     public void AVersion7Save_WithoutTraining_LoadsAsItWas()
     {
@@ -212,7 +212,7 @@ public sealed class CreationVersioningTests : IDisposable
         JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
     }
 
-    // #1144: version 8 saved each Wheel's grip; version 9 drops it and keeps everything else.
+    // Version 8 saved each Wheel's grip; version 9 drops it and keeps everything else.
     [Fact]
     public void AVersion8Save_DropsEachWheelsGrip_AndKeepsTheRest()
     {
@@ -234,7 +234,7 @@ public sealed class CreationVersioningTests : IDisposable
         JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
     }
 
-    // #1263: version 14 saved a Stepper's frequency output as sigmoid, its power output as tanh and its
+    // Version 14 saved a Stepper's frequency output as sigmoid, its power output as tanh and its
     // running frequency as an input. Version 15 makes the power neuron its signed frequency output and
     // drops the old frequency neurons with every connection to or from them; nothing else changes.
     [Fact]
@@ -279,7 +279,7 @@ public sealed class CreationVersioningTests : IDisposable
         Should.NotThrow(() => DirectNetwork.Compile(creation.Training!.Network, NetworkPorts.Of(creation.Creature)));
     }
 
-    // #1308: version 15 saved the network as training.brain; version 16 moves it, unchanged, to training.network.
+    // Version 15 saved the network as training.brain; version 16 moves it, unchanged, to training.network.
     [Fact]
     public void AVersion15Save_MovesItsNetworkToItsNewKey_AndKeepsTheRestOfItsTraining()
     {
@@ -515,7 +515,7 @@ public sealed class CreationVersioningTests : IDisposable
     private static CreationDef LoadFixture013(string name) =>
         FileCreationRepository.Format.Deserialize(Fixture013(name), name).Value;
 
-    // The trained 0.13.0 walker as the current version writes it, with sigmoid Piston target lengths (#1129).
+    // The trained 0.13.0 walker as the current version writes it, with sigmoid Piston target lengths.
     private static JsonObject CurrentTrainedWalker() =>
         JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("trained-walker.creation.json")))!.AsObject();
 
@@ -548,7 +548,7 @@ public sealed class CreationVersioningTests : IDisposable
         return (file, stepperId);
     }
 
-    // Moves a current file's network back under the key versions before 16 saved it in (#1308).
+    // Moves a current file's network back under the key versions before 16 saved it in.
     private static JsonObject NetworkUnderItsOldKey(JsonObject file)
     {
         var training = file["training"]!.AsObject();
@@ -580,7 +580,7 @@ public sealed class CreationVersioningTests : IDisposable
         ["enabled"] = true,
     };
 
-    // The 0.13.0 walker as version 13 wrote it, before Steppers (#1036).
+    // The 0.13.0 walker as version 13 wrote it, before Steppers.
     private static JsonObject Version13Walker()
     {
         var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
@@ -589,7 +589,7 @@ public sealed class CreationVersioningTests : IDisposable
         return file;
     }
 
-    // The 0.13.0 walker as version 6 wrote it, before Touch sensors (#1043).
+    // The 0.13.0 walker as version 6 wrote it, before Touch sensors.
     private static JsonObject Version6Walker()
     {
         var file = Version13Walker();

@@ -4,8 +4,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The glyph for each kind of part, shared by Build's side panel and Training's part callout
-/// (#1064), so a part looks the same wherever it is named.
+/// The glyph for each kind of part, so a part looks the same wherever it is named.
 /// </summary>
 public static class PartIcons
 {

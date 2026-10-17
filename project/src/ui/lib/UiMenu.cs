@@ -188,7 +188,7 @@ public partial class UiMenu : Container, IUiClipping
     // Mouse only: on a phone every touch also arrives as an emulated mouse event, so handling
     // both would click twice. A click lands on release over the row it started on, like a
     // Button, so the row shows its press first and sliding off cancels it. The Stop filter keeps
-    // the touch itself from reaching what lies beneath, such as Build's canvas (#689).
+    // the touch itself from reaching what lies beneath, such as Build's canvas.
     public override void _GuiInput(InputEvent inputEvent)
     {
         if (inputEvent is InputEventMouseMotion motion && _pressing)
@@ -226,7 +226,7 @@ public partial class UiMenu : Container, IUiClipping
     }
 
     // The overlay keeps a drag on the menu from reaching the panel its anchor scrolls in, so the
-    // menu scrolls that panel itself (#1139). Past the tap slop it is a scroll, not a click, and
+    // menu scrolls that panel itself. Past the tap slop it is a scroll, not a click, and
     // the row's press is let go, as in a ScrollContainer.
     private void DragScroll(InputEventMouseMotion motion)
     {
@@ -341,7 +341,7 @@ public partial class UiMenu : Container, IUiClipping
         }
 
         // Godot only ever grows a free-standing Control to its minimum, so a popup menu whose items
-        // were hidden would keep its old height (#876). Inside a Container the parent sizes it; in
+        // were hidden would keep its old height. Inside a Container the parent sizes it; in
         // the editor a resize would be saved into the scene.
         if (!Engine.IsEditorHint() && GetParent() is not Container)
         {
@@ -375,10 +375,10 @@ public partial class UiMenu : Container, IUiClipping
     /// <summary>
     /// Keeps this menu attached to a normalized point on another control.
     /// The anchor is sampled every frame so scrolling and container relayout are followed, and a
-    /// drag on the menu scrolls the ScrollContainer the anchor sits in (#1139).
+    /// drag on the menu scrolls the ScrollContainer the anchor sits in.
     /// A menu that would not fit below the screen edge opens above its anchor when it fits there,
     /// unless <paramref name="opensUpward"/> is false; otherwise it stays below.
-    /// The menu must sit in a <see cref="UiLevelLayer"/>, which floats it over its screen (#768).
+    /// The menu must sit in a <see cref="UiLevelLayer"/>, which floats it over its screen.
     /// </summary>
     public void Follow(Control anchor, Vector2 normalizedPoint, Vector2 offset = default, bool opensUpward = true)
     {

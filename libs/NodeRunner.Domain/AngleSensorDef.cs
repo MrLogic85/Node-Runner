@@ -1,7 +1,7 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// An Angle sensor (#1201, #1204): a joint sensor on one node that tells the network the angle between
+/// An Angle sensor: a joint sensor on one node that tells the network the angle between
 /// its Fixed and Target sides and how fast it changes (<c>NodeRunner.Mechanics.AngleSensor</c>). It fills
 /// the joint's hinge-part slot and takes its sides by the Servo's rules (<see cref="IHingePartDef"/>),
 /// but it is no joint motor: it has inputs only and applies no force, so it is not in
@@ -47,10 +47,10 @@ public sealed record AngleSensorDef : IHingePartDef
 
     public int NodeId { get; }
 
-    /// <summary>The side measured from: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side measured from: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? FixedLinkId { get; }
 
-    /// <summary>The side whose angle from the Fixed side it reads: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side whose angle from the Fixed side it reads: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? TargetLinkId { get; }
 
     public string? Name { get; }
@@ -62,7 +62,7 @@ public sealed record AngleSensorDef : IHingePartDef
     /// <summary>The sensor with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
     public AngleSensorDef WithLinks(int? fixedLinkId, int? targetLinkId) => new(Id, NodeId, fixedLinkId, targetLinkId, Name);
 
-    /// <summary>The width of its arc, in canvas units: <c>stroke-signal</c>, which its picture draws it with (#1205).</summary>
+    /// <summary>The width of its arc, in canvas units: <c>stroke-signal</c>, which its picture draws it with.</summary>
     public const double ArcWidth = 2;
 
     /// <summary>The width of its selection halo, <c>stroke-signal</c>, as <see cref="ArcWidth"/>.</summary>
@@ -75,7 +75,7 @@ public sealed record AngleSensorDef : IHingePartDef
     public const double ArcGap = SelectionMarks.Gap + 4;
 
     /// <summary>
-    /// Its arc's centre line (#1205), shared by its picture and the Build rings that clear it (#1206):
+    /// Its arc's centre line, shared by its picture and the Build rings that clear it:
     /// <see cref="ArcGap"/> outside the joint's outermost part, a Touch sensor's cushion over a
     /// Rubber's skin over its ring, a plain joint's. A Wheel on the joint changes nothing, so on its joint
     /// the arc lies over the tyre's inside and tubes. See docs/WORLD_VISUALS.md → "Angle sensor".

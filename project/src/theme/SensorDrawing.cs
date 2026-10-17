@@ -5,12 +5,12 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws a sensor on its beam as a small picture of the real thing (#576), shared by Build's canvas
-/// and the creature in Training. Callers pass the draw transform they are in, set so the origin is
+/// Draws a sensor on its beam as a small picture of the real thing. Callers pass the draw transform
+/// they are in, set so the origin is
 /// the picture's centre on its beam (<see cref="SensorPicture.Centre"/>) and -y is the sensor's top (the beam's built up side). Each picture fits its
 /// kind's <see cref="SensorPicture.SizeOf"/> square, which is also its tap area. Everything is
-/// drawn at window-pixel resolution (<see cref="UiPixelSpace"/>), so it stays crisp at any zoom
-/// (#625), and the caller's transform is restored afterwards.
+/// drawn at window-pixel resolution (<see cref="UiPixelSpace"/>), so it stays crisp at any zoom;
+/// the caller's transform is restored afterwards.
 /// </summary>
 public static class SensorDrawing
 {
@@ -31,7 +31,7 @@ public static class SensorDrawing
     private const int _springTurns = 3;
 
     // The camera: a body with a lens ring and a hood on the side it looks out of, twice the
-    // Accelerometer's scale (#622). It turns freely within a circle of radius 21, inside its square.
+    // Accelerometer's scale. It turns freely within a circle of radius 21, inside its square.
     private const float _bodyHalfLength = 14;
     private const float _bodyHalfHeight = 11;
     private const float _bodyBack = -18;
@@ -104,7 +104,7 @@ public static class SensorDrawing
         }
     }
 
-    /// <summary>A camera's rays in Training (#623): from <paramref name="origin"/> to each ground hit, with a <c>halo</c> ring at the hit.</summary>
+    /// <summary>A camera's rays in Training: from <paramref name="origin"/> to each ground hit, with a <c>halo</c> ring at the hit.</summary>
     public static void DrawRayHits(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2 origin, IEnumerable<Vector2> hits)
     {
         ArgumentNullException.ThrowIfNull(canvas);
@@ -126,7 +126,7 @@ public static class SensorDrawing
         }
     }
 
-    // A selected picture is drawn in halo instead of accent, like a selected part in the reference (#624).
+    // A selected picture is drawn in halo instead of accent, like a selected part in the reference.
     private static Color LineColor(VisualTheme theme, bool selected) => selected ? theme.SelectionGlow : theme.SensorLine;
 
     private static void DrawShape(UiPixelPen pen, VisualTheme theme, Vector2[] outline, Color line)

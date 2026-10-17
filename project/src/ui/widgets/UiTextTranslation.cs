@@ -7,7 +7,7 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// Turns a view-model's <see cref="UiText"/> into the player's language with Godot's own
-/// translation (#682): <c>Translate</c>, or <c>TranslatePlural</c> to pick the plural form, then
+/// translation: <c>Translate</c>, or <c>TranslatePlural</c> to pick the plural form, then
 /// fills in the arguments. Numbers are written with a point and Western digits, then
 /// <c>FormatNumber</c> swaps the digits for the language's own, as Godot's number fields do. Not
 /// <c>Tr</c>/<c>TrN</c>: they follow the node's own auto-translate mode, which is off on a
@@ -30,7 +30,7 @@ public static class UiTextTranslation
 
     /// <summary>
     /// <paramref name="text"/> in the current language, once. For text that is then kept as written,
-    /// such as a creation's default name when it is saved (#759); text on screen uses
+    /// such as a creation's default name when it is saved; text on screen uses
     /// <see cref="ShowText(UiLabel, UiText)"/> or <see cref="Source"/> to follow a language change.
     /// </summary>
     public static string Now(UiText text) => InLanguage(text);

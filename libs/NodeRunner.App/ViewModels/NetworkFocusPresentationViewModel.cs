@@ -2,7 +2,7 @@ using System.ComponentModel;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// NetworkFocus on the direct network (#536): an Inputs column and an Outputs column, the enabled
+/// NetworkFocus on the direct network: an Inputs column and an Outputs column, the enabled
 /// connections between them and live activations. Nothing is selected at first; tapping an
 /// output names the inputs that drive it most, and tapping an input names the outputs it drives
 /// most. Its look is in docs/UI_DIRECTION.md → "NetworkFocus"; hidden layers are #549.
@@ -53,7 +53,7 @@ public sealed class NetworkFocusPresentationViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Shows one sample of the live network (#1064), the same one the part callout reads; a sample
+    /// Shows one sample of the live network, the same one the part callout reads; a sample
     /// with no live network, or one that does not fit the configured ports, shows none.
     /// </summary>
     public void Update(NetworkPortValues values)
@@ -89,7 +89,7 @@ public sealed class NetworkFocusPresentationViewModel : INotifyPropertyChanged
         var inputs = UiText.Counted("{0} input", "{0} inputs", inputCount);
         var outputs = UiText.Counted("{0} output", "{0} outputs", outputCount);
 
-        // With nothing to drive there are no lines to read, so the legend is left out (#845).
+        // With nothing to drive there are no lines to read, so the legend is left out.
         Summary = outputCount == 0
             ? UiText.Format("{0} → {1}.", inputs, outputs)
             : UiText.Format("{0} → {1}. Solid blue: pushes up. Dashed red: pushes down. Thicker: stronger.", inputs, outputs);

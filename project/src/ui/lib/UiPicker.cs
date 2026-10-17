@@ -249,7 +249,7 @@ public partial class UiPicker : PanelContainer
             var overlay = new UiLevelLayer();
             AddChild(overlay);
             overlay.AddChild(menu);
-            // Always below its row, never over its own heading (#1139); the panel scrolls instead.
+            // Always below its row, never over its own heading; the panel scrolls instead.
             menu.Follow(closedRow, new Vector2(0, 1), new Vector2(0, _listGap), opensUpward: false);
             menu.CallDeferred(CanvasItem.MethodName.Show);
             _openList = menu;
@@ -274,7 +274,7 @@ public partial class UiPicker : PanelContainer
 
     public override void _Process(double delta) => ReserveRoomForList();
 
-    // The list always opens downward (#1139), so the panel must scroll far enough to bring its last
+    // The list always opens downward, so the panel must scroll far enough to bring its last
     // option on screen: while it is open, the picker grows by however far the list runs past the
     // end of the panel's content. Content-local, so scrolling does not change it.
     private void ReserveRoomForList()
@@ -317,7 +317,7 @@ public partial class UiPicker : PanelContainer
         };
         UiTranslation.ShareContext(this, rowButton);
         rowButton.Pressed += () => SetState(IsExpanded ? PickerState.Collapsed : PickerState.Expanded, emit: true);
-        // The one press look (#325); the row's content is its children and draws over the tint.
+        // The one press look; the row's content is its children and draws over the tint.
         rowButton.Draw += () =>
         {
             if (UiPressFeedback.Shows(rowButton, selected: false))

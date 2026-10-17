@@ -59,7 +59,7 @@ public partial class UiBarCell : BaseButton
         }
     }
 
-    /// <summary>Whether the bar has stopped for good, such as a run whose distance froze at a tear (#1257).</summary>
+    /// <summary>Whether the bar has stopped for good, such as a run whose distance froze at a tear.</summary>
     [Export]
     public bool Capped
     {

@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Velocity motor (#454) between the two <see cref="HingePartSides"/> at its joint: it drives the
+/// A Velocity motor between the two <see cref="HingePartSides"/> at its joint: it drives the
 /// Target's speed against the Fixed side toward the network's speed, round and round with no end
 /// stops. At zero strength it pushes nothing, so the joint turns freely.
 /// </summary>
@@ -22,14 +22,14 @@ public sealed class VelocityMotorJoint
     public HingePartSides Sides { get; }
 
     /// <summary>
-    /// Whether its Fixed or Target beam has torn at either end (#962): it then drives nothing, and its
+    /// Whether its Fixed or Target beam has torn at either end: it then drives nothing, and its
     /// network inputs keep the values they last had (Creature.Tears).
     /// </summary>
     public bool IsPassive { get; private set; }
 
     public void GoPassive() => IsPassive = true;
 
-    /// <summary>The angle between the sides as its sine and cosine (#1207), which never jump across a whole turn.</summary>
+    /// <summary>The angle between the sides as its sine and cosine, which never jump across a whole turn.</summary>
     public (double Sin, double Cos) AngleInputs => Mechanics.VelocityMotor.AngleInputs(Sides.ContinuousAngle);
 
     public double SpeedInput => Mechanics.MotorLoop.SpeedInput(Sides.Speed, Definition.MaxSpeed);

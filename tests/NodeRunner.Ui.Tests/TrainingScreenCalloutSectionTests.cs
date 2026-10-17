@@ -5,7 +5,7 @@ using NodeRunner.Ui.Screens;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>How a selected part becomes its section of the Training part callout (#1064, #1066, #1150).</summary>
+/// <summary>How a selected part becomes its section of the Training part callout.</summary>
 public sealed class TrainingScreenCalloutSectionTests
 {
     [Fact]

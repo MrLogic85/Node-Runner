@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// The turn an Angle sensor's arc is on in Training (#1243), from the angle its sides counted across whole
+/// The turn an Angle sensor's arc is on in Training, from the angle its sides counted across whole
 /// turns since the built pose (<see cref="HingePartSides.ContinuousAngle"/>), which follows every physics tick
 /// however many a frame runs.
 /// </summary>

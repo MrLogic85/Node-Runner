@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A sensor's picture (#767), centred on its origin with its top up; selected, it is drawn in
+/// A sensor's picture, centred on its origin with its top up; selected, it is drawn in
 /// <c>halo</c> (<see cref="SensorDrawing"/>).
 /// </summary>
 public partial class SensorPart : PartVisual

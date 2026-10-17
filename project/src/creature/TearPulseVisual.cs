@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// The moment a beam end lets go of its joint, on the followed creature (#1257): a <c>danger</c> ring
+/// The moment a beam end lets go of its joint, on the followed creature: a <c>danger</c> ring
 /// that grows out from the joint and fades, run by a physics-tick <see cref="Tween"/> so it keeps
 /// pace with the creature and stops on Pause. A child of the joint's body, whose rotation is locked,
 /// over the whole creature; it frees itself when done. <see cref="TearPulseDrawing"/> draws it.

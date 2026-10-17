@@ -35,7 +35,7 @@ public partial class Creature
         }
     }
 
-    // A Velocity motor (#454) turns its sides as a Servo does, with no range or stops.
+    // A Velocity motor turns its sides as a Servo does, with no range or stops.
     private void CreateVelocityMotors(CreatureDef definition)
     {
         _velocityMotors = new VelocityMotorJoint[definition.VelocityMotors.Count];
@@ -59,9 +59,9 @@ public partial class Creature
         }
     }
 
-    // A Brake (#1040) holds its sides as a Servo turns them, so it shares the Servo's sides. A Locked
+    // A Brake holds its sides as a Servo turns them, so it shares the Servo's sides. A Locked
     // one is no friction but a weld (Welder), unless both its sides slide at the joint: then it is
-    // friction without a limit. Each is drawn whatever holds it (#1041). Run once the Piston and Spring
+    // friction without a limit. Each is drawn whatever holds it. Run once the Piston and Spring
     // cylinders exist, as a Locked side can be one.
     private void CreateBrakes(CreatureDef definition)
     {
@@ -90,8 +90,8 @@ public partial class Creature
         }
     }
 
-    // A Stepper (#1037) steps its sides as a Velocity motor turns them, and welds them at each notch
-    // as a Locked Brake does (Welder). Its detent wheel (#1067) shows its notches and its pawl.
+    // A Stepper steps its sides as a Velocity motor turns them, and welds them at each notch
+    // as a Locked Brake does (Welder). Its detent wheel shows its notches and its pawl.
     private void CreateSteppers(CreatureDef definition)
     {
         _steppers = new StepperJoint[definition.Steppers.Count];
@@ -117,8 +117,8 @@ public partial class Creature
         }
     }
 
-    // An Angle sensor (#1204) reads its sides as a Velocity motor does and never turns them, so it adds
-    // no joint and no torque. Its arc (#1205) sits outside its joint's Rubber skin or Touch sensor's cushion,
+    // An Angle sensor reads its sides as a Velocity motor does and never turns them, so it adds
+    // no joint and no torque. Its arc sits outside its joint's Rubber skin or Touch sensor's cushion,
     // with its knock-out under the whole creature.
     private void CreateAngleSensors(CreatureDef definition)
     {
@@ -158,7 +158,7 @@ public partial class Creature
     // lags a step behind the load it holds, so even an endless one gives a little under a sudden load.
     // Godot's own angular limit and motor on PinJoint2D cannot hold it (godotengine/godot#91691, #87513).
     // The weld is a groove (HingeWeld), which takes only the angle the hinge leaves free: a second pin
-    // takes two, fights the hinge's pins and pumps energy into the creature until it spins (#1286). A
+    // takes two, fights the hinge's pins and pumps energy into the creature until it spins. A
     // Piston or Spring whose node B is the joint slides that node along its cylinder, so that side's far
     // node runs in the groove, on the other side's body, and the stroke stays free. When both sides
     // slide no Godot joint locks only the angle, so it returns null and the part holds as endless
@@ -184,7 +184,7 @@ public partial class Creature
         {
             // The sliding side's cylinder is not in the lock, so only the holding side turns as a bar.
             // Its far node (node A) is held, not the cylinder: the cylinder is too light to carry the lock,
-            // and grooves on it gave way when a creature landed.
+            // and grooves on it give way when a creature lands.
             var (holdingSide, holdingBody) = fixedSlides ? (targetSide, targetBody) : (fixedSide, fixedBody);
             WeighCylinderAsBar(definition, holdingSide, holdingBody);
             var sliding = definition.Link(fixedSlides ? fixedSide : targetSide);
@@ -269,7 +269,7 @@ public partial class Creature
 
     private static float MotorHousingReach(CreatureDef definition, IJointMotorDef motor)
     {
-        // A Wheel side has no link for the housing to run along (#1118).
+        // A Wheel side has no link for the housing to run along.
         if (motor.FixedLinkId is not { } fixedLinkId || definition.IsWheel(fixedLinkId))
         {
             return 0;
@@ -279,7 +279,7 @@ public partial class Creature
         return ServoGeometry.HousingReach(definition.Nodes, definition.CoveredRadius, link, SensorLength(definition, link));
     }
 
-    // A Servo's housing is drawn over its Fixed link, so a Piston's or Spring's telescope starts past it (#1210).
+    // A Servo's housing is drawn over its Fixed link, so a Piston's or Spring's telescope starts past it.
     private static float LinkCover(CreatureDef definition, LinkRef link, int nodeId) =>
         ServoGeometry.LinkCover(definition.Nodes, definition.CoveredRadius, definition.Servos, link, nodeId);
 
@@ -324,14 +324,14 @@ public partial class Creature
         }
     }
 
-    // A Piston's end stops are a hard limit, as in a real cylinder (#701): a collider-free
+    // A Piston's end stops are a hard limit, as in a real cylinder: a collider-free
     // cylinder body turns freely on node A, and Godot's GrooveJoint2D lets node B
     // slide only along the cylinder between the stroke's two ends. The groove needs that body:
     // nodes have locked rotation, so a groove on node A would keep one world direction instead of
-    // turning with the Piston. It weighs half a beam (#731): Godot's joints give far past an end
+    // turning with the Piston. It weighs half a beam: Godot's joints give far past an end
     // when the cylinder or its nodes are much lighter than the rest. Inside the stroke the groove
     // pushes nothing along the piston, so only the piston's own force moves it; at an end it
-    // holds up to EndStop.MaxForce, then slides (CapEndStops). A Spring has the same stops (#835).
+    // holds up to EndStop.MaxForce, then slides (CapEndStops). A Spring has the same stops.
     private EndStops CreateEndStops(string name, RigidBody2D nodeA, RigidBody2D nodeB, float built, float shortest, float longest)
     {
         var a = nodeA.Position;
@@ -373,7 +373,7 @@ public partial class Creature
         return new EndStops(cylinder, groove);
     }
 
-    // Every end stop gives way past EndStop.MaxForce (#1115; why: .claude/rules/creature.md rule 4). Godot has no
+    // Every end stop gives way past EndStop.MaxForce (.claude/rules/creature.md rule 4). Godot has no
     // such cap on the GrooveJoint2D node, only the server's MaxForce, which it keeps when it
     // remakes the joint. Run once every body exists, as the weight counts them all. A weld's
     // groove is no end stop and keeps no cap (HingeWeld).
@@ -388,10 +388,10 @@ public partial class Creature
         }
     }
 
-    // A Spring is Godot's DampedSpringJoint2D between its two node bodies (#453): it pulls them
+    // A Spring is Godot's DampedSpringJoint2D between its two node bodies: it pulls them
     // toward its rest length with its Stiffness and damps the speed between them with its
-    // Damping coefficient, whatever they weigh (#801). Godot's spring has no stops of its own, so
-    // it gets a Piston's end stops for its Stroke (#835); a coil length past a stop moves its rest
+    // Damping coefficient, whatever they weigh. Godot's spring has no stops of its own, so
+    // it gets a Piston's end stops for its Stroke; a coil length past a stop moves its rest
     // length there, so it starts pressed against it, and its SpringLink keeps that preload
     // inside the stop. It has no collider and no network ports; its picture is a child of the
     // creature, on the Links layer over the beams.
@@ -405,7 +405,7 @@ public partial class Creature
         // iteration, not once per step, so it would damp several times harder than its coefficient.
         // Dividing by the passes makes it damp as its coefficient asks: measured headless at 16 and 32
         // iterations, which bracket the project's 24, a two-node Spring's decay matched coefficients 1–10
-        // within 6 % (#1245).
+        // within 6 %.
         var dampingPasses = (ProjectSettings.GetSetting("physics/2d/solver/solver_iterations").AsInt32() + 1) / 2;
         for (var i = 0; i < _springVisuals.Length; i++)
         {

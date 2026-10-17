@@ -7,7 +7,7 @@ namespace NodeRunner.Sim;
 /// Runs a single creature through fixed-duration trials, resetting its pose
 /// between runs and measuring each trial with a <see cref="TrialMeasurement"/>.
 /// A <see cref="TrialDurationTicks"/> of <see cref="int.MaxValue"/> makes one
-/// trial that never ends, as Simulate (#702) plays.
+/// trial that never ends, as Simulate plays.
 ///
 /// This node does not own the creature's lifecycle (creation/destruction) or
 /// network assignment — its caller (the <see cref="Evolver"/>, or TrainingHost
@@ -30,7 +30,7 @@ public partial class TrialController : Node
     public int ElapsedTicks => _elapsedTicks;
 
     /// <summary>
-    /// The ticks the trial in progress has run (#715): 0 until it has begun, which
+    /// The ticks the trial in progress has run: 0 until it has begun, which
     /// <see cref="ElapsedTicks"/> is not, as it keeps the last trial's count until then.
     /// </summary>
     public int TicksRun => _startsNextTick ? 0 : _elapsedTicks;
@@ -38,12 +38,12 @@ public partial class TrialController : Node
     /// <summary>What the trial in progress (or the last one) has measured so far.</summary>
     public TrialResult Measured => _measurement.Result;
 
-    /// <summary>Whether a tear has frozen what the trial in progress (or the last one) measures (#962).</summary>
+    /// <summary>Whether a tear has frozen what the trial in progress (or the last one) measures.</summary>
     public bool IsFrozen => _measurement.IsFrozen;
 
     /// <summary>
     /// The gap between the creature's lowest point and the ground when every trial starts, in
-    /// creature units. A small fixed drop gives every trial the same start (#649); the fall counts
+    /// creature units. A small fixed drop gives every trial the same start; the fall counts
     /// as trial time, and distance is measured from the start X, so it doesn't change fitness.
     /// </summary>
     public const float StartClearance = 6f;
@@ -71,7 +71,7 @@ public partial class TrialController : Node
     /// <see cref="StartClearance"/> above the ground. Replaces any trial already in progress.
     /// Called inside a physics tick, as <see cref="Evolver"/> starts the next trial, it begins at
     /// once; called between ticks, as a scene starts training, it begins at the start of the next
-    /// tick (#798). Either way it begins before any creature drives that tick, so the same network
+    /// tick. Either way it begins before any creature drives that tick, so the same network
     /// runs the same trial every time. <see cref="TrialStarted"/> says when it has begun.
     /// </summary>
     public void StartTrial(Creature.Creature creature)
@@ -129,7 +129,7 @@ public partial class TrialController : Node
         }
     }
 
-    // A tear (#962), decided in the creature's tick after the last sample, freezes the trial from this
+    // A tear, decided in the creature's tick after the last sample, freezes the trial from this
     // sample on. The creature's centre and bounds then follow its main piece, so this sample is checked
     // against the tear's own, which counts the same bodies, not against the last.
     private void FollowTears(Creature.Creature creature)

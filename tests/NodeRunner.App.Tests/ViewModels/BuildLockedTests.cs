@@ -7,7 +7,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
 /// A locked Creation adds and deletes joints, beams and Springs, which have no network ports, and
-/// refuses every edit that would change its network (#896).
+/// refuses every edit that would change its network.
 /// </summary>
 public sealed class BuildLockedTests
 {
@@ -123,7 +123,7 @@ public sealed class BuildLockedTests
 
         build.Pistons.Count.ShouldBe(2);
 
-        // No network ports change: the Servo holding the beam keeps its id (#1176, #1177).
+        // No network ports change: the Servo holding the beam keeps its id.
         build.CanConnectLink(BuildLink.Spring, 2, 1, out _, out var replaced).ShouldBeTrue();
         replaced.ShouldBe(10);
         var spring = build.ConnectLink(BuildLink.Spring, 2, 1)!.Value;
@@ -134,7 +134,7 @@ public sealed class BuildLockedTests
         build.Servos.Single().ShouldBe(new ServoDef(30, 2, spring, 12));
     }
 
-    // A Servo's ports do not depend on its sides, which keep its id (#1177, #1179).
+    // A Servo's ports do not depend on its sides, which keep its id.
     [Fact]
     public void AServosSides_ArePickedAsOnAnUnlockedCreation()
     {

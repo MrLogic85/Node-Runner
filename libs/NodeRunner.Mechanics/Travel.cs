@@ -3,13 +3,13 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The travel a Piston or Spring moves in (#870, #835). It is measured on the gap between its two
-/// hubs (#1086), where the movement happens: its shortest gap grown by its stroke is its longest,
+/// The travel a Piston or Spring moves in. It is measured on the gap between its two
+/// hubs, where the movement happens: its shortest gap grown by its stroke is its longest,
 /// with the drawn gap <c>at</c> of the way along. What sits on a joint does not change it.
 /// </summary>
 public static class Travel
 {
-    /// <summary>What every link's travel leaves out at its two ends (#1086): two hubs, whatever sits on its joints.</summary>
+    /// <summary>What every link's travel leaves out at its two ends: two hubs, whatever sits on its joints.</summary>
     public const double HubRadii = 2 * NodeDef.HubRadius;
 
     /// <param name="drawnLength">The distance between its nodes' centres in the drawing.</param>

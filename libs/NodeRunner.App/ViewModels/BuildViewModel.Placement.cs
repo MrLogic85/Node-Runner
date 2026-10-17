@@ -5,20 +5,20 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// Placing parts from the tray (#376, #805) and moving a sensor to another beam (#806): one rule
+/// Placing parts from the tray and moving a sensor to another beam: one rule
 /// for where a sensor goes, and a good drop is one Undo step that selects the part.
 /// </summary>
 public sealed partial class BuildViewModel
 {
     /// <summary>
-    /// Whether a tray part dropped on <paramref name="target"/> would be placed there (#376); if
+    /// Whether a tray part dropped on <paramref name="target"/> would be placed there; if
     /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet, and joint
-    /// parts on a joint whose slot for them is free: one Wheel, one hinge part (#1206), one Touch sensor (#1044) and one Rubber (#1142).
+    /// parts on a joint whose slot for them is free: one Wheel, one hinge part, one Touch sensor and one Rubber.
     /// </summary>
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
     {
         ArgumentNullException.ThrowIfNull(target);
-        // Every tray part but the Wheel, the Rubber and the Brake has network ports (#896, #129, #1142, #1041).
+        // Every tray part but the Wheel, the Rubber and the Brake has network ports.
         if (_locked && PartTray.HasNetworkPorts(part))
         {
             reason = LockedReason;
@@ -123,8 +123,8 @@ public sealed partial class BuildViewModel
     }
 
     /// <summary>
-    /// Places a tray part dropped or tapped on <paramref name="target"/> and returns its new id
-    /// (#376, #805). A drop on empty canvas (<paramref name="target"/> null) changes nothing and says
+    /// Places a tray part dropped or tapped on <paramref name="target"/> and returns its new id.
+    /// A drop on empty canvas (<paramref name="target"/> null) changes nothing and says
     /// nothing; a refused drop changes nothing and shows why as <see cref="PlacementNote"/> at that
     /// part. A dropped part is selected; a tapped one is not, so the tray stays for the next.
     /// </summary>
@@ -138,7 +138,7 @@ public sealed partial class BuildViewModel
 
         if (!CanPlacePart(part, target, out var reason))
         {
-            // A locked Creation says why in a notification instead (#896).
+            // A locked Creation says why in a notification instead.
             if (!(_locked && PartTray.HasNetworkPorts(part)))
             {
                 PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target, reason);
@@ -225,7 +225,7 @@ public sealed partial class BuildViewModel
     }
 
     /// <summary>
-    /// Whether the sensor dragged onto <paramref name="target"/> would move there (#806): onto a
+    /// Whether the sensor dragged onto <paramref name="target"/> would move there: onto a
     /// beam no other sensor sits on, its own included. If not, <paramref name="reason"/> says why.
     /// A move keeps the sensor's network ports, so a locked Creation moves sensors too. The sensor
     /// must exist.
@@ -236,7 +236,7 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// The radius a ring that marks joint <paramref name="nodeId"/> is drawn round, at its
     /// <see cref="SelectionMarks.JointHalo"/>: <paramref name="radius"/>, or an Angle sensor's halo there
-    /// when that lies further out, so a link's or a placed part's ring never covers the sensor's arc (#1206).
+    /// when that lies further out, so a link's or a placed part's ring never covers the sensor's arc.
     /// The joint part being placed there (<paramref name="placing"/>) counts as on the joint: an Angle sensor
     /// brings the arc, and a Rubber or Touch sensor moves it out.
     /// </summary>
@@ -256,7 +256,7 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// The beams or joints that would take or refuse <paramref name="part"/> from the tray, or else
-    /// the beams that would take or refuse the sensor <paramref name="movingSensorId"/> a drag moves (#1107).
+    /// the beams that would take or refuse the sensor <paramref name="movingSensorId"/> a drag moves.
     /// </summary>
     public PlacingTargets PlacingTargetsOf(BuildPart? part, int? movingSensorId)
     {
@@ -294,7 +294,7 @@ public sealed partial class BuildViewModel
     }
 
     /// <summary>
-    /// The sensor as a drop on <paramref name="target"/> would leave it (#806), for its preview:
+    /// The sensor as a drop on <paramref name="target"/> would leave it, for its preview:
     /// null when the drop would be refused or keep it where it is, or the sensor or the beam under
     /// it is gone mid-drag.
     /// </summary>
@@ -305,9 +305,9 @@ public sealed partial class BuildViewModel
             : null;
 
     /// <summary>
-    /// Moves the sensor dragged onto <paramref name="target"/> there (#806), keeping its id, ports
+    /// Moves the sensor dragged onto <paramref name="target"/> there, keeping its id, ports
     /// and settings (<see cref="CreatureBuilder.SensorMovedTo"/>), and selects it. A drop on empty
-    /// canvas (<paramref name="target"/> null) leaves it and says nothing (#1026), as <see cref="PlacePart"/>
+    /// canvas (<paramref name="target"/> null) leaves it and says nothing, as <see cref="PlacePart"/>
     /// does; a refused drop leaves it and shows why as <see cref="PlacementNote"/> at the part it was
     /// dropped on. A sensor gone mid-drag moves nowhere.
     /// </summary>

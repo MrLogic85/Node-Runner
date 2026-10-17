@@ -5,24 +5,24 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The selection's Delete: the selected parts and what goes with them, refused on a locked Creation
-/// when it would change the network (#896, #987).
+/// when it would change the network.
 /// </summary>
 public sealed partial class BuildViewModel
 {
     /// <summary>
-    /// Why Delete cannot remove the selection now, or null when it can (#896). A locked Creation
+    /// Why Delete cannot remove the selection now, or null when it can. A locked Creation
     /// refuses a delete that would change its network: one that takes a part with network ports, also by
     /// cascade (a joint's Piston, motor, Touch sensor or Angle sensor, a beam's sensor), or clears a motor's or an
     /// Angle sensor's Fixed or Target link,
-    /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → <c>servos[]</c>). A Wheel,
-    /// a Rubber and a Brake have no ports, so they can go, and so can a Brake's side (#1041).
+    /// after which it could no longer train (<c>docs/SAVE_FORMAT.md</c> → "<c>creation.json</c>"). A Wheel,
+    /// a Rubber and a Brake have no ports, so they can go, and so can a Brake's side.
     /// </summary>
     public UiText? DeleteLockedReason => DeleteRefusalNotes().Count > 0 ? LockedReason : null;
 
     /// <summary>
     /// Deletes the selection and what goes with it, as one undo step. While <see cref="DeleteLockedReason"/>
     /// says why not, it deletes nothing and instead shows a note on each part that blocks it in
-    /// <see cref="CanvasNotes"/> (#987).
+    /// <see cref="CanvasNotes"/>.
     /// </summary>
     public void DeleteSelectedParts()
     {
@@ -38,8 +38,8 @@ public sealed partial class BuildViewModel
             return;
         }
 
-        // A joint part's joint goes too when the delete takes its links and its parts and leaves none
-        // (#973, #1044): to the player its parts are that joint, so clearing an area must not leave a
+        // A joint part's joint goes too when the delete takes its links and its parts and leaves none:
+        // to the player its parts are that joint, so clearing an area must not leave a
         // bare joint behind. A joint that had no links stays.
         var partJoints = SelectedJointPartJoints().ToDictionary(joint => joint, joint => _builder.LinksAt(joint).Count);
         _history.Change(() =>
@@ -133,7 +133,7 @@ public sealed partial class BuildViewModel
             }
         }
 
-        // A Touch sensor has no picture yet (#1045), so its note sits on its joint.
+        // A Touch sensor has no picture, so its note sits on its joint.
         var keptTouchSensors = after.TouchSensors.Select(touch => touch.Id).ToHashSet();
         foreach (var touch in before.TouchSensors)
         {

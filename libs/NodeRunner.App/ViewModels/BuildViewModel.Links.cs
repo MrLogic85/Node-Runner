@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The link half of <see cref="BuildViewModel"/>: drawing a Beam, Piston (#451) or Spring (#453)
+/// The link half of <see cref="BuildViewModel"/>: drawing a Beam, Piston or Spring
 /// between two joints, and what refuses it.
 /// </summary>
 public sealed partial class BuildViewModel
@@ -18,9 +18,9 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// <see cref="CanConnectLink(BuildLink, int, int, out UiText?)"/>, and the link of another kind it
-    /// would replace on its pair (#849, #1176). A locked Creation neither gains nor loses a link with
-    /// network ports, which would change the network (#896); a Beam and a Spring may replace each other, since a motor
-    /// holding the link keeps its id (#1177).
+    /// would replace on its pair. A locked Creation neither gains nor loses a link with
+    /// network ports, which would change the network; a Beam and a Spring may replace each other, since a motor
+    /// holding the link keeps its id.
     /// </summary>
     public bool CanConnectLink(BuildLink link, int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason, out int? replacedLinkId)
     {
@@ -59,8 +59,8 @@ public sealed partial class BuildViewModel
         : BuildLink.Beam;
 
     /// <summary>
-    /// Places <paramref name="link"/>, a Beam, a Piston (#451) or a Spring (#453), between two nodes and
-    /// returns its id; it replaces a link of another kind there (#849, #1176). A refused pair changes nothing and shows why as <see cref="PlacementNote"/>
+    /// Places <paramref name="link"/>, a Beam, a Piston or a Spring, between two nodes and
+    /// returns its id; it replaces a link of another kind there. A refused pair changes nothing and shows why as <see cref="PlacementNote"/>
     /// at <paramref name="nodeIdB"/>, the joint the drag ended on.
     /// </summary>
     public int? ConnectLink(BuildLink link, int nodeIdA, int nodeIdB)
@@ -85,7 +85,7 @@ public sealed partial class BuildViewModel
                 _ => _builder.AddSpring(nodeIdA, nodeIdB),
             };
 
-            // Within the step: its Undo row refresh must not find a replaced link (#849) still selected.
+            // Within the step: its Undo row refresh must not find a replaced link still selected.
             PruneSelection();
 
             return id;

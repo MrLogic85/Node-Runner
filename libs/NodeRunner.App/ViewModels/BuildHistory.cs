@@ -3,11 +3,11 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// Build's undo and redo steps for one visit (#689): the body as it was around each finished edit.
+/// Build's undo and redo steps for one visit: the body as it was around each finished edit.
 /// A change outside an open edit is a step of its own; an open edit, such as a drag, makes all its
 /// changes one step when it ends. A step only counts if the body changed. Holds at most
 /// <see cref="MaxSteps"/> undo steps, dropping the oldest; a new step clears Redo. A step may name
-/// the parts to select again when it is undone (#878), and keeps them through Redo and Undo.
+/// the parts to select again when it is undone, and keeps them through Redo and Undo.
 /// </summary>
 /// <remarks>
 /// Godot's <c>UndoRedo</c> keeps the same two stacks, but it would put Build's step rules in the

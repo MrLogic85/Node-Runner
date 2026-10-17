@@ -4,7 +4,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Standalone component-kit gallery for Phase 1 visual verification. It keeps
+/// Standalone component-kit gallery for visual verification. It keeps
 /// reusable controls disconnected from game state and lets developers switch
 /// tokens live to prove token updates do not require rebuilding the screen.
 /// </summary>
@@ -35,9 +35,9 @@ public partial class ComponentGalleryScreen : GalleryScreen
         }
     }
 
-    // Lines and sections are set in code only (#1064, #1066): a −1…1 and a 0…1 meter at each end
+    // Lines and sections are set in code only: a −1…1 and a 0…1 meter at each end
     // and the middle, a note, and a stacked joint's Servo and Wheel in one callout, its lines
-    // headed In and Out (#1150).
+    // headed In and Out.
     private void ShowCalloutLines()
     {
         var ports = GetNode<UiCallout>("%Ports");

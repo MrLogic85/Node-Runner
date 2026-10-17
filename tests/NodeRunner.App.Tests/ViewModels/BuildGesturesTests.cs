@@ -533,7 +533,7 @@ public class BuildGesturesTests
     }
 
     // Inside the group a drag from a part moves it; outside, Select draws a box and the other tools pan.
-    // A sensor outside the group moves alone, like a joint (#806).
+    // A sensor outside the group moves alone, like a joint.
     [Theory]
     [InlineData(BuildTool.Select, new[] { 1, 2, 3 }, 100, 0)]
     [InlineData(BuildTool.Select, new[] { 1, 3 }, 300, 0)]
@@ -897,7 +897,7 @@ public class BuildGesturesTests
     [InlineData(BuildLink.Spring)]
     public void ASensorDroppedOnALink_StaysWithTheNoteThere_ButWhereTheLinkCrossesAFreeBeamGoesOnTheBeam(BuildLink kind)
     {
-        // Free beam 7 rises over the link crossing it at (100, 150) while the sensor moves (#1107).
+        // Free beam 7 rises over the link crossing it at (100, 150) while the sensor moves.
         var (build, gestures) = SensorsOnThreeBeams();
         var top = build.PlaceNode(new Vector2D(100, 100));
         var bottom = build.PlaceNode(new Vector2D(100, 200));

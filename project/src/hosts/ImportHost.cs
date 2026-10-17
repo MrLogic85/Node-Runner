@@ -8,7 +8,7 @@ using NodeRunner.Ui.Screens;
 namespace NodeRunner.Hosts;
 
 /// <summary>
-/// The Import scene (#899): Paste reads the clipboard only when tapped, and Add to Creations saves
+/// The Import scene: Paste reads the clipboard only when tapped, and Add to Creations saves
 /// the previewed build under the name the player gave it and opens it in Build in place of Import,
 /// so Back from Build lands on Creations, like a copied example.
 /// </summary>

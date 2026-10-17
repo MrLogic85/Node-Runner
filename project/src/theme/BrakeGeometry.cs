@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A Brake (#1041) at rotation 0: a plain joint's size, as its joint collides as a plain joint
+/// A Brake at rotation 0: a plain joint's size, as its joint collides as a plain joint
 /// does. Its caliper's four pads lie either side of the Fixed side and turn with it; its disc and
 /// hand turn with the Target side. A gap between pads and disc is where a slip shows.
 /// </summary>

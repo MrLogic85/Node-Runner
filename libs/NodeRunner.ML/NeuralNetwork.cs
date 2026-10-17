@@ -29,7 +29,7 @@ public sealed class NeuralNetwork
     /// <summary>The hidden layers' activation.</summary>
     public Activation Activation { get; }
 
-    /// <summary>Each output's own activation, in output order: tanh for velocity and position, sigmoid for strength (#535).</summary>
+    /// <summary>Each output's own activation, in output order, as <see cref="NodeRunner.Domain.PortSignals"/> picks it.</summary>
     public IReadOnlyList<Activation> OutputActivations => _outputActivations;
 
     public double[] Forward(double[] input)
@@ -159,7 +159,7 @@ public sealed class NeuralNetwork
         return genome;
     }
 
-    /// <summary>The network a flat genome describes. <paramref name="outputActivations"/> gives one activation per output (#535); <c>null</c> means tanh for every output.</summary>
+    /// <summary>The network a flat genome describes. <paramref name="outputActivations"/> gives one activation per output; <c>null</c> means tanh for every output.</summary>
     public static NeuralNetwork FromGenome(int[] layers, double[] genome, Activation activation, IReadOnlyList<Activation>? outputActivations = null)
     {
         ValidateLayerSizes(layers);
@@ -257,7 +257,7 @@ public sealed class NeuralNetwork
 
         for (var i = 0; i < layerSizes.Length; i++)
         {
-            // An empty layer is allowed: a creature with no powered parts has no outputs (#845).
+            // An empty layer is allowed: a creature with no powered parts has no outputs.
             if (layerSizes[i] < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(layerSizes), "Layer sizes must not be negative.");

@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A saved network as a graph (#536, #522): neurons and the connection genes between them. 0.13 only
+/// A saved network as a graph: neurons and the connection genes between them. Training only
 /// builds direct networks, input ports straight to output ports, but the format already holds hidden
 /// neurons, disabled genes and any connection pattern, so later networks need no new format.
 /// <see cref="NextNeuronId"/> only grows, so a neuron id is never reused. See docs/SAVE_FORMAT.md.

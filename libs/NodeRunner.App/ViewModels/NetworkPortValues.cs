@@ -9,11 +9,11 @@ namespace NodeRunner.App.ViewModels;
 public readonly record struct NetworkPortValue(NetworkPort Port, double? Value);
 
 /// <summary>
-/// One sample of the live network's ports (#1064): what each input read and each output set in one
+/// One sample of the live network's ports: what each input read and each output set in one
 /// refresh, with the connection weights of that moment. The host samples once per refresh and
 /// every view of the network (NetworkFocus, the part callout) reads the same sample, so they always
 /// agree and none of them runs the network again. Values are keyed by <see cref="NetworkPort"/>, never
-/// by a label. Immutable. See docs/TRAINING_LOOP.md → "World view".
+/// by a label. Immutable. See docs/TRAINING_LOOP.md → "The Training scene".
 /// </summary>
 public sealed class NetworkPortValues
 {

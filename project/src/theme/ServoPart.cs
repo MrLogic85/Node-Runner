@@ -4,7 +4,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Theme;
 
-/// <summary>A Servo (#452): a motor housing, range band and horn on a larger joint ring.</summary>
+/// <summary>A Servo: a motor housing, range band and horn on a larger joint ring.</summary>
 public partial class ServoPart : PartVisual
 {
     private const float _housingHalfWidth = 11f;
@@ -86,7 +86,7 @@ public partial class ServoPart : PartVisual
         set => Change(ref _hasTarget, value);
     }
 
-    /// <summary>The few-primitives outline used by Training shadows.</summary>
+    /// <summary>A Training shadow's look: an outline of a few primitives.</summary>
     public bool Simplified
     {
         get => _simplified;
@@ -100,7 +100,7 @@ public partial class ServoPart : PartVisual
     public static float HousingReachFor(float freeLength, float sensorLength = 0) =>
         Math.Clamp(((freeLength - sensorLength) / 2) - 2, _housingMinReach, _housingMaxReach);
 
-    /// <summary>A Servo missing a link cannot train, so the whole part draws in danger (#1111).</summary>
+    // A Servo missing a link cannot train, so the whole part draws in danger.
     private bool Missing => !HasFixed || !HasTarget;
 
     private Color Line => Missing ? Theme.Danger : Theme.MotorAccent;
@@ -324,7 +324,7 @@ public partial class ServoPart : PartVisual
     public static (float From, float To) BandSweep(float builtAngle, float range, float start) =>
         (builtAngle - ((1 - start) * range), builtAngle + (start * range));
 
-    /// <summary>Without a Target link the band still shows, placed as if the Target pointed opposite Fixed (#1111).</summary>
+    // Without a Target link the band still shows, placed as if the Target pointed opposite Fixed.
     private float BandAngle => HasTarget ? BuiltAngle : Mathf.Pi;
 
     private float BandFrom() => BandSweep(BandAngle, Range, Start).From;

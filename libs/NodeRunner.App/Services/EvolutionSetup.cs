@@ -5,7 +5,7 @@ namespace NodeRunner.App.Services;
 
 /// <summary>
 /// The Evolver's population, genetic algorithm and trial length for a Creation's Train setup
-/// values (#617). Training has no profiles: only Shadows and Run length vary.
+/// values. Training has no profiles: only Shadows and Run length vary.
 /// </summary>
 public sealed record EvolutionSetup(int Population, GeneticAlgorithm Algorithm, int TrialTicks)
 {

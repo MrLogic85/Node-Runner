@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The Stepper's detent wheel and pawl (#1067, <c>docs/WORLD_VISUALS.md</c> → Stepper), checked on its geometry.</summary>
+/// <summary>The Stepper's detent wheel and pawl (<c>docs/WORLD_VISUALS.md</c> → Stepper), checked on its geometry.</summary>
 public sealed class StepperGeometryTests
 {
     private const float _tolerance = 1e-3f;

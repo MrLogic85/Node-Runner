@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// UI text crosses from App as <c>UiText</c> and is translated by Godot in one place (#682), and
+/// UI text crosses from App as <c>UiText</c> and is translated by Godot in one place, and
 /// text the player wrote is never translated.
 /// </summary>
 public sealed class UiTextTranslationTests
@@ -57,7 +57,7 @@ public sealed class UiTextTranslationTests
     }
 
     /// <summary>
-    /// Popup text is translated whole, so it is never put together in code (#773): "Delete {0}?" crosses as a
+    /// Popup text is translated whole, so it is never put together in code: "Delete {0}?" crosses as a
     /// UiText through a …Source property, since "Delete Walker?" has no translation. A host's own
     /// <c>Notify(title, message)</c> that hands its text on to a popup counts as the popup. The design
     /// galleries show sample text for development and are left out.
@@ -81,7 +81,7 @@ public sealed class UiTextTranslationTests
         PopupTextBuilds(member).Count().ShouldBe(flagged ? 1 : 0);
 
     /// <summary>
-    /// No .NET string casing in the UI (#776): text is cased by the TextServer in the current locale,
+    /// No .NET string casing in the UI: text is cased by the TextServer in the current locale,
     /// as <c>Label.Uppercase</c> does, since invariant casing is wrong in some languages. That it is
     /// translated before it is cased is checked on device.
     /// </summary>

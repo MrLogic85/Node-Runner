@@ -16,7 +16,7 @@ namespace NodeRunner.Ui.Widgets;
 /// <see cref="BuildTool"/> does and when to zoom or pan. Binds to
 /// <see cref="BuildViewModel"/> per `.claude/rules/ui.md`; does
 /// not own any anatomy state itself. See docs/BUILD_MODE.md.
-/// It lives in the world of a <see cref="UiWorldView"/> (#769), so its creature is drawn with the
+/// It lives in the world of a <see cref="UiWorldView"/>, so its creature is drawn with the
 /// same part visuals and layers as Training's (<see cref="CreatureParts"/>) without any of them
 /// drawing over the handles and notes in the slot. Its own marks go under the creature (grid,
 /// Select box, beam preview) or on a <see cref="ViewLayer"/> under the selected parts or over the creature.
@@ -67,7 +67,7 @@ public partial class BuildCanvas : Node2D
     [Export]
     public UiSelectionHandle? ScaleHandle { get; set; }
 
-    /// <summary>Turns a selected Camera (#594); placed and hit-tested like the selection handles.</summary>
+    /// <summary>Turns a selected Camera; placed and hit-tested like the selection handles.</summary>
     [Export]
     public UiSelectionHandle? AimHandle { get; set; }
 
@@ -76,7 +76,7 @@ public partial class BuildCanvas : Node2D
     public UiCalloutLayer? CalloutLayer { get; set; }
 
     /// <summary>
-    /// Takes a part dropped from the Parts tray (#376), authored over the slot. It lets touches
+    /// Takes a part dropped from the Parts tray, authored over the slot. It lets touches
     /// through to the canvas and only catches the pointer while a part is being dragged.
     /// </summary>
     [Export]
@@ -161,7 +161,7 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    /// <summary>Swings each Accelerometer's weight as its beam moves, and draws again while one is still moving (#576).</summary>
+    /// <summary>Swings each Accelerometer's weight as its beam moves, and draws again while one is still moving.</summary>
     public override void _Process(double delta)
     {
         if (_viewModel is null)
@@ -320,7 +320,7 @@ public partial class BuildCanvas : Node2D
 
     /// <summary>
     /// Zooms out on the next draw, once the setting has reached the creature, if a selected
-    /// Camera's rays no longer fit (#1092).
+    /// Camera's rays no longer fit.
     /// </summary>
     public void ShowCameraRays()
     {
@@ -357,7 +357,7 @@ public partial class BuildCanvas : Node2D
     /// <summary>Hands the creature its parts as they are now, through the view's zoom and pan.</summary>
     private void ShowCreature()
     {
-        // A dragged Select box shows what it would catch; the selection is cleared meanwhile (#704).
+        // A dragged Select box shows what it would catch; the selection is cleared meanwhile.
         if (_viewModel is null || _gestures is null)
         {
             return;
@@ -365,7 +365,7 @@ public partial class BuildCanvas : Node2D
 
         var caught = _gestures.SelectionBoxCatches;
         var selected = caught.Count > 0 ? caught : _viewModel.Selection;
-        // A sensor being moved looks selected, so its preview never reads as a copy (#806).
+        // A sensor being moved looks selected, so its preview never reads as a copy.
         if (_gestures.MovingSensorId is { } moving && !selected.Sensors.Contains(moving))
         {
             selected = selected with { Sensors = new HashSet<int>(selected.Sensors) { moving } };
@@ -390,7 +390,7 @@ public partial class BuildCanvas : Node2D
             previewJointPart = (jointPart, jointHover.Id);
         }
 
-        // A touch hits what rises (#1107), so both come from the view-model.
+        // A touch hits what rises, so both come from the view-model.
         var targets = _gestures.TargetsOf(PlacingPart);
         _creature.Transform = ViewTransform();
         _creature.Theme = Theme;
@@ -407,7 +407,7 @@ public partial class BuildCanvas : Node2D
                 _viewModel.RaisedParts(selected, targets)));
     }
 
-    /// <summary>What goes under the selected parts (#1107): the selected motor's link bands.</summary>
+    // What goes under the selected parts: the selected motor's link bands.
     private void DrawSelectedUnderlay(CanvasItem canvas)
     {
         if (_viewModel is not null && _gestures is not null)
@@ -439,10 +439,8 @@ public partial class BuildCanvas : Node2D
         DrawSelectionFrame(canvas);
     }
 
-    /// <summary>
-    /// Each selected Camera's own rays while the panel shows its settings (#623, #578), over the
-    /// joints so the creature never hides them.
-    /// </summary>
+    // Each selected Camera's own rays while the panel shows its settings, over the
+    // joints so the creature never hides them.
     private void DrawSelectedCameraRays(CanvasItem canvas)
     {
         foreach (var (origin, ends) in _viewModel!.ShownCameraRays())
@@ -451,11 +449,9 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    /// <summary>
-    /// A selected Piston's or Spring's shortest and longest length while its Stroke, Start position
-    /// or Coil length can be set (#704, #870, #835), and a Spring's rest length, over the joints so the
-    /// one at joint B is never hidden.
-    /// </summary>
+    // A selected Piston's or Spring's shortest and longest length while its Stroke, Start position
+    // or Coil length can be set, and a Spring's rest length, over the joints so the
+    // one at joint B is never hidden.
     private void DrawSelectedTravels(CanvasItem canvas)
     {
         var stroke = _viewModel!.CanEdit(PartParameterId.Stroke);
@@ -490,11 +486,9 @@ public partial class BuildCanvas : Node2D
     private void DrawTravel(CanvasItem canvas, int nodeA, int nodeB, double shortest, double longest, float tickHalf, double? rest) =>
         PistonDrawing.DrawStroke(canvas, ViewTransform(), Theme, ToGodot(NodeById(nodeA).Position), ToGodot(NodeById(nodeB).Position), (float)shortest, (float)longest, tickHalf, (float?)rest);
 
-    /// <summary>
-    /// The tray part being placed: one dragged from the tray, or one picked to tap into place, which
-    /// shows where it goes the same way from the moment it is picked (#1016). Null while a sensor is
-    /// moved, so only the move's targets show.
-    /// </summary>
+    // The tray part being placed: one dragged from the tray, or one picked to tap into place, which
+    // shows where it goes the same way from the moment it is picked. Null while a sensor is
+    // moved, so only the move's targets show.
     private BuildPart? PlacingPart => _gestures?.MovingSensorId is null ? _partDrag ?? _viewModel?.PickedPart : null;
 
 
@@ -828,7 +822,7 @@ public partial class BuildCanvas : Node2D
         }
     }
 
-    /// <summary>Draws strokes given in creature units on <paramref name="canvas"/> in window pixels, so they stay smooth at any zoom (#733).</summary>
+    // Draws strokes given in creature units on canvas in window pixels, so they stay smooth at any zoom.
     private UiPixelPen ViewPen(CanvasItem canvas) => UiPixelPen.Begin(canvas, ViewTransform());
 
     /// <summary>

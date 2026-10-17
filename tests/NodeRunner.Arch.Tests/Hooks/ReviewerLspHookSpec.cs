@@ -4,7 +4,7 @@ namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
 /// .claude/hooks/reviewer-lsp.sh lets a review agent use the LSP tool only for lookups, since
-/// Copilot's rename writes the files (#1352). See docs/REVIEW.md → "Hooks".
+/// Copilot's rename writes the files. See docs/REVIEW.md → "Hooks".
 /// </summary>
 public sealed class ReviewerLspHookSpec(HookFixture fixture) : IClassFixture<HookFixture>
 {

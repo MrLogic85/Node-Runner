@@ -5,8 +5,8 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A beam (#767) from <see cref="A"/> to <see cref="B"/>: a flat rod from hub to hub (#1086), its
-/// ends hidden under the joint rings (#626), or centre to centre when the hubs meet, and, while selected, a <c>halo</c>
+/// A beam from <see cref="A"/> to <see cref="B"/>: a flat rod from hub to hub, its
+/// ends hidden under the joint rings, or centre to centre when the hubs meet, and, while selected, a <c>halo</c>
 /// line along each side. Under the rod it draws its <see cref="Placing"/> mark. The rod is drawn in
 /// window pixels (<see cref="UiPixelPen"/>) like the joints, so its edges stay smooth at any zoom.
 /// </summary>
@@ -14,7 +14,7 @@ public partial class BeamPart : PartVisual
 {
     private const float _placingWidth = 2.2f;
 
-    /// <summary>How much of a torn end flashes <c>danger</c> (#1257), in creature units.</summary>
+    /// <summary>How much of a torn end flashes <c>danger</c>, in creature units.</summary>
     public const float TornEndLength = 8f;
 
     private Vector2 _a;
@@ -47,21 +47,20 @@ public partial class BeamPart : PartVisual
         set => Change(ref _b, value);
     }
 
-    /// <summary>The drawn radius of the joint at <see cref="A"/>, whose halo the selection lines join (#710).</summary>
+    /// <summary>The drawn radius of the joint at <see cref="A"/>, whose halo the selection lines join.</summary>
     public float RadiusA
     {
         get => _radiusA;
         set => Change(ref _radiusA, value);
     }
 
-    /// <summary>The drawn radius of the joint at <see cref="B"/>.</summary>
     public float RadiusB
     {
         get => _radiusB;
         set => Change(ref _radiusB, value);
     }
 
-    /// <summary>Too short to train (#593): drawn in <c>danger</c> until its joints move apart.</summary>
+    /// <summary>Too short to train: drawn in <c>danger</c> until its joints move apart.</summary>
     public bool Danger
     {
         get => _danger;
@@ -69,7 +68,7 @@ public partial class BeamPart : PartVisual
     }
 
     /// <summary>
-    /// Whether end A has torn from its joint in a run (#1257): with no joint ring over it, the rod runs
+    /// Whether end A has torn from its joint in a run: with no joint ring over it, the rod runs
     /// out to <see cref="A"/>.
     /// </summary>
     public bool TornA
@@ -78,7 +77,6 @@ public partial class BeamPart : PartVisual
         set => Change(ref _tornA, value);
     }
 
-    /// <summary>Whether end B has torn from its joint in a run.</summary>
     public bool TornB
     {
         get => _tornB;
@@ -92,21 +90,19 @@ public partial class BeamPart : PartVisual
         set => Change(ref _flashA, value);
     }
 
-    /// <summary>Whether torn end B is flashing.</summary>
     public bool FlashB
     {
         get => _flashB;
         set => Change(ref _flashB, value);
     }
 
-    /// <summary>Whether joint A is selected too, so the selection lines end on its halo ring (#710).</summary>
+    /// <summary>Whether joint A is selected too, so the selection lines end on its halo ring.</summary>
     public bool HaloA
     {
         get => _haloA;
         set => Change(ref _haloA, value);
     }
 
-    /// <summary>Whether joint B is selected too.</summary>
     public bool HaloB
     {
         get => _haloB;
@@ -156,10 +152,8 @@ public partial class BeamPart : PartVisual
         }
     }
 
-    /// <summary>
-    /// The selection lines from <paramref name="start"/> to <paramref name="end"/>, each end moved onto
-    /// its joint's halo ring when that joint is selected too, so a group reads as one outline (#710).
-    /// </summary>
+    // The selection lines from start to end, each end moved onto its joint's halo ring when that
+    // joint is selected too, so a group reads as one outline.
     private (Vector2 Start, Vector2 End) JoinHalos(Vector2 start, Vector2 end, float offset)
     {
         var joinedStart = HaloA ? SelectionDrawing.LineEnd(A, B, (float)SelectionMarks.JointHalo(RadiusA), offset) : start;

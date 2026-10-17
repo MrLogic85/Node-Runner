@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>Debug-only menu entries stay hidden in release exports (#808).</summary>
+/// <summary>Debug-only menu entries stay hidden in release exports.</summary>
 public sealed class ReleaseBuildTests
 {
     [Fact]

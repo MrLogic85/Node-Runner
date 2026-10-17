@@ -3,15 +3,15 @@ using NodeRunner.Domain;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// The named draw layers inside one drawn creature (#767, #1107), as ZIndex values relative to the
+/// The named draw layers inside one drawn creature, as ZIndex values relative to the
 /// creature's root. The parts draw on two surfaces, the unselected and above it the selected, each
 /// in draw groups: one per link, back to front as <see cref="DrawGroups"/> orders them, each with
 /// its <see cref="DrawSlot"/>s. Joints joined to no link draw in one more group, over every other of their surface.
-/// A part draws its selection mark with itself and rises whole to the selected surface (#766).
+/// A part draws its selection mark with itself and rises whole to the selected surface.
 /// </summary>
 public static class CreatureLayers
 {
-    /// <summary>The followed creature's knock-out outline (#818), under everything else.</summary>
+    /// <summary>The followed creature's knock-out outline, under everything else.</summary>
     public const int Knockout = 0;
 
     /// <summary>The rigid hatch inside closed triangles.</summary>

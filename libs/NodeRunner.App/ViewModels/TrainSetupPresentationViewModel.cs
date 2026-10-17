@@ -6,7 +6,7 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// One stepped slider row: its label, its readout, its thumb at 0…1 and the distance between two
-/// whole steps on that scale, so the thumb stops only where the value does (#711). A disabled row
+/// whole steps on that scale, so the thumb stops only where the value does. A disabled row
 /// is shown dimmed and cannot be dragged. A null <paramref name="Position"/> shows no thumb, for a
 /// value the scale does not hold.
 /// </summary>
@@ -19,13 +19,13 @@ public sealed record SettingSlider(UiText Label, UiText Readout, double? Positio
 public sealed record SettingNote(UiText Text, ShadowsLoad Load);
 
 /// <summary>
-/// Train setup (#194), between Build and Training: Train or Simulate, and the Shadows and Run length
+/// Train setup, between Build and Training: Train or Simulate, and the Shadows and Run length
 /// sliders, filled from the Creation's saved values or the default. Training starts by saving
-/// <see cref="Settings"/> on the Creation (#617). Simulate (#702) needs a trained Creation, so an
-/// untrained one has no Train or Simulate choice at all (#843); it plays one shadow until the player
+/// <see cref="Settings"/> on the Creation. Simulate needs a trained Creation, so an
+/// untrained one has no Train or Simulate choice at all; it plays one shadow until the player
 /// leaves, so it dims both sliders and saves nothing. The selected map
-/// card names <see cref="Maps.Default"/> (#444). The map choice and Run until power is out come
-/// later (#540, 0.18).
+/// card names <see cref="Maps.Default"/>. The map choice and Run until power is out come
+/// later (#540).
 /// </summary>
 public sealed class TrainSetupPresentationViewModel
 {
@@ -61,18 +61,18 @@ public sealed class TrainSetupPresentationViewModel
 
     public TrainingRunMode Mode { get; private set; }
 
-    /// <summary>How many shadows this creature can race smoothly, and before slow motion (#318).</summary>
+    /// <summary>How many shadows this creature can race smoothly, and before slow motion.</summary>
     public ShadowsBudget ShadowsBudget { get; }
 
     /// <summary>
     /// Whether Simulate can be chosen: only a trained Creation has a network to play. Without it there
-    /// is nothing to choose, so Train setup hides the Train or Simulate switch (#843).
+    /// is nothing to choose, so Train setup hides the Train or Simulate switch.
     /// </summary>
     public bool CanSimulate { get; }
 
     /// <summary>
     /// Whether the network has a powered part to drive. Without one the creature may still train, but
-    /// it only stands still, so Train setup warns at the top (#845).
+    /// it only stands still, so Train setup warns at the top.
     /// </summary>
     public bool HasPoweredParts { get; }
 
@@ -92,7 +92,7 @@ public sealed class TrainSetupPresentationViewModel
             ShadowsRange.PositionStep);
 
     /// <summary>
-    /// The line under the Shadows slider (#318): why more shadows help, or a warning above the smooth
+    /// The line under the Shadows slider: why more shadows help, or a warning above the smooth
     /// limit. It never blocks Start or changes the value. Simulate has no line.
     /// </summary>
     public SettingNote? ShadowsNote => Mode == TrainingRunMode.Simulate

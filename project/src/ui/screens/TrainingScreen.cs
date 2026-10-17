@@ -7,8 +7,8 @@ using NodeRunner.Ui.Widgets;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// The Training screen (<c>reference design/components/Training</c>), also used to simulate a saved
-/// network. The layout is authored in <c>scenes/screens/TrainingScreen.tscn</c>; its host authors the
+/// The Training screen (<c>reference design/components/Training</c>), which also shows a saved
+/// network's Simulate run. The layout is authored in <c>scenes/screens/TrainingScreen.tscn</c>; its host authors the
 /// world inside <c>%ArenaView</c>, feeds the view-models and owns the run.
 /// </summary>
 public partial class TrainingScreen : Control
@@ -38,7 +38,7 @@ public partial class TrainingScreen : Control
 
     /// <summary>
     /// The share of the arena's height the part callout takes from the top, with its leader and
-    /// margins (#1137): the shelf the camera keeps clear for it. 0 while no callout shows.
+    /// margins: the shelf the camera keeps clear for it. 0 while no callout shows.
     /// </summary>
     public double PartCalloutShelf { get; private set; }
 
@@ -77,13 +77,13 @@ public partial class TrainingScreen : Control
         pause.TooltipText = paused ? "Run" : "Pause";
     }
 
-    /// <summary>Shows or hides the "Too many shadows!" chip in the arena's top-left corner (#318).</summary>
+    /// <summary>Shows or hides the "Too many shadows!" chip in the arena's top-left corner.</summary>
     public void ShowSlowMotion(bool shown) => GetNode<Control>("%SlowMotionChip").Visible = shown;
 
     /// <summary>
-    /// What the selected parts' callout shows (#388, #1064): for each part, top → down, its name
+    /// What the selected parts' callout shows: for each part, top → down, its name
     /// and, for a part with network ports, its glyph and live values; a stacked joint's parts each
-    /// get a section of one callout (#1066). An empty list shows none. Call when the selection or
+    /// get a section of one callout. An empty list shows none. Call when the selection or
     /// the sampled values change; <see cref="MovePartCallout"/> places it every frame.
     /// </summary>
     public void ShowPartCallout(IReadOnlyList<PartCalloutPresentation> callouts)
@@ -107,8 +107,8 @@ public partial class TrainingScreen : Control
     }
 
     /// <summary>
-    /// Places the part callout (#1137): docked at the arena's top over its centre, where the camera
-    /// keeps a creature at rest (#1169), clear of the slow-motion
+    /// Places the part callout: docked at the arena's top over its centre, where the camera
+    /// keeps a creature at rest, clear of the slow-motion
     /// chip, so the box holds still and only its leader follows the part at
     /// <paramref name="worldAnchor"/>, in world coordinates. Call every frame; it updates
     /// <see cref="PartCalloutShelf"/>.
@@ -143,9 +143,9 @@ public partial class TrainingScreen : Control
     }
 
     /// <summary>
-    /// One part's section of the part callout (#1064, #1066): its glyph if it shows one, its name,
+    /// One part's section of the part callout: its glyph if it shows one, its name,
     /// then its inputs in <c>accent</c> and its outputs in <c>output</c>, each line headed by its
-    /// group's word (#1150) and each port a centred bar for −1…1 or a filling bar for 0…1; or its
+    /// group's word and each port a centred bar for −1…1 or a filling bar for 0…1; or its
     /// <paramref name="note"/>; or no lines for a part that shows only its name.
     /// <paramref name="name"/> is <c>callout.Name</c>, <paramref name="note"/> <c>callout.Note</c>,
     /// <paramref name="label"/> each port's label and <paramref name="headings"/>

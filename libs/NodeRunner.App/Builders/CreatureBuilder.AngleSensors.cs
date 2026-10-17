@@ -5,16 +5,16 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Builders;
 
 /// <summary>
-/// The Angle sensors (#1204): joint sensors that fill a joint's hinge-part slot and take their
-/// sides by the Servo's rules (#1118). They have inputs only and apply no force, so they are not
-/// joint motors. Build places them as it does a Brake (#1206).
+/// The Angle sensors: joint sensors that fill a joint's hinge-part slot and take their
+/// sides by the Servo's rules. They have inputs only and apply no force, so they are not
+/// joint motors. Build places them as it does a Brake.
 /// </summary>
 public sealed partial class CreatureBuilder
 {
-    /// <summary>Why an Angle sensor dropped on anything but a joint is refused (#1206).</summary>
+    /// <summary>Why an Angle sensor dropped on anything but a joint is refused.</summary>
     public static UiText AngleSensorsGoOnAJointReason { get; } = UiText.Plain("Angle sensors go on a joint");
 
-    /// <summary>Why an Angle sensor cannot read yet: it needs two sides at its joint (#1118).</summary>
+    /// <summary>Why an Angle sensor cannot read yet: it needs two sides at its joint.</summary>
     public static UiText AngleSensorNeedsTwoSidesReason { get; } = UiText.Plain("An Angle sensor needs two links, or a link and a Wheel");
 
     private readonly List<AngleSensorDef> _angleSensors = [];
@@ -72,7 +72,6 @@ public sealed partial class CreatureBuilder
     public void SetAngleSensorLink(int angleSensorId, bool fixedRole, int linkId) =>
         SetSide(_angleSensors, AngleSensorIndexOf(angleSensorId), fixedRole, linkId, (angleSensor, fixedLink, targetLink) => angleSensor.WithLinks(fixedLink, targetLink));
 
-    /// <summary>Removes an Angle sensor by id.</summary>
     public void RemoveAngleSensor(int angleSensorId) => _angleSensors.RemoveAt(AngleSensorIndexOf(angleSensorId));
 
     public int AngleSensorIndexOf(int angleSensorId)

@@ -1,24 +1,21 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Stepper (#455, #1036): a joint motor on one node that works like a clock. It holds its Target side in
+/// A Stepper: a joint motor on one node that works like a clock. It holds its Target side in
 /// notches against its Fixed side and, at the rate the network picks, lets go and pushes it on to the next notch.
-/// Its sides follow the Servo's rules (#1118): a link at the joint or the joint's Wheel, not both the same,
+/// Its sides follow the Servo's rules: a link at the joint or the joint's Wheel, not both the same,
 /// either null once that part is deleted. It shares the joint's hinge-part slot with a Servo, a Velocity motor,
-/// a Brake and an Angle sensor (#1044); see <see cref="JointMotor"/>. See docs/CREATURE_MODEL.md → "Stepper".
+/// a Brake and an Angle sensor; see <see cref="JointMotor"/>. See docs/CREATURE_MODEL.md → "Stepper".
 /// </summary>
 public sealed record StepperDef : IJointMotorDef
 {
     /// <summary>A new Stepper's <see cref="Strength"/>: 150 N·m in world torque units.</summary>
     public const double DefaultStrength = 1500000;
 
-    /// <summary>A new Stepper's <see cref="StepsPerTurn"/>.</summary>
     public const int DefaultStepsPerTurn = 8;
 
-    /// <summary>The fewest notches a Stepper's turn can have.</summary>
     public const int MinStepsPerTurn = 2;
 
-    /// <summary>The most notches a Stepper's turn can have.</summary>
     public const int MaxStepsPerTurn = 24;
 
     /// <summary>A new Stepper's <see cref="MaxFrequency"/>: 2 steps a second.</summary>
@@ -88,10 +85,10 @@ public sealed record StepperDef : IJointMotorDef
 
     public int NodeId { get; }
 
-    /// <summary>The side the notches turn with: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side the notches turn with: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? FixedLinkId { get; }
 
-    /// <summary>The side stepped from notch to notch: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side stepped from notch to notch: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? TargetLinkId { get; }
 
     public string? Name { get; }
@@ -99,7 +96,6 @@ public sealed record StepperDef : IJointMotorDef
     /// <summary>Max strength: the most torque it pushes with while it steps, in world torque units.</summary>
     public double Strength { get; }
 
-    /// <summary>How many notches make a full turn.</summary>
     public int StepsPerTurn { get; }
 
     /// <summary>The most steps it may take each second.</summary>

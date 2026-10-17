@@ -5,7 +5,7 @@ namespace NodeRunner.App.Tests.Repositories;
 public sealed class FilePersistenceExceptionsTests
 {
     // Every type file persistence throws is recoverable. A bug in our own code, or SaveManager's
-    // "not ready" lifecycle guard, must keep failing loud, distinct from "Creation not found" (#114).
+    // "not ready" lifecycle guard, must keep failing loud, distinct from "Creation not found".
     [Theory]
     [InlineData(typeof(IOException), true)]
     [InlineData(typeof(UnauthorizedAccessException), true)]

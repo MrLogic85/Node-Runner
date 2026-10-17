@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// One Android Back press sends several go-back signals (#506; see UiBackPressTracker), so every
+/// One Android Back press sends several go-back signals (see UiBackPressTracker), so every
 /// place that acts on Back must take the press through <c>UiBackPress.TryTake</c>; otherwise a
 /// repeat acts a second time. References are bound with Roslyn, so any spelling of
 /// <c>NotificationWMGoBackRequest</c> or <c>Window.GoBackRequested</c> counts, and each listener is

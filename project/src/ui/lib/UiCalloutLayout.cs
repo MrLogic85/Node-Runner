@@ -25,8 +25,8 @@ public static class UiCalloutLayout
 
     /// <summary>
     /// One callout: its spot, the clear direction from it, and how far the figure reaches that
-    /// way; <paramref name="Lines"/> are its live values under the caption, if any (#1064), and
-    /// <paramref name="Sections"/> its further captions, if any (#1066).
+    /// way; <paramref name="Lines"/> are its live values under the caption, if any, and
+    /// <paramref name="Sections"/> its further captions, if any.
     /// </summary>
     public readonly record struct Placement(
         Vector2 Anchor,
@@ -75,7 +75,7 @@ public static class UiCalloutLayout
     }
 
     /// <summary>
-    /// Where a docked callout goes (#1137): its top at the top of <paramref name="bounds"/> less a
+    /// Where a docked callout goes: its top at the top of <paramref name="bounds"/> less a
     /// <see cref="UiSize.Space.S1"/> margin, centred on <paramref name="centreX"/> but pushed inside
     /// them sideways, or against their left side when it is wider. It does not follow its part at
     /// <paramref name="anchor"/>; only the leader does. A taller callout grows down, so its first

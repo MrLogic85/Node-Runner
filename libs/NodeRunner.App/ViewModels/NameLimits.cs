@@ -3,7 +3,7 @@ using System.Text;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// How long a name the player can give (#868): a Creation up to <see cref="Creation"/> characters,
+/// How long a name the player can give: a Creation up to <see cref="Creation"/> characters,
 /// a part up to <see cref="Part"/>, so a part's name fits inside its network labels. Name fields stop
 /// at the limit while the player types; a name the game makes, such as "Copy of {0}", is cut with
 /// <see cref="Fit"/>. A saved name that is already longer is kept until the player edits it.

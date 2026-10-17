@@ -1,8 +1,8 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// Where a selection is marked and hit, in canvas units (#710), shared by Build's gestures
-/// and the drawing in Build and Training. Every mark's centre line sits <see cref="Gap"/> outside its
+/// Where a selection is marked and hit, in canvas units, so a mark and its touch area agree.
+/// Every mark's centre line sits <see cref="Gap"/> outside its
 /// part's edge: a joint's halo ring, and a beam's and a Piston's halo lines. A joint is also hit
 /// within that ring, so its touch area follows the zoom.
 /// </summary>
@@ -12,7 +12,7 @@ public static class SelectionMarks
     public const double Gap = 3;
 
     /// <summary>
-    /// How far from its axis a link's drawn body reaches, out to a Spring's coil, the widest (#1107).
+    /// How far from its axis a link's drawn body reaches, out to a Spring's coil, the widest.
     /// A touch this close is on the link, so it ranks by draw order against the parts it overlaps.
     /// </summary>
     public const double LinkBody = 8;

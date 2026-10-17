@@ -1,15 +1,15 @@
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>One live value in a callout line (#1064): a short label and a <see cref="UiMeterBar"/>.</summary>
+/// <summary>One live value in a callout line: a short label and a <see cref="UiMeterBar"/>.</summary>
 /// <param name="Label">Shown as given, already in the player's language.</param>
 /// <param name="Value">−1…1 when <paramref name="Centred"/>, else 0…1; NaN shows no fill.</param>
 /// <param name="Centred">True for a bar centred on 0, false for one filling from empty.</param>
 public readonly record struct UiCalloutMeter(string Label, double Value, bool Centred);
 
 /// <summary>
-/// A line under a callout's caption (#1064): meters filled in one colour, at most
+/// A line under a callout's caption: meters filled in one colour, at most
 /// <see cref="MetersPerRow"/> to a row and the rest wrapping below, or one muted note. A meter
-/// line may start with a <see cref="Heading"/> naming its group (#1150).
+/// line may start with a <see cref="Heading"/> naming its group.
 /// </summary>
 public sealed record UiCalloutLine
 {

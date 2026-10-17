@@ -6,7 +6,7 @@ using NodeRunner.Ui.Widgets;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Import (#899): Paste reads a share code, the card previews its build or says why it was
+/// Import: Paste reads a share code, the card previews its build or says why it was
 /// refused, and Add to Creations saves it under the name in the Name field. The layout is authored in
 /// <c>scenes/screens/ImportScreen.tscn</c>; this script binds the presentation and forwards Back
 /// (the toolbar's, Android Back and Escape), Paste and Add.

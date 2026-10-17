@@ -6,7 +6,7 @@ namespace NodeRunner.App.Services;
 /// Serializes read-modify-write mutations to a <see cref="CreationDef"/> per
 /// id, and lets a training snapshot captured before a superseding mutation
 /// (reset, creature edit, delete) detect that and discard itself instead of
-/// resurrecting stale or incompatible training state. See #113.
+/// resurrecting stale or incompatible training state.
 /// </summary>
 public interface ICreationUpdateCoordinator
 {
@@ -35,14 +35,14 @@ public interface ICreationUpdateCoordinator
 
     /// <summary>
     /// Runs <see cref="TryPersistTraining"/> on the thread pool, after any snapshot already queued
-    /// for the same Creation, so a generation boundary never waits for file IO (#113). The task
+    /// for the same Creation, so a generation boundary never waits for file IO. The task
     /// faults if the write throws; whoever queued it reports that.
     /// </summary>
     Task PersistTrainingInBackground(Guid id, long expectedEpoch, TrainingStateDef training);
 
     /// <summary>
     /// Reads a Creation once every training snapshot queued for it has landed, so a screen that
-    /// trusts its lock or training values never reads them early (#370). Returns <c>null</c> if no
+    /// trusts its lock or training values never reads them early. Returns <c>null</c> if no
     /// such Creation exists.
     /// </summary>
     CreationDef? Get(Guid id);
@@ -52,9 +52,9 @@ public interface ICreationUpdateCoordinator
 
     /// <summary>
     /// Saves a Build edit and invalidates any pending training snapshot. The training is kept with
-    /// its network refitted to the edited creature's ports (#516, <c>DirectNetwork.Refit</c>); generation,
+    /// its network refitted to the edited creature's ports (<c>DirectNetwork.Refit</c>); generation,
     /// latest and best are kept. When given, <paramref name="openedNetwork"/> is refitted rather than
-    /// the saved network (#689, docs/CREATURE_MODEL.md → "Build refits the network it opened with").
+    /// the saved network (docs/CREATURE_MODEL.md → "Sensor–network contract").
     /// Returns <c>null</c> if no such Creation exists.
     /// </summary>
     CreationDef? ApplyEdit(Guid id, CreatureDef editedCreature, NeuralNetworkDef? openedNetwork = null);

@@ -1,8 +1,8 @@
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Agent files load in both Copilot CLI and Claude Code: docs/REVIEW.md → "Agent, rule and skill files"
-/// (#1334). The fixtures live in a temp directory, so neither tool loads them as agents.
+/// Agent files load in both Copilot CLI and Claude Code: docs/REVIEW.md → "Agent, rule and skill files".
+/// The fixtures live in a temp directory, so neither tool loads them as agents.
 /// </summary>
 public sealed class AgentFilesSpec : IDisposable
 {

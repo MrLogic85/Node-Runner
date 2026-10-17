@@ -5,7 +5,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Services;
 
 /// <summary>
-/// Adds a shared build to Creations (#899) under a new id and the name the player gave it on
+/// Adds a shared build to Creations under a new id and the name the player gave it on
 /// Import, without training or Train settings, so it trains from scratch. Like a rename in Build,
 /// the name is trimmed, cut to <see cref="NameLimits.Creation"/> and may match another creation's.
 /// </summary>

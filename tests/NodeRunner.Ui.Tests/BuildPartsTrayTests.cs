@@ -6,7 +6,7 @@ using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The Build Parts tray (#374) and the glyphs Build and Training show for parts.</summary>
+/// <summary>The Build Parts tray and the glyphs Build and Training show for parts.</summary>
 public sealed class BuildPartsTrayTests
 {
     [Fact]

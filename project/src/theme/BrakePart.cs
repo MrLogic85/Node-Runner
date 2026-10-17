@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A Brake (#1041): a caliper and disc in <c>detail</c>, as it is passive, that stands in for its
+/// A Brake: a caliper and disc in <c>detail</c>, as it is passive, that stands in for its
 /// joint's ring or a Wheel's hub (<see cref="BrakeGeometry"/>). Its caliper turns with the Fixed side
 /// and its disc with the Target side, each drawn once on its own layer behind the part, so a moving
 /// creature never redraws it and a slip shows as the hand sweeping past the pads. A Locked Brake's
@@ -57,7 +57,7 @@ public partial class BrakePart : PartVisual
         set => Change(ref _hasTarget, value);
     }
 
-    /// <summary>A Locked Brake (#1039), which holds its joint as one piece: a solid disc.</summary>
+    /// <summary>A Locked Brake, which holds its joint as one piece: a solid disc.</summary>
     public bool Locked
     {
         get => _locked;
@@ -71,7 +71,7 @@ public partial class BrakePart : PartVisual
         set => Change(ref _simplified, value);
     }
 
-    /// <summary>A Brake missing a side cannot train, so the whole part draws in danger (#1111).</summary>
+    // A Brake missing a side cannot train, so the whole part draws in danger.
     private bool Missing => !HasFixed || !HasTarget;
 
     private Color Line => Missing ? Theme.Danger : Theme.BrakeLine;

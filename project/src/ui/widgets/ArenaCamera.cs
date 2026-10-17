@@ -4,10 +4,10 @@ using NodeRunner.App.ViewModels;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The Training arena's camera (#668): it frames the followed creature through
-/// <see cref="ArenaFraming"/>, and while a part callout shows keeps a <see cref="Shelf"/> for it
-/// (#1137). The framing does all the smoothing, so the camera's own is off. See
-/// <c>docs/TRAINING_LOOP.md</c> → Camera.
+/// The Training arena's camera: it frames the followed creature through
+/// <see cref="ArenaFraming"/>, and while a part callout shows keeps a <see cref="Shelf"/> for it.
+/// The framing does all the smoothing, so the camera's own is off. See
+/// <c>docs/TRAINING_LOOP.md</c> → "The Training scene" → Camera.
 /// </summary>
 public partial class ArenaCamera : Camera2D
 {
@@ -33,7 +33,7 @@ public partial class ArenaCamera : Camera2D
     }
 
     /// <summary>
-    /// The share of the view's height the distance scale takes along the bottom (#1170): making
+    /// The share of the view's height the distance scale takes along the bottom: making
     /// room for the <see cref="Shelf"/> lowers the ground no further than its top.
     /// </summary>
     public double ScaleBand
@@ -100,9 +100,9 @@ public partial class ArenaCamera : Camera2D
         }
     }
 
-    // The camera moves on physics ticks, as the creatures do (#909): stepped every rendered frame,
-    // it moved alone on the frames between ticks of a screen faster than physics, and the world
-    // juddered against it.
+    // The camera moves on physics ticks, as the creatures do: stepped every rendered frame, it would
+    // move alone on the frames between ticks of a screen faster than physics, and the world would
+    // judder against it.
     public override void _PhysicsProcess(double delta)
     {
         if (_creature is null)

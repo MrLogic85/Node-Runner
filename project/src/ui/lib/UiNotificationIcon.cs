@@ -2,7 +2,6 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>A canonical notification glyph.</summary>
 public sealed record UiNotificationIcon
 {
     private readonly UiIconId _icon;

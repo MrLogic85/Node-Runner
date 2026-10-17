@@ -5,11 +5,11 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A Wheel (#129) on its joint, unfilled in every theme: an opaque <c>detail</c> tyre whose outer
+/// A Wheel on its joint, unfilled in every theme: an opaque <c>detail</c> tyre whose outer
 /// edge is the collision radius, with a fine line <see cref="TyreWidth"/> inside it, and see-through
-/// within that, so it never hides what lies under it (#1086); and <see cref="CueCount"/> tubes in
+/// within that, so it never hides what lies under it; and <see cref="CueCount"/> tubes in
 /// the tyre band that turn with the part, so a rolling wheel reads as rolling. Its links are drawn over it to the hub,
-/// which its joint draws over them (<see cref="DrawHub"/>, #1086). Its joint draws its selection
+/// which its joint draws over them (<see cref="DrawHub"/>). Its joint draws its selection
 /// mark too, with the hub over the links (<see cref="JointPart.WheelSelected"/>). Training hangs it on the
 /// wheel's body, so its own rotation is the wheel's; Build shows it at rotation 0.
 /// </summary>
@@ -52,7 +52,7 @@ public partial class WheelPart : PartVisual
         set => Change(ref _radius, value);
     }
 
-    /// <summary>A Training shadow's look (#664): the tyre ring at the edge only, no cue or hub.</summary>
+    /// <summary>A Training shadow's look: the tyre ring at the edge only, no cue or hub.</summary>
     public bool Simplified
     {
         get => _simplified;
@@ -81,7 +81,7 @@ public partial class WheelPart : PartVisual
     public static float TyreRingRadius(float radius, float ringWidth) => radius - (ringWidth / 2);
 
     /// <summary>
-    /// The passive hub, drawn by the Wheel's joint over the links that reach it (#1086): an opaque
+    /// The passive hub, drawn by the Wheel's joint over the links that reach it: an opaque
     /// disc, its ring and the axle dot, all in <c>danger</c> while <paramref name="loose"/>.
     /// </summary>
     public static void DrawHub(UiPixelPen pen, VisualTheme theme, bool loose)

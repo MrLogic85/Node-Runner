@@ -3,9 +3,9 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The accelerometer's pure math (#127): a proof mass on a damped spring in its beam's sensor
+/// The accelerometer's pure math: a proof mass on a damped spring in its beam's sensor
 /// frame. Forces are specific forces in g; the frame's X is along the beam and Y is up as built.
-/// Stateless and shared by the sim and the visual (#576).
+/// Stateless.
 /// See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class Accelerometer
@@ -54,11 +54,11 @@ public static class Accelerometer
             Math.Tanh(-state.Displacement.X / ReferenceDisplacement),
             Math.Tanh(-state.Displacement.Y / ReferenceDisplacement));
 
-    /// <summary>How far 1 g moves the drawn weight, as a share of its travel from the frame's centre (#576).</summary>
+    /// <summary>How far 1 g moves the drawn weight, as a share of its travel from the frame's centre.</summary>
     public const double WeightTravelPerG = 0.5;
 
     /// <summary>
-    /// Where the drawn weight sits (#576): the proof-mass displacement in units of the weight's
+    /// Where the drawn weight sits: the proof-mass displacement in units of the weight's
     /// travel from the frame's centre, clamped to -1…1 per axis. X is along the beam and Y is down
     /// the picture, so a level beam at rest gives (0, <see cref="WeightTravelPerG"/>).
     /// </summary>
@@ -84,7 +84,7 @@ public static class Accelerometer
     /// <summary>
     /// The specific force, in g, on a point moving with world <paramref name="acceleration"/>
     /// (y down) under <paramref name="gravity"/>, both in world units per second squared: at rest
-    /// it is (0, -1), 1 g up. The sim and Build's moving weight (#576) both start here.
+    /// it is (0, -1), 1 g up.
     /// </summary>
     public static Vector2D SpecificForce(Vector2D acceleration, double gravity)
     {

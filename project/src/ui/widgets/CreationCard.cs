@@ -53,7 +53,7 @@ public partial class CreationCard : MarginContainer
 
     // A tap on the card, outside its action buttons, opens it on release. Drag-scrolling the card
     // row sends ScrollBegin, which cancels the tap as Godot cancels a Button press in a ScrollContainer.
-    // While the tap would open the card, the card shows the press tint (#325).
+    // While the tap would open the card, the card shows the press tint.
     public override void _GuiInput(InputEvent inputEvent)
     {
         if (PointerInput.TryGetPressPosition(inputEvent, out var pressed))

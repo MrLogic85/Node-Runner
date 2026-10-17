@@ -5,8 +5,8 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// What every shared part visual has (#767): its theme, whether it is selected, and its place on
-/// a <see cref="CreatureLayers"/> layer. A part in a draw group (#1107) takes its layer from its
+/// What every shared part visual has: its theme, whether it is selected, and its place on
+/// a <see cref="CreatureLayers"/> layer. A part in a draw group takes its layer from its
 /// <see cref="DrawSlot"/>, the group <see cref="Place"/> finds for it and its surface: while
 /// selected or raised it moves to the selected surface. A part draws its selection mark in its
 /// own drawing. The parts take plain visual state only,
@@ -41,7 +41,7 @@ public partial class PartVisual : Node2D
     }
 
     /// <summary>
-    /// Puts the part in its draw group in <paramref name="groups"/> (#1107): a link's or sensor's
+    /// Puts the part in its draw group in <paramref name="groups"/>: a link's or sensor's
     /// by the link id <paramref name="ownerId"/>, a joint part's by its joint id, in its own
     /// <see cref="DrawSlot"/>. A <paramref name="raised"/> part draws on the selected surface
     /// without being selected (<see cref="DrawGroups.Raised"/>).
@@ -61,7 +61,7 @@ public partial class PartVisual : Node2D
 
     /// <summary>
     /// Adds a child for a part that draws in a second <see cref="DrawSlot"/> as well as its own, such
-    /// as a joint's bands under the hinge part on it (#1269). The child keeps to
+    /// as a joint's bands under the hinge part on it. The child keeps to
     /// <paramref name="slot"/> of the part's draw group, and rises with the part to the selected
     /// surface. The part draws on it from the child's <c>Draw</c> signal.
     /// </summary>

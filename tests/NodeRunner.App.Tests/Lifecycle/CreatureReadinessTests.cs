@@ -8,7 +8,7 @@ public sealed class CreatureReadinessTests
 {
     private const string _missingSide = "{0} is missing a side. Pick its Fixed and Target parts or delete it.";
 
-    // One row per problem a drawing can have; a drawing with none trains, even if nothing moves (#845).
+    // One row per problem a drawing can have; a drawing with none trains, even if nothing moves.
     [Theory]
     [InlineData("empty")]
     [InlineData("loose joint and zero-length beam")]
@@ -29,8 +29,8 @@ public sealed class CreatureReadinessTests
         CreatureReadiness.CanTrain(creature).ShouldBe(expected.Length == 0);
     }
 
-    // #1212: 26 free units between what covers each end, a hub (15) or a joint motor (27), and 16 more for
-    // a Piston's or Spring's telescope (#1210).
+    // 26 free units between what covers each end, a hub (15) or a joint motor (27), and 16 more for
+    // a Piston's or Spring's telescope.
     [Theory]
     [InlineData(CreatureElementKind.Beam, 0, 55.9, false)]
     [InlineData(CreatureElementKind.Beam, 0, 56, true)]
@@ -61,7 +61,7 @@ public sealed class CreatureReadinessTests
         problems.Contains(tooShort).ShouldBe(!fits);
     }
 
-    // #1212: only a joint motor covers a link's end beyond the hub; a Wheel lies under its links (#1086).
+    // Only a joint motor covers a link's end beyond the hub; a Wheel lies under its links.
     [Fact]
     public void IsTooShort_IgnoresWheelsBrakesTouchSensorsAndRubbers_AndOnlyLinksHaveAMinimum()
     {
@@ -119,7 +119,7 @@ public sealed class CreatureReadinessTests
                 var servo = new CreatureDef(corner, cornerBeams, [], [new ServoDef(6, 1, null, 5)], [], [], nextPartId: 7);
                 return (servo, [UiText.Format(_missingSide, PartNames.Display(servo.Parts, 6))]);
 
-            // A Brake takes its sides by the Servo's rules (#1039), so one with a deleted side cannot train either.
+            // A Brake takes its sides by the Servo's rules, so one with a deleted side cannot train either.
             case "brake missing a side":
                 return (
                     new CreatureDef(corner, cornerBeams, [], [], [], [], [], [], [], [], [new BrakeDef(6, 1, 4, null)], nextPartId: 7),
@@ -130,7 +130,7 @@ public sealed class CreatureReadinessTests
                     "{0} needs two links, or a link and a Wheel, at its joint. Connect another link or add a Wheel there, or delete it.",
                     PartNames.Display(oneLink.Parts, 6))]);
 
-            // A link and the Wheel, a one-sided link, are its two sides (#1118).
+            // A link and the Wheel, a one-sided link, are its two sides.
             case "servo turning its joint's wheel":
                 return (new CreatureDef(corner[..2], [cornerBeams[0]], [], [new ServoDef(6, 1, 4, 7)], [], [], [new WheelDef(7, 1)], nextPartId: 8), []);
             default:

@@ -8,7 +8,7 @@ using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Hosts;
 
-/// <summary>What the scenes that change saved creations (Creations, Examples, Build) share.</summary>
+/// <summary>What the scenes that change saved creations share.</summary>
 internal static class CreationActions
 {
     /// <summary>Runs a save-file change; a recoverable file error is logged and returns false.</summary>
@@ -26,12 +26,12 @@ internal static class CreationActions
         }
     }
 
-    /// <summary>Copies a creation; a failure shows the shared "Copy failed" notification (#1013) and returns null.</summary>
+    /// <summary>Copies a creation; a failure shows the shared "Copy failed" notification and returns null.</summary>
     public static CreationDef? TryCopy(Node from, string name, Func<CreationDef> copy) =>
         TryAdd(from, name, copy, $"Copying Creation '{name}'", "Copy failed", UiIconId.Copy, $"creation.copy.failed.{name}",
             UiTextTranslation.Source(UiText.Format("Could not copy {0}. Try again.", name)));
 
-    /// <summary>Adds a shared build (#899); a failure shows "Import failed" and returns null.</summary>
+    /// <summary>Adds a shared build; a failure shows "Import failed" and returns null.</summary>
     public static CreationDef? TryImport(Node from, string name, Func<CreationDef> import) =>
         TryAdd(from, name, import, $"Importing Creation '{name}'", "Import failed", UiIconId.Paste, $"creation.import.failed.{name}",
             UiTextTranslation.Source(UiText.Format("Could not add {0}. Try again.", name)));
@@ -65,7 +65,7 @@ internal static class CreationActions
             },
             $"Deleting Creation '{name}'");
 
-    /// <summary>The reference's Delete dialog: danger, no Undo, confirmed with a tap (#866).</summary>
+    /// <summary>The reference's Delete dialog: danger, no Undo, confirmed with a tap.</summary>
     public static UiDialogSpec DeleteDialog(string name, Func<bool> delete) =>
         new(
             UiPopupType.Danger,
@@ -80,7 +80,7 @@ internal static class CreationActions
             TitleSource = UiTextTranslation.Source(UiText.Format("Delete {0}?", name)),
         };
 
-    /// <summary>The reference's "One reset" dialog (#687): losing training is danger, confirmed with a tap (#866).</summary>
+    /// <summary>The reference's "One reset" dialog: losing training is danger, confirmed with a tap.</summary>
     public static UiDialogSpec ResetTrainingDialog(Func<string> warning, Func<bool> reset) =>
         new(
             UiPopupType.Danger,
@@ -96,7 +96,7 @@ internal static class CreationActions
         };
 
     /// <summary>
-    /// Unlocking keeps the training (#371): it only opens the body for this Build visit, so a plain
+    /// Unlocking keeps the training: it only opens the body for this Build visit, so a plain
     /// confirm is enough.
     /// </summary>
     public static UiDialogSpec UnlockDialog(string name, Action unlock) =>

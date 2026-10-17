@@ -1,7 +1,7 @@
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Checks the rule files in .claude/rules: docs/REVIEW.md → "Agent, rule and skill files" (#1315). A rule
+/// Checks the rule files in .claude/rules: docs/REVIEW.md → "Agent, rule and skill files". A rule
 /// whose glob matches nothing never loads, and nothing else notices when its folder moves.
 /// </summary>
 internal static class RuleFiles

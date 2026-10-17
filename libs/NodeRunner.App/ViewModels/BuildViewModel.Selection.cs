@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The selection half of <see cref="BuildViewModel"/>: which parts are selected (#704), selecting
+/// The selection half of <see cref="BuildViewModel"/>: which parts are selected, selecting
 /// and clearing them, and the move, turn and scale of the selected joints in any tool.
 /// </summary>
 public sealed partial class BuildViewModel
@@ -83,7 +83,7 @@ public sealed partial class BuildViewModel
 
     public int? SingleSelectedStepperId => Single(_selectedStepperIds);
 
-    /// <summary>A copy of everything selected (#704).</summary>
+    /// <summary>A copy of everything selected.</summary>
     public PartSet Selection => new(
         _selectedNodeIds.ToHashSet(),
         _selectedBeamIds.ToHashSet(),
@@ -101,13 +101,13 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// The joints the selection moves: the selected joints and the joints under selected joint
-    /// parts, Servos, Velocity motors, Steppers, Brakes, Angle sensors, Wheels, Touch sensors and Rubbers, since to the player a joint part is its joint (#973).
+    /// parts, Servos, Velocity motors, Steppers, Brakes, Angle sensors, Wheels, Touch sensors and Rubbers, since to the player a joint part is its joint.
     /// </summary>
     public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0 && _selectedRubberIds.Count == 0 && _selectedVelocityMotorIds.Count == 0 && _selectedBrakeIds.Count == 0 && _selectedAngleSensorIds.Count == 0 && _selectedStepperIds.Count == 0
         ? _selectedNodeIds
         : _selectedNodeIds.Union(SelectedJointPartJoints()).ToHashSet();
 
-    /// <summary>Adds the part to the selection, or removes it if it is already selected (#704).</summary>
+    /// <summary>Adds the part to the selection, or removes it if it is already selected.</summary>
     public void ToggleSelected(CreatureElementSelection element)
     {
         ArgumentNullException.ThrowIfNull(element);
@@ -126,7 +126,7 @@ public sealed partial class BuildViewModel
     }
 
     /// <summary>
-    /// A tap on joint <paramref name="nodeId"/> (#1044): a bare joint is added or removed. A joint
+    /// A tap on joint <paramref name="nodeId"/>: a bare joint is added or removed. A joint
     /// with parts steps down its stack (<see cref="JointPartsAt"/>, top → down): with none of them
     /// selected it adds the top one; otherwise it swaps the deepest selected one for the next, or,
     /// past the last, removes them all.
@@ -226,7 +226,7 @@ public sealed partial class BuildViewModel
     private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
 
     // The joints under the selected joint parts, motors, Steppers, Brakes, Angle sensors, Wheels, Rubbers and Touch sensors.
-    // Each joint once, though several parts of a stack can be selected (#1044).
+    // Each joint once, though several parts of a stack can be selected.
     private HashSet<int> SelectedJointPartJoints() =>
     [
         .. _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId),
@@ -248,7 +248,7 @@ public sealed partial class BuildViewModel
         }
     }
 
-    // A joint part stands in for its joint (#973), also when Undo or Redo brings one back under a kept joint selection.
+    // A joint part stands in for its joint, also when Undo or Redo brings one back under a kept joint selection.
     private void SelectJointPartsInsteadOfTheirJoints()
     {
         foreach (var servo in _builder.Servos)
@@ -440,7 +440,7 @@ public sealed partial class BuildViewModel
         _shownRefusalNotes = [];
         if (SelectedPartCount > 0)
         {
-            // A selection replaces the tray, so a pick it would hide is dropped, not kept out of sight (#805).
+            // A selection replaces the tray, so a pick it would hide is dropped, not kept out of sight.
             ClearPickedPart();
         }
 

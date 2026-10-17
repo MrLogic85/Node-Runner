@@ -32,7 +32,7 @@ public sealed record CreationDef
 
     public TrainingStateDef? Training { get; }
 
-    /// <summary>Train setup's last Start for this Creation; <c>null</c> until then (#617).</summary>
+    /// <summary>Train setup's last Start for this Creation; <c>null</c> until then.</summary>
     public TrainSettingsDef? TrainSettings { get; }
 
     public CreationDef WithName(string name) => new(Id, name, Creature, Training, TrainSettings);

@@ -8,7 +8,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Repositories;
 
-/// <summary>Why a pasted share code was refused (#899).</summary>
+/// <summary>Why a pasted share code was refused.</summary>
 public enum ShareCodeRefusal
 {
     /// <summary>Nothing but white space was pasted.</summary>
@@ -29,7 +29,7 @@ public enum ShareCodeRefusal
 
 /// <summary>
 /// A read share code: the build it holds, or why it was refused. <paramref name="UpdatedFrom"/> is
-/// the format version of a code older than this app's, which its build was migrated from (#1094).
+/// the format version of a code older than this app's, which its build was migrated from.
 /// </summary>
 public sealed record ShareCodeRead(CreationDef? Build, ShareCodeRefusal? Refusal, int? UpdatedFrom = null)
 {
@@ -37,9 +37,9 @@ public sealed record ShareCodeRead(CreationDef? Build, ShareCodeRefusal? Refusal
 }
 
 /// <summary>
-/// A Creation's build as one text to copy and paste (#899): <c>NR6.</c> and its <c>creation.json</c>,
-/// build only, rounded, renumbered and without what its version's share dictionary already says
-/// (#1094), compressed against that dictionary, in URL-safe base64. It goes through the same
+/// A Creation's build as one text to copy and paste: <c>NR6.</c> and its <c>creation.json</c>,
+/// build only, rounded, renumbered and without what its version's share dictionary already says,
+/// compressed against that dictionary, in URL-safe base64. It goes through the same
 /// migrations as a saved file. docs/SAVE_FORMAT.md → "Share code" owns the format.
 /// </summary>
 public static class CreationShareCode

@@ -1,6 +1,6 @@
 namespace NodeRunner.App.Navigation;
 
-/// <summary>Opens scenes and goes back through the history. The <c>SceneRouter</c> autoload implements it.</summary>
+/// <summary>Opens scenes and goes back through the history.</summary>
 public interface ISceneNavigator
 {
     void Navigate(SceneNavigation navigation);

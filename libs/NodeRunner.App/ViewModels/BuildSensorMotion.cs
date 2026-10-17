@@ -3,11 +3,11 @@ using NodeRunner.Mechanics;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>Where an Accelerometer's beam is this frame in Build: its sensor's centre (#1086), rotation and built up side.</summary>
+/// <summary>Where an Accelerometer's beam is this frame in Build: its sensor's centre, rotation and built up side.</summary>
 public readonly record struct SensorPose(int SensorId, Vector2D Centre, double Rotation, int UpSign);
 
 /// <summary>
-/// Moves each Accelerometer's weight in Build as its beam is dragged or turned (#576). Every frame
+/// Moves each Accelerometer's weight in Build as its beam is dragged or turned. Every frame
 /// the canvas passes each beam's pose; the sensor's acceleration plus gravity drives the same
 /// <see cref="Accelerometer"/> proof mass the sim uses, so the weight swings and then settles. A
 /// sensor seen for the first time, or whose beam's up side flipped, starts at rest.

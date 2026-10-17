@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Creature;
 
 // Where the creature is, for the trial's score and the camera: its centre, bounds and lowest point, all
-// from one read of its bodies per physics tick. After a tear (#962) they follow the main piece
+// from one read of its bodies per physics tick. After a tear they follow the main piece
 // (Creature.Tears.cs).
 public partial class Creature
 {
@@ -17,9 +17,9 @@ public partial class Creature
     /// node collider. An intact beam has no collider; a torn beam's shape is left
     /// out on purpose: the score freezes at the first tear, and after it only the
     /// blow-up check reads this, which follows the main piece's nodes
-    /// (docs/TRAINING_LOOP.md → Trial → Tears, #1288). Godot's Y grows downward, so this
+    /// (docs/TRAINING_LOOP.md → Trial → Tears). Godot's Y grows downward, so this
     /// is the largest Y. Returns negative infinity for a creature with no nodes.
-    /// After a tear (#962), of the main piece's nodes only.
+    /// After a tear, of the main piece's nodes only.
     /// </summary>
     public float LowestPointY
     {
@@ -43,9 +43,9 @@ public partial class Creature
 
     /// <summary>
     /// The box around the creature's node colliders, in global coordinates: what the Training
-    /// camera fits in view (#675). Intact beams run between nodes, so the nodes bound them; the
+    /// camera fits in view. Intact beams run between nodes, so the nodes bound them; the
     /// free tip of a torn beam is left out, as in <see cref="LowestPointY"/>. An empty
-    /// rectangle for a creature with no nodes. After a tear (#962), round the main piece's nodes only.
+    /// rectangle for a creature with no nodes. After a tear, round the main piece's nodes only.
     /// </summary>
     public Rect2 Bounds
     {
@@ -69,7 +69,7 @@ public partial class Creature
 
     /// <summary>
     /// The creature's centre: the average position of its nodes, which every creature has, whatever
-    /// links join them (#1303). Vector2.Zero for a creature with no nodes. After a tear (#962), of
+    /// links join them. Vector2.Zero for a creature with no nodes. After a tear, of
     /// the main piece's nodes only.
     /// </summary>
     public Vector2 Centre
@@ -102,7 +102,7 @@ public partial class Creature
 
     // Reads every body's place once per physics tick, in global coordinates. Within a tick nothing moves
     // a body but a reset, which reads again, so the trial's sample, the camera and the tear check all
-    // share one read (#1256): each read crosses into Godot, and with every shadow's every body it adds up.
+    // share one read: each read crosses into Godot, and with every shadow's every body it adds up.
     // Outside a physics tick it reads afresh, as the step may have moved them.
     private void ReadBodies()
     {

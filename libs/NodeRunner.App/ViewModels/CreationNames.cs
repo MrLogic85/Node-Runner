@@ -1,7 +1,7 @@
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The name an example copied into Creations gets (#840): its own name, or "Copy of …" when a
+/// The name an example copied into Creations gets: its own name, or "Copy of …" when a
 /// creation already has that name, compared as the player reads it (case ignored). A duplicate is
 /// always a "Copy of …".
 /// </summary>

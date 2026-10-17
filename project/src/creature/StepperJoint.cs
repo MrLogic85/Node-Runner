@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Stepper (#1037) between the two <see cref="HingePartSides"/> at its joint: it holds the Target at
+/// A Stepper between the two <see cref="HingePartSides"/> at its joint: it holds the Target at
 /// a notch against the Fixed side and, at the network's frequency, steps it to the next notch the way the
 /// frequency's sign says (<see cref="Mechanics.Stepper"/>). It holds every tick, with or without a network:
 /// while locked it welds the sides at the notch, and lets the weld go as it steps on. Where no weld
@@ -28,11 +28,11 @@ public sealed class StepperJoint
 
     public HingePartSides Sides { get; }
 
-    /// <summary>Its state as of the last tick, which its visual shows (#1067).</summary>
+    /// <summary>Its state as of the last tick, which its visual shows.</summary>
     public Mechanics.StepperState State => _state;
 
     /// <summary>
-    /// Whether its Fixed or Target beam has torn at either end (#962): it then lets go of its weld and
+    /// Whether its Fixed or Target beam has torn at either end: it then lets go of its weld and
     /// drives nothing, and its network inputs keep the values they last had (Creature.Tears).
     /// </summary>
     public bool IsPassive { get; private set; }
@@ -46,7 +46,7 @@ public sealed class StepperJoint
     /// <summary>The angle between the sides as its sine and cosine, as a Velocity motor's.</summary>
     public (double Sin, double Cos) AngleInputs => Mechanics.Stepper.AngleInputs(Sides.ContinuousAngle);
 
-    /// <summary>Its tick as of the last physics step: 0 as it steps, rising to 1 just before its next (#1263).</summary>
+    /// <summary>Its tick as of the last physics step: 0 as it steps, rising to 1 just before its next.</summary>
     public double TickInput => Mechanics.Stepper.TickInput(_state);
 
     /// <param name="frequencyOutput">The network's Frequency output, −1…1 of its Max frequency, counter-clockwise positive.</param>
@@ -72,7 +72,7 @@ public sealed class StepperJoint
         {
             if (_state.Locked)
             {
-                // It catches the joint up to a tick past its notch, so the weld turns it back onto it (#1272).
+                // It catches the joint up to a tick past its notch, so the weld turns it back onto it.
                 _weld.Weld(angle - Mechanics.Stepper.NotchAngle(_state.Notch, Definition));
             }
             else

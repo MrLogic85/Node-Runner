@@ -84,7 +84,7 @@ public abstract partial class GalleryScreen : Control, IRoutedScene
         }
     }
 
-    // The theme goes on before the children are ready so they measure against it (#301).
+    // The theme goes on before the children are ready so they measure against it.
     public override void _EnterTree()
     {
         ApplyTheme();

@@ -1,7 +1,7 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// What a <see cref="NetworkPort"/> carries (#535). An input is a reading; an output says which
+/// What a <see cref="NetworkPort"/> carries. An input is a reading; an output says which
 /// physical signal it drives, which fixes its activation and how a new port starts
 /// (<see cref="PortSignals"/>).
 /// </summary>
@@ -10,7 +10,7 @@ public enum PortSignal
     /// <summary>An input: a sensor or motor reading.</summary>
     Reading,
 
-    /// <summary>A speed to chase, −1…1 of the maximum, as the Velocity motor's target (#454).</summary>
+    /// <summary>A speed to chase, −1…1 of the maximum, as the Velocity motor's target.</summary>
     Velocity,
 
     /// <summary>
@@ -21,7 +21,7 @@ public enum PortSignal
 
     /// <summary>
     /// A length to reach, 0…1 of the part's travel: for a Piston 0 is its shortest and 1 its longest
-    /// length, like its length input (<c>Piston.TargetLength</c> in NodeRunner.Mechanics, #1129).
+    /// length, like its length input (<c>Piston.TargetLength</c> in NodeRunner.Mechanics).
     /// </summary>
     Length,
 
@@ -30,7 +30,7 @@ public enum PortSignal
 
     /// <summary>
     /// How often to step and which way, −1…1 of the part's Max frequency, counter-clockwise positive, as a
-    /// Stepper's (#1036, #1263). At 0 it does not step.
+    /// Stepper's. At 0 it does not step.
     /// </summary>
     Frequency,
 }

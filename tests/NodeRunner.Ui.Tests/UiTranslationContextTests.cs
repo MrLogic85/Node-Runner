@@ -5,7 +5,7 @@ namespace NodeRunner.Ui.Tests;
 
 /// <summary>
 /// Godot does not pass a Control's <c>translation_context</c> on to its children, so a library
-/// component that shows its own text through an inner control hands its context on (#777).
+/// component that shows its own text through an inner control hands its context on.
 /// </summary>
 public sealed class UiTranslationContextTests
 {

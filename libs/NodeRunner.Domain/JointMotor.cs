@@ -1,12 +1,12 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// What every joint motor, a Servo or a Velocity motor (<see cref="IJointMotorDef"/>), shares. A
-/// <see cref="BrakeDef"/> (#1039) and an <see cref="AngleSensorDef"/> (#1204) take their sides by the same rules.
+/// What every joint motor (<see cref="IJointMotorDef"/>) shares. A
+/// <see cref="BrakeDef"/> and an <see cref="AngleSensorDef"/> take their sides by the same rules.
 /// </summary>
 public static class JointMotor
 {
-    /// <summary>A joint motor's visible/collision joint radius, about 11/6 of a plain joint (#452).</summary>
+    /// <summary>A joint motor's visible/collision joint radius, about 11/6 of a plain joint.</summary>
     public const double Radius = 27;
 
     /// <summary>
@@ -22,7 +22,7 @@ public static class JointMotor
     /// <summary>
     /// A new motor's Fixed and Target on a joint with <paramref name="linksAtJoint"/> and
     /// <paramref name="wheel"/>: the two lowest-id links, or with fewer the link as Fixed and the
-    /// Wheel as Target (#1118). A role nothing fills stays empty.
+    /// Wheel as Target. A role nothing fills stays empty.
     /// </summary>
     public static (int? Fixed, int? Target) DefaultSides(IEnumerable<LinkRef> linksAtJoint, WheelDef? wheel)
     {

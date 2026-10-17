@@ -114,7 +114,7 @@ public sealed class BuildJointPartTests
         build.Undo();
         build.Snapshot().Parts.Single(other => other.Id == id).Name.ShouldBeNull();
 
-        // A joint holding a part is not bare, so a delete of its links keeps it (#973); the part goes with its joint.
+        // A joint holding a part is not bare, so a delete of its links keeps it; the part goes with its joint.
         build.ReplaceSelection(Set(Beam(4), Beam(5)));
         build.DeleteSelectedParts();
         build.JointPartsAt(2).ShouldBe([placed]);
@@ -445,7 +445,7 @@ public sealed class BuildJointPartTests
         build.Brakes.Single().Strength.ShouldBe(1500000);
         build.Redo();
 
-        // Only a Brake's Strength may be infinite, and only upward: Locked (#1041).
+        // Only a Brake's Strength may be infinite, and only upward: Locked.
         Should.Throw<ArgumentOutOfRangeException>(() => build.SetParameter(PartParameterId.BrakeStrength, double.NaN));
         Should.Throw<ArgumentOutOfRangeException>(() => build.SetParameter(PartParameterId.BrakeStrength, double.NegativeInfinity));
         Should.Throw<ArgumentOutOfRangeException>(() => build.SetParameter(PartParameterId.MotorStrength, double.PositiveInfinity));
@@ -484,14 +484,14 @@ public sealed class BuildJointPartTests
         build.SetParameter(PartParameterId.MotorMaxSpeed, 2.0);
         build.VelocityMotors.Select(motor => motor.MaxSpeed).ShouldBe([2.0, 2.0]);
 
-        // A Servo's and a Piston's Max speed are other settings, so a Motor shares none with them (#1189).
+        // A Servo's and a Piston's Max speed are other settings, so a Motor shares none with them.
         foreach (var other in new CreatureElementSelection[] { new(CreatureElementKind.Servo, 10), new(CreatureElementKind.Piston, 11) })
         {
             build.ReplaceSelection(Set(new(CreatureElementKind.VelocityMotor, 8), other));
             new BuildPresentationViewModel(build).Selection!.Settings.Select(slider => slider.Id).ShouldBe([PartParameterId.RiseTime]);
         }
 
-        // A Stepper's Max strength is the Servo's setting (#1036).
+        // A Stepper's Max strength is the Servo's setting.
         build.ReplaceSelection(Set(new(CreatureElementKind.Servo, 10), new(CreatureElementKind.Stepper, 14)));
         new BuildPresentationViewModel(build).Selection!.BasicSettings.Select(slider => slider.Id).ShouldContain(PartParameterId.ServoStrength);
         build.SetParameter(PartParameterId.ServoStrength, 400000);
@@ -559,7 +559,7 @@ public sealed class BuildJointPartTests
         gestures.Tap(new Vector2D(50, 60));
         build.SingleSelectedWheelId.ShouldBe(6);
 
-        // #1143 (owner's choice): the disc wins over adding a joint and over clearing the picked link.
+        // By design, the disc wins over adding a joint and over clearing the picked link.
         foreach (var tool in new[] { BuildTool.Joint, BuildTool.Beam })
         {
             build.ClearSelection();
@@ -576,7 +576,7 @@ public sealed class BuildJointPartTests
         build.SelectedPartCount.ShouldBe(0);
         gestures.DropTargetAt(new Vector2D(150, 50), BuildPart.Camera).ShouldBeNull();
 
-        // #1107, #1086: a beam crossing a Wheel draws over its face, so a touch hits the beam there.
+        // A beam crossing a Wheel draws over its face, so a touch hits the beam there.
         var crossing = build.ConnectLink(BuildLink.Beam, build.PlaceNode(new Vector2D(60, -50)), build.PlaceNode(new Vector2D(60, 50)))!.Value;
         build.ClearSelection();
         gestures.DropTargetAt(new Vector2D(60, 0), BuildPart.Camera).ShouldBe(Beam(crossing));
@@ -602,7 +602,7 @@ public sealed class BuildJointPartTests
         CanvasNoteTargets.JointIds(new CreatureElementSelection(CreatureElementKind.Wheel, second), build).ShouldBe([2]);
         build.SetParameter(PartParameterId.WheelRadius, WheelDef.MaxRadius);
 
-        // #1086, #1212: a Wheel lies under its links, so even the biggest Wheels on both ends leave it long enough.
+        // A Wheel lies under its links, so even the biggest Wheels on both ends leave it long enough.
         CreatureReadiness.IsTooShort(build.Snapshot(), CreatureElementKind.Beam, 1, 2).ShouldBeFalse();
         CreatureReadiness.Problems(build.Snapshot()).ShouldBeEmpty();
         build.SelectOnly(CreatureElementKind.Wheel, first);

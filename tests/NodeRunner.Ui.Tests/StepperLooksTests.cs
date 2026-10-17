@@ -3,7 +3,7 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>How a Stepper's motion shows on its detent wheel (#1067, <c>docs/WORLD_VISUALS.md</c> → Stepper).</summary>
+/// <summary>How a Stepper's motion shows on its detent wheel (<c>docs/WORLD_VISUALS.md</c> → Stepper).</summary>
 public sealed class StepperLooksTests
 {
     private const int _steps = 8;

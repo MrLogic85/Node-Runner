@@ -3,8 +3,8 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// How one part kind shows (#1223): the Part settings <see cref="Title"/>, which says what the part is even when it is
-/// renamed; the <see cref="DefaultName"/> of the nth part of its kind, which fits in <see cref="NameLimits.Part"/> (#868);
+/// How one part kind shows: the Part settings <see cref="Title"/>, which says what the part is even when it is
+/// renamed; the <see cref="DefaultName"/> of the nth part of its kind, which fits in <see cref="NameLimits.Part"/>;
 /// and every network port its parts can have (<see cref="Ports"/>). <see cref="PartKindDisplays.All"/> holds one per
 /// <see cref="PartKind"/>.
 /// </summary>
@@ -28,7 +28,7 @@ public sealed record PartKindDisplay(
 /// text. <see cref="Label"/> is its full name, which NetworkFocus shows: one whole template with the part's name as
 /// <c>{0}</c>, such as "Piston 1: speed", whose space after the colon is a no-break space so a sentence that names the
 /// port does not wrap inside it (naming rule: docs/CREATURE_MODEL.md, Sensor–network contract). <see cref="ShortLabel"/>
-/// is what the part callout calls it beside its live bar, and <see cref="Range"/> the range that bar draws (#1064).
+/// is what the part callout calls it beside its live bar, and <see cref="Range"/> the range that bar draws.
 /// </summary>
 public sealed record PortDisplay(PortDirection Direction, string Channel, Func<UiText, UiText> Label, UiText ShortLabel, PortRange Range);
 

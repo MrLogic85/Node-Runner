@@ -5,16 +5,16 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Builders;
 
 /// <summary>
-/// The Steppers (#1036): joint motors that share a joint's hinge-part slot with a Servo, a Velocity motor,
-/// a Brake and an Angle sensor and take their sides by the Servo's rules (#1118). Their Max strength is
-/// the Servo's setting, so it edits together with a selected Servo's (#1038).
+/// The Steppers: joint motors that share a joint's hinge-part slot with a Servo, a Velocity motor,
+/// a Brake and an Angle sensor and take their sides by the Servo's rules. Their Max strength is
+/// the Servo's setting, so it edits together with a selected Servo's.
 /// </summary>
 public sealed partial class CreatureBuilder
 {
-    /// <summary>Why a Stepper dropped on anything but a joint is refused (#1038).</summary>
+    /// <summary>Why a Stepper dropped on anything but a joint is refused.</summary>
     public static UiText SteppersGoOnAJointReason { get; } = UiText.Plain("Steppers go on a joint");
 
-    /// <summary>Why a Stepper cannot work yet: it needs two sides at its joint (#1118).</summary>
+    /// <summary>Why a Stepper cannot work yet: it needs two sides at its joint.</summary>
     public static UiText StepperNeedsTwoSidesReason { get; } = UiText.Plain("A Stepper needs two links, or a link and a Wheel");
 
     private static readonly PartParameterId[] _stepperParameters = [PartParameterId.ServoStrength, PartParameterId.StepsPerTurn, PartParameterId.MaxFrequency];
@@ -74,7 +74,6 @@ public sealed partial class CreatureBuilder
     public void SetStepperLink(int stepperId, bool fixedRole, int linkId) =>
         SetSide(_steppers, StepperIndexOf(stepperId), fixedRole, linkId, (stepper, fixedLink, targetLink) => stepper.WithLinks(fixedLink, targetLink));
 
-    /// <summary>Removes a Stepper by id.</summary>
     public void RemoveStepper(int stepperId) => _steppers.RemoveAt(StepperIndexOf(stepperId));
 
     public int StepperIndexOf(int stepperId)

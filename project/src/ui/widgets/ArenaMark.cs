@@ -5,10 +5,10 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// A mark that stands on the Training arena's ground at a distance on the ruler: the best marker
-/// (#388), which keeps its screen size at any zoom, and the start sign (#848), which is half a metre tall in
-/// the world (#882). It is a child of the
-/// ground, and it fades back like a shadow while a part's name is shown, which may cover it.
+/// A mark that stands on the Training arena's ground at a distance on the ruler: the best marker,
+/// which keeps its screen size at any zoom, and the start sign, which is half a metre tall in the
+/// world. It is a child of the ground, and it fades back like a shadow while a part's name is
+/// shown, which may cover it.
 /// </summary>
 public abstract partial class ArenaMark : Node2D
 {
@@ -52,7 +52,7 @@ public abstract partial class ArenaMark : Node2D
 
     /// <summary>
     /// Ground units per UI unit in <paramref name="view"/>: how much to scale a mark back up by as
-    /// the camera zooms out. The arena view undoes the UI size (#738), so this applies it again.
+    /// the camera zooms out. The arena view undoes the UI size, so this applies it again.
     /// </summary>
     protected float ScreenScale(Rect2 view) => view.Size.X / GetViewportRect().Size.X * UiScale.FactorOf(this);
 }

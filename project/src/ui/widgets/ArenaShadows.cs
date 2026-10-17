@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// Draws every shadow in the Training arena as one picture faded once (#818), so where shadows
+/// Draws every shadow in the Training arena as one picture faded once, so where shadows
 /// overlap they do not add up to a solid mass that hides the followed creature. The shadows are
 /// drawn whole into a viewport of their own, which shares the arena's world and camera but draws
 /// only what is on <see cref="ArenaVisibility.Shadows"/>; this node then shows that picture at the

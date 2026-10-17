@@ -1,8 +1,8 @@
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// One short line on what each part does. The same line shows under the part's row in the
-/// Links list and as the note in its Part settings, so a part reads the same everywhere.
+/// One short line on what each part does, shared by every place that describes a part so it reads
+/// the same everywhere.
 /// </summary>
 public static class PartInfo
 {

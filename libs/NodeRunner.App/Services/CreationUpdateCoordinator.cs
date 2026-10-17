@@ -107,9 +107,9 @@ public sealed class CreationUpdateCoordinator : ICreationUpdateCoordinator
         {
             // KeyNotFoundException (not InvalidOperationException) so callers
             // treating "the Creation this id points to doesn't exist" as
-            // recoverable (#114) can't accidentally also swallow a genuine
+            // recoverable can't accidentally also swallow a genuine
             // InvalidOperationException lifecycle bug elsewhere in the call
-            // chain (e.g. SaveManager's "not ready" composition-root guard).
+            // chain.
             throw new KeyNotFoundException($"Creation '{id}' was not found.");
         }
     }

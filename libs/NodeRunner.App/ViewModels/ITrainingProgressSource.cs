@@ -8,13 +8,13 @@ public interface ITrainingProgressSource : IDisposable
 
     int ShadowCount { get; }
 
-    /// <summary>The best score ever reached; it never goes down (#479).</summary>
+    /// <summary>The best score ever reached; it never goes down.</summary>
     double BestFitness { get; }
 
     /// <summary>The generation that reached <see cref="BestFitness"/>, 0 before any has.</summary>
     int BestGeneration { get; }
 
-    /// <summary>The furthest any latest run's front has ended on this map (#725), whichever run holds the score; NaN until known.</summary>
+    /// <summary>The furthest any latest run's front has ended on this map, whichever run holds the score; NaN until known.</summary>
     double BestShownDistance { get; }
 
     double MeanFitness { get; }
@@ -29,23 +29,23 @@ public interface ITrainingProgressSource : IDisposable
     /// <summary>Whether shadow 0 runs the previous best.</summary>
     bool HasPreviousBest { get; }
 
-    /// <summary>Every shadow's front distance so far this trial (#725), NaN for one that is not running.</summary>
+    /// <summary>Every shadow's front distance so far this trial, NaN for one that is not running.</summary>
     IReadOnlyList<double> ShadowDistances { get; }
 
     /// <summary>
-    /// Whether a beam of the followed shadow has torn in its current run (#962), so its distance has
-    /// stopped counting (#1257); false when none is running.
+    /// Whether a beam of the followed shadow has torn in its current run, so its distance has
+    /// stopped counting; false when none is running.
     /// </summary>
     bool FollowedCrashed { get; }
 
-    /// <summary>How far the followed shadow is into its run (#715); null when none is running.</summary>
+    /// <summary>How far the followed shadow is into its run; null when none is running.</summary>
     RunClock? FollowedRun { get; }
 
     /// <summary>Follows the zero-based <paramref name="shadow"/> until another is picked.</summary>
     void Follow(int shadow);
 
     /// <summary>
-    /// Draws only the zero-based <paramref name="shadows"/> and the followed shadow (#284); every
+    /// Draws only the zero-based <paramref name="shadows"/> and the followed shadow; every
     /// other shadow still races and counts, undrawn.
     /// </summary>
     void DrawOnly(IReadOnlyList<int> shadows);

@@ -97,7 +97,7 @@ public partial class UiCard : PanelContainer, IUiClipping
 
     /// <summary>
     /// Shows the press tint (<see cref="UiPressFeedback"/>) over the card's fill and under its
-    /// content. Set by a card that handles its own input, for as long as it is held (#325).
+    /// content. Set by a card that handles its own input, for as long as it is held.
     /// </summary>
     public bool ShowsPress
     {

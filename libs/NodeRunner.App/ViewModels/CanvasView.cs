@@ -10,9 +10,9 @@ namespace NodeRunner.App.ViewModels;
 /// creation fitted (<see cref="Fit"/>). The view never shows anything outside
 /// <see cref="Reach"/>, except while it eases back into a Reach that has
 /// shrunk, and zooming out goes just far enough to show all of it. Zoom limits are on screen, not in view units: view units grow with
-/// the UI size's root factor (<see cref="UiScale"/>, #299), so the limits shrink by it and the
+/// the UI size's root factor (<see cref="UiScale"/>), so the limits shrink by it and the
 /// creation keeps its size on screen. Godot's <c>Camera2D</c> would replace
-/// only the clamp, so Build keeps this class (#564). See `docs/BUILD_MODE.md`.
+/// only the clamp, so Build keeps this class. See `docs/BUILD_MODE.md`.
 /// </summary>
 public sealed class CanvasView
 {
@@ -47,7 +47,7 @@ public sealed class CanvasView
 
     public CanvasRect Bounds { get; }
 
-    /// <summary>What the view may show now: <see cref="Bounds"/> and any extra reach, such as a selected Camera's rays (#1092).</summary>
+    /// <summary>What the view may show now: <see cref="Bounds"/> and any extra reach, such as a selected Camera's rays.</summary>
     public CanvasRect Reach => _extraReach() is { } extra ? Bounds.Union(extra) : Bounds;
 
     /// <summary>True while the view eases toward a goal (<see cref="Step"/>).</summary>
@@ -177,7 +177,7 @@ public sealed class CanvasView
 
     /// <summary>
     /// Eases the view out until <paramref name="target"/> (canvas units) is shown, never zooming
-    /// in (#1092). Along each axis the view grows only toward the side the target reaches past,
+    /// in. Along each axis the view grows only toward the side the target reaches past,
     /// so the opposite edge stays put; it grows evenly where the target reaches past both. Nothing
     /// moves when the target is already shown, and a move on its way stops there. The move happens over <see cref="Step"/>, as far
     /// as <see cref="Reach"/> and <see cref="MinZoom"/> allow.

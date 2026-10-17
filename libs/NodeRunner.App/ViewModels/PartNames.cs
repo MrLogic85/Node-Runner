@@ -4,8 +4,8 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The names parts show: a part's own name if it has one, else its kind's default (<see cref="PartKindDisplay.DefaultName"/>),
-/// such as "Joint 2" or "Accel 1", numbered among the parts of its kind in list order. Names are labels only (#220).
-/// A default name is translated; an own name is the player's and shows as written (#757).
+/// such as "Joint 2" or "Accel 1", numbered among the parts of its kind in list order. Names are labels only.
+/// A default name is translated; an own name is the player's and shows as written.
 /// </summary>
 public static class PartNames
 {

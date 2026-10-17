@@ -4,9 +4,9 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A hinge part's two sides (<see cref="IHingePartDef"/>): a Servo's, a Velocity motor's (#454), a Brake's (#1040),
-/// an Angle sensor's (#1204) or a Stepper's (#1037). They are links, whose angle is the direction to their far joint body and which
-/// turn by a force couple, or the joint's Wheel, a one-sided link that turns with its body (#1118). It measures the
+/// A hinge part's two sides (<see cref="IHingePartDef"/>): a Servo's, a Velocity motor's, a Brake's,
+/// an Angle sensor's or a Stepper's. They are links, whose angle is the direction to their far joint body and which
+/// turn by a force couple, or the joint's Wheel, a one-sided link that turns with its body. It measures the
 /// Target's angle and speed against the Fixed side's, unwrapped across turns, and turns them
 /// apart by an equal and opposite torque.
 /// </summary>
@@ -50,7 +50,7 @@ public sealed class HingePartSides
     }
 
     /// <summary>
-    /// What a Brake's torque turns (#1040): <see cref="EffectiveInertia"/>, but two links share their
+    /// What a Brake's torque turns: <see cref="EffectiveInertia"/>, but two links share their
     /// joint's mass (<see cref="Mechanics.HingePartSideGeometry.SharedJointInertia"/>), so it never reads
     /// heavier than the joint is. A Brake reading it heavier would chatter.
     /// </summary>
@@ -86,7 +86,7 @@ public sealed class HingePartSides
     }
 }
 
-/// <summary>What a motor holds or turns at its joint: a link or the joint's Wheel (#1118).</summary>
+/// <summary>What a motor holds or turns at its joint: a link or the joint's Wheel.</summary>
 public abstract class HingePartSide
 {
     protected HingePartSide(RigidBody2D jointBody) => JointBody = jointBody;
@@ -144,7 +144,7 @@ public sealed class HingePartLinkSide(RigidBody2D jointBody, RigidBody2D farBody
 }
 
 /// <summary>
-/// The joint's Wheel as a side (#1118): a one-sided link pointing along its own turn. The Wheel is
+/// The joint's Wheel as a side: a one-sided link pointing along its own turn. The Wheel is
 /// the joint body set free to turn (Creature.Wheels), so it turns by a plain torque on that body.
 /// </summary>
 public sealed class HingePartWheelSide(RigidBody2D wheelBody) : HingePartSide(wheelBody)

@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The Wheel's look (#129, <c>docs/WORLD_VISUALS.md</c> → Wheel), checked on its geometry.</summary>
+/// <summary>The Wheel's look (<c>docs/WORLD_VISUALS.md</c> → Wheel), checked on its geometry.</summary>
 public sealed class WheelPartTests
 {
     [Fact]

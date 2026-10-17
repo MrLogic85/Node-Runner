@@ -21,7 +21,7 @@ public sealed class PartKindsTests
         EveryPartKind.Creature.HingeParts.ShouldAllBe(part => PartKinds.SlotOf(part) == JointSlot.HingePart);
     }
 
-    // A new part list on CreatureDef must hold parts the common contract reaches (#1221).
+    // A new part list on CreatureDef must hold parts the common contract reaches.
     [Fact]
     public void EverySavedPartList_HoldsPartDefs_AndThoseOnAJoint_AreJointParts()
     {

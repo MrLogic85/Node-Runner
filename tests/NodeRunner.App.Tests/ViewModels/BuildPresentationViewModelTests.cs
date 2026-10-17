@@ -267,7 +267,7 @@ public sealed class BuildPresentationViewModelTests
     public void Readiness_CountsWhatKeepsTheCreatureFromTraining_InOneLine(string creature, string text, string? plural, int count, BuildReadiness state)
     {
         static NodeDef At(int id, double x, double y) => new(id, new Vector2D(x, y));
-        // The chip is one line, so a motor's full sentence would not fit it (#1163); joint parts count together (#454).
+        // The chip is one line, so a motor's full sentence would not fit it; joint parts count together.
         IPartDef[] parts = creature switch
         {
             "empty" => [],
@@ -297,7 +297,7 @@ public sealed class BuildPresentationViewModelTests
     [Fact]
     public void Readiness_FollowsAMotorThatMakesABeamTooShort_AndALoadedAngleSensorsPanelAsksForItsSide()
     {
-        // #1212: 60 units is long enough between plain joints (56) but not with a Servo on one (68).
+        // 60 units is long enough between plain joints (56) but not with a Servo on one (68).
         var build = Loaded(new CreatureDef(
             [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200)), new BeamDef(5, 1, 2), new BeamDef(6, 1, 3)]));
         var presentation = new BuildPresentationViewModel(build);

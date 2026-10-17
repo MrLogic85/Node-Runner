@@ -98,7 +98,7 @@ public partial class UiSidePanel : MarginContainer
 
     public override Vector2 _GetMaximumSize() => new(_width, _unbounded);
 
-    // Paddings, separations and slot sizes are the scene's own (#331, #335).
+    // Paddings, separations and slot sizes are the scene's own.
     public override void _Ready()
     {
         GetNode<Control>("%SidePanelIcon").Draw += DrawHeaderIcon;
@@ -253,7 +253,7 @@ public partial class UiSidePanel : MarginContainer
     // The tab's chevron and label are its children, so they draw over the tint.
     private void DrawTabPress() => DrawPress(GetNode<Control>("%SidePanelTab"));
 
-    // The press tint (#325) over the touch area while it is held and the pointer is still on it.
+    // The press tint over the touch area while it is held and the pointer is still on it.
     private void DrawPress(Control target)
     {
         if (_pressedTarget == target && _pressInside)

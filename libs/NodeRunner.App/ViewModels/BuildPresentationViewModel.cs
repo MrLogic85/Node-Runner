@@ -51,7 +51,7 @@ public sealed class BuildPresentationViewModel
 
     public ToolPanelPresentation ToolPanel => CreateToolPanel();
 
-    /// <summary>The Reset training dialog body (#687). Copy sits beside Reset in the overflow, so it is offered.</summary>
+    /// <summary>The Reset training dialog body. Copy sits beside Reset in the overflow, so it is offered.</summary>
     public UiText ResetTrainingWarning =>
         UiText.Counted(
             "{1} forgets its {0} generation of training and keeps its body. Copy it first to keep the trained one.",
@@ -282,8 +282,8 @@ public sealed class BuildPresentationViewModel
     }
 
     /// <summary>
-    /// A slider for each setting the panel shows for the selection (#704), disabled where it can't
-    /// change now: kept by a locked Creation, or doing nothing on these parts (#578).
+    /// A slider for each setting the panel shows for the selection, disabled where it can't
+    /// change now: kept by a locked Creation, or doing nothing on these parts.
     /// </summary>
     private List<ParameterSlider> PanelSliders() =>
         [.. _build.ShownParameters
@@ -294,7 +294,7 @@ public sealed class BuildPresentationViewModel
                 NoEffect = !_build.HasEffect(id),
             })];
 
-    /// <summary>What a sensor does; an <paramref name="aimable"/> Camera's note also says what its Aim handle does (#594).</summary>
+    /// <summary>What a sensor does; an <paramref name="aimable"/> Camera's note also says what its Aim handle does.</summary>
     public static UiText SensorNote(SensorKind kind, bool aimable) => kind switch
     {
         SensorKind.Accelerometer => PartInfo.Accelerometer,
@@ -304,7 +304,7 @@ public sealed class BuildPresentationViewModel
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    /// <summary>The selection panel, or null unless several parts are selected (#704).</summary>
+    /// <summary>The selection panel, or null unless several parts are selected.</summary>
     public SelectionPanelPresentation? Selection
     {
         get
@@ -337,23 +337,23 @@ public sealed class BuildPresentationViewModel
         }
     }
 
-    /// <summary>Whether the part and selection panels show their Advanced settings (#903).</summary>
+    /// <summary>Whether the part and selection panels show their Advanced settings.</summary>
     public bool AdvancedSettingsOpen => _build.AdvancedSettingsOpen;
 
-    /// <summary>True for a locked Creation: it refuses every edit that would change its network (#896).</summary>
+    /// <summary>True for a locked Creation: it refuses every edit that would change its network.</summary>
     public bool IsLocked => _build.IsLocked;
 
-    /// <summary>Whether the overflow's Undo can be tapped (#689).</summary>
+    /// <summary>Whether the overflow's Undo can be tapped.</summary>
     public bool CanUndo => _build.CanUndo;
 
-    /// <summary>Whether the overflow's Redo can be tapped (#689).</summary>
+    /// <summary>Whether the overflow's Redo can be tapped.</summary>
     public bool CanRedo => _build.CanRedo;
 
     /// <summary>True when the Creation has saved training, locked or unlocked for this visit.</summary>
     public bool IsTrained => _build.TrainingGeneration is not null;
 
     /// <summary>
-    /// Whether the overflow offers Copy creation (#840) and Share build (#899): anything drawn,
+    /// Whether the overflow offers Copy creation and Share build: anything drawn,
     /// trained or not. An empty creation has nothing to copy or share.
     /// </summary>
     public bool CanCopy => _build.Nodes.Count > 0;
@@ -412,7 +412,7 @@ public sealed class BuildPresentationViewModel
             return UiText.Counted("{0} piece not connected", "{0} pieces not connected", pieces.Count);
         }
 
-        // Build's canvas names each short beam with a callout (#593), so the chip only counts them.
+        // Build's canvas names each short beam with a callout, so the chip only counts them.
         var tooShort = _build.Beams.Count(beam => IsTooShort(CreatureElementKind.Beam, beam.NodeA, beam.NodeB));
         var tooShortPistons = _build.Pistons.Count(piston => IsTooShort(CreatureElementKind.Piston, piston.NodeA, piston.NodeB));
         var tooShortSprings = _build.Springs.Count(spring => IsTooShort(CreatureElementKind.Spring, spring.NodeA, spring.NodeB));
@@ -451,7 +451,7 @@ public sealed class BuildPresentationViewModel
 
     private SensorDef SensorById(int sensorId) => _build.Sensors.First(sensor => sensor.Id == sensorId);
 
-    // The "On this joint" tabs, top → down, for a joint with two or more parts (#1044).
+    // The "On this joint" tabs, top → down, for a joint with two or more parts.
     private IReadOnlyList<JointPartTab>? OnThisJoint(int nodeId)
     {
         var parts = CreatureDef.JointPartDefs(nodeId, _build.JointParts);
@@ -460,11 +460,11 @@ public sealed class BuildPresentationViewModel
 
     private ServoDef ServoById(int servoId) => _build.Servos[_build.ServoIndexOf(servoId)];
 
-    // The Fixed and Target pickers of a joint's hinge-part slot, the Servo's, Velocity motor's (#454),
-    // Brake's (#1041) and Angle sensor's (#1206) alike, also on a locked Creation (#1179).
+    // The Fixed and Target pickers of a joint's hinge-part slot, the Servo's, Velocity motor's,
+    // Brake's and Angle sensor's alike, also on a locked Creation.
     private IReadOnlyList<PartPickerPresentation> SidePickers(IHingePartDef part, UiText needsTwoSidesReason)
     {
-        // A Wheel on the joint is a one-sided link, listed after the links (#1118).
+        // A Wheel on the joint is a one-sided link, listed after the links.
         (int Id, CreatureElementKind Kind)[] links =
         [
             .. _build.LinksAt(part.NodeId).OrderBy(link => link.Id).Select(link => (link.Id, link.Kind)),

@@ -3,7 +3,7 @@ namespace NodeRunner.Ui.Tests;
 /// <summary>
 /// Reads settings from <c>project.godot</c> as text. Godot writes each setting as <c>key=value</c> under its
 /// <c>[section]</c>, with the section's name left out of the key: <c>physics/2d/default_gravity</c> is
-/// <c>2d/default_gravity=</c> under <c>[physics]</c> (#1252).
+/// <c>2d/default_gravity=</c> under <c>[physics]</c>.
 /// </summary>
 internal static class ProjectGodot
 {

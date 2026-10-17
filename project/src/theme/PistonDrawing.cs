@@ -5,12 +5,11 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws a Piston between two joints (#451), shared by Build's canvas and the creature in
-/// Training, as a three-part telescope (#1210): a thin <c>accent</c> rod from hub to hub (#1086),
+/// Draws a Piston between two joints as a three-part telescope: a thin <c>accent</c> rod from hub to hub,
 /// a middle stage and an outer cylinder at its first joint, and a cap at its second.
 /// <c>docs/WORLD_VISUALS.md</c> → "Piston" owns its look, and <see cref="TelescopeGeometry"/>
 /// places the parts. Selected, it gets the beam's two <c>halo</c> lines,
-/// which stop at the joints' hubs or join a selected joint's halo (#710). Its stroke ticks are
+/// which stop at the joints' hubs or join a selected joint's halo. Its stroke ticks are
 /// drawn apart, by <see cref="DrawStroke"/>, so a view can put them over the joints. Drawn in window
 /// pixels (<see cref="UiPixelSpace"/>) so it stays crisp at any zoom; <c>drawTransform</c> is the
 /// transform the caller draws with, and is restored afterwards.
@@ -36,7 +35,7 @@ public static class PistonDrawing
     /// <param name="theme">The theme its fills come from.</param>
     /// <param name="a">Joint A's centre, where the cylinder sits.</param>
     /// <param name="b">Joint B's centre, where the rod ends in its cap.</param>
-    /// <param name="radiusA">Joint A's drawn radius, whose halo the selection lines join; the rod starts at its hub (#1086).</param>
+    /// <param name="radiusA">Joint A's drawn radius, whose halo the selection lines join; the rod starts at its hub.</param>
     /// <param name="radiusB">Joint B's drawn radius.</param>
     /// <param name="coveredA">How far what is drawn over joint A reaches (<see cref="ServoGeometry.LinkCover"/>); the cylinder starts there.</param>
     /// <param name="coveredB">How far what is drawn over joint B reaches; the cap sits there.</param>
@@ -77,12 +76,12 @@ public static class PistonDrawing
         var cylinderHalf = CylinderHalf(theme);
         var telescope = TelescopeGeometry.Place(TelescopeGeometry.Piston, a.DistanceTo(b), shortest, longest, coveredA, coveredB);
 
-        // Like a beam, the rod runs hub to hub (#1086), or, when they meet, centre to centre.
+        // Like a beam, the rod runs hub to hub, or, when they meet, centre to centre.
         const float hub = JointDrawing.HubRadius;
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, hub, b, hub) ?? (a, b);
         canvas.DrawLine(toPixels * rodStart, toPixels * rodEnd, line, theme.BeamWidth * _rodPerBeam * scale, antialiased: true);
 
-        // The stage runs from under the cylinder, so only its mouth end shows (#1210).
+        // The stage runs from under the cylinder, so only its mouth end shows.
         if (telescope.HasStage)
         {
             DrawTube(canvas, toPixels, scale, theme, Cylinder(a + (along * telescope.Start), a + (along * telescope.StageEnd), along, across, theme.BeamWidth * _stageHalfPerBeam), line);
@@ -112,7 +111,7 @@ public static class PistonDrawing
 
     /// <summary>
     /// Half a Piston's stroke tick, across it: out to the cylinder's outer edge, so the shortest tick is
-    /// as wide as the cylinder whose end it marks (#931). A Spring's spans its seats
+    /// as wide as the cylinder whose end it marks. A Spring's spans its seats
     /// (<see cref="SpringDrawing.SeatHalf"/>); both stop a gap inside the selection outline.
     /// </summary>
     public static float TickHalf(VisualTheme theme) => CylinderHalf(theme) + (_line / 2);
@@ -127,9 +126,9 @@ public static class PistonDrawing
     public static float SelectionOffset(VisualTheme theme) => TickHalf(theme) + (float)SelectionMarks.Gap;
 
     /// <summary>
-    /// A Piston's stroke (#704): <c>halo</c> ticks at its shortest and longest length from joint A's
+    /// A Piston's stroke: <c>halo</c> ticks at its shortest and longest length from joint A's
     /// centre, joined by a dashed line, over the joints like a Camera's rays. A Spring's also rings
-    /// its rest length (#835); the line leaves the ring's hole clear.
+    /// its rest length; the line leaves the ring's hole clear.
     /// </summary>
     /// <param name="canvas">The CanvasItem drawing it, inside its draw call.</param>
     /// <param name="drawTransform">The canvas's draw transform, for <see cref="UiPixelSpace"/>; restored afterwards.</param>
@@ -138,7 +137,7 @@ public static class PistonDrawing
     /// <param name="b">Joint B's centre.</param>
     /// <param name="shortest">The Piston's or Spring's shortest length, centre to centre.</param>
     /// <param name="longest">The Piston's or Spring's longest length, centre to centre.</param>
-    /// <param name="tickHalf">Half a tick's length across the link; a Spring's spans its seats (#835).</param>
+    /// <param name="tickHalf">Half a tick's length across the link; a Spring's spans its seats.</param>
     /// <param name="rest">A Spring's rest length, centre to centre, ringed; none for a Piston.</param>
     public static void DrawStroke(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, Vector2 a, Vector2 b, float shortest, float longest, float tickHalf, float? rest = null)
     {

@@ -127,7 +127,7 @@ public sealed class NewPortExplorationTests
         }
     }
 
-    // #1263: a new Stepper reads as new while its frequency has bias 0 and no weight, and its children step either way.
+    // A new Stepper reads as new while its frequency has bias 0 and no weight, and its children step either way.
     [Fact]
     public void Explore_RedrawsANewStepper_FromStill_AndLeavesTrainedOnes()
     {

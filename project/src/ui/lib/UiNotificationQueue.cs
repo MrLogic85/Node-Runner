@@ -48,7 +48,7 @@ public sealed class UiNotificationQueue
         return Current?.Replaceable == true ? UiNotificationOffer.ReplacesCurrent : UiNotificationOffer.Queued;
     }
 
-    /// <summary>Puts <paramref name="spec"/> first in line, ahead of every rule; used for "Action failed".</summary>
+    /// <summary>Puts <paramref name="spec"/> first in line, ahead of every rule.</summary>
     public void PushFront(UiNotificationSpec spec)
     {
         ArgumentNullException.ThrowIfNull(spec);

@@ -35,14 +35,14 @@ public partial class Evolver : Node
 
     public int Generation { get; private set; }
 
-    /// <summary>The best score ever reached, by any generation; it never goes down (#479).</summary>
+    /// <summary>The best score ever reached, by any generation; it never goes down.</summary>
     public double BestFitness { get; private set; } = double.NegativeInfinity;
 
     /// <summary>The generation that reached <see cref="BestFitness"/>; 0 before any has.</summary>
     public int BestGeneration { get; private set; }
 
     /// <summary>
-    /// The furthest any latest run's front has ended up on this map (#725): the distance the best
+    /// The furthest any latest run's front has ended up on this map: the distance the best
     /// marker shows. It never goes down and never reads below the latest run, whichever run holds
     /// <see cref="BestFitness"/>. NaN before one is known.
     /// </summary>
@@ -61,7 +61,6 @@ public partial class Evolver : Node
     /// <summary>Number of candidates in the active generation.</summary>
     public int PopulationSize => _genomes.Length;
 
-    /// <summary>Whether any candidate trial is currently active.</summary>
     public bool IsTrialActive => _primaryCreature is not null && _trialControllers.Any(controller => controller.IsRunning);
 
     /// <summary>Fitness values completed in the current generation.</summary>
@@ -70,8 +69,8 @@ public partial class Evolver : Node
     /// <summary>
     /// The shadow (zero-based slot, which is also its candidate index) drawn in full and shown in
     /// signal flow and NetworkFocus. Shadow 0 by default: the previous best, or shadow 1 in a fresh
-    /// generation 0. The player changes it through <see cref="Follow"/> (#385), and every new
-    /// generation sets it back to shadow 0 (#894).
+    /// generation 0. The player changes it through <see cref="Follow"/>, and every new
+    /// generation sets it back to shadow 0.
     /// </summary>
     public int FollowedShadow => _followedShadow;
 
@@ -85,23 +84,22 @@ public partial class Evolver : Node
     /// </summary>
     public bool HasPreviousBest => _opensWithPreviousBest;
 
-    /// <summary>How far the followed shadow's front has got in its current trial (#725); NaN when none is running.</summary>
+    /// <summary>How far the followed shadow's front has got in its current trial; NaN when none is running.</summary>
     public double FollowedTrialDistance => ShadowDistance(_followedShadow);
 
-    /// <summary>Whether a beam of the followed shadow has torn in its current trial (#962), freezing its distance; false when none is running.</summary>
+    /// <summary>Whether a beam of the followed shadow has torn in its current trial, freezing its distance; false when none is running.</summary>
     public bool FollowedTrialCrashed =>
         _followedShadow < _trialControllers.Count && _trialControllers[_followedShadow] is { IsRunning: true, IsFrozen: true };
 
-    /// <summary>How far the followed shadow is into its trial and how long it lasts, in ticks (#715); null when none is running.</summary>
+    /// <summary>How far the followed shadow is into its trial and how long it lasts, in ticks; null when none is running.</summary>
     public (int TicksRun, int LengthTicks)? FollowedTrialTicks =>
         _followedShadow < _trialControllers.Count && _trialControllers[_followedShadow] is { IsRunning: true } controller
             ? (controller.TicksRun, controller.TrialDurationTicks)
             : null;
 
-    /// <summary>Every shadow's front distance so far this trial (#725), NaN for a shadow that is not running.</summary>
+    /// <summary>Every shadow's front distance so far this trial, NaN for a shadow that is not running.</summary>
     public double[] ShadowDistances => Enumerable.Range(0, _trialControllers.Count).Select(ShadowDistance).ToArray();
 
-    /// <summary>Raised when the followed shadow changes.</summary>
     public event Action? FollowedShadowChanged;
 
     /// <summary>Raised when the followed shadow starts a new trial, back at the start.</summary>
@@ -137,7 +135,7 @@ public partial class Evolver : Node
 
     /// <summary>
     /// Draws only <paramref name="shadows"/> (zero-based) and the followed shadow: the shadow strip's
-    /// page (#284). The others are hidden but still race and count. Every shadow is drawn until this
+    /// page. The others are hidden but still race and count. Every shadow is drawn until this
     /// is first called; the choice holds across <see cref="Start"/>.
     /// </summary>
     public void DrawOnly(IReadOnlyList<int> shadows)
@@ -170,13 +168,13 @@ public partial class Evolver : Node
     /// must match the creature's sensor/motor counts (its input/output layers).
     /// Supplying <paramref name="creatureFactory"/> runs every shadow of a
     /// generation at once, one slot per genome, so <paramref name="populationSize"/>
-    /// is the Shadows value and at most <see cref="Creature.Creature.MaximumShadows"/>
-    /// (#384); without it, evaluation remains sequential for compatibility. <paramref name="groundTopY"/> is the
+    /// is the Shadows value and at most <see cref="Creature.Creature.MaximumShadows"/>;
+    /// without it, one slot runs the shadows in turn. <paramref name="groundTopY"/> is the
     /// ground's top edge, which each trial measures elevation from.
     /// <paramref name="disabledGenes"/> are genome positions that stay 0 in every
     /// candidate: a saved network's disabled connection genes. Without
-    /// <paramref name="resumeGenome"/> the run starts at generation 0 (#537); with it, the saved
-    /// elite and its children open the run (#538), and <see cref="BestFitness"/> starts from
+    /// <paramref name="resumeGenome"/> the run starts at generation 0; with it, the saved
+    /// elite and its children open the run, and <see cref="BestFitness"/> starts from
     /// <paramref name="resumeBestFitness"/>, reached in <paramref name="resumeBestGeneration"/>,
     /// and <see cref="BestShownDistance"/> from <paramref name="resumeBestShownDistance"/>.
     /// </summary>
@@ -418,7 +416,7 @@ public partial class Evolver : Node
             return;
         }
 
-        // A picked shadow is followed for its generation only; each new one opens on the previous best (#894).
+        // A picked shadow is followed for its generation only; each new one opens on the previous best.
         Follow(0);
         StartAvailableSlots();
     }

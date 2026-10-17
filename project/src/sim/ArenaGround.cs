@@ -5,7 +5,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Sim;
 
 /// <summary>
-/// The arena's ground, built from the selected map's ground (#444) along this node's line: the
+/// The arena's ground, built from the selected map's ground along this node's line: the
 /// collider every creature body stands on (layer 1) and its fill; the ruler draws the edge. The scene places the
 /// line; the map decides the ground. Flat uses Godot's endless <see cref="WorldBoundaryShape2D"/>,
 /// so a creature can never walk off its end; grounds with a shape come with chunks (#91).
@@ -13,7 +13,7 @@ namespace NodeRunner.Sim;
 public partial class ArenaGround : StaticBody2D
 {
     // The fill reaches 10 km each way and as deep, so no zoom shows an end. A run
-    // has a set length, but Simulate (#702) runs until the player leaves, so a fast walker left there
+    // has a set length, but Simulate runs until the player leaves, so a fast walker left there
     // for hours could pass the drawn end; the collision ground is endless.
     private const float _reach = 1_000_000f;
 

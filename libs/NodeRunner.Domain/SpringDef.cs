@@ -1,12 +1,12 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Spring (#453): a passive link between two nodes that pulls them back toward its rest length,
+/// A Spring: a passive link between two nodes that pulls them back toward its rest length,
 /// their distance in the drawing unless <see cref="CoilLength"/> presses it against a stop, and damps
 /// how fast that distance changes. It limits movement without holding it rigid, has no network ports and draws no power. Like a Piston it travels between a shortest and
 /// a longest length, <see cref="Stroke"/> apart, and <see cref="CoilLength"/> moves its rest length
 /// evenly across that travel and half its drawn gap, between its joints' hubs, past each stop, where it starts pressed
-/// against that stop (#835). See
+/// against that stop. See
 /// <c>Spring</c> in NodeRunner.Mechanics and docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed record SpringDef : IPartDef
@@ -17,7 +17,7 @@ public sealed record SpringDef : IPartDef
     /// <summary>The softest <see cref="Stiffness"/> Build offers.</summary>
     public const double SoftestStiffness = 50;
 
-    /// <summary>The stiffest <see cref="Stiffness"/> Build offers: firm, yet stable on the lightest nodes (#787).</summary>
+    /// <summary>The stiffest <see cref="Stiffness"/> Build offers: firm, yet stable on the lightest nodes.</summary>
     public const double StiffestStiffness = 2000;
 
     /// <summary>A new Spring's <see cref="Damping"/>: 10 N·s/m.</summary>
@@ -26,7 +26,7 @@ public sealed record SpringDef : IPartDef
     /// <summary>A new Spring's <see cref="Stroke"/>: the gap between its joints' hubs can be squeezed to half its longest.</summary>
     public const double DefaultStroke = 1;
 
-    /// <summary>The longest <see cref="Stroke"/>, as a Piston's (#1211).</summary>
+    /// <summary>The longest <see cref="Stroke"/>, as a Piston's.</summary>
     public const double MaxStroke = PistonDef.MaxStroke;
 
     /// <summary>
@@ -117,15 +117,15 @@ public sealed record SpringDef : IPartDef
 
     /// <summary>
     /// How hard it brakes the speed between its nodes, in world force units per world unit per second
-    /// (N·s/m). It is a plain coefficient, not tuned to the mass it moves (#801): the same Damping
+    /// (N·s/m). It is a plain coefficient, not tuned to the mass it moves: the same Damping
     /// bounces more on heavy nodes than on light ones.
     /// </summary>
     public double Damping { get; }
 
     /// <summary>
-    /// Its travel, as a Piston's of this Stroke drawn where its rest length is, kept within its stops
-    /// (#974): drawn gap × s / (1 + at·s), at 0 on its shortest stop and 1 on its longest, the gap being
-    /// between its joints' hubs (#835). Above 0 and at most <see cref="MaxStroke"/>.
+    /// Its travel, as a Piston's of this Stroke drawn where its rest length is, kept within its stops:
+    /// drawn gap × s / (1 + at·s), at 0 on its shortest stop and 1 on its longest, the gap being
+    /// between its joints' hubs. Above 0 and at most <see cref="MaxStroke"/>.
     /// </summary>
     public double Stroke { get; }
 
@@ -133,7 +133,7 @@ public sealed record SpringDef : IPartDef
     /// Where its rest length sits, evenly from half its drawn gap, between its joints' hubs, short of
     /// its shortest stop at 0 to half that gap past its longest at 1. Between its stops that is the drawn length,
     /// and the stops sit round it as a Piston's round its Start position, so its travel is longer the
-    /// nearer its shortest stop (#974). Past a stop they stay, the drawn length on that stop, and the
+    /// nearer its shortest stop. Past a stop they stay, the drawn length on that stop, and the
     /// Spring starts pressed against it: past its longest it pushes its nodes apart, past its
     /// shortest it pulls them in. A new Stroke keeps the Coil length, so its stops may move past or
     /// off its rest length.

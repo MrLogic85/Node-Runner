@@ -19,23 +19,23 @@ public readonly record struct FramedCreature(double CentreX, double CentreY, dou
 }
 
 /// <summary>
-/// The Training camera's framing (#675, #1169): where it looks and how far it zooms out. It
+/// The Training camera's framing: where it looks and how far it zooms out. It
 /// follows the creature's centre on both axes through one <see cref="ArenaFollow"/> each and
 /// shows it in the middle of the view at rest, except that the ground line never rises above
 /// <see cref="GroundFromTop"/>, so a creature on the ground sits low and a hopping gait does not
 /// bob the view, and that a moving creature shows behind the middle. It zooms out so the creature
 /// fits, and further the faster it moves on either axis; it zooms out quickly and back in only
 /// after the creature has stayed smaller for a while, and then slowly, so a stretching gait does
-/// not make it pump. The room speed adds is shared (#1190): the view slides ahead by a sixth of it,
+/// not make it pump. The room speed adds is shared: the view slides ahead by a sixth of it,
 /// so a third of it shows behind and the creature nears a third of the view in from the back edge
 /// as it speeds up. After all smoothing, a safe zone keeps the creature's box
 /// <see cref="SafeMargin"/> inside the view's sides and top, so a sudden start or launch, which the
 /// eased speed lags, never takes it off screen. While a part callout
-/// shows, the framing keeps a <see cref="Shelf"/> for it at the top (#1137): it lowers the ground
+/// shows, the framing keeps a <see cref="Shelf"/> for it at the top: it lowers the ground
 /// first, toward <see cref="ShelfGroundFromTop"/> but never into the <see cref="ScaleBand"/> along
-/// the bottom (#1170), and zooms out only for the rest. All sizes are in
+/// the bottom, and zooms out only for the rest. All sizes are in
 /// world units; the view's size is the size it shows at zoom 1. See
-/// <c>docs/TRAINING_LOOP.md</c> → Camera.
+/// <c>docs/TRAINING_LOOP.md</c> → "The Training scene".
 /// </summary>
 public sealed class ArenaFraming
 {
@@ -58,8 +58,8 @@ public sealed class ArenaFraming
     public const double SideMargin = 0.05;
 
     /// <summary>
-    /// The least share of the view kept between the creature's box and the view's sides and top
-    /// (#1190), or half the room the box has there at rest when that is less, so the safe zone never
+    /// The least share of the view kept between the creature's box and the view's sides and top,
+    /// or half the room the box has there at rest when that is less, so the safe zone never
     /// moves a creature at rest. The ground limit holds the bottom.
     /// </summary>
     public const double SafeMargin = 0.1;
@@ -72,7 +72,7 @@ public sealed class ArenaFraming
 
     /// <summary>
     /// The widest view, 500 m, in world units. No creature's size or speed comes near it, so the
-    /// zoom follows them freely; it only keeps a physics blow-up from zooming out to nothing (#884).
+    /// zoom follows them freely; it only keeps a physics blow-up from zooming out to nothing.
     /// </summary>
     public const double MaxShownWidth = 500 * Metres.WorldUnitsPerMetre;
 
@@ -138,7 +138,7 @@ public sealed class ArenaFraming
     }
 
     /// <summary>
-    /// The share of the view's height the distance scale takes along the bottom (#1170); 0 with
+    /// The share of the view's height the distance scale takes along the bottom; 0 with
     /// none. Making room for a <see cref="Shelf"/> lowers the ground no further than its top. Set
     /// between a <see cref="Cut"/> and the next step, it is part of that cut, as for the shelf.
     /// </summary>

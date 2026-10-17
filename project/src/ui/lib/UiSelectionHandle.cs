@@ -86,8 +86,8 @@ public partial class UiSelectionHandle : Control, ISerializationListener
     public override void _Draw() => DrawRoundButton(this, HandleCenter(), accentFill: Type == HandleType.Drag);
 
     /// <summary>
-    /// The round button (<c>c_round_button</c>) behind a handle's icon, also drawn by
-    /// <see cref="UiInfoRow"/>: a <c>halo</c> ring filled <c>panel</c>, or <c>accent-soft</c> over
+    /// The round button (<c>c_round_button</c>) behind a handle's icon:
+    /// a <c>halo</c> ring filled <c>panel</c>, or <c>accent-soft</c> over
     /// <c>bg</c> for the Move handle. Drawn in window pixels (<see cref="UiPixelPen"/>).
     /// </summary>
     internal static void DrawRoundButton(Control control, Vector2 center, bool accentFill)

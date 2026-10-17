@@ -2,7 +2,7 @@ namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
 /// .claude/hooks/reviewer-bash.sh lets a review agent run only commands that read, and denies
-/// the rest with a reason (#1321). See docs/REVIEW.md → "Hooks".
+/// the rest with a reason. See docs/REVIEW.md → "Hooks".
 /// </summary>
 public sealed class ReviewerBashHookSpec(HookFixture fixture) : IClassFixture<HookFixture>
 {

@@ -91,7 +91,7 @@ public abstract partial class UiMenuItem : Container
 
     protected abstract void RefreshItem();
 
-    /// <summary>Lets go of a press held on this row without activating it, when the press turns into a scroll (#1139).</summary>
+    /// <summary>Lets go of a press held on this row without activating it, when the press turns into a scroll.</summary>
     public virtual void CancelPress()
     {
     }

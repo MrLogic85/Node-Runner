@@ -27,11 +27,11 @@ public static class CreationExamples
     private const double _walkerStroke = 0.85;
 
     /// <summary>
-    /// A walker seen from the side (#745): a back with a leg hanging from each end, and two Pistons
+    /// A walker seen from the side: a back with a leg hanging from each end, and two Pistons
     /// crossing between them, each from one end of the back to the other leg's foot. Its joints are
-    /// passive (#450), so the Pistons hold it up and swing the legs; the network drives nothing else.
-    /// The legs splay out a little, so it stands wider than its back. Its Pistons keep the reach they
-    /// had before #870, about 70%–130% of their drawn length.
+    /// passive, so the Pistons hold it up and swing the legs; the network drives nothing else.
+    /// The legs splay out a little, so it stands wider than its back. Its Pistons reach about
+    /// 70%–130% of their drawn length.
     /// </summary>
     public static CreatureDef CreateWalkerCreature()
     {

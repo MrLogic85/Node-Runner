@@ -66,56 +66,56 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void CopySelectionRequestedEventHandler();
 
-    /// <summary>A part or link row the locked Creation refuses was tapped (#896).</summary>
+    /// <summary>A part or link row the locked Creation refuses was tapped.</summary>
     [Signal]
     public delegate void CreationLockedPressedEventHandler();
 
-    /// <summary>A setting's disabled slider was tapped where the setting does nothing as set now (#578).</summary>
+    /// <summary>A setting's disabled slider was tapped where the setting does nothing as set now.</summary>
     [Signal]
     public delegate void NoEffectSettingPressedEventHandler(int setting);
 
-    /// <summary>A Coming later tray row was tapped (#992).</summary>
+    /// <summary>A Coming later tray row was tapped.</summary>
     [Signal]
     public delegate void ComingLaterPartPressedEventHandler(int part);
 
-    /// <summary>A Links row not yet implemented was tapped (#992).</summary>
+    /// <summary>A Links row not yet implemented was tapped.</summary>
     [Signal]
     public delegate void ComingLaterLinkPressedEventHandler(int link);
 
     [Signal]
     public delegate void ToolRequestedEventHandler(BuildTool tool);
 
-    /// <summary>A row in the Links tool's list was tapped (#705): the rail tool stays Links.</summary>
+    /// <summary>A row in the Links tool's list was tapped: the rail tool stays Links.</summary>
     [Signal]
     public delegate void LinkPickedEventHandler(int link);
 
-    /// <summary>A tray part was tapped (#805); the view-model picks it, or clears it if it was picked.</summary>
+    /// <summary>A tray part was tapped; the view-model picks it, or clears it if it was picked.</summary>
     [Signal]
     public delegate void PartPickedEventHandler(int part);
 
     /// <summary>
-    /// The picked part went out of sight (#805): another tray tab was opened or the side panel
+    /// The picked part went out of sight: another tray tab was opened or the side panel
     /// collapsed. The view-model clears the pick, so a tap never places a part the player cannot see.
     /// </summary>
     [Signal]
     public delegate void PartPickHiddenEventHandler();
 
-    /// <summary>A setting's slider moved (#704): every selected part takes <paramref name="value"/> for <paramref name="parameter"/> (a <see cref="PartParameterId"/>).</summary>
+    /// <summary>A setting's slider moved: every selected part takes <paramref name="value"/> for <paramref name="parameter"/> (a <see cref="PartParameterId"/>).</summary>
     [Signal]
     public delegate void ParameterChangedEventHandler(int parameter, double value);
 
-    /// <summary>A setting's slider was let go: its changes since the touch are one undo step (#689).</summary>
+    /// <summary>A setting's slider was let go: its changes since the touch are one undo step.</summary>
     [Signal]
     public delegate void ParameterChangeFinishedEventHandler();
 
     [Signal]
     public delegate void HingePartLinkChangedEventHandler(int partId, bool fixedRole, int linkId);
 
-    /// <summary>An "On this joint" tab was tapped (#1044): select that part instead.</summary>
+    /// <summary>An "On this joint" tab was tapped: select that part instead.</summary>
     [Signal]
     public delegate void JointPartChosenEventHandler(int kind, int partId);
 
-    /// <summary>The Advanced settings section was opened or closed (#903).</summary>
+    /// <summary>The Advanced settings section was opened or closed.</summary>
     [Signal]
     public delegate void AdvancedSettingsToggledEventHandler(bool open);
 
@@ -260,12 +260,9 @@ public partial class BuildScreen : Control
         }
     }
 
-    /// <summary>
-    /// The basic sliders in <paramref name="basic"/>, then the advanced ones in
-    /// <paramref name="advancedBody"/> under <paramref name="advanced"/> (#903), which shows only
-    /// when there are any. <paramref name="gap"/> widens the space above the section to space-2
-    /// when basic sliders come before it.
-    /// </summary>
+    // The basic sliders, then the advanced ones under their section, which
+    // shows only when there are any. `gap` widens the space above the section
+    // to space-2 when basic sliders come before it.
     private void ApplyParameterSliders(
         Container basic,
         Control gap,
@@ -287,12 +284,10 @@ public partial class BuildScreen : Control
         ApplySliders(advancedBody, advancedSettings);
     }
 
-    /// <summary>
-    /// One slider per setting in <paramref name="settings"/>, in order (#704). A setting's slider is
-    /// made the first time it shows; differing values have Marker ends and no thumb, and a disabled
-    /// setting's slider is dashed and ignores touches (#578); a tap on it says why: the creation
-    /// is locked, like a locked tray row (#896), or the setting does nothing as set now (#578).
-    /// </summary>
+    // One slider per setting, in order. A setting's slider is
+    // made the first time it shows; differing values have Marker ends and no thumb, and a disabled
+    // setting's slider is dashed and ignores touches; a tap on it says why: the creation
+    // is locked, like a locked tray row, or the setting does nothing as set now.
     private void ApplySliders(Container container, IReadOnlyList<ParameterSlider> settings)
     {
         foreach (var slider in container.GetChildren().OfType<UiSlider>())
@@ -358,10 +353,8 @@ public partial class BuildScreen : Control
         GetNode<BuildCanvas>("%BuildCanvas").ShowCameraRays();
     }
 
-    /// <summary>
-    /// What the touched setting does, in a fixed spot over the canvas (#867). It shows at once and
-    /// stays a moment after the finger lifts; a touch on another slider swaps the text.
-    /// </summary>
+    // What the touched setting does, in a fixed spot over the canvas. It shows at once and
+    // stays a moment after the finger lifts; a touch on another slider swaps the text.
     private void ShowSettingHint(UiSlider slider, PartParameterId id)
     {
         if (PartParameters.Of(id).Slider is not { } scale)
@@ -525,7 +518,7 @@ public partial class BuildScreen : Control
 
     private void ApplyPickList(BuildPresentationViewModel presentation, LinkListPresentation? linkList)
     {
-        // The Links panel's title already says Links, so its list has no tabs or group header (#913).
+        // The Links panel's title already says Links, so its list has no tabs or group header.
         GetNode<UiIconTabs>("%PartTabs").Visible = linkList is null;
         GetNode<Control>("%PartGroupHeader").Visible = linkList is null;
         if (linkList is not null)
@@ -671,7 +664,7 @@ public partial class BuildScreen : Control
         Apply();
     }
 
-    /// <summary>The part a tray row can be dragged out as (#376, #577): an available sensor or joint part (#129), or null.</summary>
+    /// <summary>The part a tray row can be dragged out as: an available sensor or joint part, or null.</summary>
     public static BuildPart? DraggablePart(PartTrayRow row) =>
         row.IsAvailable && (PartTray.SensorKindOf(row.Part) is not null || PartTray.IsJointPart(row.Part)) ? row.Part : null;
 
@@ -746,7 +739,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%PartDelete").Unavailable = !part.CanDelete;
     }
 
-    /// <summary>The "On this joint" tabs (#1044), top → down, shown only when the part's joint holds two or more parts.</summary>
+    // The "On this joint" tabs, top → down, shown only when the part's joint holds two or more parts.
     private void ApplyPartStack(PartSettingsPresentation part)
     {
         GetNode<Control>("%PartStack").Visible = part.OnThisJoint is not null;
@@ -773,7 +766,7 @@ public partial class BuildScreen : Control
         }
     }
 
-    /// <summary>One read-only value row per readout, such as a Wheel's Weight (#129), after the basic settings.</summary>
+    // One read-only value row per readout, such as a Wheel's Weight, after the basic settings.
     private static void ApplyPartReadouts(Container container, IReadOnlyList<PartReadout> readouts)
     {
         container.Visible = readouts.Count > 0;
@@ -838,7 +831,7 @@ public partial class BuildScreen : Control
             }
         }
 
-        // A link with no role keeps its canvas structure colour; muted would read as disabled (#1130).
+        // A link with no role keeps its canvas structure colour; muted would read as disabled.
         static UiTokens.Color TintForRole(ServoLinkRole role) => role switch
         {
             ServoLinkRole.Fixed => UiTokens.Color.Detail,

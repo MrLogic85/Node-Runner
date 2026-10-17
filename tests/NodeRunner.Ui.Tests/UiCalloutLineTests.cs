@@ -2,7 +2,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>When a refreshed callout can update its rows in place (#1064).</summary>
+/// <summary>When a refreshed callout can update its rows in place.</summary>
 public sealed class UiCalloutLineTests
 {
     [Fact]

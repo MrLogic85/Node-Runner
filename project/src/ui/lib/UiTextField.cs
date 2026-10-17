@@ -104,7 +104,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
 
     /// <summary>
     /// Already translated fact shown muted under the field while it shows no error, such as a name
-    /// already in use (#1061); asked again when the language changes. Null shows none.
+    /// already in use; asked again when the language changes. Null shows none.
     /// </summary>
     public Func<string>? FactSource
     {
@@ -117,7 +117,7 @@ public partial class UiTextField : VBoxContainer, ISerializationListener
     }
 
     /// <summary>
-    /// The most characters the player can type or paste (#868); 0 for no limit. A longer saved
+    /// The most characters the player can type or paste; 0 for no limit. A longer saved
     /// name is never cut: it shows whole, cannot grow, and the limit closes in as the player
     /// deletes. Godot's LineEdit cuts any text over its own limit, so that limit is only set while
     /// the field has focus and never below the current text.

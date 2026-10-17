@@ -3,9 +3,9 @@ using Godot;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// The reference's rigid hatch (#612): parallel lines at 45°, running down to
+/// The reference's rigid hatch: parallel lines at 45°, running down to
 /// the left, <c>spacing</c> apart, clipped to a triangle. They run on under the
-/// opaque joints at its corners (#1198). The lines are laid out from the
+/// opaque joints at its corners. The lines are laid out from the
 /// origin, so neighbouring triangles' hatches line up.
 /// </summary>
 public static class TriangleHatch
@@ -14,7 +14,7 @@ public static class TriangleHatch
 
     /// <summary>
     /// The closest the lines may come on screen, in window pixels. Any closer, zoomed out or in a
-    /// small thumbnail, they blur into a wash with moiré, so the triangle is filled instead (#770).
+    /// small thumbnail, they blur into a wash with moiré, so the triangle is filled instead.
     /// </summary>
     public const float MinPixelSpacing = 3;
 

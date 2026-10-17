@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Spring's Godot DampedSpringJoint2D (#453) and its stops (#835). Each physics tick it gives the
+/// A Spring's Godot DampedSpringJoint2D and its stops. Each physics tick it gives the
 /// joint <see cref="Mechanics.Spring.StepRestLength"/>, so a Spring preloaded past a stop pushes only
 /// what reaches that stop and the stop keeps the rest of its preload inside.
 /// </summary>

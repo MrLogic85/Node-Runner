@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Keeps properties a component derives in code out of saved scenes (#309).
+/// Keeps properties a component derives in code out of saved scenes.
 /// </summary>
 /// <remarks>
 /// Godot saves every theme override and custom minimum size a component writes, and

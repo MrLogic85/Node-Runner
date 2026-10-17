@@ -1,7 +1,7 @@
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// What a part being placed or a sensor being moved marks (#1107): the <see cref="Beams"/> and
+/// What a part being placed or a sensor being moved marks: the <see cref="Beams"/> and
 /// <see cref="Joints"/> that would take it, which rise alone to the selected surface, the moved
 /// sensor, and the beams and joints that would refuse it. The canvas draws them and a touch hits
 /// them (<see cref="BuildViewModel.DrawnPartAt"/>) from the same <see cref="BuildViewModel.RaisedParts"/>.
@@ -33,7 +33,7 @@ public sealed record PlacingTargets(IReadOnlySet<int> Beams, IReadOnlySet<int> J
 
     /// <summary>
     /// The radius joint <paramref name="nodeId"/> is ringed round while a joint part is placed: the
-    /// ring the canvas draws there and where a tap or drop lands on it (#1055).
+    /// ring the canvas draws there and where a tap or drop lands on it.
     /// </summary>
     public double JointRingOf(int nodeId) => JointRings[nodeId];
 

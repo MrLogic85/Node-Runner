@@ -63,7 +63,7 @@ public sealed class SaveFormatTests : IDisposable
         SaveJson.Serialize(listed.ShouldHaveSingleItem()).ShouldBe(SaveJson.Serialize(ExampleCreation()));
     }
 
-    // The example's Camera (7) was saved before its hit input (#1032), so its network has no hit neuron.
+    // The example's Camera (7) was saved before its hit input, so its network has no hit neuron.
     // It loads unchanged and locked, and plays exactly as before whatever hit reads: the input
     // compiles silent. A refit, as an edit makes, adds the neuron, still silent.
     [Fact]
@@ -178,9 +178,9 @@ public sealed class SaveFormatTests : IDisposable
 
     // The direct network for ExampleCreation's ports: the Accelerometer (6), the Camera (7) and the
     // Piston (9). Every input drives the Piston's position, one connection is disabled, and its
-    // strength starts passive with no connection. The file is older than #870, so loading it doubles
+    // strength starts passive with no connection. The file is older than version 3, so loading it doubles
     // the Piston length weight (0.5) and takes 0.5 off the position bias (0.25). It is older than
-    // #1129 too, so the position output turns sigmoid with its bias and every weight into it doubled.
+    // version 8 too, so the position output turns sigmoid with its bias and every weight into it doubled.
     private static NeuralNetworkDef ExampleNetwork()
     {
         (int Part, string Channel)[] inputs = [(6, "along"), (6, "across"), (7, "left1"), (7, "centre"), (7, "right1"), (9, NetworkPorts.PistonLengthChannel), (9, NetworkPorts.PistonSpeedChannel)];
@@ -197,8 +197,8 @@ public sealed class SaveFormatTests : IDisposable
     }
 
     // VersionedSaveFile writes the version first, outside the record.
-    // A Brake's Strength is the one number saved as a named literal, and only "Infinity" when Locked
-    // (#1039); BrakeDef rejects the others, so the schema allows a positive number or "Infinity".
+    // A Brake's Strength is the one number saved as a named literal, and only "Infinity" when Locked;
+    // BrakeDef rejects the others, so the schema allows a positive number or "Infinity".
     private static JsonNode OnlyLockedIsInfinite(JsonSchemaExporterContext context, JsonNode schema)
     {
         if (context.PropertyInfo is not { Name: "strength" } property || property.DeclaringType != typeof(BrakeDef))

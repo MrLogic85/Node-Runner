@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// A component's own mouse filter as a default that a scene's <c>mouse_filter</c> overrides (#1164).
+/// A component's own mouse filter as a default that a scene's <c>mouse_filter</c> overrides.
 /// Godot applies a scene's native properties before its <c>script</c>, so a C# constructor runs after
 /// the scene's value, and <c>_Ready</c> after all of them: assigning <c>MouseFilter</c> there would
 /// silently undo the scene. A scene stores only a value that differs from the native class's default,

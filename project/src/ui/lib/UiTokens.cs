@@ -41,7 +41,7 @@ public static class UiTokens
         /// <summary>Soft fill for selected, pressed and hovered backgrounds.</summary>
         Soft,
 
-        /// <summary>Every shadow in Training except the followed one (#385).</summary>
+        /// <summary>Every shadow in Training except the followed one.</summary>
         Shadow,
     }
 

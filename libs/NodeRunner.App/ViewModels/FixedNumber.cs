@@ -5,7 +5,7 @@ namespace NodeRunner.App.ViewModels;
 /// after the point, such as 2.5 for "{0} m". Whole numbers are plain <c>int</c> or <c>long</c>
 /// arguments. The value is kept rounded as shown, so two numbers that read the same are equal;
 /// a negative that rounds to zero reads 0.0, not -0.0. Godot writes the digits for the player's
-/// language (#756).
+/// language.
 /// </summary>
 public readonly record struct FixedNumber
 {

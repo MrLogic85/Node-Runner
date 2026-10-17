@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>What the Import screen shows (#899).</summary>
+/// <summary>What the Import screen shows.</summary>
 public enum ImportState
 {
     /// <summary>Nothing pasted yet.</summary>
@@ -20,9 +20,9 @@ public enum ImportState
 public sealed record ImportPartRow(PartKind Kind, int Count);
 
 /// <summary>
-/// The Import screen (#899) for the last paste: the build, the name its Name field starts with and
+/// The Import screen for the last paste: the build, the name its Name field starts with and
 /// its parts by kind; or a note on what to do or why the paste was refused. <paramref name="TakenNames"/>
-/// are the player's creations' names, for the line under the Name field (#1061).
+/// are the player's creations' names, for the line under the Name field.
 /// </summary>
 public sealed record ImportPresentation(
     ImportState State,
@@ -38,13 +38,13 @@ public sealed record ImportPresentation(
 
     /// <summary>
     /// The warning that a code from an older version was updated to this one, so its build may
-    /// differ from the one shared (#1094); null for a code in this version.
+    /// differ from the one shared; null for a code in this version.
     /// </summary>
     public UiText? UpdatedNote { get; init; }
 
     public bool CanAdd => State == ImportState.Preview;
 
-    /// <summary>The next step is the one Primary (#1061): Paste until a build shows, then Add to Creations.</summary>
+    /// <summary>The next step is the one Primary: Paste until a build shows, then Add to Creations.</summary>
     public bool PasteIsPrimary => !CanAdd;
 
     /// <summary>

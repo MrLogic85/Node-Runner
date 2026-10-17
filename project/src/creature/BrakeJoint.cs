@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Brake (#1040) between the two <see cref="HingePartSides"/> at its joint: friction that slows and
+/// A Brake between the two <see cref="HingePartSides"/> at its joint: friction that slows and
 /// holds the Target's turning against the Fixed side, up to its Strength. It has no network ports, so
 /// it holds every tick, with or without a network. A Locked one held by a weld (Creature.Welder) holds
 /// through that joint instead.
@@ -24,7 +24,7 @@ public sealed class BrakeJoint
 
     public HingePartSides Sides { get; }
 
-    /// <summary>Whether its Fixed or Target beam has torn at either end (#962): it then holds nothing.</summary>
+    /// <summary>Whether its Fixed or Target beam has torn at either end: it then holds nothing.</summary>
     public bool IsPassive { get; private set; }
 
     /// <summary>Stops holding, letting go of its weld at once, as a tear lets go of a pin (Creature.Tears).</summary>

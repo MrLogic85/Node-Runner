@@ -6,7 +6,7 @@ namespace NodeRunner.Ui.Screens;
 /// <summary>
 /// Visual inventory of the design foundations: the colour tokens in both themes,
 /// icon sizes, the icon set and the text styles. The whole page is authored in its scene.
-/// It also sets the UI size for the session (#299, #738) until Settings has it (#201).
+/// It also sets the UI size for the session until Settings has it (#201).
 /// </summary>
 public partial class ColorsAndStylesScreen : GalleryScreen
 {

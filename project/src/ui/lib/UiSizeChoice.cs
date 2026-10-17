@@ -1,7 +1,7 @@
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// A UI size the player picks (#738): Auto and Max follow the window, a fixed size is a percentage
+/// A UI size the player picks: Auto and Max follow the window, a fixed size is a percentage
 /// on the <see cref="UiScale.StepPercent"/> grid. See "UI size" in docs/UI_DIRECTION.md.
 /// </summary>
 public readonly record struct UiSizeChoice

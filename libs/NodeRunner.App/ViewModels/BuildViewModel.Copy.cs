@@ -3,15 +3,15 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The selection panel's Copy (#937, #990): several selected parts duplicated beside themselves,
+/// The selection panel's Copy: several selected parts duplicated beside themselves,
 /// inside the same Creation. A part copies only with what it sits on: a link with both its joints
-/// and a sensor with its beam. A joint part, a Servo, a Velocity motor, a Brake (#1041), an Angle sensor (#1206), a Wheel, a Touch sensor (#1045) or a Rubber (#1142), is its joint
-/// to the player (#973), so it brings that joint along (#1000). A locked Creation copies no part with
+/// and a sensor with its beam. A joint part, a Servo, a Velocity motor, a Brake, an Angle sensor, a Wheel, a Touch sensor or a Rubber, is its joint
+/// to the player, so it brings that joint along. A locked Creation copies no part with
 /// network ports, since a copy would change its network; a Wheel, a Rubber and a Brake have none.
 /// </summary>
 public sealed partial class BuildViewModel
 {
-    /// <summary>Whether enough parts are selected to copy: two or more, locked or not (#990).</summary>
+    /// <summary>Whether enough parts are selected to copy: two or more, locked or not.</summary>
     public bool CanOfferCopy => SelectedPartCount >= 2;
 
     /// <summary>Whether Copy would duplicate the selection now; when not, the button is dimmed.</summary>
@@ -90,8 +90,8 @@ public sealed partial class BuildViewModel
     /// selects the originals again. Each copy keeps its settings but not its name; a copied motor, Brake or Angle sensor
     /// sits on the copy of its joint, uses the copies of its Fixed and Target links or Wheel, and
     /// leaves a role empty whose side was not copied. A copied joint part brings its joint along, but the
-    /// joint's other parts only when they are selected too (#1044). The copy is selected as the
-    /// original was: joint parts stand in for their copied joint (#973). While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
+    /// joint's other parts only when they are selected too. The copy is selected as the
+    /// original was: joint parts stand in for their copied joint. While Copy is dimmed, it instead shows <see cref="CopyBlockers"/> in
     /// <see cref="CanvasNotes"/>.
     /// </summary>
     public void CopySelectedParts()
@@ -124,7 +124,7 @@ public sealed partial class BuildViewModel
         var touchSensors = TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).ToList();
         var rubbers = Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).ToList();
 
-        // A copied joint is as big as the joint parts that come along with it (#1044).
+        // A copied joint is as big as the joint parts that come along with it.
         var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, [.. servos, .. velocityMotors, .. steppers], wheels));
         var offset = CopyOffset(nodes, copiedRadii);
         _history.Change(() =>
@@ -167,7 +167,7 @@ public sealed partial class BuildViewModel
                 _selectedSensorIds.Add(CopySettings(sensor.Id, copy));
             }
 
-            // A Wheel before its motor: to the motor it is a one-sided link (#1118).
+            // A Wheel before its motor: to the motor it is a one-sided link.
             foreach (var wheel in wheels)
             {
                 linkCopies[wheel.Id] = CopySettings(wheel.Id, _builder.AddWheel(nodeCopies[wheel.NodeId]));

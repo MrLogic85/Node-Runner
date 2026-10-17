@@ -35,7 +35,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     }
 
     /// <summary>
-    /// Simulate's presentation (#702): nothing races or learns, so the best marker stays at
+    /// Simulate's presentation: nothing races or learns, so the best marker stays at
     /// <paramref name="training"/>'s best on <paramref name="mapId"/>, or is hidden without one.
     /// </summary>
     public static TrainingPresentationViewModel Saved(TrainingStateDef training, string mapId)
@@ -48,7 +48,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public int ShadowCount => _shadowCount;
     public double BestFitness => _bestFitness;
 
-    /// <summary>Where the best marker stands (#725): the furthest any latest run's front has ended on this map. NaN until known.</summary>
+    /// <summary>Where the best marker stands: the furthest any latest run's front has ended on this map. NaN until known.</summary>
     public double BestShownDistance => _bestShownDistance;
     public double MeanFitness => _meanFitness;
     public int BestGeneration => _bestGeneration;
@@ -56,18 +56,18 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public IReadOnlyList<double> CompletedFitness => _completedFitness;
 
     /// <summary>
-    /// The generation racing now, counted from 1 like <see cref="BestGeneration"/> (#387), or the
+    /// The generation racing now, counted from 1 like <see cref="BestGeneration"/>, or the
     /// last finished one when none is racing.
     /// </summary>
     public UiText GenerationText => UiText.Format("Generation {0}", _isTrialActive ? _generation + 1 : _generation);
 
-    /// <summary>The best marker's flag (#388), such as "Best 4.2 m", or null until there is a best.</summary>
+    /// <summary>The best marker's flag, such as "Best 4.2 m", or null until there is a best.</summary>
     public UiText? BestMarkerText => double.IsFinite(_bestShownDistance)
         ? UiText.Format("Best {0}", Metres.WithUnit(_bestShownDistance))
         : null;
 
     /// <summary>
-    /// What marks a run whose distance froze at a tear (#962, #1257), such as "Crash 3.4 m": the
+    /// What marks a run whose distance froze at a tear, such as "Crash 3.4 m": the
     /// arena flag at that distance and the Distance stage's readout.
     /// </summary>
     public static UiText CrashText(double distance) => UiText.Format("Crash {0}", Metres.WithUnit(distance));
@@ -76,9 +76,9 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     public int FollowedShadow => _source is null ? 0 : _source.FollowedShadow + 1;
 
     /// <summary>
-    /// Every shadow's live standing for the shadow strip (#387), read from the source on each call
+    /// Every shadow's live standing for the shadow strip, read from the source on each call
     /// because distances change every physics tick. The leader is marked here only; it never takes
-    /// the camera (#385).
+    /// the camera.
     /// </summary>
     public IReadOnlyList<ShadowStanding> Shadows
     {
@@ -103,7 +103,7 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
     }
 
     /// <summary>
-    /// How much of the followed shadow's run has gone (#715), from 0 as it starts to 1 as it ends,
+    /// How much of the followed shadow's run has gone, from 0 as it starts to 1 as it ends,
     /// read from the source on each call so a bar can fill smoothly; null when no run with a time
     /// limit is going, as in Simulate.
     /// </summary>
@@ -112,10 +112,10 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
             ? Math.Clamp((double)run.ElapsedTicks / run.LengthTicks, 0, 1)
             : null;
 
-    /// <summary>The shadow strip (#387): which shadows it shows and how full their bars are.</summary>
+    /// <summary>The shadow strip: which shadows it shows and how full their bars are.</summary>
     public ShadowStripView Strip => _strip.View(Shadows, _generation, _source?.FollowedCrashed ?? false);
 
-    /// <summary>How many places the shadow strip has; the strip sets it to as many as fit (#791).</summary>
+    /// <summary>How many places the shadow strip has; the strip sets it to as many as fit.</summary>
     public int StripPlaces
     {
         get => _strip.Places;
@@ -218,8 +218,8 @@ public sealed class TrainingPresentationViewModel : INotifyPropertyChanged, IDis
         ApplySourceState();
     }
 
-    // Training draws only the shadows the strip shows (#284), so drawing does not limit Shadows
-    // (#787). Called whenever the page can change: paging, sorting, a new width or new progress,
+    // Training draws only the shadows the strip shows, so drawing does not limit Shadows.
+    // Called whenever the page can change: paging, sorting, a new width or new progress,
     // which includes a new generation going back to the first page.
     private void DrawStripShadows()
     {

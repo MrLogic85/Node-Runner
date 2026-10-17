@@ -5,8 +5,8 @@ using NodeRunner.Mechanics;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The handles on a selection of two or more joints in any tool (#803), and the handle that turns a
-/// selected Camera (#594).
+/// The handles on a selection of two or more joints in any tool, and the handle that turns a
+/// selected Camera.
 /// </summary>
 public enum SelectionHandle
 {
@@ -46,10 +46,10 @@ public sealed class BuildGestures
     private const double _frameMinSize = 96;
     private const double _rotateStem = 32;
 
-    // The Aim handle's gap past the camera picture; no stem joins them (#622).
+    // The Aim handle's gap past the camera picture; no stem joins them.
     private const double _aimGap = 8;
 
-    // The owner wanted the Aim handle twice as far from the camera (#639).
+    // The owner wanted the Aim handle twice as far from the camera.
     private const double _aimReachScale = 2;
 
     private readonly BuildViewModel _build;
@@ -100,7 +100,7 @@ public sealed class BuildGestures
 
     /// <summary>
     /// Eases the view out until every selected Camera's shown rays fit, with a grid cell around
-    /// them, so changing Range or Spread visibly changes them (#1092). The view may reach past
+    /// them, so changing Range or Spread visibly changes them. The view may reach past
     /// the Build area to show them while they are shown; nothing moves when they already fit.
     /// </summary>
     public void ShowSelectedCameraRays()
@@ -150,8 +150,8 @@ public sealed class BuildGestures
     public event EventHandler? Changed;
 
     /// <summary>
-    /// The link a drag from <paramref name="nodeId"/> draws (#705), or null for a drag that moves it:
-    /// the picked link, in Links, from a joint that is not selected (#1057). The canvas marks these joints.
+    /// The link a drag from <paramref name="nodeId"/> draws, or null for a drag that moves it:
+    /// the picked link, in Links, from a joint that is not selected. The canvas marks these joints.
     /// </summary>
     public BuildLink? LinkDrawnFrom(int nodeId) =>
         _build.ActiveTool == BuildTool.Beam && !_build.Selection.Nodes.Contains(nodeId) ? _build.PickedLink : null;
@@ -165,22 +165,22 @@ public sealed class BuildGestures
     /// <summary>The joint a Beam or link drag would connect to if released now.</summary>
     public int? BeamTargetNodeId { get; private set; }
 
-    /// <summary>The joint under a link drag that would refuse it (#451, #877), such as one a beam already joins to the start.</summary>
+    /// <summary>The joint under a link drag that would refuse it, such as one a beam already joins to the start.</summary>
     public int? RefusedTargetNodeId { get; private set; }
 
-    /// <summary>The link of another kind a link drag would replace if released now (#849, #1176).</summary>
+    /// <summary>The link of another kind a link drag would replace if released now.</summary>
     public int? ReplacedLinkId { get; private set; }
 
-    /// <summary>The sensor a drag is moving to another beam (#806).</summary>
+    /// <summary>The sensor a drag is moving to another beam.</summary>
     public int? MovingSensorId { get; private set; }
 
     /// <summary>What <see cref="MovingSensorId"/> would land on if released now (<see cref="DropTargetAt"/>); null over empty canvas.</summary>
     public CreatureElementSelection? SensorDropTarget { get; private set; }
 
-    /// <summary>Where the pointer is while <see cref="MovingSensorId"/> is dragged (#1021), in canvas units: the end of the line from the sensor.</summary>
+    /// <summary>Where the pointer is while <see cref="MovingSensorId"/> is dragged, in canvas units: the end of the line from the sensor.</summary>
     public Vector2D? SensorDragEnd { get; private set; }
 
-    /// <summary>The moving sensor as it would be if released now (#806): on another beam that takes it, else null.</summary>
+    /// <summary>The moving sensor as it would be if released now: on another beam that takes it, else null.</summary>
     public SensorDef? MovedSensorPreview =>
         MovingSensorId is { } sensor ? _build.SensorMovePreview(sensor, SensorDropTarget) : null;
 
@@ -227,13 +227,13 @@ public sealed class BuildGestures
         SelectionBox is { } box ? PartsInBox(box.Start, box.End) ?? PartSet.None : PartSet.None;
 
     /// <summary>
-    /// The part a tray part dragged to <paramref name="viewPosition"/> would land on (#376): the part
-    /// drawn on top there (#1107, <see cref="BuildViewModel.DrawnPartAt"/>), a sensor picture as its
-    /// beam; off every part, which covers every joint's reach, a Piston or Spring within reach
-    /// (#1033), then a beam within reach. Null over empty canvas. A joint part being placed
+    /// The part a tray part dragged to <paramref name="viewPosition"/> would land on: the part
+    /// drawn on top there (<see cref="BuildViewModel.DrawnPartAt"/>), a sensor picture as its
+    /// beam; off every part, which covers every joint's reach, a Piston or Spring within reach,
+    /// then a beam within reach. Null over empty canvas. A joint part being placed
     /// (<paramref name="placing"/>) is marked by a ring round each joint, so it lands on a joint
-    /// anywhere inside that ring first (#1055, <see cref="PlacingTargets.JointRingOf"/>): a Servo's
-    /// at its housing, a Wheel's at a new Wheel's size (#129), a Touch sensor's round its cushion (#1045). <paramref name="placing"/> is null for a moved sensor.
+    /// anywhere inside that ring first (<see cref="PlacingTargets.JointRingOf"/>): a Servo's
+    /// at its housing, a Wheel's at a new Wheel's size, a Touch sensor's round its cushion. <paramref name="placing"/> is null for a moved sensor.
     /// </summary>
     public CreatureElementSelection? DropTargetAt(Vector2D viewPosition, BuildPart? placing)
     {
@@ -263,7 +263,7 @@ public sealed class BuildGestures
 
     /// <summary>
     /// What rises with the part being placed (<paramref name="placing"/>) or else the sensor a drag
-    /// moves (#1107), for the canvas to draw and a touch to hit on the selected surface.
+    /// moves, for the canvas to draw and a touch to hit on the selected surface.
     /// </summary>
     public PlacingTargets TargetsOf(BuildPart? placing) => _build.PlacingTargetsOf(placing, placing is null ? MovingSensorId : null);
 
@@ -383,7 +383,7 @@ public sealed class BuildGestures
             return;
         }
 
-        // The part drawn on top (#1107), which covers every joint's reach; off every part, a link's reach, then a beam's.
+        // The part drawn on top, which covers every joint's reach; off every part, a link's reach, then a beam's.
         switch (_build.DrawnPartAt(position, TargetsOf(_build.PickedPart)))
         {
             case { Kind: CreatureElementKind.Node } joint:
@@ -418,7 +418,7 @@ public sealed class BuildGestures
             return;
         }
 
-        // A selected joint part's joint still starts a link, so a dropped Servo can get its links (#973).
+        // A selected joint part's joint still starts a link, so a dropped Servo can get its links.
         if (_pressedNode is { } start && LinkDrawnFrom(start) is { } drawn)
         {
             _drawnLink = drawn;
@@ -448,7 +448,7 @@ public sealed class BuildGestures
 
             _dragging = true;
 
-            // Everything a drag changes, up to its release, is one undo step (#689).
+            // Everything a drag changes, up to its release, is one undo step.
             _build.BeginEdit(this);
             if (_pressedHandle == SelectionHandle.Aim)
             {
@@ -461,7 +461,7 @@ public sealed class BuildGestures
             {
                 if (_press == SharedPress.Move && !_pressedNodeWasSelected && _pressedNode is { } joint)
                 {
-                    // A dragged joint's top part is selected, not the joint under it (#973, #1044).
+                    // A dragged joint's top part is selected, not the joint under it.
                     _build.ReplaceSelection(PartSet.Of(_build.JointPartsAt(joint).FirstOrDefault() ?? new(CreatureElementKind.Node, joint)));
                 }
 
@@ -590,12 +590,10 @@ public sealed class BuildGestures
         }
     }
 
-    /// <summary>
-    /// What a press does once it drags, the same in every tool (#803) apart from a Beams link drag:
-    /// a selected joint drags the selection, a press inside a group's frame drags the group, an
-    /// unselected joint is moved alone, a sensor is moved to another beam (#806), and any other
-    /// press draws a box in Select and pans elsewhere. Taps are settled on release (<see cref="Tap"/>).
-    /// </summary>
+    // What a press does once it drags, the same in every tool apart from a Beams link drag:
+    // a selected joint drags the selection, a press inside a group's frame drags the group, an
+    // unselected joint is moved alone, a sensor is moved to another beam, and any other
+    // press draws a box in Select and pans elsewhere. Taps are settled on release (Tap).
     private void PressShared(Vector2D viewPosition)
     {
         if (_pressedNodeWasSelected)
@@ -620,13 +618,11 @@ public sealed class BuildGestures
         }
     }
 
-    /// <summary>
-    /// A tap in any tool (#803) adds or removes the part under it; off every part and reach, a
-    /// Wheel's disc stands for the Wheel (#1143). A tap on empty canvas clears the
-    /// selection, or with nothing selected adds a joint in Joint or clears the picked link in
-    /// Links (#1057); one on a handle does nothing. With a tray part to place, a tap places it where
-    /// a drop there would (#805), and one on empty canvas puts it back (#1055).
-    /// </summary>
+    // A tap in any tool adds or removes the part under it; off every part and reach, a
+    // Wheel's disc stands for the Wheel. A tap on empty canvas clears the
+    // selection, or with nothing selected adds a joint in Joint or clears the picked link in
+    // Links; one on a handle does nothing. With a tray part to place, a tap places it where
+    // a drop there would, and one on empty canvas puts it back.
     private void Tap()
     {
         if (_build.PickedPart is { } part)
@@ -679,7 +675,7 @@ public sealed class BuildGestures
         : _pressedBeam is { } beam ? new(CreatureElementKind.Beam, beam)
         : null;
 
-    /// <summary>Turns the Camera the Aim drag started on to look at <paramref name="position"/>, smoothly (#622).</summary>
+    // Turns the Camera the Aim drag started on to look at position, smoothly.
     private void AimCamera(Vector2D position)
     {
         if (_aimStart is not { } start)
@@ -811,10 +807,8 @@ public sealed class BuildGestures
         yield return (SelectionHandle.Scale, layout.Scale);
     }
 
-    /// <summary>
-    /// The Aim handle out along the camera's centre ray, just past its picture, so it follows the
-    /// zoom smoothly (#639). It may cover a joint; it only shows while the camera is selected.
-    /// </summary>
+    // The Aim handle out along the camera's centre ray, just past its picture, so it follows the
+    // zoom smoothly. It may cover a joint; it only shows while the camera is selected.
     private Vector2D AimHandleInView(int camera)
     {
         var (nodeA, nodeB) = CameraBeam(camera);
@@ -844,10 +838,9 @@ public sealed class BuildGestures
         }
     }
 
-    /// <summary>
-    /// The parts whose centres lie in the box from <paramref name="start"/> to <paramref name="end"/>
-    /// (#704): a joint's centre and a beam's or link's midpoint; a sensor comes with its beam. A joint with parts comes in as all of them, never as the joint (#973, #1044). Null while the box is too small to count.
-    /// </summary>
+    // The parts whose centres lie in the box from start to end: a joint's centre and a beam's or
+    // link's midpoint; a sensor comes with its beam. A joint with parts comes in as all of them,
+    // never as the joint. Null while the box is too small to count.
     private PartSet? PartsInBox(Vector2D start, Vector2D end)
     {
         var min = new Vector2D(Math.Min(start.X, end.X), Math.Min(start.Y, end.Y));
@@ -939,7 +932,7 @@ public sealed class BuildGestures
         return Math.Sqrt((dx * dx) + (dy * dy));
     }
 
-    /// <summary>What a press away from the handles does once it drags (#803).</summary>
+    // What a press away from the handles does once it drags.
     private enum SharedPress
     {
         None,
@@ -950,7 +943,7 @@ public sealed class BuildGestures
         Pan,
         Box,
 
-        /// <summary>On a sensor's picture: a drag moves the sensor to another beam (#806).</summary>
+        /// <summary>On a sensor's picture: a drag moves the sensor to another beam.</summary>
         Sensor,
     }
 }

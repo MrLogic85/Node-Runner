@@ -6,7 +6,7 @@ namespace NodeRunner.Creature;
 
 /// <summary>
 /// One accelerometer on its beam: each physics tick it measures the acceleration where its picture
-/// sits on the beam body (<see cref="SensorPicture.Centre"/>, #1086), turns it into specific force (at rest 1 g up), steps the Mechanics <see cref="Accelerometer"/> proof mass and
+/// sits on the beam body (<see cref="SensorPicture.Centre"/>), turns it into specific force (at rest 1 g up), steps the Mechanics <see cref="Accelerometer"/> proof mass and
 /// writes its two readings. <see cref="CurrentProofMass"/> is what the network reads.
 /// </summary>
 public sealed class AccelerometerSensor : IBeamSensor
@@ -17,7 +17,6 @@ public sealed class AccelerometerSensor : IBeamSensor
     private readonly double _gravity;
     private Vector2 _previousVelocity;
 
-    /// <summary>An accelerometer reading <paramref name="beamBody"/> at <paramref name="at"/>.</summary>
     /// <param name="beamBody">The beam it sits on, turning about its origin.</param>
     /// <param name="at">Where its picture sits on the beam body, in the body's space.</param>
     /// <param name="upSign">Which side of the beam is its up, +1 or −1.</param>

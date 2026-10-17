@@ -5,7 +5,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>The Import screen's states (#899).</summary>
+/// <summary>The Import screen's states.</summary>
 public sealed class ImportPresentationTests
 {
     [Fact]

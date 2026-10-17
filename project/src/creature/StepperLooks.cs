@@ -3,7 +3,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// Adapts a Stepper's mechanics state to the <see cref="StepperLook"/> its visual shows (#1067), so the
+/// Adapts a Stepper's mechanics state to the <see cref="StepperLook"/> its visual shows, so the
 /// theme never reads physics. While it releases, the pawl is lifted, the wedge running from it to the
 /// notch it steps to; otherwise, caught or pulled to its nearest notch, it shows as Hold.
 /// </summary>

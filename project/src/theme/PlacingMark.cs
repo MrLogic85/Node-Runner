@@ -1,8 +1,8 @@
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// How a beam or joint shows a part being placed or a sensor being moved (#376, #1016): it draws
-/// the mark with itself, so the mark sits on its own layers (#1107).
+/// How a beam or joint shows a part being placed or a sensor being moved: it draws
+/// the mark with itself, so the mark sits on its own layers.
 /// </summary>
 public enum PlacingMark
 {

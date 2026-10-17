@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// A Touch sensor's pure math (#1045): how far the nearest ground reaches into its joint's cushion
+/// A Touch sensor's pure math: how far the nearest ground reaches into its joint's cushion
 /// (<see cref="TouchSensorDef.Cushion"/>). The sim finds that ground in any direction, so a slope
 /// or a step reads like flat ground. See docs/CREATURE_MODEL.md → "Touch sensor".
 /// </summary>

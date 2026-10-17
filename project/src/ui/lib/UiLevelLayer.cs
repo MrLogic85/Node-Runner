@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// A CanvasLayer on one of the named <see cref="UiLayers"/> levels (#768), <see cref="UiLayers.Overlay"/>
+/// A CanvasLayer on one of the named <see cref="UiLayers"/> levels, <see cref="UiLayers.Overlay"/>
 /// unless set, in the Viewport or Window it is in. It lifts its controls, such as an open
 /// <see cref="UiMenu"/>, over the screen or dialog that opened them without a ZIndex. It stays in
 /// its opener's subtree, so its controls keep the opener's lifetime, scene and unique names.

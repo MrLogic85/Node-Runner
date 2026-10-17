@@ -1,9 +1,9 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Wheel (#129): a passive joint part on one node, a disc that turns freely on it and rolls on the
+/// A Wheel: a passive joint part on one node, a disc that turns freely on it and rolls on the
 /// ground. It has no network ports and draws no power; a Servo or Velocity motor on its joint can drive
-/// it (#1118, #454), and a Brake can hold it (#1039). Its <see cref="Radius"/> sets how big it is drawn and collides, and what it weighs
+/// it, and a Brake can hold it. Its <see cref="Radius"/> sets how big it is drawn and collides, and what it weighs
 /// (<c>NodeRunner.Mechanics.Wheel.Mass</c>). See docs/CREATURE_MODEL.md → "Wheel".
 /// </summary>
 public sealed record WheelDef : IJointPartDef
@@ -14,7 +14,6 @@ public sealed record WheelDef : IJointPartDef
     /// <summary>The largest <see cref="Radius"/>: 1 m.</summary>
     public const double MaxRadius = 100;
 
-    /// <summary>A new Wheel's <see cref="Radius"/>: the smallest.</summary>
     public const double DefaultRadius = MinRadius;
 
     public WheelDef(int id, int nodeId, string? name = null, double radius = DefaultRadius)

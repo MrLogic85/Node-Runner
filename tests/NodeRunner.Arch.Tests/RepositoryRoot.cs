@@ -1,6 +1,5 @@
 namespace NodeRunner.Arch.Tests;
 
-/// <summary>The checkout the tests run from.</summary>
 internal static class RepositoryRoot
 {
     /// <summary>The nearest parent directory of the test binaries that holds NodeRunner.slnx.</summary>

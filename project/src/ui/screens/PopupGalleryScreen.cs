@@ -10,7 +10,7 @@ public partial class PopupGalleryScreen : GalleryScreen
     private UiDialog? _dialog;
     private UiNotification? _notifications;
 
-    // Demo values are authored in the scene; screen code declares no numbers (#310).
+    // Demo values are authored in the scene.
     [Export]
     public int LongBodyRepeats { get; set; }
 

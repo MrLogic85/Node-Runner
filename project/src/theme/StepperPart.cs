@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A Stepper (#1067): a detent wheel in <c>accent</c> that stands in for its joint's ring or a Wheel's
+/// A Stepper: a detent wheel in <c>accent</c> that stands in for its joint's ring or a Wheel's
 /// hub (<see cref="StepperGeometry"/>). Its notched rim turns with the Fixed side and its pawl with the
 /// Target side, each drawn on its own layer behind the part, so a holding creature never redraws it.
 /// While it steps (<see cref="Look"/>) the pawl lifts and a soft wedge runs from it to the notch it steps
@@ -70,7 +70,7 @@ public partial class StepperPart : PartVisual
         set => Change(ref _hasTarget, value);
     }
 
-    /// <summary>Whether its joint has a Touch sensor's cushion, which its selection mark goes round (#1044).</summary>
+    /// <summary>Whether its joint has a Touch sensor's cushion, which its selection mark goes round.</summary>
     public bool Cushioned
     {
         get => _cushioned;
@@ -112,7 +112,7 @@ public partial class StepperPart : PartVisual
         _haloLayer.Rotation = targetAngle;
     }
 
-    /// <summary>A Stepper missing a side cannot train, so it draws in danger (#1111).</summary>
+    // A Stepper missing a side cannot train, so it draws in danger.
     private bool Missing => !HasFixed || !HasTarget;
 
     private Color Line => Missing ? Theme.Danger : Theme.MotorAccent;
@@ -166,7 +166,7 @@ public partial class StepperPart : PartVisual
         }
     }
 
-    // On a Touch sensor's joint the mark is a ring outside the cushion and the pawl (#1044).
+    // On a Touch sensor's joint the mark is a ring outside the cushion and the pawl.
     private void DrawHaloLayer()
     {
         if (!ShowsHalo)

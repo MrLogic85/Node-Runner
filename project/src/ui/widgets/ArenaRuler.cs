@@ -7,18 +7,18 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The ground line and the Training arena's two scales (#668, #1170), from <see cref="DistanceRuler"/>.
+/// The ground line and the Training arena's two scales, from <see cref="DistanceRuler"/>.
 /// The line runs along the node's origin, as wide as the world zooms it; the pixel pen feathers it,
-/// so a thin line does not flicker between pixel rows (#1173). The distance scale runs along the
+/// so a thin line does not flicker between pixel rows. The distance scale runs along the
 /// view's bottom edge, its ticks rising from the edge and labels above them; the height scale runs
 /// up the left edge from the ground's top (0 m), its ticks reaching in and labels sitting on them.
 /// The height scale is cut off at the distance scale's band and the view's top, as the distance
-/// labels are at the view's sides, rather than faded, so a label never blinks as the view shakes
-/// (#1302, #1338). Both share one label step, so a metre reads the same either way. It draws only
+/// labels are at the view's sides, rather than faded, so a label never blinks as the view shakes.
+/// Both share one label step, so a metre reads the same either way. It draws only
 /// what the camera shows, and the distance labels half a label past it, so they slide in and out
-/// under the view's sides (#1191); it redraws when the view moves. Ticks and labels keep their screen size at any zoom; every metre is labelled, or
-/// every 2, 5, 10, … when labels would overlap (#675), and from 5 m between labels the ticks thin
-/// out with them (#884).
+/// under the view's sides; it redraws when the view moves. Ticks and labels keep their screen size at any zoom; every metre is labelled, or
+/// every 2, 5, 10, … when labels would overlap, and from 5 m between labels the ticks thin
+/// out with them.
 /// </summary>
 public partial class ArenaRuler : Node2D
 {
@@ -98,7 +98,7 @@ public partial class ArenaRuler : Node2D
 
     /// <summary>
     /// The share of the view's height the distance scale takes along the bottom; the camera keeps
-    /// the ground line above it while it makes room for a part callout (#1170).
+    /// the ground line above it while it makes room for a part callout.
     /// </summary>
     public double BandShare
     {
@@ -115,7 +115,7 @@ public partial class ArenaRuler : Node2D
         using (var pen = UiPixelPen.Begin(this))
         {
             pen.Line(new Vector2(view.Position.X, 0), new Vector2(view.End.X, 0), _theme.GroundEdge, _theme.GroundEdgeWidth);
-            // Half a label past each side, so a label slides in under the view's edge, which clips it (#1191).
+            // Half a label past each side, so a label slides in under the view's edge, which clips it.
             var reach = _widestLabel / 2 * screenScale;
             DistanceRuler.Fill(_startX, view.Position.X - reach, view.End.X + reach, metresPerLabel, _marks);
             foreach (var mark in _marks)
@@ -134,7 +134,7 @@ public partial class ArenaRuler : Node2D
     }
 
     // Cut off at the distance scale's band; it runs up to the view's top, which cuts it as the
-    // sides cut the distance labels (#1338).
+    // sides cut the distance labels.
     private void DrawHeightScale()
     {
         var (view, screenScale, metresPerLabel) = Measure();
@@ -169,7 +169,7 @@ public partial class ArenaRuler : Node2D
         _heightScale.QueueRedraw();
     }
 
-    // What the camera shows, world units per UI unit (the arena view undoes the UI size, #738, so
+    // What the camera shows, world units per UI unit (the arena view undoes the UI size, so
     // this applies it again) and the label step. Both scales measure it as they draw.
     private (Rect2 View, float ScreenScale, int MetresPerLabel) Measure()
     {

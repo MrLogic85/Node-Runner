@@ -19,7 +19,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// How far the visible creature has got in this try, such as "12.4 m", or "Crash 3.4 m" once a
-    /// beam has torn and the distance froze (#1257); null when no try runs, so the card has no body.
+    /// beam has torn and the distance froze; null when no try runs, so the card has no body.
     /// </summary>
     public UiText? DistanceReadout { get; private set; }
 
@@ -33,7 +33,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// <param name="readings">How many readings the visible creature's network takes in.</param>
     /// <param name="parts">How many parts the network drives (Servos, Motors and Pistons); a part can have several outputs, so the note counts parts.</param>
     /// <param name="distance">How far the visible creature has got, in world units; NaN when no try runs.</param>
-    /// <param name="crashed">Whether a beam of the visible creature has torn, so <paramref name="distance"/> froze there (#1257).</param>
+    /// <param name="crashed">Whether a beam of the visible creature has torn, so <paramref name="distance"/> froze there.</param>
     public void Update(int readings, int parts, double distance, bool crashed = false)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(readings);

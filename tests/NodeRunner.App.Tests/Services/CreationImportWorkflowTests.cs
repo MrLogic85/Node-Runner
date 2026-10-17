@@ -5,7 +5,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Services;
 
-/// <summary>Adding a shared build to Creations (#899).</summary>
+/// <summary>Adding a shared build to Creations.</summary>
 public sealed class CreationImportWorkflowTests
 {
     [Fact]

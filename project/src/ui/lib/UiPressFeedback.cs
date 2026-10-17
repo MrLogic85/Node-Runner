@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// The one press feedback (#286): while a control is held down it shows an <c>accent</c> tint at
+/// The one press feedback: while a control is held down it shows an <c>accent</c> tint at
 /// <c>alpha-soft</c> over its own fill. Hover shows nothing, because desktop is not a target yet
 /// and on a phone the pointer Godot emulates from touch stays where the finger lifted. A selected
 /// or disabled control shows no tint. A destructive control tints with <c>danger</c> instead, so
@@ -54,7 +54,6 @@ public static class UiPressFeedback
         Draw(control, corners, new Rect2(Vector2.Zero, control.Size), fill, danger);
     }
 
-    /// <summary>Draws the tint over <paramref name="rect"/> of <paramref name="control"/>.</summary>
     public static void Draw(Control control, UiCorners corners, Rect2 rect, UiTokens.Color fill, bool danger)
     {
         ArgumentNullException.ThrowIfNull(control);

@@ -1,7 +1,7 @@
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// How an output port's value becomes a physical demand (#535): a pose for a position output and a
+/// How an output port's value becomes a physical demand: a pose for a position output and a
 /// force for a strength output. Which activation each output uses is the network's contract
 /// (<see cref="NodeRunner.Domain.PortSignals"/>). Stateless. See docs/CREATURE_MODEL.md.
 /// </summary>
@@ -10,8 +10,8 @@ public static class OutputSignals
     /// <summary>
     /// The pose a position <paramref name="target"/> asks for, mapped piecewise so 0 is always the
     /// built pose even when it is off-centre: −1…0 spans <paramref name="min"/>…<paramref name="built"/>
-    /// and 0…1 spans <paramref name="built"/>…<paramref name="max"/>. Used by the Servo; a Piston's
-    /// length output, 0…1, maps straight onto its travel instead (<see cref="Piston.TargetLength"/>, #1129).
+    /// and 0…1 spans <paramref name="built"/>…<paramref name="max"/>. A Servo's position output maps this way; a Piston's
+    /// length output, 0…1, maps straight onto its travel instead (<see cref="Piston.TargetLength"/>).
     /// </summary>
     public static double PositionFromTarget(double target, double min, double built, double max)
     {
