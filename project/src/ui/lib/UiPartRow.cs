@@ -3,11 +3,11 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Canonical row for build parts: icon, name, count, and four reference states. A native button
-/// (#805): a tap that does not turn into a drag or a scroll picks an available row
+/// Canonical row for build parts: icon, name, count, and four reference states. A native button:
+/// a tap that does not turn into a drag or a scroll picks an available row
 /// (<see cref="PartSelectedEventHandler"/>). A locked row shows only its lock; its owner explains
-/// the lock once (#374), and may answer a tap on it (<see cref="LockedPressedEventHandler"/>, #896).
-/// <see cref="Compact"/> rows are <c>control-sm</c> high, as in the Build Parts tray.
+/// the lock once, and may answer a tap on it (<see cref="LockedPressedEventHandler"/>).
+/// <see cref="Compact"/> rows are <c>control-sm</c> high.
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -271,7 +271,7 @@ public partial class UiPartRow : BaseButton
     private bool IsAvailable => State is PartRowState.Rest or PartRowState.Selected;
 
     /// <summary>
-    /// What follows the finger while this row's part is dragged out (#376): its glyph on a raised
+    /// What follows the finger while this row's part is dragged out: its glyph on a raised
     /// <c>accent</c> tile, centred above the touch point so the finger does not hide it.
     /// </summary>
     public Control CreateDragPreview()

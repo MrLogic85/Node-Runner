@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// The UI size (#299, #738): device pixels per canvas unit, as a percentage, applied once as the root
+/// The UI size: device pixels per canvas unit, as a percentage, applied once as the root
 /// window's <see cref="Window.ContentScaleFactor"/> (<see cref="RootFactor"/>). Registered as the
 /// <see cref="AutoloadName"/> autoload. See "UI size" in docs/UI_DIRECTION.md.
 /// </summary>
@@ -13,7 +13,7 @@ public sealed partial class UiScale : Node
     public const int MinPercent = 50;
     public const int OnePixelPercent = 100;
 
-    /// <summary>The finest step: Settings' minus and plus buttons step by this much.</summary>
+    /// <summary>The finest step between UI sizes.</summary>
     public const int StepPercent = 5;
 
     private const float _percentPerPixel = 100;

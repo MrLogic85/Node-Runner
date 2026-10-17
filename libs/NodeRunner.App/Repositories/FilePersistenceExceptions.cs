@@ -3,11 +3,9 @@ using System.Text.Json;
 namespace NodeRunner.App.Repositories;
 
 /// <summary>
-/// Single source of truth for "is this exception a recoverable
-/// unreadable/corrupt/missing on-disk Creation or Progression, rather than a
-/// programming error I should let crash?" Used by every file read/write/
-/// lookup guard (repositories and scene hosts) so the set can't drift between
-/// call sites (#114).
+/// Whether an exception is a recoverable unreadable, corrupt or missing Creation or Progression
+/// file rather than a programming error that should crash. Every file guard shares this one set
+/// so it cannot drift.
 /// </summary>
 public static class FilePersistenceExceptions
 {

@@ -6,7 +6,7 @@ namespace NodeRunner.Ui.Widgets;
 /// <summary>
 /// Build's faint blueprint grid over <see cref="BuildViewModel.BuildArea"/>, the only place joints
 /// can go: fixed <see cref="BuildViewModel.BuildGridStep"/> cells drawn as hairlines that stay one
-/// pixel wide, behind Build's canvas and Import's preview (#899).
+/// pixel wide, behind Build's canvas and Import's preview.
 /// </summary>
 public static class BuildGrid
 {

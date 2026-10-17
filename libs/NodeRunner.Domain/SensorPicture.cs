@@ -1,18 +1,17 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// Where a sensor's picture sits on its beam (#576): a square of its kind's <see cref="SizeOf"/>,
-/// centred midway between what is drawn over the beam's two ends (<see cref="Shift"/>, #1086) and
-/// turned with the beam. A beam holds one sensor (#593), so this is also the sensor's
-/// tap area, and the sensor senses from its centre. Stateless and shared by Build's canvas and gestures and the
-/// creature in Training. See docs/CREATURE_MODEL.md.
+/// Where a sensor's picture sits on its beam: a square of its kind's <see cref="SizeOf"/>,
+/// centred midway between what is drawn over the beam's two ends (<see cref="Shift"/>) and
+/// turned with the beam. A beam holds one sensor, so this is also the sensor's
+/// tap area, and the sensor senses from its centre. Stateless. See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class SensorPicture
 {
     /// <summary>The Accelerometer picture's side, in canvas units.</summary>
     public const double AccelerometerSize = 24;
 
-    /// <summary>The Camera picture's side, in canvas units: twice the first size so it reads on a phone (#622).</summary>
+    /// <summary>The Camera picture's side, in canvas units: twice the first size so it reads on a phone.</summary>
     public const double CameraSize = 44;
 
     /// <summary>The picture's side for <paramref name="kind"/>, in canvas units.</summary>
@@ -24,7 +23,7 @@ public static class SensorPicture
     };
 
     /// <summary>
-    /// How far the picture's centre sits from its beam's midpoint, towards node B (#1086): midway
+    /// How far the picture's centre sits from its beam's midpoint, towards node B: midway
     /// between what is drawn over the beam's two ends, its hubs or a motor
     /// (<see cref="CreatureDef.CoveredRadius(int, IEnumerable{IJointMotorDef})"/>), so at the midpoint
     /// unless a motor sits on one end. A Wheel's size does not move it: the Wheel is see-through
@@ -40,7 +39,6 @@ public static class SensorPicture
         return new Vector2D(((nodeA.X + nodeB.X) / 2) + (alongX * shift), ((nodeA.Y + nodeB.Y) / 2) + (alongY * shift));
     }
 
-    /// <summary>Whether <paramref name="point"/> is on the picture of the <paramref name="kind"/> sensor on the beam from <paramref name="nodeA"/> to <paramref name="nodeB"/>.</summary>
     public static bool Contains(SensorKind kind, Vector2D point, Vector2D nodeA, Vector2D nodeB, double coveredA, double coveredB)
     {
         var half = SizeOf(kind) / 2;

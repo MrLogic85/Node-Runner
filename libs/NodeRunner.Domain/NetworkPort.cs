@@ -1,8 +1,8 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// One network channel a part declares (#534): which part, which of its channels, which way the
-/// signal goes and what it carries (#535). <see cref="Channel"/> is a machine key that never
+/// One network channel a part declares: which part, which of its channels, which way the
+/// signal goes and what it carries. <see cref="Channel"/> is a machine key that never
 /// changes; display names are separate. See <see cref="NetworkPorts"/> and docs/CREATURE_MODEL.md.
 /// </summary>
 public readonly record struct NetworkPort(int PartId, string Channel, PortDirection Direction, PortSignal Signal)

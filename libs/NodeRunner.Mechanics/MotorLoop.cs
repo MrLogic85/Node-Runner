@@ -1,7 +1,7 @@
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The speed loop every joint motor, a Servo (#452) or a Velocity motor (#454), drives its torque
+/// The speed loop the Servo and the Velocity motor drive their torque
 /// with. Each asks for a wanted speed its own way and hands the rest to <see cref="Next"/>, and
 /// both give the network the speed they turn at the same way (<see cref="SpeedInput"/>).
 /// </summary>

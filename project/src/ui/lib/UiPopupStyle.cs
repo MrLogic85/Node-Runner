@@ -12,7 +12,7 @@ internal static class UiPopupStyle
             _ => UiTokens.Color.Accent,
         };
 
-    /// <summary>The overline above a popup's title (#692): a normal popup has none.</summary>
+    /// <summary>The overline above a popup's title: a normal popup has none.</summary>
     public static string Overline(UiPopupType type) =>
         type switch
         {

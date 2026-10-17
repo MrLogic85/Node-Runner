@@ -3,18 +3,18 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The travel and rest length of a <see cref="SpringDef"/> (#835). Like a Piston's they are measured
-/// on the gap between its hubs (#1086), where the movement happens. It has a hard stop at each end
+/// The travel and rest length of a <see cref="SpringDef"/>. Like a Piston's they are measured
+/// on the gap between its hubs, where the movement happens. It has a hard stop at each end
 /// of a travel, and its <see cref="SpringDef.CoilLength"/> moves its rest length evenly from half its
 /// drawn gap short of its shortest stop to half its drawn gap past its longest. While the rest length
 /// is inside the travel it is the drawn length, and the stops sit round it as a Piston's of the same
-/// Stroke round a Start position there, so the travel is longer the nearer the shortest stop (#974);
+/// Stroke round a Start position there, so the travel is longer the nearer the shortest stop;
 /// past a stop the stops stay as a Piston's at that end with the drawn length on that stop, and the
 /// Spring starts pressed against it, harder the further out.
 /// </summary>
 /// <remarks>
 /// Every length takes the Spring's length as built, centre to centre, and its two joints' radii
-/// together; a joint with a Servo is bigger, so its gap and travel are shorter.
+/// together, its hubs' (<see cref="Travel.HubRadii"/>).
 /// </remarks>
 public static class Spring
 {
@@ -35,7 +35,7 @@ public static class Spring
 
     /// <summary>
     /// How far its longest length is past its shortest: a Piston's travel at the same Stroke drawn where
-    /// its rest length is, kept within its travel, so the nearer its shortest stop, the longer (#974).
+    /// its rest length is, kept within its travel, so the nearer its shortest stop, the longer.
     /// </summary>
     public static double TravelLength(SpringDef spring, double builtLength, double jointRadii)
     {
@@ -44,7 +44,7 @@ public static class Spring
         return Travel.Longest(builtLength, jointRadii, spring.Stroke, at) - Travel.Shortest(builtLength, jointRadii, spring.Stroke, at);
     }
 
-    // Where its drawn length sits in its travel, as a Piston's Start position (#974): where its
+    // Where its drawn length sits in its travel, as a Piston's Start position: where its
     // rest length is while that is inside the travel, else the stop it is pressed against.
     // Inside, a Piston drawn at `at` has its drawn gap g·at·s/(1 + at·s) past its shortest, so
     // `at` follows from the Offset.
@@ -78,7 +78,7 @@ public static class Spring
         Travel.Longest(builtLength, jointRadii, spring.Stroke, 1) - Travel.Shortest(builtLength, jointRadii, spring.Stroke, 1);
 
     /// <summary>
-    /// The rest length to give Godot's spring this step (#835): its own rest length, but past a stop
+    /// The rest length to give Godot's spring this step: its own rest length, but past a stop
     /// it pushes at most what brings its nodes to that stop within the step.
     /// </summary>
     /// <remarks>

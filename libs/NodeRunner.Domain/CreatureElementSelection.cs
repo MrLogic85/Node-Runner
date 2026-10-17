@@ -13,7 +13,7 @@ public sealed record CreatureElementSelection
         Id = id;
     }
 
-    /// <summary><paramref name="part"/> as it is selected (#1221).</summary>
+    /// <summary><paramref name="part"/> as it is selected.</summary>
     public static CreatureElementSelection Of(IPartDef part)
     {
         ArgumentNullException.ThrowIfNull(part);

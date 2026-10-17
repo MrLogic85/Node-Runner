@@ -234,7 +234,7 @@ public sealed partial class UiNotification : Control
     }
 
     // The card shows the press tint while a held pointer would still tap it, and only when a tap
-    // does something; a swipe or a drag clears it (#325).
+    // does something; a swipe or a drag clears it.
     private void UpdatePress()
     {
         if (_card is not null)

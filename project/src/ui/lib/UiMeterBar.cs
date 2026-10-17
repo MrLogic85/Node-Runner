@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// A small read-only bar for one live value in a callout line (#1064): a <c>line</c> track with a
+/// A small read-only bar for one live value in a callout line: a <c>line</c> track with a
 /// fill in the line's colour. A centred meter shows −1…1, filling left or right from a muted tick
 /// at 0; a filling meter shows 0…1 from its left end. Values past the range are drawn at its end;
 /// NaN draws no fill. Drawn here because Godot's ProgressBar fills only from an edge, never from

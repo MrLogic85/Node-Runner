@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Signpost (#848): a sign shaped like an arrow pointing right, on a short post down from the middle
+/// Signpost: a sign shaped like an arrow pointing right, on a short post down from the middle
 /// of its body. The post's foot, <see cref="Foot"/>, is where it stands. The outline, post and text
 /// take <see cref="Color"/>, a text colour; the sign is filled with <c>panel</c>.
 /// </summary>

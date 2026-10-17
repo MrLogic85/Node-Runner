@@ -37,7 +37,7 @@ public sealed class BuildViewModelTests
         build.TranslateSelection(build.SnapshotSelection(), new Vector2D(_area.Max.X, 30));
         build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(_area.Max.X - _r - 100, 30), new Vector2D(_area.Max.X - _r, 30)]);
 
-        // A save from before #1094 may hold joints off whole units; Build keeps them until one moves.
+        // An older save may hold joints off whole units; Build keeps them until one moves.
         var fractional = new CreatureDef([new NodeDef(1, new Vector2D(0.1, 0.3)), new NodeDef(2, new Vector2D(100.1, 0.3))], [], [], 3);
         build = new BuildViewModel(new CreatureBuilder(fractional));
         build.ReplaceSelection([1, 2]);
@@ -389,7 +389,7 @@ public sealed class BuildViewModelTests
         build.DrawnPartAt(new Vector2D(100, 50), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 5));
         build.DrawnPartAt(new Vector2D(50, SensorPicture.AccelerometerSize), PlacingTargets.None).ShouldBeNull();
 
-        // #1086: a Wheel's size does not move the sensor; it is see-through under its links.
+        // A Wheel's size does not move the sensor; it is see-through under its links.
         build = Loaded(SensorLink(new WheelDef(5, 1, radius: 60)));
         build.SensorCentre(4).ShouldBe(new Vector2D(100, 0));
         build.SensorCentreOn(3).ShouldBe(new Vector2D(100, 0));
@@ -456,8 +456,8 @@ public sealed class BuildViewModelTests
     [Fact]
     public void CanvasNotes_MarkEachLinkTooShortForWhatCoversItsEnds()
     {
-        // #1212: 60 units is long enough between plain joints (56) but not with a Servo on one (68);
-        // #1210: a Piston's telescope needs 16 units more than a Beam, 72 between plain joints.
+        // 60 units is long enough between plain joints (56) but not with a Servo on one (68);
+        // a Piston's telescope needs 16 units more than a Beam, 72 between plain joints.
         var build = Loaded(new CreatureDef(
             [
                 new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200)), new NodeDef(4, new Vector2D(50, 200)),

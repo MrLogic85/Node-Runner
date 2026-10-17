@@ -5,7 +5,7 @@ namespace NodeRunner.Ui.Tests;
 
 /// <summary>
 /// A Godot button made in code keeps a drag from its ScrollContainer unless it passes input on
-/// (#1001; <c>UiNativeScroll</c>): every one sets <c>MouseFilter = Pass</c>, in its initializer or
+/// (<c>UiNativeScroll</c>): every one sets <c>MouseFilter = Pass</c>, in its initializer or
 /// on the variable it is stored in.
 /// </summary>
 public sealed class UiButtonScrollGuardTests

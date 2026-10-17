@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The scrolled part of NetworkFocus (#908): as tall as its rows, so the scene's ScrollContainer scrolls
+/// The scrolled part of NetworkFocus: as tall as its rows, so the scene's ScrollContainer scrolls
 /// it. <see cref="NetworkFocusView"/> draws into it and reads its taps.
 /// </summary>
 public partial class NetworkFocusRows : Control

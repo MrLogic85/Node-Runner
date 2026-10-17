@@ -28,7 +28,7 @@ public enum UiIconSize
 /// <summary>Central icon registry, resource loader, and control tinting helpers.</summary>
 public static class UiIcons
 {
-    /// <summary>One folder holds every icon; the file name's prefix says its kind (docs/UI_DIRECTION.md).</summary>
+    /// <summary>One folder holds every icon; the file name's prefix says its kind (docs/UI_DIRECTION.md → "Buttons and icons").</summary>
     public const string Root = "res://assets/icons/";
     public const string IconPrefix = "icon_";
     public const string PartPrefix = "part_";
@@ -38,7 +38,7 @@ public static class UiIcons
     private const float _partSourceSize = 20;
 
     /// <summary>
-    /// Icons sample Linear (#734). An icon rasterized for the UI size lands on fractional device
+    /// Icons sample Linear. An icon rasterized for the UI size lands on fractional device
     /// pixels, where the project's Nearest doubles or drops rows. Where it is already pixel-aligned,
     /// Linear draws it exactly the same. Text keeps Nearest: see "Icon filtering" in
     /// .claude/rules/ui-lib.md.
@@ -69,7 +69,7 @@ public static class UiIcons
     /// <summary>A part glyph, drawn on a 20 grid, rather than a UI icon.</summary>
     public static bool IsPartGlyph(UiIconId icon) => icon != UiIconId.None && SourceFor(icon).FileName.StartsWith(PartPrefix, StringComparison.Ordinal);
 
-    /// <summary>Part glyphs no longer read at <see cref="UiIconSize.Small"/>; every other pairing is allowed.</summary>
+    /// <summary>Part glyphs do not read at <see cref="UiIconSize.Small"/>; every other pairing is allowed.</summary>
     public static bool IsAllowed(UiIconId icon, UiIconSize size) => !(IsPartGlyph(icon) && size == UiIconSize.Small);
 
     public static Texture2D Load(UiIconId icon, UiIconSize size)
@@ -86,7 +86,7 @@ public static class UiIcons
     /// <summary>
     /// Pins one tint on the icon's normal, hover, pressed and disabled colors. It does not follow
     /// a Theme swap, so library components use the themed overload and a Theme variation
-    /// instead (#338).
+    /// instead.
     /// </summary>
     public static void Apply(Button button, UiIconId icon, UiIconSize size, Color tint)
     {

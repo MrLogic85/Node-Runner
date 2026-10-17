@@ -4,7 +4,6 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>Shared creatures and gestures for the Build tests.</summary>
 internal static class BuildFixtures
 {
     public const string LockedText = "Locked: would change the network";
@@ -15,7 +14,6 @@ internal static class BuildFixtures
 
     public static CreatureElementSelection Element(BuildPart part, int id) => new(Enum.Parse<CreatureElementKind>(part.ToString()), id);
 
-    /// <summary>A selection of exactly <paramref name="parts"/>.</summary>
     public static PartSet Set(params CreatureElementSelection[] parts)
     {
         HashSet<int> Ids(CreatureElementKind kind) => [.. parts.Where(part => part.Kind == kind).Select(part => part.Id)];

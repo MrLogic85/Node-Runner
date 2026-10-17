@@ -4,7 +4,7 @@ namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// Finds the closed triangles of beams in a creature. Three beams between three nodes fix all three
-/// angles (SSS), so a triangle cannot fold; every other joint turns freely (#450). Build hatches
+/// angles (SSS), so a triangle cannot fold; every other joint turns freely. Build hatches
 /// these triangles so the player sees which areas are rigid. See docs/CREATURE_MODEL.md.
 /// </summary>
 public static class RigidTriangles

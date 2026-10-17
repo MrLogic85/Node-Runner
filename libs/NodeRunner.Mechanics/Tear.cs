@@ -3,10 +3,10 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// When a beam end lets go of its joint (#962). Godot's joints have no break force and do not report
+/// When a beam end lets go of its joint. Godot's joints have no break force and do not report
 /// what they push, so the rule reads how far the beam's pinned end has drifted from its joint: an end
 /// lets go once its drift has been at least <see cref="DriftLimit"/> for <see cref="Ticks"/> ticks in a row.
-/// The #1255 spike set both: ordinary creatures, even dropped from 3 m, drifted at most 11.3 units over
+/// Both were measured: ordinary creatures, even dropped from 3 m, drifted at most 11.3 units over
 /// four ticks, and every truss that went on to flip crossed 20 first.
 /// </summary>
 public static class Tear
@@ -29,7 +29,7 @@ public static class Tear
 
     /// <summary>
     /// The joints of the piece a creature's centre and bounds follow after a tear, by id. The one-piece
-    /// check (<see cref="Pieces.Of"/>, #930) runs over the links still joining their joints: every Piston
+    /// check (<see cref="Pieces.Of"/>) runs over the links still joining their joints: every Piston
     /// and Spring, and every beam with neither end torn. Of the pieces it lists (by their first joint in
     /// joint order), the one with the most joints wins, the first listed on a tie. When no link joins
     /// anything, the first joint stands for the creature.

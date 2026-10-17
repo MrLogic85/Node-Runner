@@ -8,14 +8,14 @@ namespace NodeRunner.Domain;
 public sealed record NodeDef : IPartDef
 {
     /// <summary>
-    /// A plain joint's radius (#626): it is drawn and collides at this size, unless a joint part
+    /// A plain joint's radius: it is drawn and collides at this size, unless a joint part
     /// makes it bigger (<see cref="CreatureDef.JointRadius"/>). Its look is in
     /// docs/WORLD_VISUALS.md → "Joint".
     /// </summary>
     public const double PlainJointRadius = 15;
 
     /// <summary>
-    /// Where every link (beam, Piston, Spring) ends, measured from its joint's centre (#1086): a
+    /// Where every link (beam, Piston, Spring) ends, measured from its joint's centre: a
     /// plain joint's radius, whatever sits on the joint. Links' travel and the too-short rule count
     /// their length from here.
     /// </summary>

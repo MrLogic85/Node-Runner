@@ -4,20 +4,20 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The line a link drag (#920) or a sensor move (#1021) draws from where it started, since the finger
-/// hides its target: one look for both (`docs/WORLD_VISUALS.md` → "Link drag line").
+/// The line a link drag or a sensor move draws from where it started, since the finger
+/// hides its target: one look for both (`docs/WORLD_VISUALS.md` → "Build canvas" → Link drag line).
 /// </summary>
 public partial class BuildCanvas
 {
-    // The loose-joint style mark a drag line shows at its middle: a cross when refused (#920), else a
-    // sensor move's arrow (#1024).
+    // The loose-joint style mark a drag line shows at its middle: a cross when refused, else a
+    // sensor move's arrow.
     private const float _lineMarkRadius = 12;
 
     // How far an arrow mark's tip, tail and head reach from the middle, in units of the cross's arm, so
     // it fills its ring as the cross does.
     private const float _arrowReach = 1.4f;
 
-    // The dash of a free or refused drag line, and of the outline round a link another will replace (#849, #1176).
+    // The dash of a free or refused drag line, and of the outline round a link another will replace.
     private const float _dragLineDash = 8;
 
     private enum DragLine

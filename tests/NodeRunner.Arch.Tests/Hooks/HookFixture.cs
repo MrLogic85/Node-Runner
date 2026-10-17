@@ -5,7 +5,7 @@ namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
 /// Runs a repository hook from .claude/hooks against a throwaway git repository, the way both
-/// tools do: the payload as JSON on stdin and CLAUDE_PROJECT_DIR set to the project (#1320).
+/// tools do: the payload as JSON on stdin and CLAUDE_PROJECT_DIR set to the project.
 /// The repository is the fixture's temp directory, made under the test output rather than
 /// /tmp, since guard-edit.sh denies writes into /tmp. Specs that only read the repository share
 /// one through IClassFixture. Git runs without the user's or system's config, so a global
@@ -33,7 +33,6 @@ public sealed class HookFixture : IDisposable
 
     public void Dispose() => Directory.Delete(Root, recursive: true);
 
-    /// <summary>A second checkout inside the fixture, created on first use.</summary>
     internal string Checkout(string name, string branch)
     {
         var directory = Path.Combine(Root, name);
@@ -111,7 +110,7 @@ public sealed class HookFixture : IDisposable
 
     /// <summary>
     /// The PreToolUse deny reason, or null when the hook allows the call. A deny carries both
-    /// tools' fields with the same reason (#1314).
+    /// tools' fields with the same reason.
     /// </summary>
     internal static string? DenyReason(string output)
     {

@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>A ui/lib component sets its own mouse filter through <c>UiMouseFilter.Prefer</c>, never by assigning it (#1164).</summary>
+/// <summary>A ui/lib component sets its own mouse filter through <c>UiMouseFilter.Prefer</c>, never by assigning it.</summary>
 public sealed class UiMouseFilterGuardTests
 {
     private const string _helper = "ui/lib/UiMouseFilter.cs";

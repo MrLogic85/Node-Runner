@@ -5,10 +5,9 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws a Spring between two joints (#453) as a coilover (#807), shared by Build's canvas, the
-/// creature in Training and the thumbnails; <c>docs/WORLD_VISUALS.md</c> → "Spring" owns its look.
-/// Each side of the helix is one call of the same wire (#835). The damper inside the coil is a
-/// three-part telescope like a Piston's (#1210), narrower and in <c>line-strong</c>, placed by
+/// Draws a Spring between two joints as a coilover; <c>docs/WORLD_VISUALS.md</c> → "Spring" owns its look.
+/// Each side of the helix is one call of the same wire. The damper inside the coil is a
+/// three-part telescope like a Piston's, narrower and in <c>line-strong</c>, placed by
 /// <see cref="TelescopeGeometry"/>.
 /// Drawn through <see cref="UiPixelPen"/>, so it stays crisp at any zoom.
 /// </summary>
@@ -38,7 +37,7 @@ public static class SpringDrawing
     private const float _lead = 3;
 
     // The wire runs from a hairline on the softest Spring to as wide as a drawn beam on the stiffest,
-    // in proportion (owner decision, #835).
+    // in proportion (owner decision).
     private const float _maxWire = UiSize.Widget.CreatureBeamWidth;
 
     // A free coil is this many times as long as stacked solid, as far as a Spring can be squeezed.
@@ -53,7 +52,7 @@ public static class SpringDrawing
     /// <param name="theme">The theme its colours and widths come from.</param>
     /// <param name="a">Joint A's centre.</param>
     /// <param name="b">Joint B's centre.</param>
-    /// <param name="radiusA">Joint A's drawn radius, whose halo the selection lines join; the rod starts at its hub (#1086).</param>
+    /// <param name="radiusA">Joint A's drawn radius, whose halo the selection lines join; the rod starts at its hub.</param>
     /// <param name="radiusB">Joint B's drawn radius.</param>
     /// <param name="coveredA">How far what is drawn over joint A reaches (<see cref="ServoGeometry.LinkCover"/>); the cylinder and seat start there.</param>
     /// <param name="coveredB">How far what is drawn over joint B reaches; its seat sits a short lead outside.</param>
@@ -98,7 +97,7 @@ public static class SpringDrawing
         var across = along.Orthogonal();
         var seatHalf = SeatHalf(theme);
 
-        // Like a Piston's rod, it runs hub to hub (#1086), or, when they meet, centre to centre.
+        // Like a Piston's rod, it runs hub to hub, or, when they meet, centre to centre.
         const float hub = JointDrawing.HubRadius;
         var (rodStart, rodEnd) = JointDrawing.BeamSpan(theme.JointRingWidth, a, hub, b, hub) ?? (a, b);
         pen.Line(rodStart, rodEnd, line, theme.BeamWidth * _rodPerBeam);
@@ -120,7 +119,7 @@ public static class SpringDrawing
             pen.Strokes(Helix(seatA, seatB, across, turns, radius, segments, front: false), line, wire);
         }
 
-        // The stage runs from under the cylinder, so only its mouth end shows (#1210).
+        // The stage runs from under the cylinder, so only its mouth end shows.
         if (telescope.HasStage)
         {
             DrawTube(pen, theme, PistonDrawing.Cylinder(a + (along * telescope.Start), a + (along * telescope.StageEnd), along, across, theme.BeamWidth * _stageHalfPerBeam), line);
@@ -156,7 +155,7 @@ public static class SpringDrawing
     /// <summary>The selection outline's distance from the axis: the seats are its widest part, and the gap is measured from their ends.</summary>
     public static float SelectionOffset(VisualTheme theme) => SeatHalf(theme) + (float)SelectionMarks.Gap;
 
-    /// <summary>A seat plate's half width, the Spring's widest part; its stroke ticks are as wide (#835).</summary>
+    /// <summary>A seat plate's half width, the Spring's widest part; its stroke ticks are as wide.</summary>
     public static float SeatHalf(VisualTheme theme)
     {
         ArgumentNullException.ThrowIfNull(theme);
@@ -165,7 +164,7 @@ public static class SpringDrawing
 
     /// <summary>
     /// The coil's wire, in pixels, for a <paramref name="stiffness"/> in N/m: a hairline at
-    /// Build's softest, <see cref="_maxWire"/> at its stiffest, in proportion between (#835).
+    /// Build's softest, <see cref="_maxWire"/> at its stiffest, in proportion between.
     /// </summary>
     public static float Wire(double stiffness)
     {
@@ -178,12 +177,12 @@ public static class SpringDrawing
     /// a third of <paramref name="restSpan"/>, seat to seat at the Spring's rest length, and at least
     /// <see cref="MinTurns"/>. Past <see cref="LongSpan"/> they grow only with the square root of
     /// the span, so a long coil does not turn into a grey band of hundreds, yet still gains turns
-    /// with its Coil length, as there is no most (#835). They are never more than fit wire to wire,
+    /// with its Coil length, as there is no most. They are never more than fit wire to wire,
     /// with no gap, over <paramref name="shortestSpan"/>, seat to seat at its shortest length, so they
     /// do not overlap when it is squeezed, unless that is fewer than <see cref="MinTurns"/>. With no
     /// gap the cap binds less, so a plain 1 m Spring at Stroke 200% still gains turns with its Coil
     /// length; where it binds, as on a short Spring or one with a motor on its joint, a longer Coil
-    /// length can show fewer turns (#1211). They never depend
+    /// length can show fewer turns. They never depend
     /// on its current length, so they hold still as it moves.
     /// </summary>
     public static int CoilTurns(float restSpan, float shortestSpan, float wire)
@@ -195,7 +194,7 @@ public static class SpringDrawing
 
     /// <summary>
     /// The distance from seat to seat at a <paramref name="length"/>, centre to centre: a lead outside
-    /// what covers each end (<see cref="ServoGeometry.LinkCover"/>); <see cref="Draw"/> places the seats by it (#1086, #1211).
+    /// what covers each end (<see cref="ServoGeometry.LinkCover"/>); <see cref="Draw"/> places the seats by it.
     /// </summary>
     public static float SeatSpan(float length, float coveredA, float coveredB) =>
         length - coveredA - coveredB - (2 * _lead);
@@ -204,7 +203,7 @@ public static class SpringDrawing
     /// The segments in each half turn of a coil <paramref name="radiusPixels"/> wide on screen:
     /// enough to keep each within about a quarter pixel of the true curve, from
     /// <see cref="MinHalfTurnSegments"/> on a coil too small to show its curve to
-    /// <see cref="MaxHalfTurnSegments"/> up close (#835).
+    /// <see cref="MaxHalfTurnSegments"/> up close.
     /// </summary>
     public static int HalfTurnSegments(float radiusPixels) =>
         Math.Clamp((int)MathF.Ceiling(2 * MathF.Sqrt(Math.Max(radiusPixels, 0))), MinHalfTurnSegments, MaxHalfTurnSegments);

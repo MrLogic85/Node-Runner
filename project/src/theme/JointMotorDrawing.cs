@@ -17,7 +17,7 @@ public static class JointMotorDrawing
     }
 
     /// <summary>
-    /// The "!" badge of a motor missing a link (#1111), on its edge at the screen's upper right,
+    /// The "!" badge of a motor missing a link, on its edge at the screen's upper right,
     /// upright however the motor turns.
     /// </summary>
     public static void DrawDangerBadge(UiPixelPen pen, VisualTheme theme, float radius)

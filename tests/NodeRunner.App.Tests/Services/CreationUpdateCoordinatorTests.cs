@@ -10,7 +10,7 @@ namespace NodeRunner.App.Tests.Services;
 
 public sealed class CreationUpdateCoordinatorTests
 {
-    // A snapshot taken before a reset (#113), an edit that may change the network, or a delete must not
+    // A snapshot taken before a reset, an edit that may change the network, or a delete must not
     // be written over what came after, nor may an older or equal generation queued out of order.
     [Theory]
     [InlineData("nothing", true)]
@@ -85,7 +85,7 @@ public sealed class CreationUpdateCoordinatorTests
         coordinator.UpdateIfPresent(creation.Id, source => source).ShouldBeNull();
 
         // KeyNotFoundException, not InvalidOperationException, so callers treating a missing Creation as
-        // recoverable (#114) cannot also swallow a genuine lifecycle bug.
+        // recoverable cannot also swallow a genuine lifecycle bug.
         Should.Throw<KeyNotFoundException>(() => coordinator.ResetTraining(creation.Id));
         repository.List().ShouldBeEmpty();
     }
@@ -184,7 +184,7 @@ public sealed class CreationUpdateCoordinatorTests
     [Fact]
     public void ApplyEdit_FiveRaysForThree_KeepsTheWeightsOfTheRaysBothHave()
     {
-        // #578: rays keep their keys, so port matching (#516) keeps left1, centre and right1.
+        // Rays keep their keys, so port matching keeps left1, centre and right1.
         var repository = new InMemoryCreationRepository();
         var coordinator = new CreationUpdateCoordinator(repository);
         var creation = Trained(CameraCreature(rays: 3));
@@ -261,8 +261,8 @@ public sealed class CreationUpdateCoordinatorTests
         build.IsLocked.ShouldBeTrue();
     }
 
-    // A link change keeps the motor's id, so its network ports keep their weights and biases (#1177);
-    // a locked Creation changes a motor's sides without unlocking, and stays locked and trained (#1179).
+    // A link change keeps the motor's id, so its network ports keep their weights and biases;
+    // a locked Creation changes a motor's sides without unlocking, and stays locked and trained.
     [Theory]
     [InlineData(CreatureElementKind.Servo, true)]
     [InlineData(CreatureElementKind.VelocityMotor, false)]

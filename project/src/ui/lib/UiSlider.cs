@@ -112,7 +112,7 @@ public partial class UiSlider : Control, ISerializationListener
     [Signal]
     public delegate void TouchEndedEventHandler();
 
-    /// <summary>A tap on the slider while it is <see cref="Disabled"/>, so a screen can say why (#578).</summary>
+    /// <summary>A tap on the slider while it is <see cref="Disabled"/>, so a screen can say why.</summary>
     [Signal]
     public delegate void DisabledPressedEventHandler();
 
@@ -165,7 +165,7 @@ public partial class UiSlider : Control, ISerializationListener
 
     /// <summary>
     /// Code-set label text, asked again when the language changes. While set it is shown instead
-    /// of <see cref="LabelText"/> and not translated again; null shows <see cref="LabelText"/> (#758).
+    /// of <see cref="LabelText"/> and not translated again; null shows <see cref="LabelText"/>.
     /// </summary>
     public Func<string>? LabelSource
     {
@@ -190,7 +190,7 @@ public partial class UiSlider : Control, ISerializationListener
 
     /// <summary>
     /// Code-set readout text, asked again when the language changes. While set it is shown instead
-    /// of <see cref="ReadoutText"/> and not translated again; null shows <see cref="ReadoutText"/> (#756).
+    /// of <see cref="ReadoutText"/> and not translated again; null shows <see cref="ReadoutText"/>.
     /// </summary>
     public Func<string>? ReadoutSource
     {
@@ -256,7 +256,7 @@ public partial class UiSlider : Control, ISerializationListener
 
     /// <summary>
     /// The distance between two stops on the 0…1 track, like Godot's <c>Range.step</c>: a dragged
-    /// thumb stops only on whole steps, so it never runs ahead of a stepped value (#711). 0 moves smoothly.
+    /// thumb stops only on whole steps, so it never runs ahead of a stepped value. 0 moves smoothly.
     /// </summary>
     [Export(PropertyHint.Range, "0,1,0.001")]
     public double Step
@@ -267,7 +267,7 @@ public partial class UiSlider : Control, ISerializationListener
 
     /// <summary>
     /// Code-set step labels, asked again when the language changes. While set they are shown
-    /// instead of <see cref="StepLabels"/> and not translated again; null shows <see cref="StepLabels"/> (#756).
+    /// instead of <see cref="StepLabels"/> and not translated again; null shows <see cref="StepLabels"/>.
     /// </summary>
     public IReadOnlyList<Func<string>>? StepLabelSources
     {

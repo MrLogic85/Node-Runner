@@ -4,7 +4,7 @@ namespace NodeRunner.Arch.Tests;
 
 /// <summary>
 /// Both tools start the same pinned C# language server: docs/REVIEW.md → "Agent, rule and skill
-/// files" (#1352). A broken link here only makes the agents fall back to git grep, so nothing
+/// files". A broken link here only makes the agents fall back to git grep, so nothing
 /// else would notice it.
 /// </summary>
 public sealed class LspConfigSpec

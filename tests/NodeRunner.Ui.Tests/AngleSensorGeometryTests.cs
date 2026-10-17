@@ -7,7 +7,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The Angle sensor's ring and arc (#1205, #1243, <c>docs/WORLD_VISUALS.md</c> → Angle sensor), checked on its geometry.</summary>
+/// <summary>The Angle sensor's ring and arc (<c>docs/WORLD_VISUALS.md</c> → Angle sensor), checked on its geometry.</summary>
 public sealed class AngleSensorGeometryTests
 {
     private const float _tolerance = 1e-4f;
@@ -17,7 +17,7 @@ public sealed class AngleSensorGeometryTests
     private static readonly float _bare = (float)AngleSensorDef.ArcRadius(rubber: false, touch: false);
 
     // The ring stands in for a plain joint; the Domain sets the widths the arc and halo are drawn with, so Build's
-    // rings can clear the arc (#1206), and they stay the stroke-signal token as every other selection ring.
+    // rings can clear the arc, and they stay the stroke-signal token as every other selection ring.
     [Fact]
     public void Ring_and_arc_match_the_joint_and_selection_sizes()
     {
@@ -40,7 +40,7 @@ public sealed class AngleSensorGeometryTests
         ShouldBeNear(arc[^1], Vector2.FromAngle(target) * _bare);
     }
 
-    // So the part shows which side is Target (#1231).
+    // So the part shows which side is Target.
     [Theory]
     [InlineData(0.35f, 0)]
     [InlineData(3, 7)]
@@ -198,7 +198,7 @@ public sealed class AngleSensorGeometryTests
             new Vector2((float)targetX, (float)targetY).Normalized() * _bare);
     }
 
-    // A Wheel side's direction is its tube 0 (#1118), which turns with the Wheel's body.
+    // A Wheel side's direction is its tube 0, which turns with the Wheel's body.
     [Theory]
     [InlineData(0.8f)]
     public void AWheelSide_StartsOnItsFirstTube(float wheelBodyRotation)

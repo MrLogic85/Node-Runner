@@ -2,7 +2,7 @@ using static NodeRunner.Domain.CreatureElementKind;
 
 namespace NodeRunner.Domain.Tests;
 
-/// <summary>The back-to-front draw groups and ranks of a creature's parts (#1107), shared by the drawing and by touches.</summary>
+/// <summary>The back-to-front draw groups and ranks of a creature's parts, shared by the drawing and by touches.</summary>
 public sealed class DrawGroupsTests
 {
     // A frame: a top beam 10 (1–2), a Piston leg 11 (1–3), a beam leg 12 (2–4) and a joint 5 joined to nothing.
@@ -89,7 +89,7 @@ public sealed class DrawGroupsTests
         _frame.Raised([], [], [], [], [], targetJoints: [1, 2]).Links.ShouldBeEmpty();
     }
 
-    // #1107: a touch hits the part drawn on top, by the same groups and surfaces the drawing uses.
+    // A touch hits the part drawn on top, by the same groups and surfaces the drawing uses.
     [Fact]
     public void PartAt_HitsTheLinkDrawnOnTop_OrTheRaisedOne()
     {
@@ -102,7 +102,7 @@ public sealed class DrawGroupsTests
     }
 
     // A ring or Servo to its halo, a Stepper at a motor's size over its Wheel's hub and inside a Touch sensor's
-    // cushion (#1067), a Brake at a plain joint's size over its Wheel's hub (#1041).
+    // cushion, a Brake at a plain joint's size over its Wheel's hub.
     [Fact]
     public void PartAt_HitsAJointOrHingePart_ToItsHalo_OverItsLinks()
     {
@@ -121,7 +121,7 @@ public sealed class DrawGroupsTests
         HitCross(new Vector2D(0, _motorHalo), raised: touched, hingeParts: steppers).ShouldBe(P(Stepper, 90));
     }
 
-    // #1086: a link draws hub to hub, over its own Wheel's face and under its hub; raised as a target, it draws over
+    // A link draws hub to hub, over its own Wheel's face and under its hub; raised as a target, it draws over
     // the unraised ring at its end. A Wheel is hit only at its hub; a touch on its tyre or middle hits what lies under it.
     [Fact]
     public void PartAt_HitsALinkOutFromItsEndsHubs_AndAWheelOnlyAtItsHub()
@@ -145,7 +145,7 @@ public sealed class DrawGroupsTests
         HitCross(new Vector2D(300, 300), sensors: [new(50, 20, SensorKind.Camera)]).ShouldBeNull();
     }
 
-    // #1143: Wheel 41 round (0, 0) and Wheel 40 round (100, 0), both 1 m, overlap: the nearest hub wins, then the lower id.
+    // Wheel 41 round (0, 0) and Wheel 40 round (100, 0), both 1 m, overlap: the nearest hub wins, then the lower id.
     [Fact]
     public void WheelDiscAt_HoldsAPointOutToItsRadius()
     {

@@ -4,7 +4,7 @@ namespace NodeRunner.Ui.Lib;
 
 /// <summary>
 /// A Button icon that samples with <see cref="UiIcons.IconFilter"/> while the Button's text keeps
-/// Nearest (#734). The Button lays out and tints it as usual; it draws <see cref="Icon"/> on its own
+/// Nearest. The Button lays out and tints it as usual; it draws <see cref="Icon"/> on its own
 /// child canvas item, freed when the Button leaves the tree or <see cref="Detach"/>es it.
 /// Godot's <c>CanvasTexture</c> can set a filter, but draws a <c>DPITexture</c> at its unscaled
 /// RID, losing the oversampling; a child TextureRect would redo the Button's icon layout and tint.

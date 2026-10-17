@@ -2,7 +2,7 @@ using Godot;
 
 namespace NodeRunner.Ui.Lib;
 
-/// <summary>Ringed 16px step number used to lead numbered stage and chain items.</summary>
+/// <summary>Ringed 16px step number that leads a numbered item.</summary>
 [Tool]
 [GlobalClass]
 public partial class UiNumber : Control, ISerializationListener

@@ -44,7 +44,7 @@ public sealed class NeuralNetworkTests
         buffer[0].ShouldBe(Math.Tanh(Math.Tanh(0.75) - Math.Tanh(0.25)), _tolerance);
     }
 
-    // A creature with no powered parts has no outputs, and one with no sensors or parts no inputs (#845).
+    // A creature with no powered parts has no outputs, and one with no sensors or parts no inputs.
     [Fact]
     public void Forward_WithAnEmptyLayer_ReturnsNoOutputs()
     {

@@ -5,7 +5,7 @@ namespace NodeRunner.Ui.Tests;
 
 /// <summary>
 /// Screens and widgets rewritten to the ownership split in <c>docs/UI_DIRECTION.md</c> ("Who owns
-/// what"). Each rewrite adds its files; #310 closes when every product screen and widget is listed.
+/// what"). Each rewrite adds its files.
 /// </summary>
 internal static class RewrittenUi
 {
@@ -84,7 +84,7 @@ internal static class RewrittenUi
 
 /// <summary>
 /// A rewritten screen or widget scene is built from the component library, and its script binds
-/// only nodes the scene declares (#310). Reads scene text and binds C# with Roslyn; no Godot runtime.
+/// only nodes the scene declares. Reads scene text and binds C# with Roslyn; no Godot runtime.
 /// </summary>
 public sealed class RewrittenSceneTests
 {

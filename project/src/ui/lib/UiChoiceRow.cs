@@ -188,7 +188,7 @@ public abstract partial class UiChoiceRow : Container, ISerializationListener
     }
 
     // The native button redraws whenever its press state changes; the tint draws over its
-    // indicator and under the labels, its children (#325). It reaches Space.S2 past the row's
+    // indicator and under the labels, its children. It reaches Space.S2 past the row's
     // sides so its corners clear the text and the indicator; stacked rows keep it flush above
     // and below.
     private void DrawPress()

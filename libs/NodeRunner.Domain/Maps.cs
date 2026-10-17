@@ -1,7 +1,7 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// Every map, by id (#443). 0.13 has only Flat; more maps and the map loop come with #540.
+/// Every map, by id. Only Flat so far; more maps and the map loop come with #540.
 /// </summary>
 public static class Maps
 {

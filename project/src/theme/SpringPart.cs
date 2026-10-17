@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.Theme;
 
-/// <summary>A Spring (#453) from joint <see cref="A"/> to joint <see cref="B"/>, drawn by <see cref="SpringDrawing"/>.</summary>
+/// <summary>A Spring from joint <see cref="A"/> to joint <see cref="B"/>, drawn by <see cref="SpringDrawing"/>.</summary>
 public partial class SpringPart : PartVisual
 {
     private Vector2 _a;
@@ -56,56 +56,54 @@ public partial class SpringPart : PartVisual
         set => Change(ref _coveredA, value);
     }
 
-    /// <summary>How far what is drawn over joint B reaches.</summary>
     public float CoveredB
     {
         get => _coveredB;
         set => Change(ref _coveredB, value);
     }
 
-    /// <summary>Its shortest length, centre to centre, which sets its telescope's sizes (#1210).</summary>
+    /// <summary>Its shortest length, centre to centre, which sets its telescope's sizes.</summary>
     public float Shortest
     {
         get => _shortest;
         set => Change(ref _shortest, value);
     }
 
-    /// <summary>Its longest length, centre to centre: its telescope is fully out there (#1210).</summary>
+    /// <summary>Its longest length, centre to centre: its telescope is fully out there.</summary>
     public float Longest
     {
         get => _longest;
         set => Change(ref _longest, value);
     }
 
-    /// <summary>Its rest length, centre to centre, which sets its coil's turns (#835).</summary>
+    /// <summary>Its rest length, centre to centre, which sets its coil's turns.</summary>
     public float Rest
     {
         get => _rest;
         set => Change(ref _rest, value);
     }
 
-    /// <summary>Its Stiffness in N/m, which sets its coil's wire (#835).</summary>
+    /// <summary>Its Stiffness in N/m, which sets its coil's wire.</summary>
     public double Stiffness
     {
         get => _stiffness;
         set => Change(ref _stiffness, value);
     }
 
-    /// <summary>Too short to train (#593): drawn in <c>danger</c>.</summary>
+    /// <summary>Too short to train: drawn in <c>danger</c>.</summary>
     public bool Danger
     {
         get => _danger;
         set => Change(ref _danger, value);
     }
 
-    /// <summary>Whether joint A is selected too, so the selection lines end on its halo ring (#710).</summary>
+    /// <summary>Whether joint A is selected too, so the selection lines end on its halo ring.</summary>
     public bool HaloA
     {
         get => _haloA;
         set => Change(ref _haloA, value);
     }
 
-    /// <summary>Whether joint B is selected too.</summary>
     public bool HaloB
     {
         get => _haloB;

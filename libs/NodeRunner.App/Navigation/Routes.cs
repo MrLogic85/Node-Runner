@@ -23,24 +23,24 @@ public sealed record PopupGalleryRoute(int ThemeIndex = 0, bool ShowDebugBounds 
 /// <summary>Ready-made creations the player copies into Creations.</summary>
 public sealed record ExamplesRoute : SceneRoute;
 
-/// <summary>Adds a creation someone shared as a code (#899) to Creations.</summary>
+/// <summary>Adds a creation someone shared as a code to Creations.</summary>
 public sealed record ImportRoute : SceneRoute;
 
 /// <summary>
 /// Build for one saved creation. <see cref="IsNew"/> is true when + New just made it; see
-/// docs/BUILD_MODE.md for when Build removes such a creation again (#368).
+/// docs/BUILD_MODE.md for when Build removes such a creation again.
 /// </summary>
 public sealed record BuildRoute(Guid CreationId, bool IsNew = false) : SceneRoute;
 
 /// <summary>
-/// Train setup for one saved creation (#194): Shadows and Run length before Training. Start opens
+/// Train setup for one saved creation: Shadows and Run length before Training. Start opens
 /// Training in its place, so Back from Training returns to Build.
 /// </summary>
 public sealed record TrainSetupRoute(Guid CreationId) : SceneRoute;
 
 /// <summary>
 /// Training for one saved creation. To train, it resumes from the creation's last finished
-/// generation; leaving drops only the generation in progress. To simulate (#702), it plays the
+/// generation; leaving drops only the generation in progress. To simulate, it plays the
 /// saved network with one shadow until the player leaves, and saves nothing.
 /// </summary>
 public sealed record TrainingRoute(Guid CreationId, TrainingRunMode Mode = TrainingRunMode.Train) : SceneRoute;

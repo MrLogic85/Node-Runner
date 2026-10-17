@@ -291,7 +291,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
             button.Text = UiThemeLookup.LetterCase(Atr(text), UiTokens.Typography.Label);
             UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Label);
 
-            // The segment draws its own text, so only its icon samples Linear (#734).
+            // The segment draws its own text, so only its icon samples Linear.
             var linear = button.Icon as UiLinearIcon;
             if (hasIcon)
             {

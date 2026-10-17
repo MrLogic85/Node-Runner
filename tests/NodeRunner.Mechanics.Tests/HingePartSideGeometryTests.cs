@@ -7,7 +7,7 @@ public sealed class HingePartSideGeometryTests
     private const double _heavy = 1e12;
 
     // A link's angle and speed follow its far joint around the motor joint, y-down; a Wheel side turns like a link to
-    // a mark on its tyre 20 units out (#1118), and a link's couple turns the body as the Wheel's body torque does.
+    // a mark on its tyre 20 units out, and a link's couple turns the body as the Wheel's body torque does.
     [Fact]
     public void ASide_TurnsWithItsFarJoint_OrAMarkOnItsTyre()
     {

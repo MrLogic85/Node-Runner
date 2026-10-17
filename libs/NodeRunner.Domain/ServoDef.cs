@@ -1,9 +1,9 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Servo (#452): a powered joint part on one node. It holds one side fixed and turns another
+/// A Servo: a powered joint part on one node. It holds one side fixed and turns another
 /// side relative to it. A side is a link touching its joint, or the Wheel on its joint, a one-sided
-/// link whose direction is its own turn (#1118). Either reference may be missing after that part is
+/// link whose direction is its own turn. Either reference may be missing after that part is
 /// deleted; readiness then blocks training until the player picks a replacement or deletes the Servo.
 /// Its joint radius and side rules are <see cref="JointMotor"/>'s.
 /// </summary>
@@ -21,7 +21,7 @@ public sealed record ServoDef : IJointMotorDef
     /// <summary>A new Servo's <see cref="MaxSpeed"/>: 60 rpm, one turn a second.</summary>
     public const double DefaultMaxSpeed = Math.Tau;
 
-    /// <summary>A new Servo's <see cref="RiseTime"/>: 0.2 s (#801), like a Piston.</summary>
+    /// <summary>A new Servo's <see cref="RiseTime"/>: 0.2 s, like a Piston.</summary>
     public const double DefaultRiseTime = 0.2;
 
     public ServoDef(
@@ -102,10 +102,10 @@ public sealed record ServoDef : IJointMotorDef
 
     public int NodeId { get; }
 
-    /// <summary>The side held still: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side held still: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? FixedLinkId { get; }
 
-    /// <summary>The side turned: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side turned: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? TargetLinkId { get; }
 
     public string? Name { get; }

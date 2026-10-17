@@ -12,14 +12,14 @@ namespace NodeRunner.App.Lifecycle;
 public static class CreatureReadiness
 {
     /// <summary>
-    /// The least free length a link leaves between what is drawn over its two ends (#593, #1212):
-    /// half the room the Camera's picture once needed, which the owner found far too long. A large
-    /// picture centred in it reaches under the hub or motor at each end (#1086).
+    /// The least free length a link leaves between what is drawn over its two ends, kept small by the
+    /// owner's choice so links can be short; a large picture centred in it then reaches under the
+    /// hub or motor at each end.
     /// </summary>
     public const double MinimumLinkGap = 26;
 
     /// <summary>
-    /// What a Piston or Spring adds to <see cref="MinimumLength"/> (#1210), so its three-part
+    /// What a Piston or Spring adds to <see cref="MinimumLength"/>, so its three-part
     /// telescope shows past a Servo's housing at each end. The owner chose it.
     /// </summary>
     public const double TelescopeExtra = 16;
@@ -27,7 +27,7 @@ public static class CreatureReadiness
     /// <summary>
     /// The shortest a link of <paramref name="kind"/> can be, centre to centre, between joints whose
     /// <see cref="CreatureDef.CoveredRadius(int, IEnumerable{IJointMotorDef})"/> are
-    /// <paramref name="coveredA"/> and <paramref name="coveredB"/> (#1212): <see cref="MinimumLinkGap"/>
+    /// <paramref name="coveredA"/> and <paramref name="coveredB"/>: <see cref="MinimumLinkGap"/>
     /// plus what each joint covers, plus what the link type adds: nothing for a beam,
     /// <see cref="TelescopeExtra"/> for a Piston or Spring.
     /// </summary>
@@ -113,14 +113,14 @@ public static class CreatureReadiness
         return problems;
     }
 
-    /// <summary>A motor, Brake or Angle sensor without both its Fixed and Target side, a link or its Wheel (#1118), cannot train.</summary>
+    /// <summary>A motor, Brake or Angle sensor without both its Fixed and Target side, a link or its Wheel, cannot train.</summary>
     public static bool IsMissingALink(IHingePartDef part)
     {
         ArgumentNullException.ThrowIfNull(part);
         return part.FixedLinkId is null || part.TargetLinkId is null;
     }
 
-    /// <summary>Whether a beam or a link, a Piston (#451) or a Spring (#453), holds the node to the rest of the creature.</summary>
+    /// <summary>Whether a beam or a link, a Piston or a Spring, holds the node to the rest of the creature.</summary>
     public static bool IsAttached(CreatureDef creature, int nodeId)
     {
         ArgumentNullException.ThrowIfNull(creature);
@@ -154,7 +154,7 @@ public static class CreatureReadiness
     }
 
     /// <summary>
-    /// True when the creature can be simulated. It needs no powered part (#845): without one its
+    /// True when the creature can be simulated. It needs no powered part: without one its
     /// network has nothing to drive and it stands still, and Train setup warns about that.
     /// </summary>
     public static bool CanTrain(CreatureDef creature) => Problems(creature).Count == 0;

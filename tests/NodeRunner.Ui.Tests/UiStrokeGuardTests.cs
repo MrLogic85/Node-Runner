@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// Guards #733: a stroke drawn with a <c>CanvasItem</c> primitive is antialiased in window pixels,
+/// A stroke drawn with a <c>CanvasItem</c> primitive is antialiased in window pixels,
 /// so its feather is one device pixel, or is a one-pixel hairline (width -1). Window pixels means
 /// in a method that opens a <c>UiPixelPen</c>, calls <c>UiPixelSpace.Enter</c>, or takes its
 /// <c>Transform2D toPixels</c>; a helper that takes <c>toPixels</c> is called from such a method.

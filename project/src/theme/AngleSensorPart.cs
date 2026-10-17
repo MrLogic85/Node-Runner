@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// An Angle sensor (#1205): a plain joint's ring and inner ring in <c>accent</c> on an opaque
+/// An Angle sensor: a plain joint's ring and inner ring in <c>accent</c> on an opaque
 /// <c>panel</c> disc, standing in for its joint's ring or a Wheel's hub, and round it an <c>accent</c>
 /// arc between the Fixed side's direction and the Target side's that fills and empties with each
 /// <see cref="Turn"/> (<see cref="AngleSensorGeometry"/>).
@@ -84,7 +84,7 @@ public partial class AngleSensorPart : PartVisual
     /// <summary>The arc's centre line in the part's frame (<see cref="AngleSensorGeometry.ArcPoints"/>).</summary>
     public Vector2[] Arc => _arc ??= AngleSensorGeometry.ArcPoints(ArcRadius, HasFixed ? FixedAngle : null, HasTarget ? TargetAngle : null, Turn);
 
-    /// <summary>A sensor missing a side cannot train, so it draws in danger with the badge and no arc (#1111).</summary>
+    // A sensor missing a side cannot train, so it draws in danger with the badge and no arc.
     private bool Missing => !HasFixed || !HasTarget;
 
     protected override void Changed()

@@ -6,7 +6,7 @@ using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>Dropping a part from the Parts tray onto the drawing (#376), and a Servo's links.</summary>
+/// <summary>Dropping a part from the Parts tray onto the drawing, and a Servo's links.</summary>
 public sealed class BuildPlacementTests
 {
     private static readonly UiText _oneSensorPerBeam = UiText.Plain("One sensor per beam");
@@ -57,7 +57,7 @@ public sealed class BuildPlacementTests
         build.PlacePart(BuildPart.Accelerometer, Beam(4)).ShouldBeNull();
         (build.Sensors.Count, build.PlacementNote).ShouldBe((0, null));
 
-        // The reason names the part (#1053), so a new kind needs its own sentence.
+        // The reason names the part, so a new kind needs its own sentence.
         foreach (var kind in Enum.GetValues<SensorKind>())
         {
             BuildViewModel.GoesOnABeamReason(kind).Message.ShouldStartWith(kind.ToString());
@@ -67,7 +67,7 @@ public sealed class BuildPlacementTests
         (PartTray.IsAvailable(BuildPart.Accelerometer), PartTray.IsAvailable(BuildPart.Battery)).ShouldBe((true, false));
     }
 
-    // #1107: the canvas marks these takes and refusals on the parts themselves.
+    // The canvas marks these takes and refusals on the parts themselves.
     [Fact]
     public void PlacingTargetsOf_SplitsWhatTakesThePartFromWhatRefusesIt()
     {
@@ -85,7 +85,7 @@ public sealed class BuildPlacementTests
         moving.MovingSensor.ShouldBe(sensor);
 
         build.PlacePart(BuildPart.Wheel, Joint(3)).ShouldNotBeNull();
-        // One per slot (#1044): a Servo goes beside the Wheel, and a Wheel beside the Servo.
+        // One per slot: a Servo goes beside the Wheel, and a Wheel beside the Servo.
         var servo = build.PlacingTargetsOf(BuildPart.Servo, null);
         servo.Joints.ShouldBe([1, 3], ignoreOrder: true);
         servo.RefusedJoints.ShouldBe([2]);
@@ -96,7 +96,7 @@ public sealed class BuildPlacementTests
         wheel.JointRingOf(1).ShouldBe(WheelDef.DefaultRadius);
     }
 
-    // #1107: the part drawn on top, which covers every joint's reach, then a beam's reach. A beam
+    // The part drawn on top, which covers every joint's reach, then a beam's reach. A beam
     // that would take the sensor rises alone over its joints, so it is hit there too.
     [Fact]
     public void DropTargetAt_TakesThePartDrawnOnTop_ThenABeamWithinReach_AndAServoAJointInsideItsRing()
@@ -109,7 +109,7 @@ public sealed class BuildPlacementTests
         gestures.DropTargetAt(new Vector2D(30, 10), BuildPart.Accelerometer).ShouldBe(Beam(4));
         gestures.DropTargetAt(new Vector2D(300, 300), BuildPart.Accelerometer).ShouldBeNull();
 
-        // #1055: a Servo being placed rings every joint, and the ring is where a finger aims.
+        // A Servo being placed rings every joint, and the ring is where a finger aims.
         var ring = SelectionMarks.JointHalo(JointMotor.Radius);
         gestures.DropTargetAt(new Vector2D(20, 0), BuildPart.Servo).ShouldBe(Joint(1));
         gestures.DropTargetAt(new Vector2D(20, 0), BuildPart.Accelerometer).ShouldBe(Beam(4));
@@ -130,7 +130,7 @@ public sealed class BuildPlacementTests
         build.PlacementNote.ShouldBeNull();
     }
 
-    // A Piston or Spring takes no tray part, but is a target so a drop on it says why (#1033).
+    // A Piston or Spring takes no tray part, but is a target so a drop on it says why.
     [Theory]
     [InlineData(BuildPart.Accelerometer, BuildLink.Piston, "Accelerometers go on a beam")]
     [InlineData(BuildPart.Camera, BuildLink.Spring, "Cameras go on a beam")]
@@ -149,12 +149,12 @@ public sealed class BuildPlacementTests
         var gestures = new BuildGestures(build);
         gestures.DropTargetAt(new Vector2D(50, 0), placing: null).ShouldBe(link);
         gestures.DropTargetAt(new Vector2D(50, 30), BuildPart.Accelerometer).ShouldBe(link);
-        // A beam that would take the sensor rises over the link it crosses (#1107).
+        // A beam that would take the sensor rises over the link it crosses.
         gestures.DropTargetAt(new Vector2D(50, 0), BuildPart.Accelerometer).ShouldBe(Beam(5));
         gestures.DropTargetAt(new Vector2D(50, -33), BuildPart.Accelerometer).ShouldBe(Joint(3));
 
-        // Off the beam it crosses, which a sensor's target halo or a selected joint raises over it
-        // (#1107), and off the Servo's target rings.
+        // Off the beam it crosses, which a sensor's target halo or a selected joint raises over it,
+        // and off the Servo's target rings.
         var onLink = new Vector2D(50, 15);
         var refused = new CanvasNote(CanvasNoteKind.Danger, link, UiText.Plain(reason));
         build.PickPart(part);
@@ -310,7 +310,7 @@ public sealed class BuildPlacementTests
     }
 
     // Only the role links carry a role, and only the other role's link swaps; with one role empty,
-    // picking the other role's link moves it rather than swapping (#1130).
+    // picking the other role's link moves it rather than swapping.
     [Fact]
     public void ServoPickers_GiveEachLinkItsRole_AndMarkASwapOnlyWhileBothRolesAreSet()
     {
@@ -336,7 +336,7 @@ public sealed class BuildPlacementTests
         }
     }
 
-    // Like "Not connected" (#844, #1006): a Servo missing a link is marked on a Play tap, stays
+    // Like "Not connected": a Servo missing a link is marked on a Play tap, stays
     // marked while it misses one, and the next canvas touch hides it. The mark is the Servo's own.
     [Fact]
     public void AServoMissingALink_IsNotedOnAPlayTap_UntilFixedOrTheCanvasIsTouched()
@@ -368,7 +368,7 @@ public sealed class BuildPlacementTests
         build.Undo();
         build.CanvasNotes().ShouldBe([marked]);
 
-        // #1006: the note stays through a link pick until both roles are set, and a joint loosened later waits for the next tap.
+        // The note stays through a link pick until both roles are set, and a joint loosened later waits for the next tap.
         build = Loaded(ThreeBeams());
         servo = build.PlacePart(BuildPart.Servo, Joint(2))!.Value;
         build.SelectOnly(CreatureElementKind.Beam, 5);

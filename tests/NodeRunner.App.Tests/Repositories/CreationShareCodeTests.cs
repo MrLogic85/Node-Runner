@@ -8,7 +8,7 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Tests.Repositories;
 
-/// <summary>A Creation's build as a share code (#899; docs/SAVE_FORMAT.md → "Share code").</summary>
+/// <summary>A Creation's build as a share code (docs/SAVE_FORMAT.md → "Share code").</summary>
 public sealed class CreationShareCodeTests
 {
     // A code is its version and URL-safe base64, short enough to type into a chat; white space a chat
@@ -182,7 +182,7 @@ public sealed class CreationShareCodeTests
         build.Creature.Pistons.ShouldAllBe(piston => piston.Start == 0.5);
     }
 
-    // #1144: a Wheel's grip, left out at the template's 0.8 or written out, goes like a saved file's.
+    // A Wheel's grip, left out at the template's 0.8 or written out, goes like a saved file's.
     [Theory]
     [InlineData(null)]
     [InlineData(1.0)]
@@ -235,7 +235,7 @@ public sealed class CreationShareCodeTests
         CreationShareCode.Read(Pasted(pasted)).Refusal.ShouldBe(refusal);
 
     // Build's sliders hold every setting, and its area every joint, so only a code changed by hand
-    // holds another (#1036, #1039).
+    // holds another.
     [Theory]
     [InlineData("nodes", "x", 100_000.0)]
     [InlineData("pistons", "maxSpeed", 0.0)]

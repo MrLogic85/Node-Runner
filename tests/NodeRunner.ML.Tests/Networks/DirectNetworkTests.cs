@@ -61,9 +61,9 @@ public sealed class DirectNetworkTests
         resaved.Connections[0].Weight.ShouldBe(0.6);
     }
 
-    // A part added to a trained creature changes nothing yet: new inputs (#1043 Touch, #1204 Angle sensor) get zero
-    // weights, a new output starts silent, a Strength output almost passive, and a new Stepper does not step
-    // (#1036, #1263). Weights are output by output, then the biases.
+    // A part added to a trained creature changes nothing yet: new inputs (Touch, Angle sensor) get zero
+    // weights, a new output starts silent, a Strength output almost passive, and a new Stepper does not step.
+    // Weights are output by output, then the biases.
     [Fact]
     public void NewPorts_StartWithoutChangingTheTrainedGait()
     {

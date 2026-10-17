@@ -15,7 +15,7 @@ public static class UiDashedBorder
     /// <summary>
     /// The dashed outline of <paramref name="rect"/> with its own radius for each corner, in a
     /// <see cref="CanvasItem._Draw"/> that has not set a draw transform. Drawn in window pixels
-    /// (<see cref="UiPixelPen"/>), so all four sides look the same at any UI size (#733).
+    /// (<see cref="UiPixelPen"/>), so all four sides look the same at any UI size.
     /// </summary>
     public static void DrawRoundedRect(CanvasItem canvas, Rect2 rect, UiCorners corners, Color color, float width)
     {

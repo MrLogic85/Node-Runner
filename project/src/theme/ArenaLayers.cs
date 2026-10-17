@@ -3,23 +3,23 @@ using Godot;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// The named draw layers of Training's world (#767), as ZIndex values. The world has its own
+/// The named draw layers of Training's world, as ZIndex values. The world has its own
 /// viewport, so these order only the world, never the screen or dialogs. Each creature takes
 /// <see cref="CreatureLayers.Count"/> steps from its root's layer. They start at Godot's lowest z,
-/// so the shadows and the followed creature fit in its range (#1269).
+/// so the shadows and the followed creature fit in its range.
 /// </summary>
 public static class ArenaLayers
 {
     /// <summary>The best distance marker, behind the ground and every creature.</summary>
     public const int BestMarker = (int)RenderingServer.CanvasItemZMin;
 
-    /// <summary>The start sign (#848), with the best marker behind the ground and every creature.</summary>
+    /// <summary>The start sign, with the best marker behind the ground and every creature.</summary>
     public const int StartSign = BestMarker;
 
     /// <summary>The ground's fill and edge, and the arena's scales drawn with it.</summary>
     public const int Ground = BestMarker + 1;
 
-    /// <summary>The root of every shadow creature (#385): above the ground.</summary>
+    /// <summary>The root of every shadow creature: above the ground.</summary>
     public const int Shadows = Ground + 1;
 
     /// <summary>The root of the followed creature: every part of it above every part of every shadow.</summary>

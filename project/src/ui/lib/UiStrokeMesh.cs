@@ -3,8 +3,8 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Lays out many round-ended strokes as one triangle list, for <see cref="UiPixelPen.Strokes"/>
-/// (#835). Each stroke has a solid core as wide as the stroke and a feather around it that fades
+/// Lays out many round-ended strokes as one triangle list, for <see cref="UiPixelPen.Strokes"/>.
+/// Each stroke has a solid core as wide as the stroke and a feather around it that fades
 /// to clear, like Godot's antialiased lines. Godot draws one polyline per call and gives it no
 /// round ends, and the Compatibility renderer builds a buffer for every call, so a coil of hundreds
 /// of strokes drawn one call each cost a phone most of its frame.

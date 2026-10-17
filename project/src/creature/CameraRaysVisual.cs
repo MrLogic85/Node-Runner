@@ -4,7 +4,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// The creature's camera rays in Training (#623): every ray that hits the ground, drawn up to the
+/// The creature's camera rays in Training: every ray that hits the ground, drawn up to the
 /// hit with a ring there, whether or not the camera is selected, on the overlay layer over the
 /// whole creature.
 /// </summary>

@@ -19,7 +19,7 @@ public sealed class SpringDrawingTests
         SpringDrawing.CoilTurns(restSpan: -10, shortestSpan: _roomy, wire: 2).ShouldBe(SpringDrawing.MinTurns);
     }
 
-    // Stroke 200% squeezes it to a third of its gap, past what a third of its rest span stacks solid in (#1211).
+    // Stroke 200% squeezes it to a third of its gap, past what a third of its rest span stacks solid in.
     [Fact]
     public void CoilTurns_AreNeverMoreThanFitWireToWireAtItsShortest()
     {
@@ -68,7 +68,7 @@ public sealed class SpringDrawingTests
         SpringDrawing.Wire(10).ShouldBe(UiSize.Stroke.Hair);
     }
 
-    // Seats sit 3 outside what covers each end (#1086, #1211): a plain joint's hub, 15, or something wider, as a Servo's housing.
+    // Seats sit 3 outside what covers each end: a plain joint's hub, 15, or something wider, as a Servo's housing.
     [Theory]
     [InlineData(15, 15, 100 - 36)]
     [InlineData(31, 15, 100 - 52)]

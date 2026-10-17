@@ -14,7 +14,7 @@ public sealed class GenerationZeroTests
     private const double _full = GenerationZero.FullStrengthBias;
 
     // The base genome holds the built pose at full strength: no weights, position biases 0, strength biases full
-    // (a Servo's too), and a Stepper starts still (#1263).
+    // (a Servo's too), and a Stepper starts still.
     [Fact]
     public void BaseGenome_HoldsTheBuiltPoseAtFullStrength()
     {
@@ -24,7 +24,7 @@ public sealed class GenerationZeroTests
 
         var drawn = GenerationZero.BaseGenome(_ports, new Dictionary<int, double> { [9] = 0.25, [10] = 1 });
         Sigmoid(drawn[_biasStart]).ShouldBe(0.25, 1e-12);
-        // An end needs an endless bias: it stops where tanh(3) stopped before #1129, 0.25% short.
+        // An end needs an endless bias: it stops where a tanh output at the full bias, (tanh(3) + 1) / 2, stops, 0.25% short.
         Sigmoid(drawn[_biasStart + 2]).ShouldBe((Math.Tanh(_full) + 1) / 2, 1e-12);
         drawn[_biasStart + 1].ShouldBe(_full);
         drawn[..8].ShouldAllBe(weight => weight == 0);
@@ -60,8 +60,8 @@ public sealed class GenerationZeroTests
         strengths.ShouldAllBe(bias => Math.Abs(bias - _full) < GenerationZero.BiasSpread * 5);
     }
 
-    // #1129: (tanh(x) + 1) / 2 = sigmoid(2x), so a length output's noise is twice a position output's, and its
-    // shadows ask for the same lengths as when it was tanh. Without strength outputs it still perturbs.
+    // (tanh(x) + 1) / 2 = sigmoid(2x), so a length output's noise is twice a position output's, and its
+    // shadows ask for the same lengths as a tanh output would. Without strength outputs it still perturbs.
     [Fact]
     public void Population_SpreadsALengthOutputAsWidelyAsTheTanhItReplaced()
     {

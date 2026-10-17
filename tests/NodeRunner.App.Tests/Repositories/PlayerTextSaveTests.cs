@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Tests.Repositories;
 
 /// <summary>
-/// Player-typed names (the Creation's and each part's) must never break a save (#837): whatever
+/// Player-typed names (the Creation's and each part's) must never break a save: whatever
 /// a name holds, the file is written and reads back to the same Creation.
 /// </summary>
 public sealed class PlayerTextSaveTests : IDisposable

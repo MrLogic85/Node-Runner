@@ -6,7 +6,7 @@ namespace NodeRunner.Ui.Lib;
 /// Reference toolbar (<c>ComponentToolbars</c>): Back, one flexible field for the
 /// screen's title and trailing actions, then the overflow, always last.
 /// The field scrolls sideways and has no minimum width, so content that does not
-/// fit is clipped and never pushes Back or the overflow off screen (#737); it
+/// fit is clipped and never pushes Back or the overflow off screen; it
 /// clips only then, so the glow of actions that fit is not cut.
 /// The toolbar owns the overflow menu's node, its position under the overflow
 /// button, opening it, and closing it on a tap outside or Back; the screen fills
@@ -61,7 +61,7 @@ public partial class UiToolbar : MarginContainer
             ("%Overflow", CanvasItem.PropertyName.Visible),
         ]);
 
-    // The height is the scene's own (#331); the bar never grows past it.
+    // The height is the scene's own; the bar never grows past it.
     public override Vector2 _GetMaximumSize() => new(_unbounded, CustomMinimumSize.Y);
 
     public override void _Notification(int what)

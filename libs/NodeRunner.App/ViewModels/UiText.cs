@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// UI text a view-model hands to Godot, which translates it (#682). <see cref="Message"/> is the
+/// UI text a view-model hands to Godot, which translates it. <see cref="Message"/> is the
 /// English source text and also the gettext msgid; <see cref="Plural"/> is its English plural for
 /// <see cref="Count"/>, picked per language by Godot. <c>{0}</c>, <c>{1}</c>… stand for
 /// <see cref="Args"/>: whole numbers, a <see cref="FixedNumber"/>, strings shown as they are (user or

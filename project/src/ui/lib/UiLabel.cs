@@ -48,7 +48,7 @@ public sealed partial class UiLabel : Label
     }
 
     /// <summary>
-    /// Text built in code that follows the language (#682): the label shows what this returns and
+    /// Text built in code that follows the language: the label shows what this returns and
     /// asks again when the language changes. Its own auto-translation is off meanwhile, so the
     /// already translated text is not translated twice; null hands <c>Text</c> back to it.
     /// </summary>
@@ -76,7 +76,7 @@ public sealed partial class UiLabel : Label
     }
 
     /// <summary>
-    /// A label beside this one whose baseline this one stands on (#1232). Containers align boxes,
+    /// A label beside this one whose baseline this one stands on. Containers align boxes,
     /// not baselines, so this label starts at the top of its row, as tall as the other label's top
     /// margin and ascent plus its own descent and bottom margin, and draws its text at the bottom.
     /// The other label must start at the row's top with its text at the top, as a Label does by

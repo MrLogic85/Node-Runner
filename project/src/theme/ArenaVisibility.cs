@@ -1,7 +1,7 @@
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// The Training arena's visibility layers (#818): the bits a viewport's <c>canvas_cull_mask</c>
+/// The Training arena's visibility layers: the bits a viewport's <c>canvas_cull_mask</c>
 /// picks. The shadows are drawn only by <c>ArenaShadows</c>' own viewport, so they fade together
 /// as one picture; everything else only by the arena's. A viewport draws an item only if the item
 /// and every canvas item above it share a bit with its mask, so a creature's root decides which,

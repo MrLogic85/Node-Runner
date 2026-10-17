@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The Velocity motor's hub motor (#454, <c>docs/WORLD_VISUALS.md</c> → Motor), checked on its geometry.</summary>
+/// <summary>The Velocity motor's hub motor (<c>docs/WORLD_VISUALS.md</c> → Motor), checked on its geometry.</summary>
 public sealed class HubMotorGeometryTests
 {
     // Every line of the motor is a signal stroke (VisualTheme's joint and motor widths).

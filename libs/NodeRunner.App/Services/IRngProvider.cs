@@ -8,10 +8,8 @@ namespace NodeRunner.App.Services;
 /// </summary>
 public interface IRngProvider
 {
-    /// <summary>The seed the current <see cref="Random"/> was created from.</summary>
     int Seed { get; }
 
-    /// <summary>The current seeded RNG instance.</summary>
     Random Random { get; }
 
     /// <summary>Replaces the current RNG with a freshly seeded one.</summary>

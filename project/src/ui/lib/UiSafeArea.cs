@@ -10,7 +10,7 @@ public readonly record struct UiInsets(float Left, float Top, float Right, float
 
 /// <summary>
 /// The part of the window that controls can use: Godot's display safe area, which on a phone
-/// leaves out the camera cutout (#513). The app hides the phone's status and navigation bars
+/// leaves out the camera cutout. The app hides the phone's status and navigation bars
 /// (immersive mode), so the safe area only has to clear the cutout.
 /// Registered as the <see cref="AutoloadName"/> autoload, so every screen reads the same insets and
 /// hears <see cref="Changed"/> when they move.

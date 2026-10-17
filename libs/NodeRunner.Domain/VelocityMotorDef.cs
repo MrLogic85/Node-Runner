@@ -1,10 +1,10 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Velocity motor (#454): a powered joint part on one node that turns its Target side against
+/// A Velocity motor: a powered joint part on one node that turns its Target side against
 /// its Fixed side at the speed the network chooses, with no end stops. Its sides follow the Servo's
-/// rules (#1118): a link at the joint or the joint's Wheel, not both the same, either null once
-/// that part is deleted. It shares the joint's hinge-part slot with a Servo, a Brake and an Angle sensor (#1044); see
+/// rules: a link at the joint or the joint's Wheel, not both the same, either null once
+/// that part is deleted. It fills the joint's hinge-part slot (<see cref="IHingePartDef"/>); see
 /// <see cref="JointMotor"/>. Players know it as the Motor.
 /// </summary>
 public sealed record VelocityMotorDef : IJointMotorDef
@@ -85,10 +85,10 @@ public sealed record VelocityMotorDef : IJointMotorDef
 
     public int NodeId { get; }
 
-    /// <summary>The side held still: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side held still: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? FixedLinkId { get; }
 
-    /// <summary>The side turned: a link at the joint or the joint's Wheel (#1118), or null once deleted.</summary>
+    /// <summary>The side turned: a link at the joint or the joint's Wheel, or null once deleted.</summary>
     public int? TargetLinkId { get; }
 
     public string? Name { get; }

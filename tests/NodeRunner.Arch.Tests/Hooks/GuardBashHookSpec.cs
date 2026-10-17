@@ -2,8 +2,7 @@ namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
 /// .claude/hooks/guard-bash.sh denies the git commands AGENTS.md → "Working copy" forbids, work
-/// that lands on main without a PR, and bad PR titles, but not text that only mentions them
-/// (#1320).
+/// that lands on main without a PR, and bad PR titles, but not text that only mentions them.
 /// </summary>
 public sealed class GuardBashHookSpec(HookFixture fixture) : IClassFixture<HookFixture>
 {
@@ -11,7 +10,6 @@ public sealed class GuardBashHookSpec(HookFixture fixture) : IClassFixture<HookF
 
     private readonly HookFixture _fixture = fixture;
 
-    /// <summary>A second checkout inside the fixture, on a feature branch.</summary>
     private readonly string _feature = fixture.Checkout("feature", "feature");
 
     /// <summary>Gives the main checkout a local branch and a branch that exists only on a remote.</summary>

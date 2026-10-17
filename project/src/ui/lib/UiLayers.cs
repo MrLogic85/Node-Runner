@@ -1,7 +1,7 @@
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// The named UI levels inside one Viewport or Window, as CanvasLayer numbers (#768). A higher
+/// The named UI levels inside one Viewport or Window, as CanvasLayer numbers. A higher
 /// level draws over every lower one in the same Viewport, so the UI never raises a part with
 /// ZIndex. A dialog is an embedded Window: it draws over every level of the Viewport it is
 /// embedded in, notifications included, and a menu it opens uses these levels inside it.

@@ -4,7 +4,7 @@ namespace NodeRunner.Ui.Tests;
 
 public sealed class TelescopeGeometryTests
 {
-    // Rows from the approved table on #1210, one per kind of link: each is a length within a link's shortest and
+    // Rows hand-computed from docs/WORLD_VISUALS.md → "Piston" and "Spring", one per kind of link: each is a length within a link's shortest and
     // longest, with what covers each end, and where the cylinder, the stage's mouth and the cap or seat end up.
     [Theory]
     [InlineData("plain, 100%, half out", false, 120, 90, 150, 15, 15, 45, 65, 105)]

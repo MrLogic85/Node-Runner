@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws a plain joint in Build and Training (#626): a ring whose outer edge is the collision
+/// Draws a plain joint in Build and Training: a ring whose outer edge is the collision
 /// radius, a fine inner ring and a tint for its <see cref="JointLook"/>. The tint lies on an opaque
 /// background disc, so beams, links and their selection marks under the joint never show through it.
 /// Drawn in window pixels
@@ -58,7 +58,7 @@ public static class JointDrawing
         canvas.DrawSetTransformMatrix(drawTransform);
     }
 
-    /// <summary>Where every link's drawing ends (<see cref="NodeDef.HubRadius"/>, #1086), whatever sits on its joint.</summary>
+    /// <summary>Where every link's drawing ends (<see cref="NodeDef.HubRadius"/>), whatever sits on its joint.</summary>
     public const float HubRadius = (float)NodeDef.HubRadius;
 
     /// <summary>

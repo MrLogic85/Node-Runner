@@ -6,9 +6,7 @@ using System.Xml.Linq;
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Architecture rules enforced at test time. Analogous to kappuccino's :konsist-test module.
 /// Each rule pins down a boundary declared in docs/ARCHITECTURE.md and CODE_DESIGN_PRINCIPLES.md.
-/// When adding new rules, prefer a testable convention over a documented one.
 /// </summary>
 public sealed partial class ArchitectureSpec
 {
@@ -86,7 +84,7 @@ public sealed partial class ArchitectureSpec
     public void AndroidPreset_BuildsWithGradleAndGivesTheDebugBuildItsOwnIdentity()
     {
         // One preset exports both builds; Gradle's debug build type adds what lets a debug build
-        // install next to the release (#898, #914). See docs/RELEASING.md → "Android export".
+        // install next to the release. See docs/RELEASING.md → "Android export".
         var preset = ExportPresets().ShouldHaveSingleItem();
         preset["name"].ShouldBe("\"Android\"");
         preset["gradle_build/use_gradle_build"].ShouldBe("true");
@@ -105,7 +103,7 @@ public sealed partial class ArchitectureSpec
     [Fact]
     public void AndroidActivity_OpensTheDefaultKeyboardWithCapitalizedSentences()
     {
-        // Godot's own activity, tracked so the release keeps our keyboard hook (#906). A Godot
+        // Godot's own activity, tracked so the release keeps our keyboard hook. A Godot
         // upgrade replaces it; see docs/RELEASING.md → "Android export".
         var activity = File.ReadAllText(Path.Combine(RepositoryRoot.Find(), "project", "android", "build",
             "src", "main", "java", "com", "godot", "game", "GodotApp.java"));
@@ -128,7 +126,6 @@ public sealed partial class ArchitectureSpec
         return values[0];
     }
 
-    /// <summary>The settings of each export preset, with its options.</summary>
     private static List<Dictionary<string, string>> ExportPresets()
     {
         var presets = new List<Dictionary<string, string>>();

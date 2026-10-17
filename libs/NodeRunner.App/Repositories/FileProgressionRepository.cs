@@ -12,11 +12,10 @@ public sealed class FileProgressionRepository : IProgressionRepository
     public static VersionedSaveFile<ProgressionDef> Format { get; } = new([]);
 
     // Keyed by absolute path (not per-instance) so that even if more than
-    // one FileProgressionRepository instance ever pointed at the same file
-    // (SaveManager only ever constructs one today, but nothing enforces
-    // that), a Load()'s read-validate-quarantine sequence still can't
+    // one FileProgressionRepository instance pointed at the same file,
+    // a Load()'s read-validate-quarantine sequence still can't
     // interleave with another instance's Save() and quarantine away a file
-    // that was actually just written successfully (#114).
+    // that was actually just written successfully.
     private static readonly ConcurrentDictionary<string, object> _pathLocks = new();
 
     private readonly string _path;
@@ -43,7 +42,7 @@ public sealed class FileProgressionRepository : IProgressionRepository
         // Shares _writeLock with Save() so a concurrent Save can never land
         // mid-read/mid-quarantine: without this, Quarantine() could rename
         // away a just-written valid file instead of the corrupt one it read
-        // moments earlier (#114).
+        // moments earlier.
         lock (_writeLock)
         {
             if (!File.Exists(_path))
@@ -55,7 +54,7 @@ public sealed class FileProgressionRepository : IProgressionRepository
             try
             {
                 // Strict loading (SaveJson) also rejects "{}": a missing field
-                // must not silently read as a fresh progression (#114). A file
+                // must not silently read as a fresh progression. A file
                 // newer than the app, or one a migration can't change, fails
                 // here too and is quarantined, never overwritten.
                 load = _format.Deserialize(File.ReadAllText(_path), _path);
@@ -65,7 +64,7 @@ public sealed class FileProgressionRepository : IProgressionRepository
                 // A corrupt progression file must not crash startup seeding;
                 // log it, quarantine it so it isn't reported again on the next
                 // Load(), and recover to a fresh progression rather than
-                // letting the exception propagate (#114).
+                // letting the exception propagate.
                 Console.Error.WriteLine(
                     $"[FileProgressionRepository] Progression file '{_path}' is corrupt, resetting to defaults: {ex}");
                 Quarantine();
@@ -128,7 +127,7 @@ public sealed class FileProgressionRepository : IProgressionRepository
             // regardless). Its own failure modes are open-ended (permission,
             // read-only media, path-too-long, ...), so this catches broadly
             // and logs rather than letting a secondary failure escape the
-            // recovery path it's supposed to be inside of (#114).
+            // recovery path it's supposed to be inside of.
             Console.Error.WriteLine(
                 $"[FileProgressionRepository] Could not quarantine corrupt progression file '{_path}': {ex}");
         }

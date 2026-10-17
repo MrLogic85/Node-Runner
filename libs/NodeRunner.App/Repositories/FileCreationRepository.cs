@@ -14,7 +14,7 @@ public sealed class FileCreationRepository : ICreationRepository
     // The stroke a version 2 save meant when it left the field out.
     private const double _strokeBefore870 = 0.3;
 
-    // Before #1308 training kept its network under this key, so the migrations before that read it here.
+    // Up to version 15 training kept its network under this key, so the migrations before that read it here.
     private const string _networkKeyBefore1308 = "brain";
 
     /// <summary>
@@ -26,10 +26,8 @@ public sealed class FileCreationRepository : ICreationRepository
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
 
-    // Saves can now be dispatched from a background thread (see #113), so a
-    // synchronous main-thread Save and a background one could otherwise race
-    // on the same shared `.tmp` path. Serializing writes keeps the
-    // write-temp-then-rename sequence atomic per repository instance.
+    // Serialises Save with WriteBack's check-then-write, so a migrating load
+    // never overwrites a newer save made on another thread.
     private readonly object _writeLock = new();
 
     public FileCreationRepository(IStorageLocation storageLocation)
@@ -56,9 +54,9 @@ public sealed class FileCreationRepository : ICreationRepository
         creature["servos"] ??= new JsonArray();
     }
 
-    // Before #870 a Piston's stroke was ±s of its built length. Now it grows by stroke of its
+    // Up to version 2 a Piston's stroke was ±s of its built length. Now it grows by stroke of its
     // shortest length, and start says where the built length sits in that travel: 2s / (1 − s) at
-    // start 0.5 kept the same shortest and longest lengths, until #835 measured its travel on the gap
+    // start 0.5 kept the same shortest and longest lengths, until version 4 measured its travel on the gap
     // between its joints' edges, which shortens it a little. A Piston can now at most double, so
     // a stroke above ±⅓ becomes 100%, about ±33% of its built length.
     private static void PistonStrokeFromShortest(JsonObject file)
@@ -148,9 +146,9 @@ public sealed class FileCreationRepository : ICreationRepository
         }
     }
 
-    // Before #835 a Spring had no travel: it pushed nothing at its drawn length and nothing stopped
+    // Up to version 3 a Spring had no travel: it pushed nothing at its drawn length and nothing stopped
     // it. Stroke 1 and coil length 0.55 rest it at its drawn length, between stops about a third of the
-    // gap between its joints' edges either side (#974), so it stays free there for every move but the largest.
+    // gap between its joints' edges either side, so it stays free there for every move but the largest.
     private static void SpringTravel(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -176,7 +174,7 @@ public sealed class FileCreationRepository : ICreationRepository
         }
     }
 
-    // Before #129 a creature had no Wheels.
+    // Up to version 4 a creature had no Wheels.
     private static void AddWheelsArray(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -187,7 +185,7 @@ public sealed class FileCreationRepository : ICreationRepository
         creature["wheels"] ??= new JsonArray();
     }
 
-    // Before #578 every Camera had today's fan: three rays, the outer ones a right angle apart,
+    // Up to version 5 every Camera had the same fan: three rays, the outer ones a right angle apart,
     // reaching 220. Writing it into the file keeps what an old save meant if the defaults change.
     private static void CameraSettings(JsonObject file)
     {
@@ -213,7 +211,7 @@ public sealed class FileCreationRepository : ICreationRepository
         }
     }
 
-    // Before #1043 a creature had no Touch sensors.
+    // Up to version 6 a creature had no Touch sensors.
     private static void AddTouchSensorsArray(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -224,7 +222,7 @@ public sealed class FileCreationRepository : ICreationRepository
         creature["touchSensors"] ??= new JsonArray();
     }
 
-    // Before #1142 a creature had no Rubbers.
+    // Up to version 9 a creature had no Rubbers.
     private static void AddRubbersArray(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -235,7 +233,7 @@ public sealed class FileCreationRepository : ICreationRepository
         creature["rubbers"] ??= new JsonArray();
     }
 
-    // Before #454 a creature had no Velocity motors.
+    // Up to version 10 a creature had no Velocity motors.
     private static void AddVelocityMotorsArray(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -246,7 +244,7 @@ public sealed class FileCreationRepository : ICreationRepository
         creature["velocityMotors"] ??= new JsonArray();
     }
 
-    // Before #1039 a creature had no Brakes.
+    // Up to version 11 a creature had no Brakes.
     private static void AddBrakesArray(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -257,7 +255,7 @@ public sealed class FileCreationRepository : ICreationRepository
         creature["brakes"] ??= new JsonArray();
     }
 
-    // Before #1204 a creature had no Angle sensors.
+    // Up to version 12 a creature had no Angle sensors.
     private static void AddAngleSensorsArray(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -268,7 +266,7 @@ public sealed class FileCreationRepository : ICreationRepository
         creature["angleSensors"] ??= new JsonArray();
     }
 
-    // Before #1036 a creature had no Steppers.
+    // Up to version 13 a creature had no Steppers.
     private static void AddSteppersArray(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
@@ -279,7 +277,7 @@ public sealed class FileCreationRepository : ICreationRepository
         creature["steppers"] ??= new JsonArray();
     }
 
-    // Before #1129 a Piston's target-length output was tanh, −1 shortest … +1 longest, and is now
+    // Up to version 7 a Piston's target-length output was tanh, −1 shortest … +1 longest, and is now
     // sigmoid, 0…1 like its length input. (tanh(x) + 1) / 2 = sigmoid(2x), so doubling its bias and
     // every weight into it keeps a trained network asking for the same lengths. A disabled connection
     // doubles too, so mutation can enable it as it was.
@@ -341,7 +339,7 @@ public sealed class FileCreationRepository : ICreationRepository
         }
     }
 
-    // Before #1263 a Stepper's outputs were a sigmoid frequency, 0…1 of its Max frequency, and a tanh
+    // Up to version 14 a Stepper's outputs were a sigmoid frequency, 0…1 of its Max frequency, and a tanh
     // power, −1…1 of its Max strength, its sign the way to step; its third input was its running
     // frequency. Its one output is now a tanh frequency whose sign is the way to step, so the power
     // neuron, already tanh, becomes it and keeps the trained direction. The old frequency neurons and
@@ -408,7 +406,7 @@ public sealed class FileCreationRepository : ICreationRepository
         }
     }
 
-    // Before #1144 a Wheel had a Grip, its tyre's friction. Every tyre now grips like a bare joint.
+    // Up to version 8 a Wheel had a Grip, its tyre's friction. Every tyre now grips like a bare joint.
     private static void DropWheelGrip(JsonObject file)
     {
         // A file without a creature or wheels fails the strict load, which names the missing field.
@@ -428,7 +426,7 @@ public sealed class FileCreationRepository : ICreationRepository
         }
     }
 
-    // #1308 calls the creature's network a neural network everywhere, so training's key follows.
+    // The creature's network is called a neural network everywhere, so from version 16 training's key is too.
     private static void NetworkKeyFromBrain(JsonObject file)
     {
         if (file["training"] is not JsonObject training || !training.ContainsKey(_networkKeyBefore1308))
@@ -467,7 +465,7 @@ public sealed class FileCreationRepository : ICreationRepository
         }
 
         // A single unreadable/corrupt file must not empty the whole
-        // Creations list (#114): skip and log it instead of letting
+        // Creations list: skip and log it instead of letting
         // Read()'s exception propagate out of the LINQ pipeline.
         var creations = new List<CreationDef>();
         foreach (var folder in Directory.EnumerateDirectories(_directoryPath))
@@ -490,7 +488,7 @@ public sealed class FileCreationRepository : ICreationRepository
             return null;
         }
 
-        // Matches List()'s recoverable-corruption handling (#114): treat an
+        // Matches List()'s recoverable-corruption handling: treat an
         // unreadable file the same as "no Creation with this id" instead of
         // throwing, so a lookup for the currently open Creation can't crash
         // a caller if its file becomes corrupt between saves.
@@ -572,7 +570,7 @@ public sealed class FileCreationRepository : ICreationRepository
     }
 
     // A per-save unique temp name (rather than a shared "<path>.tmp") means no two writes, even from
-    // different repository instances, can ever contend on the same temp path (#114).
+    // different repository instances, can ever contend on the same temp path.
     private static void WriteAtomically(string path, string json)
     {
         var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";

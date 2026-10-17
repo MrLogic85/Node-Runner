@@ -55,7 +55,7 @@ public sealed class CreatureDefTests
             Refuses.Invalid(create).Message.ShouldBe($"Node id 1 already has a {slot}; a joint holds at most one.");
     }
 
-    // #1118: a hinge part's side may be its own joint's Wheel; an unfinished drawing still loads.
+    // A hinge part's side may be its own joint's Wheel; an unfinished drawing still loads.
     [Fact]
     public void Constructor_AcceptsAWheelSide_AnEmptyDrawing_AndAnUnfinishedOne()
     {
@@ -66,7 +66,7 @@ public sealed class CreatureDefTests
             .Beams.Count.ShouldBe(1);
     }
 
-    // Production builds a creature from one list of parts (#1222), in any order; the lists are copies.
+    // Production builds a creature from one list of parts, in any order; the lists are copies.
     [Fact]
     public void Constructor_FromOnePartList_SortsByKind_KeepsEachKindsOrder_AndCopies()
     {
@@ -98,7 +98,7 @@ public sealed class CreatureDefTests
         creature.Sensors[0].Aim.ShouldBeNull();
         new CreatureDef(_nodes, _beams, [new SensorDef(6, 4, SensorKind.Camera, aim: 2)]).Sensors[0].Aim.ShouldBe(2);
 
-        // #1086: a Wheel widens its joint but covers none of the links; only a joint motor does.
+        // A Wheel widens its joint but covers none of the links; only a joint motor does.
         foreach (var (node, radius, covered) in new[] { (1, 40.0, 27.0), (2, 27, 27), (3, 15, 15), (4, 15, 15), (18, 27, 27) })
         {
             (creature.NodeRadius(node), creature.CoveredRadius(node)).ShouldBe((radius, covered), $"node {node}");
@@ -128,7 +128,7 @@ public sealed class CreatureDefTests
         (CreatureDef.HasJointPart(3, creature.Parts), CreatureDef.HasJointPart(99, creature.Parts)).ShouldBe((true, false));
     }
 
-    // A Brake sits in its joint's hinge-part slot, at the top of the stack (#1041), whatever the list order (#1221).
+    // A Brake sits in its joint's hinge-part slot, at the top of the stack, whatever the list order.
     [Fact]
     public void JointParts_PutTheHingePartFirst_AndLeaveOtherJointsOut()
     {
@@ -139,7 +139,7 @@ public sealed class CreatureDefTests
         CreatureDef.JointParts(4, [new WheelDef(8, 1)]).ShouldBeEmpty();
     }
 
-    // #1118: a motor needs two sides, and a Wheel can be one of them.
+    // A motor needs two sides, and a Wheel can be one of them.
     [Fact]
     public void JointMotor_CountsTheWheelAsASide()
     {

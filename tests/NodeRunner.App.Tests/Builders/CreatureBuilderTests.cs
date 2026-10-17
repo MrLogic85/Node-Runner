@@ -15,8 +15,8 @@ public sealed class CreatureBuilderTests
         CreatureElementKind.AngleSensor,
     ];
 
-    // Every hinge part fills its joint's one hinge-part slot and takes its sides by the Servo's rules
-    // (#1039, #1044, #1118, #1204); every side change keeps its id, and so its ports and training (#1177).
+    // Every hinge part fills its joint's one hinge-part slot and takes its sides by the Servo's rules;
+    // every side change keeps its id, and so its ports and training.
     [Theory]
     [InlineData(CreatureElementKind.Servo)]
     [InlineData(CreatureElementKind.VelocityMotor)]
@@ -66,7 +66,7 @@ public sealed class CreatureBuilderTests
         builder.CanAddServo(joint, out _).ShouldBeTrue();
         Should.Throw<ArgumentOutOfRangeException>(() => RemoveHingePart(builder, kind, part));
 
-        // A Wheel is a one-sided link at its joint (#1118): a side until it goes.
+        // A Wheel is a one-sided link at its joint: a side until it goes.
         var wheel = builder.AddWheel(wheelJoint);
         var onWheel = AddHingePart(builder, kind, wheelJoint);
         ShouldHaveSides(builder, onWheel, wheelBeam, wheel);
@@ -112,7 +112,7 @@ public sealed class CreatureBuilderTests
         builder.Nodes.Select(node => node.Id).ShouldBe([other]);
     }
 
-    // The settings panel lists each part's settings in this order (#704), and setting one leaves the rest.
+    // The settings panel lists each part's settings in this order, and setting one leaves the rest.
     [Fact]
     public void EveryPartsSettings_ComeInPanelOrder_AndSettingOneKeepsTheOthers()
     {
@@ -177,8 +177,8 @@ public sealed class CreatureBuilderTests
         builder.ParameterHasEffect(parts.Camera, PartParameterId.CameraRange).ShouldBeTrue();
     }
 
-    // A creature from outside the app, like a share code, must be one Build could make (#899): each
-    // setting on its slider, a Brake's Locked top step included (#1041).
+    // A creature from outside the app, like a share code, must be one Build could make: each
+    // setting on its slider, a Brake's Locked top step included.
     [Theory]
     [InlineData(BrakeDef.LockedStrength, true)]
     [InlineData(199999.0, false)]
@@ -278,8 +278,8 @@ public sealed class CreatureBuilderTests
         builder.Parts.Count.ShouldBe(8);
     }
 
-    // Any link replaces a link of another kind on its pair (#849, #1176), with its default settings, and a
-    // hinge part holding the old one holds the new one in the same role under the same id (#1177).
+    // Any link replaces a link of another kind on its pair, with its default settings, and a
+    // hinge part holding the old one holds the new one in the same role under the same id.
     [Theory]
     [InlineData(BuildLink.Beam, BuildLink.Piston, true)]
     [InlineData(BuildLink.Piston, BuildLink.Spring, false)]
@@ -305,7 +305,7 @@ public sealed class CreatureBuilderTests
         builder.Springs.ShouldBe(drawn == BuildLink.Spring ? [new SpringDef(link, from, to)] : []);
     }
 
-    // One sensor per beam; a moved sensor keeps its id, kind, name and settings (#806).
+    // One sensor per beam; a moved sensor keeps its id, kind, name and settings.
     [Fact]
     public void Sensors_SitOnePerBeam_AndMoveKeepingTheirIdNameAndSettings()
     {
@@ -336,7 +336,7 @@ public sealed class CreatureBuilderTests
         builder.Sensors.ShouldBeEmpty();
     }
 
-    // A Camera keeps the world direction it looks in as built (#806): level → down turns the beam by
+    // A Camera keeps the world direction it looks in as built: level → down turns the beam by
     // +π/2 and down → level by −π/2.
     [Theory]
     [InlineData(false, 0.3 - (Math.PI / 2))]

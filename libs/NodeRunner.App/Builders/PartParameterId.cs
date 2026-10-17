@@ -1,6 +1,6 @@
 namespace NodeRunner.App.Builders;
 
-/// <summary>A part setting (#704). Parts with the same id have the same setting, whatever their kind.</summary>
+/// <summary>A part setting. Parts with the same id have the same setting, whatever their kind.</summary>
 public enum PartParameterId
 {
     Strength,

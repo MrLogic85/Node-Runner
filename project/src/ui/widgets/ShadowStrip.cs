@@ -5,10 +5,10 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// The Training shadow strip (#387, reference <c>GenerationStrip</c>): one <see cref="UiBarCell"/>
+/// The Training shadow strip (reference <c>GenerationStrip</c>): one <see cref="UiBarCell"/>
 /// per shadow, its bar the distance so far and the followed shadow selected, its bar capped once its
-/// distance froze at a tear (#1257). Tapping a cell follows
-/// that shadow. It has as many places as fit its width, cells keeping their size (#791). With more
+/// distance froze at a tear. Tapping a cell follows
+/// that shadow. It has as many places as fit its width, cells keeping their size. With more
 /// shadows than places it pages: a "worse" cell first and a sort or "better" cell last
 /// (<see cref="ShadowStripPresentation"/>). The scene authors the row and the two buttons; this adds
 /// a cell per place whenever the width changes, and refreshes them every frame, because distances
@@ -54,7 +54,7 @@ public partial class ShadowStrip : Control
 
     // As tall as a cell and no wider than nothing, so the width stays the tray's. The height is a
     // cell's, not the row's, so it is known before Fit adds cells: Fit runs while the tray lays the
-    // strip out, and a height that changes then is not laid out again (#825).
+    // strip out, and a height that changes then is not laid out again.
     public override Vector2 _GetMinimumSize() =>
         IsInsideTree() ? new Vector2(0, Worse.GetCombinedMinimumSize().Y) : Vector2.Zero;
 

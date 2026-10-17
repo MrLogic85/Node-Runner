@@ -9,7 +9,6 @@ public readonly record struct LinkRef(int Id, int NodeA, int NodeB, CreatureElem
             .Concat(pistons.Select(piston => new LinkRef(piston.Id, piston.NodeA, piston.NodeB, CreatureElementKind.Piston)))
             .Concat(springs.Select(spring => new LinkRef(spring.Id, spring.NodeA, spring.NodeB, CreatureElementKind.Spring)));
 
-    /// <summary>The link with <paramref name="linkId"/> among <paramref name="links"/>.</summary>
     public static LinkRef Find(IEnumerable<LinkRef> links, int linkId)
     {
         foreach (var link in links)

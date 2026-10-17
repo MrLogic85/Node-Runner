@@ -5,14 +5,14 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A joint (#767). On its bands layer (<see cref="DrawSlot.Band"/>, #1269), under the hinge part on
-/// it: a Touch sensor's cushion (<see cref="Cushion"/>, #1045); a Rubber's skin (<see cref="Skin"/>,
-/// #1142) over the cushion; and the marks round the joint, the Wheel's and Touch sensor's halos and
+/// A joint. On its bands layer (<see cref="DrawSlot.Band"/>), under the hinge part on
+/// it: a Touch sensor's cushion (<see cref="Cushion"/>); a Rubber's skin (<see cref="Skin"/>)
+/// over the cushion; and the marks round the joint, the Wheel's and Touch sensor's halos and
 /// its <see cref="Placing"/> mark, which it draws even where a Servo or Wheel stands in for its ring
 /// (<see cref="ShowsRing"/>). In its own slot (<see cref="DrawSlot.Over"/>): its ring
 /// (<see cref="JointDrawing"/>) at its origin and, while selected, its halo; or a Wheel's hub
 /// (<see cref="ShowsHub"/>) where a Wheel stands in for its ring, so the hub sits over the links
-/// that reach it (#1086).
+/// that reach it.
 /// </summary>
 public partial class JointPart : PartVisual
 {
@@ -112,7 +112,7 @@ public partial class JointPart : PartVisual
     }
 
     /// <summary>
-    /// Whether its Wheel is selected (#1045): the joint ring's selection mark outside the tyre, at
+    /// Whether its Wheel is selected: the joint ring's selection mark outside the tyre, at
     /// <see cref="Radius"/>'s halo. The joint draws it, as it draws the hub the Wheel is chosen
     /// at, so it lies over the links and the cushion, as a joint's own mark does.
     /// </summary>
@@ -152,7 +152,7 @@ public partial class JointPart : PartVisual
 
     /// <summary>
     /// The radius the <see cref="Placing"/> ring goes round: the placed part's there, which is where a
-    /// finger aims (#1055, <c>PlacingTargets.JointRingOf</c>), or the joint's own while it refuses.
+    /// finger aims (<c>PlacingTargets.JointRingOf</c>), or the joint's own while it refuses.
     /// </summary>
     public float PlacingRadius
     {

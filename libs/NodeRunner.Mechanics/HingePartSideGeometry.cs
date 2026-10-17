@@ -3,9 +3,9 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// How every hinge part, a Servo (#452), a Velocity motor (#454), a Brake (#1040) or an Angle sensor (#1204), measures
+/// How every hinge part (<see cref="IHingePartDef"/>) measures
 /// and turns its two sides. A link side's direction runs from the hinge part's joint to the link's other joint, and it
-/// turns by an equal and opposite force couple; a Wheel side (#1118) is a one-sided link that
+/// turns by an equal and opposite force couple; a Wheel side is a one-sided link that
 /// points along its own turn, as a mark on its tyre would, and turns by a body torque.
 /// </summary>
 public static class HingePartSideGeometry
@@ -14,16 +14,16 @@ public static class HingePartSideGeometry
     public const double MinimumLeverArm = NodeDef.PlainJointRadius;
 
     /// <summary>
-    /// The live direction of a Wheel side (#1118), a one-sided link that points along its own turn,
+    /// The live direction of a Wheel side, a one-sided link that points along its own turn,
     /// from its body's rotation. Creature coordinates are y-down, so a body's rotation is
     /// clockwise-positive on screen, and model angles are counter-clockwise-positive.
     /// </summary>
     public static double WheelAngle(double bodyRotation) => -bodyRotation;
 
-    /// <summary>A Wheel side's angular speed (#1118) from its body's, in the model's counter-clockwise-positive sense.</summary>
+    /// <summary>A Wheel side's angular speed from its body's, in the model's counter-clockwise-positive sense.</summary>
     public static double WheelAngularSpeed(double bodyAngularVelocity) => -bodyAngularVelocity;
 
-    /// <summary>The body torque that turns a Wheel side (#1118) by a model, counter-clockwise-positive, <paramref name="torque"/>.</summary>
+    /// <summary>The body torque that turns a Wheel side by a model, counter-clockwise-positive, <paramref name="torque"/>.</summary>
     public static double WheelBodyTorque(double torque) => -torque;
 
     /// <summary>The live direction from a motor's joint to a link's other joint, in radians.</summary>
@@ -42,7 +42,7 @@ public static class HingePartSideGeometry
 
     /// <summary>
     /// The unit direction, in creature coordinates, of the groove that welds a hinge part's sides at
-    /// <paramref name="overshoot"/> radians short of their angle (#1272): the line from the joint
+    /// <paramref name="overshoot"/> radians short of their angle: the line from the joint
     /// through where the held point, a point on the held side now at <paramref name="far"/>, will be
     /// once the target side has turned back by it. The groove runs on the other side, so when the held
     /// side is the fixed one it turns the other way.
@@ -104,7 +104,7 @@ public static class HingePartSideGeometry
     }
 
     /// <summary>
-    /// How hard two links that meet at one joint are to turn apart (#1040): the inertia the torque
+    /// How hard two links that meet at one joint are to turn apart: the inertia the torque
     /// between them works against, with the joint's mass shared by both rather than counted for
     /// each, as two <see cref="LinkInertia"/> in series would; that reads a straight joint twice as
     /// heavy. It treats the three joints as free masses and anything else on them only makes them

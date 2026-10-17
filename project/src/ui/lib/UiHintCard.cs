@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// A card that comes and goes with a touch (#867): <see cref="ShowNow"/> fades it in, or keeps it
+/// A card that comes and goes with a touch: <see cref="ShowNow"/> fades it in, or keeps it
 /// if it already shows; <see cref="HideAfterLinger"/> keeps it <see cref="LingerSeconds"/> and
 /// then fades it out; <see cref="HideNow"/> drops it at once. It never takes input.
 /// </summary>

@@ -4,7 +4,7 @@ using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>Tap to pick a tray part, then tap where it goes (#805).</summary>
+/// <summary>Tap to pick a tray part, then tap where it goes.</summary>
 public sealed class BuildPartPickTests
 {
     [Fact]

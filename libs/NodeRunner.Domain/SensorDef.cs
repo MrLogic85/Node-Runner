@@ -3,7 +3,7 @@ namespace NodeRunner.Domain;
 /// <summary>
 /// A sensor part on a beam, referenced by the beam's stable id. It measures its own beam where its
 /// picture sits (<see cref="SensorPicture.Centre"/>); a beam holds one sensor. A Camera also has an <see cref="Aim"/>, and its
-/// <see cref="Rays"/>, <see cref="Spread"/> and <see cref="Range"/> (#578). See
+/// <see cref="Rays"/>, <see cref="Spread"/> and <see cref="Range"/>. See
 /// docs/CREATURE_MODEL.md.
 /// </summary>
 public sealed record SensorDef : IPartDef
@@ -22,7 +22,7 @@ public sealed record SensorDef : IPartDef
 
     /// <summary>
     /// A Camera without <paramref name="rays"/>, <paramref name="spread"/> or <paramref name="range"/>
-    /// gets the defaults, today's fan; other kinds have none.
+    /// gets the defaults; other kinds have none.
     /// </summary>
     public SensorDef(
         int id,
@@ -91,14 +91,14 @@ public sealed record SensorDef : IPartDef
     PartKind IPartDef.PartKind => PartKinds.Of(Kind).Kind;
 
     /// <summary>
-    /// A Camera's aim (#594): the angle of its centre ray from its beam's direction, in radians
+    /// A Camera's aim: the angle of its centre ray from its beam's direction, in radians
     /// (the ray math is <c>CameraRays</c> in NodeRunner.Mechanics). A <see cref="CreatureDef"/> gives a
     /// Camera without one <see cref="DefaultAim"/> from its beam's built pose; other kinds have none.
     /// </summary>
     public double? Aim { get; }
 
     /// <summary>
-    /// A Camera's ray count (#578): 1, 3 or 5, odd so its centre ray is its aim. It decides the
+    /// A Camera's ray count: 1, 3 or 5, odd so its centre ray is its aim. It decides the
     /// Camera's network ports (<see cref="NetworkPorts"/>). Null for other kinds.
     /// </summary>
     public int? Rays { get; }
@@ -126,7 +126,7 @@ public sealed record SensorDef : IPartDef
     public static bool IsRayCount(int rays) => rays is >= 1 and <= MaxRays && rays % 2 == 1;
 
     /// <summary>
-    /// A new Camera's aim (#622): level, at the world's forward (+x), on the beam from
+    /// A new Camera's aim: level, at the world's forward (+x), on the beam from
     /// <paramref name="nodeA"/> to <paramref name="nodeB"/> as built, in −π..π.
     /// </summary>
     public static double DefaultAim(Vector2D nodeA, Vector2D nodeB) =>

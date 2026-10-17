@@ -7,7 +7,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Tests.Repositories;
 
 /// <summary>
-/// Each format version's share dictionary (#899; docs/SAVE_FORMAT.md → "Share code"). A new
+/// Each format version's share dictionary (docs/SAVE_FORMAT.md → "Share code"). A new
 /// version's is made with <c>NODE_RUNNER_UPDATE_SHARE_DICTIONARY=1 dotnet test tests/NodeRunner.App.Tests
 /// --filter ShareDictionaryTests</c>, then a second run builds it in. It never overwrites one.
 /// </summary>
@@ -21,27 +21,27 @@ public sealed class ShareDictionaryTests
     // The 0.13.0 walker's code in version 6. It must read for good, so version 6's dictionary never changes.
     private const string _walkerInVersion6 = "NR6.IzL5wlMFlioTIYFRjWELI0vsxQIiRCxMzUExjyoQW1sLACFCsRE";
 
-    // A joint, a beam and a 0.7 m Wheel at 30 % grip, coded in version 8 before #1144 dropped Grip.
+    // A joint, a beam and a 0.7 m Wheel at 30 % grip, coded in version 8 before version 9 dropped Grip.
     // It must read for good, so version 8's dictionary never changes.
     private const string _rollerInVersion8 = "NR8.gyfzoPycHCKTObiGxpY8DWDVN2b6M8biAxOUCgXmAXOkHG8MciMAlxLLLg";
 
-    // Two joints, a beam, a Touch sensor and a Wheel, coded in version 9 before #1142 added Rubbers.
+    // Two joints, a beam, a Touch sensor and a Wheel, coded in version 9 before version 10 added Rubbers.
     // It must read for good, so version 9's dictionary never changes.
     private const string _feelerInVersion9 = "NR9.q8bSBIEmfLdUUHwQlfDBFTW2BGsAq8UxU6QxFj8heckIpzeQSgpDkB8AJ7jUBQ";
 
-    // Two joints, a beam, a Wheel with a Servo and a Rubber, coded in version 10 before #454 added Velocity motors.
+    // Two joints, a beam, a Wheel with a Servo and a Rubber, coded in version 10 before version 11 added Velocity motors.
     // It must read for good, so version 10's dictionary never changes.
     private const string _spinnerInVersion10 = "NR10.g-eEYGC5kEdkVgDX89iSsAGsEYCZRo2xRKEpWgwao8egCZagQSp4DLH5Eqm0MAJ5EQAN-Pb1";
 
-    // Three joints, two beams, a Wheel and a Velocity motor, coded in version 11 before #1039 added Brakes.
+    // Three joints, two beams, a Wheel and a Velocity motor, coded in version 11 before version 12 added Brakes.
     // It must read for good, so version 11's dictionary never changes.
     private const string _rollerInVersion11 = "NR11.g-evoPycHCLzF7hBgy1fGMBaO1gkIVJAJVhyhQkoS2AGLVIJZ4QnCMxxV-Mm6CFgCvI0ACeIRoA";
 
-    // Three joints, two beams and a Brake, coded in version 12 before #1204 added Angle sensors.
+    // Three joints, two beams and a Brake, coded in version 12 before version 13 added Angle sensors.
     // It must read for good, so version 12's dictionary never changes.
     private const string _benderInVersion12 = "NR12.g2d3p9S8FCKzO7gBhy2bGsBad1gkIVJAJVgyqQkoh2IGjhnu9ogJug9NQb4BAFDjhSs";
 
-    // Three joints, two beams and an Angle sensor, coded in version 13 before #1036 added Steppers.
+    // Three joints, two beams and an Angle sensor, coded in version 13 before version 14 added Steppers.
     // It must read for good, so version 13's dictionary never changes.
     private const string _benderInVersion13 = "NR13.gxciTql5KUQWIuA2HLbMbwBr4GGRhEgBlWDJ-iagfI_Lj2a4GyYm6F40BfkJAPybjmA";
 
@@ -92,7 +92,7 @@ public sealed class ShareDictionaryTests
         read.UpdatedFrom.ShouldBe(_firstVersion < FileCreationRepository.Format.CurrentVersion ? _firstVersion : null);
     }
 
-    // Each pinned code was made just before the next version added a kind of part (or #1144 dropped
+    // Each pinned code was made just before the next version added a kind of part (or version 9 dropped
     // Grip); it reads as the build it was made from, other than its nodes and beams.
     public static TheoryData<string, int, string?, Vector2D[], IPartDef[]> OldCodes() => new()
     {

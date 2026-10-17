@@ -5,15 +5,15 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Builders;
 
 /// <summary>
-/// The Velocity motors (#454): joint motors that share a joint's hinge-part slot with a Servo and a Brake
-/// and take their sides by the Servo's rules (#1118).
+/// The Velocity motors: joint motors (<see cref="IJointMotorDef"/>) in a joint's hinge-part
+/// slot, taking their sides by the Servo's rules.
 /// </summary>
 public sealed partial class CreatureBuilder
 {
-    /// <summary>Why a Velocity motor dropped on anything but a joint is refused (#454).</summary>
+    /// <summary>Why a Velocity motor dropped on anything but a joint is refused.</summary>
     public static UiText VelocityMotorsGoOnAJointReason { get; } = UiText.Plain("Motors go on a joint");
 
-    /// <summary>Why a Velocity motor cannot work yet: it needs two sides at its joint (#1118).</summary>
+    /// <summary>Why a Velocity motor cannot work yet: it needs two sides at its joint.</summary>
     public static UiText VelocityMotorNeedsTwoSidesReason { get; } = UiText.Plain("A Motor needs two links, or a link and a Wheel");
 
     private static readonly PartParameterId[] _velocityMotorParameters = [PartParameterId.MotorStrength, PartParameterId.MotorMaxSpeed, PartParameterId.RiseTime];
@@ -76,7 +76,6 @@ public sealed partial class CreatureBuilder
     public void SetVelocityMotorLink(int velocityMotorId, bool fixedRole, int linkId) =>
         SetSide(_velocityMotors, VelocityMotorIndexOf(velocityMotorId), fixedRole, linkId, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink));
 
-    /// <summary>Removes a Velocity motor by id.</summary>
     public void RemoveVelocityMotor(int velocityMotorId) => _velocityMotors.RemoveAt(VelocityMotorIndexOf(velocityMotorId));
 
     public int VelocityMotorIndexOf(int velocityMotorId)
@@ -90,7 +89,6 @@ public sealed partial class CreatureBuilder
         return index;
     }
 
-    // Whether the joint's hinge-part slot is taken (#1044).
     private bool HasHingePart(int nodeId) => HingeParts.Any(part => part.NodeId == nodeId);
 
     private double VelocityMotorParameterValue(int velocityMotorId, PartParameterId parameter)

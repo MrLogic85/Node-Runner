@@ -2,17 +2,17 @@ namespace NodeRunner.Arch.Tests;
 
 /// <summary>
 /// Checks the agent-file rules in docs/REVIEW.md → "Agent, rule and skill files": a broken one silently
-/// removes an agent from Copilot CLI or Claude Code (#1314, #1334). Reads only the frontmatter keys
+/// removes an agent from Copilot CLI or Claude Code. Reads only the frontmatter keys
 /// these files use; it is not a YAML parser.
 /// </summary>
 internal static class AgentFiles
 {
     internal const string ReviewerTools = "Read, Grep, Glob, Bash, LSP";
 
-    /// <summary>The agent-scoped hook that keeps a reviewer's Bash to reading commands (#1321).</summary>
+    /// <summary>The agent-scoped hook that keeps a reviewer's Bash to reading commands.</summary>
     internal const string ReviewerHookScript = "reviewer-bash.sh";
 
-    /// <summary>The agent-scoped hook that keeps a reviewer's LSP tool to lookups (#1352).</summary>
+    /// <summary>The agent-scoped hook that keeps a reviewer's LSP tool to lookups.</summary>
     internal const string ReviewerLspHookScript = "reviewer-lsp.sh";
 
     /// <summary>
@@ -32,12 +32,12 @@ internal static class AgentFiles
                   command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerLspHookScript}}'
         """;
 
-    /// <summary>Git-ignored machine-local agents and rules: AGENTS.md → "Machine-local setup" (#1342).</summary>
+    /// <summary>Git-ignored machine-local agents and rules: AGENTS.md → "Machine-local setup".</summary>
     internal const string LocalPrefix = "local_";
 
     /// <summary>
     /// Entries the checks skip: machine-local files, and dot-files such as Finder's git-ignored
-    /// <c>.DS_Store</c>, which CI never sees (#1363).
+    /// <c>.DS_Store</c>, which CI never sees.
     /// </summary>
     internal static bool IsSkipped(string name) =>
         name.StartsWith(LocalPrefix, StringComparison.Ordinal) || name.StartsWith('.');
@@ -167,7 +167,7 @@ internal static class AgentFiles
     /// <summary>
     /// Claude Code's shape: each event lists entries that hold an inner <c>hooks</c> list, with a
     /// <c>matcher</c> where the event takes one. Copilot's flat shape puts <c>type</c> and the
-    /// command in the entry itself, and makes Claude Code drop the whole agent (#1314).
+    /// command in the entry itself, and makes Claude Code drop the whole agent.
     /// </summary>
     private static void CheckHooks(string shown, List<string> lines, List<string> problems)
     {

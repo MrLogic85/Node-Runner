@@ -2,10 +2,9 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.Services;
 
-/// <summary>How a Shadows value is likely to run for one creature (#318).</summary>
+/// <summary>How a Shadows value is likely to run for one creature.</summary>
 public enum ShadowsLoad
 {
-    /// <summary>Should run smoothly.</summary>
     Smooth,
 
     /// <summary>May stutter: frames drop, but training keeps real time.</summary>
@@ -16,11 +15,11 @@ public enum ShadowsLoad
 }
 
 /// <summary>
-/// How many shadows a creature can race before training stutters, and before it runs in slow motion
-/// (#318). Every shadow is a whole creature in the physics, so the cost grows with shadows times the
+/// How many shadows a creature can race before training stutters, and before it runs in slow motion.
+/// Every shadow is a whole creature in the physics, so the cost grows with shadows times the
 /// creature's <see cref="CreatureDef.PartCount"/>. The limits are set for a
 /// <see cref="ReferenceParts"/>-part creature and scale inversely with the creature's parts. There is
-/// no phone test yet (#620, 0.17), so the reference limits are a fixed, careful fallback; the phone
+/// no phone test yet (#620), so the reference limits are a fixed, careful fallback; the phone
 /// test will replace them with this phone's numbers.
 /// </summary>
 public sealed record ShadowsBudget
@@ -28,7 +27,7 @@ public sealed record ShadowsBudget
     // Measured on a Galaxy S23 on Flat (2026-10-05): a 29-part creature ran 100 shadows in real time
     // at about 35 fps, and a 47-part one fell to 0.8x speed at 100. A mid-range phone is about 2-3x
     // slower, so a 30-part creature gets 32 before stutter and 64 before slow motion. That was at 16
-    // solver iterations; 24 (#1245) cost about 5 % more per physics tick on a Galaxy S25, well inside
+    // solver iterations; 24 cost about 5 % more per physics tick on a Galaxy S25, well inside
     // the margin.
     public const int ReferenceParts = 30;
     public const int ReferenceSmoothLimit = 32;

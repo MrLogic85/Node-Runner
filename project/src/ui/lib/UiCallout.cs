@@ -5,9 +5,9 @@ namespace NodeRunner.Ui.Lib;
 /// <summary>
 /// Callout (<c>c_call</c>): a small note that points at a spot in a figure. Its position is data
 /// set by the caller; kind only colours the border. Code may add <see cref="Lines"/> of live
-/// values under the caption (#1064), and further <see cref="Sections"/> below it (#1066). The
+/// values under the caption, and further <see cref="Sections"/> below it. The
 /// glyphs and line headings share a first column, as wide as the widest of them in any section,
-/// and the captions, meters and notes start past it (#1150); see <see cref="UiCalloutGrid"/>.
+/// and the captions, meters and notes start past it; see <see cref="UiCalloutGrid"/>.
 /// </summary>
 [Tool]
 [GlobalClass]
@@ -95,7 +95,7 @@ public partial class UiCallout : PanelContainer
     }
 
     /// <summary>
-    /// Lines under the caption (#1064), or null for none: each meter line's heading in the glyph's
+    /// Lines under the caption, or null for none: each meter line's heading in the glyph's
     /// column, its meters and notes under the caption's text. Set in code and never saved. A list
     /// for the same grid (<see cref="UiCalloutGrid.SameGrid"/>) updates in place; setting the same
     /// list again does nothing.
@@ -116,7 +116,7 @@ public partial class UiCallout : PanelContainer
     }
 
     /// <summary>
-    /// More captions under this one (#1066), each with its own glyph and lines and a divider above
+    /// More captions under this one, each with its own glyph and lines and a divider above
     /// it, or null for none: one callout about several things at one spot. Set in code and never
     /// saved. Sections of the same shape update in place; setting the same list again does nothing.
     /// </summary>
@@ -272,7 +272,7 @@ public partial class UiCallout : PanelContainer
         }
     }
 
-    // A caption and the lines under it (#1064), laid out by UiCalloutGrid (#1150).
+    // A caption and the lines under it, laid out by UiCalloutGrid.
     private sealed class Block
     {
         private const string _rowsName = "_UiRows";
@@ -459,7 +459,7 @@ public partial class UiCallout : PanelContainer
             _builtWithColumn = withColumn;
         }
 
-        // A field label's style (#1150): it names the line's group beside its colour.
+        // A field label's style: it names the line's group beside its colour.
         private static UiLabel HeadingLabel() => new()
         {
             TextStyle = UiTokens.Typography.Overline,

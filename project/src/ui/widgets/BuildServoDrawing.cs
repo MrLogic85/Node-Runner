@@ -7,8 +7,8 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// Build canvas marks for joint parts: the link bands of a selected Servo, Velocity motor (#454),
-/// Stepper (#1067), Brake (#1041) or Angle sensor (#1205), a Wheel side's under its tyre (#1118). The bands name the sides,
+/// Build canvas marks for joint parts: the link bands of a selected Servo, Velocity motor,
+/// Stepper, Brake or Angle sensor, a Wheel side's under its tyre. The bands name the sides,
 /// so every hinge part's are drawn alike.
 /// </summary>
 public static class BuildServoDrawing
@@ -42,7 +42,7 @@ public static class BuildServoDrawing
         }
     }
 
-    // The Wheel, a one-sided link (#1118), gets its band as a ring under its tyre, showing past
+    // The Wheel, a one-sided link, gets its band as a ring under its tyre, showing past
     // both edges as a beam's band does past the beam; its see-through face shows the inner edge.
     // The ring is not hatched: its colour alone tells Fixed from Target.
     private static void DrawLinkBand(UiPixelPen pen, BuildViewModel viewModel, VisualTheme theme, int linkId, bool fixedMark)

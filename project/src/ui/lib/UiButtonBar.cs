@@ -6,7 +6,7 @@ namespace NodeRunner.Ui.Lib;
 /// Reference button bar (<c>ComponentToolbars</c>): vertical, down the left edge, with a divider
 /// on its right edge, filled with <c>panel</c>. It only lays out: the screen authors the buttons in <c>%ButtonBarContent</c>
 /// and decides what they do, including which is selected or locked. Its width, padding and
-/// separation are the scene's own (#331); the bar never grows wider than its minimum width.
+/// separation are the scene's own; the bar never grows wider than its minimum width.
 /// </summary>
 [Tool]
 [GlobalClass]

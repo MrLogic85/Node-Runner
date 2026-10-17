@@ -13,7 +13,7 @@ public readonly record struct CreatureThumbnailFit(double Scale, Vector2D Offset
 
     /// <summary>
     /// Fits <paramref name="creature"/>'s whole picture, every joint ring and every sensor picture where
-    /// it sits on its beam (#770, <see cref="SensorPicture.Centre"/>), centred in a <paramref name="width"/> × <paramref name="height"/>
+    /// it sits on its beam (<see cref="SensorPicture.Centre"/>), centred in a <paramref name="width"/> × <paramref name="height"/>
     /// thumbnail <paramref name="inset"/> inside each edge, never larger than <paramref name="largestScale"/>.
     /// Null when there is nothing to show or no room.
     /// </summary>

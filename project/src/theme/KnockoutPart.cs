@@ -4,10 +4,10 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// The arena background around a beam or joint (#818), a little wider than it and under the whole
+/// The arena background around a beam or joint, a little wider than it and under the whole
 /// creature, so the followed creature stands out from the shadows behind it. A round-ended stroke
 /// from <see cref="A"/> to <see cref="B"/>, flat at a torn end: a beam's line, or a joint's disc when the two are the same;
-/// or along its <see cref="Path"/>, such as an Angle sensor's arc (#1205).
+/// or along its <see cref="Path"/>, such as an Angle sensor's arc.
 /// </summary>
 public partial class KnockoutPart : PartVisual
 {
@@ -49,14 +49,13 @@ public partial class KnockoutPart : PartVisual
         set => Change(ref _path, value);
     }
 
-    /// <summary>Whether the beam's end A has torn (#1257): the outline ends flat there, level with the rod's tip.</summary>
+    /// <summary>Whether the beam's end A has torn: the outline ends flat there, level with the rod's tip.</summary>
     public bool TornA
     {
         get => _tornA;
         set => Change(ref _tornA, value);
     }
 
-    /// <summary>Whether the beam's end B has torn.</summary>
     public bool TornB
     {
         get => _tornB;

@@ -12,9 +12,9 @@ using NodeRunner.Ui.Widgets;
 namespace NodeRunner.Hosts;
 
 /// <summary>
-/// The Build scene for one saved creation. Every edit saves itself (#368): once edits settle, and
+/// The Build scene for one saved creation. Every edit saves itself: once edits settle, and
 /// whenever the player leaves Build or the app pauses. Training lives in its own scene,
-/// <see cref="TrainingHost"/> (#469).
+/// <see cref="TrainingHost"/>.
 /// </summary>
 public partial class BuildHost : Node, IRoutedScene
 {
@@ -145,8 +145,8 @@ public partial class BuildHost : Node, IRoutedScene
         _buildScreen.ComingLaterLinkPressed += link => NotifyUnavailable($"build.link.{(BuildLink)link}", UiTextTranslation.Source(BuildLinkList.ComingLaterReason((BuildLink)link))!);
     }
 
-    // A locked Creation keeps Delete in view; when deleting would change the network, it says why (#896)
-    // beside the notes the refused delete puts on the parts that block it (#987).
+    // A locked Creation keeps Delete in view; when deleting would change the network, it says why
+    // beside the notes the refused delete puts on the parts that block it.
     private void DeleteSelection()
     {
         if (UiTextTranslation.Source(Build.DeleteLockedReason) is { } reason)
@@ -157,7 +157,7 @@ public partial class BuildHost : Node, IRoutedScene
         Build.DeleteSelectedParts();
     }
 
-    // A tap answer: tapping again does not queue it twice, and the next tap's answer replaces it (#1004).
+    // A tap answer: tapping again does not queue it twice, and the next tap's answer replaces it.
     private void NotifyUnavailable(string id, Func<string> reason, UiIconId? icon = UiIconId.Lock) =>
         UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Default, "Build", string.Empty, Icon: icon is { } shown ? new(shown) : null)
         {
@@ -167,7 +167,7 @@ public partial class BuildHost : Node, IRoutedScene
         });
 
     // Train setup and Training open in their own scenes from the saved creation, so the edits save
-    // first; a creature that cannot train stays in Build, which points at what blocks it (#844).
+    // first; a creature that cannot train stays in Build, which points at what blocks it.
     private void StartTraining()
     {
         if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true))
@@ -192,7 +192,7 @@ public partial class BuildHost : Node, IRoutedScene
     }
 
     // The copy keeps the trained network, so the player can change one and keep the other. Build then
-    // opens the copy in place of the original (#840), so Back still returns to Creations.
+    // opens the copy in place of the original, so Back still returns to Creations.
     private void CopyActiveCreation()
     {
         if (_autosave?.CreationId is not { } id || !SaveEdits(playerAsked: true))
@@ -213,7 +213,7 @@ public partial class BuildHost : Node, IRoutedScene
         _navigator?.Navigate(new SceneNavigation(new BuildRoute(copy.Id), KeepCurrent: false));
     }
 
-    // The code is made from the build on screen, so it needs no save first (#899).
+    // The code is made from the build on screen, so it needs no save first.
     private void ShareActiveBuild()
     {
         if (_autosave?.CreationId is not { } id)
@@ -261,7 +261,7 @@ public partial class BuildHost : Node, IRoutedScene
     // failure notice outlives the scene.
     private void BackFromBuildScreen()
     {
-        // A picked tray part is the step Back takes first (#805).
+        // A picked tray part is the step Back takes first.
         if (Build.ClearPickedPart())
         {
             return;
@@ -272,8 +272,8 @@ public partial class BuildHost : Node, IRoutedScene
     }
 
     // Saves the drawing as it stands, finished or not: only training needs a creature that can be
-    // simulated (#515). Every saved edit keeps the training, with its network refitted to the edited
-    // creature's ports (ICreationUpdateCoordinator.ApplyEdit, #516). Returns false when edits are left unsaved; the next save tries again. A save
+    // simulated. Every saved edit keeps the training, with its network refitted to the edited
+    // creature's ports (ICreationUpdateCoordinator.ApplyEdit). Returns false when edits are left unsaved; the next save tries again. A save
     // the player asked for reports every failure; background saves report only the first in a row.
     private bool SaveEdits(bool playerAsked)
     {

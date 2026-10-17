@@ -4,14 +4,14 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>The link drag's drawing (#920, #849): the joints it can start from, its line, its end rings and the link it replaces.</summary>
+/// <summary>The link drag's drawing: the joints it can start from, its line, its end rings and the link it replaces.</summary>
 public partial class BuildCanvas
 {
-    // The Links tool's dashed rings, a refused target's (#451) and a link start's (#1057): this many dashes, each this many segments.
+    // The Links tool's dashed rings, a refused target's and a link start's: this many dashes, each this many segments.
     private const int _ringDashes = 12;
     private const int _ringDashSegments = 6;
 
-    // The picked link's start rings (docs/WORLD_VISUALS.md → "Picked link"). SelectedNodeIds is
+    // The picked link's start rings (docs/WORLD_VISUALS.md → "Build canvas" → Picked link). SelectedNodeIds is
     // skipped too, as LinkDrawnFrom still gives a selected Servo's joint a link.
     private void DrawLinkStarts(CanvasItem canvas)
     {
@@ -40,13 +40,13 @@ public partial class BuildCanvas
             return;
         }
 
-        // The line itself shows the state, since the finger hides the target (#920, #451, #877). It
+        // The line itself shows the state, since the finger hides the target. It
         // goes over the creature, since a refused link lies on the link already there.
         var refused = _gestures.RefusedTargetNodeId;
         var from = NodeById(start);
         var target = (_gestures.BeamTargetNodeId ?? refused) is { } id ? NodeById(id) : null;
         var to = target?.Position ?? end;
-        // Like a beam, it starts at the joint's hub (#1086), and ends at the target's hub or the finger.
+        // Like a beam, it starts at the joint's hub, and ends at the target's hub or the finger.
         if (JointDrawing.BeamSpan(Theme.JointRingWidth, ToGodot(from.Position), JointDrawing.HubRadius, ToGodot(to), target is null ? 0 : JointDrawing.HubRadius) is not (var lineStart, var lineEnd))
         {
             return;
@@ -56,7 +56,7 @@ public partial class BuildCanvas
         DrawDragLine(pen, lineStart, lineEnd, refused is not null ? DragLine.Refused : target is not null ? DragLine.Attaches : DragLine.Free, arrow: false);
     }
 
-    // A link dropped now replaces the link of another kind on its pair (#849, #1176): a dashed outline at
+    // A link dropped now replaces the link of another kind on its pair: a dashed outline at
     // that link's selection offset, from hub to hub over the creature, says so.
     private void DrawReplacedLink(CanvasItem canvas)
     {
@@ -121,7 +121,7 @@ public partial class BuildCanvas
         }
     }
 
-    // A link's rings sit at the joint's JointHalo, clear of an Angle sensor's arc (#1206).
+    // A link's rings sit at the joint's JointHalo, clear of an Angle sensor's arc.
     private float LinkRingRadius(int nodeId) =>
         (float)SelectionMarks.JointHalo(_viewModel!.RingRadiusAt(nodeId, _viewModel.NodeRadius(nodeId)));
 }

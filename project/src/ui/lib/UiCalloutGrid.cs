@@ -1,7 +1,7 @@
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// The grid a <see cref="UiCallout"/> builds for its meter lines (#1150), apart from the nodes so it
+/// The grid a <see cref="UiCallout"/> builds for its meter lines, apart from the nodes so it
 /// can be tested. A caption with a glyph or a line heading has a first column, the glyph above the
 /// headings; each meter then takes a label cell and a bar cell, <see cref="UiCalloutLine.MetersPerRow"/> to a row.
 /// </summary>

@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Operations;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// Builds <c>project/locale/messages.pot</c>, the template translators start from (#778). Godot's
+/// Builds <c>project/locale/messages.pot</c>, the template translators start from. Godot's
 /// own generator runs only from the editor and reads scenes and GDScript, so it misses our
 /// components' text properties, App <see cref="App.ViewModels.UiText"/> and text set in C#.
 /// </summary>
@@ -268,7 +268,7 @@ internal static partial class TranslationTemplate
         /// <summary>A property whose text the player sees, translated by Godot.</summary>
         public static bool IsSinkProperty(IPropertySymbol property)
         {
-            // An Id names a value for code, like a notification's (#1004); the player never sees it.
+            // An Id names a value for code, like a notification's; the player never sees it.
             if (!IsText(property.Type) || property.Name is "TextValue" or "Id")
             {
                 return false;

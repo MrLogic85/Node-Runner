@@ -3,8 +3,8 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// A list of rows whose picked row has an info line right under it (#705, #805), as the Build Links
-/// list and Parts tray do. <see cref="ShowInfoUnder"/> moves the scene's <see cref="Info"/> below
+/// A list of rows whose picked row has an info line right under it.
+/// <see cref="ShowInfoUnder"/> moves the scene's <see cref="Info"/> below
 /// that row and fades it in when it appears or moves to another row; the owner sets its text.
 /// </summary>
 [Tool]

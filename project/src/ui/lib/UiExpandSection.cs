@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// A header row that opens and closes the rows below it (#928). The header is a full-width
+/// A header row that opens and closes the rows below it. The header is a full-width
 /// <c>control-sm</c> tap target with an Overline label and a chevron. The section's own children are
 /// the body, stacked with the panel's <c>space-1</c> gap. Rows that are shown or hidden by
 /// themselves must sit inside a body container, because the section sets each child's visibility.
@@ -184,7 +184,7 @@ public partial class UiExpandSection : VBoxContainer, ISerializationListener
         EmitSignal(SignalName.Toggled, Open);
     }
 
-    // The shared press tint (#325) reaches space-2 past the row's sides, as on UiChoiceRow, so its
+    // The shared press tint reaches space-2 past the row's sides, as on UiChoiceRow, so its
     // corners clear the label and the chevron.
     private void DrawPress()
     {

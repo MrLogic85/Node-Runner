@@ -3,7 +3,7 @@ using NodeRunner.Theme;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Wheel's <see cref="WheelPart"/> in Training (#129): a child of its joint's physics body, so it
+/// A Wheel's <see cref="WheelPart"/> in Training: a child of its joint's physics body, so it
 /// turns as the wheel rolls and its cue tubes show the turn.
 /// </summary>
 public partial class WheelVisual : WheelPart, IShadowVisual

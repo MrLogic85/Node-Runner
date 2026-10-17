@@ -5,7 +5,7 @@ namespace NodeRunner.Creature;
 /// <summary>
 /// What welds a hinge part's two sides rigid (Creature.Links.cs, Welder): one <see cref="GrooveJoint2D"/>,
 /// made with the creature, that <see cref="Weld"/> fastens to the sides and <see cref="Release"/> lets go,
-/// so a Stepper (#1037) locks at every notch without making a node in the tick. A point on the held body,
+/// so a Stepper locks at every notch without making a node in the tick. A point on the held body,
 /// where the far node stands, runs in a groove on the other body along the line from the joint: it can
 /// slide along the line, as a Piston's or Spring's stroke does, but not turn about the joint. Godot makes
 /// the joint whenever its node B is set, and clears it when there is none.
@@ -18,8 +18,8 @@ public sealed class HingeWeld
     private const float _grooveReach = 10000;
 
     // How much of the weld's error Godot's solver takes back each step: its most, so a Stepper caught
-    // past its notch is on it within a few ticks (#1272). Godot's default, 0.2, took a quarter second.
-    // A Locked Brake's weld takes back its drift as fast; creatures with Brakes moved as before.
+    // past its notch is on it within a few ticks. Godot's default, 0.2, took a quarter second.
+    // A Locked Brake's weld takes back its drift as fast.
     private const float _weldBias = 0.9f;
 
     private readonly GrooveJoint2D _groove;
@@ -55,7 +55,7 @@ public sealed class HingeWeld
 
     /// <summary>
     /// Welds the sides where they will be once the target side has turned back by
-    /// <paramref name="overshoot"/> radians, in the model's counter-clockwise-positive sense (#1272):
+    /// <paramref name="overshoot"/> radians, in the model's counter-clockwise-positive sense:
     /// Godot's solver turns them there. 0 welds them as they stand.
     /// </summary>
     public void Weld(double overshoot = 0)

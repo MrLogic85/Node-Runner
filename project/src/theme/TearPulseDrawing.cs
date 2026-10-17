@@ -4,7 +4,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws the pulse a joint gives when a beam end lets go of it (#1257): a <c>danger</c> ring that
+/// Draws the pulse a joint gives when a beam end lets go of it: a <c>danger</c> ring that
 /// grows out from the joint's ring and fades as it goes (<c>docs/WORLD_VISUALS.md</c> → Tear).
 /// </summary>
 public static class TearPulseDrawing

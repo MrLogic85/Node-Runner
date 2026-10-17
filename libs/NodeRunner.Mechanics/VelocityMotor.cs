@@ -3,8 +3,8 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The network conventions and torque of a <see cref="VelocityMotorDef"/> (#454). Its angle is the
-/// one between its sides (#1207): the target side's direction minus the fixed side's, a Wheel side
+/// The network conventions and torque of a <see cref="VelocityMotorDef"/>. Its angle is the
+/// one between its sides: the target side's direction minus the fixed side's, a Wheel side
 /// read from a mark on its tyre, both measured with <see cref="HingePartSideGeometry"/>. It has no end stops and can
 /// turn round and round, so the network sees the angle as its sine and cosine, which never jump. The
 /// network drives a speed and a strength share, and the motor chases that speed with
@@ -12,7 +12,7 @@ namespace NodeRunner.Mechanics;
 /// </summary>
 public static class VelocityMotor
 {
-    /// <summary>The angle inputs (#1207): the sine and cosine of the angle between the sides, so (1, 0) with Target a quarter turn counter-clockwise from Fixed.</summary>
+    /// <summary>The angle inputs: the sine and cosine of the angle between the sides, so (1, 0) with Target a quarter turn counter-clockwise from Fixed.</summary>
     public static (double Sin, double Cos) AngleInputs(double angle) => (Math.Sin(angle), Math.Cos(angle));
 
     /// <summary>The speed a speed output asks for, in radians per second: −1…1 of Max speed, counter-clockwise positive.</summary>

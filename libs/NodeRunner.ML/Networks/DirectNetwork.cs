@@ -3,12 +3,12 @@ using NodeRunner.Domain;
 namespace NodeRunner.ML.Networks;
 
 /// <summary>
-/// The 0.13 direct network (#536): every input port connects straight to every output port, with no
+/// The direct network: every input port connects straight to every output port, with no
 /// hidden layer. It is saved as a <see cref="NeuralNetworkDef"/> graph and trained as a flat genome in
 /// <see cref="NeuralNetwork"/>'s layout for <see cref="LayerSizes"/>: one weight per
 /// (output, input) pair, output by output in port order, then one bias per output. The port order
 /// comes from <see cref="NetworkPorts"/>, so compiling never depends on the order of the saved lists.
-/// Each output uses its port's activation (<see cref="PortSignals"/>, #535). A new port starts
+/// Each output uses its port's activation (<see cref="PortSignals"/>). A new port starts
 /// almost passive: its incoming weights compile to 0 and a new output takes its signal's passive bias.
 /// </summary>
 public static class DirectNetwork
@@ -26,7 +26,7 @@ public static class DirectNetwork
         return ports.Outputs.Select(port => ToActivation(PortSignals.Activation(port.Signal))).ToArray();
     }
 
-    /// <summary>The runtime network the saved <paramref name="network"/> graph compiles to on these ports, as Simulate plays it (#702).</summary>
+    /// <summary>The runtime network the saved <paramref name="network"/> graph compiles to on these ports, as Simulate plays it.</summary>
     public static NeuralNetwork Build(NeuralNetworkDef network, NetworkPortLayout ports) =>
         NeuralNetwork.FromGenome(LayerSizes(ports), Compile(network, ports), Activation.Tanh, OutputActivations(ports));
 
@@ -138,12 +138,11 @@ public static class DirectNetwork
     }
 
     /// <summary>
-    /// <paramref name="network"/> fitted to a rebuilt creature's <paramref name="ports"/> (#516). Ports
+    /// <paramref name="network"/> fitted to a rebuilt creature's <paramref name="ports"/>. Ports
     /// match by part id, channel and direction: a kept port keeps its neuron, connections and bias, a
     /// new port starts almost passive, and a removed port's neuron and connections are dropped. Part
-    /// ids are never reused, so a new part never inherits a removed part's weights. Build refits the
-    /// network it opened with and passes the last saved one as <paramref name="idsFrom"/> (#689): see
-    /// <see cref="ToNeuralNetworkDef"/>.
+    /// ids are never reused, so a new part never inherits a removed part's weights. For
+    /// <paramref name="idsFrom"/>, see <see cref="ToNeuralNetworkDef"/>.
     /// </summary>
     public static NeuralNetworkDef Refit(NeuralNetworkDef network, NetworkPortLayout ports, NeuralNetworkDef? idsFrom = null) =>
         ToNeuralNetworkDef(ports, Compile(network, ports), network, idsFrom);

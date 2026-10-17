@@ -2,13 +2,13 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.Mechanics;
 
-/// <summary>The one-piece check (#930): which joints a creature's links join together.</summary>
+/// <summary>The one-piece check: which joints a creature's links join together.</summary>
 public static class Pieces
 {
     /// <summary>
-    /// The pieces <paramref name="links"/> join <paramref name="nodes"/> into (#930), each its node
+    /// The pieces <paramref name="links"/> join <paramref name="nodes"/> into, each its node
     /// ids in node order and listed by its first node. Loose joints are in none, as they have their
-    /// own problem when building; Servos and sensors join nothing new. A tear (#962) asks it
+    /// own problem when building; Servos and sensors join nothing new. A tear asks it
     /// again over the links still attached (<see cref="Tear.MainPiece"/>).
     /// </summary>
     public static IReadOnlyList<IReadOnlyList<int>> Of(IReadOnlyList<NodeDef> nodes, IEnumerable<LinkRef> links)

@@ -1,13 +1,13 @@
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// Where the Training camera aims along one axis (#668, #1169). It follows a centre point of the
+/// Where the Training camera aims along one axis. It follows a centre point of the
 /// followed creature, eased so a gait's wobble never shakes the view and a change of target glides
 /// rather than jumps. Smoothing has two stages: the focus eases toward the centre, then the shown
 /// point (<see cref="Shown"/>) eases toward the aim, which makes a glide start gently. Both stages
 /// trail a moving target, so the aim leads it by the creature's eased speed times that lag: at any
 /// steady speed the shown point stays on the centre. <see cref="ArenaFraming"/> runs one per axis
-/// and frames the view from them. See <c>docs/TRAINING_LOOP.md</c> → Camera.
+/// and frames the view from them. See <c>docs/TRAINING_LOOP.md</c> → "The Training scene".
 /// </summary>
 public sealed class ArenaFollow
 {
@@ -89,7 +89,7 @@ public sealed class ArenaFollow
             return;
         }
 
-        // The shown point heads for the aim of the frame before, as Godot's own smoothing did: the
+        // The shown point heads for the aim of the frame before: the
         // frame's delay offsets the exponential stages' shorter lag, so the lead stays right at a
         // steady speed.
         Shown += (Aim - Shown) * (1 - Math.Exp(-ShownEaseRate * deltaSeconds));

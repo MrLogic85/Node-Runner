@@ -22,7 +22,7 @@ public sealed class ServoGeometryTests
     [InlineData(2, 15)]
     public void LinkCover_AddsTheHousing_AtTheServoWhoseFixedLinkItIs(int nodeId, float cover)
     {
-        // #1210: a Piston's telescope starts past the housing drawn over a Servo's Fixed link.
+        // A Piston's telescope starts past the housing drawn over a Servo's Fixed link.
         var link = new LinkRef(10, 1, 2, CreatureElementKind.Piston);
         ServoDef[] servos = [new(20, 1, fixedLinkId: 10, targetLinkId: 11)];
 

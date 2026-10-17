@@ -3,7 +3,7 @@ using static NodeRunner.Ui.Lib.UiCalloutGrid.Cell;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The grid a callout builds for its meter lines (#1150).</summary>
+/// <summary>The grid a callout builds for its meter lines.</summary>
 public sealed class UiCalloutGridTests
 {
     private static UiCalloutLine Line(int meters, string? heading = null) => UiCalloutLine.OfMeters(

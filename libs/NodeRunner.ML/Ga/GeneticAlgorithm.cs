@@ -137,11 +137,11 @@ public sealed class GeneticAlgorithm
     }
 
     /// <summary>
-    /// The generation that follows saved <paramref name="elites"/> (warm start, #538): the elites
+    /// The generation that follows saved <paramref name="elites"/> (warm start): the elites
     /// open it unchanged, as <see cref="NextGeneration"/> would carry them over, and the rest are
     /// children of two elites picked at random, crossed and mutated. The elites are the only
     /// parents, so a resumed run continues from them rather than starting over. Ports a refit added
-    /// are explored afterwards by <see cref="Networks.NewPortExploration"/> (#1180), as after
+    /// are explored afterwards by <see cref="Networks.NewPortExploration"/>, as after
     /// <see cref="NextGeneration"/>.
     /// </summary>
     public double[][] FromElites(IReadOnlyList<double[]> elites, int size, Random random)

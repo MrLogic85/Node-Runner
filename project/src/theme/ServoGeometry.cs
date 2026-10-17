@@ -2,10 +2,9 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.Theme;
 
-/// <summary>Shared Servo drawing geometry for Build and Training.</summary>
 public static class ServoGeometry
 {
-    /// <summary>How far a Servo's housing reaches along its Fixed <paramref name="link"/>, given what covers each end (<see cref="CreatureDef.CoveredRadius(int, IEnumerable{IJointMotorDef})"/>, #1086).</summary>
+    /// <summary>How far a Servo's housing reaches along its Fixed <paramref name="link"/>, given what covers each end (<see cref="CreatureDef.CoveredRadius(int, IEnumerable{IJointMotorDef})"/>).</summary>
     public static float HousingReach(IReadOnlyList<NodeDef> nodes, Func<int, double> coveredRadius, LinkRef link, float sensorLength)
     {
         var nodeA = nodes.First(node => node.Id == link.NodeA);
@@ -17,8 +16,8 @@ public static class ServoGeometry
     }
 
     /// <summary>
-    /// What covers a Piston's or Spring's <paramref name="link"/> at its <paramref name="nodeId"/> end
-    /// (#1210): the joint's <paramref name="coveredRadius"/>, plus the housing's reach when a Servo
+    /// What covers a Piston's or Spring's <paramref name="link"/> at its <paramref name="nodeId"/> end:
+    /// the joint's <paramref name="coveredRadius"/>, plus the housing's reach when a Servo
     /// there holds the link as its Fixed side, since the housing is drawn over it. No sensor sits on
     /// a Piston or Spring.
     /// </summary>

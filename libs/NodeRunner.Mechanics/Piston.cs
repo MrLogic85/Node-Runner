@@ -3,20 +3,20 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// The network conventions and force of a <see cref="PistonDef"/> (#451). Its ports
+/// The network conventions and force of a <see cref="PistonDef"/>. Its ports
 /// (<see cref="NetworkPorts.PistonInputs"/>, <see cref="NetworkPorts.PistonOutputs"/>) belong to the Piston part:
 /// <list type="bullet">
 /// <item>Length input: where it is in its travel, 0 at its shortest and 1 at its longest; the drawn
-/// length reads its <see cref="PistonDef.Start"/> (#870).</item>
+/// length reads its <see cref="PistonDef.Start"/>.</item>
 /// <item>Speed input: <c>tanh(v / maxSpeed)</c>, extending positive.</item>
 /// <item>Position output (<c>sigmoid</c>): the length to reach on the same scale as the length input,
-/// 0 fully in to 1 fully out (#1129); <see cref="DrawnPosition"/> asks for the drawn length.</item>
+/// 0 fully in to 1 fully out; <see cref="DrawnPosition"/> asks for the drawn length.</item>
 /// <item>Strength output (<c>sigmoid</c>): the share of its Strength setting it may use this tick.</item>
 /// </list>
 /// The force builds up over its <see cref="PistonDef.RiseTime"/> towards the target length and dies
 /// away once it moves at the speed it wants, using at most the chosen share of its Strength. It comes
-/// from the Piston's own settings and outputs only, not from the load it moves (#801). Its end stops
-/// are not powered: they are a hard limit in the sim (#701), so the force never needs more than the
+/// from the Piston's own settings and outputs only, not from the load it moves. Its end stops
+/// are not powered: they are a hard limit in the sim, so the force never needs more than the
 /// network chose to stay inside its stroke. Pure: the caller keeps the force from one step to the next.
 /// </summary>
 public static class Piston
@@ -49,7 +49,7 @@ public static class Piston
     public static double SpeedInput(double speed, double maxSpeed) => Math.Tanh(speed / maxSpeed);
 
     /// <summary>
-    /// Its shortest length, centre to centre: the gap between its hubs (#835, #1086) sits
+    /// Its shortest length, centre to centre: the gap between its hubs sits
     /// <see cref="PistonDef.Start"/> of the way to its longest as drawn.
     /// </summary>
     public static double ShortestLength(PistonDef piston, double builtLength, double jointRadii)
@@ -86,7 +86,7 @@ public static class Piston
     /// <paramref name="length"/> and <paramref name="speed"/>.
     /// </summary>
     /// <remarks>
-    /// The owner's formula (#801). With the target force <c>tF</c> the strength output's share of
+    /// The owner's formula. With the target force <c>tF</c> the strength output's share of
     /// its Strength and the speed it lacks <c>dV</c> = wanted speed − speed:
     /// <c>F(N+1) = clamp((F(N) + dT · tF / riseTime · tanh(3 · dV / MaxSpeed)) · σ(10 · d · dV / MaxSpeed), ±tF)</c>,
     /// where <c>d</c> is the sign of the raised force. The wanted speed is the distance left times
@@ -96,7 +96,7 @@ public static class Piston
     /// lacks, not the distance left, so it brakes before the target rather than swinging past it.
     /// It knows nothing of the mass it moves: a force that builds up rather than jumps does not
     /// flip every step, but a light load at the shortest rise time and a low MaxSpeed can still
-    /// swing around its target. The user's settings, the network and fitness (#546) handle that.
+    /// swing around its target. The user's settings and the network handle that; fitness may later (#546).
     /// </remarks>
     /// <param name="piston">The Piston and its settings.</param>
     /// <param name="builtLength">Its length as built, centre to centre.</param>

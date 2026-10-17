@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Canonical button with row, compact row or stacked content. It activates on a plain tap (#866).
+/// Canonical button with row, compact row or stacked content. It activates on a plain tap.
 /// Native <c>Text</c> is the authored caption (and translation key); an internal UiLabel renders
 /// it, so letter case follows the caption's typography exactly as for UiLabel.
 /// </summary>
@@ -116,8 +116,8 @@ public sealed partial class UiButton : Button, ISerializationListener
 
     /// <summary>
     /// Drawn like a disabled button (dashed, dimmed) but still pressable, so the screen can answer
-    /// the tap with why: a feature that comes in a later version (#841), or play blocked by the
-    /// drawing (#844).
+    /// the tap with why: a feature that comes in a later version, or play blocked by the
+    /// drawing.
     /// </summary>
     [Export]
     public bool Unavailable
@@ -531,7 +531,7 @@ public sealed partial class UiButton : Button, ISerializationListener
                 MouseFilter = MouseFilterEnum.Ignore,
             };
             // Tree order, not ZIndex, keeps the badge over the button: a ZIndex sorts across the
-            // whole CanvasLayer and would draw it through any screen or overlay above (#463).
+            // whole CanvasLayer and would draw it through any screen or overlay above.
             AddChild(_badge, @internal: InternalMode.Back);
         }
 

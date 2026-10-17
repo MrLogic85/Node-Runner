@@ -1,9 +1,8 @@
 namespace NodeRunner.Creature;
 
-/// <summary>How a creature visual draws on a shadow other than the followed one (#385).</summary>
+/// <summary>How a creature visual draws on a shadow other than the followed one.</summary>
 public enum ShadowDrawing
 {
-    /// <summary>Not drawn at all.</summary>
     Hidden,
 
     /// <summary>The same shape and colours without detail.</summary>

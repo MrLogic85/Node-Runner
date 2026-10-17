@@ -1,9 +1,8 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// What a Creation trains with, chosen in Train setup (#194, #617): how many shadows race each
-/// generation and how long each run lasts. Shadows and run length replace the old training
-/// profiles; the genetic algorithm's other settings are fixed.
+/// What a Creation trains with, chosen in Train setup: how many shadows race each
+/// generation and how long each run lasts. The genetic algorithm's other settings are fixed.
 /// </summary>
 public sealed record TrainSettingsDef
 {

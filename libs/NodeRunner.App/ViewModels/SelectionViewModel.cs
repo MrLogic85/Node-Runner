@@ -30,7 +30,7 @@ public sealed class SelectionViewModel : INotifyPropertyChanged
     /// <summary>
     /// Selects the part <paramref name="tapped"/> on <paramref name="creature"/>. A tap on a joint
     /// part, or on its joint, selects every part stacked on that joint, top → down
-    /// (<see cref="CreatureDef.JointParts"/>, #1066), as Build does (#973); any other part alone.
+    /// (<see cref="CreatureDef.JointParts"/>), as Build does; any other part alone.
     /// </summary>
     public void Select(CreatureDef creature, CreatureElementSelection tapped)
     {

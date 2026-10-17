@@ -6,7 +6,7 @@ namespace NodeRunner.App.Services;
 
 /// <summary>
 /// + New on Creations: saves an empty creation straight away, so Build always edits a saved one and
-/// every edit autosaves (#368).
+/// every edit autosaves.
 /// </summary>
 public sealed class NewCreationWorkflow : INewCreationWorkflow
 {

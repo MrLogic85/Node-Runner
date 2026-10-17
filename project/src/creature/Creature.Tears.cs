@@ -5,11 +5,11 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
-// Beams tear from their joints (#962): each tick, before anything senses or drives, every beam end still
+// Beams tear from their joints: each tick, before anything senses or drives, every beam end still
 // pinned is checked by the rule in Mechanics.Tear, in beam order, end A before end B. A torn end's pin
-// lets go of both bodies and the end gets a collider so it lands (#1288); a beam torn at both ends leaves
+// lets go of both bodies and the end gets a collider so it lands; a beam torn at both ends leaves
 // the creature and falls on its own. Everything else keeps its slot, so network ports and the arrays the
-// creature runs on never shift. How a tear looks (#1257) is docs/WORLD_VISUALS.md → Tear.
+// creature runs on never shift. How a tear looks is docs/WORLD_VISUALS.md → Tear.
 public partial class Creature
 {
     private const double _hatchFadeSeconds = 0.2;
@@ -31,7 +31,7 @@ public partial class Creature
     private bool _hasTorn;
     private bool[] _nodeInMainPiece = [];
 
-    /// <summary>How many beam ends have torn from their joints since the creature was last built (#962).</summary>
+    /// <summary>How many beam ends have torn from their joints since the creature was last built.</summary>
     public int TornEnds { get; private set; }
 
     /// <summary>
@@ -82,8 +82,7 @@ public partial class Creature
 
             // The ends sit half a length either way along the body's x axis. Written out in floats, as this
             // runs for every end of every shadow each tick: with Transform2D * Vector2 and DistanceTo the check
-            // took 0.19 ms a tick for 59 shadows of 19 beams on a desktop debug build, about 8 % of the tick;
-            // written out, 0.03 ms (#1256).
+            // took about six times as long.
             var transform = _beamTransforms[beam];
             var halfLength = _beamHalfLengths[beam];
             var alongX = transform.X.X * halfLength;
@@ -115,7 +114,7 @@ public partial class Creature
             return false;
         }
 
-        // A pin with no bodies stops holding in this tick's step, with no kick (#1255).
+        // A pin with no bodies stops holding in this tick's step, with no kick.
         var pin = _beamPins[end];
         pin.NodeA = new NodePath();
         pin.NodeB = new NodePath();
@@ -143,7 +142,7 @@ public partial class Creature
         }
         else
         {
-            // Nothing holds it any more: it falls on its own, as a loose joint does (#1257).
+            // Nothing holds it any more: it falls on its own, as a loose joint does.
             _beamGone[beam] = true;
             LetFall(beam);
             for (var sensor = 0; sensor < _sensors.Length; sensor++)
@@ -216,7 +215,7 @@ public partial class Creature
         TearSample = (Centre.X, Bounds.End.X, LowestPointY);
     }
 
-    // The followed creature marks where a joint let go, once per joint; a shadow does not (#1257).
+    // The followed creature marks where a joint let go, once per joint; a shadow does not.
     private void Pulse(int node)
     {
         if (_isShadow || _nodePulsed[node])
@@ -231,7 +230,7 @@ public partial class Creature
     }
 
     // On the followed creature a torn end flashes danger for as long as the pulse runs, then is a plain
-    // beam end again: the tear is said once (#1257). A shadow's ends do not flash.
+    // beam end again: the tear is said once. A shadow's ends do not flash.
     private void Flash(BeamVisual visual, bool isA)
     {
         if (_isShadow)
@@ -258,7 +257,7 @@ public partial class Creature
     }
 
     // An intact beam has no collider (.claude/rules/creature.md rule 3). A torn end needs one so it lands instead of
-    // passing through the ground: a circle as wide as the beam (#1288).
+    // passing through the ground: a circle as wide as the beam.
     private void LandEnd(int beam, bool isA)
     {
         var halfLength = _beamHalfLengths[beam];
@@ -266,7 +265,7 @@ public partial class Creature
         BeamShape(beam).Position = new Vector2(isA ? -halfLength : halfLength, 0);
     }
 
-    // Loose at both ends, the whole beam lands: its one shape becomes a capsule along it (#1257).
+    // Loose at both ends, the whole beam lands: its one shape becomes a capsule along it.
     private void LetFall(int beam)
     {
         var halfWidth = Theme.BeamWidth / 2;

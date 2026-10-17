@@ -6,7 +6,7 @@ using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
-/// <summary>Drawing, refusing, selecting, tuning and deleting a Piston (#451) or a Spring (#453).</summary>
+/// <summary>Drawing, refusing, selecting, tuning and deleting a Piston or a Spring.</summary>
 public sealed class BuildLinkTests
 {
     [Theory]
@@ -60,7 +60,7 @@ public sealed class BuildLinkTests
         (Links().Count, build.PickedLink).ShouldBe((2, kind));
         build.SelectedNodeIds.ShouldBe([3]);
 
-        // The link reaches lower than the beam, so it draws over it there (#1107), until the beam is selected.
+        // The link reaches lower than the beam, so it draws over it there, until the beam is selected.
         var left = build.PlaceNode(new Vector2D(-60, 50));
         var crossing = Beam(build.ConnectLink(BuildLink.Beam, left, build.PlaceNode(new Vector2D(60, 50)))!.Value);
         var link = Links().Last().Id;

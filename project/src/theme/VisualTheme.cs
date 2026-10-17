@@ -14,7 +14,7 @@ public sealed class VisualTheme
 
     public static VisualTheme Paper { get; } = FromTheme(UiThemes.Paper);
 
-    // The reference's rigid hatch: muted hairlines at half opacity, 7 apart (#612).
+    // The reference's rigid hatch: muted hairlines at half opacity, 7 apart.
     private const float _rigidHatchOpacity = 0.5f;
     private const float _rigidHatchSpacing = 7f;
     private const float _servoFixedBandOpacity = 0.30f;
@@ -63,7 +63,7 @@ public sealed class VisualTheme
         StepperWedge = UiThemes.Color(theme, UiTokens.Color.Accent) with { A = UiThemes.Alpha(theme, UiTokens.Alpha.Soft) },
         AreaCorner = UiThemes.Color(theme, UiTokens.Color.Accent),
         BeamWidth = UiSize.Widget.CreatureBeamWidth,
-        // The reference's 2-wide ring, not scaled up with our wider beams (owner, 2026-10-03).
+        // The reference's 2-wide ring, not scaled up with our wider beams (owner decision).
         SelectionRingWidth = UiSize.Stroke.Signal,
         SelectedBeamOffset = (UiSize.Widget.CreatureBeamWidth / 2f) + (float)SelectionMarks.Gap,
         SelectedBeamLineWidth = UiSize.Stroke.Signal,
@@ -92,10 +92,10 @@ public sealed class VisualTheme
 
     public bool EffectsEnabled { get; private init; }
 
-    /// <summary>How opaque the shadows other than the followed one are drawn in Training, as one picture (#385, #818).</summary>
+    /// <summary>How opaque the shadows other than the followed one are drawn in Training, as one picture.</summary>
     public float ShadowAlpha { get; private init; }
 
-    /// <summary>How far the followed creature's knock-out outline reaches past its beams and joints (#818).</summary>
+    /// <summary>How far the followed creature's knock-out outline reaches past its beams and joints.</summary>
     public float KnockoutWidth { get; private init; }
 
     public Color SelectionGlow { get; private init; }
@@ -117,7 +117,7 @@ public sealed class VisualTheme
 
     public Color Beam { get; private init; }
 
-    /// <summary>The soft tint inside a plain joint (#626); <see cref="SelectionFill"/> when selected, <see cref="DangerFill"/> when loose.</summary>
+    /// <summary>The soft tint inside a plain joint; <see cref="SelectionFill"/> when selected, <see cref="DangerFill"/> when loose.</summary>
     public Color JointFill { get; private init; }
 
     /// <summary>The soft tint inside a loose joint.</summary>
@@ -129,7 +129,7 @@ public sealed class VisualTheme
     /// <summary>The width of a plain joint's fine inner ring.</summary>
     public float JointInnerRingWidth { get; private init; }
 
-    /// <summary>The front of a Spring's coil (#807), over its damper's <see cref="SensorFill"/> body (see <c>SpringDrawing</c>).</summary>
+    /// <summary>The front of a Spring's coil, over its damper's <see cref="SensorFill"/> body (see <c>SpringDrawing</c>).</summary>
     public Color SpringCoil { get; private init; }
 
     public Color MotorAccent { get; private init; }
@@ -137,7 +137,7 @@ public sealed class VisualTheme
     /// <summary>The panel fill inside a Servo's housing, range band and horn.</summary>
     public Color ServoPanelFill { get; private init; }
 
-    /// <summary>The detail colour for the passive Fixed side of a Servo (#832).</summary>
+    /// <summary>The detail colour for the passive Fixed side of a Servo.</summary>
     public Color ServoFixed { get; private init; }
 
     /// <summary>The translucent band under a selected Servo's Fixed link.</summary>
@@ -149,7 +149,7 @@ public sealed class VisualTheme
     /// <summary>The hairline edges of a selected Servo's Fixed-link band.</summary>
     public Color ServoFixedBandEdge { get; private init; }
 
-    /// <summary>A Wheel's tyre, rotation cue and passive hub (#129): <c>detail</c>, as it is passive.</summary>
+    /// <summary>A Wheel's tyre, rotation cue and passive hub: <c>detail</c>, as it is passive.</summary>
     public Color WheelLine { get; private init; }
 
     /// <summary>The translucent band under a selected Servo's Target link.</summary>
@@ -160,25 +160,25 @@ public sealed class VisualTheme
 
     public Color Danger { get; private init; }
 
-    /// <summary>The inside of a sensor's picture on its beam (#576), so the beam does not show through.</summary>
+    /// <summary>The inside of a sensor's picture on its beam, so the beam does not show through.</summary>
     public Color SensorFill { get; private init; }
 
     /// <summary>The lines of a sensor's picture on its beam.</summary>
     public Color SensorLine { get; private init; }
 
-    /// <summary>A Touch sensor's cushion at rest (#1045): <c>accent</c> at <c>alpha_soft</c>, a soft glow round its joint.</summary>
+    /// <summary>A Touch sensor's cushion at rest: <c>accent</c> at <c>alpha_soft</c>, a soft glow round its joint.</summary>
     public Color TouchCushion { get; private init; }
 
-    /// <summary>A Touch sensor's cushion at a reading of 1, its joint on the ground (#1045): solid <c>accent</c>.</summary>
+    /// <summary>A Touch sensor's cushion at a reading of 1, its joint on the ground: solid <c>accent</c>.</summary>
     public Color TouchCushionTouching { get; private init; }
 
-    /// <summary>A Rubber's skin round its joint (#1142): <c>detail</c>, as it is passive.</summary>
+    /// <summary>A Rubber's skin round its joint: <c>detail</c>, as it is passive.</summary>
     public Color RubberSkin { get; private init; }
 
-    /// <summary>A Brake's caliper, disc and ring (#1041): <c>detail</c>, as it is passive.</summary>
+    /// <summary>A Brake's caliper, disc and ring: <c>detail</c>, as it is passive.</summary>
     public Color BrakeLine { get; private init; }
 
-    /// <summary>A stepping Stepper's wedge from its pawl to the notch it steps to (#1067): <c>accent</c> at <c>alpha_soft</c>.</summary>
+    /// <summary>A stepping Stepper's wedge from its pawl to the notch it steps to: <c>accent</c> at <c>alpha_soft</c>.</summary>
     public Color StepperWedge { get; private init; }
 
     /// <summary>The corner marks that show where the Build area ends.</summary>
@@ -192,7 +192,7 @@ public sealed class VisualTheme
 
     public float GroundEdgeWidth { get; private init; }
 
-    /// <summary>The ticks of the Training arena's distance and height scales along the view's edges (#668, #1170).</summary>
+    /// <summary>The ticks of the Training arena's distance and height scales along the view's edges.</summary>
     public Color RulerTick { get; private init; }
 
     public float RulerTickWidth { get; private init; }
@@ -204,7 +204,7 @@ public sealed class VisualTheme
 
     public int RulerFontSize { get; private init; }
 
-    /// <summary>The Training best marker's dashed line, flag outline and text (#388).</summary>
+    /// <summary>The Training best marker's dashed line, flag outline and text.</summary>
     public Color MarkerInk { get; private init; }
 
     /// <summary>The Training best marker's flag.</summary>

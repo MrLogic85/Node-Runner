@@ -1,9 +1,9 @@
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// Where NetworkFocus puts its rows (#908), in the view's coordinates before scrolling. Rows are never
+/// Where NetworkFocus puts its rows, in the view's coordinates before scrolling. Rows are never
 /// closer than one label line. When the tallest column fits at that spacing the rows spread over the
-/// card as before; otherwise they keep that spacing and the network scrolls under its pinned headings,
+/// card; otherwise they keep that spacing and the network scrolls under its pinned headings,
 /// both columns together.
 /// </summary>
 public readonly record struct NetworkFocusRowLayout(float Top, float Spacing, float Radius, float ContentHeight, float ViewHeight)

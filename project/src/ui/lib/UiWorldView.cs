@@ -6,7 +6,7 @@ namespace NodeRunner.Ui.Lib;
 /// A layout slot that shows a 2D world. The world is authored under the view's
 /// <c>%WorldViewport</c>, a <see cref="SubViewport"/> with its own coordinates and camera, so the
 /// layout never moves or scales a physics scene, and the world's draw layers (<c>ZIndex</c>) order
-/// only the world, never the controls over it (#769). Unlike a stretched
+/// only the world, never the controls over it. Unlike a stretched
 /// <see cref="SubViewportContainer"/>, it renders at the screen's pixel density rather than the
 /// canvas size, so lines stay sharp on a phone. Like one, it hands the world every pointer event
 /// over it, in the world's coordinates, and a press also reports the world position under it.
@@ -82,7 +82,7 @@ public partial class UiWorldView : Control
     /// <summary>
     /// Renders a still world once more, after its owner changed it. A still world is one whose
     /// <c>WorldViewport</c> is authored with <c>render_target_update_mode</c> Disabled, as a list
-    /// of thumbnails does so scrolling moves finished pictures (#770); a live world ignores it.
+    /// of thumbnails does so scrolling moves finished pictures; a live world ignores it.
     /// </summary>
     public void RequestRender()
     {

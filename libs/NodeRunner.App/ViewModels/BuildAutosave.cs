@@ -3,7 +3,7 @@ using NodeRunner.App.Services;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// Keeps Build's saved creation in step with its drawing (#368). Each edit marks the drawing
+/// Keeps Build's saved creation in step with its drawing. Each edit marks the drawing
 /// unsaved and raises <see cref="Changed"/>; the host saves with <see cref="Save"/> once edits
 /// settle and whenever Build is left or the app pauses.
 /// </summary>

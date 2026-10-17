@@ -35,7 +35,7 @@ public sealed class GeneticAlgorithmTests
         Should.Throw<ArgumentOutOfRangeException>(() => elitesGa.FromElites([[1, 2]], 0, new Random(5)));
     }
 
-    // A creature with no powered parts has nothing to evolve, but its generations still run (#845).
+    // A creature with no powered parts has nothing to evolve, but its generations still run.
     [Fact]
     public void Generations_OfEmptyGenomes_KeepThePopulation()
     {
@@ -76,7 +76,7 @@ public sealed class GeneticAlgorithmTests
     }
 
     // Without mutation every child gene comes from a parent: uniform crossover takes one parent's gene, Blend one
-    // strictly between them. Regression guard for #112: with Random(2) both tournaments land on distinct parents for
+    // strictly between them. With Random(2) both tournaments land on distinct parents for
     // both children, so a uniform fallback, which can only copy a parent's gene, fails it.
     [Fact]
     public void Crossover_TakesEveryGeneFromTheParents()

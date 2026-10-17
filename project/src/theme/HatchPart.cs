@@ -4,8 +4,8 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// The rigid hatch (#612) of closed triangles (#767), under every other part. Where the lines would
-/// come too close on screen to read, or when <see cref="Filled"/>, it fills the triangles instead (#770).
+/// The rigid hatch of closed triangles, under every other part. Where the lines would
+/// come too close on screen to read, or when <see cref="Filled"/>, it fills the triangles instead.
 /// </summary>
 public partial class HatchPart : PartVisual
 {
@@ -39,7 +39,7 @@ public partial class HatchPart : PartVisual
         set => Change(ref _filled, value);
     }
 
-    // Width -1 keeps the hatch one pixel wide at any zoom, so it stays faint (#400). The fill's hard
+    // Width -1 keeps the hatch one pixel wide at any zoom, so it stays faint. The fill's hard
     // edges lie under the triangle's beams.
     public override void _Draw()
     {

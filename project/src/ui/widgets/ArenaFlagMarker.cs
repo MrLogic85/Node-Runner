@@ -4,12 +4,12 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
-/// A distance marked in the Training arena (#388, #725): a dashed line up from the ground, the
+/// A distance marked in the Training arena: a dashed line up from the ground, the
 /// node's origin, to a flag near the top of the view, such as "Best 4.2 m" or, in <c>danger</c>,
-/// "Crash 3.4 m" (#1257). It stands at that distance on the ruler, behind every creature, and keeps
+/// "Crash 3.4 m". It stands at that distance on the ruler, behind every creature, and keeps
 /// its screen size at any zoom. Hidden until its distance is known. Each marker has its own
 /// <see cref="Row"/>, so two flags at the same distance never cover each other. The flag always
-/// flies right of its line and is cut off at the view's edge like the scales (owner, #1257).
+/// flies right of its line and is cut off at the view's edge like the scales (owner decision).
 /// </summary>
 public partial class ArenaFlagMarker : ArenaMark
 {

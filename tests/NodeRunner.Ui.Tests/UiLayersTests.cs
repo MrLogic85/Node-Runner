@@ -6,7 +6,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// Guards #768: the UI stacks its levels with the named CanvasLayers in <see cref="UiLayers"/>,
+/// The UI stacks its levels with the named CanvasLayers in <see cref="UiLayers"/>,
 /// never ZIndex (see <c>UiSourceGuardTests</c>) or a CanvasLayer number of its own in code or a scene
 /// (scenes: <c>SceneContractTests</c>).
 /// </summary>

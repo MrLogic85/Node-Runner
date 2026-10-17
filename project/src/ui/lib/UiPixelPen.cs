@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Draws antialiased strokes and discs in window pixels (<see cref="UiPixelSpace"/>, #733), so their
+/// Draws antialiased strokes and discs in window pixels (<see cref="UiPixelSpace"/>), so their
 /// edges keep a one-pixel feather at any UI size or zoom. Points, widths, radii and dashes are in
 /// the caller's draw space; the transform may scale, turn and move, but not mirror or stretch.
 /// Disposing it restores the caller's draw transform.
@@ -53,7 +53,7 @@ public readonly struct UiPixelPen : IDisposable
 
     /// <summary>
     /// Many round-ended polylines of one colour and width, laid out by <see cref="UiStrokeMesh"/>
-    /// and drawn in one call, so a coil of hundreds of strokes stays cheap (#835).
+    /// and drawn in one call, so a coil of hundreds of strokes stays cheap.
     /// </summary>
     public void Strokes(IEnumerable<Vector2[]> strokes, Color color, float width)
     {

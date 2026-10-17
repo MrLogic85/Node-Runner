@@ -34,7 +34,7 @@ public sealed partial class UiDialog : Window
     }
 
     // Android Back reaches only the main window's own nodes and skips every child Window,
-    // this one included, so the dialog listens to the main window instead (#328).
+    // this one included, so the dialog listens to the main window instead.
     public override void _EnterTree()
     {
         _root = GetTree().Root;

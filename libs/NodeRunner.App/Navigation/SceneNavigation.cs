@@ -10,10 +10,10 @@ public enum SceneLaunchMode
     Unique,
 }
 
-/// <summary>A request to open a scene.</summary>
-/// <param name="Route">The scene to open and the arguments it is built from.</param>
-/// <param name="KeepCurrent">Whether the current scene stays in the back stack, so Back returns to it.</param>
-/// <param name="LaunchMode">Whether earlier entries of the same scene are removed first.</param>
+/// <summary>
+/// A request to open a scene. <c>KeepCurrent</c> says whether the current scene stays in the back
+/// stack, so Back returns to it.
+/// </summary>
 public sealed record SceneNavigation(
     SceneRoute Route,
     bool KeepCurrent = true,

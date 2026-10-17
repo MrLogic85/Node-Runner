@@ -18,7 +18,7 @@ public sealed class SelectionViewModelTests
     // Joint 1 holds a Servo, a Wheel, a Rubber and a Touch sensor, joint 3 a Wheel alone, joint 4 a Touch sensor alone, and joint 2 nothing.
     private static readonly CreatureDef _creature = Creature(servos: [new ServoDef(_servoId, _stackedJoint, 5, 7)], brakes: []);
 
-    // The same, with a Brake in the Servo's place: a joint holds one hinge part (#1041).
+    // The same, with a Brake in the Servo's place: a joint holds one hinge part.
     private static readonly CreatureDef _brakedCreature = Creature(servos: [], brakes: [new BrakeDef(_brakeId, _stackedJoint, 5, 7)]);
 
     private static readonly CreatureElementSelection[] _stackTopDown =

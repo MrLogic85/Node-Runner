@@ -1,9 +1,9 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Creation's saved training (#479): the latest finished generation's best network, as a graph keyed
+/// A Creation's saved training: the latest finished generation's best network, as a graph keyed
 /// by port ids (<see cref="NeuralNetworkDef"/>), and what it measured, plus the best ever reached. Latest is
-/// what the creature can do now: the card, Build, Simulate and the warm start (#538) use it, and it
+/// what the creature can do now: the card, Build, Simulate and the warm start use it, and it
 /// may go down after a noisy generation. <see cref="Best"/> never goes down.
 /// </summary>
 public sealed record TrainingStateDef
@@ -44,7 +44,7 @@ public sealed record TrainingStateDef
     /// The training after <paramref name="generation"/> finished with <paramref name="latest"/> as its
     /// best run: latest is always replaced, and the best only when <paramref name="latest"/> scores
     /// higher on the same map: its centre went further. The best's front distance is the furthest
-    /// any latest run's front got on that map, whichever run holds the score (#725).
+    /// any latest run's front got on that map, whichever run holds the score.
     /// </summary>
     public static TrainingStateDef Record(TrainingStateDef? previous, NeuralNetworkDef network, int generation, TrainingRunDef latest)
     {

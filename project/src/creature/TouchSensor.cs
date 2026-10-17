@@ -5,7 +5,7 @@ using NodeRunner.Mechanics;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// A Touch sensor as the sim runs it (#1043, #1045): how far the nearest ground reaches into its
+/// A Touch sensor as the sim runs it: how far the nearest ground reaches into its
 /// joint's cushion (<see cref="Touch.Reading"/>). A <see cref="ShapeCast2D"/> child casts the cushion
 /// in place and finds that ground in any direction, so slopes and steps read as flat ground does;
 /// it allocates nothing per step, unlike a direct space query. The joint's body is also a Wheel's,

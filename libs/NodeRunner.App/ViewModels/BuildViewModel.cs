@@ -18,7 +18,7 @@ public enum BuildTool
 }
 
 /// <summary>
-/// Drives 0.3.0's Build mode: whether it is active, which tool is
+/// Drives Build mode: whether it is active, which tool is
 /// selected, and the anatomy placed so far via a <see cref="CreatureBuilder"/>.
 /// UI (see `.claude/rules/ui.md`) binds to this instead of mutating the
 /// builder directly; it may still read the Domain DTOs (<see cref="NodeDef"/>
@@ -29,8 +29,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 {
     /// <summary>
     /// Where joints may go, in canvas units: 12 × 6 m, centred on the origin,
-    /// so a creature always fits the Training view without zooming out far
-    /// (#884). Placing and moving keep a joint's ring inside; the Build view
+    /// so a creature always fits the Training view without zooming out far.
+    /// Placing and moving keep a joint's ring inside; the Build view
     /// shows it plus <see cref="BuildViewMargin"/>. Its sides are whole
     /// multiples of <see cref="BuildGridStep"/> so the grid's cells fill it
     /// exactly.
@@ -62,7 +62,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     // What a Play tap pointed at: loose joints and motors or Brakes missing a link.
     private readonly HashSet<CreatureElementSelection> _shownBlockers = [];
     private bool _showPieces;
-    // The notes a refused Copy or Delete tap put on the parts that block it (#937, #987), until the
+    // The notes a refused Copy or Delete tap put on the parts that block it, until the
     // selection changes, the Creation is unlocked or the canvas is touched.
     private IReadOnlyList<CanvasNote> _shownRefusalNotes = [];
     private bool _advancedSettingsOpen;
@@ -72,7 +72,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     private bool _shownCanRedo;
 
     /// <summary>
-    /// Why a sensor of <paramref name="kind"/> dropped on anything but a beam is refused (#1053): it
+    /// Why a sensor of <paramref name="kind"/> dropped on anything but a beam is refused: it
     /// names the part, as a later sensor may go elsewhere.
     /// </summary>
     public static UiText GoesOnABeamReason(SensorKind kind) => kind switch
@@ -82,10 +82,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
-    /// <summary>Why a locked Creation refuses an edit that would change its network (#896): see <see cref="IsLocked"/>.</summary>
+    /// <summary>Why a locked Creation refuses an edit that would change its network: see <see cref="IsLocked"/>.</summary>
     public static UiText LockedReason { get; } = UiText.Plain("The creation is locked to avoid changes to the network, unlock to enable.");
 
-    // On each part that makes a locked Creation refuse Copy (#990) or Delete (#987).
+    // On each part that makes a locked Creation refuse Copy or Delete.
     private static readonly UiText _wouldChangeNetworkNote = UiText.Plain("Locked: would change the network");
 
     public BuildViewModel(CreatureBuilder? builder = null)
@@ -132,16 +132,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public event EventHandler? AnatomyChanged;
 
     /// <summary>
-    /// True for a locked Creation (#896): it refuses every edit that would change its network, adding or
+    /// True for a locked Creation: it refuses every edit that would change its network, adding or
     /// deleting a part with network ports or clearing a Servo's link. Joints, beams, Springs and Wheels
-    /// have no ports, so they can still be added and deleted, unless a delete takes a joint's Touch sensor. A Rubber (#1142)
-    /// and a Brake (#1041) have none either.
+    /// have no ports, so they can still be added and deleted, unless a delete takes a joint's Touch sensor. A Rubber
+    /// and a Brake have none either.
     /// </summary>
     public bool IsLocked => _locked;
 
     /// <summary>
-    /// Unlocks a locked Creation for this Build visit (#371), so its body can change. The training
-    /// is kept: each saved edit refits the network to the new body (#516). Nothing about the unlock is
+    /// Unlocks a locked Creation for this Build visit, so its body can change. The training
+    /// is kept: each saved edit refits the network to the new body. Nothing about the unlock is
     /// saved, so the Creation is locked again the next time Build opens it.
     /// </summary>
     public void Unlock()
@@ -155,7 +155,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(IsLocked));
         if (_shownRefusalNotes.Count > 0)
         {
-            // Copy and Delete notes shown while locked may blame the lock, which no longer holds (#990, #987).
+            // Copy and Delete notes shown while locked may blame the lock, which no longer holds.
             _shownRefusalNotes = [];
             OnPropertyChanged(nameof(CanvasNotes));
         }
@@ -165,7 +165,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The trained network as it was when Build opened, or null for an untrained Creation. Saves refit
-    /// this network rather than the last saved one, so an undone delete gets its trained weights back (#689).
+    /// this network rather than the last saved one, so an undone delete gets its trained weights back.
     /// </summary>
     public NeuralNetworkDef? OpenedNetwork => _openedNetwork;
 
@@ -175,7 +175,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Opens an edit for <paramref name="owner"/>, such as a drag, that lasts until its
-    /// <see cref="EndEdit"/>: all its changes are one undo step (#689). An edit another owner left open
+    /// <see cref="EndEdit"/>: all its changes are one undo step. An edit another owner left open
     /// ends first, so one source never merges into, closes or drops another's edit.
     /// </summary>
     public void BeginEdit(object owner) => _history.Begin(owner);
@@ -186,7 +186,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Drops <paramref name="owner"/>'s open edit without a step, once it has put the body back.</summary>
     public void CancelEdit(object owner) => _history.Cancel(owner);
 
-    /// <summary>Puts the body back as it was before the last step, and selects again what a delete removed (#878).</summary>
+    /// <summary>Puts the body back as it was before the last step, and selects again what a delete removed.</summary>
     public void Undo()
     {
         if (_history.Undo() is { } step)
@@ -204,7 +204,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         }
     }
 
-    // Part ids are never reused (#220): the restored body keeps the highest NextPartId this visit reached.
+    // Part ids are never reused: the restored body keeps the highest NextPartId this visit reached.
     private void Restore(CreatureDef body, PartSet? reselect)
     {
         var nextPartId = Math.Max(body.NextPartId, _builder.NextPartId);
@@ -229,7 +229,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         RaiseAnatomyChanged();
     }
 
-    // A creation joined into one piece forgets the tap's piece notes (#930): a later split waits for the next tap.
+    // A creation joined into one piece forgets the tap's piece notes: a later split waits for the next tap.
     private void RaiseAnatomyChanged()
     {
         if (_showPieces && Pieces().Count <= 1)
@@ -257,7 +257,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int? TrainingGeneration => _trainingGeneration;
 
-    /// <summary>The Camera whose aim handle shows (#594): Aim can be set, so it is the one selected part.</summary>
+    /// <summary>The Camera whose aim handle shows: Aim can be set, so it is the one selected part.</summary>
     public int? AimableCameraId => CanEdit(PartParameterId.Aim) ? SingleSelectedSensorId : null;
 
     public void SetCreationName(string creationName)
@@ -289,7 +289,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// A tap on a rail tool, even the active one: clears the selection so the side panel shows the
-    /// tool's panel (#1096).
+    /// tool's panel.
     /// </summary>
     public void PickTool(BuildTool tool)
     {
@@ -314,13 +314,13 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The link the Links tool draws when a drag starts from an unselected joint (#705), or null. Beam
+    /// The link the Links tool draws when a drag starts from an unselected joint, or null. Beam
     /// on <see cref="Load"/>; a pick, or none, then stays for the visit, across tool switches and
-    /// selections (#874). With none, Links works like the other tools (#1057).
+    /// selections. With none, Links works like the other tools.
     /// </summary>
     public BuildLink? PickedLink => _pickedLink;
 
-    /// <summary>Picks the link the Links tool draws, or clears it if it is the picked one (#1057). Locked and future links do nothing.</summary>
+    /// <summary>Picks the link the Links tool draws, or clears it if it is the picked one. Locked and future links do nothing.</summary>
     public void PickLink(BuildLink link)
     {
         if (_activeTool != BuildTool.Beam || !BuildLinkList.IsAvailable(link) || (_locked && BuildLinkList.HasNetworkPorts(link)))
@@ -331,11 +331,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         SetPickedLink(_pickedLink == link ? null : link);
     }
 
-    /// <summary>Clears <see cref="PickedLink"/> (#1057). Back does not, since Beam is where Links starts.</summary>
+    /// <summary>Clears <see cref="PickedLink"/>. Back does not, since Beam is where Links starts.</summary>
     public void ClearPickedLink() => SetPickedLink(null);
 
     /// <summary>
-    /// Whether the settings panels show their Advanced section (#903): one flag for the whole Build
+    /// Whether the settings panels show their Advanced section: one flag for the whole Build
     /// visit, kept across selections, closed again by <see cref="Load"/> and never saved.
     /// </summary>
     public bool AdvancedSettingsOpen
@@ -354,14 +354,14 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The tray part a canvas tap places (#805), or null. Picked in the Parts tool and kept after each
+    /// The tray part a canvas tap places, or null. Picked in the Parts tool and kept after each
     /// placement, so several can be placed. A switch of tool or tray tab, a collapsed side panel, a
     /// selection, Back, or <see cref="Load"/> clears it, so it is never picked out of sight.
     /// </summary>
     public BuildPart? PickedPart => _pickedPart;
 
     /// <summary>
-    /// Picks a tray part, or clears it if it is the picked one (#805). Parts that cannot be placed
+    /// Picks a tray part, or clears it if it is the picked one. Parts that cannot be placed
     /// now do nothing, as a part with network ports on a locked Creation (<see cref="PartTray.CanPick"/>).
     /// </summary>
     public void PickPart(BuildPart part)
@@ -422,13 +422,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Every part that sits on a joint: the <see cref="HingeParts"/>, then the Wheels, Touch sensors and Rubbers.</summary>
     public IReadOnlyList<IJointPartDef> JointParts => _builder.JointParts;
 
-    /// <summary>The Brakes (#1039, #1041).</summary>
     public IReadOnlyList<BrakeDef> Brakes => _builder.Brakes;
 
-    /// <summary>The Angle sensors (#1204, #1206).</summary>
     public IReadOnlyList<AngleSensorDef> AngleSensors => _builder.AngleSensors;
 
-    /// <summary>The Steppers (#1036).</summary>
     public IReadOnlyList<StepperDef> Steppers => _builder.Steppers;
 
     public IReadOnlyList<WheelDef> Wheels => _builder.Wheels;
@@ -443,10 +440,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The messages Build shows in the drawing, each beside the part it is about: why the last
-    /// dropped part was refused (#376), each loose joint and hinge part missing a side
-    /// <see cref="ShowTrainingBlockers"/> pointed at (#844, #1006), each separate piece's joint nearest
-    /// another piece (#930) and each part a dimmed Copy or a locked Delete pointed at (#937, #987), then each beam or link too
-    /// short to train (#593). Listed most important first:
+    /// dropped part was refused, each loose joint and hinge part missing a side
+    /// <see cref="ShowTrainingBlockers"/> pointed at, each separate piece's joint nearest
+    /// another piece and each part a dimmed Copy or a locked Delete pointed at, then each beam or link too
+    /// short to train. Listed most important first:
     /// notes that would overlap stack, the first listed nearest its part.
     /// </summary>
     public IReadOnlyList<CanvasNote> CanvasNotes()
@@ -567,7 +564,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public void DismissPlacementNote() => PlacementNote = null;
 
     /// <summary>
-    /// Hides the notes a tap brought up, on the next canvas touch (#991): <see cref="PlacementNote"/>,
+    /// Hides the notes a tap brought up, on the next canvas touch: <see cref="PlacementNote"/>,
     /// <see cref="ShowTrainingBlockers"/>' notes and a dimmed Copy's or a locked Delete's notes. Too-short parts' notes
     /// stay, as they mark the drawing itself.
     /// </summary>
@@ -599,13 +596,13 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Whether joint <paramref name="nodeId"/> draws the loose mark (ring and cross): a loose joint
-    /// without a hinge part or Wheel. Those show the error in their own <c>danger</c> look (#1140); a Touch
-    /// sensor's cushion and a Rubber's skin (#1142) have none, so they do not count.
+    /// without a hinge part or Wheel. Those show the error in their own <c>danger</c> look; a Touch
+    /// sensor's cushion and a Rubber's skin have none, so they do not count.
     /// </summary>
     public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId)
         && !CreatureDef.HasJointPart(nodeId, _builder.JointParts.Where(part => PartKinds.SlotOf(part) is JointSlot.HingePart or JointSlot.Wheel));
 
-    /// <summary>Why a Servo, Motor, Stepper, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work (#1118).</summary>
+    /// <summary>Why a Servo, Motor, Stepper, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work.</summary>
     public static UiText NeedsTwoSidesReason(CreatureElementKind kind) => kind switch
     {
         CreatureElementKind.Servo => CreatureBuilder.ServoNeedsTwoSidesReason,
@@ -620,10 +617,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public IReadOnlyList<IReadOnlyList<int>> Pieces() => Mechanics.Pieces.Of(Nodes, LinkRef.All(Beams, Pistons, Springs));
 
     /// <summary>
-    /// Answers a tap on the dimmed play button (#844): every joint loose now gets a "Not connected"
+    /// Answers a tap on the dimmed play button: every joint loose now gets a "Not connected"
     /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed, and so does every
-    /// piece until the creation is one piece (#930) and every hinge part missing a side until it has
-    /// both (#1006); the next canvas touch hides them all (<see cref="DismissTapNotes"/>). Too-short
+    /// piece until the creation is one piece and every hinge part missing a side until it has
+    /// both; the next canvas touch hides them all (<see cref="DismissTapNotes"/>). Too-short
     /// parts already have theirs. A blocker that appears later waits for the next tap.
     /// </summary>
     public void ShowTrainingBlockers()
@@ -653,7 +650,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
-    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id. A joint has no network ports, so a locked Creation places one too (#896).</summary>
+    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id. A joint has no network ports, so a locked Creation places one too.</summary>
     public int PlaceNode(Vector2D position)
     {
         var id = _history.Change(() => _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius)));
@@ -669,7 +666,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The settings the panel shows for the selection (#704): one part's own, or those every
+    /// The settings the panel shows for the selection: one part's own, or those every
     /// selected part has and can share.
     /// </summary>
     public IReadOnlyList<PartParameterId> ShownParameters
@@ -690,9 +687,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The <see cref="ShownParameters"/> the selection can change now. Like a Camera's aim (#638),
+    /// The <see cref="ShownParameters"/> the selection can change now. Like a Camera's aim,
     /// most tune the body without changing the network's ports, so a locked Creation can change them
-    /// too; one that <see cref="PartParameter.ChangesPorts"/>, a Camera's Rays, it keeps (#578, #896).
+    /// too; one that <see cref="PartParameter.ChangesPorts"/>, a Camera's Rays, it keeps.
     /// </summary>
     public IReadOnlyList<PartParameterId> EditableParameters =>
         [.. ShownParameters.Where(id => !_locked || !PartParameters.Of(id).ChangesPorts)];
@@ -700,9 +697,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public bool CanEdit(PartParameterId parameter) => EditableParameters.Contains(parameter);
 
     /// <summary>
-    /// Each selected Camera's rays while the panel shows their settings (#623, #578), in canvas
+    /// Each selected Camera's rays while the panel shows their settings, in canvas
     /// units: where they leave its beam and where each ends. The canvas draws them and the view
-    /// keeps them in sight (#1092).
+    /// keeps them in sight.
     /// </summary>
     public IReadOnlyList<(Vector2D Origin, IReadOnlyList<Vector2D> Ends)> ShownCameraRays()
     {
@@ -725,10 +722,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         })];
     }
 
-    /// <summary>Where the sensor <paramref name="sensorId"/> sits on its beam and senses from (<see cref="SensorPicture.Centre"/>, #1086).</summary>
+    /// <summary>Where the sensor <paramref name="sensorId"/> sits on its beam and senses from (<see cref="SensorPicture.Centre"/>).</summary>
     public Vector2D SensorCentre(int sensorId) => SensorCentreOn(Sensors.Single(sensor => sensor.Id == sensorId).BeamId);
 
-    /// <summary>Where a sensor sits on the beam <paramref name="beamId"/> (<see cref="SensorPicture.Centre"/>, #1086).</summary>
+    /// <summary>Where a sensor sits on the beam <paramref name="beamId"/> (<see cref="SensorPicture.Centre"/>).</summary>
     public Vector2D SensorCentreOn(int beamId)
     {
         var beam = Beams[BeamIndexOf(beamId)];
@@ -737,7 +734,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Whether <paramref name="parameter"/> does anything on any selected part as set now: a one-ray
-    /// Camera's Spread does nothing, so its slider shows disabled (#578).
+    /// Camera's Spread does nothing, so its slider shows disabled.
     /// </summary>
     public bool HasEffect(PartParameterId parameter) =>
         SelectedPartIds().Any(part => _builder.ParameterHasEffect(part, parameter));
@@ -753,10 +750,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         return [.. SelectedPartIds().Select(part => _builder.ParameterValue(part, parameter))];
     }
 
-    /// <summary>Sets <paramref name="parameter"/> to <paramref name="value"/>, in world units, on every selected part (#704).</summary>
+    /// <summary>Sets <paramref name="parameter"/> to <paramref name="value"/>, in world units, on every selected part.</summary>
     public void SetParameter(PartParameterId parameter, double value)
     {
-        // A Brake's top step is Locked: an infinite Strength (#1041).
+        // A Brake's top step is Locked: an infinite Strength.
         if (!double.IsFinite(value) && !(parameter == PartParameterId.BrakeStrength && value == BrakeDef.LockedStrength))
         {
             throw new ArgumentOutOfRangeException(nameof(value), "A setting must be finite, but a Brake's Strength may be Locked.");
@@ -790,10 +787,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The part drawn on top at <paramref name="position"/> (#1107), so a touch hits what it sees
+    /// The part drawn on top at <paramref name="position"/>, so a touch hits what it sees
     /// (<see cref="DrawGroups.PartAt"/>), with the selection and the <paramref name="targets"/> on
-    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A motor, Stepper, Brake (#1041), Angle sensor (#1206) or Wheel
-    /// is hit as its joint; a Touch sensor (#1045) and a Rubber (#1142) add no tap area. Null off every part.
+    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A motor, Stepper, Brake, Angle sensor or Wheel
+    /// is hit as its joint; a Touch sensor and a Rubber add no tap area. Null off every part.
     /// </summary>
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
     {
@@ -811,7 +808,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// The Wheel whose disc holds <paramref name="position"/> (#1143, <see cref="Domain.DrawGroups.WheelDiscAt"/>):
+    /// The Wheel whose disc holds <paramref name="position"/> (<see cref="Domain.DrawGroups.WheelDiscAt"/>):
     /// a tap's last fallback, after every part and reach, never a press's or a drop's. Null outside every disc.
     /// </summary>
     public CreatureElementSelection? WheelDiscAt(Vector2D position) =>
@@ -820,7 +817,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             : null;
 
     /// <summary>
-    /// What the canvas draws on the selected surface (#1107), which a touch hits there too
+    /// What the canvas draws on the selected surface, which a touch hits there too
     /// (<see cref="DrawnPartAt"/>): what belongs with <paramref name="selected"/>, a joint part
     /// as its joint, and the <paramref name="targets"/> alone, with the moved sensor.
     /// </summary>
@@ -852,7 +849,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// moved meanwhile; a part deleted since is ignored. A blank name, or the
     /// <paramref name="shownDefault"/> left as it is, clears its own name so it shows the default
     /// again. Only the screen knows the default in the player's language, so it passes the one it
-    /// showed. Names are labels only (#220), so a locked Creation can be renamed too.
+    /// showed. Names are labels only, so a locked Creation can be renamed too.
     /// </summary>
     public void RenamePart(int partId, string name, string? shownDefault)
     {
@@ -970,7 +967,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// is null and the caller should keep whatever creature is already
     /// running. Otherwise this defers to <see cref="CreatureBuilder.TryBuild"/>'s
     /// validation and, on success, returns the built <see cref="CreatureDef"/>
-    /// for the caller to instantiate (see #72).
+    /// for the caller to instantiate.
     /// </summary>
     public bool TryLeave(out CreatureDef? creature, out IReadOnlyList<UiText> errors)
     {
@@ -1041,7 +1038,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The joint parts on joint <paramref name="nodeId"/>, top → down as drawn
-    /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint (#973): a tap, drag
+    /// (<see cref="CreatureDef.JointParts"/>). To the player they are that joint: a tap, drag
     /// or box selects them, never the joint on its own.
     /// </summary>
     public IReadOnlyList<CreatureElementSelection> JointPartsAt(int nodeId) => CreatureDef.JointParts(nodeId, JointParts);
@@ -1052,8 +1049,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Gives the Servo, Velocity motor, Stepper, Brake or Angle sensor <paramref name="partId"/> a new Fixed or Target side,
-    /// from its panel's pickers; it keeps its id (#1177). Its ports do not depend on its sides, so a locked
-    /// Creation changes them too (#1041, #1179).
+    /// from its panel's pickers; it keeps its id. Its ports do not depend on its sides, so a locked
+    /// Creation changes them too.
     /// </summary>
     public void SetHingePartLink(int partId, bool fixedRole, int linkId)
     {

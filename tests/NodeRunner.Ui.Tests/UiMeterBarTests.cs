@@ -2,7 +2,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>A callout meter bar's fill (#1064): centred meters fill from the centre tick, others from the left end.</summary>
+/// <summary>A callout meter bar's fill: centred meters fill from the centre tick, others from the left end.</summary>
 public sealed class UiMeterBarTests
 {
     [Theory]

@@ -5,11 +5,11 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// How a selected part is marked (#624), shared by Build's canvas and the creature in Training: a
-/// joint gets an unfilled <c>halo</c> ring with a gap around it, like the reference, and a beam a
-/// thin <c>halo</c> line along each side. Both are drawn in window pixels (<see cref="UiPixelSpace"/>)
+/// How a selected part is marked: a joint gets an unfilled <c>halo</c> ring with a gap around it,
+/// like the reference, and a beam a thin <c>halo</c> line along each side. Both are drawn in window
+/// pixels (<see cref="UiPixelSpace"/>)
 /// so they stay sharp at any zoom; <c>drawTransform</c> is the transform the caller draws with, and
-/// is restored afterwards. Every mark sits <see cref="SelectionMarks.Gap"/> outside its part (#710).
+/// is restored afterwards. Every mark sits <see cref="SelectionMarks.Gap"/> outside its part.
 /// </summary>
 public static class SelectionDrawing
 {
@@ -30,7 +30,7 @@ public static class SelectionDrawing
     /// <summary>
     /// Where a selected link's lines, <paramref name="offset"/> from its axis, end at the joint at
     /// <paramref name="joint"/>: on a circle of <paramref name="reach"/> round it, the joint's hub or,
-    /// when the joint is selected too, its halo ring, so a group reads as one outline (#710).
+    /// when the joint is selected too, its halo ring, so a group reads as one outline.
     /// </summary>
     public static Vector2 LineEnd(Vector2 joint, Vector2 other, float reach, float offset) =>
         joint + (joint.DirectionTo(other) * (float)SelectionMarks.LineEnd(reach, offset));
@@ -56,7 +56,7 @@ public static class SelectionDrawing
     /// The two <c>halo</c> lines along a selected link, a Piston or a Spring, from joint
     /// <paramref name="a"/> to joint <paramref name="b"/>, <paramref name="offset"/> from its axis,
     /// drawn with <paramref name="toPixels"/> (<see cref="UiPixelSpace"/>, already entered). They
-    /// stop at the hubs (#1086) or, when a joint is selected too, join its halo (#710).
+    /// stop at the hubs or, when a joint is selected too, join its halo.
     /// </summary>
     public static void DrawLink(
         CanvasItem canvas,
@@ -83,8 +83,7 @@ public static class SelectionDrawing
     }
 
     /// <summary>
-    /// A filled underlay band along a link, optionally hatched. Used by a selected Servo to mark
-    /// the Fixed and Target links without hiding their own drawings.
+    /// A filled underlay band along a link, optionally hatched, that marks the link without hiding its own drawing.
     /// </summary>
     public static void DrawLinkBand(
         UiPixelPen pen,
@@ -145,7 +144,7 @@ public static class SelectionDrawing
 
     /// <summary>
     /// <see cref="DrawLinkBand"/> bent round a circle, without hatching: a filled ring band between
-    /// two radii. A selected Servo marks a Wheel side with it under the tyre (#1118).
+    /// two radii. A selected Servo marks a Wheel side with it under the tyre.
     /// </summary>
     public static void DrawRingBand(
         UiPixelPen pen,
@@ -161,10 +160,8 @@ public static class SelectionDrawing
         pen.Ring(centre, outerRadius, edge, UiSize.Stroke.Hair, _ringSegments);
     }
 
-    /// <summary>
-    /// Where a link's selection lines run: to the selected joints' halos, else to the hubs (#1086),
-    /// else, when the joints crowd too close for either, centre to centre so the mark never vanishes.
-    /// </summary>
+    // Where a link's selection lines run: to the selected joints' halos, else to the hubs,
+    // else, when the joints crowd too close for either, centre to centre so the mark never vanishes.
     private static (Vector2 Start, Vector2 End) LinkSpan(
         Vector2 a, Vector2 b, float radiusA, float radiusB, bool haloA, bool haloB, float offset, Vector2 along)
     {

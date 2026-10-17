@@ -1,7 +1,7 @@
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Where a Piston's or Spring's three-part telescope sits (#1210): an outer cylinder at joint A, a
+/// Where a Piston's or Spring's three-part telescope sits: an outer cylinder at joint A, a
 /// middle stage and a rod. <c>docs/WORLD_VISUALS.md</c> → "Piston" owns the rule. All lengths are
 /// world units from joint A's centre.
 /// </summary>

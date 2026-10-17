@@ -2,24 +2,24 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>One tick of a Training scale: where it is in world units, and its label if it has one.</summary>
 /// <param name="X">The tick's position along its scale, in world units: along the ground, or the height above it.</param>
-/// <param name="IsMajor">A long tick: every power of ten that divides the label step, or under each label when the step is 5, 50, … m (#884).</param>
+/// <param name="IsMajor">A long tick: every power of ten that divides the label step, or under each label when the step is 5, 50, … m.</param>
 /// <param name="LabelMetre">
 /// The metres from the start, or above the ground on the height scale, on every labelled metre,
 /// shown as <see cref="DistanceRuler.Label"/>;
-/// otherwise null. A number, not text, which the ruler puts in the player's language as it draws (#756).
+/// otherwise null. A number, not text, which the ruler puts in the player's language as it draws.
 /// </param>
 public readonly record struct RulerMark(double X, bool IsMajor, long? LabelMetre);
 
 /// <summary>
-/// The distance marks along the Training ground (#668): a long tick every metre and a minor one
+/// The distance marks along the Training ground: a long tick every metre and a minor one
 /// halfway, counted from the trial's start (0 m), so a moving creature shows its progress against
 /// them. Behind the start they count down ("-1 m"). Every metre is labelled, or every 2, 5, 10, …
-/// when the camera zooms out so far that labels would overlap (#675). The ticks thin out with the
-/// labels, so a far zoom does not crowd them (#884): a long tick every power of ten that divides
+/// when the camera zooms out so far that labels would overlap. The ticks thin out with the
+/// labels, so a far zoom does not crowd them: a long tick every power of ten that divides
 /// the label step, with a minor one halfway (every metre for 1 or 2 m labels, every 10 m for 10 or
 /// 20 m), or, when the step is 5, 50, … m, a long tick under each label and a minor one every
 /// 1, 10, … m between them. The height scale up the arena's side counts the same way from the
-/// ground's top, with nothing below it (#1170).
+/// ground's top, with nothing below it.
 /// </summary>
 public static class DistanceRuler
 {
@@ -134,7 +134,7 @@ public static class DistanceRuler
     /// to <paramref name="high"/>, in order: heights above the ground's top, which is 0 m, and
     /// none below it, as <see cref="Fill"/> marks the ground. A mark just below the floor stays
     /// while its label still reaches above it, so the label is cut off there rather than dropped
-    /// whole (#1302).
+    /// whole.
     /// </summary>
     /// <param name="floor">The lowest height the scale shows, in world units; below 0 counts from 0.</param>
     /// <param name="labelReach">How far a label reaches above its mark, in world units.</param>

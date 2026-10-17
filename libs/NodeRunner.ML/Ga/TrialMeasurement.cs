@@ -22,13 +22,13 @@ public readonly record struct TrialResult(double Distance, double TopSpeed, doub
 /// <item><see cref="TrialResult.Elevation"/>: the largest ground clearance once the creature has
 /// landed, so the drop it starts every trial with doesn't count. A crawler scores 0.</item>
 /// <item><see cref="TrialResult.FrontDistance"/>: how far ahead of its start the front-most point
-/// is now, or was when the trial ended; never below 0. This is the distance the player sees (#725).
+/// is now, or was when the trial ended; never below 0. This is the distance the player sees.
 /// It is not the score.</item>
 /// </list>
 /// A trial is invalid when a sample is not finite or any value moves more than
 /// <see cref="MaxPlausibleSpeed"/> allows in one tick: physics blowing up, not a creature moving.
 /// <para>
-/// A tear (#962) freezes the trial (<see cref="Freeze"/>): every value keeps what it measured up to then,
+/// A tear freezes the trial (<see cref="Freeze"/>): every value keeps what it measured up to then,
 /// so throwing a loose part forward cannot raise them, but later samples are still checked, so a blow-up
 /// after the tear still makes the trial invalid.
 /// </para>
@@ -100,7 +100,7 @@ public sealed class TrialMeasurement
     }
 
     /// <summary>
-    /// Keeps every value as it is now for the rest of the trial (#962): later samples are only checked for
+    /// Keeps every value as it is now for the rest of the trial: later samples are only checked for
     /// a blow-up. A tear calls it with the sample it changed what the samples track to (the creature's centre
     /// and bounds now follow its main piece), and the next sample is checked against that one instead of the
     /// last, so the change is not taken for a blow-up. Every later tear calls it again. A non-finite sample

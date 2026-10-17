@@ -27,8 +27,8 @@ public sealed record CreationCardPresentation(
 }
 
 /// <summary>
-/// What a trained card shows of its latest training (#479): the latest generation's best run's
-/// distance and elevation in metres and top speed in m/s, each with its unit (#846), the map it ran
+/// What a trained card shows of its latest training: the latest generation's best run's
+/// distance and elevation in metres and top speed in m/s, each with its unit, the map it ran
 /// on and how many generations it has trained. These can go down; the best ever belongs to Stats.
 /// </summary>
 public sealed record CreationCardTraining(

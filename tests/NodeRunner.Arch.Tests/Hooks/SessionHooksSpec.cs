@@ -6,8 +6,7 @@ namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
 /// session-start.sh tells the agent the branch and uncommitted changes; after-push.sh reports,
-/// once after a git push, the emulators and APKs a session left behind, compared with its start
-/// (#1320, #1356).
+/// once after a git push, the emulators and APKs a session left behind, compared with its start.
 /// </summary>
 public sealed class SessionHooksSpec : IDisposable
 {

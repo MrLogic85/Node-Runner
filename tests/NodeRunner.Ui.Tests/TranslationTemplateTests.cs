@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// <c>project/locale/messages.pot</c> holds every text the player can see (#778). When text
+/// <c>project/locale/messages.pot</c> holds every text the player can see. When text
 /// changes, regenerate it with <c>NODE_RUNNER_UPDATE_POT=1 dotnet test tests/NodeRunner.Ui.Tests
 /// --filter TranslationTemplateTests</c>; see docs/LOCALIZATION.md.
 /// </summary>

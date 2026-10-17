@@ -103,7 +103,7 @@ public sealed record CreatureDef
     }
 
     /// <summary>
-    /// A creature of <paramref name="parts"/> of any kinds, in any order (#1222): each kind keeps the order it has among
+    /// A creature of <paramref name="parts"/> of any kinds, in any order: each kind keeps the order it has among
     /// them. Without <paramref name="nextPartId"/>, the counter starts just past the highest id.
     /// </summary>
     public CreatureDef(IEnumerable<IPartDef> parts, int? nextPartId = null)
@@ -210,7 +210,7 @@ public sealed record CreatureDef
 
         var beamIds = beams.Select(beam => beam.Id).ToHashSet();
         var links = LinkRef.All(beams, pistons, springs).ToArray();
-        // A joint holds one part per slot (#1044).
+        // A joint holds one part per slot.
         var filledSlots = new HashSet<(int NodeId, JointSlot Slot)>();
         foreach (var part in sorted.OfType<IJointPartDef>())
         {
@@ -271,61 +271,50 @@ public sealed record CreatureDef
 
     public IReadOnlyList<SensorDef> Sensors => _sensors;
 
-    /// <summary>The Servos (#452): powered joint motors on nodes.</summary>
     public IReadOnlyList<ServoDef> Servos => _servos;
 
-    /// <summary>The Pistons (#451): powered links between two nodes.</summary>
     public IReadOnlyList<PistonDef> Pistons => _pistons;
 
-    /// <summary>The Springs (#453): passive links between two nodes.</summary>
     public IReadOnlyList<SpringDef> Springs => _springs;
 
-    /// <summary>The Wheels (#129): passive joint parts that roll on the ground.</summary>
     public IReadOnlyList<WheelDef> Wheels => _wheels;
 
-    /// <summary>The Touch sensors (#1043): one input each, how near its node is to the ground.</summary>
     public IReadOnlyList<TouchSensorDef> TouchSensors => _touchSensors;
 
-    /// <summary>The Rubbers (#1142): passive parts that make their node grip the ground.</summary>
     public IReadOnlyList<RubberDef> Rubbers => _rubbers;
 
-    /// <summary>The Velocity motors (#454): powered joint motors the network drives at a speed.</summary>
     public IReadOnlyList<VelocityMotorDef> VelocityMotors => _velocityMotors;
 
-    /// <summary>The Brakes (#1039): passive joint parts that resist their sides turning, with no network ports.</summary>
     public IReadOnlyList<BrakeDef> Brakes => _brakes;
 
-    /// <summary>The Angle sensors (#1204): joint sensors that read the angle between their sides and apply no force.</summary>
     public IReadOnlyList<AngleSensorDef> AngleSensors => _angleSensors;
 
-    /// <summary>The Steppers (#1036): joint motors that step their sides from notch to notch at the rate the network picks.</summary>
     public IReadOnlyList<StepperDef> Steppers => _steppers;
 
     /// <summary>
     /// Every joint motor, the Servos, then the Velocity motors, then the Steppers. With the <see cref="Brakes"/> and <see cref="AngleSensors"/>, they fill
-    /// the joints' hinge-part slots (#1044).
+    /// the joints' hinge-part slots.
     /// </summary>
     [JsonIgnore]
     public IReadOnlyList<IJointMotorDef> JointMotors { get; }
 
-    /// <summary>What fills the joints' hinge-part slots (#1044): the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
+    /// <summary>What fills the joints' hinge-part slots: the <see cref="JointMotors"/>, then the <see cref="Brakes"/>, then the <see cref="AngleSensors"/>.</summary>
     [JsonIgnore]
     public IReadOnlyList<IHingePartDef> HingeParts { get; }
 
     /// <summary>
-    /// Every part (#1221), list by list: nodes, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers,
+    /// Every part, list by list: nodes, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers,
     /// Velocity motors, Brakes, Angle sensors and Steppers. Ids are unique across them.
     /// </summary>
     [JsonIgnore]
     public IReadOnlyList<IPartDef> Parts { get; }
 
-    /// <summary>How many <see cref="Parts"/> there are, which what scales with the creature's size reads (#318).</summary>
+    /// <summary>How many <see cref="Parts"/> there are, which what scales with the creature's size reads.</summary>
     [JsonIgnore]
     public int PartCount => Parts.Count;
 
     public int NextPartId { get; }
 
-    /// <summary>The part with <paramref name="partId"/>, of whatever kind (#1221), or null if there is none.</summary>
     public IPartDef? FindPart(int partId) => _partById.GetValueOrDefault(partId);
 
     /// <summary>The joint parts on joint <paramref name="nodeId"/>: see the static <see cref="JointParts"/>.</summary>
@@ -349,10 +338,9 @@ public sealed record CreatureDef
 
     public int WheelIndexOf(int wheelId) => IndexOf(_wheelIndexById, wheelId, "Wheel id must point to an existing wheel.");
 
-    /// <summary>The Wheel on joint <paramref name="nodeId"/>, if it has one.</summary>
     public WheelDef? WheelAt(int nodeId) => _wheels.FirstOrDefault(wheel => wheel.NodeId == nodeId);
 
-    /// <summary>Whether a motor's side id names a Wheel, a one-sided link (#1118), rather than a link.</summary>
+    /// <summary>Whether a motor's side id names a Wheel, a one-sided link, rather than a link.</summary>
     public bool IsWheel(int partId) => _wheelIndexById.ContainsKey(partId);
 
     public int TouchSensorIndexOf(int touchSensorId) => IndexOf(_touchSensorIndexById, touchSensorId, "Touch sensor id must point to an existing touch sensor.");
@@ -375,10 +363,10 @@ public sealed record CreatureDef
     }
 
     /// <summary>
-    /// The drawn and collision radius of the joint <paramref name="nodeId"/> among these joint parts
-    /// (#452, #626, #129): the largest of a plain joint's, a motor's housing and a Wheel's
+    /// The drawn and collision radius of the joint <paramref name="nodeId"/> among these joint parts:
+    /// the largest of a plain joint's, a motor's housing and a Wheel's
     /// <see cref="WheelDef.Radius"/> on it, for collision and framing. Links' ends use
-    /// <see cref="NodeDef.HubRadius"/>, and touch and sensors <see cref="CoveredRadius(int)"/> (#1086).
+    /// <see cref="NodeDef.HubRadius"/>, and touch and sensors <see cref="CoveredRadius(int)"/>.
     /// </summary>
     public static double JointRadius(int nodeId, IEnumerable<IJointMotorDef> motors, IEnumerable<WheelDef> wheels)
     {
@@ -411,8 +399,8 @@ public sealed record CreatureDef
     }
 
     /// <summary>
-    /// How far out from the joint <paramref name="nodeId"/> what is drawn over its links reaches
-    /// (#1086): a motor on it, or else its hub, ring or Wheel's hub. A Wheel's face lies under its
+    /// How far out from the joint <paramref name="nodeId"/> what is drawn over its links reaches:
+    /// a motor on it, or else its hub, ring or Wheel's hub. A Wheel's face lies under its
     /// links, so it covers nothing of them.
     /// </summary>
     public static double CoveredRadius(int nodeId, IEnumerable<IJointMotorDef> motors)
@@ -421,14 +409,12 @@ public sealed record CreatureDef
         return motors.Any(motor => motor.NodeId == nodeId) ? JointMotor.Radius : NodeDef.HubRadius;
     }
 
-    /// <summary>Whether the joint <paramref name="nodeId"/> holds a joint part among <paramref name="parts"/>, in any slot (#1044).</summary>
     public static bool HasJointPart(int nodeId, IEnumerable<IPartDef> parts)
     {
         ArgumentNullException.ThrowIfNull(parts);
         return parts.OfType<IJointPartDef>().Any(part => part.NodeId == nodeId);
     }
 
-    /// <summary>The beam, Piston or Spring with <paramref name="linkId"/>.</summary>
     public LinkRef Link(int linkId) => LinkRef.Find(Links(), linkId);
 
     /// <summary>The beams, Pistons and Springs touching <paramref name="nodeId"/>, in part-list order.</summary>
@@ -510,7 +496,7 @@ public sealed record CreatureDef
         }
     }
 
-    // A hinge part's side is a link touching its joint, or the Wheel on it (#1118).
+    // A hinge part's side is a link touching its joint, or the Wheel on it.
     private static void ValidateHingePartSide(int? linkId, int nodeId, IReadOnlyList<LinkRef> links, IReadOnlyList<WheelDef> wheels)
     {
         if (linkId is null)

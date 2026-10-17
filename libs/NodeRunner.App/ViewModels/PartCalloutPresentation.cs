@@ -6,11 +6,11 @@ namespace NodeRunner.App.ViewModels;
 public sealed record PartCalloutPort(NetworkPort Port, UiText Label, PortRange Range, double? Value);
 
 /// <summary>
-/// The tapped part's callout in Training and Simulate (#388, #1064). A part with network ports
+/// The tapped part's callout in Training and Simulate. A part with network ports
 /// shows its glyph and name, then its inputs and its outputs with their live values; a Wheel, Rubber or Brake
 /// shows its glyph, its name and that it has no network ports; a Joint, Beam or Spring shows only
 /// its name. Built from one <see cref="NetworkPortValues"/> sample, the same one NetworkFocus reads,
-/// so the callout never runs the network. See docs/WORLD_VISUALS.md → "Part callout".
+/// so the callout never runs the network. See docs/WORLD_VISUALS.md → "Training arena".
 /// </summary>
 public sealed record PartCalloutPresentation(
     PartKind Kind,
@@ -23,12 +23,12 @@ public sealed record PartCalloutPresentation(
     private static readonly UiText _noNetworkPorts = UiText.Plain("No network ports");
 
     /// <summary>
-    /// The word before the inputs' line (#1150), short for Inputs: the values the part gives the
+    /// The word before the inputs' line, short for Inputs: the values the part gives the
     /// network. It names the line, so its colour is never the only cue.
     /// </summary>
     public static UiText InputsHeading { get; } = UiText.Plain("In").InContext("part callout");
 
-    /// <summary>The word before the outputs' line (#1150), short for Outputs: the values the network sets.</summary>
+    /// <summary>The word before the outputs' line, short for Outputs: the values the network sets.</summary>
     public static UiText OutputsHeading { get; } = UiText.Plain("Out").InContext("part callout");
 
     /// <summary>

@@ -16,8 +16,8 @@ using NodeRunner.Ui.Widgets;
 namespace NodeRunner.Hosts;
 
 /// <summary>
-/// The Training scene: trains one saved creation (#469) on the Training screen (#386), or simulates
-/// it (#702). The scene authors the screen and the world in its arena: camera, background, ground
+/// The Training scene: trains one saved creation on the Training screen, or simulates
+/// it. The scene authors the screen and the world in its arena: camera, background, ground
 /// line and ruler. This root builds the map's ground along that line, adds the creature to that
 /// world and points the camera and the ruler at it. To train, it adds the <see cref="Evolver"/>,
 /// resumes from the creation's last finished generation and saves every finished generation, so
@@ -31,7 +31,7 @@ public partial class TrainingHost : Node, IRoutedScene
 
 
     private readonly VisualTheme _theme = VisualTheme.Neon;
-    // The map Training runs on and records: the one Train setup selects (#444).
+    // The map Training runs on and records: the one Train setup selects.
     private readonly MapDef _map = Maps.Default;
     private readonly SelectionViewModel _selection = new();
     private readonly SignalFlowPresentationViewModel _signalFlow = new();
@@ -43,17 +43,17 @@ public partial class TrainingHost : Node, IRoutedScene
     // The network last saved, so the next save keeps its neuron ids and disabled genes.
     private TrainingStateDef? _saved;
     private Creature.Creature? _creature;
-    // The shadow drawn in full, read by signal flow, NetworkFocus and part selection (#385).
+    // The shadow drawn in full, whose network and parts the screen shows.
     private Creature.Creature? _followed;
     private Evolver? _evolver;
-    // Simulate's one endless run (#702); null while training.
+    // Simulate's one endless run; null while training.
     private TrialController? _playback;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
-    // The last network sample, taken once per signal refresh and read by both NetworkFocus and the part callout (#1064).
+    // The last network sample, taken once per signal refresh and read by both NetworkFocus and the part callout.
     private NetworkPortValues _portValues = NetworkPortValues.Empty;
     private double _signalRefreshElapsed;
-    // Training's slow-motion chip (#318); null in Simulate, which races one shadow.
+    // Training's slow-motion chip; null in Simulate, which races one shadow.
     private SlowMotionWatch? _slowMotion;
     private ulong _watchedPhysicsFrames;
     private ulong _watchedUsec;
@@ -91,7 +91,7 @@ public partial class TrainingHost : Node, IRoutedScene
     {
         // Pause is global, not scoped to this scene: start running.
         GetTree().Paused = false;
-        // Always, so tapping a part and the screen's buttons still work while paused (#85); the
+        // Always, so tapping a part and the screen's buttons still work while paused; the
         // creature and the Evolver pin themselves back to Pausable.
         ProcessMode = ProcessModeEnum.Always;
         // After the camera has moved this frame, so the part name lands on the part.
@@ -171,7 +171,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _signalFlow.Update(_networkInputs.Count, _followed.Network is null ? 0 : _followed.MotorCount, FollowedDistance, FollowedCrashed);
         ShowCrash();
 
-        // One sample of the network's ports per refresh, read by both NetworkFocus and the part callout (#1064).
+        // One sample of the network's ports per refresh, read by both NetworkFocus and the part callout.
         _portValues = NetworkPortValues.Sample(_followed.Ports, _followed.Network, _networkInputs);
         _networkFocus.Update(_portValues);
         ShowPartCallout();
@@ -223,7 +223,7 @@ public partial class TrainingHost : Node, IRoutedScene
         }
         else if (!CreatureReadiness.CanTrain(creation.Creature))
         {
-            // A saved drawing may be unfinished (#515); Build stops it before training.
+            // A saved drawing may be unfinished; Build stops it before training.
             GD.PrintErr($"Creation {_route.CreationId} cannot train yet.");
             Notify("Creations", "Finish the creation in Build before training it.");
         }
@@ -312,9 +312,9 @@ public partial class TrainingHost : Node, IRoutedScene
     }
 
     // The camera follows the followed shadow's centre and glides to the new one when following
-    // changes (#668); it zooms to fit that shadow's box and keeps the ground in place (#675). The
+    // changes; it zooms to fit that shadow's box and keeps the ground in place. The
     // ruler counts from where the creature's front-most point starts, the point every shown
-    // distance is measured from (#725): every trial resets every shadow to the same pose, so it
+    // distance is measured from: every trial resets every shadow to the same pose, so it
     // starts there every time.
     private void FollowCreature()
     {
@@ -392,8 +392,8 @@ public partial class TrainingHost : Node, IRoutedScene
         _evolver = evolver;
     }
 
-    // Resumes from the creation's saved latest network and generation (#479), or starts at generation 0
-    // (#537) without one.
+    // Resumes from the creation's saved latest network and generation, or starts at generation 0
+    // without one.
     private void StartEvolution(CreationDef? creation)
     {
         _evolver?.Stop();
@@ -425,7 +425,7 @@ public partial class TrainingHost : Node, IRoutedScene
             disabledGenes: disabledGenes);
     }
 
-    // Simulate (#702) plays the saved network on the creature in one run that lasts until the player
+    // Simulate plays the saved network on the creature in one run that lasts until the player
     // leaves: no Evolver, so no generation, nothing saved and nothing counted. The run measures how
     // far its front has got, for the Distance card.
     private void StartPlayback(CreationDef creation)
@@ -455,10 +455,10 @@ public partial class TrainingHost : Node, IRoutedScene
     private double FollowedDistance =>
         _evolver?.FollowedTrialDistance ?? (_playback is { IsRunning: true } playback ? playback.Measured.FrontDistance : double.NaN);
 
-    // Whether the followed run's distance froze at a tear (#962).
+    // Whether the followed run's distance froze at a tear.
     private bool FollowedCrashed => _evolver?.FollowedTrialCrashed ?? _playback is { IsRunning: true, IsFrozen: true };
 
-    // The crash flag stands where the followed run's distance froze (#1257), one row under the best
+    // The crash flag stands where the followed run's distance froze, one row under the best
     // flag.
     private void ShowCrash()
     {
@@ -494,10 +494,10 @@ public partial class TrainingHost : Node, IRoutedScene
         PersistTraining();
     }
 
-    // Saving reads the creation back off disk and writes it again, synchronous file IO (#113) that
+    // Saving reads the creation back off disk and writes it again, synchronous file IO that
     // would stall physics at a generation boundary, so it runs on the thread pool. Only plain values
     // cross to that thread, and nothing comes back to this scene, which may be gone by then. Build
-    // reads the creation only once the queued saves have landed (#370).
+    // reads the creation only once the queued saves have landed.
     private void PersistTraining()
     {
         // A generation without a valid trial has no latest network, so it isn't saved.
@@ -524,8 +524,8 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private static void ReportFailedSave(Guid id, int generation, Exception exception)
     {
-        // A data-loss condition: keep the whole exception and fail loud (CODE_DESIGN_PRINCIPLES
-        // "Fail loud in dev"). Logged from the main thread, even after this scene is gone.
+        // A data-loss condition: keep the whole exception and fail loud (docs/CODE_DESIGN_PRINCIPLES.md
+        // → "Fail loud in dev, gracefully in prod"). Logged from the main thread, even after this scene is gone.
         var error = $"Failed to persist training state for Creation {id} at generation {generation}: {exception}";
         Callable.From(() => GD.PrintErr(error)).CallDeferred();
     }
@@ -539,7 +539,7 @@ public partial class TrainingHost : Node, IRoutedScene
         _screen.ShowPaused(tree.Paused);
     }
 
-    // A tap in the arena selects the part of the creature under it, a stacked joint's all (#1066),
+    // A tap in the arena selects the part of the creature under it, a stacked joint's all,
     // or clears the selection.
     private void SelectPartAt(Vector2 worldPosition)
     {

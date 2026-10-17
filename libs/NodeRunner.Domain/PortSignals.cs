@@ -1,14 +1,14 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// The output conventions (#535): which activation each <see cref="PortSignal"/> uses and how a
+/// The output conventions: which activation each <see cref="PortSignal"/> uses and how a
 /// newly added output starts. A new output has no incoming weight and an almost passive bias, so a
 /// part added to a trained network starts close to doing nothing; training explores it from there
-/// (#1180, docs/TRAINING_LOOP.md → "New ports are explored").
+/// (docs/TRAINING_LOOP.md → "New ports are explored").
 /// <list type="bullet">
 /// <item>Velocity, position and frequency use <c>tanh</c>: −1…1, with 0 meaning stand still, a
-/// Servo's built pose or a Stepper that does not step (#1263).</item>
-/// <item>Length uses <c>sigmoid</c>: 0…1 of a Piston's travel, like its length input (#1129). A new
+/// Servo's built pose or a Stepper that does not step.</item>
+/// <item>Length uses <c>sigmoid</c>: 0…1 of a Piston's travel, like its length input. A new
 /// length output starts at bias 0, the middle of its travel.</item>
 /// <item>Strength uses <c>sigmoid</c>: 0…1 of the part's Strength setting, which stays the maximum.
 /// A new strength output starts at bias −4, about 2% force, with no dead zone below it.</item>

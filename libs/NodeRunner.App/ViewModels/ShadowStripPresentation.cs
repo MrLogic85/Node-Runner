@@ -2,11 +2,11 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// One cell of the shadow strip: a shadow, its bar (0–1) and its marks. <paramref name="IsCapped"/>:
-/// the followed shadow's distance froze at a tear (#1257).
+/// the followed shadow's distance froze at a tear.
 /// </summary>
 public sealed record ShadowStripCell(int Number, double Fill, bool IsFollowed, bool IsCapped = false);
 
-/// <summary>What the strip's last place holds once it pages (#387).</summary>
+/// <summary>What the strip's last place holds once it pages.</summary>
 public enum ShadowStripTrailing
 {
     None,
@@ -32,9 +32,9 @@ public sealed record ShadowStripView(
 }
 
 /// <summary>
-/// Which shadows the shadow strip shows, in what order, and how full each bar is (#387). Up to
+/// Which shadows the shadow strip shows, in what order, and how full each bar is. Up to
 /// <see cref="Places"/> shadows each get a cell; the strip sets the places to as many as fit its
-/// width (#791). Past that the strip keeps its <see cref="Places"/> places: a "worse" button,
+/// width. Past that the strip keeps its <see cref="Places"/> places: a "worse" button,
 /// shadows in all but two places, and a last button that sorts (first page) or pages back up (later
 /// pages). The order is the shadows' own, shadow 1 (the previous best)
 /// on top, until the player sorts; a new generation starts over from that order and the first page.
@@ -51,7 +51,7 @@ public sealed class ShadowStripPresentation
     /// <summary>
     /// The least distance a full bar stands for, in world units: 1 m. A leader that has only
     /// crept a few millimetres fills only a sliver of a bar, so the bars cannot swing between full
-    /// and empty (#1270).
+    /// and empty.
     /// </summary>
     public const double LeastScale = Metres.WorldUnitsPerMetre;
 
@@ -111,7 +111,7 @@ public sealed class ShadowStripPresentation
     /// <summary>
     /// The zero-based shadows on the strip's current page, best (top) first, out of
     /// <paramref name="count"/> in <paramref name="generation"/>: all of them unless the strip pages.
-    /// Training draws only these and the followed shadow (#284).
+    /// Training draws only these and the followed shadow.
     /// </summary>
     public IReadOnlyList<int> Shown(int count, int generation)
     {

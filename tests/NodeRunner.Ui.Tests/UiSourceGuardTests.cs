@@ -22,8 +22,8 @@ public sealed class UiSourceGuardTests
     private static readonly double[] _inlineNumbers = [0, 1, 2, 0.5];
 
     /// <summary>
-    /// The one library file that pins a colour override: UiIcons' tint helper, which game screens
-    /// and widgets still call until they move to the component library (#310).
+    /// The one library file that pins a colour override: UiIcons' tinted overloads, which
+    /// lib components pass a Theme colour.
     /// </summary>
     private const string _tintHelper = "ui/lib/UiIcons.cs";
 
@@ -154,7 +154,7 @@ public sealed class UiSourceGuardTests
     }
 
     // A screen's own queue is freed with its scene, dropping a notification raised just before
-    // the router changes scene (#472). Popup Gallery keeps one so its specimens follow its theme.
+    // the router changes scene. Popup Gallery keeps one so its specimens follow its theme.
     [Fact]
     public void Notifications_are_queued_on_the_app_layer()
     {
@@ -274,7 +274,7 @@ public sealed class UiSourceGuardTests
     }
 
     // A drawn widget may move scene-authored controls (the Select handles) to where its drawing is,
-    // and size a SubViewport it draws from (ArenaShadows, #818): its pixels, not a layout.
+    // and size a SubViewport it draws from (ArenaShadows): its pixels, not a layout.
     private static bool BuildsOrRestyles(string path, SyntaxNode node, SemanticModel model) => node switch
     {
         BaseObjectCreationExpressionSyntax creation => model.GetTypeInfo(creation).Type is { } type

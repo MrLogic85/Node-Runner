@@ -20,7 +20,7 @@ public sealed partial class SceneContractTests
             .ToHashSet();
     });
 
-    // Export re-packs a scene and PackedScene.Pack drops nodes added inside an instance without its marker (#333).
+    // Export re-packs a scene and PackedScene.Pack drops nodes added inside an instance without its marker.
     [Fact]
     public void Nodes_added_inside_an_instance_mark_it_editable()
     {
@@ -47,7 +47,7 @@ public sealed partial class SceneContractTests
         EditableViolations("test.tscn", scene + "\n[editable path=\"Frame\"]\n").ShouldBeEmpty();
     }
 
-    // A restructured component scene leaves a screen's added node pointing at a vanished parent (#407).
+    // A restructured component scene leaves a screen's added node pointing at a vanished parent.
     // Godot renames a duplicate sibling on load, so the second node's children lose their parent.
     [Fact]
     public void Every_parent_path_resolves_to_a_node_and_siblings_have_distinct_names()
@@ -115,7 +115,7 @@ public sealed partial class SceneContractTests
     }
 
     // Godot drops a script from a node that is not of its native base type, and the node shows
-    // nothing (#805: UiPartRow became a BaseButton and the gallery's Control-typed rows vanished).
+    // nothing.
     [Fact]
     public void Every_scripted_node_has_its_scripts_native_base_type()
     {
@@ -171,7 +171,7 @@ public sealed partial class SceneContractTests
         UnknownButtonProperties(body).Any().ShouldBe(flagged);
     }
 
-    // Code that finds scene nodes by a name or an index: ImportScreen finds its part rows by kind (#899),
+    // Code that finds scene nodes by a name or an index: ImportScreen finds its part rows by kind,
     // UiIconTabs' index is the group's index in PartTray.Groups(), and UiPickList.ShowInfoUnder moves
     // its Info line between its own rows.
     [Fact]
@@ -199,7 +199,7 @@ public sealed partial class SceneContractTests
             .ShouldBeEmpty();
     }
 
-    // A level saved in a scene would bypass UiLayers (#768). A scene's CanvasLayer is a UiLevelLayer,
+    // A level saved in a scene would bypass UiLayers. A scene's CanvasLayer is a UiLevelLayer,
     // which keeps Overlay, or a world backdrop under the screen, like Training's arena background.
     [Fact]
     public void Scenes_save_no_canvas_layer_level_over_the_screen()

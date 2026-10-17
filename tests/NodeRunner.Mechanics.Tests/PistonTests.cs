@@ -13,8 +13,8 @@ public sealed class PistonTests
 
     private static readonly PistonDef _piston = new(1, 2, 3);
 
-    // Drawn 1 m: the #870 table on point joints, then joints of radius 20 (a gap of 60), the #1211 example on
-    // plain hubs (a gap of 70 that Stroke 200% triples), a new Piston, and joints touching, which cannot move.
+    // Drawn 1 m: point joints, then joints of radius 20 (a gap of 60), plain hubs
+    // (a gap of 70 that Stroke 200% triples), a new Piston, and joints touching, which cannot move.
     [Fact]
     public void ItsTravel_GrowsTheGapBetweenItsJoints_ByItsStroke_WithTheDrawnLengthAtItsStart()
     {
@@ -42,7 +42,7 @@ public sealed class PistonTests
     }
 
     // A real telescope's stage and rod are each at most as long as the shortest gap between the hubs,
-    // so the gap can at most triple (#870, #1086, #1211).
+    // so the gap can at most triple.
     [Fact]
     public void AtItsShortest_TheGapBetweenItsJointsHubs_IsAtLeastHalfItsTravel()
     {
@@ -108,7 +108,7 @@ public sealed class PistonTests
 
     // Light and heavy pairs at the slider ends where its force can brake in time. A light pair at
     // the shortest Rise time and a low Max speed still swings around its target; the user's
-    // settings, the network and fitness (#546) handle that, not the force.
+    // settings, the network and fitness handle that, not the force.
     [Theory]
     [InlineData(2, 1, 0.2, 200)]
     [InlineData(0.3, 1, 0.2, 200)]
@@ -144,7 +144,7 @@ public sealed class PistonTests
     [Fact]
     public void AfterAnEndStopHeldItAgainstMoreThanItsStrength_ItSettlesBackCalmly()
     {
-        // The force alone, against an idealised stop: the real end stops (#701) are a Godot joint
+        // The force alone, against an idealised stop: the real end stops are a Godot joint
         // (Creature.CreateEndStops), measured in the sim, not here.
         var forces = Run(pairMass: 2, strength: 1, load: 2 * _piston.Strength, steps: 300, out var length, out _, position: 0.5, loadSteps: 120, endStops: true);
 

@@ -8,7 +8,7 @@ namespace NodeRunner.Ui.Widgets;
 /// <summary>
 /// The Training screen's network sheet: the live direct network, its summary and what the selected
 /// neuron drives or is driven by.
-/// The scene owns the layout; a tap outside the sheet closes it. The Network view (#393) replaces it.
+/// The scene owns the layout; a tap outside the sheet closes it. The Network view (#393) will replace it.
 /// </summary>
 public partial class NetworkFocusSheet : Control
 {

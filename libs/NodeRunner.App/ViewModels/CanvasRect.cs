@@ -2,7 +2,6 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>An axis-aligned rectangle from <see cref="Min"/> to <see cref="Max"/>, used for the Build canvas's area, visible area and content.</summary>
 public readonly record struct CanvasRect(Vector2D Min, Vector2D Max)
 {
     public double Width => Max.X - Min.X;
@@ -19,7 +18,6 @@ public readonly record struct CanvasRect(Vector2D Min, Vector2D Max)
         Math.Clamp(point.X, Min.X + inset, Math.Max(Min.X + inset, Max.X - inset)),
         Math.Clamp(point.Y, Min.Y + inset, Math.Max(Min.Y + inset, Max.Y - inset)));
 
-    /// <summary>The smallest rectangle around both this and <paramref name="other"/>.</summary>
     public CanvasRect Union(CanvasRect other) => new(
         new Vector2D(Math.Min(Min.X, other.Min.X), Math.Min(Min.Y, other.Min.Y)),
         new Vector2D(Math.Max(Max.X, other.Max.X), Math.Max(Max.Y, other.Max.Y)));

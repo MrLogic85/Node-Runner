@@ -14,7 +14,7 @@ public enum UiButtonKind
 /// <summary>Visual layouts supported by the canonical reusable button.</summary>
 public enum UiButtonContentLayout
 {
-    // Keep existing scene values stable when adding the compact row option.
+    // Scenes save these numbers, so a new layout takes a new one.
     Row = 0,
     RowCompact = 2,
     Stacked = 1,

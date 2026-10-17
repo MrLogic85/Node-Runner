@@ -4,7 +4,7 @@ using NodeRunner.Mechanics;
 
 namespace NodeRunner.Creature;
 
-// Wheels (#129): a Wheel is its joint's own circle body set free to turn, so Godot's solver rolls it.
+// Wheels: a Wheel is its joint's own circle body set free to turn, so Godot's solver rolls it.
 public partial class Creature
 {
     // Godot's default angular damping (1/s, added to the body's own) would stop a rolling wheel
@@ -15,7 +15,7 @@ public partial class Creature
     // weight on top of its links' shares, is unlocked so it turns, and turns as a thin ring
     // (Mechanics.Wheel.Inertia): Godot would take its circle for a solid disc. Its links stay pinned at
     // its centre, so the pins add no torque and it spins freely between them. The tyre keeps the joint
-    // body's default material, friction 1 and no bounce, so it grips like a bare joint (#1144).
+    // body's default material, friction 1 and no bounce, so it grips like a bare joint.
     private WheelVisual MakeWheel(RigidBody2D body, WheelDef wheel, float radius)
     {
         body.LockRotation = false;

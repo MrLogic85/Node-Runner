@@ -5,7 +5,7 @@ namespace NodeRunner.Managers;
 
 /// <summary>
 /// The only code that changes scenes. Each route opens its own scene in place of the current one,
-/// which is freed; Back rebuilds the previous scene from its route (#326). The history itself is
+/// which is freed; Back rebuilds the previous scene from its route. The history itself is
 /// the plain-C# <see cref="SceneBackStack"/>.
 /// </summary>
 public partial class SceneRouter : Node, ISceneNavigator

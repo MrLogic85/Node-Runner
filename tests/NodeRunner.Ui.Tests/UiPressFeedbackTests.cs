@@ -40,7 +40,7 @@ public sealed class UiPressFeedbackTests
         violations.ShouldBeEmpty();
     }
 
-    // Hover has no look of its own (#325): a hover stylebox repeats the normal one, and the
+    // Hover has no look of its own: a hover stylebox repeats the normal one, and the
     // pressed one is repeated for hover_pressed, so Godot's default theme never shows through.
     [Fact]
     public void Hover_styleboxes_repeat_their_plain_state()

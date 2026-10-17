@@ -7,9 +7,9 @@ using NodeRunner.Theme;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// Guards #767: a drawn creature and Training's world order their drawing through the named
+/// A drawn creature and Training's world order their drawing through the named
 /// layers in <see cref="CreatureLayers"/> and <see cref="ArenaLayers"/>, never ZIndex numbers, and
-/// a part in a creature's draw groups (#1107) by its <see cref="DrawSlot"/>.
+/// a part in a creature's draw groups by its <see cref="DrawSlot"/>.
 /// A part's effective z is its creature root's layer plus its own, as every body sits at 0.
 /// </summary>
 public sealed class DrawLayersTests
@@ -51,7 +51,7 @@ public sealed class DrawLayersTests
         _creatureLayers.ShouldAllBe(layer => layer >= 0 && layer < CreatureLayers.Count);
     }
 
-    // #1107: a part's layer is its draw rank on its surface, the same rank Build's touches use.
+    // A part's layer is its draw rank on its surface, the same rank Build's touches use.
     [Fact]
     public void A_parts_layer_follows_its_draw_rank_on_its_surface()
     {
@@ -65,7 +65,7 @@ public sealed class DrawLayersTests
         CreatureLayers.Of(DrawSlot.Link, 3, selected: true).ShouldBe(CreatureLayers.Of(DrawSlot.Link, 3, selected: false) + CreatureLayers.SelectedParts - CreatureLayers.Parts);
     }
 
-    // #1269: a joint's bands draw under its ring and the hinge part on it, by layer, not by the
+    // A joint's bands draw under its ring and the hinge part on it, by layer, not by the
     // order the parts are made in, on either surface and for a joint joined to no link too.
     [Theory]
     [InlineData(DrawGroups.MaxGroups - 1, true)]
@@ -143,7 +143,7 @@ public sealed class DrawLayersTests
             && declaration.Members.OfType<ConstructorDeclarationSyntax>().ToList() is { Count: > 0 } constructors
             && constructors.All(NamesItsLayers));
 
-    // A part in a creature's draw groups names its DrawSlot (#1107); any other its CreatureLayers layer.
+    // A part in a creature's draw groups names its DrawSlot; any other its CreatureLayers layer.
     private static bool NamesItsLayers(ConstructorDeclarationSyntax constructor) =>
         constructor.Initializer is { ThisOrBaseKeyword.Text: "base", ArgumentList.Arguments: var arguments }
         && arguments is [{ Expression: MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.Text: nameof(DrawSlot) or nameof(CreatureLayers) } } }];

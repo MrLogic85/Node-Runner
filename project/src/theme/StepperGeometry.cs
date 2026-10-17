@@ -4,7 +4,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// A Stepper (#1067, <c>docs/WORLD_VISUALS.md</c> → Stepper) at rotation 0: a detent wheel with one
+/// A Stepper (<c>docs/WORLD_VISUALS.md</c> → Stepper) at rotation 0: a detent wheel with one
 /// V notch per step, which turns with the Fixed side, and a pawl on the Target side that sits in a
 /// notch while it holds. Angles are Godot rotations, so a notch counted counter-clockwise on screen
 /// (<c>Mechanics.Stepper.NotchAngle</c>) lies at a falling rotation.

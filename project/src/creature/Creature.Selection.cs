@@ -4,13 +4,12 @@ using NodeRunner.Theme;
 
 namespace NodeRunner.Creature;
 
-// Selection (#1107): what a tap selects, and each part placed in its draw group with the selection raised.
+// Selection: what a tap selects, and each part placed in its draw group with the selection raised.
 public partial class Creature
 {
     /// <summary>
-    /// The part a tap at <paramref name="globalPosition"/> selects: the one drawn on top there
-    /// (#1107), as in Build; off every part, the first within a finger's reach; then a Wheel's
-    /// disc (#1143).
+    /// The part a tap at <paramref name="globalPosition"/> selects: the one drawn on top there,
+    /// as in Build; off every part, the first within a finger's reach; then a Wheel's disc.
     /// </summary>
     public bool TrySelectPart(Vector2 globalPosition, out CreatureElementSelection? selection)
     {
@@ -23,7 +22,7 @@ public partial class Creature
         var tolerance = GetHitTolerance();
         for (var nodeIndex = 0; nodeIndex < _nodeVisuals.Length; nodeIndex++)
         {
-            // A Wheel is touched only at its hub (#1086), as it is drawn over its links.
+            // A Wheel is touched only at its hub, as it is drawn over its links.
             var radius = Math.Max(tolerance, ToGodotFloat(Definition!.CoveredRadius(Definition.Nodes[nodeIndex].Id), nameof(JointMotor.Radius)));
             if (_nodeVisuals[nodeIndex].GlobalPosition.DistanceSquaredTo(globalPosition) <= radius * radius)
             {
@@ -85,7 +84,7 @@ public partial class Creature
             }
         }
 
-        // Off every part and reach, a Wheel's face or tyre stands for the Wheel (#1143).
+        // Off every part and reach, a Wheel's face or tyre stands for the Wheel.
         if (DrawGroups.WheelDiscAt(ToDomain(globalPosition), nodeId => ToDomain(_nodeVisuals[Definition!.NodeIndexOf(nodeId)].GlobalPosition), Definition!.Wheels) is { } disc)
         {
             selection = new CreatureElementSelection(CreatureElementKind.Wheel, disc.Id);
@@ -98,7 +97,7 @@ public partial class Creature
 
     private static Vector2D ToDomain(Vector2 position) => new(position.X, position.Y);
 
-    // The part drawn on top at the point (#1107), by the rule Build's touches follow too.
+    // The part drawn on top at the point, by the rule Build's touches follow too.
     private CreatureElementSelection? DrawnPartAt(Vector2 globalPosition)
     {
         if (Definition is not { } definition || _drawGroups is not { } groups)
@@ -116,7 +115,7 @@ public partial class Creature
     }
 
     /// <summary>
-    /// Where a part's name points to, in global coordinates (#388): a joint's centre, a beam's or
+    /// Where a part's name points to, in global coordinates: a joint's centre, a beam's or
     /// link's middle, or a sensor's picture.
     /// </summary>
     public Vector2 PartAnchor(CreatureElementSelection selection)
@@ -143,7 +142,7 @@ public partial class Creature
         static Vector2 Middle(Node2D a, Node2D b) => (a.GlobalPosition + b.GlobalPosition) / 2;
     }
 
-    /// <summary>Marks the <paramref name="parts"/> selected, a stacked joint's all at once (#1066); none with an empty list.</summary>
+    /// <summary>Marks the <paramref name="parts"/> selected, a stacked joint's all at once; none with an empty list.</summary>
     public void SetSelectedParts(IReadOnlyList<CreatureElementSelection> parts)
     {
         ArgumentNullException.ThrowIfNull(parts);
@@ -151,7 +150,7 @@ public partial class Creature
         ApplySelection();
     }
 
-    // A shadow never shows a selection (#385), so its parts stay on their unselected layers.
+    // A shadow never shows a selection, so its parts stay on their unselected layers.
     private void ApplySelection()
     {
         foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_velocityMotorVisuals).Concat(_brakeVisuals).Concat(_stepperVisuals).Concat(_angleSensorVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
@@ -170,21 +169,21 @@ public partial class Creature
         ApplyDrawGroups(selection);
         foreach (var part in selection)
         {
-            // A Touch sensor's mark is its joint's ring outside the cushion (#1045); the joint's own stays unselected.
+            // A Touch sensor's mark is its joint's ring outside the cushion; the joint's own stays unselected.
             if (part.Kind == CreatureElementKind.TouchSensor)
             {
                 _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(part.Id)].NodeId)].TouchSelected = true;
                 continue;
             }
 
-            // A Rubber's mark is its skin in halo (#1142), drawn by its joint.
+            // A Rubber's mark is its skin in halo, drawn by its joint.
             if (part.Kind == CreatureElementKind.Rubber)
             {
                 _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(part.Id)].NodeId)].SkinSelected = true;
                 continue;
             }
 
-            // A Wheel's joint draws its mark with the hub, over the links (#1045).
+            // A Wheel's joint draws its mark with the hub, over the links.
             if (part.Kind == CreatureElementKind.Wheel)
             {
                 _nodeVisuals[Definition!.NodeIndexOf(Definition.Wheels[Definition.WheelIndexOf(part.Id)].NodeId)].WheelSelected = true;
@@ -211,7 +210,7 @@ public partial class Creature
             _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
         };
 
-    // Each part in its draw group (#1107), with what belongs with the selection raised as in Build's CreatureParts.
+    // Each part in its draw group, with what belongs with the selection raised as in Build's CreatureParts.
     private void ApplyDrawGroups(IReadOnlyList<CreatureElementSelection> selection)
     {
         if (Definition is not { } definition || _drawGroups is not { } groups)

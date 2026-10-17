@@ -61,7 +61,7 @@ public sealed class PartTrayTests
         tray.HelpText.ShouldBe(PartTray.PickHelp);
     }
 
-    // A Wheel (#129) and a Rubber (#1142) have no network ports, so a locked creation still takes one.
+    // A Wheel and a Rubber have no network ports, so a locked creation still takes one.
     [Theory]
     [InlineData(BuildPart.Servo, false)]
     [InlineData(BuildPart.Wheel, true)]

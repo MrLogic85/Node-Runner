@@ -7,7 +7,7 @@ using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
-/// A sensor moves to another beam and keeps what the network learned about it (#806): its id, so its
+/// A sensor moves to another beam and keeps what the network learned about it: its id, so its
 /// ports and weights, on locked Creations too.
 /// </summary>
 public sealed class BuildSensorMoveTests

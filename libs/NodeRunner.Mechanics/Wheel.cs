@@ -3,7 +3,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// What a <see cref="WheelDef"/> weighs and how hard it is to set turning (#129). Its weight is in the
+/// What a <see cref="WheelDef"/> weighs and how hard it is to set turning. Its weight is in the
 /// tyre, a thin ring at its radius, so it turns as a ring does; Godot would take a circle collider for a
 /// solid disc, half that. What its joint carries of its links sits on the axle and adds nothing.
 /// </summary>

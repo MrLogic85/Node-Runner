@@ -1,7 +1,7 @@
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// The metre the player reads (#670). The sim measures in world units; text converts at the
+/// The metre the player reads. The sim measures in world units; text converts at the
 /// display boundary, so fitness and saves never change with it.
 /// </summary>
 public static class Metres

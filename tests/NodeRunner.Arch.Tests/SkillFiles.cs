@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Checks the skill files in .claude/skills: docs/REVIEW.md → "Agent, rule and skill files" (#1317).
+/// Checks the skill files in .claude/skills: docs/REVIEW.md → "Agent, rule and skill files".
 /// A skill whose name or description is off loads in only one tool, or is never matched to a task.
 /// </summary>
 internal static partial class SkillFiles

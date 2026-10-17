@@ -4,13 +4,13 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// What a part setting is (#704), as data. <see cref="MultiEditable"/> settings can take one value
+/// What a part setting is, as data. <see cref="MultiEditable"/> settings can take one value
 /// on several selected parts; the panel shows those with a <see cref="Slider"/>, and the canvas
 /// sets the rest, like a Camera's aim. <see cref="Advanced"/> settings sit in the panel's
-/// Advanced section (#903); the flag belongs to the setting, so it is the same on every part.
+/// Advanced section; the flag belongs to the setting, so it is the same on every part.
 /// A setting that <see cref="ChangesPorts"/> adds or removes network ports, so a locked creation
-/// keeps it (#578, #896). <see cref="NoEffectReason"/> says why a setting that can do nothing
-/// as set now, like a one-ray Camera's Spread, shows disabled (#578).
+/// keeps it. <see cref="NoEffectReason"/> says why a setting that can do nothing
+/// as set now, like a one-ray Camera's Spread, shows disabled.
 /// </summary>
 public sealed record PartParameter(PartParameterId Id, bool MultiEditable, ParameterScale? Slider, bool Advanced, bool ChangesPorts = false, UiText? NoEffectReason = null)
 {
@@ -18,10 +18,10 @@ public sealed record PartParameter(PartParameterId Id, bool MultiEditable, Param
 }
 
 /// <summary>
-/// How a panel slider shows a setting: its label, the one line shown while its slider is touched (#867), its range
+/// How a panel slider shows a setting: its label, the one line shown while its slider is touched, its range
 /// and step in shown units, its readout with the unit for one value ("{0} N") and for a span of
 /// values ("{0}–{1} N"), and how shown units convert from and to world units, like <see cref="Metres"/>.
-/// A slider whose top step is no number, like a Brake's Locked (#1041), has a <see cref="Top"/>; its numbers end a step below.
+/// A slider whose top step is no number, like a Brake's Locked, has a <see cref="Top"/>; its numbers end a step below.
 /// </summary>
 public sealed record ParameterScale(
     UiText Label,
@@ -59,12 +59,12 @@ public sealed record ParameterScale(
     }
 }
 
-/// <summary>A slider's top step that is no number (#1041): its <paramref name="Readout"/> there ("Locked") and for a span up to it ("{0} N·m–Locked").</summary>
+/// <summary>A slider's top step that is no number: its <paramref name="Readout"/> there ("Locked") and for a span up to it ("{0} N·m–Locked").</summary>
 public sealed record TopStep(UiText Readout, string SpanReadout);
 
 /// <summary>
 /// A slider's range and step, in the units its readout shows. With <see cref="Stops"/> it snaps to
-/// those values instead, spread evenly along the slider whatever the gaps between them (#801).
+/// those values instead, spread evenly along the slider whatever the gaps between them.
 /// </summary>
 public sealed record SettingRange(double Min, double Max, double Step)
 {
@@ -132,12 +132,12 @@ public sealed record SettingRange(double Min, double Max, double Step)
 }
 
 /// <summary>
-/// A panel slider over the selected parts' values of one setting (#704). <see cref="Low"/> and
+/// A panel slider over the selected parts' values of one setting. <see cref="Low"/> and
 /// <see cref="High"/> are the lowest and highest shown values at 0…1; they differ when the parts'
-/// values do. <see cref="Step"/> is one whole step at 0…1 (#711). A <see cref="Disabled"/> slider
+/// values do. <see cref="Step"/> is one whole step at 0…1. A <see cref="Disabled"/> slider
 /// is shown but can't be moved: a setting a locked creation keeps (<see cref="Locked"/>), whose tap
-/// says why like the tray's locked rows (#896), or one that does nothing on these parts
-/// (<see cref="NoEffect"/>), like a one-ray Camera's spread (#578).
+/// says why like the tray's locked rows, or one that does nothing on these parts
+/// (<see cref="NoEffect"/>), like a one-ray Camera's spread.
 /// </summary>
 public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Readout, double Low, double High, double Step, bool Locked = false, bool NoEffect = false)
 {
@@ -149,15 +149,15 @@ public sealed record ParameterSlider(PartParameterId Id, UiText Label, UiText Re
 }
 
 /// <summary>
-/// Every part setting (#704). A Piston's Max strength is in N, its Stroke % of its shortest gap between its joints' hubs (#835),
-/// its Start position % of its travel (#870), its Max speed in m/s (#451) and its Rise time in s
-/// (#801); a Spring's Stiffness is in N/m, its Damping in N·s/m (#453, #801), and its Stroke and
-/// Coil length in % like a Piston's Stroke and Start position (#835); a Wheel's Radius is in m
-/// (#129); a Camera's aim is turned on the canvas (#594), and its Rays snap to 1, 3 or 5,
-/// its Spread is in degrees and its Range in m (#578). A Servo's and a Motor's (a Velocity motor's)
-/// Max strength is in N·m and Max speed in rpm, each on its own range (#454). A Brake's Strength is in
-/// N·m, and its top step is Locked (#1041). A Stepper's Max strength is the Servo's setting and
-/// its Max frequency in steps a second, shown as Hz (#1036, #1038).
+/// Every part setting. A Piston's Max strength is in N, its Stroke % of its shortest gap between its joints' hubs,
+/// its Start position % of its travel, its Max speed in m/s and its Rise time in s;
+/// a Spring's Stiffness is in N/m, its Damping in N·s/m, and its Stroke and
+/// Coil length in % like a Piston's Stroke and Start position; a Wheel's Radius is in m;
+/// a Camera's aim is turned on the canvas, and its Rays snap to 1, 3 or 5,
+/// its Spread is in degrees and its Range in m. A Servo's and a Motor's (a Velocity motor's)
+/// Max strength is in N·m and Max speed in rpm, each on its own range. A Brake's Strength is in
+/// N·m, and its top step is Locked. A Stepper's Max strength is the Servo's setting and
+/// its Max frequency in steps a second, shown as Hz.
 /// </summary>
 public static class PartParameters
 {
@@ -168,18 +168,18 @@ public static class PartParameters
     public static PartParameter ServoStrength { get; } = new(
         PartParameterId.ServoStrength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can turn with"), new(5, 200, 5), 0, "{0} N·m", "{0}–{1} N·m", NewtonMetres, ToWorldTorque), Advanced: false);
 
-    // Weaker than a Servo, so a Motor struggles up hills (#454).
+    // Weaker than a Servo, so a Motor struggles up hills.
     public static PartParameter MotorStrength { get; } = new(
         PartParameterId.MotorStrength, MultiEditable: true, new(UiText.Plain("Max strength"), UiText.Plain("The most force it can turn with"), new(5, 40, 5), 0, "{0} N·m", "{0}–{1} N·m", NewtonMetres, ToWorldTorque), Advanced: false);
 
-    // 20–400 N·m in steps of 20, and one step more that reads Locked: an infinite Strength (#1041).
+    // 20–400 N·m in steps of 20, and one step more that reads Locked: an infinite Strength.
     public static PartParameter BrakeStrength { get; } = new(
         PartParameterId.BrakeStrength, MultiEditable: true, new(UiText.Plain("Strength"), UiText.Plain("How hard it holds the joint still. Locked holds it fully."), new(20, _lockedBrakeStep, 20), 0, "{0} N·m", "{0}–{1} N·m", BrakeNewtonMetres, BrakeTorque, new TopStep(UiText.Plain("Locked"), "{0} N·m–Locked")), Advanced: false);
 
     public static PartParameter StepsPerTurn { get; } = new(
         PartParameterId.StepsPerTurn, MultiEditable: true, new(UiText.Plain("Notches"), UiText.Plain("How many notches make a full turn"), new(StepperDef.MinStepsPerTurn, StepperDef.MaxStepsPerTurn, 1), 0, "{0}", "{0}–{1}", value => value, value => value), Advanced: false);
 
-    // Starts at 1 Hz: slower stepping comes from the network's Frequency output near 0, down to a stop (#1263, #1296).
+    // Starts at 1 Hz: slower stepping comes from the network's Frequency output near 0, down to a stop.
     // A saved value under 1 Hz still loads and reads as it is.
     public static PartParameter MaxFrequency { get; } = new(
         PartParameterId.MaxFrequency, MultiEditable: true, new(UiText.Plain("Max frequency"), UiText.Plain("The most steps it takes each second"), new(1, 5, 0.1), 1, "{0} Hz", "{0}–{1} Hz", value => value, value => value), Advanced: false);
@@ -216,7 +216,7 @@ public static class PartParameters
     public static PartParameter Damping { get; } = new(
         PartParameterId.Damping, MultiEditable: true, new(UiText.Plain("Damping"), UiText.Plain("How quickly it stops bouncing"), new(0, 100, 1), 0, "{0} N·s/m", "{0}–{1} N·s/m", value => value, value => value), Advanced: true);
 
-    // In whole percent, as a new Spring's stops sit at a third and two thirds of it (#835).
+    // In whole percent, as a new Spring's stops sit at a third and two thirds of it.
     public static PartParameter CoilLength { get; } = new(
         PartParameterId.CoilLength, MultiEditable: true, new(UiText.Plain("Coil length"), UiText.Plain("The length the coil wants to be"), new(SpringDef.MinCoilLength * 100, SpringDef.MaxCoilLength * 100, 1), 0, "{0}%", "{0}–{1}%", value => value * 100, value => value / 100), Advanced: true);
 
@@ -234,7 +234,7 @@ public static class PartParameters
         PartParameterId.Spread, MultiEditable: true, new(UiText.Plain("Spread"), UiText.Plain("How wide its rays fan out"), new(15, 90, 5), 0, "{0}°", "{0}–{1}°", RadiansToDegrees, DegreesToRadians), Advanced: false,
         NoEffectReason: UiText.Plain("One ray has no spread."));
 
-    // A Worm's beam is 0.7 m and the build area 12 m wide; up to 10 m sees far ahead (#1097). The default 2.2 m is on a step.
+    // A Worm's beam is 0.7 m and the build area 12 m wide; up to 10 m sees far ahead. The default 2.2 m is on a step.
     public static PartParameter CameraRange { get; } = new(
         PartParameterId.CameraRange, MultiEditable: true, new(UiText.Plain("Range"), UiText.Plain("How far it can see"), new(1, 10, 0.1), 1, "{0} m", "{0}–{1} m", Metres.FromWorldUnits, ToWorld), Advanced: false);
 

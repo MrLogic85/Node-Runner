@@ -5,8 +5,8 @@ using NodeRunner.Mechanics;
 namespace NodeRunner.Creature;
 
 /// <summary>
-/// One camera on its beam (#575, #604, #594, #578): a <see cref="RayCast2D"/> child per ray where its
-/// picture sits on the beam (<see cref="SensorPicture.Centre"/>, #1086), fanned around its aim by the Mechanics <see cref="CameraRays"/> so they turn with
+/// One camera on its beam: a <see cref="RayCast2D"/> child per ray where its
+/// picture sits on the beam (<see cref="SensorPicture.Centre"/>), fanned around its aim by the Mechanics <see cref="CameraRays"/> so they turn with
 /// the beam. They see the ground only; <see cref="CameraRays.Read"/> turns their hits into the network
 /// inputs, relative to the camera's range.
 /// </summary>
@@ -47,7 +47,7 @@ public sealed class CameraSensor : IBeamSensor
     /// <summary>Where each ray starts, in global space (the camera's picture).</summary>
     public Vector2 GlobalOrigin => _rays[0].GlobalPosition;
 
-    /// <summary>Whether its beam has torn from both its joints and left the world (#962); its rays are not drawn then.</summary>
+    /// <summary>Whether its beam has torn from both its joints and left the world; its rays are not drawn then.</summary>
     public bool IsGone { get; set; }
 
     /// <summary>Each ray's ground hit as of the last physics step, in global space; a ray that sees nothing has none.</summary>

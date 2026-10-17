@@ -3,7 +3,7 @@ using Godot;
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// The optional-icon-plus-caption row shared by <see cref="UiChip"/> and <see cref="UiCallout"/>.
+/// An optional icon followed by a caption, in one row.
 /// It is an unowned child, so it is never saved into a scene; <see cref="Ensure"/> finds it again after a reload.
 /// </summary>
 internal sealed class UiIconCaption

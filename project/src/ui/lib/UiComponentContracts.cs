@@ -139,14 +139,14 @@ public static class UiComponentContracts
     }
 
     /// <summary>
-    /// The LineEdit limit for a text field with a cap (#868): none without a cap, and never below the
+    /// The LineEdit limit for a text field with a cap: none without a cap, and never below the
     /// text already there, so a longer saved name is not cut and the limit closes in as it shrinks.
     /// </summary>
     public static int EditorMaxLength(int limit, int currentLength) =>
         limit <= 0 ? 0 : Math.Max(limit, currentLength);
 
     /// <summary>
-    /// The one line under a text field (#1061): its error while it is in error and has error text,
+    /// The one line under a text field: its error while it is in error and has error text,
     /// otherwise its fact. Blank text hides the line.
     /// </summary>
     public static (string Text, bool IsError) FieldLine(bool inError, string errorText, string? fact) =>
@@ -166,7 +166,7 @@ public static class UiComponentContracts
 
     /// <summary>
     /// <paramref name="position"/> on the nearest whole <paramref name="step"/>, like Godot's
-    /// <c>Range.step</c>; a step of 0 leaves it where it is (#711).
+    /// <c>Range.step</c>; a step of 0 leaves it where it is.
     /// </summary>
     public static double SnapSliderPosition(double position, double step)
     {

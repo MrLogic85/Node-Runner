@@ -7,7 +7,7 @@ public sealed class SpringTests
     private const double _built = 100;
 
     // Drawn 1 m. Point joints, Stroke 100%: drawn at its longest a travel of 50, so Coil length spans 50 + 50 + 50 and
-    // the stops sit at ⅓ and ⅔; inside them the stops move round the drawn length as a Piston's round its Start (#974),
+    // the stops sit at ⅓ and ⅔; inside them the stops move round the drawn length as a Piston's round its Start,
     // past them only the rest length moves, evenly. Joints of radius 20: a gap of 60, so 30 + 30 + 30. Plain hubs at
     // Stroke 200%: a gap of 70, so 35 + (70 − 70/3) + 35. Stroke 20% still presses half the drawn length past a stop.
     // A new Spring is drawn at its longest and squeezes to half; joints touching leave no travel.
@@ -36,8 +36,8 @@ public sealed class SpringTests
     }
 
     // A real telescope's stage and rod are each at most as long as the shortest gap between the hubs, so the gap
-    // can at most triple (#870, #1086, #1211). Its stops are a Piston's of the same Stroke drawn where its rest length
-    // is, and at Start 0% or 100% past a stop (#974); hanging free it shares one drawn at its longest.
+    // can at most triple. Its stops are a Piston's of the same Stroke drawn where its rest length
+    // is, and at Start 0% or 100% past a stop; hanging free it shares one drawn at its longest.
     [Fact]
     public void ItsStops_AreAPistonsOfTheSameStroke_DrawnWhereItsRestLengthIs()
     {
@@ -62,7 +62,7 @@ public sealed class SpringTests
         Spring.ShortestLength(hanging, _built, 0).ShouldBe(Piston.ShortestLength(new PistonDef(1, 2, 3, stroke: 0.4, start: 1), _built, 0), 1e-9);
     }
 
-    // Coil length moves its rest length and stops smoothly, with no jump where it meets a stop (#974).
+    // Coil length moves its rest length and stops smoothly, with no jump where it meets a stop.
     [Fact]
     public void CoilLength_MovesItsStopsWithoutAJump()
     {

@@ -1,7 +1,7 @@
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// One more caption in a callout, under a divider (#1066): an optional glyph, a caption and its
+/// One more caption in a callout, under a divider: an optional glyph, a caption and its
 /// <see cref="UiCalloutLine"/>s, laid out as the callout's own caption and lines.
 /// </summary>
 /// <param name="IconId">The glyph before the caption, or <see cref="UiIconId.None"/>.</param>

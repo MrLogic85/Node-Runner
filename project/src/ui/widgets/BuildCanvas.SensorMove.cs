@@ -3,12 +3,12 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.Ui.Widgets;
 
-/// <summary>The sensor move's line (#1021): no tile follows the finger, so a line ties it to the sensor it moves.</summary>
+/// <summary>The sensor move's line: no tile follows the finger, so a line ties it to the sensor it moves.</summary>
 public partial class BuildCanvas
 {
     /// <summary>
     /// The drag line from the moving sensor's picture to the finger, or to its picture on a beam that
-    /// takes it, with an arrowhead (`docs/WORLD_VISUALS.md` → "Moving a sensor").
+    /// takes it, with an arrowhead (`docs/WORLD_VISUALS.md` → "Build canvas" → Moving a sensor).
     /// </summary>
     private void DrawSensorMoveLine(CanvasItem canvas)
     {

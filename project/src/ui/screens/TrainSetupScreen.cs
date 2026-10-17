@@ -8,7 +8,7 @@ using NodeRunner.Ui.Widgets;
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Train setup (#194): Train or Simulate, Shadows, Run length and the map, with one Start. The
+/// Train setup: Train or Simulate, Shadows, Run length and the map, with one Start. The
 /// layout is authored in <c>scenes/screens/TrainSetupScreen.tscn</c>; this script binds the
 /// presentation, forwards the mode, the sliders and Start, and handles Back.
 /// </summary>
@@ -98,7 +98,7 @@ public partial class TrainSetupScreen : Control
         Bind(GetNode<UiSlider>("%RunLength"), _presentation.RunLength, _presentation.RunLengthEnds);
     }
 
-    // The row stays in every state, empty in Simulate, so Run length below it does not move (#318).
+    // The row stays in every state, empty in Simulate, so Run length below it does not move.
     private void BindNote(SettingNote? note)
     {
         var load = note?.Load ?? ShadowsLoad.Smooth;

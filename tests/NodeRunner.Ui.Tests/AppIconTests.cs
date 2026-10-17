@@ -6,7 +6,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The app icon (#820) is wired into the Android export and drawn from the Neon palette.</summary>
+/// <summary>The app icon is wired into the Android export and drawn from the Neon palette.</summary>
 public sealed partial class AppIconTests
 {
     private const string _iconRoot = "res://assets/icons/app/";

@@ -3,9 +3,9 @@ using NodeRunner.Domain;
 namespace NodeRunner.Mechanics;
 
 /// <summary>
-/// How a <see cref="StepperDef"/> steps (#1037), like a clock. It holds its joint locked at a notch,
+/// How a <see cref="StepperDef"/> steps, like a clock. It holds its joint locked at a notch,
 /// one of <see cref="StepperDef.StepsPerTurn"/> evenly spaced angles counted from the built angle. Its
-/// clock runs at the network's frequency (#1263); each time it ticks it unlocks and drives the joint to the
+/// clock runs at the network's frequency; each time it ticks it unlocks and drives the joint to the
 /// neighbouring notch, the way the frequency's sign says, with at most Max strength: full torque, then
 /// braking just in time to arrive still. It has
 /// no top speed. It locks the joint the moment it is close enough to the notch, or as soon as it has
@@ -32,7 +32,7 @@ public static class Stepper
     public static (double Sin, double Cos) AngleInputs(double angle) => VelocityMotor.AngleInputs(angle);
 
     /// <summary>
-    /// The tick input (#1263): its clock's phase, a sawtooth that drops to 0 as it steps and rises to 1
+    /// The tick input: its clock's phase, a sawtooth that drops to 0 as it steps and rises to 1
     /// just before the next step. It holds still while the Stepper does not step.
     /// </summary>
     public static double TickInput(StepperState state) => state.Phase;

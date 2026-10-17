@@ -1,7 +1,7 @@
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// What a <see cref="StepperPart"/> shows of its Stepper's motion (#1067), as plain state the creature
+/// What a <see cref="StepperPart"/> shows of its Stepper's motion, as plain state the creature
 /// layer adapts from the mechanics. The default is Build's and Hold's look: the pawl seated.
 /// </summary>
 /// <param name="Lifted">Whether the pawl is lifted out of its notch to step on.</param>

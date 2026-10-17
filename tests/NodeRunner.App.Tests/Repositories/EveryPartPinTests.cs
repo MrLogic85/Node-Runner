@@ -7,15 +7,15 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.Tests.Repositories;
 
 /// <summary>
-/// Pins what one creature holding every part kind saves as, shares as and gives the network (#1219),
-/// so a refactor of the part kinds (#1213) shows it changed none of them. The pins are the files in
+/// Pins what one creature holding every part kind saves as, shares as and gives the network,
+/// so a refactor of the part kinds shows it changed none of them. The pins are the files in
 /// Repositories/Pins; docs/SAVE_FORMAT.md → "Pinned saves" owns when they change.
 /// </summary>
 public sealed class EveryPartPinTests
 {
     private static readonly CreationDef _creation = new(Guid.Parse("5b0e2f4c-8a3d-4e61-9c7b-1d2e3f405162"), "Every part", Creature());
 
-    // This build's code in version 15, before #1308 renamed training's network key. It must read for good.
+    // This build's code in version 15, before version 16 renamed training's network key. It must read for good.
     private const string _codeInVersion15 = "NR15.lddBDoIwFEXRrRjGDvpb28ICSNwIEWbEgQm7V1DoK_-V4IwUUkyFw-1GYPvqntNlnLPiDINZYlf3Yaz2Wi1XEMI-30aKJhmeCbP8crfuPQrnfXZeGVinVe-HR1-hcHDs4FiuGZe_UZ-YxDm20QCjIdUWpTMmOmvEbuv9qp26lTiz-iZ46cxvyVz_f2zjzK4wM0wMlP9Gv3Yblu3q3a1Z06TXLuSBbiGCbVbBLk8roTJ7sgeLBzJL8XbiDbmhEjztIyMmPwheZ6Ft98mf285ot-c8R02EaW4hPMOR5bZsufozG1xcp_rYLc8LrKJj3N_KdS46LR3JSXR_j_P8vGmd6dejaH8oN7u233DtmzRH3P9Ehb0EtvE4yf8b12ywSg";
 
     [Fact]

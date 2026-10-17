@@ -3,29 +3,29 @@ using NodeRunner.Domain;
 namespace NodeRunner.ML.Networks;
 
 /// <summary>
-/// The first generation of a new Creation (#537, #810). Its base network has no weights and holds the
-/// built pose at <see cref="FullStrengthBias"/>, each Stepper still (#1263): each length output's bias asks for the Piston's
-/// drawn length (#870, #1129), like a robot that starts stiff in its default pose
+/// The first generation of a new Creation. Its base network has no weights and holds the
+/// built pose at <see cref="FullStrengthBias"/>, each Stepper still: each length output's bias asks for the Piston's
+/// drawn length, like a robot that starts stiff in its default pose
 /// and learns offsets from it. Generation 0 never changes it. The last shadow runs it unchanged, as a
 /// reference near 0; every other shadow is a wide random perturbation of it. Parts added to a
-/// trained network later start almost passive instead (<see cref="DirectNetwork"/>, #535), and every
-/// child of a trained elite redraws them as generation 0 would (<see cref="NewPortExploration"/>,
-/// #1180). See docs/TRAINING_LOOP.md.
+/// trained network later start almost passive instead (<see cref="DirectNetwork"/>), and every
+/// child of a trained elite redraws them as generation 0 would (<see cref="NewPortExploration"/>).
+/// See docs/TRAINING_LOOP.md.
 /// </summary>
 public static class GenerationZero
 {
-    /// <summary>Standard deviation of the noise added to every weight; twice it into a length output (#1129).</summary>
+    /// <summary>Standard deviation of the noise added to every weight; twice it into a length output.</summary>
     public const double WeightSpread = 1.5;
 
-    /// <summary>Standard deviation of the noise added to every bias; twice it on a length output (#1129).</summary>
+    /// <summary>Standard deviation of the noise added to every bias; twice it on a length output.</summary>
     public const double BiasSpread = 0.5;
 
     /// <summary>The bias every strength output starts at: about 95% of its Strength.</summary>
     public const double FullStrengthBias = 3;
 
     // A length output's sigmoid takes twice the input a tanh would for the same length, as
-    // (tanh(x) + 1) / 2 = sigmoid(2x) (#1129). Its bias limit and noise are scaled by it, so a
-    // Piston starts and explores as it did when its output was tanh.
+    // (tanh(x) + 1) / 2 = sigmoid(2x). Its bias limit and noise are scaled by it, so a
+    // Piston starts and explores on the same scale as with a tanh output.
     private const double _lengthScale = 2;
 
     /// <summary>The network a new Creation starts from, as a genome for <paramref name="ports"/>.</summary>
@@ -102,7 +102,7 @@ public static class GenerationZero
 
     /// <summary>
     /// The noise generation 0 adds to gene <paramref name="gene"/>: <see cref="WeightSpread"/> on a
-    /// weight, <see cref="BiasSpread"/> on a bias, twice that into a length output (#1129).
+    /// weight, <see cref="BiasSpread"/> on a bias, twice that into a length output.
     /// </summary>
     internal static double Noise(int gene, NetworkPortLayout ports, Random random)
     {

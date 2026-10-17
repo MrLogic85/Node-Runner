@@ -1,9 +1,9 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// The best ever reached on a map, from any generation (#479). Unlike the latest run its score never
-/// goes down; the Training arena's best marker (#388) and, later, Stats show it. <see cref="Distance"/>
-/// is the score that decides the best; <see cref="FrontDistance"/> is what the marker shows (#725).
+/// The best ever reached on a map, from any generation. Unlike the latest run its score never
+/// goes down; the Training arena's best marker shows it. <see cref="Distance"/>
+/// is the score that decides the best; <see cref="FrontDistance"/> is what the marker shows.
 /// </summary>
 public sealed record TrainingBestDef
 {
@@ -36,8 +36,8 @@ public sealed record TrainingBestDef
     public string MapId { get; }
 
     /// <summary>
-    /// The furthest any latest run's front-most point ended ahead of its start on this map (#725),
-    /// whichever run holds the score, so it never goes down. Null in a save from before #725 until
+    /// The furthest any latest run's front-most point ended ahead of its start on this map,
+    /// whichever run holds the score, so it never goes down. Null in an older save until
     /// its next generation is saved.
     /// </summary>
     public double? FrontDistance { get; }

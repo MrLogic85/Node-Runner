@@ -1,7 +1,7 @@
 namespace NodeRunner.Ui.Lib;
 
 /// <summary>
-/// Lets one go-back signal through per Android Back press (#506, #838). Godot sends one when the Back
+/// Lets one go-back signal through per Android Back press. Godot sends one when the Back
 /// key goes down, one on every key repeat, and one from the system back callback on release
 /// (godotengine/godot#123454). So each Back key-down gets one go-back. A go-back with no Back key near
 /// it comes from a gesture, which sends no key events, and counts on its own. Godot sends the
