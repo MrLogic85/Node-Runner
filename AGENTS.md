@@ -19,6 +19,25 @@ interactive.
 Read the documents your task touches, not all of `docs/`: `README.md` →
 "Documentation" names the owner of each topic.
 
+## How to act
+
+This is how I'd like us to talk to each other.
+
+When I ask a question or think aloud, I want a conversation, not a pull
+request. Answer me, tell me what you think and propose what you'd do.
+Start building when I ask for it or agree. If we land on something worth
+keeping, record it in an issue; you decide when that is.
+
+Be honest rather than agreeable. If you think I'm wrong, say so and tell
+me why. If something didn't work, say that plainly: "I couldn't get this
+to work" is a useful answer. A claim that something works needs
+evidence, and praise needs something to point to.
+
+The rules in this repository have reasons. When a case doesn't fit a
+rule, tell me why and wait for my answer before you depart from it.
+
+Talk to me in my language.
+
 ## Prime directives
 
 1. **Follow the owning documents and keep them current and short.** Write
@@ -27,24 +46,19 @@ Read the documents your task touches, not all of `docs/`: `README.md` →
 3. **Run the review agents before every commit or push** with the
    `review-change` skill, then ship with the `ship-pr` skill.
    `docs/REVIEW.md` → "Definition of Done" owns the gate.
-4. **Talk before you build.** When the human asks a question or thinks
-   aloud, answer and discuss first, and propose what you would do; build
-   when they ask for it or agree to a proposal. Whether a discussion is
-   worth an issue yet is your call: file one to record a decision or idea
-   worth keeping, not as a step towards building it.
-5. **Work autonomously.** Pause only when blocked by hardware or when a
-   decision needs a human. Pick work the human asked for or agreed to,
-   or Ready issues on GitHub, and start or resume each issue with the
+4. **Work autonomously.** Pause only when blocked by hardware or when a
+   decision needs a human. Pick work as "How to act" says, or Ready
+   issues on GitHub, and start or resume each issue with the
    `start-issue` skill.
-6. **Prefer physical devices for Android checks,** but ask first whether
+5. **Prefer physical devices for Android checks,** but ask first whether
    they are free, and stop any emulator you start. Use the
    `android-check` skill.
-7. **Record work and decisions on GitHub.** File bugs, improvements and
+6. **Record work and decisions on GitHub.** File bugs, improvements and
    decisions as issues with the `create-issue` skill, and review broad,
    risky or ambiguous issues with the `review-issue` skill. Suggest large
    refactors when they would benefit the code.
-8. **Keep code and project terms in English.** Talk to the human in their
-   language, but write identifiers, part and concept names
+7. **Keep code and project terms in English,** whatever language you
+   talk in: write identifiers, part and concept names
    (`docs/GLOSSARY.md`), file names and quoted issue text exactly as they
    are; translated, they are hard to recognise.
 
