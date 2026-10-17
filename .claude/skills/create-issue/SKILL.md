@@ -8,12 +8,16 @@ description: File a new Node Runner GitHub issue with its labels, project fields
 `docs/ISSUES.md` owns the rules. Read `LOCAL_CONFIG.md` first for the
 `gh` login.
 
-1. Search for a duplicate: `gh issue list --state all --search "<words>"`.
-   If one exists, comment there instead.
-2. Write the body to `.scratch/issue.md`: the outcome, the context with
+1. If it is a simple problem found outside the current task
+   (`docs/ISSUES.md` → "Creating an issue"), fix it in your current change
+   and stop; with no current change, file it as a *quick fix* below.
+2. Search for a duplicate: `gh issue list --state all --search "<words>"`.
+   If one exists, comment there instead; for a quick fix, also set it
+   **Ready** unless it is In progress, and start it with `start-issue`.
+3. Write the body to `.scratch/issue.md`: the outcome, the context with
    evidence (files, lines, logs, issue numbers), acceptance criteria and a
    test plan. Title it as `docs/ISSUES.md` says.
-3. Create it with the labels "Required metadata" asks for, the milestone
+4. Create it with the labels "Required metadata" asks for, the milestone
    if it belongs to one, and its parent and blockers:
 
    ```bash
@@ -23,9 +27,10 @@ description: File a new Node Runner GitHub issue with its labels, project fields
    ```
 
    Then delete `.scratch/issue.md`.
-4. Set Status, Priority and Size as "Creating an issue", "Status" and
-   "Size" say:
+5. Set Status, Priority and Size as "Creating an issue", "Status" and
+   "Size" say, Status **Ready** for a quick fix:
    `.github/scripts/issue-fields.sh N --status … --priority … [--size …]`.
-5. Run `.github/scripts/issue-audit.sh` and fix what it lists for the new
+6. Run `.github/scripts/issue-audit.sh` and fix what it lists for the new
    issue.
-6. Tell the human its number.
+7. Tell the human its number, and start a quick fix at once with the
+   `start-issue` skill.

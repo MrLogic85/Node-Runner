@@ -20,11 +20,12 @@ not apply:
 - [ ] Tests as `docs/TEST_STRATEGY.md` asks
 - [ ] Review agents ran on the final diff, and the author judged every
       new finding: a Major one is fixed, any other is fixed or dismissed
-      with a short reason. Each preexisting finding of Medium or higher
-      has an issue; a lower one may be noted in the PR instead. For a
-      UI-touching change, `design-lead`'s "insufficient evidence" blocks
-      until live app access, screenshots or recordings, or a human waiver
-      is recorded in the PR.
+      with a short reason. Each preexisting finding is fixed here if it
+      is simple (`docs/ISSUES.md` → "Creating an issue"); otherwise one of
+      Medium or higher has an issue, and a lower one may be noted in the
+      PR. For a UI-touching change, `design-lead`'s "insufficient
+      evidence" blocks until live app access, screenshots or recordings,
+      or a human waiver is recorded in the PR.
 - [ ] Docs and the matching `.claude/rules/` files updated where
       behaviour, architecture or a rule changed
 - [ ] A change to a saved shape follows `docs/SAVE_FORMAT.md` →
