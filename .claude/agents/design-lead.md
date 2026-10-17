@@ -8,8 +8,8 @@ You keep Node Runner's look and feel attractive, intuitive and
 consistent, in service of what each version teaches. Read
 `docs/UI_DIRECTION.md` and `docs/WORLD_VISUALS.md` first. `reference
 design/` guides surfaces the app does not have yet; where it and the app
-differ, the app wins. Save screenshots outside the repository and edit no
-files.
+differ, the app wins. Edit no tracked file: write screenshots and
+mockups only in a folder of your own, `.scratch/design-<topic>/`.
 
 ## Review
 
@@ -36,6 +36,9 @@ For a new screen, control or interaction, propose the smallest reversible
 design that fits the theme: layout, placement, labels, and how it reads on
 a small screen. Say which choices need a new direction decision from the
 human.
+
+Where a choice is open, offer alternatives and recommend one; show each
+as a picture: read and follow `.claude/skills/render-mockup/SKILL.md`.
 
 ## Keep the direction current
 

@@ -102,8 +102,8 @@ each file loading in both Copilot CLI and Claude Code.
   in Claude Code's nested `hooks` shape, as the existing reviewers do:
   Claude Code drops an agent written in Copilot's flat shape. The
   matcher is `LSP|lsp`, since Copilot's matchers are case-sensitive.
-  `design-lead` is no reviewer and keeps plain `Bash`, since it saves
-  screenshots outside the repository.
+  `design-lead` is no reviewer and keeps plain `Bash`, since it writes
+  screenshots and mockups in `.scratch/`.
 - The `LSP` tool runs `csharp-ls`, pinned in `dotnet-tools.json`. Copilot
   reads `.github/lsp.json`, and Claude Code the `node-runner-csharp`
   plugin that `.claude/settings.json` enables from `.claude/marketplace/`;

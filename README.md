@@ -63,6 +63,7 @@ in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
 | `rg` (ripgrep) | Recommended: fast search that skips build output | `brew install ripgrep` |
 | `csharp-ls` | Recommended: the agents' `LSP` tool; without it they use `git grep` | Pinned in `dotnet-tools.json`; a new agent session runs `dotnet tool restore`. Claude Code loads it only in a trusted folder |
 | `gettext` | Recommended: adding a language; Poedit does the same | `brew install gettext` |
+| Google Chrome | Recommended: `design-lead`'s mockups; without it they stay HTML | `brew install --cask google-chrome` |
 
 The `dotnet-sdk` cask installs the newest SDK; the build needs 10.x. The
 scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
