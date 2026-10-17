@@ -4,99 +4,47 @@ namespace NodeRunner.Mechanics.Tests;
 
 public sealed class TearTests
 {
-    [Theory]
-    [InlineData(0, 19.99, 0)]
-    [InlineData(3, 19.99, 0)]
-    [InlineData(0, 20, 1)]
-    [InlineData(2, 35, 3)]
-    [InlineData(4, 35, 4)]
-    public void NextTicksOver_CountsTicksAtOrOverTheLimitInARow(int before, double drift, int after)
-    {
-        Tear.NextTicksOver(before, drift).ShouldBe(after);
-    }
-
-    [Theory]
-    [InlineData(double.NaN)]
-    [InlineData(double.PositiveInfinity)]
-    public void NextTicksOver_CountsADriftThatIsNoNumberAsOver(double drift)
-    {
-        Tear.NextTicksOver(1, drift).ShouldBe(2);
-    }
-
+    // An end lets go on the fourth tick in a row at or over the drift limit of 20 (a drift that is no number counts
+    // as over); one tick under it, a bounce settling, starts the count over.
     [Fact]
     public void AnEnd_LetsGoOnTheFourthTickInARowOverTheLimit()
     {
-        var ticksOver = 0;
-        var letGo = new List<bool>();
-        foreach (var drift in new[] { 25.0, 30, 21, 20 })
+        foreach (var (before, drift, after) in new[] { (0, 19.99, 0), (3, 19.99, 0), (0, 20, 1), (2, 35, 3), (4, 35, 4), (1, double.NaN, 2), (1, double.PositiveInfinity, 2) })
         {
-            ticksOver = Tear.NextTicksOver(ticksOver, drift);
-            letGo.Add(Tear.LetsGo(ticksOver));
+            Tear.NextTicksOver(before, drift).ShouldBe(after, $"{before} then {drift}");
         }
 
-        letGo.ShouldBe([false, false, false, true]);
+        foreach (var (drifts, letsGo) in new[] { (new[] { 25.0, 30, 21 }, false), ([25.0, 30, 21, 20], true), ([25.0, 30, 21, 19, 25, 25, 25], false) })
+        {
+            Tear.LetsGo(drifts.Aggregate(0, Tear.NextTicksOver)).ShouldBe(letsGo, string.Join(", ", drifts));
+        }
     }
 
-    // One tick under the limit (a bounce settling) starts the count over.
+    // Joints 1–2–3 in a row by beams 10 and 11, and 4–5 by beam 12. The main piece has the most joints, a tie going to
+    // the first listed; a beam torn at either end no longer joins its joints, but a Piston never tears.
     [Fact]
-    public void AnEnd_DoesNotLetGoWhenATickDipsUnderTheLimit()
+    public void TheMainPiece_IsTheOneWithTheMostJoints()
     {
-        var ticksOver = 0;
-        foreach (var drift in new[] { 25.0, 30, 21, 19, 25, 25, 25 })
+        foreach (var (pistons, torn, main) in new (PistonDef[], bool[], int[])[]
         {
-            ticksOver = Tear.NextTicksOver(ticksOver, drift);
+            ([], new bool[6], [1, 2, 3]),
+            ([], [false, false, false, true, false, false], [1, 2]),
+            ([], [false, false, true, true, false, false], [1, 2]),
+            ([new PistonDef(13, 3, 4)], [false, false, true, true, false, false], [3, 4, 5]),
+            ([], [true, false, false, true, true, true], [1]),
+        })
+        {
+            Tear.MainPiece(Chain(pistons), torn).ShouldBe(main, string.Join(", ", torn));
         }
 
-        Tear.LetsGo(ticksOver).ShouldBeFalse();
+        Should.Throw<ArgumentException>(() => Tear.MainPiece(Chain([]), new bool[5]));
     }
 
-    // Joints 1–2–3 in a row by beams 10 and 11, and 4–5 by beam 12.
-    private static CreatureDef Chain(PistonDef[]? pistons = null) => new(
+    private static CreatureDef Chain(PistonDef[] pistons) => new(
         Enumerable.Range(1, 5).Select(id => new NodeDef(id, new Vector2D(id * 100, 0))).ToArray(),
         [new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 4, 5)],
         [],
-        pistons ?? [],
+        pistons,
         [],
         100);
-
-    [Fact]
-    public void MainPiece_IsThePieceWithTheMostJoints()
-    {
-        Tear.MainPiece(Chain(), new bool[6]).ShouldBe([1, 2, 3]);
-    }
-
-    // A beam torn at one end no longer joins its joints, so 1–2–3 splits into 1–2 and 3 alone.
-    [Fact]
-    public void MainPiece_LeavesOutABeamTornAtOneEnd()
-    {
-        Tear.MainPiece(Chain(), [false, false, false, true, false, false]).ShouldBe([1, 2]);
-    }
-
-    // With beam 11 gone at both ends the creature is 1–2 and 4–5: a tie, which the first listed wins.
-    [Fact]
-    public void MainPiece_OnATie_IsThePieceWithTheFirstJoint()
-    {
-        Tear.MainPiece(Chain(), [false, false, true, true, false, false]).ShouldBe([1, 2]);
-    }
-
-    // A Piston never tears, so it still joins 3 to 4 when beam 11 has let go.
-    [Fact]
-    public void MainPiece_CountsPistonsAndSpringsAsHolding()
-    {
-        var creature = Chain([new PistonDef(13, 3, 4)]);
-
-        Tear.MainPiece(creature, [false, false, true, true, false, false]).ShouldBe([3, 4, 5]);
-    }
-
-    [Fact]
-    public void MainPiece_WithEveryLinkTorn_IsTheFirstJoint()
-    {
-        Tear.MainPiece(Chain(), [true, false, false, true, true, true]).ShouldBe([1]);
-    }
-
-    [Fact]
-    public void MainPiece_NeedsBothEndsOfEveryBeam()
-    {
-        Should.Throw<ArgumentException>(() => Tear.MainPiece(Chain(), new bool[5]));
-    }
 }

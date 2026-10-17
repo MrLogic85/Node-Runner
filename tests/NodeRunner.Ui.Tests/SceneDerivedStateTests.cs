@@ -7,7 +7,11 @@ namespace NodeRunner.Ui.Tests;
 /// </summary>
 public sealed class SceneDerivedStateTests
 {
+    // UiIcons builds icons as DPITextures at runtime; a saved one is a generated icon baked into the scene (#288).
     private static readonly string[] _generatedTextureTypes = ["Image", "ImageTexture", "DPITexture"];
+
+    // UiLabel derives these only while it stands on another label's baseline (#1232); a plain label authors them.
+    private static readonly string[] _baselineDerived = ["custom_minimum_size", "size_flags_vertical", "vertical_alignment"];
 
     // Component script → properties its code derives on its own node.
     private static readonly Dictionary<string, string[]> _derived = new()
@@ -30,49 +34,26 @@ public sealed class SceneDerivedStateTests
     };
 
     [Fact]
-    public void Scenes_DoNotPinStylesOnNodes()
+    public void Scenes_save_no_pinned_style_generated_texture_or_derived_property()
     {
-        SceneNodes.All()
-            .Where(node => SceneNodes.StyleOverrideGroups.Any(
-                group => node.Body.Contains("\n" + group, StringComparison.Ordinal)))
-            .Select(node => node.ToString())
-            .ShouldBeEmpty();
-    }
-
-    // UiIcons builds icons as DPITextures at runtime; an authored icon is an ext_resource to its
-    // SVG. A saved Image, ImageTexture or DPITexture is a generated icon baked into the scene (#288).
-    [Fact]
-    public void Scenes_DoNotStoreGeneratedTextures()
-    {
-        SceneNodes.Files()
+        var pinnedStyles = SceneNodes.All()
+            .Where(node => SceneNodes.StyleOverrideGroups.Any(group => node.Body.Contains("\n" + group, StringComparison.Ordinal)))
+            .Select(node => $"{node} pins a style");
+        var textures = SceneNodes.Files()
             .SelectMany(file => _generatedTextureTypes
                 .Where(type => file.Text.Contains($"[sub_resource type=\"{type}\"", StringComparison.Ordinal))
-                .Select(type => $"{file.Scene}: {type}"))
-            .ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Scenes_DoNotStoreComponentDerivedProperties()
-    {
-        _derived
-            .SelectMany(entry => SceneNodes.WithScript(entry.Key)
-                .SelectMany(node => entry.Value
-                    .Where(property => node.Body.Contains("\n" + property + " = ", StringComparison.Ordinal))
-                    .Select(property => $"{node} {property}")))
-            .ShouldBeEmpty();
-    }
-
-    // UiLabel derives these only while it stands on another label's baseline (#1232); a plain
-    // label authors them.
-    [Fact]
-    public void Scenes_DoNotStoreBaselineDerivedProperties()
-    {
-        string[] derived = ["custom_minimum_size", "size_flags_vertical", "vertical_alignment"];
-        SceneNodes.WithScript("UiLabel.cs")
+                .Select(type => $"{file.Scene}: saves a generated {type}"));
+        var derived = _derived
+            .SelectMany(entry => SceneNodes.WithScript(entry.Key).SelectMany(node => Saved(node, entry.Value)));
+        var baseline = SceneNodes.WithScript("UiLabel.cs")
             .Where(node => node.Body.Contains("\nBaselineOf = ", StringComparison.Ordinal))
-            .SelectMany(node => derived
-                .Where(property => node.Body.Contains("\n" + property + " = ", StringComparison.Ordinal))
-                .Select(property => $"{node} {property}"))
-            .ShouldBeEmpty();
+            .SelectMany(node => Saved(node, _baselineDerived));
+
+        pinnedStyles.Concat(textures).Concat(derived).Concat(baseline).ShouldBeEmpty();
     }
+
+    private static IEnumerable<string> Saved(SceneNodes.Node node, string[] properties) =>
+        properties
+            .Where(property => node.Body.Contains("\n" + property + " = ", StringComparison.Ordinal))
+            .Select(property => $"{node} saves derived {property}");
 }

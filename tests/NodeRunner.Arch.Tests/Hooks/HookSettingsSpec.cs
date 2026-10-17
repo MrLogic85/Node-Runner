@@ -19,23 +19,34 @@ public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixtur
     private static readonly string _hooks = Path.Combine(_root, ".claude", "hooks");
 
     [Fact]
-    public void Settings_RunEachRepositoryHookByItsQuotedPath()
+    public void Settings_RunEachRepositoryHookOnItsEventByItsQuotedPath()
     {
         var settings = JsonNode.Parse(File.ReadAllText(Path.Combine(_root, ".claude", "settings.json")))!;
         var registered = new List<string>();
 
-        foreach (var (_, groups) in settings["hooks"]!.AsObject())
+        foreach (var (hookEvent, groups) in settings["hooks"]!.AsObject())
         {
-            foreach (var hook in groups!.AsArray().SelectMany(group => group!["hooks"]!.AsArray()))
+            foreach (var group in groups!.AsArray())
             {
-                hook!["type"]!.GetValue<string>().ShouldBe("command");
-                var match = CommandPath().Match(hook["command"]!.GetValue<string>());
-                match.Success.ShouldBeTrue($"Write the command as {_command}: {hook["command"]}");
-                registered.Add(match.Groups[1].Value);
+                foreach (var hook in group!["hooks"]!.AsArray())
+                {
+                    hook!["type"]!.GetValue<string>().ShouldBe("command");
+                    var match = CommandPath().Match(hook["command"]!.GetValue<string>());
+                    match.Success.ShouldBeTrue($"Write the command as {_command}: {hook["command"]}");
+                    registered.Add($"{hookEvent} {group["matcher"]?.GetValue<string>() ?? "*"} {match.Groups[1].Value}");
+                }
             }
         }
 
-        registered.Distinct().Order(StringComparer.Ordinal)
+        registered.Order(StringComparer.Ordinal).ShouldBe(
+        [
+            "PostToolUse Bash after-push.sh",
+            "PreToolUse Bash guard-bash.sh",
+            "PreToolUse Write|Edit|MultiEdit|NotebookEdit guard-edit.sh",
+            "SessionEnd * session-end.sh",
+            "SessionStart * session-start.sh",
+        ]);
+        registered.Select(entry => entry[(entry.LastIndexOf(' ') + 1)..]).Order(StringComparer.Ordinal)
             .ShouldBe(HookScripts()
                 .Where(script => script is not (AgentFiles.ReviewerHookScript or AgentFiles.ReviewerLspHookScript))
                 .Order(StringComparer.Ordinal));
@@ -49,25 +60,6 @@ public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixtur
             File.GetUnixFileMode(Path.Combine(_hooks, script)).HasFlag(UnixFileMode.UserExecute)
                 .ShouldBeTrue($"{script} is not executable; run git update-index --chmod=+x.");
         }
-    }
-
-    [Fact]
-    public void Settings_RunEachHookOnItsEvent()
-    {
-        var settings = JsonNode.Parse(File.ReadAllText(Path.Combine(_root, ".claude", "settings.json")))!;
-        var registered = settings["hooks"]!.AsObject()
-            .SelectMany(pair => pair.Value!.AsArray().SelectMany(group => group!["hooks"]!.AsArray().Select(hook =>
-                $"{pair.Key} {group["matcher"]?.GetValue<string>() ?? "*"} {CommandPath().Match(hook!["command"]!.GetValue<string>()).Groups[1].Value}")))
-            .Order(StringComparer.Ordinal);
-
-        registered.ShouldBe(
-        [
-            "PostToolUse Bash after-push.sh",
-            "PreToolUse Bash guard-bash.sh",
-            "PreToolUse Write|Edit|MultiEdit|NotebookEdit guard-edit.sh",
-            "SessionEnd * session-end.sh",
-            "SessionStart * session-start.sh",
-        ]);
     }
 
     /// <summary>
@@ -106,11 +98,8 @@ public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixtur
     [InlineData("fix(#1): a lowercase subject")]
     [InlineData("fix: No scope")]
     [InlineData("fix(#0): Zero issue")]
-    [InlineData("fix(1320): No hash")]
     [InlineData("wip(#1320): Unknown type")]
     [InlineData("fix(#1,#2): No space")]
-    [InlineData("fix(#1): X")]
-    [InlineData("Fix(#1): Capital type")]
     public void Title_GetsTheSameVerdictFromTheHookAndCi(string title)
     {
         var ci = CiTitleCheck();

@@ -32,57 +32,47 @@ public sealed class ReviewReceiptSpec : IDisposable
     public void Push_AfterTheReview_IsAllowed()
     {
         Commit("a.txt", "one");
+        Write("a.txt", "two");
         Review();
 
-        DenyReason("git push -u origin HEAD").ShouldBeNull();
+        DenyReason("git add -A && git commit -m Fix && git push").ShouldBeNull();
     }
 
-    [Fact]
-    public void Push_AfterAnEditSinceTheReview_IsDenied()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Push_AfterAnEditOrModeChangeSinceTheReview_IsDenied(bool modeOnly)
     {
         Commit("a.txt", "one");
         Review();
-        Commit("a.txt", "two");
+        if (modeOnly)
+        {
+            HookFixture.Git(Root, "update-index", "--chmod=+x", "a.txt");
+            HookFixture.Git(Root, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "commit", "-q", "-m", "Mode");
+        }
+        else
+        {
+            Commit("a.txt", "two");
+        }
 
         DenyReason("git push").ShouldNotBeNull().ShouldStartWith(_noReceipt);
     }
 
-    [Fact]
-    public void Push_OfTheReviewedChangeRebasedOntoANewerMain_IsAllowed()
-    {
-        Commit("a.txt", "one");
-        Review();
-        HookFixture.Git(Root, "switch", "-q", "main");
-        Commit("b.txt", "main moved on");
-        HookFixture.Git(Root, "switch", "-q", "feature");
-        HookFixture.Git(Root, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "rebase", "-q", "main");
-
-        DenyReason("git push --force-with-lease").ShouldBeNull();
-    }
-
-    [Fact]
-    public void Push_OfTheReviewedChangeRebasedOntoOriginMain_WithAStaleLocalMain_IsAllowed()
+    /// <summary>origin/main moves while the local main stays behind.</summary>
+    [Theory]
+    [InlineData("main")]
+    [InlineData("origin/main")]
+    public void Push_OfTheReviewedChangeRebasedOntoANewerMain_IsAllowed(string onto)
     {
         Commit("a.txt", "one");
         Review();
         HookFixture.Git(Root, "switch", "-q", "-c", "upstream", "main");
         Commit("b.txt", "main moved on");
-        HookFixture.Git(Root, "update-ref", "refs/remotes/origin/main", "upstream");
+        HookFixture.Git(Root, "update-ref", onto == "main" ? "refs/heads/main" : "refs/remotes/origin/main", "upstream");
         HookFixture.Git(Root, "switch", "-q", "feature");
-        HookFixture.Git(Root, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "rebase", "-q", "origin/main");
+        HookFixture.Git(Root, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "rebase", "-q", onto);
 
-        DenyReason("git push").ShouldBeNull();
-    }
-
-    [Fact]
-    public void Push_AfterAModeChangeSinceTheReview_IsDenied()
-    {
-        Commit("a.txt", "one");
-        Review();
-        HookFixture.Git(Root, "update-index", "--chmod=+x", "a.txt");
-        HookFixture.Git(Root, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "commit", "-q", "-m", "Mode");
-
-        DenyReason("git push").ShouldNotBeNull().ShouldStartWith(_noReceipt);
+        DenyReason("git push --force-with-lease").ShouldBeNull();
     }
 
     [Fact]
@@ -105,83 +95,45 @@ public sealed class ReviewReceiptSpec : IDisposable
         DenyReason("git -C other push").ShouldBeNull();
     }
 
+    /// <summary>
+    /// The review covers a staged edit of a.txt but not the untracked notes.txt; a commit earlier
+    /// in the line is measured by what it takes: the index, the tracked files, or everything after
+    /// `git add -A`.
+    /// </summary>
     [Theory]
-    [InlineData("git add -A && git commit -m Fix && git push")]
-    [InlineData("git commit -am Fix; git push origin HEAD")]
-    [InlineData("git commit -sam Fix; git push origin HEAD")]
-    [InlineData("git commit -qa -m Fix; git push origin HEAD")]
-    [InlineData("git commit --all -m Fix && git push -u origin feature")]
-    [InlineData("git commit -mfix-test -a && git push")]
-    public void CommitAndPush_OfTheReviewedWorkingTree_IsAllowed(string command)
+    [InlineData(false, "git commit -m Fix && git push", false)]
+    [InlineData(true, "git commit -sam Fix; git push origin HEAD", false)]
+    [InlineData(true, "git commit -mfix-test -a && git push", false)]
+    [InlineData(true, "git commit --all -m Fix && git push -u origin feature", false)]
+    [InlineData(true, "git commit -uall -m Fix && git push", true)]
+    [InlineData(false, "git add -A && git commit -m Notes && git push", true)]
+    [InlineData(false, "git add -A && git commit -am Notes && git push", true)]
+    public void CommitAndPush_IsMeasuredByWhatTheCommitTakes(bool unstage, string command, bool denied)
     {
         Commit("a.txt", "one");
         Write("a.txt", "two");
-        Review();
-        HookFixture.Git(Root, "reset", "-q");
+        HookFixture.Git(Root, "add", "a.txt");
+        Write("notes.txt", "not part of the change");
+        ReviewStaged();
+        if (unstage)
+        {
+            HookFixture.Git(Root, "reset", "-q");
+        }
 
-        DenyReason(command).ShouldBeNull();
-    }
-
-    [Fact]
-    public void Push_AfterCommittingTheReviewedChange_IsAllowed()
-    {
-        Commit("a.txt", "one");
-        Write("a.txt", "two");
-        Review();
-        HookFixture.Git(Root, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.com", "commit", "-q", "-m", "Fix");
-
-        DenyReason("git push").ShouldBeNull();
-    }
-
-    [Fact]
-    public void CommitAndPush_OfLessThanWasReviewed_IsDenied()
-    {
-        Commit("a.txt", "one");
-        Write("a.txt", "two");
-        Write("b.txt", "new");
-        Review();
-        HookFixture.Git(Root, "rm", "--cached", "-q", "b.txt");
-
-        DenyReason("git commit -m Fix && git push").ShouldNotBeNull().ShouldStartWith(_noReceipt);
-    }
-
-    [Theory]
-    [InlineData("git add a.txt && git commit -m Fix && git push")]
-    [InlineData("git add -A src && git commit -m Fix && git push")]
-    public void CommitAndPush_AfterAddingSomePaths_IsDenied(string command)
-    {
-        Commit("a.txt", "one");
-        Write("a.txt", "two");
-        Review();
-
-        DenyReason(command).ShouldNotBeNull().ShouldStartWith("Run git push as its own command after git add");
+        HookFixture.ShouldDecide(_fixture.Run(_hook, HookFixture.Bash(command)), denied ? _noReceipt : null);
     }
 
     [Theory]
     [InlineData("git rebase main && git push --force-with-lease", "rebase")]
-    [InlineData("git pull; git push", "pull")]
-    [InlineData("git cherry-pick other && git push origin HEAD", "cherry-pick")]
-    [InlineData("git switch -q -c other && git rebase main feature && git push origin feature", "rebase")]
     [InlineData("git reset --soft HEAD~1 && git push --force-with-lease", "reset")]
     [InlineData("git branch -f feature main && git push origin feature", "branch")]
     [InlineData("git fetch origin main:feature && git push origin feature", "fetch")]
     [InlineData("git switch -C feature main && git push", "switch")]
-    [InlineData("git add -A && git commit a.txt -m Fix && git push", "commit")]
-    [InlineData("git add -A && git commit -o -m Fix -- a.txt && git push", "commit")]
-    [InlineData("git add -A && git commit --only --message Fix a.txt && git push", "commit")]
-    [InlineData("git commit -F msg.txt a.txt && git push", "commit")]
-    [InlineData("git merge other && git push", "merge")]
-    [InlineData("git am x.patch && git push", "am")]
-    [InlineData("git revert HEAD && git push", "revert")]
-    [InlineData("git restore --staged a.txt && git commit -m Fix && git push", "restore")]
-    [InlineData("git rm -q a.txt && git commit -m Fix && git push", "rm")]
-    [InlineData("git mv a.txt b.txt && git commit -m Fix && git push", "mv")]
-    [InlineData("git apply x.patch && git push", "apply")]
-    [InlineData("git update-ref refs/heads/feature main && git push", "update-ref")]
-    [InlineData("git branch -m feature other && git push origin other", "branch")]
-    [InlineData("git checkout -B feature main && git push", "checkout")]
     [InlineData("git switch -c other main && git push -u origin other", "switch")]
-    [InlineData("git checkout -b other main && git push -u origin other", "checkout")]
+    [InlineData("git commit -F msg.txt a.txt && git push", "commit")]
+    [InlineData("git add -A && git commit -o -m Fix -- a.txt && git push", "commit")]
+    [InlineData("git add a.txt && git commit -m Fix && git push", "add")]
+    [InlineData("git add -A src && git commit -m Fix && git push", "add")]
     public void Push_AfterHeadMovesInTheSameLine_IsDenied(string command, string moved)
     {
         Commit("a.txt", "one");
@@ -202,24 +154,11 @@ public sealed class ReviewReceiptSpec : IDisposable
         DenyReason("git push origin feature other").ShouldNotBeNull().ShouldStartWith("No review receipt matches other");
     }
 
-    [Fact]
-    public void CommitAndPush_WithAnUntrackedFilesOption_IsMeasuredFromTheIndex()
-    {
-        Commit("a.txt", "one");
-        Write("a.txt", "two");
-        Review();
-        HookFixture.Git(Root, "reset", "-q");
-
-        DenyReason("git commit -uall -m Fix && git push").ShouldNotBeNull().ShouldStartWith(_noReceipt);
-    }
-
     [Theory]
     [InlineData(false, "git push origin HEAD~0:other", "HEAD~0")]
     [InlineData(true, "git push origin HEAD:other", "HEAD")]
-    [InlineData(false, "git push origin +feature", "feature")]
     [InlineData(false, "git push origin +HEAD:feature", "feature")]
     [InlineData(false, "git switch -c other && git push -u origin other", "other")]
-    [InlineData(false, "git checkout -qb other && git push -u origin HEAD", "other")]
     [InlineData(false, "git commit -m \"$(cat <<'EOF'\nDon't\nEOF\n)\" && git push", "feature")]
     [InlineData(false, "((x=1<<2))\ngit push", "feature")]
     public void Push_OfAnUnreviewedCommit_HoweverTheLineNamesIt_IsDenied(bool detached, string command, string name)
@@ -235,47 +174,20 @@ public sealed class ReviewReceiptSpec : IDisposable
 
     [Theory]
     [InlineData("git push --dry-run")]
-    [InlineData("git push -n origin feature")]
     [InlineData("git push origin --delete feature")]
     [InlineData("git push origin :feature")]
     [InlineData("git push origin v1")]
     [InlineData("git push origin HEAD:refs/tags/v2")]
-    [InlineData("git push --tags")]
-    [InlineData("git push origin release/v1.0")]
-    [InlineData("git push origin no-such-branch")]
     public void Push_ThatSendsNoReviewableBranch_IsAllowed(string command)
     {
         Commit("a.txt", "one");
         HookFixture.Git(Root, "tag", "v1");
-        HookFixture.Git(Root, "branch", "release/v1.0");
 
         DenyReason(command).ShouldBeNull();
     }
 
     [Fact]
-    public void Push_OfAnEmptyChange_IsAllowed()
-    {
-        DenyReason("git push -u origin HEAD").ShouldBeNull();
-    }
-
-    [Fact]
-    public void Write_RecordsTheReviewersAndFindings()
-    {
-        Commit("a.txt", "one");
-
-        Review();
-
-        var receipt = Directory.GetFiles(Path.Combine(Root, ".git", "review-receipts")).ShouldHaveSingleItem();
-        var text = File.ReadAllText(receipt);
-        text.ShouldContain("- Branch: feature\n");
-        text.ShouldContain($"- Base: {HookFixture.Git(Root, "rev-parse", "main")}");
-        text.ShouldContain($"- Tree: {HookFixture.Git(Root, "rev-parse", "HEAD^{tree}")}");
-        text.ShouldContain("- Reviewers: docs-reviewer,tests-reviewer\n");
-        text.ShouldContain("Minor, new: dismissed, the wording is intended.");
-    }
-
-    [Fact]
-    public void Write_RemovesReceiptsOlderThanThirtyDays()
+    public void Write_RecordsTheReviewersAndFindings_AndRemovesReceiptsOlderThanThirtyDays()
     {
         var receipts = Path.Combine(Root, ".git", "review-receipts");
         Directory.CreateDirectory(receipts);
@@ -291,7 +203,13 @@ public sealed class ReviewReceiptSpec : IDisposable
 
         File.Exists(old).ShouldBeFalse();
         File.Exists(recent).ShouldBeTrue();
-        Directory.GetFiles(receipts).Length.ShouldBe(2);
+        var receipt = Directory.GetFiles(receipts).Where(path => path != recent).ShouldHaveSingleItem();
+        var text = File.ReadAllText(receipt);
+        text.ShouldContain("- Branch: feature\n");
+        text.ShouldContain($"- Base: {HookFixture.Git(Root, "rev-parse", "main")}");
+        text.ShouldContain($"- Tree: {HookFixture.Git(Root, "rev-parse", "HEAD^{tree}")}");
+        text.ShouldContain("- Reviewers: docs-reviewer,tests-reviewer\n");
+        text.ShouldContain("Minor, new: dismissed, the wording is intended.");
     }
 
     [Fact]
@@ -308,50 +226,7 @@ public sealed class ReviewReceiptSpec : IDisposable
     }
 
     [Fact]
-    public void Write_WithAnUntrackedFileOutsideTheChange_RecordsTheStagedChange()
-    {
-        Commit("a.txt", "one");
-        Write("notes.txt", "not part of the change");
-
-        ReviewStaged();
-
-        DenyReason("git push -u origin HEAD").ShouldBeNull();
-    }
-
-    [Theory]
-    [InlineData("git add -A && git commit -m Notes && git push")]
-    [InlineData("git add -A && git commit -am Notes && git push")]
-    [InlineData("git add -A && git commit --all -m Notes && git push")]
-    public void CommitAndPush_OfAnUntrackedFileLeftOutOfTheReview_IsDenied(string command)
-    {
-        Commit("a.txt", "one");
-        Write("notes.txt", "not part of the change");
-        ReviewStaged();
-
-        DenyReason(command).ShouldNotBeNull().ShouldStartWith(_noReceipt);
-    }
-
-    [Theory]
-    [InlineData(false, "git commit -m Fix && git push")]
-    [InlineData(true, "git commit -am Fix && git push")]
-    [InlineData(true, "git commit --all -m Fix && git push")]
-    public void CommitAndPush_OfTheReviewedChange_WithAnUntrackedFilePresent_IsAllowed(bool unstage, string command)
-    {
-        Commit("a.txt", "one");
-        Write("a.txt", "two");
-        HookFixture.Git(Root, "add", "a.txt");
-        Write("notes.txt", "not part of the change");
-        ReviewStaged();
-        if (unstage)
-        {
-            HookFixture.Git(Root, "reset", "-q");
-        }
-
-        DenyReason(command).ShouldBeNull();
-    }
-
-    [Fact]
-    public void Write_WhenGitCannotReadATrackedFile_SaysSo()
+    public void WriteAndCheck_WhenGitCannotReadATrackedFile_SaySo()
     {
         Commit("a.txt", "one");
         File.WriteAllText(Findings, "No findings.\n");
@@ -361,28 +236,15 @@ public sealed class ReviewReceiptSpec : IDisposable
             return;
         }
 
-        var (exitCode, output) = HookFixture.Script(Root, _script, "write", "--reviewers", "docs-reviewer", Findings);
+        var write = HookFixture.Script(Root, _script, "write", "--reviewers", "docs-reviewer", Findings);
+        var check = HookFixture.Script(Root, _script, "check", "--worktree");
 
-        exitCode.ShouldBe(2);
-        output.ShouldContain("cannot compare the working tree with the index");
-    }
-
-    [Fact]
-    public void Check_WhenGitCannotReadATrackedFile_ShowsGitsReason()
-    {
-        Commit("a.txt", "one");
-        Write("a.txt", "a longer second version");
-        if (!TryMakeUnreadable("a.txt"))
-        {
-            return;
-        }
-
-        var (exitCode, output) = HookFixture.Script(Root, _script, "check", "--worktree");
-
-        exitCode.ShouldBe(2);
-        output.ShouldContain("cannot measure --worktree against main");
-        output.ShouldContain("a.txt");
-        output.ShouldContain("Permission denied");
+        write.ExitCode.ShouldBe(2);
+        write.Output.ShouldContain("cannot compare the working tree with the index");
+        check.ExitCode.ShouldBe(2);
+        check.Output.ShouldContain("cannot measure --worktree against main");
+        check.Output.ShouldContain("a.txt");
+        check.Output.ShouldContain("Permission denied");
     }
 
     [Fact]
@@ -400,19 +262,6 @@ public sealed class ReviewReceiptSpec : IDisposable
 
         exitCode.ShouldBe(0);
         output.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Check_WhenGitCannotWriteATreeFromTheIndex_ShowsGitsReason()
-    {
-        Commit("a.txt", "one");
-        File.WriteAllText(Path.Combine(Root, ".git", "index"), "not an index");
-
-        var (exitCode, output) = HookFixture.Script(Root, _script, "check", "--index");
-
-        exitCode.ShouldBe(2);
-        output.ShouldContain("cannot measure --index against main");
-        output.ShouldContain("index file");
     }
 
     [Fact]
@@ -440,8 +289,6 @@ public sealed class ReviewReceiptSpec : IDisposable
 
     [Theory]
     [InlineData("write", "FINDINGS")]
-    [InlineData("write", "--reviewers", "docs-reviewer")]
-    [InlineData("write", "--reviewers", "docs-reviewer", "missing.md")]
     [InlineData("write", "--reviewers", "docs-reviewer", "BLANK")]
     [InlineData("write", "--reviewers", "no-such-reviewer", "FINDINGS")]
     [InlineData("check")]

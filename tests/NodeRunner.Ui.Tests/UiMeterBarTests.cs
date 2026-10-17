@@ -6,34 +6,14 @@ namespace NodeRunner.Ui.Tests;
 public sealed class UiMeterBarTests
 {
     [Theory]
-    [InlineData(-1, 0, 0.5)]
-    [InlineData(0, 0.5, 0.5)]
-    [InlineData(1, 0.5, 1)]
-    [InlineData(-0.5, 0.25, 0.5)]
-    [InlineData(0.5, 0.5, 0.75)]
-    public void FillSpan_ACentredMeter_FillsFromTheCentreTick(double value, float start, float end)
-    {
-        UiMeterBar.FillSpan(value, centred: true).ShouldBe((start, end));
-    }
-
-    [Theory]
-    [InlineData(0, 0)]
-    [InlineData(0.5, 0.5)]
-    [InlineData(1, 1)]
-    public void FillSpan_AFillingMeter_FillsFromItsLeftEnd(double value, float end)
-    {
-        UiMeterBar.FillSpan(value, centred: false).ShouldBe((0f, end));
-    }
-
-    [Theory]
-    [InlineData(3, true, 0.5, 1)]
-    [InlineData(-3, true, 0, 0.5)]
-    [InlineData(1.5, false, 0, 1)]
+    [InlineData(-1, true, 0, 0.5)]
+    [InlineData(1, true, 0.5, 1)]
+    [InlineData(-0.5, true, 0.25, 0.5)]
+    [InlineData(0.5, false, 0, 0.5)]
+    [InlineData(3, true, 0.5, 1)]       // A value past the range is drawn at its end.
     [InlineData(-0.5, false, 0, 0)]
-    public void FillSpan_AValuePastTheRange_IsDrawnAtItsEnd(double value, bool centred, float start, float end)
-    {
+    public void FillSpan_FillsCentredMetersFromTheCentreTick_AndOthersFromTheLeft(double value, bool centred, float start, float end) =>
         UiMeterBar.FillSpan(value, centred).ShouldBe((start, end));
-    }
 
     [Fact]
     public void FillSpan_WithNoValue_DrawsNoFill()

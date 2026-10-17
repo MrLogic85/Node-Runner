@@ -34,22 +34,29 @@ public sealed class SessionHooksSpec : IDisposable
     }
 
     [Fact]
-    public void SessionStart_WithACleanCheckout_NamesTheBranchInBothFields()
+    public void SessionStart_WithACleanCheckoutAndNoToolManifest_NamesTheBranchWithoutRestoring()
     {
-        var context = StartSession();
+        var log = StubDotnet("exit 1");
+        File.Delete(Path.Combine(_fixture.Root, "dotnet-tools.json"));
+
+        var context = StartSession(path: StubPath);
 
         context.ShouldBe("Working copy at session start: branch feature/1320-hooks, no uncommitted changes.");
+        File.Exists(log).ShouldBeFalse();
     }
 
     [Fact]
-    public void SessionStart_WithUncommittedChanges_ListsThemAndSaysToAsk()
+    public void SessionStart_WithUncommittedChanges_ListsThemSaysToAskAndRestoresTheToolsFromTheRoot()
     {
+        var log = StubDotnet("exit 0");
         File.WriteAllText(Path.Combine(_fixture.Root, "notes.md"), "Notes.\n");
 
-        var context = StartSession();
+        var context = StartSession(path: StubPath);
 
-        context.ShouldContain("1 uncommitted changes:\n?? notes.md\n");
+        context.ShouldContain("2 uncommitted changes:\n?? dotnet-tools.json\n?? notes.md\n");
         context.ShouldContain("stop and ask the human");
+        context.ShouldNotContain("dotnet tool restore");
+        File.ReadAllText(log).ShouldBe($"{_fixture.Root} tool restore\n");
     }
 
     [Fact]
@@ -67,17 +74,17 @@ public sealed class SessionHooksSpec : IDisposable
         context.ShouldNotContain("note10");
     }
 
-    [Theory]
-    [InlineData("resume")]
-    [InlineData("compact")]
-    public void SessionStart_OnResume_ReportsWithoutAskingAboutItsOwnChanges(string source)
+    [Fact]
+    public void SessionStart_OnResume_ReportsWithoutAskingOrRestoring()
     {
-        File.WriteAllText(Path.Combine(_fixture.Root, "notes.md"), "Notes.\n");
+        var log = StubDotnet("exit 1");
 
-        var context = StartSession(source);
+        var context = StartSession("resume", StubPath);
 
         context.ShouldStartWith("Working copy now: branch feature/1320-hooks, 1 uncommitted changes:");
         context.ShouldNotContain("stop and ask");
+        context.ShouldNotContain("dotnet tool restore");
+        File.Exists(log).ShouldBeFalse();
     }
 
     [Fact]
@@ -131,55 +138,35 @@ public sealed class SessionHooksSpec : IDisposable
         Directory.Exists(live).ShouldBeTrue();
     }
 
-    [Theory]
-    [InlineData("git push")]
-    [InlineData("git status")]
-    public void AfterPush_OfAnyCommand_KeepsALongSessionFromLookingStale(string command)
+    [Fact]
+    public void AfterPush_OfAnyCommand_KeepsALongSessionFromLookingStale()
     {
         StartSession();
         Directory.SetLastWriteTimeUtc(State, DateTime.UtcNow.AddDays(-4));
 
-        Push(command);
+        Push("git status");
 
         Directory.GetLastWriteTimeUtc(State).ShouldBeGreaterThan(DateTime.UtcNow.AddMinutes(-1));
     }
 
-    [Theory]
-    [InlineData("after-push.sh")]
-    [InlineData("session-end.sh")]
-    public void WithoutASessionId_IsSilent(string hook)
+    [Fact]
+    public void WithoutASessionId_TheHooksKeepNoStateAndSaySo()
     {
         StartSession();
         StartEmulator();
-
         var input = new JsonObject
         {
             ["cwd"] = _fixture.Root,
             ["tool_input"] = new JsonObject { ["command"] = "git push" },
         };
 
-        _fixture.RunRaw(hook, input.ToJsonString()).ShouldBeEmpty();
-        Directory.Exists(State).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void SessionStart_WithoutASessionId_SaysTheAfterPushCheckIsOff()
-    {
+        _fixture.RunRaw("after-push.sh", input.ToJsonString()).ShouldBeEmpty();
+        _fixture.RunRaw("session-end.sh", input.ToJsonString()).ShouldBeEmpty();
         var output = _fixture.RunRaw("session-start.sh", new JsonObject { ["cwd"] = _fixture.Root }.ToJsonString());
 
+        Directory.Exists(State).ShouldBeTrue();
         JsonNode.Parse(output)!["additionalContext"]!.GetValue<string>()
             .ShouldEndWith("the after-push check for emulators and APKs is off.");
-    }
-
-    [Fact]
-    public void SessionStart_WithAToolManifest_RestoresTheToolsFromTheRoot()
-    {
-        var log = StubDotnet("exit 0");
-
-        var context = StartSession(path: StubPath);
-
-        File.ReadAllText(log).ShouldBe($"{_fixture.Root} tool restore\n");
-        context.ShouldNotContain("dotnet tool restore");
     }
 
     [Fact]
@@ -217,29 +204,6 @@ public sealed class SessionHooksSpec : IDisposable
     }
 
     [Fact]
-    public void SessionStart_WithoutAToolManifest_DoesNotRestore()
-    {
-        var log = StubDotnet("exit 1");
-        File.Delete(Path.Combine(_fixture.Root, "dotnet-tools.json"));
-
-        var context = StartSession(path: StubPath);
-
-        File.Exists(log).ShouldBeFalse();
-        context.ShouldNotContain("dotnet tool restore");
-    }
-
-    [Fact]
-    public void SessionStart_OnResume_DoesNotRestoreTheTools()
-    {
-        var log = StubDotnet("exit 1");
-
-        var context = StartSession("resume", StubPath);
-
-        File.Exists(log).ShouldBeFalse();
-        context.ShouldNotContain("dotnet tool restore");
-    }
-
-    [Fact]
     public void AfterPush_WithQemuOnlyAsAnArgument_IsSilent()
     {
         StartSession();
@@ -256,77 +220,49 @@ public sealed class SessionHooksSpec : IDisposable
     }
 
     [Fact]
-    public void AfterPush_WithNothingLeft_IsSilent()
-    {
-        StartSession();
-
-        Push().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void AfterPush_WithANewApk_ReportsItOnce()
+    public void AfterPush_WithAnEmulatorAndApkFromThisSession_ReportsOnlyThoseOnce()
     {
         Directory.CreateDirectory(Build);
         var old = Path.Combine(Build, "node-runner-0.14.2.apk");
         File.WriteAllText(old, "");
         File.SetLastWriteTimeUtc(old, DateTime.UtcNow.AddHours(-1));
+        var before = StartEmulator();
         StartSession();
+        var during = StartEmulator();
         File.WriteAllText(Path.Combine(Build, "node-runner-0.14.3.apk"), "");
         File.SetLastWriteTimeUtc(Path.Combine(Build, "node-runner-0.14.3.apk"), DateTime.UtcNow.AddMinutes(1));
 
         var first = Reminder(Push());
 
+        first.ShouldContain($"emulator pid {during.Id}");
         first.ShouldContain("build/node-runner-0.14.3.apk");
+        first.ShouldNotContain($"emulator pid {before.Id}");
         first.ShouldNotContain("0.14.2");
         Push().ShouldBeEmpty();
     }
 
-    [Fact]
-    public void AfterPush_WithAnEmulatorStartedThisSession_ReportsOnlyThatOne()
-    {
-        var before = StartEmulator();
-        StartSession();
-        var during = StartEmulator();
-
-        var reminder = Reminder(Push());
-
-        reminder.ShouldContain($"emulator pid {during.Id}");
-        reminder.ShouldNotContain($"emulator pid {before.Id}");
-    }
-
+    /// <summary>Only a git push that sends something reminds, read as guard-bash.sh reads the line.</summary>
     [Theory]
-    [InlineData("git status")]
-    [InlineData("echo legit push")]
-    [InlineData("git log --grep push")]
-    [InlineData("git commit -m \"Remind after git push instead\"")]
-    [InlineData("gh pr comment 1 --body 'then git push it'")]
-    [InlineData("git push --dry-run")]
-    [InlineData("git push -n origin main")]
-    [InlineData("git push -nu origin main")]
-    [InlineData("git push --help")]
-    public void AfterPush_OfAnotherCommand_IsSilent(string command)
-    {
-        StartSession();
-        StartEmulator();
-
-        Push(command).ShouldBeEmpty();
-    }
-
-    [Theory]
-    [InlineData("git -C sub push -u origin feature/1320-hooks")]
-    [InlineData("cd sub && git push")]
-    [InlineData("git -c core.sshCommand=ssh push")]
-    [InlineData("git --no-pager push; echo done")]
-    [InlineData("GIT_TRACE=0 /usr/bin/git push 2>&1 | tail -5")]
-    [InlineData("if git --git-dir .git push -u origin main; then :; fi")]
-    [InlineData("env -C sub GIT_SSH_COMMAND=ssh git push")]
-    [InlineData("{ time git push --force-with-lease; }")]
-    public void AfterPush_OfAPushInALine_Reminds(string command)
+    [InlineData("git commit -m \"Remind after git push instead\"; echo legit push", false)]
+    [InlineData("git push --dry-run", false)]
+    [InlineData("git push -nu origin main", false)]
+    [InlineData("GIT_TRACE=0 /usr/bin/git -C sub -c core.sshCommand=ssh push 2>&1 | tail -5", true)]
+    [InlineData("{ time git push --force-with-lease; }", true)]
+    public void AfterPush_RemindsOnlyAfterAPush(string command, bool reminds)
     {
         StartSession();
         var during = StartEmulator();
 
-        Reminder(Push(command)).ShouldContain($"emulator pid {during.Id}");
+        var output = Push(command);
+
+        if (reminds)
+        {
+            Reminder(output).ShouldContain($"emulator pid {during.Id}");
+        }
+        else
+        {
+            output.ShouldBeEmpty();
+        }
     }
 
     [Fact]

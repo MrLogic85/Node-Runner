@@ -4,94 +4,44 @@ namespace NodeRunner.Mechanics.Tests;
 
 public sealed class AngleSensorTests
 {
+    // Read as a Velocity motor's from target minus fixed (y-down, so counter-clockwise on screen is toward negative y):
+    // target a quarter turn counter-clockwise reads 1, 0, opposite reads 0, −1. A Wheel target turning
+    // counter-clockwise (Godot's −1 rad/s) reads a positive speed; swapping the sides reverses both signs.
     [Fact]
-    public void AngleInputs_WithTargetAQuarterTurnCounterClockwiseFromFixed_AreOneAndZero()
+    public void ItReadsTheTargetSideAgainstTheFixedSide()
     {
-        var fixedSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
-        // Creature coordinates are y-down, so counter-clockwise on screen is up, toward negative y.
-        var targetSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(0, -10));
+        var right = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
+        Reads(AngleSensor.AngleInputs(HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(0, -10)) - right), 1, 0);
+        Reads(AngleSensor.AngleInputs(HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(-10, 0)) - right), 0, -1);
+        foreach (var angle in new[] { 0, 0.7, Math.PI, -2.5, (4 * Math.PI) + 1 })
+        {
+            AngleSensor.AngleInputs(angle).ShouldBe(VelocityMotor.AngleInputs(angle));
+        }
 
-        var (sin, cos) = AngleSensor.AngleInputs(targetSide - fixedSide);
-
-        sin.ShouldBe(1, tolerance: 1e-12);
-        cos.ShouldBe(0, tolerance: 1e-12);
-    }
-
-    [Fact]
-    public void AngleInputs_WithTargetOppositeFixed_AreZeroAndMinusOne()
-    {
-        var fixedSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
-        var targetSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(-10, 0));
-
-        var (sin, cos) = AngleSensor.AngleInputs(targetSide - fixedSide);
-
-        sin.ShouldBe(0, tolerance: 1e-12);
-        cos.ShouldBe(-1, tolerance: 1e-12);
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(0.7)]
-    [InlineData(Math.PI)]
-    [InlineData(-2.5)]
-    [InlineData((4 * Math.PI) + 1)]
-    public void AngleInputs_EqualAVelocityMotors_OnTheSameAngle(double angle)
-    {
-        var sensor = AngleSensor.AngleInputs(angle);
-
-        sensor.ShouldBe(VelocityMotor.AngleInputs(angle));
-    }
-
-    [Fact]
-    public void Readings_WithFixedRightAndTheTargetWheelTurnedAQuarterTurnCounterClockwise_AreOneZeroAndAPositiveSpeed()
-    {
-        // Godot's body rotation is clockwise-positive on screen, so −π/2 is a quarter turn counter-clockwise.
-        var fixedSide = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
         var wheel = HingePartSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
         var wheelSpeed = HingePartSideGeometry.WheelAngularSpeed(bodyAngularVelocity: -1);
-        const double fixedSpeed = 0;
-
-        var (sin, cos) = AngleSensor.AngleInputs(wheel - fixedSide);
-        var speed = AngleSensor.SpeedInput(wheelSpeed - fixedSpeed);
-
-        sin.ShouldBe(1, tolerance: 1e-12);
-        cos.ShouldBe(0, tolerance: 1e-12);
-        speed.ShouldBeGreaterThan(0);
+        Reads(AngleSensor.AngleInputs(wheel - right), 1, 0);
+        AngleSensor.SpeedInput(wheelSpeed).ShouldBeGreaterThan(0);
+        AngleSensor.AngleInputs(right - wheel).Sin.ShouldBe(-1, 1e-12);
+        AngleSensor.SpeedInput(-wheelSpeed).ShouldBeLessThan(0);
     }
 
+    // tanh of the speed over 60 rpm: a Velocity motor's only when its Max speed is 60 rpm.
     [Fact]
-    public void Readings_WithFixedAndTargetSwapped_ReverseTheirSign()
+    public void ItsSpeedInput_IsTanhOfTheSpeedOverSixtyRpm()
     {
-        var link = HingePartSideGeometry.LinkAngle(new Vector2D(0, 0), new Vector2D(10, 0));
-        var wheel = HingePartSideGeometry.WheelAngle(bodyRotation: -Math.PI / 2);
-        var wheelSpeed = HingePartSideGeometry.WheelAngularSpeed(bodyAngularVelocity: -1);
-        const double linkSpeed = 0;
+        foreach (var (speed, input) in new[] { (0.0, 0.0), (2 * Math.PI, 0.7615941559557649), (-2 * Math.PI, -0.7615941559557649), (Math.PI, 0.46211715726000974) })
+        {
+            AngleSensor.SpeedInput(speed).ShouldBe(input, 1e-12);
+        }
 
-        var (sin, _) = AngleSensor.AngleInputs(link - wheel);
-        var speed = AngleSensor.SpeedInput(linkSpeed - wheelSpeed);
-
-        sin.ShouldBe(-1, tolerance: 1e-12);
-        speed.ShouldBeLessThan(0);
+        AngleSensor.SpeedInput(3).ShouldBe(MotorLoop.SpeedInput(3, new VelocityMotorDef(1, 2, maxSpeed: 2 * Math.PI).MaxSpeed), 1e-12);
+        Math.Abs(AngleSensor.SpeedInput(3) - MotorLoop.SpeedInput(3, new VelocityMotorDef(1, 2, maxSpeed: 4 * Math.PI).MaxSpeed)).ShouldBeGreaterThan(1e-6);
     }
 
-    [Theory]
-    [InlineData(0, 0)]
-    [InlineData(2 * Math.PI, 0.7615941559557649)]
-    [InlineData(-2 * Math.PI, -0.7615941559557649)]
-    [InlineData(Math.PI, 0.46211715726000974)]
-    public void SpeedInput_IsTanhOfTheSpeedOverSixtyRpm(double speed, double expected) =>
-        AngleSensor.SpeedInput(speed).ShouldBe(expected, tolerance: 1e-12);
-
-    [Fact]
-    public void SpeedInput_EqualsAMotors_OnlyWhenItsMaxSpeedIsSixtyRpm()
+    private static void Reads((double Sin, double Cos) inputs, double sin, double cos)
     {
-        const double speed = 3;
-        var sixtyRpm = new VelocityMotorDef(1, 2, maxSpeed: 2 * Math.PI);
-        var faster = new VelocityMotorDef(1, 2, maxSpeed: 4 * Math.PI);
-
-        var sensor = AngleSensor.SpeedInput(speed);
-
-        sensor.ShouldBe(MotorLoop.SpeedInput(speed, sixtyRpm.MaxSpeed), tolerance: 1e-12);
-        Math.Abs(sensor - MotorLoop.SpeedInput(speed, faster.MaxSpeed)).ShouldBeGreaterThan(1e-6);
+        inputs.Sin.ShouldBe(sin, 1e-12);
+        inputs.Cos.ShouldBe(cos, 1e-12);
     }
 }

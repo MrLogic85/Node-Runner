@@ -2,6 +2,7 @@ using NodeRunner.App.Repositories;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
@@ -11,136 +12,66 @@ namespace NodeRunner.App.Tests.ViewModels;
 /// </summary>
 public sealed class BuildSensorMoveTests
 {
-    private static readonly CreatureElementSelection _freeBeam = new(CreatureElementKind.Beam, 11);
-
     [Fact]
-    public void OnALockedCreation_ASensorMoves_AndUndoAndRedoCoverIt()
+    public void OnALockedCreation_AMovedSensor_IsAnUndoStep_AndKeepsItsPortsAndTrainedWeights()
     {
+        var repository = new InMemoryCreationRepository();
+        var creation = new CreationDef(Guid.NewGuid(), "Walker", Creature(), TestTraining.StateFor(Creature(), 3));
+        repository.Save(creation);
         var build = new BuildViewModel();
-        build.LoadCreation(Trained());
+        build.LoadCreation(creation);
         var before = build.Snapshot();
 
-        build.MoveSensor(21, _freeBeam).ShouldBeTrue();
+        build.MoveSensor(21, Beam(11)).ShouldBeTrue();
         var after = build.Snapshot();
-
         after.Sensors.Single(sensor => sensor.Id == 21).BeamId.ShouldBe(11);
         build.IsLocked.ShouldBeTrue();
         build.Undo();
         build.Snapshot().Sensors.ShouldBe(before.Sensors);
         build.Redo();
         build.Snapshot().Sensors.ShouldBe(after.Sensors);
-    }
 
-    [Fact]
-    public void AMovedSensor_KeepsItsPortsAndTrainedWeights()
-    {
-        var repository = new InMemoryCreationRepository();
-        var coordinator = new CreationUpdateCoordinator(repository);
-        var creation = Trained();
-        repository.Save(creation);
-        var build = new BuildViewModel();
-        build.LoadCreation(creation);
-
-        build.MoveSensor(20, _freeBeam).ShouldBeTrue();
-        build.MoveSensor(21, new CreatureElementSelection(CreatureElementKind.Beam, 10)).ShouldBeTrue();
-        var updated = coordinator.ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
-
-        updated.Creature.Sensors.Select(sensor => (sensor.Id, sensor.BeamId)).ShouldBe([(20, 11), (21, 10)]);
-
+        build.MoveSensor(20, Beam(12)).ShouldBeTrue();
+        build.SingleSelectedSensorId.ShouldBe(20);
+        var updated = new CreationUpdateCoordinator(repository).ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
+        updated.Creature.Sensors.Select(sensor => (sensor.Id, sensor.BeamId)).ShouldBe([(20, 12), (21, 11)]);
         NetworkPorts.Of(updated.Creature).Inputs.ShouldBe(NetworkPorts.Of(creation.Creature).Inputs);
         updated.Training!.Network.Neurons.ShouldBe(creation.Training!.Network.Neurons);
         updated.Training.Network.Connections.ShouldBe(creation.Training.Network.Connections);
     }
 
     [Fact]
-    public void ADropOnABeamThatHasASensor_LeavesItAndSaysWhyThere()
+    public void ADropThatTakesNoMove_LeavesTheSensor_IsNoStep_AndSaysWhyWhereItCan()
     {
-        var build = Unlocked();
-        var before = build.Snapshot();
-        var occupied = new CreatureElementSelection(CreatureElementKind.Beam, 12);
+        var build = Loaded(Creature());
+        var before = build.Snapshot().Sensors;
 
-        build.MoveSensor(20, occupied).ShouldBeFalse();
-
-        build.Snapshot().Sensors.ShouldBe(before.Sensors);
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, occupied, UiText.Plain("One sensor per beam")));
-        build.CanUndo.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void ADropOnEmptyCanvas_LeavesItAndSaysNothing()
-    {
-        var build = Unlocked();
-        var before = build.Snapshot();
-
+        build.MoveSensor(20, Beam(12)).ShouldBeFalse();
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Beam(12), UiText.Plain("One sensor per beam")));
+        build.MoveSensor(20, Joint(4)).ShouldBeFalse();
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(4), UiText.Plain("Cameras go on a beam")));
         build.MoveSensor(20, null).ShouldBeFalse();
-
-        build.Snapshot().Sensors.ShouldBe(before.Sensors);
         build.PlacementNote.ShouldBeNull();
-        build.CanUndo.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void ADropOnAJoint_LeavesItAndSaysWhyThere()
-    {
-        var build = Unlocked();
-        var joint = new CreatureElementSelection(CreatureElementKind.Node, 4);
-
-        build.MoveSensor(20, joint).ShouldBeFalse();
-
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, joint, UiText.Plain("Cameras go on a beam")));
-    }
-
-    [Fact]
-    public void ADropOnItsOwnBeam_IsNoStep()
-    {
-        var build = Unlocked();
-
-        build.MoveSensor(20, new CreatureElementSelection(CreatureElementKind.Beam, 10)).ShouldBeTrue();
-
-        build.CanUndo.ShouldBeFalse();
+        build.MoveSensor(20, Beam(10)).ShouldBeTrue();
         build.PlacementNote.ShouldBeNull();
-    }
+        build.Snapshot().Sensors.ShouldBe(before);
+        build.CanUndo.ShouldBeFalse();
 
-    [Fact]
-    public void AGoodDrop_SelectsTheSensor()
-    {
-        var build = Unlocked();
-
-        build.MoveSensor(20, _freeBeam).ShouldBeTrue();
-
-        build.SingleSelectedSensorId.ShouldBe(20);
-    }
-
-    [Fact]
-    public void ASensorGoneBeforeItsDrop_MovesNowhereAndSaysNothing()
-    {
-        var build = Unlocked();
-        build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 20 } });
+        build.SelectOnly(CreatureElementKind.Sensor, 20);
         build.DeleteSelectedParts();
-
-        build.SensorMovePreview(20, _freeBeam).ShouldBeNull();
-        build.MoveSensor(20, _freeBeam).ShouldBeFalse();
+        build.SensorMovePreview(20, Beam(11)).ShouldBeNull();
+        build.MoveSensor(20, Beam(11)).ShouldBeFalse();
         build.PlacementNote.ShouldBeNull();
     }
-
-    private static BuildViewModel Unlocked()
-    {
-        var build = new BuildViewModel();
-        build.Load(Creature());
-        return build;
-    }
-
-    private static CreationDef Trained() =>
-        new(Guid.NewGuid(), "Walker", Creature(), TestTraining.StateFor(Creature(), 3));
 
     // A Camera on beam 10, an Accelerometer on beam 12 and nothing on beam 11; Piston 30 gives the
     // network an output.
     private static CreatureDef Creature() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(100, 100)), new NodeDef(4, new Vector2D(200, 100))],
-        [new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 3, 4)],
-        [new SensorDef(20, 10, SensorKind.Camera, aim: 0.2), new SensorDef(21, 12, SensorKind.Accelerometer)],
-        [],
-        [new PistonDef(30, 1, 3)],
-        [],
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(100, 100)), new NodeDef(4, new Vector2D(200, 100)),
+            new BeamDef(10, 1, 2), new BeamDef(11, 2, 3), new BeamDef(12, 3, 4),
+            new SensorDef(20, 10, SensorKind.Camera, aim: 0.2), new SensorDef(21, 12, SensorKind.Accelerometer),
+            new PistonDef(30, 1, 3),
+        ],
         nextPartId: 31);
 }

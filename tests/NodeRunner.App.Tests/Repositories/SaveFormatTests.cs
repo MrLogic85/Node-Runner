@@ -28,17 +28,14 @@ public sealed class SaveFormatTests : IDisposable
     }
 
     [Theory]
-    [InlineData(typeof(CreationDef), "creation.schema.json", true)]
-    [InlineData(typeof(ProgressionDef), "progression.schema.json", true)]
-    public void Schema_MatchesTheCommittedSchema(Type type, string name, bool versioned)
+    [InlineData(typeof(CreationDef), "creation.schema.json")]
+    [InlineData(typeof(ProgressionDef), "progression.schema.json")]
+    public void Schema_MatchesTheCommittedSchema(Type type, string name)
     {
         var schema = JsonSchemaExporter
             .GetJsonSchemaAsNode(SaveJson.Options, type, new JsonSchemaExporterOptions { TreatNullObliviousAsNonNullable = true, TransformSchemaNode = OnlyLockedIsInfinite })
             .AsObject();
-        if (versioned)
-        {
-            AddVersionField(schema);
-        }
+        AddVersionField(schema);
 
         var generated = schema.ToJsonString(SaveJson.Options);
         var committedPath = Path.Combine(AppContext.BaseDirectory, "SaveSchema", name);
@@ -52,16 +49,18 @@ public sealed class SaveFormatTests : IDisposable
         Assert.Fail($"The saved shape behind {name} changed. Update docs/SAVE_FORMAT.md and docs/save-schema/{name} (new schema: {actualPath}).");
     }
 
+    // A file with a null part is skipped, never thrown out of List.
     [Fact]
-    public void Example_Loads()
+    public void Example_Loads_AndAFileWithANullPartIsSkipped()
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(CreationPath(_exampleId))!);
-        File.WriteAllText(CreationPath(_exampleId), Example());
+        var withNullPart = JsonNode.Parse(Example())!;
+        withNullPart["creature"]!["nodes"]!.AsArray().Add(null);
+        WriteCreation(_exampleId, Example());
+        WriteCreation(Guid.NewGuid(), withNullPart.ToJsonString());
 
-        var loaded = new FileCreationRepository(new TestStorageLocation(_directory)).Get(_exampleId);
+        var listed = new FileCreationRepository(new TestStorageLocation(_directory)).List();
 
-        loaded.ShouldNotBeNull();
-        SaveJson.Serialize(loaded).ShouldBe(SaveJson.Serialize(ExampleCreation()));
+        SaveJson.Serialize(listed.ShouldHaveSingleItem()).ShouldBe(SaveJson.Serialize(ExampleCreation()));
     }
 
     // The example's Camera (7) was saved before its hit input (#1032), so its network has no hit neuron.
@@ -70,7 +69,7 @@ public sealed class SaveFormatTests : IDisposable
     [Fact]
     public void Example_ACameraNetworkFromBeforeHit_PlaysAsBefore_AndARefitAddsHit()
     {
-        var loaded = Load(Example(), "creation.json");
+        var loaded = Load(Example());
         var network = loaded.Training!.Network;
         var ports = NetworkPorts.Of(loaded.Creature);
         var hit = NetworkPort.Input(7, "hit");
@@ -88,37 +87,36 @@ public sealed class SaveFormatTests : IDisposable
         DirectNetwork.Build(refit, ports).Forward(seenNow).ShouldBe(before);
     }
 
+    // Loading is strict: an unknown field, a required one missing or a null where a value belongs fails
+    // and names the field.
     [Theory]
-    [InlineData("\"name\": \"Example\",", "\"name\": \"Example\", \"isLocked\": true,", "isLocked")]
-    [InlineData("\"name\": \"Hip\"", "\"name\": \"Hip\", \"mass\": 2", "mass")]
-    public void Loading_WithAnUnknownField_FailsAndNamesIt(string field, string withExtra, string extra)
-    {
-        var json = Example();
-        json.ShouldContain(field);
-
-        var error = Should.Throw<JsonException>(() => Load(ReplaceFirst(json, field, withExtra), "creation.json"));
-
-        error.Message.ShouldContain(extra);
-    }
-
-    [Theory]
-    [InlineData("kind")]
-    [InlineData("generation")]
-    [InlineData("latest")]
-    [InlineData("best")]
-    [InlineData("enabled")]
-    [InlineData("nextNeuronId")]
-    [InlineData("springs")]
-    [InlineData("nextPartId")]
-    [InlineData("x")]
-    public void Loading_WithARequiredFieldMissing_FailsAndNamesIt(string field)
+    [InlineData("unknown", "isLocked")]
+    [InlineData("unknown", "mass")]
+    [InlineData("missing", "x")]
+    [InlineData("missing", "enabled")]
+    [InlineData("missing", "springs")]
+    [InlineData("null", "network")]
+    [InlineData("null", "latest")]
+    public void Loading_AFileOutsideTheShape_FailsAndNamesTheField(string change, string field)
     {
         var json = JsonNode.Parse(Example())!;
-        RemoveFirst(json, field).ShouldBeTrue();
+        switch (change)
+        {
+            case "unknown" when field == "isLocked":
+                json["isLocked"] = true;
+                break;
+            case "unknown":
+                json["creature"]!["nodes"]![0]![field] = 2;
+                break;
+            case "missing":
+                RemoveFirst(json, field).ShouldBeTrue();
+                break;
+            default:
+                json["training"]![field == "network" ? "brain" : field] = null;
+                break;
+        }
 
-        var error = Should.Throw<JsonException>(() => Load(json.ToJsonString(), "creation.json"));
-
-        error.Message.ShouldContain(field);
+        Should.Throw<JsonException>(() => Load(json.ToJsonString())).Message.ShouldContain(field);
     }
 
     [Fact]
@@ -128,89 +126,40 @@ public sealed class SaveFormatTests : IDisposable
         RemoveFirst(json, "frontDistance").ShouldBeTrue();
         RemoveFirst(json, "frontDistance").ShouldBeTrue();
 
-        var training = Load(json.ToJsonString(), "creation.json").Training!;
+        var training = Load(json.ToJsonString()).Training!;
 
         training.Latest.FrontDistance.ShouldBeNull();
         training.Latest.ShownDistance.ShouldBe(3.5);
         training.Best.FrontDistance.ShouldBeNull();
     }
 
+    // Each Creation has its own folder, and a Camera's settings and a stroke of 200% survive the file.
     [Fact]
-    public void Loading_WithNullNetwork_FailsAndNamesIt()
-    {
-        var json = JsonNode.Parse(Example())!.AsObject();
-        json["training"]!["brain"] = null;
-
-        Should.Throw<JsonException>(() => Load(json.ToJsonString(), "creation.json"))
-            .Message.ShouldContain("network");
-    }
-
-    [Fact]
-    public void Loading_WithNullLatest_FailsAndNamesIt()
-    {
-        var json = JsonNode.Parse(Example())!.AsObject();
-        json["training"]!["latest"] = null;
-
-        Should.Throw<JsonException>(() => Load(json.ToJsonString(), "creation.json"))
-            .Message.ShouldContain("latest");
-    }
-
-    [Fact]
-    public void List_SkipsAFileWithANullPart()
-    {
-        var json = JsonNode.Parse(Example())!;
-        json["creature"]!["nodes"]!.AsArray().Add(null);
-        Directory.CreateDirectory(Path.GetDirectoryName(CreationPath(_exampleId))!);
-        File.WriteAllText(CreationPath(_exampleId), json.ToJsonString());
-
-        new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Repository_KeepsEachCreationInItsOwnFolder()
-    {
-        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
-        var creation = ExampleCreation();
-
-        repository.Save(creation);
-        File.Exists(CreationPath(creation.Id)).ShouldBeTrue();
-        Directory.EnumerateFileSystemEntries(_directory).ShouldBe([Path.GetDirectoryName(CreationPath(creation.Id))!]);
-
-        repository.Delete(creation.Id).ShouldBeTrue();
-        Directory.EnumerateFileSystemEntries(_directory).ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Repository_KeepsACamerasRaysSpreadAndRange()
+    public void Repository_KeepsEachCreationInItsOwnFolder_AndACamerasSettingsAndAMaxStroke()
     {
         var repository = new FileCreationRepository(new TestStorageLocation(_directory));
         var camera = new SensorDef(3, 2, SensorKind.Camera, "Eye", aim: -0.5, rays: 5, spread: Math.PI / 6, range: 350);
-        var creation = new CreationDef(
-            Guid.NewGuid(),
-            "Looker",
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(4, new Vector2D(2, 0))], [new BeamDef(2, 1, 4)], [camera], [], nextPartId: 5));
-
-        repository.Save(creation);
-
-        repository.Get(creation.Id).ShouldNotBeNull().Creature.Sensors.ShouldBe([camera]);
-    }
-
-    [Fact]
-    public void Repository_KeepsAStrokeOf200Percent()
-    {
-        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
-        var piston = new PistonDef(3, 1, 2, stroke: PistonDef.MaxStroke, start: 0);
-        var spring = new SpringDef(4, 2, 5, stroke: SpringDef.MaxStroke, coilLength: 1);
+        var piston = new PistonDef(6, 1, 4, stroke: PistonDef.MaxStroke, start: 0);
+        var spring = new SpringDef(7, 4, 5, stroke: SpringDef.MaxStroke, coilLength: 1);
         var creation = new CreationDef(
             Guid.NewGuid(),
             "Reacher",
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(5, new Vector2D(2, 2))], [], [], [piston], [spring], nextPartId: 6));
+            new CreatureDef(
+                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(4, new Vector2D(2, 0)), new NodeDef(5, new Vector2D(2, 2))],
+                [new BeamDef(2, 1, 4)],
+                [camera],
+                [piston],
+                [spring],
+                nextPartId: 8));
 
         repository.Save(creation);
 
+        Directory.EnumerateFileSystemEntries(_directory).ShouldBe([Path.GetDirectoryName(CreationPath(creation.Id))!]);
+        File.Exists(CreationPath(creation.Id)).ShouldBeTrue();
         var loaded = repository.Get(creation.Id).ShouldNotBeNull().Creature;
-        loaded.Pistons.ShouldBe([piston]);
-        loaded.Springs.ShouldBe([spring]);
+        loaded.Parts.ShouldBe(creation.Creature.Parts);
+        repository.Delete(creation.Id).ShouldBeTrue();
+        Directory.EnumerateFileSystemEntries(_directory).ShouldBeEmpty();
     }
 
     private static CreationDef ExampleCreation() =>
@@ -270,7 +219,7 @@ public sealed class SaveFormatTests : IDisposable
         schema["required"]!.AsArray().Insert(0, field);
     }
 
-    private static CreationDef Load(string json, string path) => FileCreationRepository.Format.Deserialize(json, path).Value;
+    private static CreationDef Load(string json) => FileCreationRepository.Format.Deserialize(json, "creation.json").Value;
 
     private static string Example() =>
         File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Repositories", "SaveExamples", "creation.json"));
@@ -285,10 +234,10 @@ public sealed class SaveFormatTests : IDisposable
 
     private static string Normalize(string json) => json.ReplaceLineEndings("\n").TrimEnd();
 
-    private static string ReplaceFirst(string text, string value, string replacement)
+    private void WriteCreation(Guid id, string json)
     {
-        var index = text.IndexOf(value, StringComparison.Ordinal);
-        return text[..index] + replacement + text[(index + value.Length)..];
+        Directory.CreateDirectory(Path.GetDirectoryName(CreationPath(id))!);
+        File.WriteAllText(CreationPath(id), json);
     }
 
     private string CreationPath(Guid id) => Path.Combine(_directory, id.ToString("N"), FileCreationRepository.CreationFileName);

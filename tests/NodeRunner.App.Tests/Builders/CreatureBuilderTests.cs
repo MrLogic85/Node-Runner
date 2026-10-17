@@ -6,260 +6,250 @@ namespace NodeRunner.App.Tests.Builders;
 
 public sealed class CreatureBuilderTests
 {
-    [Fact]
-    public void AddNode_ReturnsSequentialIds()
-    {
-        var builder = new CreatureBuilder();
+    private static readonly CreatureElementKind[] _hingeKinds =
+    [
+        CreatureElementKind.Servo,
+        CreatureElementKind.VelocityMotor,
+        CreatureElementKind.Stepper,
+        CreatureElementKind.Brake,
+        CreatureElementKind.AngleSensor,
+    ];
 
-        var first = builder.AddNode(new Vector2D(0, 0));
-        var second = builder.AddNode(new Vector2D(2, 0));
-
-        first.ShouldBe(1);
-        second.ShouldBe(2);
-        builder.Nodes.Count.ShouldBe(2);
-    }
-
-    [Fact]
-    public void MoveNode_UpdatesPositionAndKeepsName()
-    {
-        var builder = new CreatureBuilder();
-        var node = builder.AddNode(new Vector2D(0, 0));
-        builder.Rename(node, "Knee");
-
-        builder.MoveNode(node, new Vector2D(5, 7));
-
-        builder.Nodes[builder.NodeIndexOf(node)].Position.ShouldBe(new Vector2D(5, 7));
-        builder.Nodes[builder.NodeIndexOf(node)].Name.ShouldBe("Knee");
-    }
-
-    [Fact]
-    public void AddBeam_BetweenDistinctNodes_ReturnsId()
-    {
-        var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0));
-        var b = builder.AddNode(new Vector2D(2, 0));
-
-        var beamId = builder.AddBeam(a, b);
-
-        beamId.ShouldBe(3);
-        builder.Beams[0].NodeA.ShouldBe(a);
-        builder.Beams[0].NodeB.ShouldBe(b);
-    }
-
-    [Fact]
-    public void AddBeam_DuplicateInEitherOrder_Throws()
-    {
-        var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0));
-        var b = builder.AddNode(new Vector2D(2, 0));
-        builder.AddBeam(a, b);
-
-        var actionSameOrder = () => { builder.AddBeam(a, b); };
-        var actionReversed = () => { builder.AddBeam(b, a); };
-
-        actionSameOrder.ShouldThrow<ArgumentException>();
-        actionReversed.ShouldThrow<ArgumentException>();
-    }
-
-    [Fact]
-    public void AddSensor_OnExistingBeam_ReturnsId()
-    {
-        var builder = PairBuilder();
-        var beam = builder.Beams[0].Id;
-
-        var added = builder.AddSensor(beam, SensorKind.Accelerometer, out var sensorId, out var reason);
-
-        added.ShouldBeTrue();
-        sensorId.ShouldBe(4);
-        reason.ShouldBeNull();
-        builder.Sensors.ShouldBe([new SensorDef(4, beam, SensorKind.Accelerometer)]);
-    }
-
+    // Every hinge part fills its joint's one hinge-part slot and takes its sides by the Servo's rules
+    // (#1039, #1044, #1118, #1204); every side change keeps its id, and so its ports and training (#1177).
     [Theory]
-    [InlineData(SensorKind.Accelerometer, SensorKind.Accelerometer)]
-    [InlineData(SensorKind.Accelerometer, SensorKind.Camera)]
-    [InlineData(SensorKind.Camera, SensorKind.Accelerometer)]
-    [InlineData(SensorKind.Camera, SensorKind.Camera)]
-    public void AddSensor_OnABeamThatHasOne_ReturnsReasonAndDoesNotMutate(SensorKind first, SensorKind second)
+    [InlineData(CreatureElementKind.Servo)]
+    [InlineData(CreatureElementKind.VelocityMotor)]
+    [InlineData(CreatureElementKind.Stepper)]
+    [InlineData(CreatureElementKind.Brake)]
+    [InlineData(CreatureElementKind.AngleSensor)]
+    public void AHingePart_TakesItsSidesByTheServosRules_AndKeepsItsIdThroughEveryChange(CreatureElementKind kind)
     {
-        var builder = PairBuilder();
-        var beam = builder.Beams[0].Id;
-        builder.AddSensor(beam, first, out var firstId, out _);
+        var builder = Joint(out var joint, out var far, out var first, out var second);
+        var elsewhere = builder.AddBeam(far, builder.AddNode(new Vector2D(240, 0)));
+        var wheelJoint = builder.AddNode(new Vector2D(120, -120));
+        var wheelBeam = builder.AddBeam(wheelJoint, far);
+        CanAddHingePart(builder, kind, 999, out var offJoint).ShouldBeFalse();
+        offJoint.ShouldBe(OffJointReason(kind));
+        Should.Throw<ArgumentException>(() => AddHingePart(builder, kind, 999)).Message.ShouldBe(offJoint!.Message);
+        Should.Throw<ArgumentException>(() => AddHingePart(builder, kind, joint, first, elsewhere));
 
-        var added = builder.AddSensor(beam, second, out var secondId, out var reason);
+        var part = AddHingePart(builder, kind, joint);
 
-        added.ShouldBeFalse();
-        secondId.ShouldBe(0);
-        reason.ShouldBe(UiText.Plain("One sensor per beam"));
-        builder.Sensors.Select(sensor => (sensor.Id, sensor.BeamId, sensor.Kind)).ShouldBe([(firstId, beam, first)]);
+        ShouldHaveSides(builder, part, first, second);
+        new CreatureBuilder(builder.Build()).HingeParts.ShouldBe(builder.HingeParts);
+        foreach (var other in _hingeKinds)
+        {
+            CanAddHingePart(builder, other, joint, out var full).ShouldBeFalse();
+            full.ShouldBe(CreatureBuilder.OneHingePartPerJointReason);
+        }
+
+        Should.Throw<ArgumentException>(() => AddHingePart(builder, kind, joint));
+        builder.Rename(part, "Knee");
+        SetHingePartLink(builder, kind, part, fixedRole: true, second);
+        ShouldHaveSides(builder, part, second, first);
+        SetHingePartLink(builder, kind, part, fixedRole: false, second);
+        ShouldHaveSides(builder, part, first, second);
+        Should.Throw<ArgumentException>(() => SetHingePartLink(builder, kind, part, fixedRole: true, elsewhere));
+        var spring = builder.AddSpring(joint, far);
+        ShouldHaveSides(builder, part, spring, second);
+        var third = builder.AddBeam(joint, builder.AddNode(new Vector2D(-120, 0)));
+        SetHingePartLink(builder, kind, part, fixedRole: false, third);
+        ShouldHaveSides(builder, part, spring, third);
+        SetHingePartLink(builder, kind, part, fixedRole: true, second);
+        ShouldHaveSides(builder, part, second, third);
+        builder.RemoveBeam(third);
+        ShouldHaveSides(builder, part, second, null);
+        builder.HingeParts.Single().Name.ShouldBe("Knee");
+        RemoveHingePart(builder, kind, part);
+        builder.HingeParts.ShouldBeEmpty();
+        builder.CanAddServo(joint, out _).ShouldBeTrue();
+        Should.Throw<ArgumentOutOfRangeException>(() => RemoveHingePart(builder, kind, part));
+
+        // A Wheel is a one-sided link at its joint (#1118): a side until it goes.
+        var wheel = builder.AddWheel(wheelJoint);
+        var onWheel = AddHingePart(builder, kind, wheelJoint);
+        ShouldHaveSides(builder, onWheel, wheelBeam, wheel);
+        builder.RemoveWheel(wheel);
+        ShouldHaveSides(builder, onWheel, wheelBeam, null);
+        builder.RemoveNode(wheelJoint);
+        builder.HingeParts.ShouldBeEmpty();
     }
 
-    [Fact]
-    public void AddSensor_Camera_AimsAtTheWorldsForwardDownAsBuilt()
-    {
-        var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0));
-        builder.AddNode(new Vector2D(0, 100));
-        var beam = builder.AddBeam(1, 2);
-
-        builder.AddSensor(beam, SensorKind.Camera, out _, out _);
-
-        builder.Sensors[0].Aim.ShouldBe(SensorDef.DefaultAim(new Vector2D(0, 0), new Vector2D(0, 100)));
-    }
-
-    [Fact]
-    public void Aim_IsKeptThroughRename()
-    {
-        var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0));
-        var b = builder.AddNode(new Vector2D(100, 0));
-        var beam = builder.AddBeam(a, b);
-        builder.AddSensor(beam, SensorKind.Camera, out var sensor, out _);
-
-        builder.SetParameter(sensor, PartParameterId.Aim, 2);
-        builder.Rename(sensor, "Eye");
-
-        builder.Sensors.ShouldBe([new SensorDef(sensor, beam, SensorKind.Camera, "Eye", 2)]);
-    }
-
-    [Fact]
-    public void ParametersOf_ACamera_AreItsAimRaysSpreadAndRange_AndSettingOneKeepsTheOthers()
-    {
-        var builder = PairBuilder();
-        builder.AddSensor(builder.Beams[0].Id, SensorKind.Camera, out var camera, out _);
-        var aim = builder.Sensors[0].Aim!.Value;
-
-        builder.ParametersOf(camera).ShouldBe([PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
-        builder.ParameterValue(camera, PartParameterId.Rays).ShouldBe(3);
-        builder.ParameterValue(camera, PartParameterId.Spread).ShouldBe(Math.PI / 2);
-        builder.ParameterValue(camera, PartParameterId.CameraRange).ShouldBe(220);
-
-        builder.SetParameter(camera, PartParameterId.Rays, 1);
-        builder.SetParameter(camera, PartParameterId.Spread, 0.5);
-        builder.SetParameter(camera, PartParameterId.CameraRange, 150);
-
-        builder.Sensors.ShouldBe([new SensorDef(camera, builder.Beams[0].Id, SensorKind.Camera, aim: aim, rays: 1, spread: 0.5, range: 150)]);
-        builder.ParameterHasEffect(camera, PartParameterId.Spread).ShouldBeFalse();
-        builder.ParameterHasEffect(camera, PartParameterId.CameraRange).ShouldBeTrue();
-    }
-
+    // A Wheel, a Touch sensor and a Rubber each take one slot of their own at a joint, beside a hinge part.
     [Theory]
-    [InlineData(2.0)]
-    [InlineData(2.5)]
-    [InlineData(7.0)]
-    public void Rays_OtherThanOneThreeOrFive_Throw(double rays)
+    [InlineData(CreatureElementKind.Wheel)]
+    [InlineData(CreatureElementKind.TouchSensor)]
+    [InlineData(CreatureElementKind.Rubber)]
+    public void AJointPart_TakesItsOwnSlot_AndGoesWithItsJoint(CreatureElementKind kind)
     {
         var builder = PairBuilder();
-        builder.AddSensor(builder.Beams[0].Id, SensorKind.Camera, out var camera, out _);
+        var (joint, other, beam) = (builder.Nodes[0].Id, builder.Nodes[1].Id, builder.Beams[0].Id);
+        CanAddJointPart(builder, kind, beam, out var offJoint).ShouldBeFalse();
+        offJoint.ShouldBe(JointPartReasons(kind).OffJoint);
+        foreach (var neighbour in new[] { CreatureElementKind.Wheel, CreatureElementKind.TouchSensor, CreatureElementKind.Rubber }.Where(neighbour => neighbour != kind))
+        {
+            AddJointPart(builder, neighbour, joint);
+        }
 
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(camera, PartParameterId.Rays, rays));
-        builder.Sensors[0].Rays.ShouldBe(3);
+        builder.AddServo(joint);
+        var expectedId = builder.NextPartId;
+
+        var part = AddJointPart(builder, kind, joint);
+
+        part.ShouldBe(expectedId);
+        CanAddJointPart(builder, kind, joint, out var full).ShouldBeFalse();
+        full.ShouldBe(JointPartReasons(kind).Full);
+        Should.Throw<ArgumentException>(() => AddJointPart(builder, kind, joint));
+        var kept = AddJointPart(builder, kind, other);
+        builder.NodeRadius(other).ShouldBe(kind == CreatureElementKind.Wheel ? WheelDef.DefaultRadius : NodeDef.PlainJointRadius);
+        builder.Rename(kept, "Toe");
+        new CreatureBuilder(builder.Build()).JointParts.ShouldBe(builder.JointParts);
+        builder.RemoveNode(joint);
+        builder.JointParts.Select(jointPart => (jointPart.Id, jointPart.Name)).ShouldBe([(kept, "Toe")]);
+        RemoveJointPart(builder, kind, kept);
+        builder.JointParts.ShouldBeEmpty();
+        builder.Nodes.Select(node => node.Id).ShouldBe([other]);
     }
 
-    [Theory]
-    [InlineData(PartParameterId.Spread, 15 * Math.PI / 180, true)]
-    [InlineData(PartParameterId.Spread, Math.PI / 2, true)]
-    [InlineData(PartParameterId.Spread, 10 * Math.PI / 180, false)]
-    [InlineData(PartParameterId.Spread, Math.PI, false)]
-    [InlineData(PartParameterId.CameraRange, 100, true)]
-    [InlineData(PartParameterId.CameraRange, 1000, true)]
-    [InlineData(PartParameterId.CameraRange, 90, false)]
-    [InlineData(PartParameterId.CameraRange, 1010, false)]
-    public void IsWithinBuildLimits_ChecksACamerasSettings(PartParameterId parameter, double value, bool within)
+    // The settings panel lists each part's settings in this order (#704), and setting one leaves the rest.
+    [Fact]
+    public void EveryPartsSettings_ComeInPanelOrder_AndSettingOneKeepsTheOthers()
     {
-        var builder = PairBuilder();
-        builder.AddSensor(builder.Beams[0].Id, SensorKind.Camera, out var camera, out _);
+        var parts = EveryPart();
+        var builder = parts.Builder;
+        var expected = new Dictionary<int, PartParameterId[]>
+        {
+            [parts.Piston] = [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime],
+            [parts.Servo] = [PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.ServoStartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime],
+            [parts.Motor] = [PartParameterId.MotorStrength, PartParameterId.MotorMaxSpeed, PartParameterId.RiseTime],
+            [parts.Stepper] = [PartParameterId.ServoStrength, PartParameterId.StepsPerTurn, PartParameterId.MaxFrequency],
+            [parts.Brake] = [PartParameterId.BrakeStrength],
+            [parts.Spring] = [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength],
+            [parts.Wheel] = [PartParameterId.WheelRadius],
+            [parts.Camera] = [PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange],
+        };
+
+        builder.PartIdsWithSettings.ShouldBe(expected.Keys, ignoreOrder: true);
+        builder.Parts.Where(part => !expected.ContainsKey(part.Id)).ShouldAllBe(part => builder.ParametersOf(part.Id).Count == 0);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(parts.Accelerometer, PartParameterId.Aim, 1));
+        foreach (var (part, parameters) in expected)
+        {
+            builder.ParametersOf(part).ShouldBe(parameters);
+            var notItsOwn = Enum.GetValues<PartParameterId>().First(parameter => !parameters.Contains(parameter));
+            Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(part, notItsOwn, 1));
+            Should.Throw<ArgumentOutOfRangeException>(() => builder.ParameterValue(part, notItsOwn));
+            foreach (var parameter in parameters)
+            {
+                var others = parameters.Where(other => other != parameter).ToDictionary(other => other, other => builder.ParameterValue(part, other));
+                var value = parameter == PartParameterId.Aim ? 0.3 : PartParameters.ValueAt(parameter, 0.25);
+
+                builder.SetParameter(part, parameter, value);
+
+                builder.ParameterValue(part, parameter).ShouldBe(value, 1e-9, $"{part} {parameter}");
+                foreach (var (other, before) in others)
+                {
+                    builder.ParameterValue(part, other).ShouldBe(before, 1e-9, $"{part} {other} after {parameter}");
+                }
+            }
+        }
+
         builder.IsWithinBuildLimits().ShouldBeTrue();
-
-        builder.SetParameter(camera, parameter, value);
-
-        builder.IsWithinBuildLimits().ShouldBe(within);
+        builder.NodeRadius(builder.Wheels.Single().NodeId).ShouldBe(builder.Wheels.Single().Radius);
     }
 
     [Fact]
-    public void Aim_OnAnAccelerometer_Throws()
+    public void WholeNumberSettings_RoundOrRefuse_AndASingleRayCameraHasNoSpread()
     {
-        var builder = PairBuilder();
-        builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out var sensor, out _);
+        var parts = EveryPart();
+        var builder = parts.Builder;
 
-        builder.ParametersOf(sensor).ShouldBeEmpty();
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(sensor, PartParameterId.Aim, 1));
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(sensor, PartParameterId.Rays, 1));
-        builder.IsWithinBuildLimits().ShouldBeTrue();
+        builder.SetParameter(parts.Stepper, PartParameterId.StepsPerTurn, 11.6);
+        builder.Steppers.Single().StepsPerTurn.ShouldBe(12);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(parts.Stepper, PartParameterId.StepsPerTurn, 25));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(parts.Camera, PartParameterId.Rays, 2));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(parts.Camera, PartParameterId.Rays, 2.5));
+        builder.Steppers.Single().StepsPerTurn.ShouldBe(12);
+        builder.Sensors.Single(sensor => sensor.Id == parts.Camera).Rays.ShouldBe(3);
+        builder.ParameterHasEffect(parts.Camera, PartParameterId.Spread).ShouldBeTrue();
+        builder.SetParameter(parts.Camera, PartParameterId.Rays, 1);
+        builder.ParameterHasEffect(parts.Camera, PartParameterId.Spread).ShouldBeFalse();
+        builder.ParameterHasEffect(parts.Camera, PartParameterId.CameraRange).ShouldBeTrue();
     }
 
-    [Fact]
-    public void ParametersOf_APiston_AreItsFive_AndSettingOneKeepsTheOthers()
+    // A creature from outside the app, like a share code, must be one Build could make (#899): each
+    // setting on its slider, a Brake's Locked top step included (#1041).
+    [Theory]
+    [InlineData(BrakeDef.LockedStrength, true)]
+    [InlineData(199999.0, false)]
+    public void IsWithinBuildLimits_TakesEachSettingOnItsSlider(double brakeStrength, bool within)
     {
-        var builder = PairBuilder();
-        var far = builder.AddNode(new Vector2D(180, 0));
-        var piston = builder.AddPiston(builder.Nodes[0].Id, far);
+        var parts = EveryPart();
 
-        builder.ParametersOf(piston).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
-        builder.ParametersOf(builder.Beams[0].Id).ShouldBeEmpty();
-        builder.SetParameter(piston, PartParameterId.Stroke, 0.4);
+        parts.Builder.SetParameter(parts.Brake, PartParameterId.BrakeStrength, brakeStrength);
 
-        builder.Pistons.Single().ShouldBe(new PistonDef(piston, builder.Nodes[0].Id, far, stroke: 0.4));
-        builder.ParameterValue(piston, PartParameterId.Stroke).ShouldBe(0.4);
-        builder.SetParameter(piston, PartParameterId.RiseTime, 0.5);
-        builder.Pistons.Single().ShouldBe(new PistonDef(piston, builder.Nodes[0].Id, far, stroke: 0.4, riseTime: 0.5));
-        builder.ParameterValue(piston, PartParameterId.RiseTime).ShouldBe(0.5);
-        builder.SetParameter(piston, PartParameterId.StartPosition, 0);
-        builder.Pistons.Single().ShouldBe(new PistonDef(piston, builder.Nodes[0].Id, far, stroke: 0.4, riseTime: 0.5, start: 0));
-        builder.ParameterValue(piston, PartParameterId.StartPosition).ShouldBe(0);
+        parts.Builder.IsWithinBuildLimits().ShouldBe(within);
     }
 
     [Fact]
-    public void ParametersOf_AServo_AreItsFive_WithAStartPositionOfItsOwn()
+    public void ACreature_RoundTripsThroughTheBuilder_AndRemovingAJointTakesEverythingOnIt()
     {
-        var builder = PairBuilder();
-        var a = builder.Nodes[0].Id;
-        builder.AddBeam(a, builder.AddNode(new Vector2D(0, 90)));
-        var servo = builder.AddServo(a);
+        var built = EveryPart().Builder.Build();
 
-        builder.ParametersOf(servo).ShouldBe([PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.ServoStartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime]);
-        builder.SetParameter(servo, PartParameterId.ServoStartPosition, 0.25);
-        builder.Servos.Single().Start.ShouldBe(0.25);
-        builder.ParameterValue(servo, PartParameterId.ServoStartPosition).ShouldBe(0.25);
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(servo, PartParameterId.StartPosition, 0.5));
+        var builder = new CreatureBuilder(built);
+
+        builder.Build().Parts.ShouldBe(built.Parts);
+        builder.Build().NextPartId.ShouldBe(built.NextPartId);
+        foreach (var part in builder.Parts)
+        {
+            builder.Rename(part.Id, $"Part {part.Id}");
+        }
+
+        builder.Parts.ShouldAllBe(part => part.Name == $"Part {part.Id}");
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.Rename(999, "Ghost"));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.Rename(0, "Ghost"));
+        var middle = builder.Nodes[1];
+        builder.MoveNode(middle.Id, new Vector2D(130, 10));
+        builder.Nodes[1].ShouldBe(new NodeDef(middle.Id, new Vector2D(130, 10), middle.Name));
+        builder.TryBuild(out _, out _).ShouldBeTrue();
+        var survivors = builder.Parts.Where(part => part.Id is 3 or 9 or 12).ToList();
+
+        builder.RemoveNode(middle.Id);
+
+        builder.Nodes.Select(node => node.Id).ShouldNotContain(middle.Id);
+        builder.Beams.ShouldAllBe(beam => beam.NodeA != middle.Id && beam.NodeB != middle.Id);
+        builder.Sensors.ShouldBeEmpty();
+        builder.VelocityMotors.ShouldBeEmpty();
+        builder.Servos.Single().FixedLinkId.ShouldBeNull();
+        builder.Parts.Where(part => part.Id is 3 or 9 or 12).ShouldBe(survivors);
+        builder.TryBuild(out var creature, out var problems).ShouldBeFalse();
+        creature.ShouldBeNull();
+        problems.ShouldNotBeEmpty();
+        builder.AddNode(new Vector2D(0, -90)).ShouldBe(built.NextPartId);
     }
 
     [Fact]
-    public void AddServo_WithGivenLinks_KeepsThem_AndRefusesALinkElsewhere()
+    public void AWorm_Builds()
     {
-        var builder = PairBuilder();
-        var a = builder.Nodes[0].Id;
-        var second = builder.AddBeam(a, builder.AddNode(new Vector2D(0, 90)));
-        var elsewhere = builder.AddBeam(builder.AddNode(new Vector2D(300, 0)), builder.AddNode(new Vector2D(400, 0)));
+        var builder = new CreatureBuilder();
+        var previous = builder.AddNode(new Vector2D(0, 0));
+        previous.ShouldBe(1);
+        for (var i = 1; i < 5; i++)
+        {
+            var next = builder.AddNode(new Vector2D(i * 90, 0));
+            builder.AddBeam(previous, next);
+            previous = next;
+        }
 
-        Should.Throw<ArgumentException>(() => builder.AddServo(a, elsewhere, null));
-        var servo = builder.AddServo(a, null, second);
+        builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out _, out _).ShouldBeTrue();
 
-        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, null, second));
+        builder.TryBuild(out var creature, out var errors).ShouldBeTrue();
+        errors.ShouldBeEmpty();
+        creature!.Parts.ShouldBe(builder.Build().Parts);
     }
 
     [Fact]
-    public void ParametersOf_ASpring_AreItsFourSettings_AndSettingOneKeepsTheOthers()
-    {
-        var builder = PairBuilder();
-        var far = builder.AddNode(new Vector2D(180, 0));
-        var spring = builder.AddSpring(builder.Nodes[0].Id, far);
-
-        builder.ParametersOf(spring).ShouldBe(
-            [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength]);
-        builder.SetParameter(spring, PartParameterId.Damping, 0.6);
-        builder.SetParameter(spring, PartParameterId.Stroke, 0.3);
-        builder.SetParameter(spring, PartParameterId.CoilLength, 0.2);
-
-        builder.Springs.Single().ShouldBe(new SpringDef(spring, builder.Nodes[0].Id, far, damping: 0.6, stroke: 0.3, coilLength: 0.2));
-        builder.ParameterValue(spring, PartParameterId.Stiffness).ShouldBe(SpringDef.DefaultStiffness);
-        builder.ParameterValue(spring, PartParameterId.Stroke).ShouldBe(0.3);
-        builder.ParameterValue(spring, PartParameterId.CoilLength).ShouldBe(0.2);
-        builder.Nodes.Single(node => node.Id == far).Position.ShouldBe(new Vector2D(180, 0));
-    }
-
-    [Fact]
-    public void ALink_OnAPairTheSameKindJoins_IsRefusedWithWhy()
+    public void ALink_OnAPairAlreadyJoined_OrOnASensorsBeam_IsRefusedWithWhy()
     {
         var builder = PairBuilder();
         var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
@@ -267,6 +257,7 @@ public sealed class CreatureBuilderTests
         var d = builder.AddNode(new Vector2D(90, 90));
         builder.AddSpring(a, c);
         builder.AddPiston(b, d);
+        builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out _, out _);
 
         builder.CanAddBeam(b, a, out var onBeam).ShouldBeFalse();
         onBeam.ShouldBe(CreatureBuilder.BeamJoinsTheseNodesReason);
@@ -274,214 +265,25 @@ public sealed class CreatureBuilderTests
         onSpring.ShouldBe(CreatureBuilder.SpringJoinsTheseNodesReason);
         builder.CanAddPiston(d, b, out var onPiston).ShouldBeFalse();
         onPiston.ShouldBe(CreatureBuilder.PistonJoinsTheseNodesReason);
-        Should.Throw<ArgumentException>(() => builder.AddSpring(a, c));
+        builder.CanAddPiston(a, b, out var pistonOnSensor).ShouldBeFalse();
+        pistonOnSensor.ShouldBe(CreatureBuilder.SensorSitsOnThisBeamReason);
+        builder.CanAddSpring(b, a, out var springOnSensor).ShouldBeFalse();
+        springOnSensor.ShouldBe(CreatureBuilder.SensorSitsOnThisBeamReason);
         builder.CanAddSpring(a, a, out _).ShouldBeFalse();
         builder.CanAddSpring(c, d, out _).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void RemoveNode_RemovesItsSprings_AndRenameNamesOne()
-    {
-        var builder = PairBuilder();
-        var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
-        var c = builder.AddNode(new Vector2D(0, 90));
-        var kept = builder.AddSpring(a, c);
-        var removed = builder.AddSpring(b, c);
-        builder.Rename(kept, "Tail");
-
-        builder.RemoveNode(b);
-
-        builder.Springs.ShouldBe([new SpringDef(kept, a, c, "Tail")]);
-        builder.Build().Springs.ShouldBe(builder.Springs);
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.SpringIndexOf(removed));
-    }
-
-    [Fact]
-    public void RemoveSensor_RemovesOnlyThatSensor()
-    {
-        var builder = PairBuilder();
-        builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out var sensorId, out _);
-
-        builder.RemoveSensor(sensorId);
-
-        builder.Sensors.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void RemoveBeam_CascadesToSensorsOnThatBeam()
-    {
-        var builder = PairBuilder();
-        var beam = builder.Beams[0].Id;
-        builder.AddSensor(beam, SensorKind.Accelerometer, out _, out _);
-        builder.AddSensor(beam, SensorKind.Camera, out _, out _);
-
-        builder.RemoveBeam(beam);
-
-        builder.Beams.ShouldBeEmpty();
-        builder.Sensors.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void RemoveNode_CascadesToAttachedBeamsAndSensors()
-    {
-        var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0));
-        var b = builder.AddNode(new Vector2D(2, 0));
-        var c = builder.AddNode(new Vector2D(4, 0));
-        var first = builder.AddBeam(a, b);
-        var second = builder.AddBeam(b, c);
-        builder.AddSensor(first, SensorKind.Accelerometer, out _, out _);
-        builder.AddSensor(second, SensorKind.Accelerometer, out _, out _);
-
-        builder.RemoveNode(b);
-
-        builder.Nodes.Count.ShouldBe(2);
-        builder.Beams.ShouldBeEmpty();
-        builder.Sensors.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void RemoveNode_KeepsSurvivingBeamAndSensorReferencesById()
-    {
-        var builder = new CreatureBuilder();
-        var a = builder.AddNode(new Vector2D(0, 0));
-        var b = builder.AddNode(new Vector2D(2, 0));
-        var c = builder.AddNode(new Vector2D(4, 0));
-        var beam = builder.AddBeam(b, c);
-        builder.AddSensor(beam, SensorKind.Accelerometer, out var sensor, out _);
-
-        builder.RemoveNode(a);
-
-        builder.Nodes.Count.ShouldBe(2);
-        builder.Beams[0].NodeA.ShouldBe(b);
-        builder.Beams[0].NodeB.ShouldBe(c);
-        builder.Sensors[0].ShouldBe(new SensorDef(sensor, beam, SensorKind.Accelerometer));
-    }
-
-    [Fact]
-    public void Rename_ChangesOnlyTheMatchingPartName()
-    {
-        var builder = PairBuilder();
-        var a = builder.Nodes[0].Id;
-        var beam = builder.Beams[0].Id;
-        builder.AddSensor(beam, SensorKind.Accelerometer, out var sensor, out _);
-
-        builder.Rename(a, "Node");
-        builder.Rename(beam, "Beam");
-        builder.Rename(sensor, "Accelerometer");
-
-        builder.Nodes[0].Name.ShouldBe("Node");
-        builder.Beams[0].Name.ShouldBe("Beam");
-        builder.Sensors[0].Name.ShouldBe("Accelerometer");
-        builder.Sensors[0].BeamId.ShouldBe(beam);
-    }
-
-    [Fact]
-    public void Constructor_FromCreature_KeepsIdsAndCounter()
-    {
-        var source = new CreatureDef(
-            [new NodeDef(10, new Vector2D(0, 0)), new NodeDef(20, new Vector2D(2, 0))],
-            [new BeamDef(30, 10, 20)],
-            [new SensorDef(40, 30, SensorKind.Accelerometer)],
-            nextPartId: 99);
-
-        var builder = new CreatureBuilder(source);
-        var next = builder.AddNode(new Vector2D(4, 0));
-
-        builder.Build().Nodes.Take(2).ToArray().ShouldBe(source.Nodes.ToArray());
-        builder.Build().Sensors.ToArray().ShouldBe(source.Sensors.ToArray());
-        next.ShouldBe(99);
-        builder.Build().NextPartId.ShouldBe(100);
-    }
-
-    [Fact]
-    public void Build_WithUnfinishedDrawing_ReturnsItAsItStands()
-    {
-        var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0));
-        builder.AddNode(new Vector2D(2, 0));
-
-        var creature = builder.Build();
-
-        creature.Nodes.Count.ShouldBe(2);
-        creature.Beams.ShouldBeEmpty();
-        creature.Sensors.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void TryBuild_WithValidAnatomy_ReturnsCreatureDef()
-    {
-        var builder = PairBuilder();
-        builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out _, out _);
-
-        var succeeded = builder.TryBuild(out var creature, out var errors);
-
-        succeeded.ShouldBeTrue();
-        creature.ShouldNotBeNull();
-        errors.ShouldBeEmpty();
-        creature.Nodes.Count.ShouldBe(2);
-        creature.Beams.Count.ShouldBe(1);
-        creature.Sensors.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void TryBuild_MatchesHardcodedWormShape()
-    {
-        var builder = new CreatureBuilder();
-        var previous = builder.AddNode(new Vector2D(0, 0));
-        int? headBeam = null;
-        for (var i = 1; i < 5; i++)
-        {
-            var next = builder.AddNode(new Vector2D(i * 90, 0));
-            var beam = builder.AddBeam(previous, next);
-            headBeam ??= beam;
-            previous = next;
-        }
-
-        builder.AddSensor(headBeam!.Value, SensorKind.Accelerometer, out _, out _);
-
-        var succeeded = builder.TryBuild(out var creature, out var errors);
-
-        succeeded.ShouldBeTrue();
-        creature.ShouldNotBeNull();
-        errors.ShouldBeEmpty();
-        creature.Nodes.Count.ShouldBe(5);
-        creature.Beams.Count.ShouldBe(4);
-        creature.Sensors.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void APistonOrSpring_OnASensorsBeam_IsRefusedWithWhy()
-    {
-        var builder = PairBuilder();
-        var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
-        builder.AddSensor(builder.Beams[0].Id, SensorKind.Accelerometer, out _, out _);
-
-        builder.CanAddPiston(a, b, out var piston).ShouldBeFalse();
-        piston.ShouldBe(CreatureBuilder.SensorSitsOnThisBeamReason);
-        builder.CanAddSpring(b, a, out var spring).ShouldBeFalse();
-        spring.ShouldBe(CreatureBuilder.SensorSitsOnThisBeamReason);
-        builder.CanAddBeam(a, b, out var beam).ShouldBeFalse();
-        beam.ShouldBe(CreatureBuilder.BeamJoinsTheseNodesReason);
+        Should.Throw<ArgumentException>(() => builder.AddBeam(b, a));
+        Should.Throw<ArgumentException>(() => builder.AddSpring(a, c));
         Should.Throw<ArgumentException>(() => builder.AddPiston(a, b));
-        builder.Beams.Count.ShouldBe(1);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.RemoveSpring(999));
+        builder.Parts.Count.ShouldBe(8);
     }
 
     // Any link replaces a link of another kind on its pair (#849, #1176), with its default settings, and a
-    // Servo holding the old one holds the new one in the same role under the same id (#1177).
+    // hinge part holding the old one holds the new one in the same role under the same id (#1177).
     [Theory]
     [InlineData(BuildLink.Beam, BuildLink.Piston, true)]
-    [InlineData(BuildLink.Beam, BuildLink.Piston, false)]
-    [InlineData(BuildLink.Beam, BuildLink.Spring, true)]
-    [InlineData(BuildLink.Beam, BuildLink.Spring, false)]
-    [InlineData(BuildLink.Piston, BuildLink.Beam, true)]
-    [InlineData(BuildLink.Piston, BuildLink.Beam, false)]
-    [InlineData(BuildLink.Piston, BuildLink.Spring, true)]
     [InlineData(BuildLink.Piston, BuildLink.Spring, false)]
     [InlineData(BuildLink.Spring, BuildLink.Beam, true)]
-    [InlineData(BuildLink.Spring, BuildLink.Beam, false)]
-    [InlineData(BuildLink.Spring, BuildLink.Piston, true)]
-    [InlineData(BuildLink.Spring, BuildLink.Piston, false)]
     public void ALink_OnAPairAnotherKindJoins_ReplacesIt_AndTakesItsServoRole(BuildLink old, BuildLink drawn, bool replaceFixed)
     {
         var builder = new CreatureBuilder();
@@ -492,366 +294,250 @@ public sealed class CreatureBuilderTests
         var targetLink = AddLink(builder, replaceFixed ? BuildLink.Beam : old, a, c);
         var servo = builder.AddServo(a, fixedLink, targetLink);
         var (from, to) = replaceFixed ? (b, a) : (c, a);
-        var replaced = replaceFixed ? fixedLink : targetLink;
 
         var link = AddLink(builder, drawn, from, to);
 
         LinkIds(builder).ShouldBe(replaceFixed ? [targetLink, link] : [fixedLink, link], ignoreOrder: true);
-        LinkIds(builder).ShouldNotContain(replaced);
         builder.LinkBetween(to, from).ShouldBe(link);
         builder.Servos.Single().ShouldBe(new ServoDef(servo, a, replaceFixed ? link : fixedLink, replaceFixed ? targetLink : link));
         builder.NextPartId.ShouldBe(link + 1);
-        if (drawn == BuildLink.Piston)
-        {
-            builder.Pistons.Single().ShouldBe(new PistonDef(link, from, to));
-        }
-        else if (drawn == BuildLink.Spring)
-        {
-            builder.Springs.Single().ShouldBe(new SpringDef(link, from, to));
-        }
+        builder.Pistons.ShouldBe(drawn == BuildLink.Piston ? [new PistonDef(link, from, to)] : []);
+        builder.Springs.ShouldBe(drawn == BuildLink.Spring ? [new SpringDef(link, from, to)] : []);
     }
 
-    // Every link change keeps the Servo's id, and so its network ports and training (#1177).
+    // One sensor per beam; a moved sensor keeps its id, kind, name and settings (#806).
     [Fact]
-    public void SetServoLink_KeepsItsId_ThroughEveryLinkChange()
+    public void Sensors_SitOnePerBeam_AndMoveKeepingTheirIdNameAndSettings()
     {
-        var builder = PairBuilder();
-        var a = builder.Nodes[0].Id;
-        var first = builder.Beams[0].Id;
-        var second = builder.AddBeam(a, builder.AddNode(new Vector2D(0, 90)));
-        var third = builder.AddBeam(a, builder.AddNode(new Vector2D(-90, 0)));
-        var servo = builder.AddServo(a);
-        var wheel = builder.AddWheel(a);
-        builder.RemoveBeam(first);
-        var nextPartId = builder.NextPartId;
+        var builder = TwoBeams(out var level, out var down);
+        var third = builder.AddBeam(builder.Nodes[0].Id, builder.Nodes[2].Id);
+        builder.AddSensor(level, SensorKind.Accelerometer, out var tilt, out _).ShouldBeTrue();
+        builder.Rename(tilt, "Tilt");
 
-        builder.SetServoLink(servo, fixedRole: true, third);
-        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, third, second));
-        builder.SetServoLink(servo, fixedRole: false, wheel);
-        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, third, wheel));
-        builder.SetServoLink(servo, fixedRole: true, wheel);
-        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, wheel, third));
-        builder.SetServoLink(servo, fixedRole: false, second);
-        builder.Servos.Single().ShouldBe(new ServoDef(servo, a, wheel, second));
+        builder.AddSensor(level, SensorKind.Camera, out var refusedId, out var refused).ShouldBeFalse();
+        builder.AddSensor(down, SensorKind.Camera, out var camera, out _).ShouldBeTrue();
+        builder.MoveSensor(tilt, down, out var taken).ShouldBeFalse();
+        builder.MoveSensor(tilt, third, out var none).ShouldBeTrue();
 
-        builder.NextPartId.ShouldBe(nextPartId);
-    }
-
-    [Fact]
-    public void MoveSensor_ToAFreeBeam_KeepsItsIdKindAndName()
-    {
-        var builder = TwoBeams(out var from, out var to);
-        builder.AddSensor(from, SensorKind.Accelerometer, out var sensor, out _);
-        builder.Rename(sensor, "Tilt");
-
-        var moved = builder.MoveSensor(sensor, to, out var reason);
-
-        moved.ShouldBeTrue();
-        reason.ShouldBeNull();
-        builder.Sensors.ShouldBe([new SensorDef(sensor, to, SensorKind.Accelerometer, "Tilt")]);
-    }
-
-    [Fact]
-    public void MoveSensor_ToABeamThatHasOne_ReturnsReasonAndDoesNotMutate()
-    {
-        var builder = TwoBeams(out var from, out var to);
-        builder.AddSensor(from, SensorKind.Accelerometer, out var sensor, out _);
-        builder.AddSensor(to, SensorKind.Camera, out _, out _);
+        refusedId.ShouldBe(0);
+        refused.ShouldBe(CreatureBuilder.OneSensorPerBeamReason);
+        taken.ShouldBe(CreatureBuilder.OneSensorPerBeamReason);
+        none.ShouldBeNull();
+        builder.Sensors.ShouldBe(
+        [
+            new SensorDef(tilt, third, SensorKind.Accelerometer, "Tilt"),
+            new SensorDef(camera, down, SensorKind.Camera, aim: SensorDef.DefaultAim(new Vector2D(90, 0), new Vector2D(90, 90))),
+        ]);
         var before = builder.Sensors.ToList();
-
-        var moved = builder.MoveSensor(sensor, to, out var reason);
-
-        moved.ShouldBeFalse();
-        reason.ShouldBe(UiText.Plain("One sensor per beam"));
+        builder.MoveSensor(camera, down, out _).ShouldBeTrue();
         builder.Sensors.ShouldBe(before);
+        builder.RemoveSensor(tilt);
+        builder.RemoveBeam(down);
+        builder.Sensors.ShouldBeEmpty();
     }
 
+    // A Camera keeps the world direction it looks in as built (#806): level → down turns the beam by
+    // +π/2 and down → level by −π/2.
     [Theory]
     [InlineData(false, 0.3 - (Math.PI / 2))]
     [InlineData(true, 0.3 + (Math.PI / 2))]
-    public void MoveSensor_Camera_KeepsTheWorldDirectionItLooksIn(bool fromTheDownBeam, double expected)
+    public void MoveSensor_Camera_KeepsTheWorldDirectionItLooksIn_AndItsSettings(bool fromTheDownBeam, double expectedAim)
     {
-        // Level → down turns the beam by +π/2 and down → level by −π/2, so both beams' angles count.
         var builder = TwoBeams(out var level, out var down);
         var (from, to) = fromTheDownBeam ? (down, level) : (level, down);
         builder.AddSensor(from, SensorKind.Camera, out var camera, out _);
         builder.SetParameter(camera, PartParameterId.Aim, 0.3);
-
-        builder.MoveSensor(camera, to, out _).ShouldBeTrue();
-
-        builder.Sensors.Single().Aim!.Value.ShouldBe(expected, 1e-9);
-    }
-
-    [Fact]
-    public void MoveSensor_Camera_KeepsItsRaysSpreadAndRange()
-    {
-        var builder = TwoBeams(out var from, out var to);
-        builder.AddSensor(from, SensorKind.Camera, out var camera, out _);
         builder.SetParameter(camera, PartParameterId.Rays, 5);
         builder.SetParameter(camera, PartParameterId.Spread, 0.5);
         builder.SetParameter(camera, PartParameterId.CameraRange, 300);
 
         builder.MoveSensor(camera, to, out _).ShouldBeTrue();
 
-        builder.Sensors.Single().ShouldBe(new SensorDef(camera, to, SensorKind.Camera, aim: builder.Sensors.Single().Aim, rays: 5, spread: 0.5, range: 300));
+        var moved = builder.Sensors.Single();
+        moved.Aim!.Value.ShouldBe(expectedAim, 1e-9);
+        moved.ShouldBe(new SensorDef(camera, to, SensorKind.Camera, aim: moved.Aim, rays: 5, spread: 0.5, range: 300));
     }
 
-    [Fact]
-    public void MoveSensor_ToItsOwnBeam_ChangesNothing()
+    // Nodes 1 (0,0), 2 (120,0), 3 (240,0), 4 (0,120), 5 (120,120), 6 (240,120); beams 7 (1–2), 8 (2–3),
+    // 9 (1–4), 10 (2–5), 11 (3–6); every other part on them.
+    private static EveryPartIds EveryPart()
     {
-        var builder = TwoBeams(out var from, out _);
-        builder.AddSensor(from, SensorKind.Camera, out var camera, out _);
-        builder.SetParameter(camera, PartParameterId.Aim, 0.3);
-        var before = builder.Sensors.ToList();
-
-        builder.MoveSensor(camera, from, out _).ShouldBeTrue();
-
-        builder.Sensors.ShouldBe(before);
+        var builder = new CreatureBuilder();
+        var n = new[] { (0, 0), (120, 0), (240, 0), (0, 120), (120, 120), (240, 120) }.Select(p => builder.AddNode(new Vector2D(p.Item1, p.Item2))).ToArray();
+        var b12 = builder.AddBeam(n[0], n[1]);
+        var b23 = builder.AddBeam(n[1], n[2]);
+        builder.AddBeam(n[0], n[3]);
+        builder.AddBeam(n[1], n[4]);
+        builder.AddBeam(n[2], n[5]);
+        var piston = builder.AddPiston(n[3], n[4]);
+        var spring = builder.AddSpring(n[4], n[5]);
+        builder.AddSensor(b12, SensorKind.Accelerometer, out var accelerometer, out _);
+        builder.AddSensor(b23, SensorKind.Camera, out var camera, out _);
+        return new EveryPartIds(
+            builder,
+            piston,
+            spring,
+            Servo: builder.AddServo(n[0]),
+            Motor: builder.AddVelocityMotor(n[1]),
+            Stepper: builder.AddStepper(n[2]),
+            Brake: builder.AddBrake(n[3]),
+            AngleSensor: builder.AddAngleSensor(n[4]),
+            Wheel: builder.AddWheel(n[5]),
+            Touch: builder.AddTouchSensor(n[5]),
+            Rubber: builder.AddRubber(n[5]),
+            accelerometer,
+            camera);
     }
 
-    // A level beam from (0,0) to (90,0), and one from (90,0) straight down to (90,90).
-    private static CreatureBuilder TwoBeams(out int level, out int down)
+    private sealed record EveryPartIds(
+        CreatureBuilder Builder,
+        int Piston,
+        int Spring,
+        int Servo,
+        int Motor,
+        int Stepper,
+        int Brake,
+        int AngleSensor,
+        int Wheel,
+        int Touch,
+        int Rubber,
+        int Accelerometer,
+        int Camera);
+
+    private static void ShouldHaveSides(CreatureBuilder builder, int partId, int? fixedLink, int? targetLink)
     {
-        var builder = PairBuilder();
-        level = builder.Beams[0].Id;
-        var end = builder.AddNode(new Vector2D(90, 90));
-        down = builder.AddBeam(builder.Beams[0].NodeB, end);
-        return builder;
+        var part = builder.HingeParts.Single(part => part.Id == partId);
+        part.FixedLinkId.ShouldBe(fixedLink);
+        part.TargetLinkId.ShouldBe(targetLink);
     }
 
-    [Fact]
-    public void AddWheel_OnAJoint_AddsADefaultWheel_ThatGrowsTheJoint()
+    private static UiText OffJointReason(CreatureElementKind kind) => kind switch
     {
-        var builder = PairBuilder();
-        var joint = builder.Nodes[0].Id;
-        var freshId = builder.Build().NextPartId;
+        CreatureElementKind.Servo => CreatureBuilder.ServosGoOnAJointReason,
+        CreatureElementKind.VelocityMotor => CreatureBuilder.VelocityMotorsGoOnAJointReason,
+        CreatureElementKind.Stepper => CreatureBuilder.SteppersGoOnAJointReason,
+        CreatureElementKind.Brake => CreatureBuilder.BrakesGoOnAJointReason,
+        _ => CreatureBuilder.AngleSensorsGoOnAJointReason,
+    };
 
-        var wheel = builder.AddWheel(joint);
-
-        wheel.ShouldBe(freshId);
-        builder.Wheels.ShouldBe([new WheelDef(wheel, joint)]);
-        builder.NodeRadius(joint).ShouldBe(WheelDef.DefaultRadius);
-        builder.Build().Wheels.ShouldBe(builder.Wheels);
+    private static bool CanAddHingePart(CreatureBuilder builder, CreatureElementKind kind, int nodeId, out UiText? reason)
+    {
+        UiText? why = null;
+        var can = kind switch
+        {
+            CreatureElementKind.Servo => builder.CanAddServo(nodeId, out why),
+            CreatureElementKind.VelocityMotor => builder.CanAddVelocityMotor(nodeId, out why),
+            CreatureElementKind.Stepper => builder.CanAddStepper(nodeId, out why),
+            CreatureElementKind.Brake => builder.CanAddBrake(nodeId, out why),
+            _ => builder.CanAddAngleSensor(nodeId, out why),
+        };
+        reason = why;
+        return can;
     }
 
-    [Fact]
-    public void JointParts_TakeOnePerSlot_AWheelAndAHingePart()
+    private static int AddHingePart(CreatureBuilder builder, CreatureElementKind kind, int nodeId) => kind switch
     {
-        var builder = PairBuilder();
-        var joint = builder.Nodes[0].Id;
-        builder.AddWheel(joint);
+        CreatureElementKind.Servo => builder.AddServo(nodeId),
+        CreatureElementKind.VelocityMotor => builder.AddVelocityMotor(nodeId),
+        CreatureElementKind.Stepper => builder.AddStepper(nodeId),
+        CreatureElementKind.Brake => builder.AddBrake(nodeId),
+        _ => builder.AddAngleSensor(nodeId),
+    };
 
-        builder.CanAddServo(joint, out _).ShouldBeTrue();
-        builder.AddServo(joint);
-        builder.CanAddWheel(builder.Beams[0].Id, out var notAJoint).ShouldBeFalse();
-        builder.CanAddWheel(joint, out var secondWheel).ShouldBeFalse();
-        builder.CanAddServo(joint, out var secondServo).ShouldBeFalse();
+    private static int AddHingePart(CreatureBuilder builder, CreatureElementKind kind, int nodeId, int? fixedLink, int? targetLink) => kind switch
+    {
+        CreatureElementKind.Servo => builder.AddServo(nodeId, fixedLink, targetLink),
+        CreatureElementKind.VelocityMotor => builder.AddVelocityMotor(nodeId, fixedLink, targetLink),
+        CreatureElementKind.Stepper => builder.AddStepper(nodeId, fixedLink, targetLink),
+        CreatureElementKind.Brake => builder.AddBrake(nodeId, fixedLink, targetLink),
+        _ => builder.AddAngleSensor(nodeId, fixedLink, targetLink),
+    };
 
-        notAJoint.ShouldBe(UiText.Plain("Wheels go on a joint"));
-        secondWheel.ShouldBe(UiText.Plain("One wheel per joint"));
-        secondServo.ShouldBe(UiText.Plain("One Servo, Stepper, Motor, Brake or Angle sensor per joint"));
-        Should.Throw<ArgumentException>(() => builder.AddWheel(joint));
+    private static void SetHingePartLink(CreatureBuilder builder, CreatureElementKind kind, int partId, bool fixedRole, int linkId)
+    {
+        switch (kind)
+        {
+            case CreatureElementKind.Servo:
+                builder.SetServoLink(partId, fixedRole, linkId);
+                break;
+            case CreatureElementKind.VelocityMotor:
+                builder.SetVelocityMotorLink(partId, fixedRole, linkId);
+                break;
+            case CreatureElementKind.Stepper:
+                builder.SetStepperLink(partId, fixedRole, linkId);
+                break;
+            case CreatureElementKind.Brake:
+                builder.SetBrakeLink(partId, fixedRole, linkId);
+                break;
+            default:
+                builder.SetAngleSensorLink(partId, fixedRole, linkId);
+                break;
+        }
     }
 
-    [Fact]
-    public void ParametersOf_AWheel_IsItsRadius_InWorldUnits()
+    private static void RemoveHingePart(CreatureBuilder builder, CreatureElementKind kind, int partId)
     {
-        var builder = PairBuilder();
-        var wheel = builder.AddWheel(builder.Nodes[0].Id);
-
-        builder.ParametersOf(wheel).ShouldBe([PartParameterId.WheelRadius]);
-        builder.SetParameter(wheel, PartParameterId.WheelRadius, 100);
-
-        builder.Wheels.Single().Radius.ShouldBe(100);
-        builder.ParameterValue(wheel, PartParameterId.WheelRadius).ShouldBe(100);
-        builder.NodeRadius(builder.Nodes[0].Id).ShouldBe(100);
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetParameter(wheel, PartParameterId.Stroke, 0.5));
+        switch (kind)
+        {
+            case CreatureElementKind.Servo:
+                builder.RemoveServo(partId);
+                break;
+            case CreatureElementKind.VelocityMotor:
+                builder.RemoveVelocityMotor(partId);
+                break;
+            case CreatureElementKind.Stepper:
+                builder.RemoveStepper(partId);
+                break;
+            case CreatureElementKind.Brake:
+                builder.RemoveBrake(partId);
+                break;
+            default:
+                builder.RemoveAngleSensor(partId);
+                break;
+        }
     }
 
-    [Fact]
-    public void RemoveNode_TakesItsWheel_AndRemoveWheel_LeavesTheJoint()
+    private static (UiText OffJoint, UiText Full) JointPartReasons(CreatureElementKind kind) => kind switch
     {
-        var builder = PairBuilder();
-        var first = builder.Nodes[0].Id;
-        var second = builder.Nodes[1].Id;
-        builder.AddWheel(first);
-        var kept = builder.AddWheel(second);
+        CreatureElementKind.Wheel => (CreatureBuilder.WheelsGoOnAJointReason, CreatureBuilder.OneWheelPerJointReason),
+        CreatureElementKind.TouchSensor => (CreatureBuilder.TouchSensorsGoOnAJointReason, CreatureBuilder.OneSensorPerJointReason),
+        _ => (CreatureBuilder.RubberGoesOnAJointReason, CreatureBuilder.OneRubberPerJointReason),
+    };
 
-        builder.RemoveNode(first);
-        builder.Wheels.Select(wheel => wheel.Id).ShouldBe([kept]);
-        builder.RemoveWheel(kept);
-
-        builder.Wheels.ShouldBeEmpty();
-        builder.Nodes.Select(node => node.Id).ShouldBe([second]);
+    private static bool CanAddJointPart(CreatureBuilder builder, CreatureElementKind kind, int nodeId, out UiText? reason)
+    {
+        UiText? why = null;
+        var can = kind switch
+        {
+            CreatureElementKind.Wheel => builder.CanAddWheel(nodeId, out why),
+            CreatureElementKind.TouchSensor => builder.CanAddTouchSensor(nodeId, out why),
+            _ => builder.CanAddRubber(nodeId, out why),
+        };
+        reason = why;
+        return can;
     }
 
-    [Fact]
-    public void Rename_AWheel_KeepsItsSettings()
+    private static int AddJointPart(CreatureBuilder builder, CreatureElementKind kind, int nodeId) => kind switch
     {
-        var builder = PairBuilder();
-        var wheel = builder.AddWheel(builder.Nodes[0].Id);
-        builder.SetParameter(wheel, PartParameterId.WheelRadius, 50);
+        CreatureElementKind.Wheel => builder.AddWheel(nodeId),
+        CreatureElementKind.TouchSensor => builder.AddTouchSensor(nodeId),
+        _ => builder.AddRubber(nodeId),
+    };
 
-        builder.Rename(wheel, "Front");
-
-        builder.Wheels.Single().ShouldBe(new WheelDef(wheel, builder.Nodes[0].Id, "Front", radius: 50));
-    }
-
-    [Fact]
-    public void Constructor_FromACreatureWithAWheel_KeepsIt()
+    private static void RemoveJointPart(CreatureBuilder builder, CreatureElementKind kind, int partId)
     {
-        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], [], [], [], [], [new WheelDef(2, 1, radius: 70)], nextPartId: 3);
-
-        var builder = new CreatureBuilder(creature);
-
-        builder.Wheels.ShouldBe(creature.Wheels);
-        builder.Build().Wheels.ShouldBe(creature.Wheels);
-        builder.Build().NextPartId.ShouldBe(3);
-    }
-
-    [Fact]
-    public void AddTouchSensor_OnAJoint_AddsOne_ThatLeavesTheJointsSizeAndPartsAlone()
-    {
-        var builder = PairBuilder();
-        var joint = builder.Nodes[0].Id;
-        var freshId = builder.Build().NextPartId;
-
-        var touch = builder.AddTouchSensor(joint);
-
-        touch.ShouldBe(freshId);
-        builder.TouchSensors.ShouldBe([new TouchSensorDef(touch, joint)]);
-        builder.NodeRadius(joint).ShouldBe(NodeDef.PlainJointRadius);
-        builder.Build().TouchSensors.ShouldBe(builder.TouchSensors);
-    }
-
-    [Fact]
-    public void ATouchSensor_SharesItsJointWithAWheelAndAServo_ButNotWithAnotherTouchSensor()
-    {
-        var builder = PairBuilder();
-        var joint = builder.Nodes[0].Id;
-        builder.AddWheel(joint);
-        builder.AddServo(joint);
-
-        builder.CanAddTouchSensor(joint, out _).ShouldBeTrue();
-        builder.AddTouchSensor(joint);
-        builder.CanAddTouchSensor(joint, out var second).ShouldBeFalse();
-        builder.CanAddTouchSensor(builder.Beams[0].Id, out var notAJoint).ShouldBeFalse();
-
-        second.ShouldBe(UiText.Plain("One Touch sensor per joint"));
-        notAJoint.ShouldBe(UiText.Plain("Touch sensors go on a joint"));
-        Should.Throw<ArgumentException>(() => builder.AddTouchSensor(joint));
-    }
-
-    [Fact]
-    public void RemoveNode_TakesItsTouchSensor_AndRemoveTouchSensor_LeavesTheJoint()
-    {
-        var builder = PairBuilder();
-        var first = builder.Nodes[0].Id;
-        var second = builder.Nodes[1].Id;
-        builder.AddTouchSensor(first);
-        var kept = builder.AddTouchSensor(second);
-
-        builder.RemoveNode(first);
-        builder.TouchSensors.Select(touch => touch.Id).ShouldBe([kept]);
-        builder.RemoveTouchSensor(kept);
-
-        builder.TouchSensors.ShouldBeEmpty();
-        builder.Nodes.Select(node => node.Id).ShouldBe([second]);
-    }
-
-    [Fact]
-    public void Rename_ATouchSensor_NamesIt()
-    {
-        var builder = PairBuilder();
-        var touch = builder.AddTouchSensor(builder.Nodes[0].Id);
-
-        builder.Rename(touch, "Toe");
-
-        builder.TouchSensors.Single().ShouldBe(new TouchSensorDef(touch, builder.Nodes[0].Id, "Toe"));
-    }
-
-    [Fact]
-    public void Constructor_FromACreatureWithATouchSensor_KeepsIt()
-    {
-        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], [], [], [], [], [], [new TouchSensorDef(2, 1)], nextPartId: 3);
-
-        var builder = new CreatureBuilder(creature);
-
-        builder.TouchSensors.ShouldBe(creature.TouchSensors);
-        builder.Build().TouchSensors.ShouldBe(creature.TouchSensors);
-    }
-
-    [Fact]
-    public void AddRubber_OnAJoint_AddsOne_ThatLeavesTheJointsSizeAndPartsAlone()
-    {
-        var builder = PairBuilder();
-        var joint = builder.Nodes[0].Id;
-        var freshId = builder.Build().NextPartId;
-
-        var rubber = builder.AddRubber(joint);
-
-        rubber.ShouldBe(freshId);
-        builder.Rubbers.ShouldBe([new RubberDef(rubber, joint)]);
-        builder.NodeRadius(joint).ShouldBe(NodeDef.PlainJointRadius);
-        builder.Build().Rubbers.ShouldBe(builder.Rubbers);
-    }
-
-    [Fact]
-    public void ARubber_SharesItsJointWithEveryOtherJointPart_ButNotWithAnotherRubber()
-    {
-        var builder = PairBuilder();
-        var joint = builder.Nodes[0].Id;
-        builder.AddWheel(joint);
-        builder.AddServo(joint);
-        builder.AddTouchSensor(joint);
-
-        builder.CanAddRubber(joint, out _).ShouldBeTrue();
-        builder.AddRubber(joint);
-        builder.CanAddRubber(joint, out var second).ShouldBeFalse();
-        builder.CanAddRubber(builder.Beams[0].Id, out var notAJoint).ShouldBeFalse();
-
-        second.ShouldBe(UiText.Plain("One rubber per joint"));
-        notAJoint.ShouldBe(UiText.Plain("Rubber goes on a joint"));
-        Should.Throw<ArgumentException>(() => builder.AddRubber(joint));
-    }
-
-    [Fact]
-    public void RemoveNode_TakesItsRubber_AndRemoveRubber_LeavesTheJoint()
-    {
-        var builder = PairBuilder();
-        var first = builder.Nodes[0].Id;
-        var second = builder.Nodes[1].Id;
-        builder.AddRubber(first);
-        var kept = builder.AddRubber(second);
-
-        builder.RemoveNode(first);
-        builder.Rubbers.Select(rubber => rubber.Id).ShouldBe([kept]);
-        builder.RemoveRubber(kept);
-
-        builder.Rubbers.ShouldBeEmpty();
-        builder.Nodes.Select(node => node.Id).ShouldBe([second]);
-    }
-
-    [Fact]
-    public void Rename_ARubber_NamesIt()
-    {
-        var builder = PairBuilder();
-        var rubber = builder.AddRubber(builder.Nodes[0].Id);
-
-        builder.Rename(rubber, "Sole");
-
-        builder.Rubbers.Single().ShouldBe(new RubberDef(rubber, builder.Nodes[0].Id, "Sole"));
-    }
-
-    [Fact]
-    public void Constructor_FromACreatureWithARubber_KeepsIt()
-    {
-        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], [], [], [], [], [], [], [new RubberDef(2, 1)], nextPartId: 3);
-
-        var builder = new CreatureBuilder(creature);
-
-        builder.Rubbers.ShouldBe(creature.Rubbers);
-        builder.Build().Rubbers.ShouldBe(creature.Rubbers);
+        switch (kind)
+        {
+            case CreatureElementKind.Wheel:
+                builder.RemoveWheel(partId);
+                break;
+            case CreatureElementKind.TouchSensor:
+                builder.RemoveTouchSensor(partId);
+                break;
+            default:
+                builder.RemoveRubber(partId);
+                break;
+        }
     }
 
     private static int AddLink(CreatureBuilder builder, BuildLink link, int nodeIdA, int nodeIdB) => link switch
@@ -864,12 +550,32 @@ public sealed class CreatureBuilderTests
     private static IEnumerable<int> LinkIds(CreatureBuilder builder) =>
         [.. builder.Beams.Select(beam => beam.Id), .. builder.Pistons.Select(piston => piston.Id), .. builder.Springs.Select(spring => spring.Id)];
 
+    // A joint with two beams, to far and to a third node.
+    private static CreatureBuilder Joint(out int joint, out int far, out int first, out int second)
+    {
+        var builder = new CreatureBuilder();
+        joint = builder.AddNode(new Vector2D(0, 0));
+        far = builder.AddNode(new Vector2D(120, 0));
+        first = builder.AddBeam(joint, far);
+        second = builder.AddBeam(joint, builder.AddNode(new Vector2D(0, 90)));
+        return builder;
+    }
+
     private static CreatureBuilder PairBuilder()
     {
         var builder = new CreatureBuilder();
         var a = builder.AddNode(new Vector2D(0, 0));
         var b = builder.AddNode(new Vector2D(90, 0));
         builder.AddBeam(a, b);
+        return builder;
+    }
+
+    // A level beam from (0,0) to (90,0), and one from (90,0) straight down to (90,90).
+    private static CreatureBuilder TwoBeams(out int level, out int down)
+    {
+        var builder = PairBuilder();
+        level = builder.Beams[0].Id;
+        down = builder.AddBeam(builder.Beams[0].NodeB, builder.AddNode(new Vector2D(90, 90)));
         return builder;
     }
 }

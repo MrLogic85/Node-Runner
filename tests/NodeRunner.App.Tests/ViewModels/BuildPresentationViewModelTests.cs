@@ -1,1045 +1,384 @@
 using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class BuildPresentationViewModelTests
 {
-    [Fact]
-    public void ToolPanel_WithPartsAndNothingSelected_ShowsTray()
+    [Theory]
+    [InlineData(BuildTool.Parts, ToolPanelMode.PartsTray, "Parts")]
+    [InlineData(BuildTool.Beam, ToolPanelMode.LinkList, "Links")]
+    [InlineData(BuildTool.Joint, ToolPanelMode.JointHelp, "Joint")]
+    [InlineData(BuildTool.Select, ToolPanelMode.SelectHelp, "Select")]
+    public void ToolPanel_ShowsTheToolsHelp_UntilASelectionReplacesIt(BuildTool tool, ToolPanelMode mode, string title)
     {
-        var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Parts }).ToolPanel;
+        var build = Loaded(PairCreature());
+        build.ActiveTool = tool;
+        var presentation = new BuildPresentationViewModel(build);
+        (presentation.ToolPanel.Mode, presentation.ToolPanel.Title).ShouldBe((mode, UiText.Plain(title)));
+        (presentation.LinkList is not null).ShouldBe(tool == BuildTool.Beam);
 
-        panel.Mode.ShouldBe(ToolPanelMode.PartsTray);
-        panel.Title.ShouldBe(UiText.Plain("Parts"));
+        build.ToggleSelected(Joint(1));
+        (presentation.ToolPanel.Mode, presentation.LinkList).ShouldBe((ToolPanelMode.None, null));
     }
 
     [Fact]
-    public void ToolPanel_WithLinksAndNothingSelected_ShowsLinkList()
-    {
-        var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
-
-        presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.LinkList);
-        presentation.ToolPanel.Title.ShouldBe(UiText.Plain("Links"));
-        presentation.LinkList.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public void ToolPanel_WithJointAndNothingSelected_ShowsJointHelp()
-    {
-        var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Joint }).ToolPanel;
-
-        panel.Mode.ShouldBe(ToolPanelMode.JointHelp);
-        panel.Title.ShouldBe(UiText.Plain("Joint"));
-    }
-
-    [Fact]
-    public void ToolPanel_WithSelectAndNothingSelected_ShowsSelectHelp()
-    {
-        var panel = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Select }).ToolPanel;
-
-        panel.Mode.ShouldBe(ToolPanelMode.SelectHelp);
-        panel.Title.ShouldBe(UiText.Plain("Select"));
-    }
-
-    [Fact]
-    public void LinkList_ShowsForUnlockedLinksToolWithNothingSelected()
-    {
-        var presentation = new BuildPresentationViewModel(new BuildViewModel { ActiveTool = BuildTool.Beam });
-
-        var list = presentation.LinkList.ShouldNotBeNull();
-        list.Rows.Select(row => (row.Link, row.State)).ShouldBe([
-            (BuildLink.Beam, LinkListRowState.Selected),
-            (BuildLink.Piston, LinkListRowState.Rest),
-            (BuildLink.Spring, LinkListRowState.Rest),
-            (BuildLink.Wing, LinkListRowState.Locked)]);
-    }
-
-    [Fact]
-    public void PickLink_RaisesPresentationChanged_AndUpdatesLinkList()
+    public void TheLinkListAndTray_MarkThePick_AndWhatALockedCreationKeeps()
     {
         var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
         var presentation = new BuildPresentationViewModel(build);
+        presentation.LinkList!.Rows.Select(row => (row.Link, row.State)).ShouldBe([
+            (BuildLink.Beam, LinkListRowState.Selected), (BuildLink.Piston, LinkListRowState.Rest),
+            (BuildLink.Spring, LinkListRowState.Rest), (BuildLink.Wing, LinkListRowState.Locked)]);
         var changes = 0;
         presentation.PresentationChanged += (_, _) => changes++;
-
         build.PickLink(BuildLink.Piston);
-
         changes.ShouldBe(1);
-        var list = presentation.LinkList.ShouldNotBeNull();
-        list.PickedInfo.ShouldBe(UiText.Format("{0}\n{1}", PartInfo.Piston, BuildLinkList.DrawHelp));
-        list.Rows.Single(row => row.Link == BuildLink.Piston).State.ShouldBe(LinkListRowState.Selected);
-        list.Rows.Single(row => row.Link == BuildLink.Beam).State.ShouldBe(LinkListRowState.Rest);
-    }
+        presentation.LinkList!.PickedInfo.ShouldBe(UiText.Format("{0}\n{1}", PartInfo.Piston, BuildLinkList.DrawHelp));
+        presentation.LinkList.Rows.Take(2).Select(row => row.State).ShouldBe([LinkListRowState.Rest, LinkListRowState.Selected]);
 
-    [Fact]
-    public void LinkList_HidesWhenAPartIsSelected()
-    {
-        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
-        build.PlaceNode(new Vector2D(0, 0));
-        build.ReplaceSelection([1]);
-
-        new BuildPresentationViewModel(build).LinkList.ShouldBeNull();
-    }
-
-    [Fact]
-    public void LinkList_OnALockedCreation_LocksOnlyThePiston()
-    {
-        var build = new BuildViewModel();
-        build.Load(PairCreature(), locked: true);
+        build = Loaded(PairCreature(), locked: true);
         build.ActiveTool = BuildTool.Beam;
-
-        var list = new BuildPresentationViewModel(build).LinkList.ShouldNotBeNull();
-
-        list.Rows.Select(row => (row.Link, row.State)).ShouldBe([
-            (BuildLink.Beam, LinkListRowState.Selected),
-            (BuildLink.Piston, LinkListRowState.CreationLocked),
-            (BuildLink.Spring, LinkListRowState.Rest),
-            (BuildLink.Wing, LinkListRowState.Locked)]);
-    }
-
-    [Fact]
-    public void PartsTray_OnALockedCreation_ShowsEveryRowLocked_AndHowToUnlock()
-    {
-        var build = new BuildViewModel();
-        build.Load(PairCreature(), locked: true);
-
+        new BuildPresentationViewModel(build).LinkList!.Rows.Select(row => row.State).ShouldBe(
+            [LinkListRowState.Selected, LinkListRowState.CreationLocked, LinkListRowState.Rest, LinkListRowState.Locked]);
         var tray = new BuildPresentationViewModel(build).Tray;
-        var groups = tray.Groups;
-
-        groups.SelectMany(group => group.Rows).Where(row => row.Part is not (BuildPart.Brake or BuildPart.Wheel or BuildPart.Rubber)).ShouldAllBe(row => !row.IsAvailable);
-        groups.SelectMany(group => group.Rows).Where(row => row.Part is BuildPart.Brake or BuildPart.Wheel or BuildPart.Rubber).ShouldAllBe(row => row.State == PartTrayRowState.Available);
-        tray.HelpText.ShouldBe(UiText.Plain("Unlock to add parts the network uses."));
-        tray.PickedInfo.ShouldBeNull();
-        var servo = groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Servo);
-        servo.State.ShouldBe(PartTrayRowState.CreationLocked);
-        groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.TouchSensor).State.ShouldBe(PartTrayRowState.CreationLocked);
-        groups.SelectMany(group => group.Rows).Single(row => row.Part == BuildPart.Pulse).State.ShouldBe(PartTrayRowState.ComingLater);
-    }
-
-    [Theory]
-    [InlineData(BuildTool.Parts)]
-    [InlineData(BuildTool.Joint)]
-    [InlineData(BuildTool.Select)]
-    public void LinkList_HidesForOtherTools(BuildTool tool)
-    {
-        new BuildPresentationViewModel(new BuildViewModel { ActiveTool = tool }).LinkList.ShouldBeNull();
+        var rows = tray.Groups.SelectMany(group => group.Rows).ToList();
+        rows.Where(row => row.Part is not (BuildPart.Brake or BuildPart.Wheel or BuildPart.Rubber)).ShouldAllBe(row => !row.IsAvailable);
+        rows.Where(row => row.Part is BuildPart.Brake or BuildPart.Wheel or BuildPart.Rubber).ShouldAllBe(row => row.State == PartTrayRowState.Available);
+        (tray.HelpText, tray.PickedInfo).ShouldBe((UiText.Plain("Unlock to add parts the network uses."), null));
+        new[] { BuildPart.Servo, BuildPart.TouchSensor, BuildPart.Pulse }.Select(part => rows.Single(row => row.Part == part).State).ShouldBe(
+            [PartTrayRowState.CreationLocked, PartTrayRowState.CreationLocked, PartTrayRowState.ComingLater]);
     }
 
     [Fact]
-    public void PartPickerPresentation_LinkAt_ReturnsNothingOutsideTheOptions()
+    public void ATrainedCreation_OpensLockedOnTheJointTool_WarnsWhatUnlockLoses_AndKeepsDeleteFromThePorts()
     {
-        var picker = new PartPickerPresentation(
-            UiText.Plain("Fixed part"),
-            [new PartPickerOption(4, UiText.Format("Beam {0}", 1), CreatureElementKind.Beam, ServoLinkRole.None)],
-            SelectedIndex: null,
-            Note: null,
-            UiText.Plain("Pick a Fixed part"));
+        foreach (var generation in new[] { 1, 2, 12 })
+        {
+            var trained = new BuildViewModel();
+            trained.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(generation)));
+            new BuildPresentationViewModel(trained).ResetTrainingWarning.ShouldBe(UiText.Counted(
+                "{1} forgets its {0} generation of training and keeps its body. Copy it first to keep the trained one.",
+                "{1} forgets its {0} generations of training and keeps its body. Copy it first to keep the trained one.",
+                generation,
+                "Worm"));
+        }
 
-        picker.LinkIdAt(0).ShouldBe(4);
-        picker.LinkIdAt(-1).ShouldBeNull();
-        picker.LinkIdAt(1).ShouldBeNull();
-    }
-
-    [Fact]
-    public void LockedCreation_OpensOnTheJointTool_WithItsPanel()
-    {
         var build = new BuildViewModel();
-        build.LoadCreation(new CreationDef(
-            Guid.NewGuid(),
-            "Worm",
-            PairCreature(),
-            TestTraining.State(3, 1, TestTraining.Run)));
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(3, 1, TestTraining.Run)));
         var presentation = new BuildPresentationViewModel(build);
-
-        presentation.ActiveTool.ShouldBe(BuildTool.Joint);
-        presentation.ToolPanel.Mode.ShouldBe(ToolPanelMode.JointHelp);
-        presentation.IsLocked.ShouldBeTrue();
-        presentation.IsTrained.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void CanCopy_AnythingDrawn_TrainedOrNot()
-    {
-        var empty = new BuildViewModel();
-        var untrained = new BuildViewModel();
-        untrained.Load(PairCreature());
-        var trained = new BuildViewModel();
-        trained.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(3)));
-
-        new BuildPresentationViewModel(empty).CanCopy.ShouldBeFalse();
-        new BuildPresentationViewModel(untrained).CanCopy.ShouldBeTrue();
-        new BuildPresentationViewModel(trained).CanCopy.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Selection_ReplacesToolPanel()
-    {
-        var build = new BuildViewModel { ActiveTool = BuildTool.Select };
-        build.Load(PairCreature());
-        build.ToggleSelected(new(CreatureElementKind.Node, 1));
-
-        new BuildPresentationViewModel(build).ToolPanel.Mode.ShouldBe(ToolPanelMode.None);
-    }
-
-    [Fact]
-    public void Unlock_OpensTheBodyForEditing_AndKeepsTheTraining()
-    {
-        var build = new BuildViewModel();
-        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(3)));
-        var presentation = new BuildPresentationViewModel(build);
+        (presentation.ActiveTool, presentation.ToolPanel.Mode, presentation.IsLocked, presentation.IsTrained, presentation.CanCopy).ShouldBe(
+            (BuildTool.Joint, ToolPanelMode.JointHelp, true, true, true));
+        build.ToggleSelected(Joint(1));
+        presentation.SinglePart!.CanDelete.ShouldBeFalse();
+        build.ReplaceSelection([1, 2]);
+        (presentation.Selection!.Title, presentation.Selection.CanDelete, presentation.Selection.CanCopy).ShouldBe(
+            (UiText.Counted("{0} selected", "{0} selected", 2), false, true));
         var changes = 0;
         presentation.PresentationChanged += (_, _) => changes++;
-
         build.Unlock();
-
-        presentation.IsLocked.ShouldBeFalse();
-        presentation.IsTrained.ShouldBeTrue();
-        build.TrainingGeneration.ShouldBe(3);
+        (presentation.IsLocked, presentation.IsTrained, build.TrainingGeneration).ShouldBe((false, true, 3));
         changes.ShouldBeGreaterThan(0);
-    }
 
-    [Theory]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(12)]
-    public void ResetTrainingWarning_NamesTheTrainingThatIsLost(int generation)
-    {
-        var build = new BuildViewModel();
-        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", PairCreature(), TestTraining.State(generation)));
-
-        new BuildPresentationViewModel(build).ResetTrainingWarning.ShouldBe(UiText.Counted(
-            "{1} forgets its {0} generation of training and keeps its body. Copy it first to keep the trained one.",
-            "{1} forgets its {0} generations of training and keeps its body. Copy it first to keep the trained one.",
-            generation,
-            "Worm"));
-    }
-
-    [Fact]
-    public void SelectedBeam_ShowsNameEndsAndLengthGuidance()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
-            [new BeamDef(101, 1, 2)],
-            []));
-        build.SelectOnly(CreatureElementKind.Beam, 101);
-        var part = new BuildPresentationViewModel(build).SinglePart!;
-
-        part.ShouldBe(new PartSettingsPresentation(
-            101,
-            PartKind.Beam,
-            UiText.Format("Beam {0}", 1),
-            UiText.Format("Beam {0}", 1),
-            UiText.Plain("Between"),
-            UiText.Format("{0} ↔ {1}", UiText.Format("Joint {0}", 1), UiText.Format("Joint {0}", 2)),
-            PartInfo.Beam,
-            CanDelete: true,
-            part.Settings));
-        part.Settings.ShouldBeEmpty();
-    }
-
-    [Theory]
-    [InlineData(SensorKind.Accelerometer, PartKind.Accelerometer, "Accel", "Measures a beam's acceleration.")]
-    [InlineData(SensorKind.Camera, PartKind.Camera, "Camera", "Measures distance to the ground. Drag the round handle to aim it.")]
-    public void SelectedSensor_ShowsNameBeamAndWhatItFeels(SensorKind kind, PartKind partKind, string name, string note)
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
-            [new BeamDef(101, 1, 2, "Thigh")],
-            [new SensorDef(7, 101, kind)]));
-        build.SelectOnly(CreatureElementKind.Sensor, 7);
-        var presentation = new BuildPresentationViewModel(build);
-
-        var part = presentation.SinglePart!;
-
-        part.ShouldBe(new PartSettingsPresentation(
-            7,
-            partKind,
-            UiText.Format(name + " {0}", 1),
-            UiText.Format(name + " {0}", 1),
-            UiText.Plain("On"),
-            UiText.AsWritten("Thigh"),
-            UiText.Plain(note),
-            CanDelete: true,
-            part.Settings));
-        part.Settings.Select(setting => setting.Id).ShouldBe(kind == SensorKind.Camera
-            ? [PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]
-            : []);
-    }
-
-    [Fact]
-    public void SelectedCamera_ShowsItsRaysSpreadAndRange()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
-            [new BeamDef(101, 1, 2)],
-            [new SensorDef(7, 101, SensorKind.Camera)]));
-        build.SelectOnly(CreatureElementKind.Sensor, 7);
-
-        var settings = new BuildPresentationViewModel(build).SinglePart!.Settings;
-
-        settings.Select(setting => setting.Label).ShouldBe([UiText.Plain("Rays"), UiText.Plain("Spread"), UiText.Plain("Range")]);
-        settings.Select(setting => setting.Readout).ShouldBe([
-            UiText.Format("{0}", new FixedNumber(3, 0)),
-            UiText.Format("{0}°", new FixedNumber(90, 0)),
-            UiText.Format("{0} m", new FixedNumber(2.2, 1))]);
-        settings.ShouldAllBe(setting => !setting.Disabled && !setting.Advanced);
-    }
-
-    [Fact]
-    public void SelectedCamera_WithOneRay_ShowsItsSpreadDisabled()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
-            [new BeamDef(101, 1, 2)],
-            [new SensorDef(7, 101, SensorKind.Camera, rays: 1)]));
-        build.SelectOnly(CreatureElementKind.Sensor, 7);
-
-        var settings = new BuildPresentationViewModel(build).SinglePart!.Settings;
-
-        settings.Select(setting => (setting.Locked, setting.NoEffect)).ShouldBe([(false, false), (false, true), (false, false)]);
-        PartParameters.Of(settings[1].Id).NoEffectReason.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public void SelectedCamera_WhenLocked_ShowsItsRaysDisabled_AndItsSpreadAndRangeEnabled()
-    {
-        var build = new BuildViewModel();
-        build.Load(
-            new CreatureDef(
-                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
-                [new BeamDef(101, 1, 2)],
-                [new SensorDef(7, 101, SensorKind.Camera)]),
-            locked: true);
-        build.SelectOnly(CreatureElementKind.Sensor, 7);
-
-        var settings = new BuildPresentationViewModel(build).SinglePart!.Settings;
-
-        settings.Select(setting => setting.Id).ShouldBe([PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
-        settings.Select(setting => (setting.Locked, setting.NoEffect)).ShouldBe([(true, false), (false, false), (false, false)]);
-    }
-
-    [Fact]
-    public void SelectedCameras_ShareTheirRaysSpreadAndRange()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-            [new SensorDef(201, 101, SensorKind.Camera, rays: 1), new SensorDef(202, 102, SensorKind.Camera, rays: 5)]));
-        build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 201, 202 } });
-
-        var settings = new BuildPresentationViewModel(build).Selection!.Settings;
-
-        settings.Select(setting => setting.Id).ShouldBe([PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
-        settings[0].Readout.ShouldBe(UiText.Format("{0}–{1}", new FixedNumber(1, 0), new FixedNumber(5, 0)));
-        settings[0].ValuesDiffer.ShouldBeTrue();
-        settings.ShouldAllBe(setting => !setting.Disabled);
-    }
-
-    [Fact]
-    public void SelectedCamera_WhenLocked_StillOffersToAimIt()
-    {
-        var build = new BuildViewModel();
-        build.Load(
-            new CreatureDef(
-                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
-                [new BeamDef(101, 1, 2)],
-                [new SensorDef(7, 101, SensorKind.Camera)]),
-            locked: true);
-        build.SelectOnly(CreatureElementKind.Sensor, 7);
-
-        new BuildPresentationViewModel(build).SinglePart!.Note.ShouldBe(UiText.Plain("Measures distance to the ground. Drag the round handle to aim it."));
-    }
-
-    [Fact]
-    public void SelectedNode_ShowsNameAndNoConnections()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [
-                new NodeDef(1, new Vector2D(0, 0)),
-                new NodeDef(2, new Vector2D(20, 5), "Knee"),
-                new NodeDef(3, new Vector2D(40, 0)),
-            ],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3, "Shin")],
-            []));
-        build.ToggleSelected(new(CreatureElementKind.Node, 2));
-        var part = new BuildPresentationViewModel(build).SinglePart!;
-
-        part.ShouldBe(new PartSettingsPresentation(
-            2,
-            PartKind.Node,
-            UiText.AsWritten("Knee"),
-            UiText.Format("Joint {0}", 2),
-            null,
-            null,
-            UiText.Plain("Links meet and turn here. Drag it to move them."),
-            CanDelete: true,
-            part.Settings));
-        part.Settings.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void SelectedPiston_HasASliderForEachOfItsSettings()
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoPistonCreature(stroke: 0.3));
-        build.SelectOnly(CreatureElementKind.Piston, 301);
-
-        var part = new BuildPresentationViewModel(build).SinglePart!;
-
-        part.Note.ShouldBe(PartInfo.Piston);
-        part.Settings.Select(slider => slider.Readout).ShouldBe(
-        [
-            UiText.Format("{0} N", new FixedNumber(250, 0)),
-            UiText.Format("{0}%", new FixedNumber(30, 0)),
-            UiText.Format("{0}%", new FixedNumber(50, 0)),
-            UiText.Format("{0} m/s", new FixedNumber(2, 1)),
-            UiText.Format("{0} s", new FixedNumber(0.2, 1)),
-        ]);
-        part.Settings.ShouldAllBe(slider => !slider.ValuesDiffer);
-    }
-
-    [Fact]
-    public void SelectedSpring_HasASliderForEachOfItsSettings()
-    {
-        var build = new BuildViewModel();
-        build.Load(SpringCreature());
-        build.SelectOnly(CreatureElementKind.Spring, 401);
-
-        var part = new BuildPresentationViewModel(build).SinglePart!;
-
-        part.Kind.ShouldBe(PartKind.Spring);
-        part.Note.ShouldBe(PartInfo.Spring);
-        part.Settings.Select(slider => slider.Readout).ShouldBe(
-        [
-            UiText.Format("{0} N/m", new FixedNumber(400, 0)),
-            UiText.Format("{0} N·s/m", new FixedNumber(10, 0)),
-            UiText.Format("{0}%", new FixedNumber(100, 0)),
-            UiText.Format("{0}%", new FixedNumber(67, 0)),
-        ]);
-    }
-
-    [Fact]
-    public void Readiness_WhenASpringIsTooShort_CountsItInReadiness()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 20))],
-            [new BeamDef(101, 1, 2)],
-            [],
-            [new PistonDef(301, 2, 3)],
-            [new SpringDef(401, 1, 3)],
-            nextPartId: 402));
-
-        new BuildPresentationViewModel(build).Readiness.Text.ShouldBe(UiText.Counted("{0} spring too short", "{0} springs too short", 1));
-    }
-
-    [Fact]
-    public void Readiness_CountsABeamTooShort_OnceAMotorOnItsJointCoversMoreOfIt()
-    {
-        // #1212: 60 units is long enough between plain joints (56) but not with a Servo on one (68).
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200))],
-            [new BeamDef(5, 1, 2), new BeamDef(6, 1, 3)],
-            []));
-        var presentation = new BuildPresentationViewModel(build);
-        var tooShort = UiText.Counted("{0} beam too short", "{0} beams too short", 1);
-        presentation.Readiness.Text.ShouldNotBe(tooShort);
-
-        build.PlacePart(BuildPart.Servo, new CreatureElementSelection(CreatureElementKind.Node, 1)).ShouldNotBeNull();
-
-        presentation.Readiness.Text.ShouldBe(tooShort);
-    }
-
-    [Fact]
-    public void Readiness_CountsAPistonTooShort_WhereABeamWouldFit()
-    {
-        // #1210: a Piston's telescope needs 16 units more than a Beam, 72 between plain joints.
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200))],
-            [new BeamDef(5, 1, 3), new BeamDef(6, 2, 3)],
-            [],
-            [new PistonDef(7, 1, 2)],
-            nextPartId: 8));
-
-        new BuildPresentationViewModel(build).Readiness.Text.ShouldBe(UiText.Counted("{0} piston too short", "{0} pistons too short", 1));
-    }
-
-    [Fact]
-    public void LockedCreation_PartSettingsDimDelete_WhenItTakesASensorAlong()
-    {
-        var build = new BuildViewModel();
-        build.LoadCreation(new CreationDef(
-            Guid.NewGuid(),
-            "Worm",
-            PairCreature(),
-            TestTraining.State(3, 1, TestTraining.Run)));
-        build.ToggleSelected(new(CreatureElementKind.Node, build.Nodes[0].Id));
-
-        new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void LockedCreation_PartSettingsOfferDelete_ForALinkWithoutPorts()
-    {
-        var build = new BuildViewModel();
-        build.Load(PistonCreature(), locked: true);
+        build = Loaded(PistonCreature(), locked: true);
         build.SelectOnly(CreatureElementKind.Beam, 102);
-
         new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBeTrue();
+        build = Loaded(SpringCreature(), locked: true);
+        build.ReplaceSelection(Set(Beam(101), new(CreatureElementKind.Spring, 401)));
+        new BuildPresentationViewModel(build).Selection!.CanDelete.ShouldBeTrue();
+        (new BuildPresentationViewModel(new BuildViewModel()).CanCopy, new BuildPresentationViewModel(Loaded(PairCreature())).CanCopy).ShouldBe((false, true));
     }
 
     [Fact]
-    public void NoOrManySelected_HasNoPartSettings()
+    public void ASinglePart_ShowsItsNameWhereItSitsAndWhatItDoes_ButNoneOrSeveralShowNoPanel()
     {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(3, 4))],
-            [new BeamDef(101, 1, 2)],
-            []));
+        var build = Loaded(new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 5), "Knee"), new NodeDef(3, new Vector2D(40, 0)),
+                new BeamDef(101, 1, 2), new BeamDef(102, 2, 3, "Shin"), new SensorDef(7, 102, SensorKind.Accelerometer),
+            ]));
         var presentation = new BuildPresentationViewModel(build);
+        (presentation.SinglePart, presentation.Selection).ShouldBe((null, null));
 
+        build.SelectOnly(CreatureElementKind.Beam, 101);
+        var part = presentation.SinglePart!;
+        part.ShouldBe(new PartSettingsPresentation(
+            101, PartKind.Beam, UiText.Format("Beam {0}", 1), UiText.Format("Beam {0}", 1), UiText.Plain("Between"),
+            UiText.Format("{0} ↔ {1}", UiText.Format("Joint {0}", 1), UiText.AsWritten("Knee")), PartInfo.Beam, CanDelete: true, part.Settings));
+        part.Settings.ShouldBeEmpty();
+
+        build.SelectOnly(CreatureElementKind.Sensor, 7);
+        part = presentation.SinglePart!;
+        part.ShouldBe(new PartSettingsPresentation(
+            7, PartKind.Accelerometer, UiText.Format("Accel {0}", 1), UiText.Format("Accel {0}", 1), UiText.Plain("On"), UiText.AsWritten("Shin"),
+            UiText.Plain("Measures a beam's acceleration."), CanDelete: true, part.Settings));
+        (part.Settings.Count, part.AdvancedSettings.Count).ShouldBe((0, 0));
+
+        build.SelectOnly(CreatureElementKind.Node, 2);
+        part = presentation.SinglePart!;
+        part.ShouldBe(new PartSettingsPresentation(
+            2, PartKind.Node, UiText.AsWritten("Knee"), UiText.Format("Joint {0}", 2), null, null,
+            UiText.Plain("Links meet and turn here. Drag it to move them."), CanDelete: true, part.Settings));
+
+        build.ToggleSelected(Joint(1));
         presentation.SinglePart.ShouldBeNull();
-        build.ToggleSelected(new(CreatureElementKind.Node, 1));
-        build.ToggleSelected(new(CreatureElementKind.Node, 2));
-        presentation.SinglePart.ShouldBeNull();
-    }
+        presentation.Selection.ShouldNotBeNull();
 
-    [Theory]
-    [InlineData(SensorKind.Accelerometer, false)]
-    [InlineData(SensorKind.Camera, false)]
-    [InlineData(SensorKind.Camera, true)]
-    public void SensorNote_AvoidsNetworkWording(SensorKind kind, bool aimable)
-    {
-        var note = BuildPresentationViewModel.SensorNote(kind, aimable).Message.ToLowerInvariant();
-
-        foreach (var word in new[] { "network", "port", "neuron", "input", "layer" })
+        // The notes speak of what a sensor feels, not of the network.
+        foreach (var (kind, aimable) in new[] { (SensorKind.Accelerometer, false), (SensorKind.Camera, false), (SensorKind.Camera, true) })
         {
-            note.ShouldNotContain(word);
+            var note = BuildPresentationViewModel.SensorNote(kind, aimable).Message.ToLowerInvariant();
+            new[] { "network", "port", "neuron", "input", "layer" }.ShouldAllBe(word => !note.Contains(word));
         }
     }
 
     [Fact]
-    public void Selection_OfJoints_ShowsTheFrameHelp_AndOffersDelete()
+    public void ACamerasPanel_ShowsItsRaysSpreadAndRange_WithSpreadIdleForOneRay_AndRaysLockedWhenTrained()
     {
-        var build = new BuildViewModel();
-        build.Load(PistonCreature());
-        build.ReplaceSelection([1, 2, 3]);
-        var selection = new BuildPresentationViewModel(build).Selection!;
-
-        selection.Settings.ShouldBeEmpty();
-        selection.ShouldBe(new SelectionPanelPresentation(
-            UiText.Counted("{0} selected", "{0} selected", 3),
-            selection.Settings,
-            SettingsNote: null,
-            EmptyNote: null,
-            ShowFrameRows: true,
-            UiText.Counted("Delete {0}", "Delete {0}", 3),
-            UiText.Plain("Links on a deleted joint go with it."),
-            CanDelete: true,
-            UiText.Counted("Copy {0}", "Copy {0}", 3),
-            CanCopy: true));
-    }
-
-    [Fact]
-    public void Selection_WithAPartCopyCannotTake_DimsCopy()
-    {
-        var build = new BuildViewModel();
-        build.Load(PistonCreature());
-        build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1 }, Pistons = new HashSet<int> { 301 } });
-
-        new BuildPresentationViewModel(build).Selection!.CanCopy.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Selection_OfPistons_SharesTheirSettings_AndShowsDifferingValuesAsARange()
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoPistonCreature(stroke: 0.3));
-        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
-
-        var selection = new BuildPresentationViewModel(build).Selection!;
-
-        selection.ShowFrameRows.ShouldBeFalse();
-        selection.EmptyNote.ShouldBeNull();
-        selection.SettingsNote.ShouldBe(UiText.Plain("A slider sets one value for all of them."));
-        selection.DeleteNote.ShouldBeNull();
-        selection.Settings.Select(slider => slider.Id).ShouldBe(
-            [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
-        var strength = selection.Settings[0];
-        strength.Readout.ShouldBe(UiText.Format("{0}–{1} N", new FixedNumber(100, 0), new FixedNumber(250, 0)));
-        strength.ValuesDiffer.ShouldBeTrue();
-        strength.Low.ShouldBe(PartParameters.Strength.Slider!.Range.Position(100));
-        strength.High.ShouldBe(PartParameters.Strength.Slider!.Range.Position(250));
-        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, UiText.Plain("Stroke"), UiText.Format("{0}%", new FixedNumber(30, 0)), 20.0 / 190, 20.0 / 190, 5.0 / 190));
-    }
-
-    [Fact]
-    public void Selection_OfPistons_SplitsTheirSettingsIntoBasicAndAdvanced()
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoPistonCreature(stroke: 0.3));
-        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
-
-        var selection = new BuildPresentationViewModel(build).Selection!;
-
-        selection.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke]);
-        selection.AdvancedSettings.Select(slider => slider.Id).ShouldBe(
-            [PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
-    }
-
-    [Fact]
-    public void SelectedServo_SplitsItsSettingsIntoBasicAndAdvanced()
-    {
-        var build = new BuildViewModel();
-        build.Load(ServoCreature());
-        build.SelectOnly(CreatureElementKind.Servo, 6);
-
+        var aim = UiText.Plain("Measures distance to the ground. Drag the round handle to aim it.");
+        var build = Loaded(Cameras(3));
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
         var part = new BuildPresentationViewModel(build).SinglePart!;
+        (part.Kind, part.Name, part.Note).ShouldBe((PartKind.Camera, UiText.Format("Camera {0}", 1), aim));
+        part.Settings.Select(setting => setting.Label).ShouldBe([UiText.Plain("Rays"), UiText.Plain("Spread"), UiText.Plain("Range")]);
+        part.Settings.Select(setting => setting.Readout).ShouldBe([
+            UiText.Format("{0}", new FixedNumber(3, 0)), UiText.Format("{0}°", new FixedNumber(90, 0)), UiText.Format("{0} m", new FixedNumber(2.2, 1))]);
+        part.Settings.ShouldAllBe(setting => !setting.Disabled && !setting.Advanced);
+        part.AdvancedSettings.ShouldBeEmpty();
 
+        build = Loaded(Cameras(1));
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+        var settings = new BuildPresentationViewModel(build).SinglePart!.Settings;
+        settings.Select(setting => (setting.Locked, setting.NoEffect)).ShouldBe([(false, false), (false, true), (false, false)]);
+        PartParameters.Of(settings[1].Id).NoEffectReason.ShouldNotBeNull();
+
+        build = Loaded(Cameras(3), locked: true);
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+        part = new BuildPresentationViewModel(build).SinglePart!;
+        part.Settings.Select(setting => (setting.Locked, setting.NoEffect)).ShouldBe([(true, false), (false, false), (false, false)]);
+        part.Note.ShouldBe(aim);
+
+        build = Loaded(Cameras(1, 5));
+        build.ReplaceSelection(Set(new(CreatureElementKind.Sensor, 201), new(CreatureElementKind.Sensor, 202)));
+        settings = new BuildPresentationViewModel(build).Selection!.Settings;
+        settings.Select(setting => setting.Id).ShouldBe([PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
+        (settings[0].Readout, settings[0].ValuesDiffer).ShouldBe((UiText.Format("{0}–{1}", new FixedNumber(1, 0), new FixedNumber(5, 0)), true));
+        settings.ShouldAllBe(setting => !setting.Disabled);
+    }
+
+    [Fact]
+    public void ALinksOrMotorsPanel_HasASliderPerSetting_SplitIntoBasicAndAdvanced_WhichStaysOpenUntilTheNextVisit()
+    {
+        var build = Loaded(TwoPistonCreature(stroke: 0.3));
+        var presentation = new BuildPresentationViewModel(build);
+        build.SelectOnly(CreatureElementKind.Piston, 301);
+        var part = presentation.SinglePart!;
+        part.Note.ShouldBe(PartInfo.Piston);
+        part.Settings.Select(slider => slider.Readout).ShouldBe([
+            UiText.Format("{0} N", new FixedNumber(250, 0)), UiText.Format("{0}%", new FixedNumber(30, 0)), UiText.Format("{0}%", new FixedNumber(50, 0)),
+            UiText.Format("{0} m/s", new FixedNumber(2, 1)), UiText.Format("{0} s", new FixedNumber(0.2, 1))]);
+        part.Settings.ShouldAllBe(slider => !slider.ValuesDiffer);
+        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke]);
+        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
+        presentation.AdvancedSettingsOpen.ShouldBeFalse();
+        build.AdvancedSettingsOpen = true;
+        build.ReplaceSelection(Set(new(CreatureElementKind.Piston, 301), new(CreatureElementKind.Piston, 302)));
+        presentation.AdvancedSettingsOpen.ShouldBeTrue();
+        presentation.Selection!.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime]);
+        build.Load(TwoPistonCreature(stroke: 0.3));
+        presentation.AdvancedSettingsOpen.ShouldBeFalse();
+
+        build = Loaded(SpringCreature());
+        build.SelectOnly(CreatureElementKind.Spring, 401);
+        part = new BuildPresentationViewModel(build).SinglePart!;
+        (part.Kind, part.Note).ShouldBe((PartKind.Spring, PartInfo.Spring));
+        part.Settings.Select(slider => slider.Readout).ShouldBe([
+            UiText.Format("{0} N/m", new FixedNumber(400, 0)), UiText.Format("{0} N·s/m", new FixedNumber(10, 0)),
+            UiText.Format("{0}%", new FixedNumber(100, 0)), UiText.Format("{0}%", new FixedNumber(67, 0))]);
+        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Stiffness, PartParameterId.Stroke]);
+        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Damping, PartParameterId.CoilLength]);
+
+        // Servos saved on the old 15°/s steps can sit between two 5 rpm steps: 105°/s is 17.5 rpm.
+        var offStep = 105 * Math.PI / 180;
+        build = Loaded(TwoBeamsDef(new ServoDef(6, 2, 4, 5, maxSpeed: offStep)));
+        build.SelectOnly(CreatureElementKind.Servo, 6);
+        part = new BuildPresentationViewModel(build).SinglePart!;
         part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.ServoStrength, PartParameterId.Range]);
         part.AdvancedSettings.Select(slider => slider.Id).ShouldBe(
             [PartParameterId.ServoStartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime]);
-    }
-
-    [Fact]
-    public void SelectedServo_OffItsRpmSteps_ReadsRounded_AndKeepsItsValue()
-    {
-        // Servos saved on the old 15°/s steps can sit between two 5 rpm steps: 105°/s is 17.5 rpm.
-        var offStep = 105 * Math.PI / 180;
-        var build = new BuildViewModel();
-        build.Load(ServoCreature(maxSpeed: offStep));
-        build.SelectOnly(CreatureElementKind.Servo, 6);
-
-        var speed = new BuildPresentationViewModel(build).SinglePart!.AdvancedSettings.Single(slider => slider.Id == PartParameterId.AngularMaxSpeed);
-
+        var speed = part.AdvancedSettings.Single(slider => slider.Id == PartParameterId.AngularMaxSpeed);
         speed.Readout.ShouldBe(UiText.Format("{0} rpm", new FixedNumber(18, 0)));
         speed.High.ShouldBe(12.5 / 115, tolerance: 1e-9);
-        build.Snapshot().Servos.Single().MaxSpeed.ShouldBe(offStep);
-        build.CanUndo.ShouldBeFalse();
+        (build.Servos.Single().MaxSpeed, build.CanUndo).ShouldBe((offStep, false));
     }
 
     [Fact]
-    public void SelectedSpring_HasDampingAndCoilLengthUnderAdvanced()
+    public void ASelectionPanel_SharesWhatItsPartsHave_ShowingDifferencesAsARange_AndSaysWhatADeleteTakes()
     {
-        var build = new BuildViewModel();
-        build.Load(SpringCreature());
-        build.SelectOnly(CreatureElementKind.Spring, 401);
-
-        var part = new BuildPresentationViewModel(build).SinglePart!;
-
-        part.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Stiffness, PartParameterId.Stroke]);
-        part.AdvancedSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Damping, PartParameterId.CoilLength]);
-    }
-
-    [Fact]
-    public void SelectedSensor_HasNoAdvancedSettings()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0))],
-            [new BeamDef(101, 1, 2)],
-            [new SensorDef(201, 101, SensorKind.Camera)]));
-        build.SelectOnly(CreatureElementKind.Sensor, 201);
-
-        var part = new BuildPresentationViewModel(build).SinglePart!;
-
-        part.AdvancedSettings.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void AdvancedSettings_StayOpenAcrossSelections_AndCloseOnTheNextVisit()
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoPistonCreature(stroke: 0.3));
+        var build = Loaded(PistonCreature());
         var presentation = new BuildPresentationViewModel(build);
-        presentation.AdvancedSettingsOpen.ShouldBeFalse();
+        build.ReplaceSelection([1, 2, 3]);
+        var selection = presentation.Selection!;
+        selection.Settings.ShouldBeEmpty();
+        selection.ShouldBe(new SelectionPanelPresentation(
+            UiText.Counted("{0} selected", "{0} selected", 3), selection.Settings, SettingsNote: null, EmptyNote: null, ShowFrameRows: true,
+            UiText.Counted("Delete {0}", "Delete {0}", 3), UiText.Plain("Links on a deleted joint go with it."), CanDelete: true,
+            UiText.Counted("Copy {0}", "Copy {0}", 3), CanCopy: true));
 
-        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301 } });
-        build.AdvancedSettingsOpen = true;
-        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
-        presentation.AdvancedSettingsOpen.ShouldBeTrue();
+        build.ReplaceSelection(Set(Joint(1), new(CreatureElementKind.Piston, 301)));
+        (presentation.Selection!.Settings.Count, presentation.Selection.ShowFrameRows, presentation.Selection.EmptyNote, presentation.Selection.CanCopy).ShouldBe(
+            (0, false, UiText.Plain("These parts share no settings."), false));
+        build.ReplaceSelection(Set(Beam(101), Beam(102)));
+        presentation.Selection!.DeleteNote.ShouldBe(UiText.Plain("A sensor on a deleted beam goes with it."));
 
-        build.Load(TwoPistonCreature(stroke: 0.3));
-        presentation.AdvancedSettingsOpen.ShouldBeFalse();
-    }
+        build = Loaded(TwoPistonCreature(stroke: 0.3));
+        build.ReplaceSelection(Set(new(CreatureElementKind.Piston, 301), new(CreatureElementKind.Piston, 302)));
+        selection = new BuildPresentationViewModel(build).Selection!;
+        (selection.ShowFrameRows, selection.EmptyNote, selection.DeleteNote).ShouldBe((false, null, null));
+        selection.SettingsNote.ShouldBe(UiText.Plain("A slider sets one value for all of them."));
+        selection.BasicSettings.Select(slider => slider.Id).ShouldBe([PartParameterId.Strength, PartParameterId.Stroke]);
+        var strength = selection.Settings[0];
+        (strength.Readout, strength.ValuesDiffer).ShouldBe((UiText.Format("{0}–{1} N", new FixedNumber(100, 0), new FixedNumber(250, 0)), true));
+        (strength.Low, strength.High).ShouldBe((PartParameters.Strength.Slider!.Range.Position(100), PartParameters.Strength.Slider!.Range.Position(250)));
+        selection.Settings[1].ShouldBe(new ParameterSlider(PartParameterId.Stroke, UiText.Plain("Stroke"), UiText.Format("{0}%", new FixedNumber(30, 0)), 20.0 / 190, 20.0 / 190, 5.0 / 190));
 
-    [Fact]
-    public void Selection_ValuesThatShowTheSame_DoNotDiffer()
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoPistonCreature(stroke: 0.3, otherStroke: 0.3001));
-        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
-
+        build = Loaded(TwoPistonCreature(stroke: 0.3, otherStroke: 0.3001));
+        build.ReplaceSelection(Set(new(CreatureElementKind.Piston, 301), new(CreatureElementKind.Piston, 302)));
         new BuildPresentationViewModel(build).Selection!.Settings[1].ValuesDiffer.ShouldBeFalse();
     }
 
-    [Fact]
-    public void Selection_OfAJointAndAPiston_SharesNothing()
-    {
-        var build = new BuildViewModel();
-        build.Load(PistonCreature());
-        build.ReplaceSelection(new PartSet(new HashSet<int> { 1 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int> { 301 }, new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
-
-        var selection = new BuildPresentationViewModel(build).Selection!;
-
-        selection.Settings.ShouldBeEmpty();
-        selection.ShowFrameRows.ShouldBeFalse();
-        selection.EmptyNote.ShouldBe(UiText.Plain("These parts share no settings."));
-    }
-
-    [Fact]
-    public void Selection_OfBeams_WarnsThatTheirSensorsGoWithThem()
-    {
-        var build = new BuildViewModel();
-        build.Load(PistonCreature());
-        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 101, 102 } });
-
-        new BuildPresentationViewModel(build).Selection!.DeleteNote.ShouldBe(UiText.Plain("A sensor on a deleted beam goes with it."));
-    }
-
-    [Fact]
-    public void Selection_OnALockedCreation_DimsDelete_WhenItTakesASensorAlong_ButOffersCopy()
-    {
-        var build = new BuildViewModel();
-        build.LoadCreation(new CreationDef(
-            Guid.NewGuid(),
-            "Worm",
-            PairCreature(),
-            TestTraining.State(3, 1, TestTraining.Run)));
-        build.ReplaceSelection([1, 2]);
-
-        var selection = new BuildPresentationViewModel(build).Selection!;
-        selection.Title.ShouldBe(UiText.Counted("{0} selected", "{0} selected", 2));
-        selection.CanDelete.ShouldBeFalse();
-        selection.CanCopy.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Selection_OnALockedCreation_OffersDelete_WithoutPortedParts()
-    {
-        var build = new BuildViewModel();
-        build.Load(SpringCreature(), locked: true);
-        build.ReplaceSelection(PartSet.None with { Beams = new HashSet<int> { 101 }, Springs = new HashSet<int> { 401 } });
-
-        new BuildPresentationViewModel(build).Selection!.CanDelete.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Selection_NeedsSeveralParts()
-    {
-        var build = new BuildViewModel();
-        build.Load(PairCreature());
-        var presentation = new BuildPresentationViewModel(build);
-
-        presentation.Selection.ShouldBeNull();
-        build.ToggleSelected(new(CreatureElementKind.Node, 1));
-        presentation.Selection.ShouldBeNull();
-    }
-
-    [Fact]
-    public void Readiness_WhenBeamsAreTooShort_CountsThemInReadiness()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(50, 0)), new NodeDef(3, new Vector2D(100, 0))],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-            []));
-        var presentation = new BuildPresentationViewModel(build);
-
-        presentation.Readiness.CanStartTraining.ShouldBeFalse();
-        presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} beam too short", "{0} beams too short", 2));
-    }
-
-    [Fact]
-    public void Readiness_WithOnlyAZeroLengthBeam_CountsIt()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, 0))],
-            [new BeamDef(101, 1, 2)],
-            []));
-
-        new BuildPresentationViewModel(build).Readiness.Text.ShouldBe(
-            UiText.Counted("{0} link has zero length", "{0} links have zero length", 1));
-    }
-
-    // The chip is one line, so a motor's full sentence would not fit it (#1163); Servos and
-    // Velocity motors count together (#454).
-    [Fact]
-    public void Readiness_WithAServoMissingALink_CountsIt()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
-            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
-            [],
-            [new ServoDef(6, 2, fixedLinkId: 4)],
-            [],
-            [],
-            nextPartId: 7));
-
-        var readiness = new BuildPresentationViewModel(build).Readiness;
-
-        readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a side", "{0} parts missing a side", 1));
-    }
-
-    [Fact]
-    public void Readiness_CountsServosAndVelocityMotorsMissingALinkTogether()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
-            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
-            [],
-            [new ServoDef(6, 2, fixedLinkId: 4)],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [new VelocityMotorDef(7, 3, fixedLinkId: 5)],
-            [],
-            nextPartId: 8));
-
-        var readiness = new BuildPresentationViewModel(build).Readiness;
-
-        readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a side", "{0} parts missing a side", 2));
-    }
-
-    [Fact]
-    public void Readiness_CountsBrakesMissingALink_WithTheJointMotors()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
-            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
-            [],
-            [new ServoDef(6, 2, fixedLinkId: 4)],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [new BrakeDef(7, 3, targetLinkId: 5)],
-            nextPartId: 8));
-
-        var readiness = new BuildPresentationViewModel(build).Readiness;
-
-        readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.Text.ShouldBe(UiText.Counted("{0} part missing a side", "{0} parts missing a side", 2));
-    }
-
-    // A loaded one, from a share code say, is counted by readiness, and its panel asks for the side.
-    [Fact]
-    public void ALoadedAngleSensorMissingALink_IsCountedInReadiness_AndItsPanelAsksForTheSide()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))],
-            [new BeamDef(4, 1, 2)],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [new AngleSensorDef(7, 2, fixedLinkId: 4)],
-            nextPartId: 8));
-        build.SelectOnly(CreatureElementKind.AngleSensor, 7);
-        var presentation = new BuildPresentationViewModel(build);
-
-        presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} part missing a side", "{0} parts missing a side", 1));
-        build.SingleSelectedAngleSensorId.ShouldBe(7);
-        presentation.SinglePart!.Pickers!.Select(picker => (picker.SelectedIndex, picker.Placeholder)).ShouldBe([(0, null), (null, UiText.Plain("Pick a Target part"))]);
-    }
-
     [Theory]
-    [InlineData(1)]
-    [InlineData(2)]
-    public void Readiness_WhenPistonsAreTooShort_CountsThemInReadiness(int tooShort)
+    [InlineData("empty", "Add joints and links", null, 0, BuildReadiness.Empty)]
+    [InlineData("loose joint", "{0} joint not connected", "{0} joints not connected", 1, BuildReadiness.Blocked)]
+    [InlineData("two pieces", "{0} piece not connected", "{0} pieces not connected", 2, BuildReadiness.Blocked)]
+    [InlineData("two short beams", "{0} beam too short", "{0} beams too short", 2, BuildReadiness.Blocked)]
+    [InlineData("zero-length beam", "{0} link has zero length", "{0} links have zero length", 1, BuildReadiness.Blocked)]
+    [InlineData("short spring", "{0} spring too short", "{0} springs too short", 1, BuildReadiness.Blocked)]
+    [InlineData("short piston", "{0} piston too short", "{0} pistons too short", 1, BuildReadiness.Blocked)]
+    [InlineData("two short pistons", "{0} piston too short", "{0} pistons too short", 2, BuildReadiness.Blocked)]
+    [InlineData("servo", "{0} part missing a side", "{0} parts missing a side", 1, BuildReadiness.Blocked)]
+    [InlineData("servo and motor", "{0} part missing a side", "{0} parts missing a side", 2, BuildReadiness.Blocked)]
+    [InlineData("servo and brake", "{0} part missing a side", "{0} parts missing a side", 2, BuildReadiness.Blocked)]
+    [InlineData("angle sensor", "{0} part missing a side", "{0} parts missing a side", 1, BuildReadiness.Blocked)]
+    [InlineData("piston", "Ready to train", null, 0, BuildReadiness.Ready)]
+    [InlineData("pair", "Ready to train", null, 0, BuildReadiness.Ready)]
+    public void Readiness_CountsWhatKeepsTheCreatureFromTraining_InOneLine(string creature, string text, string? plural, int count, BuildReadiness state)
     {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 50)), new NodeDef(4, new Vector2D(90, 50))],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 3, 4)],
-            [],
-            [new PistonDef(301, 1, 3), tooShort == 2 ? new PistonDef(302, 2, 4) : new PistonDef(302, 1, 4)]));
-        var presentation = new BuildPresentationViewModel(build);
-
-        presentation.Readiness.CanStartTraining.ShouldBeFalse();
-        presentation.Readiness.Text.ShouldBe(UiText.Counted("{0} piston too short", "{0} pistons too short", tooShort));
-    }
-
-    [Fact]
-    public void Readiness_WhenEmpty_AsksForNodesAndBeams()
-    {
-        var presentation = new BuildPresentationViewModel(new BuildViewModel());
-
-        var readiness = presentation.Readiness;
-
-        readiness.State.ShouldBe(BuildReadiness.Empty);
-        readiness.CanStartTraining.ShouldBeFalse();
-        readiness.Text.ShouldBe(UiText.Plain("Add joints and links"));
-    }
-
-    [Fact]
-    public void Readiness_WhenANodeIsUnconnected_SaysSoInReadiness()
-    {
-        var build = new BuildViewModel();
-        build.PlaceNode(new Vector2D(0, 0));
-        var presentation = new BuildPresentationViewModel(build);
-
-        var readiness = presentation.Readiness;
-
-        readiness.State.ShouldBe(BuildReadiness.Blocked);
-        readiness.CanStartTraining.ShouldBeFalse();
-        readiness.Text.ShouldBe(UiText.Counted("{0} joint not connected", "{0} joints not connected", 1));
-    }
-
-    [Fact]
-    public void Readiness_WithSeparatePieces_SaysSoInReadiness()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 300)), new NodeDef(4, new Vector2D(90, 300))],
-            [new BeamDef(5, 1, 2), new BeamDef(6, 3, 4)],
-            []));
+        static NodeDef At(int id, double x, double y) => new(id, new Vector2D(x, y));
+        // The chip is one line, so a motor's full sentence would not fit it (#1163); joint parts count together (#454).
+        IPartDef[] parts = creature switch
+        {
+            "empty" => [],
+            "loose joint" => [At(1, 0, 0)],
+            "two pieces" => [At(1, 0, 0), At(2, 90, 0), At(3, 0, 300), At(4, 90, 300), new BeamDef(5, 1, 2), new BeamDef(6, 3, 4)],
+            "two short beams" => [At(1, 0, 0), At(2, 50, 0), At(3, 100, 0), new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
+            "zero-length beam" => [At(1, 0, 0), At(2, 0, 0), new BeamDef(101, 1, 2)],
+            "short spring" => [At(1, 0, 0), At(2, 90, 0), At(3, 0, 20), new BeamDef(101, 1, 2), new PistonDef(301, 2, 3), new SpringDef(401, 1, 3)],
+            "short piston" or "two short pistons" =>
+                [At(1, 0, 0), At(2, 90, 0), At(3, 0, 50), At(4, 90, 50), new BeamDef(101, 1, 2), new BeamDef(102, 3, 4), new PistonDef(301, 1, 3),
+                 creature == "short piston" ? new PistonDef(302, 1, 4) : new PistonDef(302, 2, 4)],
+            "servo" => [.. TwoBeamsDef().Parts, new ServoDef(6, 2, fixedLinkId: 4)],
+            "servo and motor" => [.. TwoBeamsDef().Parts, new ServoDef(6, 2, fixedLinkId: 4), new VelocityMotorDef(7, 3, fixedLinkId: 5)],
+            "servo and brake" => [.. TwoBeamsDef().Parts, new ServoDef(6, 2, fixedLinkId: 4), new BrakeDef(7, 3, targetLinkId: 5)],
+            "angle sensor" => [At(1, 0, 0), At(2, 100, 0), new BeamDef(4, 1, 2), new AngleSensorDef(7, 2, fixedLinkId: 4)],
+            "piston" => [.. PistonCreature().Parts],
+            _ => [.. PairCreature().Parts],
+        };
+        var build = Loaded(new CreatureDef(parts, nextPartId: 500));
 
         var readiness = new BuildPresentationViewModel(build).Readiness;
 
-        readiness.CanStartTraining.ShouldBeFalse();
-        readiness.Text.ShouldBe(UiText.Counted("{0} piece not connected", "{0} pieces not connected", 2));
+        var expected = plural is null ? UiText.Plain(text) : UiText.Counted(text, plural, count);
+        (readiness.Text, readiness.State, readiness.CanStartTraining).ShouldBe((expected, state, state == BuildReadiness.Ready));
     }
 
     [Fact]
-    public void Readiness_WithAPiston_IsReadyToTrain()
+    public void Readiness_FollowsAMotorThatMakesABeamTooShort_AndALoadedAngleSensorsPanelAsksForItsSide()
     {
-        var build = new BuildViewModel();
-        build.Load(PistonCreature());
+        // #1212: 60 units is long enough between plain joints (56) but not with a Servo on one (68).
+        var build = Loaded(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200)), new BeamDef(5, 1, 2), new BeamDef(6, 1, 3)]));
         var presentation = new BuildPresentationViewModel(build);
+        var tooShort = UiText.Counted("{0} beam too short", "{0} beams too short", 1);
+        presentation.Readiness.Text.ShouldNotBe(tooShort);
+        build.PlacePart(BuildPart.Servo, Joint(1)).ShouldNotBeNull();
+        presentation.Readiness.Text.ShouldBe(tooShort);
 
-        var readiness = presentation.Readiness;
+        // A loaded one, from a share code say, has its panel ask for the side.
+        build = Loaded(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new BeamDef(4, 1, 2), new AngleSensorDef(7, 2, fixedLinkId: 4)]));
+        build.SelectOnly(CreatureElementKind.AngleSensor, 7);
+        build.SingleSelectedAngleSensorId.ShouldBe(7);
+        new BuildPresentationViewModel(build).SinglePart!.Pickers!.Select(picker => (picker.SelectedIndex, picker.Placeholder)).ShouldBe(
+            [(0, null), (null, UiText.Plain("Pick a Target part"))]);
 
-        readiness.State.ShouldBe(BuildReadiness.Ready);
-        readiness.CanStartTraining.ShouldBeTrue();
-        readiness.Text.ShouldBe(UiText.Plain("Ready to train"));
+        var picker = new PartPickerPresentation(
+            UiText.Plain("Fixed part"), [new PartPickerOption(4, UiText.Format("Beam {0}", 1), CreatureElementKind.Beam, ServoLinkRole.None)],
+            SelectedIndex: null, Note: null, UiText.Plain("Pick a Fixed part"));
+        new[] { 0, -1, 1 }.Select(picker.LinkIdAt).ShouldBe([4, null, null]);
     }
 
     [Fact]
-    public void Readiness_WithoutAPiston_IsReadyToTrain()
-    {
-        var build = new BuildViewModel();
-        build.Load(PairCreature());
-        var presentation = new BuildPresentationViewModel(build);
-
-        var readiness = presentation.Readiness;
-
-        readiness.State.ShouldBe(BuildReadiness.Ready);
-        readiness.CanStartTraining.ShouldBeTrue();
-        readiness.Text.ShouldBe(UiText.Plain("Ready to train"));
-    }
-
-    [Fact]
-    public void PresentationChanged_WhenAnatomyChanges_RaisesForLiveBuildScreenRefresh()
+    public void PresentationChanged_RaisesOncePerEdit_AndTheUndoRowsFollowTheHistory()
     {
         var build = new BuildViewModel();
         var presentation = new BuildPresentationViewModel(build);
-        var raiseCount = 0;
-        presentation.PresentationChanged += (_, _) => raiseCount++;
-
+        var raised = 0;
+        presentation.PresentationChanged += (_, _) => raised++;
         build.PlaceNode(new Vector2D(0, 0));
-        raiseCount = 0;
-
+        raised = 0;
         build.PlaceNode(new Vector2D(90, 0));
+        raised.ShouldBe(1);
 
-        raiseCount.ShouldBe(1);
-    }
-
-    [Fact]
-    public void UndoAndRedoRows_FollowTheHistory_EvenWhenOnlyTheHistoryChanges()
-    {
-        var build = new BuildViewModel();
-        build.Load(PairCreature());
-        var presentation = new BuildPresentationViewModel(build);
-        var gestures = new BuildGestures(build);
+        build = Loaded(PairCreature());
+        presentation = new BuildPresentationViewModel(build);
         presentation.CanUndo.ShouldBeFalse();
-        var raised = false;
-        presentation.PresentationChanged += (_, _) => raised = true;
-
+        presentation.PresentationChanged += (_, _) => raised++;
+        var gestures = new BuildGestures(build);
         gestures.Press(new Vector2D(0, 0));
         gestures.Drag(new Vector2D(0, 40));
-        raised = false;
+        raised = 0;
         gestures.Release(new Vector2D(0, 40));
-
-        raised.ShouldBeTrue();
+        raised.ShouldBeGreaterThan(0);
         presentation.CanUndo.ShouldBeTrue();
         build.Undo();
-        presentation.CanUndo.ShouldBeFalse();
-        presentation.CanRedo.ShouldBeTrue();
-    }
+        (presentation.CanUndo, presentation.CanRedo).ShouldBe((false, true));
 
-    [Fact]
-    public void TheFirstStepsRefresh_SeesNoRemovedPartSelected()
-    {
-        var build = new BuildViewModel();
-        build.Load(PairCreature());
-        var presentation = new BuildPresentationViewModel(build);
+        // The first refresh of a delete must not see the removed part still selected.
         presentation.PresentationChanged += (_, _) => _ = presentation.SinglePart;
         build.SelectOnly(CreatureElementKind.Beam, 101);
-
         build.DeleteSelectedParts();
-
-        build.Beams.ShouldNotContain(beam => beam.Id == 101);
+        build.Beams.ShouldBeEmpty();
         presentation.CanUndo.ShouldBeTrue();
     }
 
     private static CreatureDef PairCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0))],
-        [new BeamDef(101, 1, 2)],
-        [new SensorDef(201, 101, SensorKind.Accelerometer)]);
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new BeamDef(101, 1, 2), new SensorDef(201, 101, SensorKind.Accelerometer)]);
 
     private static CreatureDef PistonCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
-        [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-        [new SensorDef(201, 101, SensorKind.Accelerometer)],
-        [new PistonDef(301, 1, 3)]);
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0)),
+            new BeamDef(101, 1, 2), new BeamDef(102, 2, 3), new SensorDef(201, 101, SensorKind.Accelerometer), new PistonDef(301, 1, 3),
+        ]);
 
     private static CreatureDef SpringCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
-        [new BeamDef(101, 1, 2)],
-        [],
-        [new PistonDef(301, 1, 3)],
-        [new SpringDef(401, 2, 3)],
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0)),
+            new BeamDef(101, 1, 2), new PistonDef(301, 1, 3), new SpringDef(401, 2, 3),
+        ],
         nextPartId: 402);
 
-    private static CreatureDef ServoCreature(double maxSpeed = ServoDef.DefaultMaxSpeed) => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
-        [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
-        [],
-        [new ServoDef(6, 2, 4, 5, maxSpeed: maxSpeed)],
-        [],
-        [],
-        nextPartId: 7);
-
     private static CreatureDef TwoPistonCreature(double stroke, double otherStroke = 0.3) => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90)), new NodeDef(4, new Vector2D(90, 90))],
-        [new BeamDef(101, 1, 2), new BeamDef(102, 3, 4)],
-        [],
-        [new PistonDef(301, 1, 3, strength: 25000, stroke: stroke), new PistonDef(302, 2, 4, strength: 10000, stroke: otherStroke)]);
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90)), new NodeDef(4, new Vector2D(90, 90)),
+            new BeamDef(101, 1, 2), new BeamDef(102, 3, 4),
+            new PistonDef(301, 1, 3, strength: 25000, stroke: stroke), new PistonDef(302, 2, 4, strength: 10000, stroke: otherStroke),
+        ]);
+
+    private static CreatureDef Cameras(int rays, int otherRays = 3) => new(
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0)), new BeamDef(101, 1, 2), new BeamDef(102, 2, 3),
+            new SensorDef(201, 101, SensorKind.Camera, rays: rays), new SensorDef(202, 102, SensorKind.Camera, rays: otherRays),
+        ]);
 }

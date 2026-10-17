@@ -4,197 +4,91 @@ namespace NodeRunner.Mechanics.Tests;
 
 public sealed class AccelerometerTests
 {
+    private static readonly double _half = Math.Sqrt(0.5);
+
+    // World up (0, −1) in the sensor's frame: across-up on a level beam either way it was built, split on a beam
+    // rising 45° to the right, and the tie break on a vertical one. At rest it reads 1 g up, through tanh.
     [Fact]
-    public void Rest_OnLevelBeam_ReadsOneGUp()
+    public void AtRest_ItReadsOneGUp_TurnedWithItsBeam()
     {
-        var frameForce = Accelerometer.ToSensorFrame(new Vector2D(0, -1), beamRotation: 0, upSign: -1);
-        var reading = Accelerometer.Reading(Accelerometer.Rest(frameForce));
+        foreach (var (rotation, upSign, x, y) in new[] { (0.0, -1, 0.0, 1.0), (Math.PI, 1, 0, 1), (-Math.PI / 4, -1, _half, _half), (Math.PI / 2, -1, -1, 0) })
+        {
+            var frame = Accelerometer.ToSensorFrame(new Vector2D(0, -1), rotation, upSign);
+            Near(frame, x, y, $"rotation {rotation}");
+            Near(Accelerometer.Reading(Accelerometer.Rest(frame)), Math.Tanh(x), Math.Tanh(y), $"rotation {rotation}");
+        }
 
-        reading.X.ShouldBe(0, 1e-12);
-        reading.Y.ShouldBe(Math.Tanh(1), 1e-12);
-    }
+        // The glyph's weight sits half its travel down, sliding to the lower end of a slope, the same either way built.
+        foreach (var (rotation, upSign, x, y) in new[] { (0.0, -1, 0.0, 1.0), (Math.PI, 1, 0, 1), (-Math.PI / 4, -1, -_half, _half) })
+        {
+            Near(Accelerometer.RestWeightOffset(rotation, upSign), Accelerometer.WeightTravelPerG * x, Accelerometer.WeightTravelPerG * y, $"rotation {rotation}");
+        }
 
-    [Fact]
-    public void Rest_OnTiltedBeam_TurnsGravityReading()
-    {
-        var frameForce = Accelerometer.ToSensorFrame(new Vector2D(0, -1), beamRotation: -Math.PI / 4, upSign: -1);
-        var reading = Accelerometer.Reading(Accelerometer.Rest(frameForce));
-
-        reading.X.ShouldBe(Math.Tanh(Math.Sqrt(0.5)), 1e-12);
-        reading.Y.ShouldBe(Math.Tanh(Math.Sqrt(0.5)), 1e-12);
-    }
-
-    [Fact]
-    public void SpecificForce_AtRest_IsOneGUp_AndFallingFreely_IsNothing()
-    {
         Accelerometer.SpecificForce(new Vector2D(0, 0), 980).ShouldBe(new Vector2D(0, -1));
         Accelerometer.SpecificForce(new Vector2D(490, 980), 980).ShouldBe(new Vector2D(0.5, 0));
+        foreach (var (a, b, upSign) in new[] { (new Vector2D(0, 0), new Vector2D(2, 0), -1), (new(2, 0), new(0, 0), 1), (new(0, 0), new(0, 2), -1) })
+        {
+            Accelerometer.UpSign(a, b).ShouldBe(upSign);
+        }
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(double.NaN)]
-    public void SpecificForce_WithoutGravity_Throws(double gravity)
-    {
-        Should.Throw<ArgumentOutOfRangeException>(() => Accelerometer.SpecificForce(new Vector2D(0, 0), gravity));
-    }
-
-    [Fact]
-    public void RestWeightOffset_OnLevelBeam_SitsHalfItsTravelDown()
-    {
-        var offset = Accelerometer.RestWeightOffset(beamRotation: 0, upSign: -1);
-
-        offset.X.ShouldBe(0, 1e-12);
-        offset.Y.ShouldBe(Accelerometer.WeightTravelPerG, 1e-12);
-    }
-
-    [Fact]
-    public void RestWeightOffset_OnTiltedBeam_SlidesTowardsTheLowerEnd()
-    {
-        // Rising to the right: along points up the slope, so the weight moves back along it.
-        var offset = Accelerometer.RestWeightOffset(beamRotation: -Math.PI / 4, upSign: -1);
-
-        offset.X.ShouldBe(-Accelerometer.WeightTravelPerG * Math.Sqrt(0.5), 1e-12);
-        offset.Y.ShouldBe(Accelerometer.WeightTravelPerG * Math.Sqrt(0.5), 1e-12);
-    }
-
-    [Fact]
-    public void RestWeightOffset_IsTheSameForEitherBuiltDirection()
-    {
-        // A beam drawn right to left has its top on the other local side, so the glyph is turned and reads the same.
-        var leftToRight = Accelerometer.RestWeightOffset(beamRotation: 0, upSign: -1);
-        var rightToLeft = Accelerometer.RestWeightOffset(beamRotation: Math.PI, upSign: 1);
-
-        rightToLeft.X.ShouldBe(leftToRight.X, 1e-12);
-        rightToLeft.Y.ShouldBe(leftToRight.Y, 1e-12);
-    }
-
-    [Fact]
-    public void WeightOffset_ClampsToTheFrame()
-    {
-        var hard = new ProofMass(new Vector2D(10 * Accelerometer.ReferenceDisplacement, 10 * Accelerometer.ReferenceDisplacement), new Vector2D(0, 0));
-
-        Accelerometer.WeightOffset(hard).ShouldBe(new Vector2D(1, -1));
-    }
-
+    // Its weight settles to the new rest under any physics step, spikes after a jolt and settles back, the same every run.
     [Theory]
     [InlineData(1)]
     [InlineData(2)]
     [InlineData(4)]
-    public void Step_WithConstantInput_SettlesToNewRest(int ticksPerStep)
+    public void ItsWeight_SettlesToRest_AndSpikesAfterAJolt(int ticksPerStep)
     {
-        var force = new Vector2D(0, 1);
+        var dt = ticksPerStep / 60.0;
+        var up = new Vector2D(0, 1);
         var state = Accelerometer.Rest(new Vector2D(0, 0));
-
         for (var i = 0; i < 600 / ticksPerStep; i++)
         {
-            state = Accelerometer.Step(state, force, ticksPerStep / 60.0);
+            state = Accelerometer.Step(state, up, dt);
         }
 
-        var reading = Accelerometer.Reading(state);
-        reading.X.ShouldBe(0, 0.01);
-        reading.Y.ShouldBe(Math.Tanh(1), 0.01);
-    }
+        Near(Accelerometer.Reading(state), 0, Math.Tanh(1), "settled", 0.01);
 
-    [Theory]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(4)]
-    public void Step_AfterImpulse_ProducesSpikeThatDecays(int ticksPerStep)
-    {
-        var restForce = new Vector2D(0, 1);
-        var state = Accelerometer.Rest(restForce);
-
-        state = Accelerometer.Step(state, new Vector2D(5, 1), ticksPerStep / 60.0);
-        var spike = Accelerometer.Reading(state);
-
+        state = Accelerometer.Step(Accelerometer.Rest(up), new Vector2D(5, 1), dt);
+        Accelerometer.Reading(state).X.ShouldBeGreaterThan(0.05);
+        var again = state;
         for (var i = 0; i < 240 / ticksPerStep; i++)
         {
-            state = Accelerometer.Step(state, restForce, ticksPerStep / 60.0);
+            var force = new Vector2D(0.01 * Math.Sin(i), 1);
+            state = Accelerometer.Step(state, force, dt);
+            again = Accelerometer.Step(again, force, dt);
         }
 
-        var settled = Accelerometer.Reading(state);
-        spike.X.ShouldBeGreaterThan(0.05);
-        settled.X.ShouldBe(0, 0.01);
-        settled.Y.ShouldBe(Math.Tanh(1), 0.01);
+        Near(Accelerometer.Reading(state), 0, Math.Tanh(1), "after the jolt", 0.01);
+        again.ShouldBe(state);
     }
 
     [Fact]
-    public void Reading_ForHugeDisplacement_StaysInUnitRange()
+    public void FarOff_ItsReadingAndWeight_StayInTheFrame()
     {
         var reading = Accelerometer.Reading(new ProofMass(new Vector2D(1_000_000, -1_000_000), new Vector2D(0, 0)));
-
         reading.X.ShouldBeInRange(-1, 1);
         reading.Y.ShouldBeInRange(-1, 1);
+        var far = 10 * Accelerometer.ReferenceDisplacement;
+        Accelerometer.WeightOffset(new ProofMass(new Vector2D(far, far), new Vector2D(0, 0))).ShouldBe(new Vector2D(1, -1));
     }
 
     [Fact]
-    public void Step_WithSameInputs_IsDeterministic()
+    public void ItRefuses_NoGravity_NoTime_AndABadFrame()
     {
-        var left = Accelerometer.Rest(new Vector2D(0, 1));
-        var right = Accelerometer.Rest(new Vector2D(0, 1));
-
-        for (var i = 0; i < 60; i++)
+        foreach (var gravity in new[] { 0, -1, double.NaN })
         {
-            var force = new Vector2D(Math.Sin(i * 0.1), 1 + Math.Cos(i * 0.2));
-            left = Accelerometer.Step(left, force, 1.0 / 60.0);
-            right = Accelerometer.Step(right, force, 1.0 / 60.0);
+            Should.Throw<ArgumentOutOfRangeException>(() => Accelerometer.SpecificForce(new Vector2D(0, 0), gravity));
         }
 
-        right.ShouldBe(left);
+        Should.Throw<ArgumentOutOfRangeException>(() => Accelerometer.Step(Accelerometer.Rest(new Vector2D(0, 1)), new Vector2D(0, 1), 0));
+        Should.Throw<ArgumentException>(() => Accelerometer.ToSensorFrame(new Vector2D(0, -1), 0, upSign: 0));
+        Should.Throw<ArgumentException>(() => Accelerometer.ToSensorFrame(new Vector2D(0, -1), double.NaN, upSign: 1));
     }
 
-    [Fact]
-    public void Step_WithNonPositiveDt_Throws()
+    private static void Near(Vector2D actual, double x, double y, string row, double tolerance = 1e-12)
     {
-        Action action = () => Accelerometer.Step(Accelerometer.Rest(new Vector2D(0, 1)), new Vector2D(0, 1), 0);
-
-        action.ShouldThrow<ArgumentOutOfRangeException>();
-    }
-
-    [Theory]
-    [InlineData(0, 0, 2, 0, -1)]
-    [InlineData(2, 0, 0, 0, 1)]
-    [InlineData(0, 0, 0, 2, -1)]
-    public void UpSign_IsFixedFromBuiltPose(double ax, double ay, double bx, double by, int expected)
-    {
-        Accelerometer.UpSign(new Vector2D(ax, ay), new Vector2D(bx, by)).ShouldBe(expected);
-    }
-
-    [Fact]
-    public void ToSensorFrame_LevelBeam_MapsWorldUpToAcrossUp()
-    {
-        var frame = Accelerometer.ToSensorFrame(new Vector2D(0, -1), beamRotation: 0, upSign: -1);
-
-        frame.X.ShouldBe(0, 1e-12);
-        frame.Y.ShouldBe(1, 1e-12);
-    }
-
-    [Fact]
-    public void ToSensorFrame_TiltedBeam_SplitsWorldUpAcrossAxes()
-    {
-        var frame = Accelerometer.ToSensorFrame(new Vector2D(0, -1), beamRotation: -Math.PI / 4, upSign: -1);
-
-        frame.X.ShouldBe(Math.Sqrt(0.5), 1e-12);
-        frame.Y.ShouldBe(Math.Sqrt(0.5), 1e-12);
-    }
-
-    [Fact]
-    public void ToSensorFrame_ReversedLevelBeam_StillMapsWorldUpToAcrossUp()
-    {
-        var frame = Accelerometer.ToSensorFrame(new Vector2D(0, -1), beamRotation: Math.PI, upSign: 1);
-
-        frame.X.ShouldBe(0, 1e-12);
-        frame.Y.ShouldBe(1, 1e-12);
-    }
-
-    [Fact]
-    public void ToSensorFrame_VerticalBeam_UsesDeterministicTieBreak()
-    {
-        var frame = Accelerometer.ToSensorFrame(new Vector2D(0, -1), beamRotation: Math.PI / 2, upSign: -1);
-
-        frame.X.ShouldBe(-1, 1e-12);
-        frame.Y.ShouldBe(0, 1e-12);
+        actual.X.ShouldBe(x, tolerance, row);
+        actual.Y.ShouldBe(y, tolerance, row);
     }
 }

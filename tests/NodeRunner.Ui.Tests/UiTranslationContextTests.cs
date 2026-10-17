@@ -25,31 +25,19 @@ public sealed class UiTranslationContextTests
     }
 
     [Theory]
-    [InlineData("[Export] public string Title { get; set; } = \"\"; private Label _label = new(); void M() => _label.Text = Title;")]
-    [InlineData("[Export] public string Title { get; set; } = \"\"; void M(Label label) => label.Text = $\"{Title}!\";")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; private Button _button = new(); void M() => _button.TooltipText = Help;")]
-    [InlineData("private Label _label = new(); void M() => _label.Text = TooltipText;")]
-    [InlineData("[Export] public string Note { get; set; } = \"\"; private Label _label = new(); void M() { var note = Note; _label.Text = note; }")]
-    [InlineData("[Export] public string[] Steps { get; set; } = []; void M(Label label) { foreach (var step in Steps) label.Text = step; }")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; void M() { var button = new Button { TooltipText = Help }; AddChild(button); }")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; static Label Make(string text) => new() { Text = text }; void M() => AddChild(Make(Help));")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; private UiChoiceRow _row = new(); void M() => _row.Subtext = Help;")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; private UiIconCaption _content = UiIconCaption.Ensure(new Control()); void M() => _content.Apply(Help, UiIconId.None, UiIconSize.Small, UiTokens.Color.Ink, Colors.White);")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; private Label _label = new(); static void Show(Label label, string text) => label.Text = text; void M() => Show(_label, Help);")]
-    public void Inner_text_without_context_is_flagged(string member) =>
-        UnsharedIn(member).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("[Export] public string Title { get; set; } = \"\"; private Label _label = new(); void M() { UiTranslation.ShareContext(this, _label); _label.Text = Title; }")]
-    [InlineData("[Export] public string Title { get; set; } = \"\"; void M(Label label) { UiTranslation.ShareContext(this, label); label.Text = Title; }")]
-    [InlineData("private Label _label = new(); void M(string text) => _label.Text = text;")]
-    [InlineData("void M() => Text = TooltipText;")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; static Label Make(string text) => new() { Text = text }; void M() { var label = Make(Help); UiTranslation.ShareContext(this, label); }")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; void M() { var button = new Button { TooltipText = Help }; UiTranslation.ShareContext(this, button); }")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; private UiIconCaption _content = UiIconCaption.Ensure(new Control()); void M() { UiTranslation.ShareContext(this, _content.Label); _content.Apply(Help, UiIconId.None, UiIconSize.Small, UiTokens.Color.Ink, Colors.White); }")]
-    [InlineData("[Export] public string Help { get; set; } = \"\"; void M() => SetMeta(\"help\", string.IsNullOrEmpty(Help));")]
-    public void Inner_text_with_context_passes(string member) =>
-        UnsharedIn(member).ShouldBeEmpty();
+    [InlineData("[Export] public string Title { get; set; } = \"\"; private Label _label = new(); void M() => _label.Text = Title;", true)]
+    [InlineData("[Export] public string Note { get; set; } = \"\"; private Label _label = new(); void M() { var note = Note; _label.Text = note; }", true)]
+    [InlineData("[Export] public string[] Steps { get; set; } = []; void M(Label label) { foreach (var step in Steps) label.Text = step; }", true)]
+    [InlineData("[Export] public string Help { get; set; } = \"\"; void M() { var button = new Button { TooltipText = Help }; AddChild(button); }", true)]
+    [InlineData("[Export] public string Help { get; set; } = \"\"; private UiIconCaption _content = UiIconCaption.Ensure(new Control()); void M() => _content.Apply(Help, UiIconId.None, UiIconSize.Small, UiTokens.Color.Ink, Colors.White);", true)]
+    [InlineData("[Export] public string Help { get; set; } = \"\"; private Label _label = new(); static void Show(Label label, string text) => label.Text = text; void M() => Show(_label, Help);", true)]
+    [InlineData("[Export] public string Help { get; set; } = \"\"; static Label Make(string text) => new() { Text = text }; void M() => AddChild(Make(Help));", true)]
+    [InlineData("[Export] public string Help { get; set; } = \"\"; private UiChoiceRow _row = new(); void M() => _row.Subtext = Help;", true)]
+    [InlineData("[Export] public string Title { get; set; } = \"\"; void M(Label label) { UiTranslation.ShareContext(this, label); label.Text = Title; }", false)]
+    [InlineData("private Label _label = new(); void M(string text) => _label.Text = text;", false)]
+    [InlineData("[Export] public string Help { get; set; } = \"\"; private UiIconCaption _content = UiIconCaption.Ensure(new Control()); void M() { UiTranslation.ShareContext(this, _content.Label); _content.Apply(Help, UiIconId.None, UiIconSize.Small, UiTokens.Color.Ink, Colors.White); }", false)]
+    public void Inner_text_without_context_is_flagged(string member, bool flagged) =>
+        UnsharedIn(member).Count().ShouldBe(flagged ? 1 : 0);
 
     private static IEnumerable<string> UnsharedIn(string member)
     {

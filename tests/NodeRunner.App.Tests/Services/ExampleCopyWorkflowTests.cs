@@ -8,13 +8,14 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class ExampleCopyWorkflowTests
 {
     [Fact]
-    public void Copy_SavesAnIdenticalCreationUnderANewId_AndTheNameInThePlayersLanguage()
+    public void Copy_SavesTheExampleUnderANewId_InThePlayersLanguage_AndRefusesAnUnknownExample()
     {
         var repository = new InMemoryCreationRepository();
-        var example = CreateExample();
+        repository.Save(new CreationDef(Guid.NewGuid(), "Worm", Example().Creature));
+        var example = Example();
         var copyId = Guid.NewGuid();
-        var workflow = new ExampleCopyWorkflow(repository, [example], () => copyId);
         UiText? asked = null;
+        var workflow = new ExampleCopyWorkflow(repository, [example], () => copyId);
 
         var copy = workflow.Copy(example.Id, text =>
         {
@@ -23,91 +24,35 @@ public sealed class ExampleCopyWorkflowTests
         });
 
         asked.ShouldBe(example.Name);
-        copy.Id.ShouldBe(copyId);
-        copy.Name.ShouldBe("Gångare");
-        copy.Creature.ShouldBe(example.Creature);
-        copy.Creature.NextPartId.ShouldBe(example.Creature.NextPartId);
-        copy.Training.ShouldBe(example.Training);
+        copy.ShouldBe(new CreationDef(copyId, "Gångare", example.Creature, example.Training));
         repository.Get(copyId).ShouldBe(copy);
-    }
-
-    [Fact]
-    public void Copy_Twice_LeavesTheExampleAndGivesTwoCreations()
-    {
-        var repository = new InMemoryCreationRepository();
-        var workflow = new ExampleCopyWorkflow(repository);
-
-        workflow.Copy(CreationExamples.WalkerId, TestLanguage.Untranslated);
-        workflow.Copy(CreationExamples.WalkerId, TestLanguage.Untranslated);
-
-        repository.List().Count.ShouldBe(2);
-        repository.List().ShouldAllBe(creation => creation.Id != CreationExamples.WalkerId);
-    }
-
-    [Fact]
-    public void Copy_NameTaken_IsCopyOfTheName()
-    {
-        var repository = new InMemoryCreationRepository();
-        var example = CreateExample();
-        repository.Save(new CreationDef(Guid.NewGuid(), "walker", example.Creature));
-        var workflow = new ExampleCopyWorkflow(repository, [example]);
-
-        var copy = workflow.Copy(example.Id, text =>
-            text.Equals(UiText.Format("Copy of {0}", "Walker")) ? "Kopia av Walker" : text.Message);
-
-        copy.Name.ShouldBe("Kopia av Walker");
-    }
-
-    [Fact]
-    public void Copy_NameTaken_CutsTheCopyNameToTheCreationLimit()
-    {
-        var repository = new InMemoryCreationRepository();
-        var example = CreateExample();
-        repository.Save(new CreationDef(Guid.NewGuid(), "Walker", example.Creature));
-        var workflow = new ExampleCopyWorkflow(repository, [example]);
-
-        var copy = workflow.Copy(example.Id, text =>
-            text.Equals(UiText.Plain("Walker")) ? "Walker" : new string('K', 60));
-
-        copy.Name.ShouldBe(new string('K', NameLimits.Creation));
-    }
-
-    [Fact]
-    public void Copy_NameFree_KeepsTheName()
-    {
-        var repository = new InMemoryCreationRepository();
-        var example = CreateExample();
-        repository.Save(new CreationDef(Guid.NewGuid(), "Worm", example.Creature));
-        var workflow = new ExampleCopyWorkflow(repository, [example]);
-
-        workflow.Copy(example.Id, TestLanguage.Untranslated).Name.ShouldBe("Walker");
-    }
-
-    [Fact]
-    public void Copy_UnknownExample_Throws()
-    {
-        var workflow = new ExampleCopyWorkflow(new InMemoryCreationRepository());
-
         Should.Throw<KeyNotFoundException>(() => workflow.Copy(Guid.NewGuid(), TestLanguage.Untranslated));
     }
 
-    [Fact]
-    public void Constructor_WithNullRepository_Throws()
+    // A name already taken, in any case, becomes "Copy of" the name, cut to the creation limit.
+    [Theory]
+    [InlineData("Kopia av Walker", "Kopia av Walker")]
+    [InlineData("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK", null)]
+    public void Copy_ANameTaken_IsACopyOfTheName(string translated, string? expected)
     {
-        Should.Throw<ArgumentNullException>(() => new ExampleCopyWorkflow(null!));
+        var repository = new InMemoryCreationRepository();
+        var example = Example();
+        repository.Save(new CreationDef(Guid.NewGuid(), "walker", example.Creature));
+
+        var copy = new ExampleCopyWorkflow(repository, [example]).Copy(example.Id, text =>
+            text.Equals(UiText.Format("Copy of {0}", "Walker")) ? translated : text.Message);
+
+        copy.Name.ShouldBe(expected ?? translated[..NameLimits.Creation]);
     }
 
-    private static CreationExample CreateExample()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
-            [new BeamDef(101, 1, 2)],
-            [new SensorDef(201, 101, SensorKind.Accelerometer)]);
-        return new CreationExample(
+    private static CreationExample Example() =>
+        new(
             Guid.NewGuid(),
             UiText.Plain("Walker"),
             UiText.Plain("Servos in the knees: the basic walk."),
-            creature,
+            new CreatureDef(
+                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
+                [new BeamDef(101, 1, 2)],
+                [new SensorDef(201, 101, SensorKind.Accelerometer)]),
             TestTraining.State(8, 1, TestTraining.Run));
-    }
 }

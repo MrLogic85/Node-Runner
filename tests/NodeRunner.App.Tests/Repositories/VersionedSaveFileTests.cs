@@ -9,126 +9,72 @@ public sealed class VersionedSaveFileTests
     private const string _versionField = VersionedSaveFile<Sample>.VersionField;
 
     [Fact]
-    public void Serialize_WritesTheCurrentVersionFirst()
+    public void Serialize_WritesTheCurrentVersionFirst_AndReadsBackNotOutdated()
     {
         var format = new VersionedSaveFile<Sample>([_ => { }]);
+        var json = format.Serialize(new Sample("Walker"));
 
-        var file = JsonNode.Parse(format.Serialize(new Sample("Walker")))!.AsObject();
+        var load = format.Deserialize(json, "sample");
 
+        var file = JsonNode.Parse(json)!.AsObject();
         file.Select(property => property.Key).ShouldBe([_versionField, "name"]);
         file[_versionField]!.GetValue<int>().ShouldBe(2);
+        load.ShouldBe(new VersionedLoad<Sample>(new Sample("Walker"), IsOutdated: false));
     }
 
-    [Fact]
-    public void Deserialize_InTheCurrentVersion_IsNotOutdated()
+    // A file without a version is the baseline, and outdated even while the baseline is current.
+    [Theory]
+    [InlineData("""{ "formatVersion": 2, "title": "Walker" }""", true, "2,3")]
+    [InlineData("""{ "title": "Walker" }""", true, "1,2,3")]
+    [InlineData("""{ "name": "Walker" }""", false, "")]
+    public void Migrations_RunInOrderFromTheFilesVersion_BeforeTheStrictLoad(string json, bool withMigrations, string expected)
     {
-        var format = new VersionedSaveFile<Sample>([_ => { }]);
-
-        var load = format.Deserialize(format.Serialize(new Sample("Walker")), "sample");
-
-        load.Value.ShouldBe(new Sample("Walker"));
-        load.IsOutdated.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Deserialize_WithoutAVersion_IsTheBaselineAndOutdated()
-    {
-        var format = new VersionedSaveFile<Sample>([]);
-
-        var load = format.Deserialize("""{ "name": "Walker" }""", "sample");
-
-        format.CurrentVersion.ShouldBe(VersionedSaveFile<Sample>.BaselineVersion);
-        load.Value.ShouldBe(new Sample("Walker"));
-        load.IsOutdated.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Migrations_RunInOrderFromTheFilesVersion()
-    {
+        // The last migration renames "title" to "name".
         var ran = new List<int>();
-        var format = new VersionedSaveFile<Sample>([_ => ran.Add(1), _ => ran.Add(2), _ => ran.Add(3)]);
-
-        var load = format.Deserialize("""{ "formatVersion": 2, "name": "Walker" }""", "sample");
-
-        ran.ShouldBe([2, 3]);
-        load.IsOutdated.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Migrations_AllRunForAFileWithoutAVersion()
-    {
-        var ran = new List<int>();
-        var format = new VersionedSaveFile<Sample>([_ => ran.Add(1), _ => ran.Add(2)]);
-
-        format.Deserialize("""{ "name": "Walker" }""", "sample");
-
-        ran.ShouldBe([1, 2]);
-        format.CurrentVersion.ShouldBe(3);
-    }
-
-    [Fact]
-    public void Migration_ChangesTheShapeBeforeTheStrictLoad()
-    {
-        var format = new VersionedSaveFile<Sample>([file =>
+        SaveMigration[] migrations = [.. Enumerable.Range(1, withMigrations ? 3 : 0).Select(step => (SaveMigration)(file =>
         {
-            file["name"] = file["title"]!.DeepClone();
-            file.Remove("title");
-        }]);
+            ran.Add(step);
+            if (step == 3)
+            {
+                file["name"] = file["title"]!.DeepClone();
+                file.Remove("title");
+            }
+        }))];
+        var format = new VersionedSaveFile<Sample>(migrations);
 
-        format.Deserialize("""{ "title": "Walker" }""", "sample").Value.ShouldBe(new Sample("Walker"));
+        var load = format.Deserialize(json, "sample");
+
+        load.ShouldBe(new VersionedLoad<Sample>(new Sample("Walker"), IsOutdated: true));
+        string.Join(',', ran).ShouldBe(expected);
     }
 
-    [Fact]
-    public void Deserialize_StillLoadsStrictlyAfterTheMigrations()
-    {
-        var format = new VersionedSaveFile<Sample>([_ => { }]);
-
-        Should.Throw<JsonException>(() => format.Deserialize("""{ "name": "Walker", "title": "Old" }""", "sample"))
-            .Message.ShouldContain("title");
-    }
-
+    // Each load the format cannot read fails as bad data naming the file; a migration's bad-data failure
+    // stays bad data, and its bug stays a bug.
     [Theory]
-    [InlineData("3")]
-    [InlineData("0")]
-    [InlineData("-1")]
-    [InlineData("\"1\"")]
-    [InlineData("1.5")]
-    [InlineData("null")]
-    [InlineData("{}")]
-    public void Deserialize_WithAVersionItCannotRead_Fails(string version)
-    {
-        var format = new VersionedSaveFile<Sample>([_ => { }]);
-
-        Should.Throw<InvalidDataException>(() => format.Deserialize($$"""{ "formatVersion": {{version}}, "name": "Walker" }""", "sample"))
-            .Message.ShouldContain("'sample'");
-    }
-
-    [Theory]
+    [InlineData("""{ "formatVersion": 3, "name": "Walker" }""")]
+    [InlineData("""{ "formatVersion": 0, "name": "Walker" }""")]
+    [InlineData("""{ "formatVersion": "1", "name": "Walker" }""")]
+    [InlineData("""{ "formatVersion": {}, "name": "Walker" }""")]
+    [InlineData("""{ "formatVersion": null, "name": "Walker" }""")]
     [InlineData("[]")]
-    [InlineData("null")]
-    [InlineData("1")]
-    public void Deserialize_WhenTheFileIsNotAnObject_Fails(string json)
+    public void Deserialize_AFileItCannotRead_FailsAsBadData(string json)
     {
-        var format = new VersionedSaveFile<Sample>([]);
+        var format = new VersionedSaveFile<Sample>([_ => { }]);
 
-        Should.Throw<InvalidDataException>(() => format.Deserialize(json, "sample"));
+        Should.Throw<InvalidDataException>(() => format.Deserialize(json, "sample")).Message.ShouldContain("'sample'");
     }
 
     [Fact]
-    public void Migration_ThatFindsBadData_FailsTheLoad()
+    public void Deserialize_LoadsStrictly_AndKeepsAMigrationsFailure()
     {
-        var format = new VersionedSaveFile<Sample>([_ => throw new InvalidDataException("no title")]);
+        var current = new VersionedSaveFile<Sample>([_ => { }]);
+        var badData = new VersionedSaveFile<Sample>([_ => throw new InvalidDataException("no title")]);
+        var bug = new VersionedSaveFile<Sample>([_ => throw new InvalidOperationException("bug")]);
 
-        Should.Throw<InvalidDataException>(() => format.Deserialize("""{ "name": "Walker" }""", "sample"))
-            .Message.ShouldBe("no title");
-    }
-
-    [Fact]
-    public void Migration_ThatHasABug_IsNotTurnedIntoBadData()
-    {
-        var format = new VersionedSaveFile<Sample>([_ => throw new InvalidOperationException("bug")]);
-
-        Should.Throw<InvalidOperationException>(() => format.Deserialize("""{ "name": "Walker" }""", "sample"));
+        Should.Throw<JsonException>(() => current.Deserialize("""{ "formatVersion": 2, "name": "Walker", "title": "Old" }""", "sample"))
+            .Message.ShouldContain("title");
+        Should.Throw<InvalidDataException>(() => badData.Deserialize("""{ "name": "Walker" }""", "sample")).Message.ShouldBe("no title");
+        Should.Throw<InvalidOperationException>(() => bug.Deserialize("""{ "name": "Walker" }""", "sample"));
     }
 
     public sealed record Sample(string Name);

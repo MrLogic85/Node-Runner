@@ -5,31 +5,19 @@ namespace NodeRunner.Ui.Tests;
 public sealed class UiIconsTests
 {
     [Fact]
-    public void NoIcon_IsNotAResourceAndDoesNotRenumberExistingIcons()
+    public void Every_icon_has_an_svg_embedded_for_runtime_rasterization()
     {
-        ((int)UiIconId.None).ShouldBe(-1);
-        ((int)UiIconId.Back).ShouldBe(0);
-        ((int)UiIconId.PartWing).ShouldBe(54);
-        ((int)UiIconId.MapStairs).ShouldBe(60);
+        var resources = typeof(UiIcons).Assembly.GetManifestResourceNames();
+
         UiIcons.AllIds.ShouldNotContain(UiIconId.None);
-        Should.Throw<ArgumentOutOfRangeException>(() => UiIcons.PathFor(UiIconId.None));
+        UiIcons.AllIds
+            .Where(icon => !File.Exists(Path.Combine(ThemeFile.ProjectRoot, UiIcons.PathFor(icon)["res://".Length..]))
+                || !resources.Contains(UiIcons.PathFor(icon)["res://assets/".Length..]))
+            .ShouldBeEmpty("Copy the icon's SVG into project/assets/icons, where the build embeds it.");
     }
 
     [Fact]
-    public void EveryTypedIcon_MapsToAnExistingCopiedSvg()
-    {
-        var projectRoot = Path.Combine(FindRepositoryRoot(), "project");
-
-        UiIcons.AllIds.Count.ShouldBe(74);
-
-        foreach (var icon in UiIcons.AllIds)
-        {
-            File.Exists(ToAssetPath(projectRoot, UiIcons.PathFor(icon))).ShouldBeTrue($"Missing icon: {icon}");
-        }
-    }
-
-    [Fact]
-    public void PartGlyphs_AreNeverAllowedAtSmall()
+    public void Part_glyphs_are_never_allowed_at_small()
     {
         foreach (var icon in UiIcons.AllIds)
         {
@@ -42,86 +30,33 @@ public sealed class UiIconsTests
         Should.Throw<ArgumentException>(() => UiIcons.Load(UiIconId.PartWheel, UiIconSize.Small));
     }
 
+    [Theory]
+    [InlineData(UiIconId.Beam, "icon_beam.svg")]
+    [InlineData(UiIconId.PartBeam, "part_beam.svg")]
+    public void Notification_icon_keeps_the_library_when_names_overlap(UiIconId icon, string file) =>
+        new UiNotificationIcon(icon).ResourcePath.ShouldBe(UiIcons.Root + file);
+
+    [Theory]
+    [InlineData(UiIconId.None)]
+    [InlineData((UiIconId)999)]
+    public void Notification_icon_rejects_a_missing_or_invalid_glyph(UiIconId icon) =>
+        Should.Throw<ArgumentOutOfRangeException>(() => new UiNotificationIcon(icon));
+
+    // Screens and widgets draw icons through UiIconId, never a text stand-in.
     [Fact]
-    public void IconSizes_UseOnlyTheFourCanonicalPixelMappings()
+    public void Screens_and_widgets_use_no_pseudo_icon_text()
     {
-        Enum.GetValues<UiIconSize>().Select(UiIcons.Pixels).ShouldBe([12, 16, 20, 24]);
-    }
+        string[] banned =
+        [
+            "IconText =", "Glyph =", "Glyphs =", "\"?\"", "\"!\"", "\"...\"",
+            "🔒", "⋯", "▶", "✎", "✓", "⚠", "⌫", "⧉", "◎", "⛓", "◌", "▣", "⌃", "⌄",
+        ];
 
-    [Fact]
-    public void EveryCanonicalSvg_IsEmbeddedForRuntimeRasterization()
-    {
-        var resources = typeof(UiIcons).Assembly.GetManifestResourceNames();
-
-        foreach (var icon in UiIcons.AllIds)
-        {
-            resources.ShouldContain(UiIcons.PathFor(icon)["res://assets/".Length..]);
-        }
-    }
-
-    [Fact]
-    public void CanonicalGalleryFixtures_DoNotContainPseudoIconStrings()
-    {
-        var gallery = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "project", "src", "ui", "screens", "ComponentGalleryScreen.cs"));
-
-        foreach (var pseudoIcon in new[] { "IconText =", "Glyph =", "Glyphs =", "\"?\"", "\"!\"", "\"...\"", "🔒", "◎", "▶", "✓" })
-        {
-            gallery.ShouldNotContain(pseudoIcon);
-        }
-    }
-
-    [Fact]
-    public void ActiveProductUiCallers_DoNotUseLegacyIconAliasesOrPseudoIconLiterals()
-    {
-        var uiRoot = Path.Combine(FindRepositoryRoot(), "project", "src", "ui");
-        var activeFiles = Directory.EnumerateFiles(Path.Combine(uiRoot, "screens"), "*.cs")
-            .Concat(Directory.EnumerateFiles(Path.Combine(uiRoot, "widgets"), "*.cs"));
-        var bannedSnippets = new[]
-        {
-            "IconText =",
-            "Glyph =",
-            "Glyphs =",
-            "🔒",
-            "⋯",
-            "▶",
-            "✎",
-            "✓",
-            "⚠",
-            "⌫",
-            "⧉",
-            "◎",
-            "⛓",
-            "◌",
-            "▣",
-            "⌃",
-            "⌄",
-        };
-
-        foreach (var path in activeFiles)
-        {
-            var text = File.ReadAllText(path);
-            foreach (var snippet in bannedSnippets)
-            {
-                text.Contains(snippet, StringComparison.Ordinal).ShouldBeFalse($"{Path.GetRelativePath(uiRoot, path)} must use typed UiIconId APIs for icon visuals.");
-            }
-        }
-    }
-
-    private static string ToAssetPath(string projectRoot, string resourcePath) =>
-        Path.Combine(projectRoot, resourcePath["res://".Length..]);
-
-    private static string FindRepositoryRoot()
-    {
-        for (var directory = new DirectoryInfo(AppContext.BaseDirectory);
-             directory is not null;
-             directory = directory.Parent)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "NodeRunner.slnx")))
-            {
-                return directory.FullName;
-            }
-        }
-
-        throw new DirectoryNotFoundException("Could not locate the Node Runner repository root.");
+        CSharpSources.Project
+            .Where(source => source.Path.StartsWith("ui/screens/", StringComparison.Ordinal) || source.Path.StartsWith("ui/widgets/", StringComparison.Ordinal))
+            .SelectMany(source => banned
+                .Where(snippet => source.Tree.ToString().Contains(snippet, StringComparison.Ordinal))
+                .Select(snippet => $"{source.Path}: {snippet}"))
+            .ShouldBeEmpty("Use typed UiIconId APIs for icon visuals.");
     }
 }

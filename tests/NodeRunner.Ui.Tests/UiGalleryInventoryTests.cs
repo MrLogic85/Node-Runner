@@ -4,9 +4,9 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Ui.Tests;
 
 /// <summary>
-/// The Colors &amp; Styles page is authored in its scene, so these read the scene text to keep it a
-/// complete inventory: a new token, icon or text style fails here until the page shows it. They
-/// find each specimen by its group or its script, not by how the scene arranges it.
+/// The Colors &amp; Styles page is authored in its scene, so this reads the scene text to keep it a
+/// complete inventory: a new token, icon, icon size or text style fails here until the page shows it.
+/// It finds each specimen by its group or its script, not by how the scene arranges it.
 /// </summary>
 public sealed partial class UiGalleryInventoryTests
 {
@@ -24,53 +24,44 @@ public sealed partial class UiGalleryInventoryTests
             SceneNodes.FindRepositoryRoot(), "project", "scenes", "screens", "ColorsAndStylesScreen.tscn")))
         .ToDictionary(match => match.Groups["id"].Value, match => match.Groups["path"].Value);
 
-    [Fact]
-    public void Every_swatch_shows_the_neon_or_the_paper_theme()
-    {
-        var themes = Swatches().Select(swatch => swatch.Theme).Distinct();
-
-        themes.ShouldBe([_neon, _paper], ignoreOrder: true);
-    }
-
+    // Each row: what the page shows, and what it must show exactly once.
     [Theory]
-    [InlineData(_neon)]
-    [InlineData(_paper)]
-    public void Colours_show_every_token_once_in_each_theme(string theme)
+    [InlineData("swatch themes")]
+    [InlineData("neon colours")]
+    [InlineData("paper colours")]
+    [InlineData("icons")]
+    [InlineData("icon sizes")]
+    [InlineData("text styles")]
+    public void Page_shows_every_entry_once(string inventory)
     {
-        var tokens = Swatches().Where(swatch => swatch.Theme == theme).Select(swatch => swatch.Token);
+        var (shown, expected) = inventory switch
+        {
+            "swatch themes" => (Swatches().Select(swatch => swatch.Theme ?? "none").Distinct(), [_neon, _paper]),
+            "neon colours" => (Colours(_neon), Names(UiThemeExpander.AuthoredColors)),
+            "paper colours" => (Colours(_paper), Names(UiThemeExpander.AuthoredColors)),
+            "icons" => (Shown<UiIconId>("inventory_icon", "IconId", UiIconId.None),
+                Names(Enum.GetValues<UiIconId>().Where(id => id != UiIconId.None))),
+            "icon sizes" => (Shown<UiIconSize>("inventory_icon_size", "IconSize", UiIconSize.Standard),
+                Names(Enum.GetValues<UiIconSize>())),
+            "text styles" => (Shown<UiTokens.Typography>("inventory_text_style", "TextStyle", UiTokens.Typography.Body),
+                Names(Enum.GetValues<UiTokens.Typography>())),
+            _ => throw new ArgumentOutOfRangeException(nameof(inventory)),
+        };
 
-        tokens.ShouldBe(UiThemeExpander.AuthoredColors, ignoreOrder: true);
+        shown.ShouldBe(expected, ignoreOrder: true, $"The Colors & Styles page must show each of its {inventory} once.");
     }
 
-    [Fact]
-    public void Icon_set_shows_every_icon_once()
-    {
-        var shown = InGroup("inventory_icon").Select(node => (UiIconId)Int(node, "IconId", (int)UiIconId.None));
+    private static string[] Names<T>(IEnumerable<T> values) => [.. values.Select(value => value!.ToString()!)];
 
-        shown.ShouldBe(Enum.GetValues<UiIconId>().Where(id => id != UiIconId.None), ignoreOrder: true);
-    }
+    private static IEnumerable<string> Colours(string theme) =>
+        Swatches().Where(swatch => swatch.Theme == theme).Select(swatch => swatch.Token.ToString());
 
-    [Fact]
-    public void Icon_sizes_show_every_size_once()
-    {
-        var shown = InGroup("inventory_icon_size")
-            .Select(node => (UiIconSize)Int(node, "IconSize", (int)UiIconSize.Standard));
-
-        shown.ShouldBe(Enum.GetValues<UiIconSize>(), ignoreOrder: true);
-    }
-
-    [Fact]
-    public void Text_styles_show_every_style_once()
-    {
-        var shown = InGroup("inventory_text_style")
-            .Select(node => (UiTokens.Typography)Int(node, "TextStyle", (int)UiTokens.Typography.Body));
-
-        shown.ShouldBe(Enum.GetValues<UiTokens.Typography>(), ignoreOrder: true);
-    }
-
-    private static IEnumerable<SceneNodes.SceneNode> InGroup(string group) =>
+    // Godot omits a property saved at its default, so an absent value reads as the default.
+    private static IEnumerable<string> Shown<T>(string group, string property, T fallback)
+        where T : struct, Enum =>
         _page.Where(node => Groups().Match(node.Node.Header) is { Success: true } groups
-            && groups.Groups["list"].Value.Split(", ").Contains($"\"{group}\""));
+                && groups.Groups["list"].Value.Split(", ").Contains($"\"{group}\""))
+            .Select(node => ((T)(object)Int(node, property, Convert.ToInt32(fallback, System.Globalization.CultureInfo.InvariantCulture))).ToString());
 
     private static IEnumerable<(string? Theme, UiTokens.Color Token)> Swatches() =>
         _page.Where(node => node.Script?.EndsWith("/UiSwatch.cs", StringComparison.Ordinal) == true)
@@ -87,6 +78,7 @@ public sealed partial class UiGalleryInventoryTests
                 return _resources[theme.Groups["id"].Value];
             }
         }
+
         return null;
     }
 
@@ -100,7 +92,6 @@ public sealed partial class UiGalleryInventoryTests
     private static string ParentOf(string path) =>
         path.LastIndexOf('/') is var slash and >= 0 ? path[..slash] : ".";
 
-    // Godot omits a property saved at its default, so an absent value reads as the default.
     private static int Int(SceneNodes.SceneNode node, string property, int fallback)
     {
         var match = Regex.Match(node.Node.Body, $@"\n{property} = (?<value>-?\d+)");

@@ -1,229 +1,246 @@
 using NodeRunner.App.Builders;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
+using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 
 namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class BuildViewModelTests
 {
     private static readonly CanvasRect _area = BuildViewModel.BuildArea;
+    private static readonly double _r = NodeDef.PlainJointRadius;
 
     [Fact]
-    public void PlaceNode_OutsideTheBuildArea_LandsWithItsRingJustInside()
-    {
-        var viewModel = new BuildViewModel();
-
-        viewModel.PlaceNode(new Vector2D(_area.Max.X + 500, _area.Min.Y - 500));
-
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - NodeDef.PlainJointRadius, _area.Min.Y + NodeDef.PlainJointRadius));
-    }
-
-    [Fact]
-    public void ShowsLooseMark_OnALooseJointWithoutAServoOrWheel_NotUnderOne()
+    public void Joints_LandOnWholeUnits_InsideTheBuildArea_AndEachPlaceOrMoveRedraws()
     {
         var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(300, 0)), new NodeDef(5, new Vector2D(400, 0)), new NodeDef(10, new Vector2D(500, 0))],
-            [new BeamDef(6, 4, 5)],
-            [],
-            [new ServoDef(7, 2)],
-            [],
-            [],
-            [new WheelDef(8, 3)],
-            [new TouchSensorDef(9, 10)],
-            nextPartId: 11));
+        var changes = build.CountAnatomyChanges();
+        build.PlaceNode(new Vector2D(3, 4)).ShouldBe(1);
+        build.Nodes.Single().Position.ShouldBe(new Vector2D(3, 4));
+        build.MoveNode(1, new Vector2D(10, 20));
+        build.Nodes.Single().Position.ShouldBe(new Vector2D(10, 20));
+        changes().ShouldBe(2);
+        build.MoveNode(1, new Vector2D(_area.Min.X - 500, 40));
+        build.Nodes[0].Position.ShouldBe(new Vector2D(_area.Min.X + _r, 40));
+        build.PlaceNode(new Vector2D(_area.Max.X + 500, _area.Min.Y - 500));
+        build.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - _r, _area.Min.Y + _r));
 
-        build.ShowsLooseMark(1).ShouldBeTrue();
-        build.IsLoose(2).ShouldBeTrue();
-        build.ShowsLooseMark(2).ShouldBeFalse();
-        build.IsLoose(3).ShouldBeTrue();
-        build.ShowsLooseMark(3).ShouldBeFalse();
-        build.ShowsLooseMark(4).ShouldBeFalse();
-        build.ShowsLooseMark(10).ShouldBeTrue();
-    }
+        foreach (var (x, y, wholeX, wholeY) in new[] { (12.4, -7.6, 12.0, -8.0), (0.5, -0.5, 1.0, -1.0), (-0.4, 0.4, 0.0, 0.0) })
+        {
+            var id = build.PlaceNode(new Vector2D(x, y));
+            build.Nodes[^1].Position.ShouldBe(new Vector2D(wholeX, wholeY));
+            build.MoveNode(id, new Vector2D(x + 100, y));
+            build.Nodes[^1].Position.ShouldBe(new Vector2D(wholeX + 100, wholeY));
+        }
 
-    // A Brake missing its sides draws in danger itself (#1041).
-    [Fact]
-    public void ShowsLooseMark_NotUnderABrake()
-    {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0))],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [],
-            [new BrakeDef(2, 1)],
-            nextPartId: 3));
+        build = SelectedPair();
+        build.TranslateSelection(build.SnapshotSelection(), new Vector2D(_area.Max.X, 30));
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(_area.Max.X - _r - 100, 30), new Vector2D(_area.Max.X - _r, 30)]);
 
-        build.IsLoose(1).ShouldBeTrue();
-        build.ShowsLooseMark(1).ShouldBeFalse();
+        // A save from before #1094 may hold joints off whole units; Build keeps them until one moves.
+        var fractional = new CreatureDef([new NodeDef(1, new Vector2D(0.1, 0.3)), new NodeDef(2, new Vector2D(100.1, 0.3))], [], [], 3);
+        build = new BuildViewModel(new CreatureBuilder(fractional));
+        build.ReplaceSelection([1, 2]);
+        build.CopySelectedParts();
+        build.Nodes.Skip(2).Select(node => node.Position).ShouldAllBe(position => position.X == Math.Round(position.X) && position.Y == Math.Round(position.Y));
+        build = new BuildViewModel(new CreatureBuilder(fractional));
+        build.ReplaceSelection([1, 2]);
+        build.TranslateSelection(build.SnapshotSelection(), new Vector2D(1500.3, 0));
+        build.Nodes[1].Position.X.ShouldBe(_area.Max.X - _r);
+        build.Nodes[0].Position.X.ShouldBe(_area.Max.X - _r - 100, 1e-9);
     }
 
     [Fact]
-    public void MoveNode_PastTheBuildArea_StopsAtTheEdge()
+    public void ASelection_TurnsAndScalesAboutThePivotOfItsJoints_WithinTheBuildArea_AndRestores()
     {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
+        var build = SelectedPair();
+        var start = build.SnapshotSelection();
+        start.Pivot.ShouldBe(new Vector2D(50, 0));
+        foreach (var radians in new[] { Math.PI / 2, -Math.PI / 2, 3 * Math.PI / 2 })
+        {
+            build.RotateSelection(start, radians);
+            build.Nodes[0].Position.X.ShouldBe(50, 1e-9);
+            build.Nodes[0].Position.Y.ShouldBe(-50 * Math.Sin(radians), 1e-9);
+            build.Nodes[1].Position.Y.ShouldBe(50 * Math.Sin(radians), 1e-9);
+        }
 
-        viewModel.MoveNode(1, new Vector2D(_area.Min.X - 500, 40));
+        for (var i = 0; i < 1000; i++)
+        {
+            build.RotateSelection(start, i * 0.37);
+        }
 
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Min.X + NodeDef.PlainJointRadius, 40));
-    }
-
-    [Fact]
-    public void TranslateSelection_PastTheBuildArea_StopsTheWholeGroupAndKeepsItsShape()
-    {
-        var viewModel = SelectedPair();
-
-        viewModel.TranslateSelection(viewModel.SnapshotSelection(), new Vector2D(_area.Max.X, 30));
-
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - NodeDef.PlainJointRadius, 30));
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - NodeDef.PlainJointRadius - 100, 30));
-    }
-
-    [Theory]
-    [InlineData(12.4, -7.6, 12, -8)]
-    [InlineData(0.5, -0.5, 1, -1)]
-    [InlineData(-0.4, 0.4, 0, 0)]
-    public void PlaceNode_AndMoveNode_LandOnWholeUnits(double x, double y, double wholeX, double wholeY)
-    {
-        var viewModel = new BuildViewModel();
-
-        viewModel.PlaceNode(new Vector2D(x, y));
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(wholeX, wholeY));
-        viewModel.MoveNode(1, new Vector2D(x + 100, y));
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(wholeX + 100, wholeY));
-    }
-
-    [Fact]
-    public void RotateSelection_LandsTheJointsOnWholeUnits()
-    {
-        var viewModel = SelectedPair();
-
-        viewModel.RotateSelection(viewModel.SnapshotSelection(), Math.PI / 6);
+        build.RotateSelection(start, 0);
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
 
         // 50 ∓ 50·cos 30° = 6.70… and 93.30…; ∓ 50·sin 30° = ∓25.
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(7, -25));
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(93, 25));
+        build.RotateSelection(start, Math.PI / 6);
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(7, -25), new Vector2D(93, 25)]);
+
+        foreach (var (factor, applied) in new[] { (2.0, 2.0), (0.5, 0.5), (100, BuildViewModel.MaxSelectionScale), (-3, BuildViewModel.MinSelectionScale) })
+        {
+            build.ScaleSelection(start, factor);
+            build.Nodes[0].Position.X.ShouldBe(Math.Round(50 - (50 * applied), MidpointRounding.AwayFromZero));
+            build.Nodes[1].Position.X.ShouldBe(Math.Round(50 + (50 * applied), MidpointRounding.AwayFromZero));
+        }
+
+        Should.Throw<ArgumentOutOfRangeException>(() => build.ScaleSelection(start, double.NaN));
+        build.RestoreSelection(start);
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(0, 0), new Vector2D(100, 0)]);
+
+        build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(_area.Max.X - 18, -100));
+        build.PlaceNode(new Vector2D(_area.Max.X - 18, 100));
+        build.PlaceNode(new Vector2D(10, 10));
+        build.PlaceNode(new Vector2D(10, 10));
+        build.ReplaceSelection([1, 2]);
+        build.RotateSelection(build.SnapshotSelection(), Math.PI / 4).ShouldBeFalse();
+        build.Nodes.Take(2).Select(node => node.Position).ShouldBe([new Vector2D(_area.Max.X - 18, -100), new Vector2D(_area.Max.X - 18, 100)]);
+        build.ReplaceSelection([3, 4]);
+        build.ScaleSelection(build.SnapshotSelection(), 3);
+        build.Nodes.Skip(2).ShouldAllBe(node => node.Position == new Vector2D(10, 10));
+
+        build = Loaded(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0)), new BeamDef(101, 1, 2)]), locked: true);
+        build.ReplaceSelection([1, 2]);
+        build.ScaleSelection(build.SnapshotSelection(), 2);
+        build.Nodes.Select(node => node.Position).ShouldBe([new Vector2D(-10, 0), new Vector2D(30, 0)]);
+        build.RotateSelection(build.SnapshotSelection(), Math.PI).ShouldBeTrue();
+        build.Nodes[0].Position.X.ShouldBe(30, 1e-9);
     }
 
     [Fact]
-    public void CopySelectedParts_OfJointsOffWholeUnits_LandsTheCopiesOnThem()
+    public void ALooseJoint_ShowsTheLooseMark_UnlessAServoWheelOrBrakeDrawsItsDanger()
     {
-        var viewModel = new BuildViewModel(new CreatureBuilder(OldSaveWithFractionalJoints()));
-        viewModel.ReplaceSelection([1, 2]);
+        var build = Loaded(new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0)), new NodeDef(4, new Vector2D(300, 0)),
+                new NodeDef(5, new Vector2D(400, 0)), new NodeDef(10, new Vector2D(500, 0)), new NodeDef(11, new Vector2D(600, 0)),
+                new BeamDef(6, 4, 5), new ServoDef(7, 2), new WheelDef(8, 3), new TouchSensorDef(9, 10), new BrakeDef(12, 11),
+            ],
+            nextPartId: 13));
 
-        viewModel.CopySelectedParts();
-
-        viewModel.Nodes.Skip(2).Select(node => node.Position).ShouldAllBe(position =>
-            position.X == Math.Round(position.X) && position.Y == Math.Round(position.Y));
+        new[] { 1, 2, 3, 4, 10, 11 }.Select(build.IsLoose).ShouldBe([true, true, true, false, true, true]);
+        new[] { 1, 2, 3, 4, 10, 11 }.Select(build.ShowsLooseMark).ShouldBe([true, false, false, false, true, false]);
     }
 
-    // A save from before #1094 may hold joints off whole units; Build keeps them until one moves.
     [Fact]
-    public void TranslateSelection_WithFractionalCoordinates_StillReachesTheEdge()
+    public void ASelection_IsToggledReplacedAndCleared_RaisingWhatChanged_AndDeleteTakesWhatGoesWithIt()
     {
-        var viewModel = new BuildViewModel(new CreatureBuilder(OldSaveWithFractionalJoints()));
-        viewModel.ReplaceSelection([1, 2]);
-
-        viewModel.TranslateSelection(viewModel.SnapshotSelection(), new Vector2D(1500.3, 0));
-
-        viewModel.Nodes[1].Position.X.ShouldBe(_area.Max.X - NodeDef.PlainJointRadius);
-        viewModel.Nodes[0].Position.X.ShouldBe(_area.Max.X - NodeDef.PlainJointRadius - 100, 1e-9);
-    }
-
-    private static CreatureDef OldSaveWithFractionalJoints() =>
-        new([new NodeDef(1, new Vector2D(0.1, 0.3)), new NodeDef(2, new Vector2D(100.1, 0.3))], [], [], 3);
-
-    [Fact]
-    public void ToggleSelected_AddsAndRemovesAnyPart_KeepingTheRest()
-    {
-        var build = new BuildViewModel();
-        build.Load(Carrier());
-
-        build.ToggleSelected(new(CreatureElementKind.Node, 1));
-        build.ToggleSelected(new(CreatureElementKind.Beam, 101));
+        var build = Loaded(Carrier());
+        build.ToggleSelected(Joint(1));
+        build.ToggleSelected(Beam(101));
         build.ToggleSelected(new(CreatureElementKind.Piston, 301));
         build.ToggleSelected(new(CreatureElementKind.Sensor, 201));
         build.SelectedPartCount.ShouldBe(4);
+        build.ToggleSelected(Beam(101));
+        build.Selection.Parts.ShouldBe([Joint(1), new(CreatureElementKind.Sensor, 201), new(CreatureElementKind.Piston, 301)], ignoreOrder: true);
 
-        build.ToggleSelected(new(CreatureElementKind.Beam, 101));
-        build.Selection.Beams.ShouldBeEmpty();
-        build.Selection.Nodes.ShouldBe([1]);
-        build.SelectedPartCount.ShouldBe(3);
-    }
+        var raised = new List<string?>();
+        build.PropertyChanged += (_, args) => raised.Add(args.PropertyName);
+        var changes = build.CountAnatomyChanges();
+        build.SelectOnly(CreatureElementKind.Beam, 101);
+        (build.SelectedNodeCount, build.SelectedBeamCount, build.SelectedPartCount, build.SingleSelectedBeamId).ShouldBe((0, 1, 1, 101));
+        new[] { nameof(BuildViewModel.SelectedBeamCount), nameof(BuildViewModel.SelectedPartCount), nameof(BuildViewModel.SingleSelectedBeamId) }.ShouldBeSubsetOf(raised);
+        changes().ShouldBe(1);
+        raised.Clear();
+        build.ClearSelection();
+        (build.SelectedPartCount, build.SingleSelectedBeamId).ShouldBe((0, null));
+        raised.ShouldContain(nameof(BuildViewModel.SingleSelectedBeamId));
+        changes().ShouldBe(2);
 
-    [Fact]
-    public void DeleteSelectedParts_DeletesEachSelectedPart_EvenOnesADeletedBeamOrJointTakes()
-    {
-        var build = new BuildViewModel();
-        build.Load(Carrier());
-        build.ReplaceSelection(new PartSet(
-            new HashSet<int> { 3 },
-            new HashSet<int> { 101, 102 },
-            new HashSet<int> { 201 },
-            new HashSet<int>(),
-            new HashSet<int> { 301 },
-            new HashSet<int>(),
-            new HashSet<int>(),
-            new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
-
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+        build.SingleSelectedSensorId.ShouldBe(201);
+        build.SelectOnly(CreatureElementKind.Beam, 102);
+        (build.SingleSelectedSensorId, build.SelectedPartCount).ShouldBe((null, 1));
         build.DeleteSelectedParts();
+        build.Nodes.Count.ShouldBe(3);
+        build.Undo();
 
+        build.ReplaceSelection(Set(Joint(3), Beam(101), Beam(102), new(CreatureElementKind.Sensor, 201), new(CreatureElementKind.Piston, 301)));
+        build.DeleteSelectedParts();
         build.Nodes.Select(node => node.Id).ShouldBe([1, 2]);
-        build.Beams.ShouldBeEmpty();
-        build.Sensors.ShouldBeEmpty();
-        build.Pistons.ShouldBeEmpty();
-        build.SelectedPartCount.ShouldBe(0);
+        (build.Beams.Count, build.Sensors.Count, build.Pistons.Count, build.SelectedPartCount).ShouldBe((0, 0, 0, 0));
     }
 
     [Fact]
-    public void SetParameter_ChangesOnlyThatSetting_OnEverySelectedPiston()
+    public void SetParameter_ChangesOnlyThatSetting_OnEverySelectedPart_OnceForAValue_EvenWhenLocked()
     {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90)), new NodeDef(4, new Vector2D(90, 90))],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 3, 4)],
-            [],
-            [new PistonDef(301, 1, 3, stroke: 0.2), new PistonDef(302, 2, 4, stroke: 0.4), new PistonDef(303, 1, 4)]));
-        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
+        var pistons = new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90)), new NodeDef(4, new Vector2D(90, 90)),
+                new PistonDef(301, 1, 3, stroke: 0.2), new PistonDef(302, 2, 4, stroke: 0.4), new PistonDef(303, 1, 4),
+            ]);
+        foreach (var locked in new[] { false, true })
+        {
+            var build = Loaded(pistons, locked);
+            build.ReplaceSelection(Set(new(CreatureElementKind.Piston, 301), new(CreatureElementKind.Piston, 302)));
+            var changes = build.CountAnatomyChanges();
+            build.SetParameter(PartParameterId.Strength, 20000);
+            build.SetParameter(PartParameterId.MaxSpeed, 100);
+            build.SetParameter(PartParameterId.MaxSpeed, 100);
+            build.Pistons.Select(piston => (piston.Strength, piston.Stroke, piston.MaxSpeed)).ShouldBe(
+                [(20000, 0.2, 100), (20000, 0.4, 100), (PistonDef.DefaultStrength, PistonDef.DefaultStroke, PistonDef.DefaultMaxSpeed)]);
+            build.SetParameter(PartParameterId.Stroke, 0.5);
+            build.Pistons.Select(piston => piston.Stroke).ShouldBe([0.5, 0.5, PistonDef.DefaultStroke]);
+            changes().ShouldBe(3);
+        }
 
-        build.SetParameter(PartParameterId.Strength, 20000);
-        build.SetParameter(PartParameterId.MaxSpeed, 100);
-
-        build.Pistons.Select(piston => (piston.Strength, piston.Stroke, piston.MaxSpeed)).ShouldBe([
-            (20000, 0.2, 100),
-            (20000, 0.4, 100),
-            (PistonDef.DefaultStrength, PistonDef.DefaultStroke, PistonDef.DefaultMaxSpeed)]);
-
-        build.SetParameter(PartParameterId.Stroke, 0.5);
-        build.Pistons.Select(piston => piston.Stroke).ShouldBe([0.5, 0.5, PistonDef.DefaultStroke]);
+        var carrier = Loaded(Carrier());
+        carrier.ReplaceSelection(Set(Joint(1), new(CreatureElementKind.Piston, 301)));
+        Should.Throw<InvalidOperationException>(() => carrier.SetParameter(PartParameterId.Strength, 20000));
     }
 
     [Fact]
-    public void SetParameter_OnALockedCreation_ChangesOnce_AndNotAgainForTheSameValue()
+    public void ACamera_IsAimedAndTuned_ButALockedOneKeepsItsRays()
     {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(0, 90))],
-            [],
-            [],
-            [new PistonDef(301, 1, 2), new PistonDef(302, 1, 3, stroke: 0.4)]), locked: true);
-        build.ReplaceSelection(PartSet.None with { Pistons = new HashSet<int> { 301, 302 } });
-        var changes = 0;
-        build.AnatomyChanged += (_, _) => changes++;
+        var build = Loaded(TwoCameras());
+        build.ReplaceSelection(Set(new(CreatureElementKind.Sensor, 201), new(CreatureElementKind.Sensor, 202)));
+        build.SetParameter(PartParameterId.Rays, 5);
+        build.SetParameter(PartParameterId.Spread, Math.PI / 3);
+        build.SetParameter(PartParameterId.CameraRange, 300);
+        build.Sensors.ShouldAllBe(sensor => sensor.Rays == 5 && sensor.Spread == Math.PI / 3 && sensor.Range == 300);
+        build.SelectedValuesOf(PartParameterId.Rays).ShouldBe([5.0, 5.0]);
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+        var changes = build.CountAnatomyChanges();
+        build.SetParameter(PartParameterId.Aim, 1);
+        build.SetParameter(PartParameterId.Aim, 1);
+        build.Sensors[0].Aim.ShouldBe(1);
+        changes().ShouldBe(1);
 
-        build.SetParameter(PartParameterId.Stroke, 0.2);
-        build.SetParameter(PartParameterId.Stroke, 0.2);
+        build = Loaded(TwoCameras(), locked: true);
+        build.SelectOnly(CreatureElementKind.Sensor, 201);
+        build.ShownParameters.ShouldBe([PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
+        build.EditableParameters.ShouldBe([PartParameterId.Aim, PartParameterId.Spread, PartParameterId.CameraRange]);
+        build.CanEdit(PartParameterId.Rays).ShouldBeFalse();
+        build.SelectedValuesOf(PartParameterId.Rays).ShouldBe([3.0]);
+        Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Rays, 5));
+        build.SetParameter(PartParameterId.Aim, 1);
+        build.SetParameter(PartParameterId.Spread, Math.PI / 4);
+        build.SetParameter(PartParameterId.CameraRange, 150);
+        build.Sensors[0].ShouldBe(new SensorDef(201, 101, SensorKind.Camera, aim: 1, rays: 3, spread: Math.PI / 4, range: 150));
+        build.Unlock();
+        build.SetParameter(PartParameterId.Rays, 5);
+        build.Sensors[0].Rays.ShouldBe(5);
+    }
 
-        build.Pistons.Select(piston => piston.Stroke).ShouldBe([0.2, 0.2]);
-        changes.ShouldBe(1);
+    [Fact]
+    public void ACamerasSpread_HasEffect_OnlyWhileASelectedCameraHasMoreThanOneRay()
+    {
+        foreach (var (rays, effect) in new[] { (1, false), (3, true) })
+        {
+            var build = Loaded(TwoCameras(rays));
+            build.SelectOnly(CreatureElementKind.Sensor, 201);
+            build.HasEffect(PartParameterId.Spread).ShouldBe(effect);
+            build.HasEffect(PartParameterId.CameraRange).ShouldBeTrue();
+            build.HasEffect(PartParameterId.Rays).ShouldBeTrue();
+        }
+
+        var mixed = Loaded(new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0)), new BeamDef(101, 1, 2), new BeamDef(102, 2, 3),
+                new SensorDef(201, 101, SensorKind.Camera, rays: 1), new SensorDef(202, 102, SensorKind.Camera, rays: 3),
+            ]));
+        mixed.ReplaceSelection(Set(new(CreatureElementKind.Sensor, 201), new(CreatureElementKind.Sensor, 202)));
+        mixed.HasEffect(PartParameterId.Spread).ShouldBeTrue();
     }
 
     [Theory]
@@ -233,1261 +250,343 @@ public sealed class BuildViewModelTests
     [InlineData(new[] { 301, 101 }, "")]
     [InlineData(new[] { 201 }, "Aim,Rays,Spread,CameraRange")]
     [InlineData(new[] { 201, 202 }, "Rays,Spread,CameraRange")]
-    [InlineData(new[] { 201, 301 }, "")]
-    [InlineData(new[] { 401 }, "Stiffness,Damping,Stroke,CoilLength")]
     [InlineData(new[] { 401, 402 }, "Stiffness,Damping,Stroke,CoilLength")]
     [InlineData(new[] { 301, 401 }, "Stroke")]
     [InlineData(new int[0], "")]
     public void EditableParameters_AreOnePartsOwn_OrThoseEverySelectedPartHasAndCanShare(int[] parts, string editable)
     {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-            [new SensorDef(201, 101, SensorKind.Camera), new SensorDef(202, 102, SensorKind.Camera)],
-            [new PistonDef(301, 1, 2), new PistonDef(302, 2, 3)],
-            [new SpringDef(401, 1, 3), new SpringDef(402, 2, 3)],
+        var build = Loaded(new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0)), new BeamDef(101, 1, 2), new BeamDef(102, 2, 3),
+                new SensorDef(201, 101, SensorKind.Camera), new SensorDef(202, 102, SensorKind.Camera),
+                new PistonDef(301, 1, 2), new PistonDef(302, 2, 3), new SpringDef(401, 1, 3), new SpringDef(402, 2, 3),
+            ],
             nextPartId: 403));
-        build.ReplaceSelection(new PartSet(
-            parts.Where(id => id < 100).ToHashSet(),
-            parts.Where(id => id is > 100 and < 200).ToHashSet(),
-            parts.Where(id => id is > 200 and < 300).ToHashSet(),
-            new HashSet<int>(),
-            parts.Where(id => id is > 300 and < 400).ToHashSet(),
-            parts.Where(id => id > 400).ToHashSet(),
-            new HashSet<int>(),
-            new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>()));
+        build.ReplaceSelection(Set([.. parts.Select(id => new CreatureElementSelection(
+            id switch { < 100 => CreatureElementKind.Node, < 200 => CreatureElementKind.Beam, < 300 => CreatureElementKind.Sensor, < 400 => CreatureElementKind.Piston, _ => CreatureElementKind.Spring },
+            id))]));
 
         string.Join(',', build.EditableParameters).ShouldBe(editable);
     }
 
     [Fact]
-    public void SetParameter_ThatNotEverySelectedPartHas_Throws()
+    public void Tools_ClearTheSelection_ButKeepThePickedLink_WhichLoadResetsToABeam()
     {
-        var build = new BuildViewModel();
-        build.Load(Carrier());
-        build.ReplaceSelection(PartSet.None with { Nodes = new HashSet<int> { 1 }, Pistons = new HashSet<int> { 301 } });
+        foreach (var tool in new[] { BuildTool.Parts, BuildTool.Select, BuildTool.Beam })
+        {
+            var build = Loaded(TwoCameras());
+            build.PickTool(BuildTool.Select);
+            build.SelectOnly(CreatureElementKind.Sensor, 201);
+            build.PickTool(tool);
+            (build.SelectedPartCount, build.ActiveTool).ShouldBe((0, tool));
+        }
 
-        Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Strength, 20000));
+        var links = new BuildViewModel();
+        links.ActiveTool.ShouldBe(BuildTool.Joint);
+        links.ActiveTool = BuildTool.Beam;
+        links.PickLink(BuildLink.Wing);
+        links.PickedLink.ShouldBe(BuildLink.Beam);
+        links.PickLink(BuildLink.Beam);
+        links.PickedLink.ShouldBeNull();
+        foreach (var other in new[] { BuildTool.Parts, BuildTool.Joint, BuildTool.Select })
+        {
+            links.ActiveTool = other;
+            links.ActiveTool = BuildTool.Beam;
+            links.PickedLink.ShouldBeNull();
+        }
+
+        links.PickLink(BuildLink.Spring);
+        links.PickedLink.ShouldBe(BuildLink.Spring);
+        foreach (var other in new[] { BuildTool.Parts, BuildTool.Joint, BuildTool.Select })
+        {
+            links.ActiveTool = other;
+            links.ActiveTool = BuildTool.Beam;
+        }
+
+        links.PlaceNode(new Vector2D(0, 0));
+        links.ReplaceSelection([1]);
+        links.PickTool(BuildTool.Beam);
+        links.ReplaceSelection([1]);
+        links.ClearSelection();
+        links.PickedLink.ShouldBe(BuildLink.Spring);
+        links.ClearPickedLink();
+        links.ActiveTool = BuildTool.Select;
+        links.Load(new CreatureBuilder().Build());
+        (links.ActiveTool, links.PickedLink).ShouldBe((BuildTool.Joint, BuildLink.Beam));
     }
 
     [Fact]
-    public void CameraSettings_SetOnEverySelectedCamera()
+    public void Load_LocksExactlyATrainedCreation_ShowsItsNameAndGeneration_AndUnlockRaises()
     {
         var build = new BuildViewModel();
-        build.Load(TwoCameras(), locked: false);
-        build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 201, 202 } });
+        build.IsActive.ShouldBeFalse();
+        var raised = new List<string?>();
+        build.PropertyChanged += (_, args) => raised.Add(args.PropertyName);
+        build.IsActive = false;
+        raised.ShouldBeEmpty();
+        build.IsActive = true;
+        raised.ShouldContain(nameof(BuildViewModel.IsActive));
 
-        build.SetParameter(PartParameterId.Rays, 5);
-        build.SetParameter(PartParameterId.Spread, Math.PI / 3);
-        build.SetParameter(PartParameterId.CameraRange, 300);
+        var creature = new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0)), new BeamDef(3, 1, 2)]);
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", creature, null));
+        build.IsLocked.ShouldBeFalse();
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", creature, TestTraining.State(1, 1, TestTraining.Run)));
+        build.IsLocked.ShouldBeTrue();
+        build.Load(creature, locked: true, creationName: "Worm", training: TestTraining.State(9, 1, TestTraining.Run));
+        (build.CreationName, build.TrainingGeneration).ShouldBe(("Worm", 9));
+        build.MoveNode(1, new Vector2D(5, 5));
+        build.Nodes[0].Position.ShouldBe(new Vector2D(5, 5));
+        var added = build.PlaceNode(new Vector2D(30, 0));
+        build.CanConnectLink(BuildLink.Beam, 2, added, out _).ShouldBeTrue();
+        build.ConnectLink(BuildLink.Beam, 2, added).ShouldNotBeNull();
+        (build.Nodes.Count, build.Beams.Count, build.IsLocked).ShouldBe((3, 2, true));
 
-        build.Sensors.ShouldAllBe(sensor => sensor.Rays == 5 && sensor.Spread == Math.PI / 3 && sensor.Range == 300);
-        build.SelectedValuesOf(PartParameterId.Rays).ShouldBe([5.0, 5.0]);
-    }
-
-    [Fact]
-    public void LockedCreation_KeepsItsCamerasRays_ButChangesTheirSpreadAndRange()
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoCameras(), locked: true);
-        build.SelectOnly(CreatureElementKind.Sensor, 201);
-
-        build.ShownParameters.ShouldBe([PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange]);
-        build.EditableParameters.ShouldBe([PartParameterId.Aim, PartParameterId.Spread, PartParameterId.CameraRange]);
-        build.CanEdit(PartParameterId.Rays).ShouldBeFalse();
-        build.SelectedValuesOf(PartParameterId.Rays).ShouldBe([3.0]);
-        Should.Throw<InvalidOperationException>(() => build.SetParameter(PartParameterId.Rays, 5));
-
-        build.SetParameter(PartParameterId.Spread, Math.PI / 4);
-        build.SetParameter(PartParameterId.CameraRange, 150);
-
-        build.Sensors[0].ShouldBe(new SensorDef(201, 101, SensorKind.Camera, aim: build.Sensors[0].Aim, rays: 3, spread: Math.PI / 4, range: 150));
-    }
-
-    [Fact]
-    public void UnlockedCreation_ChangesItsCamerasRays()
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoCameras(), locked: true);
+        raised.Clear();
         build.Unlock();
-        build.SelectOnly(CreatureElementKind.Sensor, 201);
-
-        build.SetParameter(PartParameterId.Rays, 5);
-
-        build.Sensors[0].Rays.ShouldBe(5);
+        build.IsLocked.ShouldBeFalse();
+        raised.ShouldContain(nameof(BuildViewModel.IsLocked));
+        build.SetCreationName("Hopper");
+        build.CreationName.ShouldBe("Hopper");
+        build.Load(new CreatureDef([], [], []));
+        build.CreationName.ShouldBeEmpty();
     }
 
-    [Theory]
-    [InlineData(1, false)]
-    [InlineData(3, true)]
-    [InlineData(5, true)]
-    public void Spread_HasEffect_OnlyWithMoreThanOneRay(int rays, bool effect)
+    [Fact]
+    public void HitTests_FindTheNearestJointOrBeamWithinReach_AndLinksJoinTwoJointsOnce()
     {
         var build = new BuildViewModel();
-        build.Load(TwoCameras(rays), locked: false);
-        build.SelectOnly(CreatureElementKind.Sensor, 201);
+        build.TryFindNodeNear(new Vector2D(0, 0), 10, out var node).ShouldBeFalse();
+        node.ShouldBe(-1);
+        var a = build.PlaceNode(new Vector2D(0, 0));
+        var b = build.PlaceNode(new Vector2D(5, 0));
+        build.PlaceNode(new Vector2D(100, 100));
+        build.TryFindNodeNear(new Vector2D(6, 0), 10, out node).ShouldBeTrue();
+        node.ShouldBe(b);
+        build.TryFindNodeNear(new Vector2D(50, 50), 10, out node).ShouldBeFalse();
+        node.ShouldBe(-1);
 
-        build.HasEffect(PartParameterId.Spread).ShouldBe(effect);
-        build.HasEffect(PartParameterId.CameraRange).ShouldBeTrue();
-        build.HasEffect(PartParameterId.Rays).ShouldBeTrue();
+        var changes = build.CountAnatomyChanges();
+        build.ConnectLink(BuildLink.Beam, a, a).ShouldBeNull();
+        build.ConnectLink(BuildLink.Beam, a, b).ShouldNotBeNull();
+        build.ConnectLink(BuildLink.Beam, a, b).ShouldBeNull();
+        build.Beams.Select(beam => (beam.NodeA, beam.NodeB)).ShouldBe([(a, b)]);
+        changes().ShouldBe(1);
+        build.TryFindBeamNear(new Vector2D(3, 0), 2, out var beamId).ShouldBeTrue();
+        beamId.ShouldBe(build.Beams[0].Id);
+        build.TryFindBeamNear(new Vector2D(3, 50), 2, out beamId).ShouldBeFalse();
+        beamId.ShouldBe(-1);
     }
 
     [Fact]
-    public void Spread_HasEffect_WhenAnySelectedCameraHasMoreThanOneRay()
+    public void ASensor_SitsMidwayBetweenWhatCoversItsBeamsEnds_AndIsHitOnlyOnItsPicture()
     {
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-            [new SensorDef(201, 101, SensorKind.Camera, rays: 1), new SensorDef(202, 102, SensorKind.Camera, rays: 3)]));
-        build.ReplaceSelection(PartSet.None with { Sensors = new HashSet<int> { 201, 202 } });
+        var build = Loaded(new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(6, new Vector2D(100, 100)), new BeamDef(3, 1, 2), new BeamDef(7, 2, 6),
+                new SensorDef(4, 3, SensorKind.Accelerometer), new SensorDef(5, 7, SensorKind.Camera),
+            ]));
+        build.DrawnPartAt(new Vector2D(50, 0), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 4));
+        build.DrawnPartAt(new Vector2D(100, 50), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 5));
+        build.DrawnPartAt(new Vector2D(50, SensorPicture.AccelerometerSize), PlacingTargets.None).ShouldBeNull();
 
-        build.HasEffect(PartParameterId.Spread).ShouldBeTrue();
-    }
-
-    private static CreatureDef TwoCameras(int rays = 3) => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
-        [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-        [new SensorDef(201, 101, SensorKind.Camera, rays: rays), new SensorDef(202, 102, SensorKind.Camera, rays: rays)]);
-
-    [Theory]
-    [InlineData(BuildTool.Parts)]
-    [InlineData(BuildTool.Select)]
-    [InlineData(BuildTool.Beam)]
-    public void PickTool_ClearsTheSelection_EvenForTheActiveTool(BuildTool tool)
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoCameras(), locked: false);
-        build.PickTool(BuildTool.Select);
-        build.SelectOnly(CreatureElementKind.Sensor, 201);
-
-        build.PickTool(tool);
-
-        build.SelectedPartCount.ShouldBe(0);
-        build.ActiveTool.ShouldBe(tool);
-    }
-
-    [Fact]
-    public void PickTool_ClearingASelection_KeepsThePickedLink()
-    {
-        var build = new BuildViewModel();
-        build.Load(TwoCameras(), locked: false);
-        build.PickTool(BuildTool.Beam);
-        build.PickLink(BuildLink.Spring);
-        build.SelectOnly(CreatureElementKind.Beam, 101);
-
-        build.PickTool(BuildTool.Beam);
-
-        build.SelectedPartCount.ShouldBe(0);
-        build.PickedLink.ShouldBe(BuildLink.Spring);
-    }
-
-    [Theory]
-    [InlineData(BuildTool.Parts)]
-    [InlineData(BuildTool.Joint)]
-    [InlineData(BuildTool.Select)]
-    public void PickedLink_StaysAcrossToolSwitches(BuildTool other)
-    {
-        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
-        build.PickLink(BuildLink.Spring);
-
-        build.ActiveTool = other;
-        build.ActiveTool = BuildTool.Beam;
-
-        build.PickedLink.ShouldBe(BuildLink.Spring);
-    }
-
-    [Theory]
-    [InlineData(BuildTool.Parts)]
-    [InlineData(BuildTool.Joint)]
-    [InlineData(BuildTool.Select)]
-    public void NoPickedLink_StaysAcrossToolSwitches(BuildTool other)
-    {
-        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
-        build.ClearPickedLink();
-
-        build.ActiveTool = other;
-        build.ActiveTool = BuildTool.Beam;
-
-        build.PickedLink.ShouldBeNull();
-    }
-
-    [Fact]
-    public void PickLink_ThePickedLinkAgain_ClearsIt_AndAnotherPicksIt()
-    {
-        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
-
-        build.PickLink(BuildLink.Beam);
-        build.PickedLink.ShouldBeNull();
-
-        build.PickLink(BuildLink.Spring);
-        build.PickedLink.ShouldBe(BuildLink.Spring);
-    }
-
-    [Fact]
-    public void Load_PicksBeamAgain()
-    {
-        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
-        build.ClearPickedLink();
-
-        build.Load(new CreatureBuilder().Build());
-
-        build.PickedLink.ShouldBe(BuildLink.Beam);
-    }
-
-    [Fact]
-    public void PickedLink_SurvivesSelectingAndClearingAPart()
-    {
-        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
-        build.PlaceNode(new Vector2D(0, 0));
-        build.PickLink(BuildLink.Piston);
-
-        build.ReplaceSelection([1]);
-        build.ClearSelection();
-
-        build.PickedLink.ShouldBe(BuildLink.Piston);
-    }
-
-    [Fact]
-    public void PickLink_LockedFutureRowsDoNothing()
-    {
-        var build = new BuildViewModel { ActiveTool = BuildTool.Beam };
-
-        build.PickLink(BuildLink.Wing);
-
-        build.PickedLink.ShouldBe(BuildLink.Beam);
-    }
-
-    private static CreatureDef Carrier() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0))],
-        [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-        [new SensorDef(201, 101, SensorKind.Accelerometer)],
-        [new PistonDef(301, 1, 3)]);
-
-    [Fact]
-    public void SnapshotSelection_PivotsOnTheCentreOfTheJointsBounds()
-    {
-        var viewModel = SelectedPair();
-
-        viewModel.SnapshotSelection().Pivot.ShouldBe(new Vector2D(50, 0));
-    }
-
-    [Theory]
-    [InlineData(Math.PI / 2)]
-    [InlineData(-Math.PI / 2)]
-    [InlineData(3 * Math.PI / 2)]
-    public void RotateSelection_TurnsAboutThePivotAndKeepsDistances(double radians)
-    {
-        var viewModel = SelectedPair();
-        var start = viewModel.SnapshotSelection();
-
-        viewModel.RotateSelection(start, radians);
-
-        var turned = new Vector2D(50, -50 * Math.Sin(radians));
-        viewModel.Nodes[0].Position.X.ShouldBe(turned.X, 1e-9);
-        viewModel.Nodes[0].Position.Y.ShouldBe(turned.Y, 1e-9);
-        viewModel.Nodes[1].Position.Y.ShouldBe(-turned.Y, 1e-9);
-    }
-
-    [Fact]
-    public void RotateSelection_FromTheSnapshot_DoesNotDrift()
-    {
-        var viewModel = SelectedPair();
-        var start = viewModel.SnapshotSelection();
-
-        for (var i = 0; i < 1000; i++)
-        {
-            viewModel.RotateSelection(start, i * 0.37);
-        }
-
-        viewModel.RotateSelection(start, 0);
-
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(100, 0));
-    }
-
-    [Fact]
-    public void RotateSelection_ThatWouldLeaveTheBuildArea_IsIgnored()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(_area.Max.X - 18, -100));
-        viewModel.PlaceNode(new Vector2D(_area.Max.X - 18, 100));
-        viewModel.ReplaceSelection([1, 2]);
-        var start = viewModel.SnapshotSelection();
-
-        viewModel.RotateSelection(start, Math.PI / 4).ShouldBeFalse();
-
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(_area.Max.X - 18, -100));
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(_area.Max.X - 18, 100));
-    }
-
-    [Theory]
-    [InlineData(2, 2)]
-    [InlineData(0.5, 0.5)]
-    [InlineData(100, BuildViewModel.MaxSelectionScale)]
-    [InlineData(-3, BuildViewModel.MinSelectionScale)]
-    public void ScaleSelection_SpreadsFromThePivotWithinTheClamps(double factor, double applied)
-    {
-        var viewModel = SelectedPair();
-
-        viewModel.ScaleSelection(viewModel.SnapshotSelection(), factor);
-
-        // Each joint lands on the whole unit nearest (CreatureBuilder.OnWholeUnits).
-        viewModel.Nodes[0].Position.X.ShouldBe(Math.Round(50 - (50 * applied), MidpointRounding.AwayFromZero));
-        viewModel.Nodes[1].Position.X.ShouldBe(Math.Round(50 + (50 * applied), MidpointRounding.AwayFromZero));
-    }
-
-    [Fact]
-    public void ScaleSelection_OfCoincidentJoints_LeavesThemInPlace()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(10, 10));
-        viewModel.PlaceNode(new Vector2D(10, 10));
-        viewModel.ReplaceSelection([1, 2]);
-
-        viewModel.ScaleSelection(viewModel.SnapshotSelection(), 3);
-
-        viewModel.Nodes.ShouldAllBe(node => node.Position == new Vector2D(10, 10));
-    }
-
-    [Fact]
-    public void ScaleSelection_WithANonFiniteFactor_Throws()
-    {
-        var viewModel = SelectedPair();
-
-        Should.Throw<ArgumentOutOfRangeException>(() => viewModel.ScaleSelection(viewModel.SnapshotSelection(), double.NaN));
-    }
-
-    [Fact]
-    public void ScaleSelection_WhenLocked_StillSpreadsTheJoints()
-    {
-        var viewModel = LockedPair();
-        viewModel.ReplaceSelection([1, 2]);
-
-        viewModel.ScaleSelection(viewModel.SnapshotSelection(), 2);
-
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(-10, 0));
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(30, 0));
-    }
-
-    [Fact]
-    public void RotateSelection_WhenLocked_Turns()
-    {
-        var viewModel = LockedPair();
-        viewModel.ReplaceSelection([1, 2]);
-
-        viewModel.RotateSelection(viewModel.SnapshotSelection(), Math.PI).ShouldBeTrue();
-
-        viewModel.Nodes[0].Position.X.ShouldBe(20, 1e-9);
-    }
-
-    [Fact]
-    public void RestoreSelection_PutsTheJointsBack()
-    {
-        var viewModel = SelectedPair();
-        var start = viewModel.SnapshotSelection();
-        viewModel.ScaleSelection(start, 2);
-
-        viewModel.RestoreSelection(start);
-
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
-        viewModel.Nodes[1].Position.ShouldBe(new Vector2D(100, 0));
-    }
-
-    private static BuildViewModel SelectedPair()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
-        viewModel.PlaceNode(new Vector2D(100, 0));
-        viewModel.ReplaceSelection([1, 2]);
-        return viewModel;
-    }
-
-    [Fact]
-    public void IsActive_DefaultsToFalse()
-    {
-        var viewModel = new BuildViewModel();
-
-        viewModel.IsActive.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void IsActive_WhenChanged_RaisesPropertyChanged()
-    {
-        var viewModel = new BuildViewModel();
-        var raisedFor = new List<string?>();
-        viewModel.PropertyChanged += (_, args) => raisedFor.Add(args.PropertyName);
-
-        viewModel.IsActive = true;
-
-        raisedFor.ShouldContain(nameof(BuildViewModel.IsActive));
-    }
-
-    [Fact]
-    public void IsActive_WhenSetToSameValue_DoesNotRaisePropertyChanged()
-    {
-        var viewModel = new BuildViewModel();
-        var raiseCount = 0;
-        viewModel.PropertyChanged += (_, _) => raiseCount++;
-
-        viewModel.IsActive = false;
-
-        raiseCount.ShouldBe(0);
-    }
-
-    [Fact]
-    public void PlaceNode_AddsNodeAndRaisesAnatomyChanged()
-    {
-        var viewModel = new BuildViewModel();
-        var raised = false;
-        viewModel.AnatomyChanged += (_, _) => raised = true;
-
-        var id = viewModel.PlaceNode(new Vector2D(3, 4));
-
-        id.ShouldBe(1);
-        viewModel.Nodes.Count.ShouldBe(1);
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(3, 4));
-        raised.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void MoveNode_UpdatesPositionAndRaisesAnatomyChanged()
-    {
-        var viewModel = new BuildViewModel();
-        var id = viewModel.PlaceNode(new Vector2D(0, 0));
-        var raised = false;
-        viewModel.AnatomyChanged += (_, _) => raised = true;
-
-        viewModel.MoveNode(id, new Vector2D(10, 20));
-
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(10, 20));
-        raised.ShouldBeTrue();
-    }
-
-    [Theory]
-    [InlineData(null, false)]
-    [InlineData(1, true)]
-    public void LoadCreation_IsLockedExactlyWhenTrained(int? generation, bool locked)
-    {
-        var training = generation is { } trained ? TestTraining.State(trained, 1, TestTraining.Run) : null;
-        var viewModel = new BuildViewModel();
-
-        viewModel.LoadCreation(new CreationDef(Guid.NewGuid(), "Worm", TwoNodeCreature(), training));
-
-        viewModel.IsLocked.ShouldBe(locked);
-    }
-
-    [Fact]
-    public void LoadLocked_MovesNodes_AndAddsJoints()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
-            [new BeamDef(101, 1, 2)],
-            []);
-        var viewModel = new BuildViewModel();
-
-        viewModel.Load(creature, locked: true);
-        viewModel.MoveNode(1, new Vector2D(5, 5));
-
-        viewModel.Nodes[0].Position.ShouldBe(new Vector2D(5, 5));
-        viewModel.IsLocked.ShouldBeTrue();
-        viewModel.PlaceNode(new Vector2D(30, 0));
-
-        viewModel.Nodes.Count.ShouldBe(3);
-        viewModel.Beams.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void Unlock_AllowsTopologyChanges()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
-            [new BeamDef(101, 1, 2)],
-            []);
-        var viewModel = new BuildViewModel();
-        viewModel.Load(creature, locked: true);
-        var changed = new List<string?>();
-        viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
-
-        viewModel.Unlock();
-        viewModel.PlaceNode(new Vector2D(30, 0));
-
-        viewModel.IsLocked.ShouldBeFalse();
-        changed.ShouldContain(nameof(BuildViewModel.IsLocked));
-        viewModel.Nodes.Count.ShouldBe(3);
-    }
-
-    [Fact]
-    public void Load_ResetsActiveToolToJoint()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
-            [new BeamDef(101, 1, 2)],
-            []);
-        var viewModel = new BuildViewModel { ActiveTool = BuildTool.Beam };
-
-        viewModel.Load(creature);
-
-        viewModel.ActiveTool.ShouldBe(BuildTool.Joint);
-    }
-
-    [Fact]
-    public void LoadLocked_OpensOnTheJointTool()
-    {
-        var viewModel = new BuildViewModel { ActiveTool = BuildTool.Select };
-
-        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []), locked: true);
-
-        viewModel.ActiveTool.ShouldBe(BuildTool.Joint);
-    }
-
-    [Fact]
-    public void LoadLocked_WithSavedCreationMetadata_ExposesNameAndTrainingGeneration()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
-            [new BeamDef(101, 1, 2)],
-            []);
-        var training = TestTraining.State(9, 1, TestTraining.Run);
-        var viewModel = new BuildViewModel();
-
-        viewModel.Load(creature, locked: true, creationName: "Worm", training: training);
-
-        viewModel.CreationName.ShouldBe("Worm");
-        viewModel.TrainingGeneration.ShouldBe(9);
-    }
-
-    [Fact]
-    public void SetCreationName_ChangesTheName()
-    {
-        var viewModel = new BuildViewModel();
-
-        viewModel.SetCreationName("Hopper");
-
-        viewModel.CreationName.ShouldBe("Hopper");
-    }
-
-    [Fact]
-    public void Load_WithoutName_HasNoName()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef([], [], []), creationName: "Hopper");
-
-        viewModel.Load(new CreatureDef([], [], []));
-
-        viewModel.CreationName.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void TryFindNodeNear_WithNoNodes_ReturnsFalse()
-    {
-        var viewModel = new BuildViewModel();
-
-        var found = viewModel.TryFindNodeNear(new Vector2D(0, 0), 10, out var nodeIndex);
-
-        found.ShouldBeFalse();
-        nodeIndex.ShouldBe(-1);
-    }
-
-    [Fact]
-    public void TryFindNodeNear_WithinDistance_ReturnsClosestNode()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
-        var closeIndex = viewModel.PlaceNode(new Vector2D(5, 0));
-        viewModel.PlaceNode(new Vector2D(100, 100));
-
-        var found = viewModel.TryFindNodeNear(new Vector2D(6, 0), 10, out var nodeIndex);
-
-        found.ShouldBeTrue();
-        nodeIndex.ShouldBe(closeIndex);
-    }
-
-    [Fact]
-    public void TryFindNodeNear_BeyondDistance_ReturnsFalse()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
-
-        var found = viewModel.TryFindNodeNear(new Vector2D(100, 100), 10, out var nodeIndex);
-
-        found.ShouldBeFalse();
-        nodeIndex.ShouldBe(-1);
-    }
-
-    [Fact]
-    public void ActiveTool_DefaultsToJoint()
-    {
-        var viewModel = new BuildViewModel();
-
-        viewModel.ActiveTool.ShouldBe(BuildTool.Joint);
-    }
-
-
-    [Fact]
-    public void ConnectLink_Beam_DifferentNodes_CreatesBeam()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-        var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        var raised = false;
-        viewModel.AnatomyChanged += (_, _) => raised = true;
-
-        viewModel.ConnectLink(BuildLink.Beam, a, b);
-
-        viewModel.Beams.Count.ShouldBe(1);
-        viewModel.Beams[0].NodeA.ShouldBe(a);
-        viewModel.Beams[0].NodeB.ShouldBe(b);
-        raised.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ConnectLink_Beam_SameNode_CreatesNoBeam()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-
-        viewModel.ConnectLink(BuildLink.Beam, a, a).ShouldBeNull();
-
-        viewModel.Beams.Count.ShouldBe(0);
-    }
-
-    [Fact]
-    public void ConnectLink_Beam_DuplicateBeam_RefusesInsteadOfThrowing()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-        var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectLink(BuildLink.Beam, a, b);
-
-        viewModel.ConnectLink(BuildLink.Beam, a, b).ShouldBeNull();
-
-        viewModel.Beams.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void ConnectLink_Beam_WhenLocked_CreatesTheBeam()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))], [], []),
-            locked: true);
-
-        viewModel.CanConnectLink(BuildLink.Beam, 1, 2, out _).ShouldBeTrue();
-        viewModel.ConnectLink(BuildLink.Beam, 1, 2).ShouldNotBeNull();
-
-        viewModel.Beams.ShouldHaveSingleItem();
-    }
-
-
-    private static BuildViewModel LockedPair()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(
-            new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))], [new BeamDef(101, 1, 2)], []),
-            locked: true);
-        return viewModel;
-    }
-
-
-
-
-    [Fact]
-    public void TryFindBeamNear_WithinDistance_ReturnsBeam()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-        var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectLink(BuildLink.Beam, a, b);
-
-        var found = viewModel.TryFindBeamNear(new Vector2D(5, 0), 2, out var beamId);
-
-        found.ShouldBeTrue();
-        beamId.ShouldBe(viewModel.Beams[0].Id);
-    }
-
-    [Fact]
-    public void TryFindBeamNear_BeyondDistance_ReturnsFalse()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-        var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectLink(BuildLink.Beam, a, b);
-
-        var found = viewModel.TryFindBeamNear(new Vector2D(5, 50), 2, out var beamIndex);
-
-        found.ShouldBeFalse();
-        beamIndex.ShouldBe(-1);
-    }
-
-    [Fact]
-    public void SelectBeam_ReplacesNodeSelectionAndExposesBeamAsSelectedPart()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-        var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectLink(BuildLink.Beam, a, b);
-        viewModel.ToggleSelected(new(CreatureElementKind.Node, a));
-        var raisedFor = new List<string?>();
-        var anatomyChanged = false;
-        viewModel.PropertyChanged += (_, args) => raisedFor.Add(args.PropertyName);
-        viewModel.AnatomyChanged += (_, _) => anatomyChanged = true;
-
-        viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
-
-        viewModel.SelectedNodeCount.ShouldBe(0);
-        viewModel.SelectedBeamCount.ShouldBe(1);
-        viewModel.SelectedPartCount.ShouldBe(1);
-        viewModel.SingleSelectedBeamId.ShouldBe(viewModel.Beams[0].Id);
-        raisedFor.ShouldContain(nameof(BuildViewModel.SelectedBeamCount));
-        raisedFor.ShouldContain(nameof(BuildViewModel.SelectedPartCount));
-        raisedFor.ShouldContain(nameof(BuildViewModel.SingleSelectedBeamId));
-        anatomyChanged.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void ClearSelection_WithOnlyBeamSelected_ClearsBeam()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-        var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectLink(BuildLink.Beam, a, b);
-        viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
-        var raisedFor = new List<string?>();
-        var anatomyChanged = false;
-        viewModel.PropertyChanged += (_, args) => raisedFor.Add(args.PropertyName);
-        viewModel.AnatomyChanged += (_, _) => anatomyChanged = true;
-
-        viewModel.ClearSelection();
-
-        viewModel.SelectedPartCount.ShouldBe(0);
-        viewModel.SingleSelectedBeamId.ShouldBeNull();
-        raisedFor.ShouldContain(nameof(BuildViewModel.SelectedBeamCount));
-        raisedFor.ShouldContain(nameof(BuildViewModel.SelectedPartCount));
-        raisedFor.ShouldContain(nameof(BuildViewModel.SingleSelectedBeamId));
-        anatomyChanged.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void DeleteSelectedParts_WithBeamSelected_RemovesBeamButKeepsNodes()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-        var b = viewModel.PlaceNode(new Vector2D(10, 0));
-        viewModel.ConnectLink(BuildLink.Beam, a, b);
-        viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
-
-        viewModel.DeleteSelectedParts();
-
-        viewModel.Beams.ShouldBeEmpty();
-        viewModel.Nodes.Count.ShouldBe(2);
-        viewModel.SelectedPartCount.ShouldBe(0);
-    }
-
-    [Fact]
-    public void SelectSensor_ReplacesAnyOtherSelection_AndDeleteRemovesOnlyTheSensor()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(SensorCreature());
-        viewModel.ReplaceSelection([1]);
-
-        viewModel.SelectOnly(CreatureElementKind.Sensor, 5);
-
-        viewModel.SelectedPartCount.ShouldBe(1);
-        viewModel.SingleSelectedSensorId.ShouldBe(5);
-
-        viewModel.DeleteSelectedParts();
-
-        viewModel.Sensors.Select(sensor => sensor.Id).ShouldBe([4]);
-        viewModel.Beams.Count.ShouldBe(2);
-        viewModel.SelectedPartCount.ShouldBe(0);
-    }
-
-    [Fact]
-    public void SelectingABeam_DropsTheSelectedSensor()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(SensorCreature());
-        viewModel.SelectOnly(CreatureElementKind.Sensor, 4);
-
-        viewModel.SelectOnly(CreatureElementKind.Beam, 3);
-        viewModel.SingleSelectedSensorId.ShouldBeNull();
-        viewModel.SelectedPartCount.ShouldBe(1);
-    }
-
-    [Fact]
-    public void DrawnPartAt_HitsASensorOnlyOnItsPicture()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(SensorCreature());
-
-        viewModel.DrawnPartAt(new Vector2D(50, 0), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 4));
-        viewModel.DrawnPartAt(new Vector2D(100, 50), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 5));
-        viewModel.DrawnPartAt(new Vector2D(50, SensorPicture.AccelerometerSize), PlacingTargets.None).ShouldBeNull();
-    }
-
-    [Fact]
-    public void ASensor_SitsMidwayBetweenTheHubs_WhateverWheelIsOnAJoint()
-    {
         // #1086: a Wheel's size does not move the sensor; it is see-through under its links.
-        var viewModel = new BuildViewModel();
-        viewModel.Load(SensorLink([], [new WheelDef(5, 1, radius: 60)]));
+        build = Loaded(SensorLink(new WheelDef(5, 1, radius: 60)));
+        build.SensorCentre(4).ShouldBe(new Vector2D(100, 0));
+        build.SensorCentreOn(3).ShouldBe(new Vector2D(100, 0));
 
-        viewModel.SensorCentre(4).ShouldBe(new Vector2D(100, 0));
-        viewModel.SensorCentreOn(3).ShouldBe(new Vector2D(100, 0));
-    }
-
-    [Fact]
-    public void ASensor_SitsMidwayBetweenAServosEdgeAndTheOtherHub()
-    {
-        // #1086: a Servo (27) on joint 1 and a hub (15) on joint 2, 200 apart: edges at 27 and 185.
-        var viewModel = new BuildViewModel();
-        viewModel.Load(SensorLink([new ServoDef(5, 1)], []));
-        var centre = (27 + 185) / 2.0;
-
-        viewModel.SensorCentre(4).ShouldBe(new Vector2D(centre, 0));
-        viewModel.SensorCentreOn(3).ShouldBe(new Vector2D(centre, 0));
+        // A Servo (27) on joint 1 and a hub (15) on joint 2, 200 apart: edges at 27 and 185, centre at 106.
+        build = Loaded(SensorLink(new ServoDef(5, 1)));
+        build.SensorCentre(4).ShouldBe(new Vector2D(106, 0));
+        build.SensorCentreOn(3).ShouldBe(new Vector2D(106, 0));
         // The 24-wide picture covers 94–118 shifted, 88–112 unshifted: only the shift explains these.
-        viewModel.DrawnPartAt(new Vector2D(115, 0), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 4));
-        viewModel.DrawnPartAt(new Vector2D(91, 0), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Beam, 3));
-    }
-
-    private static CreatureDef SensorLink(IReadOnlyList<ServoDef> servos, IReadOnlyList<WheelDef> wheels) => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))],
-        [new BeamDef(3, 1, 2)],
-        [new SensorDef(4, 3, SensorKind.Accelerometer)],
-        servos,
-        [],
-        [],
-        wheels,
-        nextPartId: 6);
-
-    private static CreatureDef SensorCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(6, new Vector2D(100, 100))],
-        [new BeamDef(3, 1, 2), new BeamDef(7, 2, 6)],
-        [new SensorDef(4, 3, SensorKind.Accelerometer), new SensorDef(5, 7, SensorKind.Camera)]);
-
-    [Fact]
-    public void DeleteSelectedParts_OnALockedCreation_KeepsABeamWithASensor()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(
-            new CreatureDef(
-                [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(10, 0))],
-                [new BeamDef(101, 1, 2)],
-                [new SensorDef(201, 101, SensorKind.Accelerometer)]),
-            locked: true);
-        viewModel.SelectOnly(CreatureElementKind.Beam, viewModel.Beams[0].Id);
-
-        viewModel.DeleteSelectedParts();
-
-        viewModel.Beams.Count.ShouldBe(1);
-        viewModel.Sensors.Count.ShouldBe(1);
-    }
-
-
-
-    [Fact]
-    public void TryLeave_WithNoNodesPlaced_ReturnsTrue()
-    {
-        var viewModel = new BuildViewModel();
-
-        var canLeave = viewModel.TryLeave(out var creature, out var errors);
-
-        canLeave.ShouldBeTrue();
-        creature.ShouldBeNull();
-        errors.ShouldBeEmpty();
+        build.DrawnPartAt(new Vector2D(115, 0), PlacingTargets.None).ShouldBe(new CreatureElementSelection(CreatureElementKind.Sensor, 4));
+        build.DrawnPartAt(new Vector2D(91, 0), PlacingTargets.None).ShouldBe(Beam(3));
     }
 
     [Fact]
-    public void TryLeave_WithUnconnectedNode_ReturnsFalseWithErrors()
+    public void ShownCameraRays_LeaveTheSensorsCentre_TurnWithTheBeam_AndHideWithTheCamerasSettings()
     {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
-
-        var canLeave = viewModel.TryLeave(out var creature, out var errors);
-
-        canLeave.ShouldBeFalse();
-        creature.ShouldBeNull();
-        errors.ShouldNotBeEmpty();
-    }
-
-    [Fact]
-    public void Snapshot_WithUnconnectedNode_ReturnsTheDrawingForSaving()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
-
-        var creature = viewModel.Snapshot();
-
-        creature.Nodes.Count.ShouldBe(1);
-        creature.Beams.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void TryGetTrainableCreature_WithUnconnectedNode_Refuses()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
-
-        viewModel.TryGetTrainableCreature(out var creature).ShouldBeFalse();
-
-        creature.ShouldBeNull();
-    }
-
-    [Fact]
-    public void TryGetTrainableCreature_WithNothingToDrive_ReturnsTheCreature()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))], [new BeamDef(3, 1, 2)], []));
-
-        viewModel.TryGetTrainableCreature(out var creature).ShouldBeTrue();
-
-        creature.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public void TryGetTrainableCreature_WithAPiston_ReturnsTheCreature()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 20))],
-            [new BeamDef(101, 1, 2), new BeamDef(102, 2, 3)],
-            [],
-            [new PistonDef(301, 1, 3)]));
-
-        viewModel.TryGetTrainableCreature(out var creature).ShouldBeTrue();
-
-        creature.ShouldNotBeNull();
-        creature.Beams.Count.ShouldBe(2);
-    }
-
-    [Fact]
-    public void TryLeave_WithValidCreature_ReturnsTrue()
-    {
-        var viewModel = new BuildViewModel();
-        var a = viewModel.PlaceNode(new Vector2D(0, 0));
-        var b = viewModel.PlaceNode(new Vector2D(90, 0));
-        viewModel.ConnectLink(BuildLink.Beam, a, b);
-
-        var canLeave = viewModel.TryLeave(out var creature, out var errors);
-
-        canLeave.ShouldBeTrue();
-        creature.ShouldNotBeNull();
-        creature.Nodes.Count.ShouldBe(2);
-        errors.ShouldBeEmpty();
-    }
-
-    private static CreatureDef TwoNodeCreature() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))],
-        [new BeamDef(3, 1, 2)],
-        []);
-
-    [Fact]
-    public void CanvasNotes_NameEachBeamTooShortToTrain()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(50, 0)), new NodeDef(3, new Vector2D(150, 0)), new NodeDef(4, new Vector2D(150, 0))],
-            [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 3, 4)],
-            []));
-
-        viewModel.CanvasNotes().ShouldBe(
-        [
-            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Beam, 5), UiText.Plain("Too short")),
-        ]);
-    }
-
-    [Fact]
-    public void CanvasNotes_MarkABeamTooShort_WhileAMotorOnItsJointCoversMoreOfIt()
-    {
-        // #1212: 60 units is long enough between plain joints (56) but not with a Servo on one (68).
-        var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200))],
-            [new BeamDef(5, 1, 2), new BeamDef(6, 1, 3)],
-            []));
-        var tooShort = new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Beam, 5), UiText.Plain("Too short"));
-        viewModel.CanvasNotes().ShouldNotContain(tooShort);
-
-        viewModel.PlacePart(BuildPart.Servo, new CreatureElementSelection(CreatureElementKind.Node, 1)).ShouldNotBeNull();
-        viewModel.CanvasNotes().ShouldContain(tooShort);
-
-        viewModel.Undo();
-        viewModel.CanvasNotes().ShouldNotContain(tooShort);
-    }
-
-    [Fact]
-    public void CanvasNotes_MarkAPistonTooShort_WhereABeamWouldFit()
-    {
-        // #1210: a Piston's telescope needs 16 units more than a Beam, 72 between plain joints.
-        var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200))],
-            [new BeamDef(5, 1, 3), new BeamDef(6, 2, 3)],
-            [],
-            [new PistonDef(7, 1, 2)],
-            nextPartId: 8));
-
-        viewModel.CanvasNotes().ShouldBe(
-            [new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Piston, 7), UiText.Plain("Too short"))]);
-    }
-
-    [Fact]
-    public void ShowTrainingBlockers_NotesEachLooseJoint_UntilItIsJoined()
-    {
-        var viewModel = new BuildViewModel();
-        var first = viewModel.PlaceNode(new Vector2D(0, 0));
-        var second = viewModel.PlaceNode(new Vector2D(200, 0));
-        var changed = new List<string?>();
-        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-        viewModel.CanvasNotes().ShouldBeEmpty();
-
-        viewModel.ShowTrainingBlockers();
-
-        changed.ShouldContain(nameof(BuildViewModel.CanvasNotes));
-        viewModel.CanvasNotes().ShouldBe(
-        [
-            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, first), UiText.Plain("Not connected")),
-            new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, second), UiText.Plain("Not connected")),
-        ]);
-
-        viewModel.ConnectLink(BuildLink.Beam, first, second).ShouldNotBeNull();
-
-        viewModel.CanvasNotes().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void ShowTrainingBlockers_NotesEveryPieceAtItsJointNearestAnother_UntilTheyAreJoined()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(TwoPieces());
-        viewModel.CanvasNotes().ShouldBeEmpty();
-
-        viewModel.ShowTrainingBlockers();
-
-        viewModel.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(4)]);
-
-        viewModel.ConnectLink(BuildLink.Beam, 2, 4).ShouldNotBeNull();
-
-        viewModel.CanvasNotes().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void ShowTrainingBlockers_LeavesAPieceSplitOffAfterTheyWereJoinedForTheNextTap()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(TwoPieces());
-        viewModel.ShowTrainingBlockers();
-        viewModel.ConnectLink(BuildLink.Beam, 2, 4).ShouldNotBeNull();
-
-        var a = viewModel.PlaceNode(new Vector2D(600, 0));
-        var b = viewModel.PlaceNode(new Vector2D(800, 0));
-        viewModel.ConnectLink(BuildLink.Beam, a, b).ShouldNotBeNull();
-
-        viewModel.CanvasNotes().ShouldBeEmpty();
-        viewModel.ShowTrainingBlockers();
-        viewModel.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(a)]);
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void ShowTrainingBlockers_ForgetsThePiecesOnceJoined_SoUndoOrDeletingTheLinkWaitsForTheNextTap(bool undo)
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(TwoPieces());
-        viewModel.ShowTrainingBlockers();
-
-        var spring = viewModel.ConnectLink(BuildLink.Spring, 2, 4).ShouldNotBeNull();
-        if (undo)
-        {
-            viewModel.Undo();
-        }
-        else
-        {
-            viewModel.SelectOnly(CreatureElementKind.Spring, spring);
-            viewModel.DeleteSelectedParts();
-        }
-
-        viewModel.Pieces().Count.ShouldBe(2);
-        viewModel.CanvasNotes().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void ACanvasTouch_HidesTheNotConnectedNotes_ButNotTooShort()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(50, 0)), new NodeDef(3, new Vector2D(400, 0))],
-            [new BeamDef(5, 1, 2)],
-            []));
-        var tooShort = new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Beam, 5), UiText.Plain("Too short"));
-        viewModel.ShowTrainingBlockers();
-        viewModel.CanvasNotes().ShouldBe([NotConnected(3), tooShort]);
-        var changed = new List<string?>();
-        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-
-        new BuildGestures(viewModel).Press(new Vector2D(2000, 2000));
-
-        changed.ShouldContain(nameof(BuildViewModel.CanvasNotes));
-        viewModel.CanvasNotes().ShouldBe([tooShort]);
-    }
-
-    [Fact]
-    public void ACanvasTouch_HidesThePieceNotes_UntilTheNextTap()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(TwoPieces());
-        viewModel.ShowTrainingBlockers();
-
-        new BuildGestures(viewModel).Press(new Vector2D(2000, 2000));
-
-        viewModel.CanvasNotes().ShouldBeEmpty();
-        viewModel.ShowTrainingBlockers();
-        viewModel.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(4)]);
-    }
-
-    [Fact]
-    public void Load_ForgetsThePiecesTheLastTapPointedAt()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(TwoPieces());
-        viewModel.ShowTrainingBlockers();
-
-        viewModel.Load(TwoPieces());
-
-        viewModel.CanvasNotes().ShouldBeEmpty();
-    }
-
-    // Joints 1–2 and 3–4: joint 2 and joint 4 are the two pieces' nearest joints.
-    private static CreatureDef TwoPieces() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 100)), new NodeDef(3, new Vector2D(0, 300)), new NodeDef(4, new Vector2D(200, 300))],
-        [new BeamDef(5, 1, 2), new BeamDef(6, 4, 3)],
-        []);
-
-    private static CanvasNote NotConnected(int nodeId) =>
-        new(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, nodeId), UiText.Plain("Not connected"));
-
-    [Fact]
-    public void ShowTrainingBlockers_LeavesAJointLoosenedLaterForTheNextTap()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))], [new BeamDef(3, 1, 2)], []));
-        viewModel.ShowTrainingBlockers();
-
-        var loose = viewModel.PlaceNode(new Vector2D(400, 0));
-
-        viewModel.CanvasNotes().ShouldBeEmpty();
-        viewModel.ShowTrainingBlockers();
-        viewModel.CanvasNotes().ShouldBe(
-            [new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, loose), UiText.Plain("Not connected"))]);
-    }
-
-    [Fact]
-    public void Load_ForgetsTheShownBlockers()
-    {
-        var viewModel = new BuildViewModel();
-        viewModel.PlaceNode(new Vector2D(0, 0));
-        viewModel.ShowTrainingBlockers();
-
-        viewModel.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []));
-
-        viewModel.CanvasNotes().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void SetAim_TurnsTheCameraAndRedrawsOnlyOnAChange()
-    {
-        var build = new BuildViewModel();
-        build.Load(CameraPair(), locked: false);
-        build.SelectOnly(CreatureElementKind.Sensor, 4);
-        var changes = 0;
-        build.AnatomyChanged += (_, _) => changes++;
-
-        build.SetParameter(PartParameterId.Aim, 1);
-        build.SetParameter(PartParameterId.Aim, 1);
-
-        build.Sensors[0].Aim.ShouldBe(1);
-        changes.ShouldBe(1);
-    }
-
-    [Fact]
-    public void SetAim_WhenLocked_TurnsTheCamera()
-    {
-        var build = new BuildViewModel();
-        build.Load(CameraPair(), locked: true);
-        build.SelectOnly(CreatureElementKind.Sensor, 4);
-
-        build.SetParameter(PartParameterId.Aim, 1);
-
-        build.Sensors[0].Aim.ShouldBe(1);
-    }
-
-    private static CreatureDef CameraPair() => new(
-        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))],
-        [new BeamDef(3, 1, 2)],
-        [new SensorDef(4, 3, SensorKind.Camera)]);
-
-    [Fact]
-    public void ShownCameraRays_LeaveTheBeamMiddleAndTurnWithTheBeam()
-    {
-        var (build, camera, _) = DownwardBeamWithCameraAndAccelerometer();
+        var (build, camera, accelerometer) = DownwardBeamWithCameraAndAccelerometer();
         build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
         build.SetParameter(PartParameterId.Aim, Math.PI / 4);
         build.SetParameter(PartParameterId.Spread, Math.PI / 2);
         build.SetParameter(PartParameterId.CameraRange, 300);
 
         var (origin, ends) = build.ShownCameraRays().ShouldHaveSingleItem();
-
         origin.ShouldBe(new Vector2D(0, 50));
         // Aimed 45° off the downward beam, the outer rays 45° either side of that: straight down,
         // 45° towards −x (300 × cos 45° ≈ 212.1) and level towards −x.
-        ends.Select(end => (Math.Round(end.X, 1), Math.Round(end.Y, 1)))
-            .ShouldBe([(0, 350), (-212.1, 262.1), (-300, 50)], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void ShownCameraRays_LeaveTheSensorsCentre_ShiftedByAServoOnItsBeam()
-    {
-        // #1086: a Servo (27) on joint 1 and a hub (15) on joint 2, 200 apart: centre at 106.
-        var build = new BuildViewModel();
-        build.Load(new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0))],
-            [new BeamDef(3, 1, 2)],
-            [new SensorDef(4, 3, SensorKind.Camera)],
-            [new ServoDef(5, 1)],
-            [],
-            [],
-            [],
-            nextPartId: 6));
-        build.ToggleSelected(new(CreatureElementKind.Sensor, 4));
-
-        var (origin, _) = build.ShownCameraRays().ShouldHaveSingleItem();
-
-        origin.ShouldBe(new Vector2D(106, 0));
-        build.SensorCentre(4).ShouldBe(origin);
-    }
-
-    [Fact]
-    public void ShownCameraRays_NoneWhileTheSelectionHidesTheCamerasSettings()
-    {
-        var (build, camera, accelerometer) = DownwardBeamWithCameraAndAccelerometer();
-        build.ToggleSelected(new(CreatureElementKind.Sensor, camera));
+        ends.Select(end => (Math.Round(end.X, 1), Math.Round(end.Y, 1))).ShouldBe([(0, 350), (-212.1, 262.1), (-300, 50)], ignoreOrder: true);
         build.ToggleSelected(new(CreatureElementKind.Sensor, accelerometer));
-
         build.ShownCameraRays().ShouldBeEmpty();
+
+        build = Loaded(SensorLink(new ServoDef(5, 1), SensorKind.Camera));
+        build.ToggleSelected(new(CreatureElementKind.Sensor, 4));
+        build.ShownCameraRays().ShouldHaveSingleItem().Origin.ShouldBe(new Vector2D(106, 0));
     }
 
-    internal static (BuildViewModel Build, int Camera, int Accelerometer) DownwardBeamWithCameraAndAccelerometer()
+    [Fact]
+    public void Leaving_HandsOverAConnectedCreature_ButSnapshotKeepsAnyDrawing()
     {
-        var builder = new CreatureBuilder();
-        builder.AddNode(new Vector2D(0, 0));
-        builder.AddNode(new Vector2D(0, 100));
-        builder.AddNode(new Vector2D(100, 100));
-        builder.AddSensor(builder.AddBeam(1, 2), SensorKind.Camera, out var camera, out _).ShouldBeTrue();
-        builder.AddSensor(builder.AddBeam(2, 3), SensorKind.Accelerometer, out var accelerometer, out _).ShouldBeTrue();
-        return (new BuildViewModel(builder), camera, accelerometer);
+        var build = new BuildViewModel();
+        build.TryLeave(out var creature, out var errors).ShouldBeTrue();
+        creature.ShouldBeNull();
+        errors.ShouldBeEmpty();
+
+        build.PlaceNode(new Vector2D(0, 0));
+        build.TryLeave(out creature, out errors).ShouldBeFalse();
+        creature.ShouldBeNull();
+        errors.ShouldNotBeEmpty();
+        build.TryGetTrainableCreature(out creature).ShouldBeFalse();
+        creature.ShouldBeNull();
+        build.Snapshot().Nodes.Count.ShouldBe(1);
+
+        build.PlaceNode(new Vector2D(90, 0));
+        build.ConnectLink(BuildLink.Beam, 1, 2);
+        build.TryLeave(out creature, out errors).ShouldBeTrue();
+        creature!.Nodes.Count.ShouldBe(2);
+        errors.ShouldBeEmpty();
+        var third = build.PlaceNode(new Vector2D(180, 20));
+        build.ConnectLink(BuildLink.Beam, 2, third);
+        build.ConnectLink(BuildLink.Piston, 1, third);
+        build.TryGetTrainableCreature(out creature).ShouldBeTrue();
+        creature!.Beams.Count.ShouldBe(2);
     }
+
+    [Fact]
+    public void CanvasNotes_MarkEachLinkTooShortForWhatCoversItsEnds()
+    {
+        // #1212: 60 units is long enough between plain joints (56) but not with a Servo on one (68);
+        // #1210: a Piston's telescope needs 16 units more than a Beam, 72 between plain joints.
+        var build = Loaded(new CreatureDef(
+            [
+                new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200)), new NodeDef(4, new Vector2D(50, 200)),
+                new NodeDef(5, new Vector2D(160, 0)), new NodeDef(6, new Vector2D(160, 0)), new NodeDef(7, new Vector2D(60, 100)),
+                new BeamDef(10, 1, 2), new BeamDef(11, 1, 3), new BeamDef(12, 3, 4), new BeamDef(13, 2, 5), new BeamDef(14, 5, 6), new BeamDef(15, 2, 7),
+                new PistonDef(16, 7, 3),
+            ],
+            nextPartId: 17));
+        static CanvasNote TooShort(CreatureElementKind kind, int id) => new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Too short"));
+        build.CanvasNotes().ShouldBe([TooShort(CreatureElementKind.Beam, 12)]);
+
+        build.PlacePart(BuildPart.Servo, Joint(1)).ShouldNotBeNull();
+        build.CanvasNotes().ShouldContain(TooShort(CreatureElementKind.Beam, 10));
+        build.Undo();
+        build.CanvasNotes().ShouldNotContain(TooShort(CreatureElementKind.Beam, 10));
+
+        build = Loaded(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(60, 0)), new NodeDef(3, new Vector2D(0, 200)), new BeamDef(5, 1, 3), new BeamDef(6, 2, 3), new PistonDef(7, 1, 2)],
+            nextPartId: 8));
+        build.CanvasNotes().ShouldBe([TooShort(CreatureElementKind.Piston, 7)]);
+    }
+
+    [Fact]
+    public void ShowTrainingBlockers_NotesEachLooseJoint_UntilJoined_AndLeavesLaterOnesForTheNextTap()
+    {
+        var build = new BuildViewModel();
+        var first = build.PlaceNode(new Vector2D(0, 0));
+        var second = build.PlaceNode(new Vector2D(200, 0));
+        var changed = new List<string?>();
+        build.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+        build.CanvasNotes().ShouldBeEmpty();
+
+        build.ShowTrainingBlockers();
+        changed.ShouldContain(nameof(BuildViewModel.CanvasNotes));
+        build.CanvasNotes().ShouldBe([NotConnected(first), NotConnected(second)]);
+        build.ConnectLink(BuildLink.Beam, first, second).ShouldNotBeNull();
+        build.CanvasNotes().ShouldBeEmpty();
+        var loose = build.PlaceNode(new Vector2D(400, 0));
+        build.CanvasNotes().ShouldBeEmpty();
+        build.ShowTrainingBlockers();
+        build.CanvasNotes().ShouldBe([NotConnected(loose)]);
+
+        build.Load(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], [], []));
+        build.CanvasNotes().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void ShowTrainingBlockers_NotesEveryPieceAtItsJointNearestAnother_UntilJoinedOrTouched()
+    {
+        var build = Loaded(TwoPieces());
+        build.CanvasNotes().ShouldBeEmpty();
+        build.ShowTrainingBlockers();
+        build.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(4)]);
+        new BuildGestures(build).Press(new Vector2D(2000, 2000));
+        build.CanvasNotes().ShouldBeEmpty();
+        build.ShowTrainingBlockers();
+        build.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(4)]);
+        build.Load(TwoPieces());
+        build.CanvasNotes().ShouldBeEmpty();
+
+        build.ShowTrainingBlockers();
+        var spring = build.ConnectLink(BuildLink.Spring, 2, 4).ShouldNotBeNull();
+        build.CanvasNotes().ShouldBeEmpty();
+        build.Undo();
+        build.Pieces().Count.ShouldBe(2);
+        build.CanvasNotes().ShouldBeEmpty();
+        build.Redo();
+        build.SelectOnly(CreatureElementKind.Spring, spring);
+        build.DeleteSelectedParts();
+        build.Pieces().Count.ShouldBe(2);
+        build.CanvasNotes().ShouldBeEmpty();
+
+        build.ConnectLink(BuildLink.Beam, 2, 4).ShouldNotBeNull();
+        var a = build.PlaceNode(new Vector2D(600, 0));
+        build.ConnectLink(BuildLink.Beam, a, build.PlaceNode(new Vector2D(800, 0))).ShouldNotBeNull();
+        build.CanvasNotes().ShouldBeEmpty();
+        build.ShowTrainingBlockers();
+        build.CanvasNotes().ShouldBe([NotConnected(2), NotConnected(a)]);
+    }
+
+    [Fact]
+    public void ACanvasTouch_HidesTheNotConnectedNotes_ButNotTooShort()
+    {
+        var build = Loaded(new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(50, 0)), new NodeDef(3, new Vector2D(400, 0)), new BeamDef(5, 1, 2)]));
+        var tooShort = new CanvasNote(CanvasNoteKind.Danger, Beam(5), UiText.Plain("Too short"));
+        build.ShowTrainingBlockers();
+        build.CanvasNotes().ShouldBe([NotConnected(3), tooShort]);
+        var changed = new List<string?>();
+        build.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        new BuildGestures(build).Press(new Vector2D(2000, 2000));
+
+        changed.ShouldContain(nameof(BuildViewModel.CanvasNotes));
+        build.CanvasNotes().ShouldBe([tooShort]);
+    }
+
+    private static BuildViewModel SelectedPair()
+    {
+        var build = new BuildViewModel();
+        build.PlaceNode(new Vector2D(0, 0));
+        build.PlaceNode(new Vector2D(100, 0));
+        build.ReplaceSelection([1, 2]);
+        return build;
+    }
+
+    private static CreatureDef Carrier() => new(
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0)), new BeamDef(101, 1, 2), new BeamDef(102, 2, 3),
+            new SensorDef(201, 101, SensorKind.Accelerometer), new PistonDef(301, 1, 3),
+        ]);
+
+    private static CreatureDef TwoCameras(int rays = 3) => new(
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new NodeDef(3, new Vector2D(180, 0)), new BeamDef(101, 1, 2), new BeamDef(102, 2, 3),
+            new SensorDef(201, 101, SensorKind.Camera, rays: rays), new SensorDef(202, 102, SensorKind.Camera, rays: rays),
+        ]);
+
+    // Joints 1 and 2, 200 apart, joined by beam 3 with sensor 4 on it; then a part on joint 1.
+    private static CreatureDef SensorLink(IPartDef onJoint, SensorKind kind = SensorKind.Accelerometer) => new(
+        [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 0)), new BeamDef(3, 1, 2), new SensorDef(4, 3, kind), onJoint],
+        nextPartId: 6);
+
+    // Joints 1–2 and 3–4: joint 2 and joint 4 are the two pieces' nearest joints.
+    private static CreatureDef TwoPieces() => new(
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(200, 100)), new NodeDef(3, new Vector2D(0, 300)), new NodeDef(4, new Vector2D(200, 300)),
+            new BeamDef(5, 1, 2), new BeamDef(6, 4, 3),
+        ]);
+
+    private static CanvasNote NotConnected(int nodeId) => new(CanvasNoteKind.Danger, Joint(nodeId), UiText.Plain("Not connected"));
 }

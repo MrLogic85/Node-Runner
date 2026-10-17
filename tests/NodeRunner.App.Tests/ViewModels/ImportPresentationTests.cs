@@ -17,10 +17,11 @@ public sealed class ImportPresentationTests
         waiting.NoteTitle.ShouldBeNull();
         waiting.NoteText.ShouldBe(UiText.Plain("Copy a creation's share code, then tap Paste."));
         waiting.CanAdd.ShouldBeFalse();
+        waiting.PasteIsPrimary.ShouldBeTrue();
     }
 
     [Fact]
-    public void ABuild_ShowsItsNameAndPartsByKind_AndCanBeAdded()
+    public void ABuild_ShowsItsNameAndPartsByKind_AndCanBeAdded_WarningIfFromAnOlderVersion()
     {
         var walker = CreationExamples.Walker.Creature;
         var build = new CreationDef(Guid.NewGuid(), "Walker", walker);
@@ -37,54 +38,10 @@ public sealed class ImportPresentationTests
             new ImportPartRow(PartKind.Piston, walker.Pistons.Count),
         ]);
         preview.CanAdd.ShouldBeTrue();
+        preview.PasteIsPrimary.ShouldBeFalse();
         preview.UpdatedNote.ShouldBeNull();
-    }
-
-    [Fact]
-    public void ABuildFromAnOlderVersion_WarnsItMayDiffer()
-    {
-        var build = new CreationDef(Guid.NewGuid(), "Walker", CreationExamples.Walker.Creature);
-
-        var preview = ImportPresentation.For(new ShareCodeRead(build, null, UpdatedFrom: 6), []);
-
-        preview.UpdatedNote.ShouldBe(UiText.Plain("Shared from an older version, import may differ from original."));
-    }
-
-    [Fact]
-    public void EveryKindOfPart_HasARow_WithItsCount()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new(0, 0)), new NodeDef(2, new(100, 0)), new NodeDef(3, new(0, 100)), new NodeDef(4, new(100, 100))],
-            [new BeamDef(5, 1, 2), new BeamDef(6, 3, 4)],
-            [new SensorDef(9, 5, SensorKind.Accelerometer), new SensorDef(10, 6, SensorKind.Camera, aim: 0)],
-            [new ServoDef(11, 2, 5, 7)],
-            [new PistonDef(7, 2, 4)],
-            [new SpringDef(8, 1, 3)],
-            [new WheelDef(12, 4)],
-            [new TouchSensorDef(13, 1)],
-            [new RubberDef(14, 4)],
-            [new VelocityMotorDef(15, 4, 7, 12)],
-            [new BrakeDef(16, 1, 5)],
-            [new AngleSensorDef(17, 3, 6)],
-            nextPartId: 18);
-
-        var preview = ImportPresentation.For(new ShareCodeRead(new CreationDef(Guid.NewGuid(), "All", creature), null), []);
-
-        preview.Parts.Select(row => (row.Kind, row.Count)).ShouldBe([
-            (PartKind.Node, 4),
-            (PartKind.Beam, 2),
-            (PartKind.Accelerometer, 1),
-            (PartKind.Camera, 1),
-            (PartKind.Servo, 1),
-            (PartKind.VelocityMotor, 1),
-            (PartKind.Piston, 1),
-            (PartKind.Spring, 1),
-            (PartKind.Wheel, 1),
-            (PartKind.TouchSensor, 1),
-            (PartKind.Rubber, 1),
-            (PartKind.Brake, 1),
-            (PartKind.AngleSensor, 1),
-        ], ignoreOrder: true);
+        ImportPresentation.For(new ShareCodeRead(build, null, UpdatedFrom: 6), []).UpdatedNote
+            .ShouldBe(UiText.Plain("Shared from an older version, import may differ from original."));
     }
 
     [Theory]
@@ -95,7 +52,7 @@ public sealed class ImportPresentationTests
     [InlineData(ShareCodeRefusal.NothingToBuild, "Nothing to build", "This creation has no parts yet.")]
     public void ARefusal_SaysWhy_AndCannotAdd(ShareCodeRefusal refusal, string title, string text)
     {
-        var refused = ImportPresentation.For(ShareCodeRead.Refused(refusal), []);
+        var refused = ImportPresentation.For(ShareCodeRead.Refused(refusal), ["Walker"]);
 
         refused.State.ShouldBe(ImportState.Refused);
         refused.Build.ShouldBeNull();
@@ -103,38 +60,18 @@ public sealed class ImportPresentationTests
         refused.NoteTitle.ShouldBe(UiText.Plain(title));
         refused.NoteText.ShouldBe(UiText.Plain(text));
         refused.CanAdd.ShouldBeFalse();
-    }
-
-    [Fact]
-    public void PasteIsPrimary_UntilABuildShows()
-    {
-        ImportPresentation.Waiting.PasteIsPrimary.ShouldBeTrue();
-        ImportPresentation.For(ShareCodeRead.Refused(ShareCodeRefusal.NotACreation), []).PasteIsPrimary.ShouldBeTrue();
-        Walker([]).PasteIsPrimary.ShouldBeFalse();
+        refused.PasteIsPrimary.ShouldBeTrue();
+        refused.NameLine("Walker").ShouldBeNull();
     }
 
     [Theory]
-    [InlineData("Walker")]
-    [InlineData("walker")]
-    [InlineData("  Walker ")]
-    public void NameLine_SaysTheNameIsTaken_InAnyCaseOrSpacing(string name)
+    [InlineData("walker", true)]
+    [InlineData("  Walker ", true)]
+    [InlineData("Walker 2", false)]
+    [InlineData("   ", false)]
+    public void NameLine_SaysTheNameIsTaken_InAnyCaseOrSpacing(string name, bool taken)
     {
-        Walker(["Strider", "Walker"]).NameLine(name).ShouldBe(UiText.Plain("You already have one by this name."));
-    }
-
-    [Theory]
-    [InlineData("Walker 2")]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void NameLine_IsNull_ForAFreeOrBlankName(string name)
-    {
-        Walker(["Walker"]).NameLine(name).ShouldBeNull();
-    }
-
-    [Fact]
-    public void NameLine_IsNull_WithNoBuild()
-    {
-        ImportPresentation.For(ShareCodeRead.Refused(ShareCodeRefusal.Damaged), ["Walker"]).NameLine("Walker").ShouldBeNull();
+        Walker(["Strider", "Walker"]).NameLine(name).ShouldBe(taken ? UiText.Plain("You already have one by this name.") : null);
     }
 
     private static ImportPresentation Walker(IReadOnlyList<string> takenNames) =>

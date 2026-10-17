@@ -1,6 +1,4 @@
-using System.Globalization;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NodeRunner.Ui.Lib;
@@ -9,7 +7,8 @@ namespace NodeRunner.Ui.Tests;
 
 /// <summary>
 /// Guards #768: the UI stacks its levels with the named CanvasLayers in <see cref="UiLayers"/>,
-/// never ZIndex (see <c>UiSourceGuardTests</c>) or a CanvasLayer number of its own in code or a scene.
+/// never ZIndex (see <c>UiSourceGuardTests</c>) or a CanvasLayer number of its own in code or a scene
+/// (scenes: <c>SceneContractTests</c>).
 /// </summary>
 public sealed class UiLayersTests
 {
@@ -39,67 +38,12 @@ public sealed class UiLayersTests
         violations.ShouldBeEmpty("Set a CanvasLayer's Layer from UiLayers (#768), so the UI levels live in one place.");
     }
 
-    // A level saved in a scene would bypass UiLayers. A scene's CanvasLayer is a UiLevelLayer,
-    // which keeps Overlay, or a world backdrop under the screen, like Training's arena background.
-    [Fact]
-    public void Scenes_save_no_level_over_the_screen()
-    {
-        var violations = SceneNodes.Files()
-            .SelectMany(file => SceneNodes.Parse(file.Scene, file.Text))
-            .Where(SavesUnnamedLevel)
-            .Select(node => node.Node)
-            .ToList();
-
-        violations.ShouldBeEmpty("Use a UiLevelLayer, and set any other UI level in code from UiLayers (#768).");
-    }
-
     [Theory]
-    [InlineData("type=\"CanvasLayer\"", "", true)]
-    [InlineData("type=\"CanvasLayer\"", "layer = 50", true)]
-    [InlineData("type=\"CanvasLayer\"", "layer = -1", false)]
-    [InlineData("type=\"CanvasLayer\"", "script = ExtResource(\"1\")", false)]
-    [InlineData("type=\"CanvasLayer\"", "layer = 2\nscript = ExtResource(\"1\")", true)]
-    [InlineData("instance=ExtResource(\"2\")", "layer = 2", true)]
-    [InlineData("type=\"Control\"", "", false)]
-    public void Scene_level_is_checked(string kind, string properties, bool flagged)
-    {
-        var scene = $"""
-            [ext_resource type="Script" path="res://src/ui/lib/UiLevelLayer.cs" id="1"]
-            [ext_resource type="PackedScene" path="res://scenes/ui/Some.tscn" id="2"]
-
-            [node name="Layer" {kind} parent="."]
-            {properties}
-
-            """;
-
-        SceneNodes.Parse("Snippet.tscn", scene).Count(SavesUnnamedLevel).ShouldBe(flagged ? 1 : 0);
-    }
-
-    [Theory]
-    [InlineData("void M(CanvasLayer layer) { layer.Layer = 50; }")]
-    [InlineData("CanvasLayer M() => new CanvasLayer { Layer = 1 };")]
-    [InlineData("void M(CanvasLayer layer) { layer.Layer = UiLayers.Overlay + 1; }")]
-    public void Unnamed_level_is_flagged(string member) =>
-        CSharpSources.Snippet(member).Find(SetsUnnamedLayer).ShouldHaveSingleItem();
-
-    [Fact]
-    public void Named_level_passes() =>
-        CSharpSources.Snippet("void M(CanvasLayer layer) { layer.Layer = UiLayers.Notification; }")
-            .Find(SetsUnnamedLayer)
-            .ShouldBeEmpty();
-
-    private static bool SavesUnnamedLevel(SceneNodes.SceneNode node)
-    {
-        var match = Regex.Match(node.Node.Body, @"(?m)^layer = (?<layer>-?\d+)$");
-        int? saved = match.Success ? int.Parse(match.Groups["layer"].Value, CultureInfo.InvariantCulture) : null;
-        if (node.Script?.EndsWith("/UiLevelLayer.cs", StringComparison.Ordinal) == true)
-        {
-            return saved is not null;
-        }
-
-        // Godot's default layer, saved as nothing, is already over the screen.
-        return node.Type == "CanvasLayer" ? saved is not < UiLayers.Screen : saved is >= UiLayers.Screen;
-    }
+    [InlineData("void M(CanvasLayer layer) { layer.Layer = UiLayers.Overlay + 1; }", true)]
+    [InlineData("CanvasLayer M() => new CanvasLayer { Layer = 1 };", true)]
+    [InlineData("void M(CanvasLayer layer) { layer.Layer = UiLayers.Notification; }", false)]
+    public void Unnamed_level_is_flagged(string member, bool flagged) =>
+        CSharpSources.Snippet(member).Find(SetsUnnamedLayer).Count().ShouldBe(flagged ? 1 : 0);
 
     private static bool SetsUnnamedLayer(SyntaxNode node) =>
         node is AssignmentExpressionSyntax

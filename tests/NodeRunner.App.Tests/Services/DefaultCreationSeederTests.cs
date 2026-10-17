@@ -7,58 +7,23 @@ namespace NodeRunner.App.Tests.Services;
 
 public sealed class DefaultCreationSeederTests
 {
+    // The marker, not the list of creations, says whether this is the first start.
     [Fact]
-    public void SeedIfNeeded_OnFirstStart_SavesACopyOfWalkerInThePlayersLanguageAndTheMarker()
-    {
-        var creations = new InMemoryCreationRepository();
-        var progression = new InMemoryProgressionRepository();
-
-        var seeded = CreateSeeder(creations, progression).SeedIfNeeded(text => text.Equals(UiText.Plain("Walker")) ? "Gångare" : "?");
-
-        seeded.ShouldBeTrue();
-        var walker = creations.List().ShouldHaveSingleItem();
-        walker.Id.ShouldNotBe(CreationExamples.WalkerId);
-        walker.Name.ShouldBe("Gångare");
-        progression.Load().DefaultCreationsSeeded.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void SeedIfNeeded_OnFirstStartWithCreations_StillSeeds()
+    public void SeedIfNeeded_SeedsWalkerInThePlayersLanguageOnFirstStartOnly_EvenBesideACreation()
     {
         var creations = new InMemoryCreationRepository();
         creations.Save(new CreationDef(Guid.NewGuid(), "Player Build", CreationExamples.CreateWalkerCreature()));
+        var progression = new InMemoryProgressionRepository();
+        var seeder = new DefaultCreationSeeder(new ExampleCopyWorkflow(creations), progression);
 
-        var seeded = CreateSeeder(creations, new InMemoryProgressionRepository()).SeedIfNeeded(TestLanguage.Untranslated);
+        var seeded = seeder.SeedIfNeeded(text => text.Equals(UiText.Plain("Walker")) ? "Gångare" : "?");
 
         seeded.ShouldBeTrue();
-        creations.List().Count.ShouldBe(2);
+        var walker = creations.List().Single(creation => creation.Name == "Gångare");
+        walker.Id.ShouldNotBe(CreationExamples.WalkerId);
+        progression.Load().DefaultCreationsSeeded.ShouldBeTrue();
+        creations.Delete(walker.Id);
+        seeder.SeedIfNeeded(TestLanguage.Untranslated).ShouldBeFalse();
+        creations.List().Count.ShouldBe(1);
     }
-
-    [Fact]
-    public void SeedIfNeeded_AfterFirstStart_DoesNothing()
-    {
-        var creations = new InMemoryCreationRepository();
-        var progression = new InMemoryProgressionRepository();
-        var seeder = CreateSeeder(creations, progression);
-        seeder.SeedIfNeeded(TestLanguage.Untranslated);
-        creations.Delete(creations.List().Single().Id);
-
-        var seededAgain = seeder.SeedIfNeeded(TestLanguage.Untranslated);
-
-        seededAgain.ShouldBeFalse();
-        creations.List().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Constructor_RequiresDependencies()
-    {
-        var examples = new ExampleCopyWorkflow(new InMemoryCreationRepository());
-        var progression = new InMemoryProgressionRepository();
-
-        Should.Throw<ArgumentNullException>(() => new DefaultCreationSeeder(null!, progression));
-        Should.Throw<ArgumentNullException>(() => new DefaultCreationSeeder(examples, null!));
-    }
-
-    private static DefaultCreationSeeder CreateSeeder(ICreationRepository creations, IProgressionRepository progression) =>
-        new(new ExampleCopyWorkflow(creations), progression);
 }

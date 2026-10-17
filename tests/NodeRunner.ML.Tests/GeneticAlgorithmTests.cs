@@ -5,297 +5,119 @@ namespace NodeRunner.ML.Tests;
 public sealed class GeneticAlgorithmTests
 {
     [Fact]
-    public void Constructor_RejectsInvalidParameters()
+    public void ItRefuses_BadSettingsAndPopulations()
     {
-        Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(0, 0.1, 0.1));
-        Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, -0.1, 0.1));
-        Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, 1.1, 0.1));
-        Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, 0.1, -0.1));
-        Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, 0.1, 0.1, elitismCount: -1));
-        Should.Throw<ArgumentOutOfRangeException>(() => new GeneticAlgorithm(2, 0.1, 0.1, crossoverStrategy: (CrossoverStrategy)99));
+        foreach (var create in new Func<GeneticAlgorithm>[]
+        {
+            () => new(0, 0.1, 0.1), () => new(2, -0.1, 0.1), () => new(2, 1.1, 0.1), () => new(2, 0.1, -0.1),
+            () => new(2, 0.1, 0.1, elitismCount: -1), () => new(2, 0.1, 0.1, crossoverStrategy: (CrossoverStrategy)99),
+        })
+        {
+            Should.Throw<ArgumentOutOfRangeException>(() => create());
+        }
+
+        double[][] pair = [[1, 2], [3, 4]];
+        foreach (var (ga, genomes, fitness) in new (GeneticAlgorithm, double[][], double[])[]
+        {
+            (new(2, 0.1, 0.1), [], []),
+            (new(2, 0.1, 0.1), pair, [1]),
+            (new(5, 0.1, 0.1), pair, [1, 2]),
+            (new(1, 0.1, 0.1, elitismCount: 5), pair, [1, 2]),
+            (new(1, 0.1, 0.1), [[1, 2], [3, 4, 5]], [1, 2]),
+        })
+        {
+            Should.Throw<ArgumentException>(() => ga.NextGeneration(genomes, fitness, new Random(1)));
+        }
+
+        var elitesGa = new GeneticAlgorithm(3, 0.1, 0.1);
+        Should.Throw<ArgumentException>(() => elitesGa.FromElites([], 4, new Random(5)));
+        Should.Throw<ArgumentException>(() => elitesGa.FromElites([[1, 2], [1]], 4, new Random(5)));
+        Should.Throw<ArgumentOutOfRangeException>(() => elitesGa.FromElites([[1, 2]], 0, new Random(5)));
     }
 
+    // A creature with no powered parts has nothing to evolve, but its generations still run (#845).
     [Fact]
-    public void NextGeneration_OfEmptyGenomes_KeepsThePopulation()
+    public void Generations_OfEmptyGenomes_KeepThePopulation()
     {
-        // A creature with no powered parts has nothing to evolve, but its generations still run (#845).
         var ga = new GeneticAlgorithm(2, 0.5, 1);
-        double[][] genomes = [[], [], []];
 
-        var next = ga.NextGeneration(genomes, [0.1, 0.3, 0.2], new Random(1));
+        var next = ga.NextGeneration([[], [], []], [0.1, 0.3, 0.2], new Random(1));
 
         next.Length.ShouldBe(3);
         next.ShouldAllBe(genome => genome.Length == 0);
         ga.FromElites([[]], 3, new Random(2)).ShouldAllBe(genome => genome.Length == 0);
     }
 
-    [Theory]
-    [InlineData(new[] { 0.1, 0.3, 0.2 }, 2)]
-    [InlineData(new[] { double.NaN, 0.3, double.NegativeInfinity }, 1)]
-    [InlineData(new[] { double.NaN, double.PositiveInfinity, double.NegativeInfinity }, 0)]
-    public void EliteCount_IsTheElitesNextGenerationCarriesOver(double[] fitness, int expected)
-    {
-        var ga = new GeneticAlgorithm(2, 0, 0, elitismCount: 2);
-        double[][] genomes = [[1], [2], [3]];
-
-        ga.EliteCount(fitness).ShouldBe(expected);
-        var next = ga.NextGeneration(genomes, fitness, new Random(1));
-        var validByFitness = Enumerable.Range(0, 3).Where(i => double.IsFinite(fitness[i])).OrderByDescending(i => fitness[i]);
-        next.Take(expected).ShouldBe(validByFitness.Take(expected).Select(i => genomes[i]));
-    }
-
+    // The fittest valid genomes open the next generation unchanged, however hard the rest mutate; an invalid one
+    // (NaN or infinite) is never kept. It keeps the population's size and genome length, leaves its input alone and
+    // is the same for a seed.
     [Fact]
-    public void NextGeneration_RejectsEmptyPopulation()
+    public void NextGeneration_CarriesTheFittestValidGenomesOverUnchanged()
     {
-        var ga = new GeneticAlgorithm(2, 0.1, 0.1);
-
-        Should.Throw<ArgumentException>(() => ga.NextGeneration(Array.Empty<double[]>(), Array.Empty<double>(), new Random(1)));
-    }
-
-    [Fact]
-    public void NextGeneration_RejectsMismatchedFitnessLength()
-    {
-        var ga = new GeneticAlgorithm(2, 0.1, 0.1);
-        var genomes = new[] { new double[] { 1, 2 }, new double[] { 3, 4 } };
-
-        Should.Throw<ArgumentException>(() => ga.NextGeneration(genomes, new[] { 1.0 }, new Random(1)));
-    }
-
-    [Fact]
-    public void NextGeneration_RejectsTournamentSizeLargerThanPopulation()
-    {
-        var ga = new GeneticAlgorithm(5, 0.1, 0.1);
-        var genomes = new[] { new double[] { 1, 2 }, new double[] { 3, 4 } };
-
-        Should.Throw<ArgumentException>(() => ga.NextGeneration(genomes, new[] { 1.0, 2.0 }, new Random(1)));
-    }
-
-    [Fact]
-    public void NextGeneration_RejectsElitismCountLargerThanPopulation()
-    {
-        var ga = new GeneticAlgorithm(1, 0.1, 0.1, elitismCount: 5);
-        var genomes = new[] { new double[] { 1, 2 }, new double[] { 3, 4 } };
-
-        Should.Throw<ArgumentException>(() => ga.NextGeneration(genomes, new[] { 1.0, 2.0 }, new Random(1)));
-    }
-
-    [Fact]
-    public void NextGeneration_RejectsGenomesOfDifferentLengths()
-    {
-        var ga = new GeneticAlgorithm(1, 0.1, 0.1);
-        var genomes = new[] { new double[] { 1, 2 }, new double[] { 3, 4, 5 } };
-
-        Should.Throw<ArgumentException>(() => ga.NextGeneration(genomes, new[] { 1.0, 2.0 }, new Random(1)));
-    }
-
-    [Fact]
-    public void NextGeneration_ReturnsSamePopulationSizeAndGenomeLength()
-    {
-        var ga = new GeneticAlgorithm(3, 0.1, 0.1);
-        var genomes = new[]
+        var ga = new GeneticAlgorithm(2, mutationRate: 1, mutationStrength: 5, elitismCount: 2);
+        double[][] genomes = [[1, 1], [2, 2], [100, 100]];
+        foreach (var (fitness, elites) in new[]
         {
-            new double[] { 1, 2, 3 },
-            new double[] { 4, 5, 6 },
-            new double[] { 7, 8, 9 },
-            new double[] { 10, 11, 12 },
-        };
-        var fitness = new double[] { 1, 5, 3, 2 };
-
-        var next = ga.NextGeneration(genomes, fitness, new Random(42));
-
-        next.Length.ShouldBe(genomes.Length);
-        foreach (var genome in next)
+            (new[] { 0.1, 0.3, 0.2 }, new[] { 1, 2 }),
+            ([1, 2, 999], [2, 1]),
+            ([double.NaN, 0.3, double.NegativeInfinity], [1]),
+            ([double.NaN, double.PositiveInfinity, double.NegativeInfinity], []),
+        })
         {
-            genome.Length.ShouldBe(3);
+            ga.EliteCount(fitness).ShouldBe(elites.Length);
+            var next = ga.NextGeneration(genomes, fitness, new Random(3));
+            next.Take(elites.Length).ShouldBe(elites.Select(index => genomes[index]));
+            next.Skip(elites.Length).ShouldAllBe(child => child.Length == 2 && !child.SequenceEqual(genomes[0]) && !child.SequenceEqual(genomes[2]));
+            next.Length.ShouldBe(3);
+            next.ShouldBe(ga.NextGeneration(genomes, fitness, new Random(3)));
         }
+
+        genomes.ShouldBe([[1, 1], [2, 2], [100, 100]]);
     }
 
+    // Without mutation every child gene comes from a parent: uniform crossover takes one parent's gene, Blend one
+    // strictly between them. Regression guard for #112: with Random(2) both tournaments land on distinct parents for
+    // both children, so a uniform fallback, which can only copy a parent's gene, fails it.
     [Fact]
-    public void NextGeneration_WithZeroMutationRate_OnlyProducesGenesFromParents()
+    public void Crossover_TakesEveryGeneFromTheParents()
     {
-        var ga = new GeneticAlgorithm(3, mutationRate: 0.0, mutationStrength: 1.0, elitismCount: 0);
-        var genomes = new[]
-        {
-            new double[] { 1, 1, 1 },
-            new double[] { 2, 2, 2 },
-            new double[] { 3, 3, 3 },
-        };
-        var fitness = new double[] { 1, 2, 3 };
+        var uniform = new GeneticAlgorithm(3, mutationRate: 0, mutationStrength: 1, elitismCount: 0);
+        uniform.NextGeneration([[1, 1, 1], [2, 2, 2], [3, 3, 3]], [1, 2, 3], new Random(7)).SelectMany(genome => genome).ShouldAllBe(gene => gene == 1 || gene == 2 || gene == 3);
 
-        var next = ga.NextGeneration(genomes, fitness, new Random(7));
-
-        var possibleGeneValues = new HashSet<double> { 1, 2, 3 };
-        foreach (var genome in next)
+        var blend = new GeneticAlgorithm(1, mutationRate: 0, mutationStrength: 1, elitismCount: 0, crossoverStrategy: CrossoverStrategy.Blend);
+        double[][] parents = [[0, 10], [10, 20]];
+        foreach (var child in blend.NextGeneration(parents, [1, 2], new Random(2)))
         {
-            foreach (var gene in genome)
+            for (var gene = 0; gene < 2; gene++)
             {
-                possibleGeneValues.ShouldContain(gene);
+                child[gene].ShouldBeInRange(parents[0][gene], parents[1][gene]);
+                child[gene].ShouldNotBe(parents[0][gene]);
+                child[gene].ShouldNotBe(parents[1][gene]);
             }
         }
     }
 
+    // A generation from saved elites opens with copies of them; the rest are their mutated children, which with one
+    // parent keep some of its genes and without mutation only recombine theirs. The same for a seed.
     [Fact]
-    public void NextGeneration_WithBlendCrossover_InterpolatesBetweenDistinctParentGenes()
+    public void FromElites_OpensWithTheElites_AndFillsTheRestWithTheirChildren()
     {
-        // Regression guard for #112: with Random(2) both tournament
-        // selections land on distinct parents for both children, so a
-        // correct Blend crossover must produce genes strictly between the
-        // two parent values. Uniform crossover (the accidental fallback
-        // this guards against) can only ever reproduce a parent's gene
-        // exactly, so it would fail this assertion -- unlike the previous
-        // "stays within range" assertion, which uniform crossover also
-        // always satisfies.
-        var ga = new GeneticAlgorithm(1, mutationRate: 0.0, mutationStrength: 1.0, elitismCount: 0, crossoverStrategy: CrossoverStrategy.Blend);
-        var genomes = new[]
-        {
-            new double[] { 0, 10 },
-            new double[] { 10, 20 },
-        };
+        double[][] elites = [[1, 2, 3, 4, 5, 6], [4, 5, 6, 7, 8, 9]];
+        var ga = new GeneticAlgorithm(3, 0.5, 1);
 
-        var next = ga.NextGeneration(genomes, new[] { 1.0, 2.0 }, new Random(2));
-
-        for (var genomeIndex = 0; genomeIndex < next.Length; genomeIndex++)
-        {
-            for (var geneIndex = 0; geneIndex < next[genomeIndex].Length; geneIndex++)
-            {
-                var gene = next[genomeIndex][geneIndex];
-                var parentAGene = genomes[0][geneIndex];
-                var parentBGene = genomes[1][geneIndex];
-                gene.ShouldBeInRange(parentAGene, parentBGene);
-                gene.ShouldNotBe(parentAGene);
-                gene.ShouldNotBe(parentBGene);
-            }
-        }
-    }
-
-    [Fact]
-    public void NextGeneration_WithElitism_CarriesFittestGenomeUnchanged()
-    {
-        var ga = new GeneticAlgorithm(2, mutationRate: 1.0, mutationStrength: 5.0, elitismCount: 1);
-        var genomes = new[]
-        {
-            new double[] { 1, 1 },
-            new double[] { 2, 2 },
-            new double[] { 100, 100 },
-        };
-        var fitness = new double[] { 1, 2, 999 };
-
-        var next = ga.NextGeneration(genomes, fitness, new Random(3));
-
-        next[0].ShouldBe(new double[] { 100, 100 });
-    }
-
-    [Fact]
-    public void NextGeneration_NeverKeepsAnInvalidGenomeAsAnElite()
-    {
-        var ga = new GeneticAlgorithm(2, mutationRate: 1.0, mutationStrength: 5.0, elitismCount: 2);
-        var genomes = new[]
-        {
-            new double[] { 1, 1 },
-            new double[] { 2, 2 },
-            new double[] { 100, 100 },
-        };
-        var fitness = new[] { double.NegativeInfinity, 2, double.NaN };
-
-        var next = ga.NextGeneration(genomes, fitness, new Random(3));
-
-        next[0].ShouldBe(new double[] { 2, 2 });
-        next.Skip(1).ShouldAllBe(genome => !genome.SequenceEqual(new double[] { 1, 1 }) && !genome.SequenceEqual(new double[] { 100, 100 }));
-    }
-
-    [Fact]
-    public void NextGeneration_WithSameSeed_IsDeterministic()
-    {
-        var ga = new GeneticAlgorithm(2, 0.3, 0.2, elitismCount: 1);
-        var genomes = new[]
-        {
-            new double[] { 1, 2, 3 },
-            new double[] { 4, 5, 6 },
-            new double[] { 7, 8, 9 },
-        };
-        var fitness = new double[] { 0.2, 0.7, 0.4 };
-
-        var first = ga.NextGeneration(genomes, fitness, new Random(99));
-        var second = ga.NextGeneration(genomes, fitness, new Random(99));
-
-        for (var i = 0; i < first.Length; i++)
-        {
-            first[i].ShouldBe(second[i]);
-        }
-    }
-
-    [Fact]
-    public void NextGeneration_DoesNotMutateInputGenomesArray()
-    {
-        var ga = new GeneticAlgorithm(2, 1.0, 1.0, elitismCount: 1);
-        var genomes = new[]
-        {
-            new double[] { 1, 2 },
-            new double[] { 3, 4 },
-        };
-        var original = new[] { (double[])genomes[0].Clone(), (double[])genomes[1].Clone() };
-        var fitness = new double[] { 1, 2 };
-
-        ga.NextGeneration(genomes, fitness, new Random(5));
-
-        genomes[0].ShouldBe(original[0]);
-        genomes[1].ShouldBe(original[1]);
-    }
-
-    [Fact]
-    public void FromElites_OpensWithTheElitesUnchanged()
-    {
-        double[][] elites = [[1, 2, 3], [4, 5, 6]];
-
-        var generation = new GeneticAlgorithm(3, 0.5, 1).FromElites(elites, 8, new Random(1));
+        var generation = ga.FromElites(elites, 8, new Random(1));
 
         generation.Length.ShouldBe(8);
-        generation[0].ShouldBe(elites[0]);
-        generation[1].ShouldBe(elites[1]);
+        generation[..2].ShouldBe(elites);
         generation[0].ShouldNotBeSameAs(elites[0]);
-    }
-
-    [Fact]
-    public void FromElites_FillsTheRestWithMutatedChildrenOfTheElites()
-    {
-        double[] elite = [1, 2, 3, 4, 5, 6];
-
-        var generation = new GeneticAlgorithm(3, 0.5, 1).FromElites([elite], 8, new Random(2));
-
-        foreach (var child in generation[1..])
+        generation.ShouldBe(ga.FromElites(elites, 8, new Random(1)));
+        foreach (var child in ga.FromElites([elites[0]], 8, new Random(2))[1..])
         {
-            child.ShouldNotBe(elite);
-            // With one parent, crossover gives the elite back, so every gene mutation leaves is the elite's.
-            child.Where((gene, i) => gene == elite[i]).Count().ShouldBeGreaterThan(0);
+            child.ShouldNotBe(elites[0]);
+            child.Where((gene, i) => gene == elites[0][i]).ShouldNotBeEmpty();
         }
-    }
 
-    [Fact]
-    public void FromElites_WithoutMutation_OnlyRecombinesEliteGenes()
-    {
-        double[][] elites = [[0, 0, 0, 0], [1, 1, 1, 1]];
-
-        var generation = new GeneticAlgorithm(3, 0, 0).FromElites(elites, 16, new Random(3));
-
-        generation.SelectMany(genome => genome).ShouldAllBe(gene => gene == 0 || gene == 1);
-    }
-
-    [Fact]
-    public void FromElites_IsDeterministicForASeed()
-    {
-        var ga = new GeneticAlgorithm(3, 0.3, 0.5);
-
-        ga.FromElites([[1, 2, 3]], 6, new Random(4)).ShouldBe(ga.FromElites([[1, 2, 3]], 6, new Random(4)));
-    }
-
-    [Fact]
-    public void FromElites_RejectsNoElitesOrMismatchedLengths()
-    {
-        var ga = new GeneticAlgorithm(3, 0.1, 0.1);
-
-        Should.Throw<ArgumentException>(() => ga.FromElites([], 4, new Random(5)));
-        Should.Throw<ArgumentException>(() => ga.FromElites([[1, 2], [1]], 4, new Random(5)));
-        Should.Throw<ArgumentOutOfRangeException>(() => ga.FromElites([[1, 2]], 0, new Random(5)));
+        new GeneticAlgorithm(3, 0, 0).FromElites([[0, 0, 0, 0], [1, 1, 1, 1]], 16, new Random(3)).SelectMany(genome => genome).ShouldAllBe(gene => gene == 0 || gene == 1);
     }
 
     // Genome i is [i] with fitness i, and without mutation each child gene is one tournament winner's:
@@ -316,10 +138,8 @@ public sealed class GeneticAlgorithmTests
         var winners = Enumerable.Range(0, 2000).SelectMany(_ => ga.NextGeneration(genomes, fitness, random)).Select(child => child[0]).ToArray();
 
         var expectedMean = Enumerable.Range(1, population - 1).Sum(j => 1 - Math.Pow((double)j / population, tournamentSize));
-        winners.Average().ShouldBe(expectedMean, tolerance: 0.1);
-        ((double)winners.Count(gene => gene == population - 1) / winners.Length).ShouldBe(
-            1 - Math.Pow(1 - (1.0 / population), tournamentSize),
-            tolerance: 0.02);
+        winners.Average().ShouldBe(expectedMean, 0.1);
+        ((double)winners.Count(gene => gene == population - 1) / winners.Length).ShouldBe(1 - Math.Pow(1 - (1.0 / population), tournamentSize), 0.02);
     }
 
     [Fact]
@@ -333,9 +153,9 @@ public sealed class GeneticAlgorithmTests
         var genes = Enumerable.Range(0, 40).SelectMany(seed => ga.NextGeneration(genomes, [0, 0], new Random(seed))).SelectMany(child => child).ToArray();
 
         var mutated = genes.Where(gene => gene != 0).ToArray();
-        ((double)mutated.Length / genes.Length).ShouldBe(rate, tolerance: 0.01);
-        mutated.Average().ShouldBe(0, tolerance: 0.02);
-        Math.Sqrt(mutated.Average(gene => gene * gene)).ShouldBe(sigma, tolerance: 0.02);
-        ((double)mutated.Count(gene => Math.Abs(gene) <= sigma) / mutated.Length).ShouldBe(0.6827, tolerance: 0.02);
+        ((double)mutated.Length / genes.Length).ShouldBe(rate, 0.01);
+        mutated.Average().ShouldBe(0, 0.02);
+        Math.Sqrt(mutated.Average(gene => gene * gene)).ShouldBe(sigma, 0.02);
+        ((double)mutated.Count(gene => Math.Abs(gene) <= sigma) / mutated.Length).ShouldBe(0.6827, 0.02);
     }
 }

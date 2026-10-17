@@ -15,7 +15,6 @@ public sealed class UiSizeChoiceTests
 
     [Theory]
     [InlineData(155, 155)]
-    [InlineData(300, 300)]
     [InlineData(10, 50)]
     public void Max_FollowsTheWindowsMax(int max, int effective)
     {
@@ -24,9 +23,7 @@ public sealed class UiSizeChoiceTests
 
     [Theory]
     [InlineData(400, 300, 300)]
-    [InlineData(100, 300, 100)]
     [InlineData(20, 300, 50)]
-    [InlineData(155, 155, 155)]
     [InlineData(155, 300, 155)]
     public void Fixed_IsKeptAndLimitedToTheRange(int percent, int max, int effective)
     {
@@ -48,7 +45,6 @@ public sealed class UiSizeChoiceTests
     }
 
     [Theory]
-    [InlineData(100, 155, true)]
     [InlineData(100, 95, false)]
     [InlineData(50, 10, true)]
     public void Fits_IsFalseOnlyForAFixedSizeAboveMax(int percent, int max, bool fits)

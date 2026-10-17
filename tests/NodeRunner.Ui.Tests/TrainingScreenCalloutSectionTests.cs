@@ -68,14 +68,6 @@ public sealed class TrainingScreenCalloutSectionTests
     }
 
     [Fact]
-    public void CalloutSection_ForANameOnlyPart_HasNoLines()
-    {
-        var beam = new PartCalloutPresentation(PartKind.Beam, UiText.AsWritten("Shin"), ShowsGlyph: false, [], [], null);
-
-        Lines(beam).ShouldBeNull();
-    }
-
-    [Fact]
     public void CalloutSection_ShowsTheGlyphAndName_OrTheNameAlone()
     {
         var wheel = new PartCalloutPresentation(PartKind.Wheel, UiText.AsWritten("Rear"), ShowsGlyph: true, [], [], UiText.Plain("No network ports"));
@@ -86,6 +78,7 @@ public sealed class TrainingScreenCalloutSectionTests
 
         (wheelSection.IconId, wheelSection.Text).ShouldBe((UiIconId.PartWheel, "Rear"));
         (beamSection.IconId, beamSection.Text).ShouldBe((UiIconId.None, "Shin"));
+        beamSection.Lines.ShouldBeNull();
     }
 
     // Translation needs Godot, so the tests show each text's English message.

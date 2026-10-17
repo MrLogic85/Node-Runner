@@ -6,15 +6,6 @@ namespace NodeRunner.Ui.Tests;
 public sealed class UiDashedBorderTests
 {
     [Fact]
-    public void RoundedRectPoints_KeepTheSameCountHoweverLargeTheRect()
-    {
-        var small = UiDashedBorder.RoundedRectPoints(new Rect2(0, 0, 10, 10), 2);
-        var large = UiDashedBorder.RoundedRectPoints(new Rect2(0, 0, 2000, 900), 2);
-
-        large.Length.ShouldBe(small.Length);
-    }
-
-    [Fact]
     public void RoundedRectPoints_AreClosedAndTouchEveryEdgeWithoutLeavingTheRect()
     {
         var rect = new Rect2(10, 20, 300, 120);
@@ -27,6 +18,7 @@ public sealed class UiDashedBorderTests
         points.Max(point => point.X).ShouldBe(rect.End.X, 1e-3f);
         points.Min(point => point.Y).ShouldBe(rect.Position.Y, 1e-3f);
         points.Max(point => point.Y).ShouldBe(rect.End.Y, 1e-3f);
+        UiDashedBorder.RoundedRectPoints(new Rect2(0, 0, 2000, 900), 4).Length.ShouldBe(points.Length, "the same count however large the rect");
     }
 
     [Fact]

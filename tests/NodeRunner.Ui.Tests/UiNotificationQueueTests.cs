@@ -23,64 +23,43 @@ public sealed class UiNotificationQueueTests
         Titles(queue).ShouldBe(["A"]);
     }
 
+    /// <summary>An id already waiting is not queued again, the showing id repeats instead, and a closed id can show again.</summary>
     [Fact]
-    public void AnIdAlreadyWaiting_IsNotQueuedAgain()
+    public void AnId_IsQueuedOnce_RepeatsWhileShowing_AndShowsAgainOnceClosed()
     {
         var queue = new UiNotificationQueue();
         queue.Offer(Spec("Busy"));
         queue.TryAdvance(out _);
-
         queue.Offer(Spec("Locked", "lock")).ShouldBe(UiNotificationOffer.Queued);
         queue.Offer(Spec("Locked", "lock")).ShouldBe(UiNotificationOffer.AlreadyWaiting);
-
         Titles(queue).ShouldBe(["Locked"]);
-    }
 
-    [Fact]
-    public void TheShowingId_RepeatsInsteadOfQueueing()
-    {
-        var queue = new UiNotificationQueue();
-        queue.Offer(Spec("Locked", "lock"));
-        queue.TryAdvance(out _);
-
-        queue.Offer(Spec("Locked", "lock")).ShouldBe(UiNotificationOffer.RepeatsCurrent);
-
-        queue.Waiting.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void AClosedId_CanShowAgain()
-    {
-        var queue = new UiNotificationQueue();
-        queue.Offer(Spec("Locked", "lock"));
-        queue.TryAdvance(out _);
         queue.CloseCurrent();
+        queue.TryAdvance(out _);
+        queue.Offer(Spec("Locked", "lock")).ShouldBe(UiNotificationOffer.RepeatsCurrent);
+        queue.Waiting.ShouldBeEmpty();
 
+        queue.CloseCurrent();
         queue.Offer(Spec("Locked", "lock")).ShouldBe(UiNotificationOffer.Queued);
     }
 
+    /// <summary>A replaceable showing notification gives way to a newer one, unless that is its own duplicate; a staying one keeps its turn.</summary>
     [Fact]
     public void AReplaceableShowingNotification_GivesWayToANewerOne()
     {
         var queue = new UiNotificationQueue();
         queue.Offer(Spec("Stepper", "stepper", replaceable: true));
         queue.TryAdvance(out _);
-
+        queue.Offer(Spec("Stepper", "stepper", replaceable: true)).ShouldBe(UiNotificationOffer.RepeatsCurrent);
         queue.Offer(Spec("Wing", "wing", replaceable: true)).ShouldBe(UiNotificationOffer.ReplacesCurrent);
         queue.CloseCurrent();
         queue.TryAdvance(out var shown);
-
         shown!.Title.ShouldBe("Wing");
-    }
 
-    [Fact]
-    public void AStayingShowingNotification_KeepsItsTurn()
-    {
-        var queue = new UiNotificationQueue();
-        queue.Offer(Spec("Saved"));
-        queue.TryAdvance(out _);
-
-        queue.Offer(Spec("Wing", "wing", replaceable: true)).ShouldBe(UiNotificationOffer.Queued);
+        var staying = new UiNotificationQueue();
+        staying.Offer(Spec("Saved"));
+        staying.TryAdvance(out _);
+        staying.Offer(Spec("Wing", "wing", replaceable: true)).ShouldBe(UiNotificationOffer.Queued);
     }
 
     [Fact]
@@ -96,18 +75,6 @@ public sealed class UiNotificationQueueTests
         queue.Offer(Spec("Save failed")).ShouldBe(UiNotificationOffer.Queued);
 
         Titles(queue).ShouldBe(["Copy failed", "Save failed"]);
-    }
-
-    [Fact]
-    public void ADroppedDuplicate_DoesNotReplaceAnything()
-    {
-        var queue = new UiNotificationQueue();
-        queue.Offer(Spec("Stepper", "stepper", replaceable: true));
-        queue.TryAdvance(out _);
-
-        queue.Offer(Spec("Stepper", "stepper", replaceable: true)).ShouldBe(UiNotificationOffer.RepeatsCurrent);
-
-        queue.Current!.Title.ShouldBe("Stepper");
     }
 
     [Fact]

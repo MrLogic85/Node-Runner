@@ -12,22 +12,17 @@ public sealed class LspConfigSpec
     private static readonly string _root = RepositoryRoot.Find();
 
     [Fact]
-    public void BothTools_RunTheSameServerForCSharp()
+    public void BothTools_RunTheSameServerForCSharp_PinnedInTheToolManifest()
     {
         var copilot = Read(".github", "lsp.json")["lspServers"]!["csharp"]!;
         var claude = Read(".claude", "marketplace", Plugin(), ".lsp.json")["csharp"]!;
-
-        Command(claude).ShouldBe(Command(copilot));
-        copilot["fileExtensions"]![".cs"]!.GetValue<string>().ShouldBe("csharp");
-        claude["extensionToLanguage"]![".cs"]!.GetValue<string>().ShouldBe("csharp");
-    }
-
-    [Fact]
-    public void TheServer_IsAToolPinnedInTheManifest()
-    {
-        var command = Command(Read(".github", "lsp.json")["lspServers"]!["csharp"]!);
         var tools = Read("dotnet-tools.json")["tools"]!.AsObject();
 
+        var command = Command(copilot);
+
+        Command(claude).ShouldBe(command);
+        copilot["fileExtensions"]![".cs"]!.GetValue<string>().ShouldBe("csharp");
+        claude["extensionToLanguage"]![".cs"]!.GetValue<string>().ShouldBe("csharp");
         command.Take(3).ShouldBe(["dotnet", "tool", "run"]);
         var tool = tools.Single(entry => entry.Value!["commands"]!.AsArray().Any(name => name!.GetValue<string>() == command[3]));
         tool.Value!["version"]!.GetValue<string>().ShouldMatch(@"^\d+\.\d+\.\d+$");

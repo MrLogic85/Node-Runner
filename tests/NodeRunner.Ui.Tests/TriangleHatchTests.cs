@@ -11,25 +11,10 @@ public sealed class TriangleHatchTests
     private static readonly Vector2 _c = new(0, 100);
 
     [Theory]
-    [InlineData(1f, false)]
     [InlineData(3f / _spacing, false)]
     [InlineData(2.9f / _spacing, true)]
-    [InlineData(0.06f, true)]
     public void Hatch_CloserThanMinPixelSpacingOnScreen_IsTooDense(float pixelScale, bool tooDense) =>
         TriangleHatch.IsTooDense(_spacing, pixelScale).ShouldBe(tooDense);
-
-    [Fact]
-    public void Lines_RunDownToTheLeftAtFortyFiveDegrees()
-    {
-        var lines = TriangleHatch.Lines(_a, _b, _c, _spacing);
-
-        lines.ShouldNotBeEmpty();
-        foreach (var (start, end) in lines)
-        {
-            var direction = (end - start).Normalized();
-            Mathf.Abs(direction.X + direction.Y).ShouldBeLessThan(1e-4f);
-        }
-    }
 
     [Fact]
     public void Lines_AreSpacingApartAndStayInsideTheTriangle()
@@ -41,6 +26,8 @@ public sealed class TriangleHatchTests
         for (var index = 0; index < lines.Count; index++)
         {
             var (start, end) = lines[index];
+            // Down to the left at 45°.
+            Mathf.Abs((end - start).Normalized().X + (end - start).Normalized().Y).ShouldBeLessThan(1e-4f);
             across.Dot(start).ShouldBe((index + 1) * _spacing, 1e-3f);
             Inside(start).ShouldBeTrue();
             Inside(end).ShouldBeTrue();

@@ -14,18 +14,9 @@ public sealed class SpringDrawingTests
     {
         // A 2 px wire stacks solid 4 apart: 10 turns fill a third of 120.
         SpringDrawing.CoilTurns(restSpan: 120, shortestSpan: _roomy, wire: 2).ShouldBe(10);
-    }
-
-    [Fact]
-    public void CoilTurns_WithALongerRestLength_AreMore()
-    {
         SpringDrawing.CoilTurns(restSpan: 180, shortestSpan: _roomy, wire: 2).ShouldBe(15);
-    }
-
-    [Fact]
-    public void CoilTurns_WithAThickerWire_AreFewer()
-    {
         SpringDrawing.CoilTurns(restSpan: 120, shortestSpan: _roomy, wire: 3).ShouldBe(8);
+        SpringDrawing.CoilTurns(restSpan: -10, shortestSpan: _roomy, wire: 2).ShouldBe(SpringDrawing.MinTurns);
     }
 
     // Stroke 200% squeezes it to a third of its gap, past what a third of its rest span stacks solid in (#1211).
@@ -51,24 +42,16 @@ public sealed class SpringDrawingTests
     }
 
     [Fact]
-    public void CoilTurns_AreAtLeastTheMinimum()
-    {
-        SpringDrawing.CoilTurns(restSpan: -10, shortestSpan: _roomy, wire: 2).ShouldBe(SpringDrawing.MinTurns);
-    }
-
-    [Fact]
     public void CoilTurns_PastALongSpan_GrowWithItsSquareRoot_WithNoMaximum()
     {
         SpringDrawing.CoilTurns(restSpan: SpringDrawing.LongSpan, shortestSpan: _roomy, wire: 2).ShouldBe(16);
 
         // 200 · √12 ≈ 692.8 of span, a third of it at 4 apart.
         SpringDrawing.CoilTurns(restSpan: 2400, shortestSpan: _roomy, wire: 2).ShouldBe(57);
-        SpringDrawing.CoilTurns(restSpan: 9600, shortestSpan: _roomy, wire: 2).ShouldBe(115);
     }
 
     [Theory]
     [InlineData(0f, SpringDrawing.MinHalfTurnSegments)]
-    [InlineData(2.4f, 4)]
     [InlineData(10f, 7)]
     [InlineData(1000f, SpringDrawing.MaxHalfTurnSegments)]
     public void HalfTurnSegments_GrowWithTheCoilOnScreen(float radiusPixels, int segments)

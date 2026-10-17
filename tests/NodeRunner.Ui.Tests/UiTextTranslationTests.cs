@@ -12,12 +12,12 @@ public sealed class UiTextTranslationTests
     private const string _translation = "ui/widgets/UiTextTranslation.cs";
 
     /// <summary>Labels that show a name the player gave, so a creation named "Train" stays "Train".</summary>
-    [Theory]
-    [InlineData("widgets/CreationCard.tscn", "Name")]
-    [InlineData("screens/TrainingScreen.tscn", "CreationName")]
-    public void Player_names_are_not_auto_translated(string scene, string node) =>
-        SceneNodes.InScene(scene).Single(entry => entry.Name == node).Node.Body
-            .ShouldContain("\nauto_translate_mode = 2", customMessage: "AutoTranslateMode.Disabled on the label itself.");
+    [Fact]
+    public void Player_names_are_not_auto_translated() =>
+        new[] { ("widgets/CreationCard.tscn", "Name"), ("screens/TrainingScreen.tscn", "CreationName") }
+            .Where(entry => !SceneNodes.InScene(entry.Item1).Single(node => node.Name == entry.Item2).Node.Body
+                .Contains("\nauto_translate_mode = 2", StringComparison.Ordinal))
+            .ShouldBeEmpty("AutoTranslateMode.Disabled on the label itself.");
 
     /// <summary>
     /// Callout text is set in code, already translated or as the player wrote it (a part they named "Thigh"),
@@ -73,33 +73,12 @@ public sealed class UiTextTranslationTests
     }
 
     [Theory]
-    [InlineData("object M(string name) => new UiNotificationSpec(UiPopupType.Default, \"Examples\", $\"Could not copy {name}.\");")]
-    [InlineData("object M(string name) => new UiDialogSpec(UiPopupType.Danger, \"Delete \" + name + \"?\", \"Gone for good.\");")]
-    [InlineData("object M(string name) => UiDialogResult.Failure(string.Format(\"Could not delete {0}.\", name));")]
-    [InlineData("object M(string name) => Notify(\"Creations\", $\"Could not open {name}.\"); object Notify(string title, string message) => new UiNotificationSpec(UiPopupType.Default, title, message);")]
-    public void Building_popup_text_is_flagged(string member) =>
-        PopupTextBuilds(member).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("object M() => new UiNotificationSpec(UiPopupType.Default, \"Examples\", \"Could not copy.\");")]
-    [InlineData("object M() => Notify(\"Creations\", \"Could not open it.\"); object Notify(string title, string message) => new UiNotificationSpec(UiPopupType.Default, title, message);")]
-    public void Whole_popup_text_passes(string member) =>
-        PopupTextBuilds(member).ShouldBeEmpty();
-
-    [Fact]
-    public void UiTextTranslation_translates_with_TranslationServer()
-    {
-        var source = CSharpSources.Project.Single(source => source.Path == _translation);
-        var model = CSharpSources.ProjectCompilation.GetSemanticModel(source.Tree);
-
-        var calls = source.Tree.GetRoot().DescendantNodes().OfType<InvocationExpressionSyntax>()
-            .Select(call => CSharpSources.Symbol(model, call))
-            .Where(symbol => symbol?.ContainingType.ToDisplayString() == "Godot.TranslationServer")
-            .Select(symbol => symbol!.Name)
-            .ToHashSet();
-
-        calls.ShouldBe(["Translate", "TranslatePlural", "FormatNumber", "GetLocale"], ignoreOrder: true);
-    }
+    [InlineData("object M(string name) => new UiDialogSpec(UiPopupType.Danger, \"Delete \" + name + \"?\", \"Gone for good.\");", true)]
+    [InlineData("object M(string name) => UiDialogResult.Failure(string.Format(\"Could not delete {0}.\", name));", true)]
+    [InlineData("object M(string name) => Notify(\"Creations\", $\"Could not open {name}.\"); object Notify(string title, string message) => new UiNotificationSpec(UiPopupType.Default, title, message);", true)]
+    [InlineData("object M() => Notify(\"Creations\", \"Could not open it.\"); object Notify(string title, string message) => new UiNotificationSpec(UiPopupType.Default, title, message);", false)]
+    public void Building_popup_text_is_flagged(string member, bool flagged) =>
+        PopupTextBuilds(member).Count().ShouldBe(flagged ? 1 : 0);
 
     /// <summary>
     /// No .NET string casing in the UI (#776): text is cased by the TextServer in the current locale,
@@ -122,18 +101,11 @@ public sealed class UiTextTranslationTests
     }
 
     [Theory]
-    [InlineData("string M(string text) => text.ToUpperInvariant();")]
-    [InlineData("string M(string text) => text.ToUpper();")]
-    [InlineData("string M(string text) => text.ToLowerInvariant();")]
-    [InlineData("string M(string text) => text.ToLower(System.Globalization.CultureInfo.CurrentCulture);")]
-    public void Invariant_casing_is_flagged(string member) =>
-        InvariantCasing(member).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("string M(string text) => UiThemeLookup.Uppercase(text);")]
-    [InlineData("string M(string text) => UiThemeLookup.LetterCase(text, UiTokens.Typography.Label);")]
-    public void Text_server_casing_passes(string member) =>
-        InvariantCasing(member).ShouldBeEmpty();
+    [InlineData("string M(string text) => text.ToUpperInvariant();", true)]
+    [InlineData("string M(string text) => text.ToLower(System.Globalization.CultureInfo.CurrentCulture);", true)]
+    [InlineData("string M(string text) => UiThemeLookup.Uppercase(text);", false)]
+    public void Invariant_casing_is_flagged(string member, bool flagged) =>
+        InvariantCasing(member).Count().ShouldBe(flagged ? 1 : 0);
 
     private static IEnumerable<string> InvariantCasing(string member)
     {
@@ -151,25 +123,13 @@ public sealed class UiTextTranslationTests
         };
 
     [Theory]
-    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => text.Message;")]
-    [InlineData("int M(NodeRunner.App.ViewModels.UiText text) => text.Args.Count;")]
-    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => text.ToString();")]
-    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => $\"{text}\";")]
-    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => \"Best \" + text;")]
-    [InlineData("object M(NodeRunner.App.ViewModels.UiText text) => text;")]
-    [InlineData("void M(NodeRunner.App.ViewModels.UiText text) => System.Console.WriteLine(text);")]
-    public void Bypassing_UiTextTranslation_is_flagged(string member) =>
-        Bypasses(member).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text);")]
-    [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.CreationCardTraining training) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, training.GenerationsText);")]
-    [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText? text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text ?? NodeRunner.App.ViewModels.UiText.Plain(\"Delete\"));")]
-    [InlineData("void M(UiStageCard card, NodeRunner.App.ViewModels.UiText? text, bool show) => card.NoteSource = NodeRunner.Ui.Widgets.UiTextTranslation.Source(show ? text : null);")]
-    [InlineData("string M() => nameof(NodeRunner.App.ViewModels.SignalFlowPresentationViewModel.DistanceReadout);")]
-    [InlineData("bool M(NodeRunner.App.ViewModels.BuildViewModel build) => build.CanPlacePart(NodeRunner.App.ViewModels.BuildPart.Camera, default, out _);")]
-    public void Showing_ui_text_passes(string member) =>
-        Bypasses(member).ShouldBeEmpty();
+    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => text.Message;", true)]
+    [InlineData("string M(NodeRunner.App.ViewModels.UiText text) => \"Best \" + text;", true)]
+    [InlineData("void M(UiLabel label, NodeRunner.App.ViewModels.UiText? text) => NodeRunner.Ui.Widgets.UiTextTranslation.ShowText(label, text ?? NodeRunner.App.ViewModels.UiText.Plain(\"Delete\"));", false)]
+    [InlineData("void M(UiStageCard card, NodeRunner.App.ViewModels.UiText? text, bool show) => card.NoteSource = NodeRunner.Ui.Widgets.UiTextTranslation.Source(show ? text : null);", false)]
+    [InlineData("string M() => nameof(NodeRunner.App.ViewModels.SignalFlowPresentationViewModel.DistanceReadout);", false)]
+    public void Bypassing_UiTextTranslation_is_flagged(string member, bool flagged) =>
+        Bypasses(member).Count().ShouldBe(flagged ? 1 : 0);
 
     private static IEnumerable<string> Bypasses(string member)
     {

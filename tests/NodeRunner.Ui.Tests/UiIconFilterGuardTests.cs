@@ -39,58 +39,32 @@ public sealed partial class UiIconFilterGuardTests
     }
 
     [Fact]
-    public void EveryIconHost_SetsTheIconFilter()
+    public void EveryIconHost_SetsTheIconFilter_AndKeepsTextUnderItOnTheTextFilter()
     {
-        var hosts = Hosts(CSharpSources.Project, CSharpSources.ProjectCompilation)
-            .Where(host => !_providers.Contains(host.Type) && !_sceneFiltered.ContainsKey(host.Type))
-            .ToList();
+        var hosts = Hosts(CSharpSources.Project, CSharpSources.ProjectCompilation);
+        var inCode = hosts.Where(host => !_providers.Contains(host.Type) && !_sceneFiltered.ContainsKey(host.Type)).ToList();
+        var textUnderIcon = hosts.Where(host => _textUnderIcon.Contains(host.Type)).ToList();
+        var inScenes = _sceneFiltered.SelectMany(entry => entry.Value.Nodes
+            .Where(name => !SceneNodes.InScene(entry.Value.Scene).Single(node => node.Name == name).Node.Body
+                .Contains($"\ntexture_filter = {(int)UiIcons.IconFilter}\n", StringComparison.Ordinal))
+            .Select(name => $"{entry.Value.Scene}: {name} does not set the icon filter"));
 
-        hosts.ShouldNotBeEmpty();
-        hosts.Where(host => !host.SetsIconFilter).Select(host => host.Where).ShouldBeEmpty(
-            "Icon hosts use UiIcons.UseIconFilter, UiIcons.IconFilter or UiLinearIcon (#734).");
-    }
-
-    [Fact]
-    public void TextUnderAnIconFilter_KeepsTheTextFilter()
-    {
-        var hosts = Hosts(CSharpSources.Project, CSharpSources.ProjectCompilation)
-            .Where(host => _textUnderIcon.Contains(host.Type))
-            .ToList();
-
-        hosts.Select(host => host.Type).Distinct().Order().ShouldBe(_textUnderIcon.Order());
-        hosts.Where(host => !host.SetsIconFilter || !host.SetsTextFilter).Select(host => host.Where).ShouldBeEmpty(
-            "Text under an icon-filtered node calls UiIcons.UseTextFilter (#734).");
-    }
-
-    [Fact]
-    public void SceneIconNodes_SetTheIconFilter()
-    {
-        var hosts = Hosts(CSharpSources.Project, CSharpSources.ProjectCompilation).Select(host => host.Type).ToHashSet();
-        foreach (var (type, (scene, nodes)) in _sceneFiltered)
-        {
-            hosts.ShouldContain(type);
-            var sceneNodes = SceneNodes.InScene(scene);
-            foreach (var name in nodes)
-            {
-                sceneNodes.Single(node => node.Name == name).Node.Body.ShouldContain(
-                    $"\ntexture_filter = {(int)UiIcons.IconFilter}\n", Case.Sensitive, $"{scene}: {name}");
-            }
-        }
+        inCode.ShouldNotBeEmpty();
+        textUnderIcon.Select(host => host.Type).Distinct().Order().ShouldBe(_textUnderIcon.Order());
+        _sceneFiltered.Keys.Except(hosts.Select(host => host.Type)).ShouldBeEmpty("A scene-filtered host no longer loads an icon.");
+        inCode.Where(host => !host.SetsIconFilter).Select(host => $"{host.Where}: use UiIcons.UseIconFilter, UiIcons.IconFilter or UiLinearIcon")
+            .Concat(textUnderIcon.Where(host => !host.SetsTextFilter).Select(host => $"{host.Where}: text under it calls UiIcons.UseTextFilter"))
+            .Concat(inScenes)
+            .ShouldBeEmpty("#734");
     }
 
     [Theory]
-    [InlineData("TextureRect _r = new(); void A() { _r.Texture = UiIcons.Load(UiIconId.Back, UiIconSize.Standard); }")]
-    [InlineData("/// <see cref=\"UiIcons.IconFilter\"/>\nvoid A() { UiIcons.Apply(this, UiIconId.Back, UiIconSize.Standard); } // UiLinearIcon")]
-    [InlineData("void A() { AddThemeIconOverride(\"x\", new UiNotificationIcon(UiIconId.Back).Load(UiIconSize.Large)); }")]
-    public void Guard_reports_an_icon_without_the_filter(string member) =>
-        Snippet(member).ShouldHaveSingleItem().SetsIconFilter.ShouldBeFalse();
-
-    [Theory]
-    [InlineData("TextureRect _r = new(); void A() { _r.Texture = UiIcons.Load(UiIconId.Back, UiIconSize.Standard); UiIcons.UseIconFilter(_r); }")]
-    [InlineData("void A() { UiIcons.Apply(this, UiIconId.Back, UiIconSize.Standard); TextureFilter = UiIcons.IconFilter; }")]
-    [InlineData("void A(Button b) { UiIcons.Apply(b, UiIconId.Back, UiIconSize.Standard); b.Icon = new UiLinearIcon(b) { Icon = b.Icon }; }")]
-    public void Guard_accepts_an_icon_with_the_filter(string member) =>
-        Snippet(member).ShouldHaveSingleItem().SetsIconFilter.ShouldBeTrue();
+    [InlineData("TextureRect _r = new(); void A() { _r.Texture = UiIcons.Load(UiIconId.Back, UiIconSize.Standard); }", false)]
+    [InlineData("void A() { AddThemeIconOverride(\"x\", new UiNotificationIcon(UiIconId.Back).Load(UiIconSize.Large)); }", false)]
+    [InlineData("TextureRect _r = new(); void A() { _r.Texture = UiIcons.Load(UiIconId.Back, UiIconSize.Standard); UiIcons.UseIconFilter(_r); }", true)]
+    [InlineData("void A(Button b) { UiIcons.Apply(b, UiIconId.Back, UiIconSize.Standard); b.Icon = new UiLinearIcon(b) { Icon = b.Icon }; }", true)]
+    public void Guard_tells_whether_an_icon_host_sets_the_filter(string member, bool setsFilter) =>
+        Snippet(member).ShouldHaveSingleItem().SetsIconFilter.ShouldBe(setsFilter);
 
     private static List<Host> Snippet(string member)
     {

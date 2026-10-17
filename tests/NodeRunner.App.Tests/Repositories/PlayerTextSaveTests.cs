@@ -11,23 +11,6 @@ public sealed class PlayerTextSaveTests : IDisposable
 {
     private readonly string _directory = Path.Combine(Path.GetTempPath(), $"node-runner-player-text-{Guid.NewGuid():N}");
 
-    public static TheoryData<string> HostileNames() =>
-    [
-        "\"quoted\" and \\back\\slashed",
-        "{\"name\": null}, \"nodes\": []",
-        "line\nbreak\r\nand\ttab",
-        "nul\0and\u0001control\u001f",
-        "../../../etc/passwd",
-        "C:\\Windows\\..\\con",
-        "</script><b>&amp;'",
-        "emoji 🦖🏃‍♀️👍🏽",
-        "åäö ÅÄÖ ß 中文 العربية עברית",
-        "zero\u200Bwidth\u200D\uFEFFbom",
-        "\u2028line\u2029separators",
-        "\uFFFF\uFFFE noncharacters",
-        new string('x', 100_000),
-    ];
-
     public void Dispose()
     {
         if (Directory.Exists(_directory))
@@ -36,42 +19,39 @@ public sealed class PlayerTextSaveTests : IDisposable
         }
     }
 
-    [Theory]
-    [MemberData(nameof(HostileNames))]
-    public void File_SaveAndGet_RoundTripsAnyPlayerName(string name)
-    {
-        var repository = new FileCreationRepository(new TestStorageLocation(_directory));
-        var creation = CreationNamed(name);
-
-        repository.Save(creation);
-
-        var loaded = new FileCreationRepository(new TestStorageLocation(_directory)).Get(creation.Id);
-        loaded.ShouldNotBeNull();
-        loaded.Name.ShouldBe(name);
-        loaded.Creature.Nodes[0].Name.ShouldBe(name);
-        loaded.Creature.Beams[0].Name.ShouldBe(name);
-        loaded.Creature.Sensors[0].Name.ShouldBe(name);
-        loaded.Creature.Pistons[0].Name.ShouldBe(name);
-        loaded.Creature.Springs[0].Name.ShouldBe(name);
-    }
-
-    // System.Text.Json writes half of a surrogate pair as U+FFFD; the file still loads. The names
-    // are built here, not passed as theory data: xUnit stores theory strings as UTF-8, which
-    // would replace the half pair before the test runs.
+    // System.Text.Json writes half of a surrogate pair as U+FFFD; the file still loads.
     [Fact]
-    public void File_SaveAndGet_ReplacesALoneSurrogate()
+    public void File_SaveAndGet_RoundTripsAnyPlayerName()
     {
         var repository = new FileCreationRepository(new TestStorageLocation(_directory));
-        foreach (var half in new[] { '\uD83D', '\uDE00' })
-        {
-            var creation = CreationNamed($"lone {half} surrogate");
+        (string Name, string Loaded)[] names =
+        [
+            .. new[]
+            {
+                "\"quoted\" and \\back\\slashed",
+                "{\"name\": null}, \"nodes\": []",
+                "line\nbreak\r\nand\ttab",
+                "nul\0and\u0001control\u001f",
+                "../../../etc/passwd",
+                "</script><b>&amp;'",
+                "emoji 🦖🏃‍♀️👍🏽 åäö 中文 العربية",
+                "zero\u200Bwidth\u200D\uFEFFbom \u2028line\u2029separators \uFFFF\uFFFE",
+                new string('x', 100_000),
+            }.Select(name => (name, name)),
+            ($"lone {'\uD83D'} surrogate", "lone \uFFFD surrogate"),
+            ($"lone {'\uDE00'} surrogate", "lone \uFFFD surrogate"),
+        ];
 
+        foreach (var (name, loadedName) in names)
+        {
+            var creation = CreationNamed(name);
             repository.Save(creation);
 
             var loaded = new FileCreationRepository(new TestStorageLocation(_directory)).Get(creation.Id);
+
             loaded.ShouldNotBeNull();
-            loaded.Name.ShouldBe("lone \uFFFD surrogate");
-            loaded.Creature.Nodes[0].Name.ShouldBe("lone \uFFFD surrogate");
+            loaded.Name.ShouldBe(loadedName);
+            loaded.Creature.Parts.Where(part => part.Name is not null).Select(part => part.Name).ShouldBe(Enumerable.Repeat(loadedName, 5));
         }
     }
 

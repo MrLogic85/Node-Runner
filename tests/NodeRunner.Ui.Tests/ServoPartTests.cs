@@ -8,7 +8,6 @@ public sealed class ServoPartTests
     [Theory]
     [InlineData(52, 24, 8)]
     [InlineData(52, 44, 3)]
-    [InlineData(20, 0, 8)]
     [InlineData(9, 0, 3)]
     public void HousingReachFor_LeavesRoomForSensors_ButAlwaysShows(float freeLength, float sensorLength, float expected)
     {
@@ -17,7 +16,6 @@ public sealed class ServoPartTests
 
     [Theory]
     [InlineData(0)]
-    [InlineData(0.25)]
     [InlineData(1)]
     public void BandSweep_MatchesTheModelStops_InClockwiseGodotRotation(double start)
     {

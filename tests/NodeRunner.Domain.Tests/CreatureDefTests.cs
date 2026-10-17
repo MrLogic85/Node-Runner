@@ -4,511 +4,153 @@ namespace NodeRunner.Domain.Tests;
 
 public sealed class CreatureDefTests
 {
-    [Fact]
-    public void CoveredRadius_IsAServos_ElseTheHub_WhateverWheelSitsThere()
-    {
-        // #1086: a Wheel's face lies under its links, so only a Servo covers more than the hub.
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new NodeDef(3, new Vector2D(200, 0))],
-            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
-            [],
-            [new ServoDef(6, 2)],
-            [],
-            [],
-            [new WheelDef(7, 1, radius: WheelDef.MaxRadius), new WheelDef(8, 2)],
-            nextPartId: 9);
-
-        creature.CoveredRadius(1).ShouldBe(NodeDef.HubRadius);
-        creature.CoveredRadius(2).ShouldBe(JointMotor.Radius);
-        creature.CoveredRadius(3).ShouldBe(NodeDef.HubRadius);
-        Should.Throw<ArgumentException>(() => creature.CoveredRadius(99));
-    }
+    // A small frame: nodes 1 (0,0), 2 (100,0) and 3 (0,100); beams 4 (1–2) and 5 (1–3).
+    private static readonly NodeDef[] _nodes = [new(1, new Vector2D(0, 0)), new(2, new Vector2D(100, 0)), new(3, new Vector2D(0, 100))];
+    private static readonly BeamDef[] _beams = [new(4, 1, 2), new(5, 1, 3)];
 
     [Fact]
-    public void PartCount_CountsEveryKindOfPart()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(1, 1))],
-            [new BeamDef(4, 1, 2), new BeamDef(5, 2, 3)],
-            [new SensorDef(6, 4, SensorKind.Accelerometer)],
-            [new ServoDef(9, 2, 4, 5)],
-            [new PistonDef(7, 1, 3)],
-            [new SpringDef(8, 1, 3)],
-            [new WheelDef(10, 1)],
-            nextPartId: 11);
-
-        creature.PartCount.ShouldBe(10);
-        new CreatureDef([], [], []).PartCount.ShouldBe(0);
-    }
-
-    [Fact]
-    public void Constructor_WithNoNodes_AcceptsAnEmptyDrawing()
-    {
-        var creature = new CreatureDef([], [], []);
-
-        creature.Nodes.ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Constructor_WithUnfinishedDrawing_AcceptsLooseNodesAndZeroLengthBeams()
-    {
-        var creature = new CreatureDef(
-            new[]
-            {
-                new NodeDef(1, new Vector2D(0, 0)),
-                new NodeDef(2, new Vector2D(0, 0)),
-                new NodeDef(3, new Vector2D(4, 0)),
-            },
-            [new BeamDef(101, 1, 2)],
-            []);
-
-        creature.Nodes.Count.ShouldBe(3);
-        creature.Beams.Count.ShouldBe(1);
-    }
-
-    [Fact]
-    public void Constructor_WithOutOfRangeBeamNode_Throws()
-    {
-        var action = () => new CreatureDef(
-            new[]
-            {
-                new NodeDef(1, new Vector2D(0, 0)),
-                new NodeDef(2, new Vector2D(2, 0)),
-            },
-            new[] { new BeamDef(101, 1, 3) },
-            []);
-
-        action.ShouldThrow<ArgumentOutOfRangeException>();
-    }
-
-    [Fact]
-    public void Constructor_WithOutOfRangeSensorBeam_Throws()
-    {
-        var action = () => new CreatureDef(
-            new[]
-            {
-                new NodeDef(1, new Vector2D(0, 0)),
-                new NodeDef(2, new Vector2D(2, 0)),
-            },
-            new[] { new BeamDef(101, 1, 2) },
-            new[] { new SensorDef(201, 999, SensorKind.Accelerometer) });
-
-        action.ShouldThrow<ArgumentOutOfRangeException>();
-    }
-
-    [Fact]
-    public void Constructor_WithDuplicateSensorKindOnBeam_Throws()
-    {
-        var action = () => new CreatureDef(
-            new[]
-            {
-                new NodeDef(1, new Vector2D(0, 0)),
-                new NodeDef(2, new Vector2D(2, 0)),
-            },
-            new[] { new BeamDef(101, 1, 2) },
-            new[]
-            {
-                new SensorDef(201, 101, SensorKind.Accelerometer),
-                new SensorDef(202, 101, SensorKind.Accelerometer),
-            });
-
-        action.ShouldThrow<ArgumentException>();
-    }
-
-    [Fact]
-    public void Constructor_WithTwoSensorKindsOnOneBeam_Throws()
-    {
-        var action = () => new CreatureDef(
-            new[]
-            {
-                new NodeDef(1, new Vector2D(0, 0)),
-                new NodeDef(2, new Vector2D(2, 0)),
-            },
-            new[] { new BeamDef(101, 1, 2) },
-            new[]
-            {
-                new SensorDef(201, 101, SensorKind.Accelerometer),
-                new SensorDef(202, 101, SensorKind.Camera),
-            });
-
-        action.ShouldThrow<ArgumentException>();
-    }
-
-    [Fact]
-    public void Constructor_WithCameraWithoutAim_GivesItTheDefaultAimFromItsBeam()
-    {
-        var creature = new CreatureDef(
-            new[] { new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, 2)) },
-            new[] { new BeamDef(101, 1, 2) },
-            new[] { new SensorDef(201, 101, SensorKind.Camera) });
-
-        creature.Sensors[0].Aim.ShouldBe(SensorDef.DefaultAim(new Vector2D(0, 0), new Vector2D(0, 2)));
-    }
-
-    [Fact]
-    public void Constructor_KeepsAGivenAimAndLeavesAccelerometersWithout()
-    {
-        var creature = new CreatureDef(
-            new[] { new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)) },
-            new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3) },
-            new[] { new SensorDef(201, 101, SensorKind.Camera, aim: 2), new SensorDef(202, 102, SensorKind.Accelerometer) });
-
-        creature.Sensors[0].Aim.ShouldBe(2);
-        creature.Sensors[1].Aim.ShouldBeNull();
-    }
-
-    [Fact]
-    public void JsonRoundTrip_PreservesCreatureDefinition()
+    public void JsonRoundTrip_KeepsEveryPart_AndALockedBrakeAsInfinity()
     {
         var original = new CreatureDef(
-            new[]
-            {
-                new NodeDef(1, new Vector2D(0, 0)),
-                new NodeDef(2, new Vector2D(2, 0)),
-                new NodeDef(3, new Vector2D(4, 0)),
-            },
-            new[] { new BeamDef(101, 1, 2), new BeamDef(102, 2, 3) },
-            new[]
-            {
-                new SensorDef(201, 101, SensorKind.Accelerometer),
-                new SensorDef(202, 102, SensorKind.Camera, aim: -0.75),
-            });
+            EveryPartKind.Creature.Parts.Select(part => part is BrakeDef brake ? brake.WithStrength(BrakeDef.LockedStrength).WithName("Hold") : part),
+            EveryPartKind.Creature.NextPartId);
 
         var json = JsonSerializer.Serialize(original);
+        var loaded = JsonSerializer.Deserialize<CreatureDef>(json)!;
 
-        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(json);
-
-        roundTripped.ShouldNotBeNull();
-        roundTripped.Nodes.ToArray().ShouldBe(original.Nodes.ToArray());
-        roundTripped.Beams.ToArray().ShouldBe(original.Beams.ToArray());
-        roundTripped.Sensors.ToArray().ShouldBe(original.Sensors.ToArray());
-        roundTripped.NextPartId.ShouldBe(original.NextPartId);
-        json.ShouldContain("\"sensors\":");
-        json.ShouldContain("\"Id\":1");
-        json.ShouldContain("\"NextPartId\":203");
+        loaded.Parts.ShouldBe(original.Parts);
+        loaded.NextPartId.ShouldBe(22);
+        loaded.Brakes[0].Locked.ShouldBeTrue();
+        json.ShouldContain("\"Strength\":\"Infinity\"");
     }
 
+    // Each row uses another of the per-list constructors, so each stays in use.
     [Fact]
-    public void Constructor_WithAPistonToAMissingNode_Throws()
+    public void Constructor_RefusesBrokenReferencesIdsAndSides()
     {
-        Should.Throw<ArgumentOutOfRangeException>(() => new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
-            [],
-            [],
-            [new PistonDef(3, 1, 9)]));
+        Refuses.OutOfRange(() => new CreatureDef(_nodes, [new BeamDef(4, 1, 9)], []));
+        Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [new SensorDef(6, 9, SensorKind.Accelerometer)]));
+        Refuses.Invalid(() => new CreatureDef(_nodes, _beams, [new SensorDef(6, 4, SensorKind.Accelerometer), new SensorDef(7, 4, SensorKind.Camera)]))
+            .Message.ShouldBe("Beam id 4 already has a sensor; a beam holds at most one.");
+        Refuses.Invalid(() => new CreatureDef(_nodes, [new BeamDef(1, 1, 2)], [], 9)).Message.ShouldBe("Part id 1 is used more than once.");
+        Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [], 0));
+        Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [], [new PistonDef(6, 2, 3)], 6));
+        Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [], [new PistonDef(6, 1, 9)]));
+        Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [], [], [new SpringDef(6, 9, 1)], 7));
+        Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [], [], [], [], [new WheelDef(6, 9)], 7));
+        Refuses.Invalid(() => new CreatureDef(_nodes, _beams, [], [new ServoDef(6, 2, 4, 5)], [], [], 7))
+            .Message.ShouldBe("Link id 5 must touch node id 2, or be its Wheel, for that hinge part.");
+        Refuses.Invalid(() => new CreatureDef(_nodes, _beams, [], [], [], [], [new WheelDef(6, 1)], [], [], [], [], [new AngleSensorDef(7, 2, 4, 6)], 8));
+        Refuses.Invalid(() => new CreatureDef([_nodes[0], null!], [], []));
+        Should.Throw<ArgumentNullException>(() => new CreatureDef(_nodes, null!, []));
+        Should.Throw<ArgumentNullException>(() => new CreatureDef(null!, 1));
+        Refuses.Invalid(() => new CreatureDef([_nodes[0], new StrayPartDef(2)])).Message.ShouldStartWith("A creature cannot hold a StrayPartDef");
+
+        SecondIsRefused("Wheel", () => new CreatureDef(_nodes, _beams, [], [], [], [], [new WheelDef(6, 1), new WheelDef(7, 1)], 8));
+        SecondIsRefused("Touch sensor", () => new CreatureDef(_nodes, _beams, [], [], [], [], [], [new TouchSensorDef(6, 1), new TouchSensorDef(7, 1)], 8));
+        SecondIsRefused("Rubber", () => new CreatureDef(_nodes, _beams, [], [], [], [], [], [], [new RubberDef(6, 1), new RubberDef(7, 1)], 8));
+        SecondIsRefused("hinge part", () => new CreatureDef(_nodes, _beams, [], [], [], [], [], [], [], [new VelocityMotorDef(6, 1)], [new BrakeDef(7, 1)], 8));
+
+        static void SecondIsRefused(string slot, Action create) =>
+            Refuses.Invalid(create).Message.ShouldBe($"Node id 1 already has a {slot}; a joint holds at most one.");
     }
 
+    // #1118: a hinge part's side may be its own joint's Wheel; an unfinished drawing still loads.
     [Fact]
-    public void JsonRoundTrip_PreservesPistons()
+    public void Constructor_AcceptsAWheelSide_AnEmptyDrawing_AndAnUnfinishedOne()
     {
-        var original = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
-            [],
-            [],
-            [new PistonDef(3, 1, 2, "Ram", 20000, 0.4, maxSpeed: 150)]);
-
-        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
-
-        roundTripped.ShouldNotBeNull();
-        roundTripped.Pistons.ToArray().ShouldBe(original.Pistons.ToArray());
-        roundTripped.PistonIndexOf(3).ShouldBe(0);
-        roundTripped.NextPartId.ShouldBe(4);
+        new CreatureDef(_nodes, _beams, [], [new ServoDef(6, 1, 4, 7)], [], [], [new WheelDef(7, 1)], 8).Servos[0].TargetLinkId.ShouldBe(7);
+        var empty = new CreatureDef([], [], []);
+        (empty.PartCount, empty.NextPartId).ShouldBe((0, 1));
+        new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(0, 0)), new NodeDef(3, new Vector2D(4, 0))], [new BeamDef(4, 1, 2)], [])
+            .Beams.Count.ShouldBe(1);
     }
 
+    // Production builds a creature from one list of parts (#1222), in any order; the lists are copies.
     [Fact]
-    public void Constructor_WithASpringToAMissingNode_Throws()
-    {
-        Should.Throw<ArgumentOutOfRangeException>(() => new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
-            [],
-            [],
-            [],
-            [new SpringDef(3, 1, 9)],
-            nextPartId: 4));
-    }
-
-    [Fact]
-    public void Constructor_WithASpringSharingAPistonsId_Throws()
-    {
-        Should.Throw<ArgumentException>(() => new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0)), new NodeDef(3, new Vector2D(0, 1))],
-            [],
-            [],
-            [new PistonDef(4, 1, 2)],
-            [new SpringDef(4, 2, 3)],
-            nextPartId: 5));
-    }
-
-    [Fact]
-    public void JsonRoundTrip_PreservesSprings()
-    {
-        var original = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
-            [],
-            [],
-            [],
-            [new SpringDef(3, 1, 2, "Tail", 800, 0.6)],
-            nextPartId: 4);
-
-        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
-
-        roundTripped.ShouldNotBeNull();
-        roundTripped.Springs.ToArray().ShouldBe(original.Springs.ToArray());
-        roundTripped.SpringIndexOf(3).ShouldBe(0);
-        roundTripped.NextPartId.ShouldBe(4);
-    }
-
-    [Fact]
-    public void JsonRoundTrip_PreservesServos()
-    {
-        var original = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0)), new NodeDef(3, new Vector2D(0, 1))],
-            [new BeamDef(4, 1, 2), new BeamDef(5, 1, 3)],
-            [],
-            [new ServoDef(6, 1, null, 5, "Hip", strength: 7, range: Math.PI / 2, start: 0.25, maxSpeed: 3, riseTime: 0.4)],
-            [],
-            [],
-            nextPartId: 7);
-
-        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
-
-        roundTripped.ShouldNotBeNull();
-        roundTripped.Servos.ToArray().ShouldBe(original.Servos.ToArray());
-        roundTripped.ServoIndexOf(6).ShouldBe(0);
-        roundTripped.NextPartId.ShouldBe(7);
-    }
-
-    [Fact]
-    public void JsonRoundTrip_PreservesAServosWheelSide()
-    {
-        var original = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0))],
-            [new BeamDef(3, 1, 2)],
-            [],
-            [new ServoDef(5, 1, 3, 4)],
-            [],
-            [],
-            [new WheelDef(4, 1)],
-            nextPartId: 6);
-
-        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(original));
-
-        roundTripped.ShouldNotBeNull();
-        roundTripped.Servos.Single().ShouldBe(original.Servos.Single());
-        roundTripped.IsWheel(roundTripped.Servos.Single().TargetLinkId!.Value).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void Constructor_WithANullPart_Throws()
-    {
-        NodeDef[] nodes = [new NodeDef(1, new Vector2D(0, 0)), null!];
-
-        Should.Throw<ArgumentException>(() => new CreatureDef(nodes, [], []));
-    }
-
-    [Fact]
-    public void Constructor_WithOmittedNextPartId_DefaultsToMaxIdPlusOne()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(7, new Vector2D(0, 0)), new NodeDef(3, new Vector2D(1, 0))],
-            [new BeamDef(12, 7, 3)],
-            []);
-
-        creature.NextPartId.ShouldBe(13);
-    }
-
-    [Fact]
-    public void Lookups_UseIdsSoReferencesSurviveReorderedLists()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(20, new Vector2D(2, 0)), new NodeDef(10, new Vector2D(0, 0))],
-            [new BeamDef(30, 10, 20)],
-            [new SensorDef(40, 30, SensorKind.Accelerometer)],
-            nextPartId: 41);
-
-        creature.NodeIndexOf(10).ShouldBe(1);
-        creature.NodeIndexOf(20).ShouldBe(0);
-        creature.BeamIndexOf(30).ShouldBe(0);
-        creature.SensorIndexOf(40).ShouldBe(0);
-
-        var roundTripped = JsonSerializer.Deserialize<CreatureDef>(JsonSerializer.Serialize(creature));
-
-        roundTripped.ShouldNotBeNull();
-        roundTripped.Beams[0].NodeA.ShouldBe(10);
-        roundTripped.Beams[0].NodeB.ShouldBe(20);
-        roundTripped.Sensors[0].BeamId.ShouldBe(30);
-        roundTripped.NodeIndexOf(10).ShouldBe(1);
-    }
-
-    [Fact]
-    public void Constructor_WithDuplicatePartId_Throws()
-    {
-        var action = () => new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
-            [new BeamDef(1, 1, 2)],
-            []);
-
-        action.ShouldThrow<ArgumentException>();
-    }
-
-    [Fact]
-    public void Constructor_WithPartIdAtOrBeyondNextPartId_Throws()
-    {
-        var action = () => new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(1, 0))],
-            [new BeamDef(3, 1, 2)],
-            [],
-            nextPartId: 3);
-
-        action.ShouldThrow<ArgumentOutOfRangeException>();
-    }
-
-    [Fact]
-    public void Names_AreDisplayMetadataAndDoNotAffectReferences()
-    {
-        var creature = new CreatureDef(
-            [new NodeDef(1, new Vector2D(0, 0), "Leg"), new NodeDef(2, new Vector2D(1, 0), "Leg")],
-            [new BeamDef(3, 1, 2, "Leg")],
-            [new SensorDef(4, 3, SensorKind.Accelerometer, "Leg")],
-            nextPartId: 5);
-
-        creature.Nodes.Select(node => node.Name).ShouldBe(["Leg", "Leg"]);
-        creature.Beams[0].NodeA.ShouldBe(1);
-        creature.Sensors[0].BeamId.ShouldBe(3);
-    }
-
-    [Fact]
-    public void Constructor_DefensivelyCopiesInputCollections()
-    {
-        var nodes = new[]
-        {
-            new NodeDef(1, new Vector2D(0, 0)),
-            new NodeDef(2, new Vector2D(2, 0)),
-        };
-        var beams = new[] { new BeamDef(3, 1, 2) };
-        var sensors = new[] { new SensorDef(4, 3, SensorKind.Accelerometer) };
-
-        var creature = new CreatureDef(nodes, beams, sensors);
-        nodes[0] = new NodeDef(10, new Vector2D(99, 99));
-        beams[0] = new BeamDef(11, 2, 1);
-        sensors[0] = new SensorDef(12, 11, SensorKind.Accelerometer);
-
-        creature.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
-        creature.Beams[0].ShouldBe(new BeamDef(3, 1, 2));
-        creature.Sensors[0].ShouldBe(new SensorDef(4, 3, SensorKind.Accelerometer));
-    }
-
-    // The order comes from the slots, not from where each part is in the list (#1221).
-    [Fact]
-    public void JointParts_ListsTheJointsServoThenWheelThenRubberThenTouchSensorAndNoOtherJoints()
-    {
-        IPartDef[] parts =
-        [
-            new TouchSensorDef(10, 1), new TouchSensorDef(11, 5), new RubberDef(12, 1), new RubberDef(13, 3),
-            new WheelDef(8, 1), new WheelDef(9, 3), new ServoDef(6, 2, 4, 5), new ServoDef(7, 1, 4, 5), new NodeDef(1, new Vector2D(0, 0)),
-        ];
-
-        CreatureDef.JointParts(1, parts).ShouldBe([
-            new CreatureElementSelection(CreatureElementKind.Servo, 7),
-            new CreatureElementSelection(CreatureElementKind.Wheel, 8),
-            new CreatureElementSelection(CreatureElementKind.Rubber, 12),
-            new CreatureElementSelection(CreatureElementKind.TouchSensor, 10),
-        ]);
-        CreatureDef.JointParts(3, parts).ShouldBe([
-            new CreatureElementSelection(CreatureElementKind.Wheel, 9),
-            new CreatureElementSelection(CreatureElementKind.Rubber, 13),
-        ]);
-        CreatureDef.JointParts(5, parts).ShouldBe([new CreatureElementSelection(CreatureElementKind.TouchSensor, 11)]);
-        CreatureDef.JointParts(4, parts).ShouldBeEmpty();
-    }
-
-    // A Brake sits in its joint's hinge-part slot, at the top of the stack (#1041).
-    [Fact]
-    public void JointParts_ListsTheJointsBrakeFirst()
-    {
-        CreatureDef.JointParts(1, [new WheelDef(8, 1), new BrakeDef(6, 1), new BrakeDef(7, 2)]).ShouldBe([
-            new CreatureElementSelection(CreatureElementKind.Brake, 6),
-            new CreatureElementSelection(CreatureElementKind.Wheel, 8),
-        ]);
-    }
-
-    [Fact]
-    public void HasJointPart_CountsATouchSensorAndARubber()
-    {
-        CreatureDef.HasJointPart(1, [new TouchSensorDef(2, 1)]).ShouldBeTrue();
-        CreatureDef.HasJointPart(3, [new TouchSensorDef(2, 1)]).ShouldBeFalse();
-        CreatureDef.HasJointPart(1, [new RubberDef(2, 1)]).ShouldBeTrue();
-        CreatureDef.HasJointPart(3, [new RubberDef(2, 1)]).ShouldBeFalse();
-    }
-
-    // A Brake fills its joint's hinge-part slot (#1039), so its joint is not bare.
-    [Fact]
-    public void HasJointPart_CountsABrake()
-    {
-        CreatureDef.HasJointPart(1, [new BrakeDef(2, 1)]).ShouldBeTrue();
-        CreatureDef.HasJointPart(3, [new BrakeDef(2, 1)]).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Parts_HoldOnePartOfEveryKind_WithASlotExactlyWhenOnAJoint()
-    {
-        EveryPartKind.Creature.Parts.Select(part => part.PartKind).Distinct().ShouldBe(Enum.GetValues<PartKind>(), ignoreOrder: true);
-        EveryPartKind.Creature.PartCount.ShouldBe(EveryPartKind.Creature.Parts.Count);
-        foreach (var part in EveryPartKind.Creature.Parts)
-        {
-            (PartKinds.Of(part.PartKind).Slot is not null).ShouldBe(part is IJointPartDef, $"{part.PartKind}");
-        }
-
-        EveryPartKind.Creature.HingeParts.ShouldAllBe(part => PartKinds.SlotOf(part) == JointSlot.HingePart);
-    }
-
-    [Fact]
-    public void FindPart_FindsEachPartById_OrNothing()
-    {
-        foreach (var part in EveryPartKind.Creature.Parts)
-        {
-            EveryPartKind.Creature.FindPart(part.Id).ShouldBeSameAs(part);
-        }
-
-        EveryPartKind.Creature.FindPart(22).ShouldBeNull();
-        ((SensorDef)EveryPartKind.Creature.FindPart(8)!).Aim.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public void ASecondPartInAJointSlot_IsRefused_NamingTheSlot()
-    {
-        Should.Throw<ArgumentException>(() => new CreatureDef(
-            nodes: [new(1, new Vector2D(0, 0))], beams: [], sensors: [], servos: [], pistons: [], springs: [], wheels: [],
-            touchSensors: [], rubbers: [], velocityMotors: [], brakes: [new(2, 1)], angleSensors: [new(3, 1)], nextPartId: 4))
-            .Message.ShouldBe("Node id 1 already has a hinge part; a joint holds at most one.");
-    }
-
-    // Production builds a creature from one list of parts (#1222), in any order.
-    [Fact]
-    public void Constructor_FromOnePartList_SortsThePartsByKind_EachKindKeepingItsOrder()
+    public void Constructor_FromOnePartList_SortsByKind_KeepsEachKindsOrder_AndCopies()
     {
         var every = EveryPartKind.Creature;
         IPartDef[] shuffled = [.. every.Parts.Reverse()];
 
         var creature = new CreatureDef(shuffled, every.NextPartId);
+        shuffled[0] = new NodeDef(99, new Vector2D(1, 1));
 
         creature.Parts.ShouldBe(every.Parts.GroupBy(part => part.GetType()).SelectMany(kind => kind.Reverse()));
-        creature.NextPartId.ShouldBe(every.NextPartId);
-        new CreatureDef([new NodeDef(2, new Vector2D(0, 0)), new NodeDef(1, new Vector2D(1, 0))]).NextPartId.ShouldBe(3);
+        new CreatureDef([new NodeDef(7, new Vector2D(0, 0)), new NodeDef(3, new Vector2D(1, 0)), new BeamDef(12, 7, 3)]).NextPartId.ShouldBe(13);
     }
 
     [Fact]
-    public void Constructor_FromOnePartList_RefusesAPartItCannotSave()
+    public void Queries_OnACreatureOfEveryKind()
     {
-        Should.Throw<ArgumentException>(() => new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new StrayPartDef(2)]))
-            .Message.ShouldStartWith("A creature cannot hold a StrayPartDef");
+        var creature = EveryPartKind.Creature;
+
+        creature.PartCount.ShouldBe(21);
+        creature.JointMotors.Select(part => part.Id).ShouldBe([9, 15, 21]);
+        creature.HingeParts.Select(part => part.Id).ShouldBe([9, 15, 21, 16, 17]);
+        creature.JointPartsAt(1).ShouldBe([
+            new CreatureElementSelection(CreatureElementKind.Servo, 9),
+            new CreatureElementSelection(CreatureElementKind.Wheel, 12),
+            new CreatureElementSelection(CreatureElementKind.Rubber, 14),
+            new CreatureElementSelection(CreatureElementKind.TouchSensor, 13),
+        ]);
+        creature.Sensors[1].Aim.ShouldBe(-Math.PI / 2);
+        creature.Sensors[0].Aim.ShouldBeNull();
+        new CreatureDef(_nodes, _beams, [new SensorDef(6, 4, SensorKind.Camera, aim: 2)]).Sensors[0].Aim.ShouldBe(2);
+
+        // #1086: a Wheel widens its joint but covers none of the links; only a joint motor does.
+        foreach (var (node, radius, covered) in new[] { (1, 40.0, 27.0), (2, 27, 27), (3, 15, 15), (4, 15, 15), (18, 27, 27) })
+        {
+            (creature.NodeRadius(node), creature.CoveredRadius(node)).ShouldBe((radius, covered), $"node {node}");
+        }
+
+        (creature.NodeIndexOf(18), creature.BeamIndexOf(20), creature.SensorIndexOf(8)).ShouldBe((4, 3, 1));
+        new[]
+        {
+            creature.ServoIndexOf(9), creature.PistonIndexOf(10), creature.SpringIndexOf(11), creature.WheelIndexOf(12), creature.TouchSensorIndexOf(13),
+            creature.RubberIndexOf(14), creature.VelocityMotorIndexOf(15), creature.BrakeIndexOf(16), creature.AngleSensorIndexOf(17), creature.StepperIndexOf(21),
+        }.ShouldAllBe(index => index == 0);
+        Refuses.OutOfRange(() => creature.NodeIndexOf(5));
+        Refuses.OutOfRange(() => creature.CoveredRadius(99));
+        foreach (var part in creature.Parts)
+        {
+            creature.FindPart(part.Id).ShouldBeSameAs(part);
+        }
+
+        creature.FindPart(22).ShouldBeNull();
+        creature.WheelAt(1)!.Id.ShouldBe(12);
+        creature.WheelAt(2).ShouldBeNull();
+        (creature.IsWheel(12), creature.IsWheel(13)).ShouldBe((true, false));
+        creature.LinksAt(4).Select(link => (link.Id, link.Kind)).ShouldBe([(19, CreatureElementKind.Beam), (10, CreatureElementKind.Piston), (11, CreatureElementKind.Spring)]);
+        (creature.Link(19).FarNodeFrom(4), creature.Link(19).FarNodeFrom(18)).ShouldBe((18, 4));
+        Refuses.Invalid(() => creature.Link(19).FarNodeFrom(1));
+        Refuses.OutOfRange(() => creature.Link(99));
+        (CreatureDef.HasJointPart(3, creature.Parts), CreatureDef.HasJointPart(99, creature.Parts)).ShouldBe((true, false));
     }
 
+    // A Brake sits in its joint's hinge-part slot, at the top of the stack (#1041), whatever the list order (#1221).
     [Fact]
-    public void Constructor_FromOnePartList_RefusesNull()
+    public void JointParts_PutTheHingePartFirst_AndLeaveOtherJointsOut()
     {
-        Should.Throw<ArgumentException>(() => new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), null!]));
-        Should.Throw<ArgumentNullException>(() => new CreatureDef(null!, 1));
+        CreatureDef.JointParts(1, [new WheelDef(8, 1), new BrakeDef(6, 1), new BrakeDef(7, 2)]).ShouldBe([
+            new CreatureElementSelection(CreatureElementKind.Brake, 6),
+            new CreatureElementSelection(CreatureElementKind.Wheel, 8),
+        ]);
+        CreatureDef.JointParts(4, [new WheelDef(8, 1)]).ShouldBeEmpty();
+    }
+
+    // #1118: a motor needs two sides, and a Wheel can be one of them.
+    [Fact]
+    public void JointMotor_CountsTheWheelAsASide()
+    {
+        LinkRef[] links = [new(9, 1, 3, CreatureElementKind.Beam), new(4, 1, 2, CreatureElementKind.Spring), new(7, 1, 4, CreatureElementKind.Piston)];
+        var wheel = new WheelDef(5, 1);
+
+        (JointMotor.HasTwoSides(links[..1], true), JointMotor.HasTwoSides(links[..1], false), JointMotor.HasTwoSides([], true)).ShouldBe((true, false, false));
+        JointMotor.DefaultSides(links, wheel).ShouldBe((4, 7));
+        JointMotor.DefaultSides(links[..1], wheel).ShouldBe((9, 5));
+        JointMotor.DefaultSides([], wheel).ShouldBe((null, 5));
+        JointMotor.DefaultSides(links[..1], null).ShouldBe((9, null));
     }
 
     private sealed record StrayPartDef(int Id) : IPartDef

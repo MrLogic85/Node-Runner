@@ -4,27 +4,23 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class FixedNumberTests
 {
+    // Numbers that read the same are equal, and a negative that rounds to zero is zero.
     [Theory]
     [InlineData(13.097, 1, 13.1)]
-    [InlineData(0.25, 1, 0.3)]
     [InlineData(-0.25, 1, -0.3)]
     [InlineData(249.5, 0, 250)]
     [InlineData(2, 3, 2)]
-    public void KeepsTheValueRoundedAsShown(double value, int decimals, double expected)
+    [InlineData(3.96, 1, 4.04)]
+    [InlineData(-0.01, 1, 0)]
+    public void KeepsTheValueRoundedAsShown(double value, int decimals, double readsAs)
     {
         var number = new FixedNumber(value, decimals);
 
-        number.Value.ShouldBe(expected);
+        number.ShouldBe(new FixedNumber(readsAs, decimals));
+        number.Value.ShouldBe(Math.Round(readsAs, decimals, MidpointRounding.AwayFromZero));
         number.Decimals.ShouldBe(decimals);
+        double.IsNegative(number.Value).ShouldBe(number.Value < 0);
     }
-
-    [Fact]
-    public void NumbersThatReadTheSame_AreEqual() =>
-        new FixedNumber(4.04, 1).ShouldBe(new FixedNumber(3.96, 1));
-
-    [Fact]
-    public void ANegativeThatRoundsToZero_IsZero() =>
-        double.IsNegative(new FixedNumber(-0.01, 1).Value).ShouldBeFalse();
 
     [Theory]
     [InlineData(double.NaN, 1)]

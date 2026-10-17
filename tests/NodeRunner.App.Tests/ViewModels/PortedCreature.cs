@@ -1,3 +1,4 @@
+using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.ML;
 
@@ -37,6 +38,9 @@ internal static class PortedCreature
 
     public static NetworkPortLayout Layout { get; } = NetworkPorts.Of(Def);
 
+    /// <summary>Every port in layout order, with the part's kind and shown name, and the reading's word and range.</summary>
+    public static IReadOnlyList<(NetworkPort Port, PartKind Kind, UiText Name, string Reading, PortRange Range)> Ports { get; } = Table();
+
     public static NeuralNetwork Network()
     {
         int[] layers = [Layout.Inputs.Count, Layout.Outputs.Count];
@@ -45,4 +49,50 @@ internal static class PortedCreature
     }
 
     public static double[] Readings() => Enumerable.Range(0, Layout.Inputs.Count).Select(input => (input % 5 * 0.4) - 0.8).ToArray();
+
+    private static (NetworkPort, PartKind, UiText, string, PortRange)[] Table()
+    {
+        const PortRange signed = PortRange.MinusOneToOne;
+        const PortRange unsigned = PortRange.ZeroToOne;
+        var accelerometer = UiText.Format("Accel {0}", 1);
+        var eye = UiText.AsWritten("Eye");
+        var hip = UiText.AsWritten("Hip");
+        var ram = UiText.AsWritten("Ram");
+        var touch = UiText.Format("Touch {0}", 1);
+        var drive = UiText.AsWritten("Drive");
+        var knee = UiText.AsWritten("Knee");
+        var ratchet = UiText.AsWritten("Ratchet");
+        return
+        [
+            (NetworkPort.Input(Accelerometer, "along"), PartKind.Accelerometer, accelerometer, "along", signed),
+            (NetworkPort.Input(Accelerometer, "across"), PartKind.Accelerometer, accelerometer, "across", signed),
+            (NetworkPort.Input(Camera, "left2"), PartKind.Camera, eye, "far left", unsigned),
+            (NetworkPort.Input(Camera, "left1"), PartKind.Camera, eye, "left", unsigned),
+            (NetworkPort.Input(Camera, "centre"), PartKind.Camera, eye, "centre", unsigned),
+            (NetworkPort.Input(Camera, "right1"), PartKind.Camera, eye, "right", unsigned),
+            (NetworkPort.Input(Camera, "right2"), PartKind.Camera, eye, "far right", unsigned),
+            (NetworkPort.Input(Camera, "hit"), PartKind.Camera, eye, "hit", unsigned),
+            (NetworkPort.Input(Servo, NetworkPorts.ServoAngleChannel), PartKind.Servo, hip, "angle", signed),
+            (NetworkPort.Input(Servo, NetworkPorts.ServoSpeedChannel), PartKind.Servo, hip, "speed", signed),
+            (NetworkPort.Input(Piston, NetworkPorts.PistonLengthChannel), PartKind.Piston, ram, "length", unsigned),
+            (NetworkPort.Input(Piston, NetworkPorts.PistonSpeedChannel), PartKind.Piston, ram, "speed", signed),
+            (NetworkPort.Input(Touch, NetworkPorts.TouchChannel), PartKind.TouchSensor, touch, "touch", unsigned),
+            (NetworkPort.Input(VelocityMotor, NetworkPorts.VelocityMotorAngleSinChannel), PartKind.VelocityMotor, drive, "angle sin", signed),
+            (NetworkPort.Input(VelocityMotor, NetworkPorts.VelocityMotorAngleCosChannel), PartKind.VelocityMotor, drive, "angle cos", signed),
+            (NetworkPort.Input(VelocityMotor, NetworkPorts.VelocityMotorSpeedChannel), PartKind.VelocityMotor, drive, "speed", signed),
+            (NetworkPort.Input(AngleSensor, NetworkPorts.AngleSensorAngleSinChannel), PartKind.AngleSensor, knee, "angle sin", signed),
+            (NetworkPort.Input(AngleSensor, NetworkPorts.AngleSensorAngleCosChannel), PartKind.AngleSensor, knee, "angle cos", signed),
+            (NetworkPort.Input(AngleSensor, NetworkPorts.AngleSensorSpeedChannel), PartKind.AngleSensor, knee, "speed", signed),
+            (NetworkPort.Input(Stepper, NetworkPorts.StepperAngleSinChannel), PartKind.Stepper, ratchet, "angle sin", signed),
+            (NetworkPort.Input(Stepper, NetworkPorts.StepperAngleCosChannel), PartKind.Stepper, ratchet, "angle cos", signed),
+            (NetworkPort.Input(Stepper, NetworkPorts.StepperTickChannel), PartKind.Stepper, ratchet, "tick", unsigned),
+            (Layout.Outputs[0], PartKind.Servo, hip, "angle", signed),
+            (Layout.Outputs[1], PartKind.Servo, hip, "strength", unsigned),
+            (Layout.Outputs[2], PartKind.Piston, ram, "length", unsigned),
+            (Layout.Outputs[3], PartKind.Piston, ram, "strength", unsigned),
+            (Layout.Outputs[4], PartKind.VelocityMotor, drive, "speed", signed),
+            (Layout.Outputs[5], PartKind.VelocityMotor, drive, "strength", unsigned),
+            (Layout.Outputs[6], PartKind.Stepper, ratchet, "frequency", signed),
+        ];
+    }
 }

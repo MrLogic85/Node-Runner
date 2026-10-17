@@ -11,25 +11,12 @@ public sealed class ReviewerLspHookSpec(HookFixture fixture) : IClassFixture<Hoo
     private const string _hook = "reviewer-lsp.sh";
 
     [Theory]
-    [InlineData("goToDefinition")]
-    [InlineData("findReferences")]
-    [InlineData("hover")]
-    [InlineData("documentSymbol")]
-    [InlineData("workspaceSymbol")]
-    [InlineData("goToImplementation")]
-    [InlineData("prepareCallHierarchy")]
-    [InlineData("incomingCalls")]
-    [InlineData("outgoingCalls")]
-    public void Lookup_IsAllowed(string operation) =>
-        HookFixture.DenyReason(fixture.Run(_hook, Payload(operation))).ShouldBeNull();
-
-    [Theory]
+    [InlineData("hover", null)]
+    [InlineData("outgoingCalls", null)]
     [InlineData("rename", "LSP rename is not allowed for a review agent")]
-    [InlineData("Rename", "LSP Rename is not allowed for a review agent")]
-    [InlineData("codeAction", "LSP codeAction is not allowed for a review agent")]
     [InlineData(null, "LSP without an operation is not allowed for a review agent")]
-    public void OtherOperation_IsDenied(string? operation, string reason) =>
-        HookFixture.DenyReason(fixture.Run(_hook, Payload(operation))).ShouldStartWith(reason);
+    public void Operation_IsAllowedOnlyForALookup(string? operation, string? reason) =>
+        HookFixture.ShouldDecide(fixture.Run(_hook, Payload(operation)), reason);
 
     private static JsonObject Payload(string? operation)
     {

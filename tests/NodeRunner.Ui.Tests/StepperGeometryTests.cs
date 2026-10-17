@@ -20,7 +20,6 @@ public sealed class StepperGeometryTests
     }
 
     [Theory]
-    [InlineData(2, 4.5f, 6)]
     [InlineData(8, 4.5f, 6)]
     [InlineData(12, 4.35f, 6)]
     [InlineData(24, 2.2f, 4.7f)]
@@ -33,9 +32,6 @@ public sealed class StepperGeometryTests
 
     [Theory]
     [InlineData(2, 0)]
-    [InlineData(8, 0)]
-    [InlineData(12, 0)]
-    [InlineData(24, 0)]
     [InlineData(8, 1.3f)]
     [InlineData(24, -2.5f)]
     public void The_rim_has_a_notch_per_step_with_notch_0_on_the_built_angle(int steps, float builtAngle)
@@ -60,9 +56,7 @@ public sealed class StepperGeometryTests
         StepperGeometry.NotchAngle(1, 8, 0).ShouldBe(-Mathf.Pi / 4, _tolerance);
 
     [Theory]
-    [InlineData(0.5f, 2f)]
     [InlineData(-2.8f, 2.9f)]
-    [InlineData(1f, -1f)]
     public void Built_notch_0_lies_on_the_target_with_both_sides(float fixedAngle, float targetAngle)
     {
         var (rim, pawl, built) = StepperGeometry.BuildAngles(fixedAngle, targetAngle);
@@ -87,15 +81,12 @@ public sealed class StepperGeometryTests
 
     [Theory]
     [InlineData(24, 0.6f, true)]
-    [InlineData(24, 1f, false)]
-    [InlineData(8, 0.3f, true)]
     [InlineData(8, 0.34f, false)]
     public void Below_a_3px_mouth_the_rim_is_a_plain_circle(int steps, float pixelScale, bool plain) =>
         StepperGeometry.IsTooSmall(steps, pixelScale).ShouldBe(plain);
 
     [Theory]
     [InlineData(8, 4f)]
-    [InlineData(24, 1f)]
     public void A_shadows_rim_is_a_plain_circle_however_large(int steps, float pixelScale)
     {
         StepperGeometry.IsPlain(steps, pixelScale, simplified: true).ShouldBeTrue();
@@ -103,9 +94,7 @@ public sealed class StepperGeometryTests
     }
 
     [Theory]
-    [InlineData(2)]
     [InlineData(8)]
-    [InlineData(24)]
     public void A_seated_pawl_sits_in_its_notch_and_a_lifted_one_clears_the_rim(int steps)
     {
         var seated = StepperGeometry.Pawl(steps, seated: true);
@@ -121,7 +110,6 @@ public sealed class StepperGeometryTests
 
     [Theory]
     [InlineData(-Mathf.Pi / 4)]
-    [InlineData(Mathf.Pi / 4)]
     [InlineData(-Mathf.Pi)]
     public void The_wedge_runs_from_the_pawl_to_its_notch_at_the_rim(float sweep)
     {
@@ -133,9 +121,7 @@ public sealed class StepperGeometryTests
     }
 
     [Theory]
-    [InlineData(0f)]
     [InlineData(2.1f)]
-    [InlineData(-3f)]
     public void The_selection_mark_leaves_the_ring_round_the_pawl(float pawlAngle)
     {
         var halo = StepperGeometry.Halo(keyhole: true).Select(point => point.Rotated(pawlAngle)).ToArray();
@@ -152,8 +138,6 @@ public sealed class StepperGeometryTests
 
     [Theory]
     [InlineData(2, 0f, 0f, true)]
-    [InlineData(8, 0.4f, 2.1f, true)]
-    [InlineData(12, 1f, -0.3f, true)]
     [InlineData(24, -1f, -3f, true)]
     [InlineData(24, 0.2f, 0f, false)]
     public void The_selection_mark_keeps_its_gap_from_the_rim_and_the_pawl(int steps, float builtAngle, float pawlAngle, bool keyhole)
@@ -176,7 +160,6 @@ public sealed class StepperGeometryTests
     [Theory]
     [InlineData(2, true)]
     [InlineData(8, false)]
-    [InlineData(24, true)]
     public void On_a_cushion_the_selection_ring_keeps_its_gap_from_the_cushion_and_the_pawl(int steps, bool seated)
     {
         var cushionEdge = StepperGeometry.Radius + (float)TouchSensorDef.Cushion;

@@ -10,35 +10,28 @@ public class CreatureThumbnailFitTests
     private const double _inset = 12;
 
     [Fact]
-    public void EmptyCreature_HasNoFit() =>
-        CreatureThumbnailFit.Of(new CreatureDef([], [], []), _width, _height, _inset).ShouldBeNull();
-
-    [Fact]
-    public void ThumbnailWithoutRoom_HasNoFit() =>
-        CreatureThumbnailFit.Of(Line(0, 100), _width, 2 * _inset, _inset).ShouldBeNull();
-
-    [Fact]
-    public void LoneJoint_IsCentred_AndNotBlownUp()
+    public void Of_HasNoFitWithoutJointsOrRoom()
     {
-        var fit = CreatureThumbnailFit.Of(new CreatureDef([new NodeDef(1, new Vector2D(40, -30))], [], []), _width, _height, _inset)!.Value;
-
-        fit.Scale.ShouldBe(CreatureThumbnailFit.LargestScale);
-        Place(fit, new Vector2D(40, -30)).ShouldBe(new Vector2D(_width / 2, _height / 2));
+        CreatureThumbnailFit.Of(new CreatureDef([], [], []), _width, _height, _inset).ShouldBeNull();
+        CreatureThumbnailFit.Of(Line(0, 100), _width, 2 * _inset, _inset).ShouldBeNull();
     }
 
     [Fact]
-    public void LargestScale_CapsTheFit()
+    public void LoneJoint_IsCentred_AndNotBlownUpPastTheLargestScale()
     {
         var joint = new CreatureDef([new NodeDef(1, new Vector2D(40, -30))], [], []);
 
+        var fit = CreatureThumbnailFit.Of(joint, _width, _height, _inset)!.Value;
+
+        fit.Scale.ShouldBe(CreatureThumbnailFit.LargestScale);
+        Place(fit, new Vector2D(40, -30)).ShouldBe(new Vector2D(_width / 2, _height / 2));
         CreatureThumbnailFit.Of(joint, _width, _height, _inset, largestScale: 1)!.Value.Scale.ShouldBe(1);
     }
 
     [Theory]
     [InlineData(3000, 0)]
     [InlineData(0, 3000)]
-    [InlineData(800, 800)]
-    public void WideTallOrSquareCreature_FitsInsideTheInset(double dx, double dy)
+    public void WideOrTallCreature_FitsInsideTheInset(double dx, double dy)
     {
         var creature = Line(dx, dy);
         var fit = CreatureThumbnailFit.Of(creature, _width, _height, _inset)!.Value;

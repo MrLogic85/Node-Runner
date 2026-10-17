@@ -72,6 +72,7 @@ public sealed class TranslationTemplateTests
         File.ReadAllText(path).ReplaceLineEndings("\n").ShouldBe(pot, $"Shown text changed. Regenerate {TranslationTemplate.Path}: run the UI tests with {_updateVariable}=1.");
     }
 
+    /// <summary>Shown text is followed back to its literal; text that is never shown is left out.</summary>
     [Fact]
     public void Text_set_in_code_is_followed_to_where_it_is_shown()
     {
@@ -88,21 +89,14 @@ public sealed class TranslationTemplateTests
             }
             static string Fallback() => "Not ready";
             static void Tip(Control control, string tip = "Tip") => control.TooltipText = tip;
-            """));
-
-        ids.ShouldBe(["Heading", "Not ready", "Ready", "Tip"], ignoreOrder: true);
-    }
-
-    [Fact]
-    public void Text_that_is_never_shown_is_left_out()
-    {
-        var ids = Ids(Code(
-            """
+            sealed record Unit(string Readout);
+            static readonly Unit Speed = new("{0} m/s");
+            NodeRunner.App.ViewModels.UiText Readout(double value) => NodeRunner.App.ViewModels.UiText.Format(Speed.Readout, value);
             void Fail() => throw new System.InvalidOperationException("Something broke.");
             void Hidden() => new Label().Language = "en";
             """));
 
-        ids.ShouldBeEmpty();
+        ids.ShouldBe(["Heading", "Not ready", "Ready", "Tip", "{0} m/s"], ignoreOrder: true);
     }
 
     [Fact]
@@ -142,44 +136,12 @@ public sealed class TranslationTemplateTests
         ids.ShouldBe(["{0} m/s"]);
     }
 
-    [Fact]
-    public void Counted_text_that_is_not_literal_is_a_problem()
-    {
-        var extraction = Code(
-            """
-            NodeRunner.App.ViewModels.UiText Counted(string one, int count) =>
-                NodeRunner.App.ViewModels.UiText.Counted(one, "{0} nodes", count);
-            """);
-
-        extraction.Problems.ShouldHaveSingleItem().ShouldContain("counted text and a context need literal text");
-    }
-
-    [Fact]
-    public void Ui_text_that_cannot_be_traced_to_a_literal_is_a_problem()
-    {
-        var extraction = Code(
-            """
-            NodeRunner.App.ViewModels.UiText Greeting(string name) =>
-                NodeRunner.App.ViewModels.UiText.Plain($"Hello {name}");
-            """);
-
-        extraction.Problems.ShouldHaveSingleItem().ShouldContain("a UiText needs literal text");
-    }
-
-    [Fact]
-    public void One_text_cannot_be_both_plain_and_counted()
-    {
-        var extraction = Code(
-            """
-            NodeRunner.App.ViewModels.UiText[] Texts(int count) =>
-            [
-                NodeRunner.App.ViewModels.UiText.Plain("{0} node"),
-                NodeRunner.App.ViewModels.UiText.Counted("{0} node", "{0} nodes", count),
-            ];
-            """);
-
-        extraction.Problems.ShouldHaveSingleItem().ShouldContain("\"{0} node\" is used both");
-    }
+    [Theory]
+    [InlineData("NodeRunner.App.ViewModels.UiText Counted(string one, int count) => NodeRunner.App.ViewModels.UiText.Counted(one, \"{0} nodes\", count);", "counted text and a context need literal text")]
+    [InlineData("NodeRunner.App.ViewModels.UiText Greeting(string name) => NodeRunner.App.ViewModels.UiText.Plain($\"Hello {name}\");", "a UiText needs literal text")]
+    [InlineData("NodeRunner.App.ViewModels.UiText[] Texts(int count) => [NodeRunner.App.ViewModels.UiText.Plain(\"{0} node\"), NodeRunner.App.ViewModels.UiText.Counted(\"{0} node\", \"{0} nodes\", count)];", "\"{0} node\" is used both")]
+    public void Text_the_template_cannot_hold_is_a_problem(string member, string problem) =>
+        Code(member).Problems.ShouldHaveSingleItem().ShouldContain(problem);
 
     [Fact]
     public void Scene_text_keeps_its_own_node_context_and_skips_untranslated_nodes()
@@ -236,7 +198,7 @@ public sealed class TranslationTemplateTests
     }
 
     [Fact]
-    public void Gallery_scenes_stay_in_English()
+    public void Galleries_stay_in_English()
     {
         var entries = Scene(
             """
@@ -250,8 +212,11 @@ public sealed class TranslationTemplateTests
             [node name="Title" type="Label" parent="."]
             text = "Gallery"
             """);
+        var code = TranslationTemplate.Extract([_uiText, _galleryScreen, _gallery], []);
 
         entries.ShouldBeEmpty();
+        code.Entries.ShouldBeEmpty();
+        code.Problems.ShouldBeEmpty();
     }
 
     [Fact]
@@ -281,15 +246,6 @@ public sealed class TranslationTemplateTests
             msgstr ""
 
             """.ReplaceLineEndings("\n"));
-    }
-
-    [Fact]
-    public void Gallery_code_stays_in_English()
-    {
-        var extraction = TranslationTemplate.Extract([_uiText, _galleryScreen, _gallery], []);
-
-        extraction.Entries.ShouldBeEmpty();
-        extraction.Problems.ShouldBeEmpty();
     }
 
     private static CSharpSources.Source Source(string path, string code) => new(path, CSharpSyntaxTree.ParseText(code));

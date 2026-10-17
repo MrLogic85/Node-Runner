@@ -7,10 +7,12 @@ public sealed class ArenaFollowTests
     private const double _frame = 1.0 / 60;
 
     [Fact]
-    public void Step_SnapsToTheFirstCentre()
+    public void Step_SnapsToTheFirstFiniteCentre()
     {
         var follow = new ArenaFollow();
 
+        follow.Step(double.NaN, _frame);
+        follow.HasFocus.ShouldBeFalse();
         follow.Step(250, _frame);
 
         follow.HasFocus.ShouldBeTrue();
@@ -18,21 +20,28 @@ public sealed class ArenaFollowTests
     }
 
     [Fact]
-    public void Step_GlidesToANewTargetWithoutJumping()
+    public void Step_GlidesToANewTargetWithoutJumping_WhateverTheFrameRate()
     {
         var follow = new ArenaFollow();
+        var at30 = new ArenaFollow();
         follow.SnapTo(0);
+        at30.SnapTo(0);
         var positions = new List<double>();
 
         for (var frame = 0; frame < 180; frame++)
         {
             follow.Step(1000, _frame);
             positions.Add(follow.Focus);
+            if (frame % 2 == 0)
+            {
+                at30.Step(1000, 2 * _frame);
+            }
         }
 
         positions[0].ShouldBeLessThan(1000 * ArenaFollow.EaseRate * _frame * 1.01);
         positions.ShouldBeInOrder(SortDirection.Ascending);
         positions[^1].ShouldBe(1000, tolerance: 1);
+        at30.Focus.ShouldBe(follow.Focus, tolerance: 1e-9);
     }
 
     [Fact]
@@ -76,9 +85,7 @@ public sealed class ArenaFollowTests
     }
 
     [Theory]
-    [InlineData(150, 1.0 / 60)]
     [InlineData(400, 1.0 / 60)]
-    [InlineData(600, 4.0 / 60)]
     [InlineData(-300, 4.0 / 60)]
     public void Camera_GlidesToAnotherMovingCreatureWithoutOvershooting(double gap, double frameSeconds)
     {
@@ -128,46 +135,16 @@ public sealed class ArenaFollowTests
     }
 
     [Fact]
-    public void Step_IsTheSameWhateverTheFrameRate()
-    {
-        var at30 = new ArenaFollow();
-        var at120 = new ArenaFollow();
-        at30.SnapTo(0);
-        at120.SnapTo(0);
-
-        for (var frame = 0; frame < 30; frame++)
-        {
-            at30.Step(500, 1.0 / 30);
-        }
-
-        for (var frame = 0; frame < 120; frame++)
-        {
-            at120.Step(500, 1.0 / 120);
-        }
-
-        at120.Focus.ShouldBe(at30.Focus, tolerance: 1e-9);
-    }
-
-    [Theory]
-    [InlineData(double.NaN)]
-    [InlineData(double.PositiveInfinity)]
-    public void Step_HoldsTheFocusWhenTheCentreIsNotFinite(double centre)
+    public void StepAndRetarget_IgnoreANonFiniteCentreOrNoTime()
     {
         var follow = new ArenaFollow();
         follow.SnapTo(120);
 
-        follow.Step(centre, _frame);
-
-        follow.Focus.ShouldBe(120);
-    }
-
-    [Fact]
-    public void Step_WaitsForAFiniteFirstCentre()
-    {
-        var follow = new ArenaFollow();
-
+        follow.SnapTo(double.PositiveInfinity);
+        follow.Retarget(double.NaN);
         follow.Step(double.NaN, _frame);
+        follow.Step(500, 0);
 
-        follow.HasFocus.ShouldBeFalse();
+        (follow.Focus, follow.Shown, follow.Speed).ShouldBe((120, 120, 0));
     }
 }

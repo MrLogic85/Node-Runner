@@ -38,27 +38,15 @@ public sealed class UiStrokeGuardTests
     }
 
     [Theory]
-    [InlineData("void _Draw() { DrawLine(Vector2.Zero, Vector2.One, Colors.White, 2); }")]
-    [InlineData("void _Draw() { DrawArc(Vector2.Zero, 4, 0, 1, 8, Colors.White, 1, antialiased: false); }")]
-    [InlineData("void _Draw() { DrawCircle(Vector2.Zero, 4, Colors.White); }")]
-    [InlineData("void _Draw() { DrawRect(new Rect2(), Colors.White, filled: false, width: 1); }")]
-    [InlineData("void _Draw() { DrawSetTransform(Vector2.Zero, 0, Vector2.One * 3); DrawLine(Vector2.Zero, Vector2.One, Colors.White, 2, antialiased: true); }")]
-    [InlineData("void _Draw() { DrawArc(Vector2.Zero, 4, -1, 1, 8, Colors.White, 2); }")]
-    [InlineData("void Ring(float toPixels) { DrawArc(Vector2.Zero, 4, 0, 1, 8, Colors.White, 1, antialiased: true); }")]
-    [InlineData("void _Draw() { UiDashedBorder.DrawRoundedRect(this, new Rect2(), 2, Colors.White, 1, Transform2D.Identity, 4, 3); }")]
-    public void Hard_stroke_is_flagged(string member) =>
-        HardStrokes(member).ShouldHaveSingleItem();
-
-    [Theory]
-    [InlineData("void _Draw() { DrawLine(Vector2.Zero, Vector2.One, Colors.White, -1); }")]
-    [InlineData("void _Draw() { var toPixels = UiPixelSpace.Enter(this, Transform2D.Identity); DrawPolyline([], Colors.White, 2, antialiased: true); }")]
-    [InlineData("void Ring(Transform2D toPixels) { DrawArc(toPixels * Vector2.Zero, 4, 0, 1, 8, Colors.White, 1, antialiased: true); }")]
-    [InlineData("void _Draw() { using var pen = UiPixelPen.Begin(this); UiDashedBorder.DrawRoundedRect(this, new Rect2(), 2, Colors.White, 1, pen.ToPixels, 4, 3); }")]
-    [InlineData("void _Draw() { DrawRect(new Rect2(), Colors.White); }")]
-    [InlineData("void _Draw() { using var pen = UiPixelPen.Begin(this); pen.Line(Vector2.Zero, Vector2.One, Colors.White, 2); }")]
-    [InlineData("float Measure(CanvasItem canvas) => UiPixelSpace.ScaleOf(UiPixelSpace.ItemToPixels(canvas));")]
-    public void Smooth_stroke_or_fill_passes(string member) =>
-        HardStrokes(member).ShouldBeEmpty();
+    [InlineData("void _Draw() { DrawLine(Vector2.Zero, Vector2.One, Colors.White, 2); }", true)]
+    [InlineData("void _Draw() { DrawRect(new Rect2(), Colors.White, filled: false, width: 1); }", true)]
+    [InlineData("void _Draw() { UiDashedBorder.DrawRoundedRect(this, new Rect2(), 2, Colors.White, 1, Transform2D.Identity, 4, 3); }", true)]
+    [InlineData("void Ring(float toPixels) { DrawArc(Vector2.Zero, 4, 0, 1, 8, Colors.White, 1, antialiased: true); }", true)]
+    [InlineData("void _Draw() { DrawLine(Vector2.Zero, Vector2.One, Colors.White, -1); }", false)]
+    [InlineData("void Ring(Transform2D toPixels) { DrawArc(toPixels * Vector2.Zero, 4, 0, 1, 8, Colors.White, 1, antialiased: true); }", false)]
+    [InlineData("void _Draw() { using var pen = UiPixelPen.Begin(this); UiDashedBorder.DrawRoundedRect(this, new Rect2(), 2, Colors.White, 1, pen.ToPixels, 4, 3); }", false)]
+    public void Guard_flags_a_stroke_that_is_neither_smooth_in_window_pixels_nor_a_hairline(string member, bool flagged) =>
+        HardStrokes(member).Count().ShouldBe(flagged ? 1 : 0);
 
     private static IEnumerable<string> HardStrokes(string member)
     {

@@ -9,54 +9,18 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class CreationImportWorkflowTests
 {
     [Fact]
-    public void Import_SavesTheBuildUnderANewId_Untrained_WithTheGivenName()
+    public void Import_SavesTheBuildUntrainedUnderANewId_WithTheGivenNameTrimmedAndCut()
     {
         var repository = new InMemoryCreationRepository();
-        var build = Walker("Walker");
+        var build = new CreationDef(Guid.NewGuid(), "Walker", CreationExamples.Walker.Creature);
         var newId = Guid.NewGuid();
+        Should.Throw<ArgumentException>(() => new CreationImportWorkflow(repository).Import(build, "   "));
 
         var creation = new CreationImportWorkflow(repository, () => newId).Import(build, "  Strider ");
+        var again = new CreationImportWorkflow(repository).Import(build, new string('W', 100));
 
-        creation.Id.ShouldBe(newId);
-        creation.Name.ShouldBe("Strider");
-        creation.Creature.ShouldBe(build.Creature);
-        creation.Training.ShouldBeNull();
-        creation.TrainSettings.ShouldBeNull();
-        repository.Get(newId).ShouldBe(creation);
+        creation.ShouldBe(new CreationDef(newId, "Strider", build.Creature));
+        again.Name.ShouldBe(new string('W', NameLimits.Creation));
+        repository.List().Select(saved => saved.Id).ShouldBe([newId, again.Id], ignoreOrder: true);
     }
-
-    [Fact]
-    public void Import_TheSameBuildTwice_GivesTwoCreations_WithTheSameName()
-    {
-        var repository = new InMemoryCreationRepository();
-        var workflow = new CreationImportWorkflow(repository);
-
-        workflow.Import(Walker("Walker"), "Walker");
-        workflow.Import(Walker("Walker"), "Walker");
-
-        repository.List().Select(creation => creation.Name).ShouldBe(["Walker", "Walker"]);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Import_ABlankName_IsRefused(string name)
-    {
-        var repository = new InMemoryCreationRepository();
-
-        Should.Throw<ArgumentException>(() => new CreationImportWorkflow(repository).Import(Walker("Walker"), name));
-        repository.List().ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Import_ANameLongerThanTheLimit_IsCut()
-    {
-        var repository = new InMemoryCreationRepository();
-
-        var creation = new CreationImportWorkflow(repository).Import(Walker("Walker"), new string('W', 100));
-
-        creation.Name.ShouldBe(new string('W', NameLimits.Creation));
-    }
-
-    private static CreationDef Walker(string name) => new(Guid.NewGuid(), name, CreationExamples.Walker.Creature);
 }

@@ -6,7 +6,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 public sealed class ExamplesPresentationViewModelTests
 {
     [Fact]
-    public void Cards_ShowEachExampleWithWhatIsNewAndCopyOnly()
+    public void Cards_ShowEachExampleWithWhatIsNewAndCopyOnly_AndCopyOnlyWhatIsShown()
     {
         var example = CreateExample();
         var viewModel = new ExamplesPresentationViewModel([example]);
@@ -20,22 +20,14 @@ public sealed class ExamplesPresentationViewModelTests
         card.CanOpen.ShouldBeFalse();
         card.CanDuplicate.ShouldBeTrue();
         card.CanDelete.ShouldBeFalse();
+        viewModel.RequestCopy(example.Id).ShouldBe(example.Id);
+        viewModel.RequestCopy(Guid.NewGuid()).ShouldBeNull();
     }
 
     [Fact]
     public void Cards_ByDefault_ShowTheShippedExamples() =>
         new ExamplesPresentationViewModel().Cards.Select(card => card.Id)
             .ShouldBe(CreationExamples.All.Select(example => example.Id));
-
-    [Fact]
-    public void RequestCopy_ReturnsTheExampleOnlyWhenItIsShown()
-    {
-        var example = CreateExample();
-        var viewModel = new ExamplesPresentationViewModel([example]);
-
-        viewModel.RequestCopy(example.Id).ShouldBe(example.Id);
-        viewModel.RequestCopy(Guid.NewGuid()).ShouldBeNull();
-    }
 
     private static CreationExample CreateExample() =>
         new(

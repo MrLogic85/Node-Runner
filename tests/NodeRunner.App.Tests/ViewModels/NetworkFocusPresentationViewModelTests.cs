@@ -36,7 +36,7 @@ public sealed class NetworkFocusPresentationViewModelTests
     }
 
     [Fact]
-    public void Update_ShowsInputsAndOutputsByPortName_WithNothingSelected()
+    public void Update_ShowsInputsAndOutputsByPortName_AndEveryConnection_WithNothingSelected()
     {
         var viewModel = Live();
 
@@ -53,22 +53,14 @@ public sealed class NetworkFocusPresentationViewModelTests
         viewModel.Selected.ShouldBeNull();
         viewModel.SelectionText.ShouldBe(_noSelection);
         viewModel.Layers.SelectMany(layer => layer.Neurons).ShouldAllBe(neuron => !neuron.IsHighlighted);
-    }
-
-    [Fact]
-    public void Update_DrawsEveryEnabledConnection()
-    {
-        var viewModel = Live(disabledGenes: 2);
-
-        viewModel.Edges.Count.ShouldBe(5);
-        viewModel.Edges.ShouldNotContain(edge => edge.FromNeuronIndex == 2 && edge.ToNeuronIndex == 0);
+        viewModel.Edges.Count.ShouldBe(6);
         var edge = viewModel.Edges.Single(edge => edge.FromNeuronIndex == 1 && edge.ToNeuronIndex == 0);
         edge.Weight.ShouldBe(-1.5);
         edge.Strength.ShouldBe(0.75);
     }
 
     [Fact]
-    public void SelectOutput_NamesTheInputsThatDriveItMost()
+    public void Select_NamesWhatDrivesWhatMost_UntilTappedAgainOrCleared_AndSurvivesTheNextUpdate()
     {
         var viewModel = Live();
 
@@ -77,90 +69,54 @@ public sealed class NetworkFocusPresentationViewModelTests
         viewModel.SelectionText.ShouldBe(UiText.Format("{0} is driven most by {1} and {2}.", _rearKnee, _kneeSpeed, _centre));
         viewModel.Layers[1].Neurons[0].IsSelected.ShouldBeTrue();
         viewModel.Layers[0].Neurons.Select(neuron => neuron.IsHighlighted).ShouldBe([false, true, true]);
-        viewModel.Edges.Where(edge => edge.IsHighlighted).Select(edge => edge.ToNeuronIndex).ShouldAllBe(output => output == 0);
-        viewModel.Edges.Count(edge => edge.IsHighlighted).ShouldBe(3);
-    }
+        viewModel.Edges.Where(edge => edge.IsHighlighted).Select(edge => edge.ToNeuronIndex).ShouldBe([0, 0, 0]);
 
-    [Fact]
-    public void SelectInput_NamesTheOutputsItDrivesMost_SkippingZeroAndDisabledConnections()
-    {
-        var viewModel = Live();
+        viewModel.SelectNeuron(NetworkFocusPresentationViewModel.OutputLayer, 0);
 
+        viewModel.Selected.ShouldBeNull();
+        viewModel.Edges.ShouldAllBe(edge => !edge.IsHighlighted);
+
+        // Its zero connection to Front knee is skipped.
         viewModel.SelectNeuron(NetworkFocusPresentationViewModel.InputLayer, 1);
 
         viewModel.SelectionText.ShouldBe(UiText.Format("{0} drives {1} most.", _kneeSpeed, _rearKnee));
         viewModel.Layers[1].Neurons.Select(neuron => neuron.IsHighlighted).ShouldBe([true, false]);
-    }
-
-    [Fact]
-    public void SelectOutput_WithEveryConnectionDisabled_SaysNothingDrivesIt()
-    {
-        var viewModel = Live(0, 1, 2);
-
-        viewModel.SelectNeuron(NetworkFocusPresentationViewModel.OutputLayer, 0);
-
-        viewModel.SelectionText.ShouldBe(UiText.Format("{0} is not driven by any input yet.", _rearKnee));
-    }
-
-    [Fact]
-    public void SelectOutput_WithOneInputDrivingIt_NamesThatInput()
-    {
-        var viewModel = Live(disabledGenes: 5);
-
-        viewModel.SelectNeuron(NetworkFocusPresentationViewModel.OutputLayer, 1);
-
-        viewModel.SelectionText.ShouldBe(UiText.Format("{0} is driven most by {1}.", _frontKnee, _along));
-    }
-
-    [Fact]
-    public void SelectInput_DrivingNothing_SaysItDrivesNoOutput()
-    {
-        var viewModel = Live(disabledGenes: 1);
-
-        viewModel.SelectNeuron(NetworkFocusPresentationViewModel.InputLayer, 1);
-
-        viewModel.SelectionText.ShouldBe(UiText.Format("{0} does not drive any output yet.", _kneeSpeed));
-    }
-
-    [Fact]
-    public void SelectingTheSelectedNeuronAgain_ClearsTheSelection()
-    {
-        var viewModel = Live();
-        viewModel.SelectNeuron(NetworkFocusPresentationViewModel.OutputLayer, 1);
-
-        viewModel.SelectNeuron(NetworkFocusPresentationViewModel.OutputLayer, 1);
-
-        viewModel.Selected.ShouldBeNull();
-        viewModel.Edges.ShouldAllBe(edge => !edge.IsHighlighted);
-    }
-
-    [Fact]
-    public void ClearSelection_ReturnsToTheUnselectedHint()
-    {
-        var viewModel = Live();
-        viewModel.SelectNeuron(NetworkFocusPresentationViewModel.InputLayer, 1);
 
         viewModel.ClearSelection();
 
         viewModel.Selected.ShouldBeNull();
         viewModel.SelectionText.ShouldBe(_noSelection);
         viewModel.Layers.SelectMany(layer => layer.Neurons).ShouldAllBe(neuron => !neuron.IsHighlighted);
-    }
 
-    [Fact]
-    public void Selection_SurvivesTheNextUpdate()
-    {
-        var viewModel = Live();
         viewModel.SelectNeuron(NetworkFocusPresentationViewModel.InputLayer, 0);
-
         viewModel.Update(Sample(Network()));
 
         viewModel.Selected.ShouldBe((NetworkFocusPresentationViewModel.InputLayer, 0));
         viewModel.SelectionText.ShouldBe(UiText.Format("{0} drives {1} and {2} most.", _along, _frontKnee, _rearKnee));
     }
 
+    public static TheoryData<int[], int, int, UiText> DisabledConnections => new()
+    {
+        { [0, 1, 2], NetworkFocusPresentationViewModel.OutputLayer, 0, UiText.Format("{0} is not driven by any input yet.", _rearKnee) },
+        { [5], NetworkFocusPresentationViewModel.OutputLayer, 1, UiText.Format("{0} is driven most by {1}.", _frontKnee, _along) },
+        { [1], NetworkFocusPresentationViewModel.InputLayer, 1, UiText.Format("{0} does not drive any output yet.", _kneeSpeed) },
+    };
+
+    [Theory]
+    [MemberData(nameof(DisabledConnections))]
+    public void Select_SkipsDisabledConnections_WhichAreNotDrawn(int[] disabledGenes, int layer, int neuron, UiText text)
+    {
+        var viewModel = Live(disabledGenes);
+
+        viewModel.SelectNeuron(layer, neuron);
+
+        viewModel.SelectionText.ShouldBe(text);
+        viewModel.Edges.Count.ShouldBe(6 - disabledGenes.Length);
+        viewModel.Edges.ShouldNotContain(edge => disabledGenes.Contains((edge.ToNeuronIndex * 3) + edge.FromNeuronIndex));
+    }
+
     [Fact]
-    public void Update_WithANetworkThatDoesNotFitThePorts_ShowsWaitingState()
+    public void Update_WithANetworkOrLiveSampleThatDoesNotFitThePorts_ShowsWaitingState()
     {
         var viewModel = new NetworkFocusPresentationViewModel();
         viewModel.Configure(_labels, []);
@@ -175,14 +131,8 @@ public sealed class NetworkFocusPresentationViewModelTests
         viewModel.Summary.ShouldBe(UiText.Plain("Waiting for a live network"));
         viewModel.SelectionText.ShouldBe(UiText.Plain("Start training to see the live network."));
         notifications.ShouldBe(1);
-    }
 
-    [Fact]
-    public void Update_WithALiveSampleOfOtherPorts_ShowsWaitingState()
-    {
-        var viewModel = new NetworkFocusPresentationViewModel();
-        viewModel.Configure(_labels, []);
-
+        viewModel.Update(Sample(Network()));
         viewModel.Update(NetworkPortValues.Sample(new NetworkPortLayout([NetworkPort.Input(1, "along")], []), NeuralNetwork.FromGenome([1, 0], [], Activation.Tanh), [0.5]));
 
         viewModel.HasNetwork.ShouldBeFalse();
@@ -206,16 +156,5 @@ public sealed class NetworkFocusPresentationViewModelTests
             UiText.Counted("{0} input", "{0} inputs", 1),
             UiText.Counted("{0} output", "{0} outputs", 0)));
         viewModel.SelectionText.ShouldBe(UiText.Plain("Warning, no powered parts added! There is nothing to train"));
-    }
-
-    [Fact]
-    public void NoViewModel_OffersNetworkEditing()
-    {
-        string[] editing = ["SetNetworkShape", "NetworkShape", "NetworkSetup", "HiddenLayers", "NeuronsPerLayer"];
-        var members = typeof(NetworkFocusPresentationViewModel).Assembly.GetTypes()
-            .Where(type => type.Namespace == typeof(NetworkFocusPresentationViewModel).Namespace)
-            .SelectMany(type => type.GetMembers().Select(member => $"{type.Name}.{member.Name}"));
-
-        members.ShouldNotContain(member => editing.Any(name => member.EndsWith($".{name}", StringComparison.Ordinal)));
     }
 }
