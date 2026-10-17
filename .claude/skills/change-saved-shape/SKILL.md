@@ -5,8 +5,7 @@ description: Change what Node Runner saves in creation.json or progression.json,
 
 # Change a saved shape
 
-`docs/SAVE_FORMAT.md` → "Versions and migration" owns the rules,
-including when a change needs a migration; this skill owns the steps.
+`docs/SAVE_FORMAT.md` → "Versions and migration" owns the rules.
 
 1. Decide by "Changing a saved shape" whether the change needs a
    migration. If not, record why in "Versions and migration" and skip

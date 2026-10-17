@@ -5,9 +5,8 @@ description: Write docs/release-notes/X.Y.Z.md, the player-facing text and scree
 
 # Write release notes
 
-`.claude/rules/release-notes.md` owns what goes in the notes, how they
-read and the pictures; read it first. This skill owns the steps. Read
-`LOCAL_CONFIG.md` for the `gh` login.
+Read `.claude/rules/release-notes.md` first: it owns what goes in the
+notes. Read `LOCAL_CONFIG.md` for the `gh` login.
 
 1. List the rule's "Sources". For a milestone, `prev` is the newest
    release reachable from `main`, and the fixes already shipped are on

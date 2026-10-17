@@ -5,9 +5,8 @@ description: Review a Node Runner change with the review agents before it is com
 
 # Review a change
 
-`docs/REVIEW.md` → "Choosing reviewers" owns which reviewer a diff
-selects, "Review receipts" owns when review runs and what a push needs,
-and "Definition of Done" owns the gate; this skill owns the steps.
+Rules: `docs/REVIEW.md` → "Choosing reviewers", "Review receipts" and
+"Definition of Done".
 
 1. Fix the exact change under review, as "Review receipts" measures it:
    - before the commit: stage it with `git add -A`, or name its paths
@@ -17,7 +16,7 @@ and "Definition of Done" owns the gate; this skill owns the steps.
    - someone else's PR: `gh pr diff N`.
 2. Select the reviewers by "Choosing reviewers".
 3. Run the selected agents in parallel as subagents, each with this
-   prompt, and give `design-lead` the evidence "Choosing reviewers" names:
+   prompt, and give `design-lead` the evidence its file asks for:
 
    ```text
    Review `<diff command>` for <issue URL>.
@@ -35,8 +34,8 @@ and "Definition of Done" owns the gate; this skill owns the steps.
    with a short reason. File an issue with the `create-issue` skill only
    where it asks for one.
 5. After a fix that changes behaviour or design, repeat steps 1, 3 and 4
-   on the new diff with only the reviewers the corrective change selects
-   ("Review receipts"). A simple, local fix needs no new review.
+   on the new diff with only the reviewers the fix selects ("Review
+   receipts").
 6. For your own change, record the receipt. Write each reviewer's
    findings and their dispositions, or "No findings", and for each fix
    whether it was re-reviewed or simple, to

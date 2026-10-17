@@ -1,12 +1,11 @@
 # UI direction
 
 How the app's UI looks, and why. `reference design/` gave the app its look,
-words and flows and is still the place to start for a new screen or control,
-but it is a guide, not the source of truth: where the two differ, the app and
-these docs win, and the reference is never edited to match. How the world
-itself is drawn (parts, selection, shadows, arena marks) is in
-`docs/WORLD_VISUALS.md`. Code rules for the UI library are in
-`.claude/rules/ui-lib.md`.
+words and flows and is still the place to start for a new screen or
+control, but it is a guide, not the source of truth: where the two differ,
+the app and these docs win, and the reference is never edited to match.
+How the world itself is drawn is in `docs/WORLD_VISUALS.md`; how the UI
+library's code is written is in `.claude/rules/ui-lib.md`.
 
 ## Who owns what
 
@@ -19,11 +18,9 @@ Each UI decision has one owner. A layer below never overrides the one above.
 | Screen scenes: `project/scenes/screens` | Layout: which components, their order, containers, separations, margins, a slot's minimum size, and text | Restyle a component (colour, font, font-size or stylebox overrides) or change its dimensions |
 | C#: view-models in `NodeRunner.App`, screen scripts in `project/src/ui/screens` | Functionality: state, rules, actions, formatting | Build a screen's static layout in code or restyle components |
 
-Whoever authors a layout value owns it; code never re-applies a value a
-scene already stores
-([#331](https://github.com/MrLogic85/Node-Runner/issues/331)). What a library
-component derives in code is never saved in a scene
-([#309](https://github.com/MrLogic85/Node-Runner/issues/309)).
+Whoever authors a layout value owns it, so code never re-applies a value a
+scene already stores, and what a library component derives in code is
+never saved in a scene.
 
 ## Product feel
 
@@ -38,93 +35,88 @@ component derives in code is never saved in a scene
 
 ## Visual fidelity standard
 
-The app's UI library and its finished screens are the visual standard. A
-change matches their tokens, typography, spacing, radius, stroke widths,
-glow, proportions and hierarchy, and reuses library components instead of
+The UI library and the finished screens are the visual standard. A change
+matches their tokens, typography, spacing, radius, strokes, glow,
+proportions and hierarchy, and reuses library components instead of
 restyling them. A difference from `reference design/` is not a bug by
-itself; inconsistency inside the app is: two screens that style the same
-thing differently, a one-off colour or size, or a control that departs from
-its library component.
+itself; inconsistency inside the app is: the same thing styled two ways, a
+one-off colour or size, or a control that departs from its library
+component.
 
 ## Tokens
 
-Colours, opacities and typography are Theme items, one set per theme (Neon,
-Paper), which differ only in colour, soft-fill alpha and glow. Neon is one
-skin: layout, state and names never depend on it. Dimensions are constants
-every theme shares (`.claude/rules/ui-lib.md` → "Theme and tokens").
+Colours, opacities and typography are Theme items, one set per theme
+(Neon, Paper), which differ only in colour, soft-fill alpha and glow. Neon
+is one skin: layout, state and names never depend on it. Dimensions are
+constants every theme shares (`.claude/rules/ui-lib.md` → "Theme and
+tokens").
 
 ### Reference token mapping deviations
 
-Every reference token has a named Godot mapping or a reason here, so a later
-token import does not bring back a dead one.
+Every reference token has a Godot mapping or a reason here, so a later
+token import does not bring a dead one back.
 
-- **`detail`** marks passive parts and passive details, which the network
-  neither drives nor reads: the Spring's coil (#1059), the Brake (#1041),
-  the Servo's Fixed-link band and picker icon. A Target-link band stays
-  `accent` on a Brake too: the band colours name the side, not who drives
-  it. Structure (beams, joints, rods, seats,
-  bodies) stays `line-strong` and `panel`. `accent` marks what the network
-  drives or reads.
-- **`*-glow` colours** are not imported. CSS needs them only because it
-  cannot derive an alpha variant; `UiGlow` derives glow from the base colour,
-  and Paper turns glow off with `effects_enabled`.
-- **`accent-soft`** is not a colour: it is any base colour at the theme's
-  `alpha_soft` (Neon 31, Paper 26, out of 255). It also sets a Touch
-  sensor's cushion at rest (#1045), the one world part in `accent-soft`.
-  `alpha_shadow` (82, 0.32 in both themes) is the opacity of every Training
-  shadow but the followed one (#385).
-- **`shadow.glow`** is not imported. A CSS blur radius has no 1:1
-  `StyleBoxFlat` equivalent, so `UiGlow` owns the Android-reviewed values
-  (extent 10, opacity 12%) for every glowing surface.
+- **`detail`** marks passive parts and details, which the network neither
+  drives nor reads: a Spring's coil, a Brake, a Servo's Fixed-side band
+  and picker tint. A Target-side band stays `accent` on a Brake too: the
+  band colours name the side, not who drives it. `accent` marks what the
+  network drives or reads. Structure (beams, joints, rods, seats, bodies)
+  stays `line-strong` on `panel`.
+- **`accent-soft`** is not a colour but any base colour at the theme's
+  `alpha_soft`. **`alpha_shadow`** is the opacity of every Training shadow
+  but the followed one.
+- **`*-glow` colours** and **`shadow.glow`** are not imported. CSS needs
+  glow colours only because it cannot derive an alpha variant, and a CSS
+  blur has no 1:1 `StyleBoxFlat` equivalent, so `UiGlow` derives every
+  glow from the base colour with values reviewed on Android. Paper turns
+  glow off with `effects_enabled`.
 - **Dimension tokens** are code constants (see Tokens).
 
 ## Screen size and safe area
 
-The canvas grows as `reference design/README.md` → "Screen size" describes,
-and parts keep their size. A screen narrower than 16:9 keeps 640 units of
-width and gains height. 640 × 360 is the smallest canvas the layouts fit,
-not a fixed size. The Creations card row keeps its 16:9 height (#520).
+The canvas grows as `reference design/README.md` → "Screen size"
+describes, and parts keep their size. A screen narrower than 16:9 keeps
+640 units of width and gains height; 640 × 360 is the smallest canvas the
+layouts must fit, not a fixed size. The Creations card row keeps its 16:9
+height.
 
-The app runs immersive in both landscape orientations (#513). Godot asks
-Android for `userLandscape`, which keeps to the rotation lock. Only the
-camera cutout is avoided: the card holding the content is inset, and the
-background still reaches the screen edge. Content that needs more room is
-clipped inside the frame and toolbar (#737).
+The app runs immersive in both landscape orientations, keeping to the
+rotation lock (`userLandscape`). Only the camera cutout is avoided: the
+card holding the content is inset, and the background still reaches the
+screen edge. Content that needs more room is clipped inside the frame, not
+pushed off screen.
 
 ## UI size
 
-The UI size (#299, #738) is how many device pixels one canvas unit is, as a
-percentage: 100% is one pixel per unit. It scales everything around the
-arena and the Build canvas uniformly, touch targets included, with no
-floor; the world views keep their size and get the space left.
+The UI size is how many device pixels one canvas unit is, as a
+percentage. It scales everything around the arena and the Build canvas
+uniformly, touch targets included; the world views keep their size and
+get the space left.
 
-- **Auto**, the default, is one unit per Android dp, snapped to 5%, because
-  the reference is drawn in CSS pixels, which are about dp. A tablet gets
-  more canvas, not a bigger UI.
-- **Max** is the largest size, floored to 5%, at which a 640 × 360 canvas
-  fits the safe area.
-- **Min** is 50%.
+- **Auto**, the default, is one unit per Android dp, because the reference
+  is drawn in CSS pixels, which are about dp. A tablet gets more canvas,
+  not a bigger UI.
+- **Max** is the largest size at which a 640 × 360 canvas fits the safe
+  area. **Min** is 50%.
 
-On an S25 Auto is 280% and Max 300%. Auto and Max follow the window; a
-fixed size is limited to the range. Colors & Styles sets the UI size for the
-session (Settings: #201).
+Auto and Max follow the window; a fixed size is limited to the range.
+Until Settings exists (#201), Colors & Styles sets the UI size for the
+session.
 
 ## Touch and press feedback
 
-- **Tap only.** Nothing is press-and-hold (#866); where care is needed, a
-  dialog names the action.
+- **Tap only.** Nothing is press-and-hold; where care is needed, a dialog
+  names the action.
 - **No hover look** (`.claude/rules/ui-lib.md` → "Input and press
   feedback").
-- **No touch margins** (#275), unlike the reference's 40-in-48 targets.
-  Buttons are 40 high in a row, 32 compact and 48 × 48 stacked; toolbar
-  icon actions are stacked (#964). A segment
-  is at least 48 wide and 40 high.
-- **Press tint** (#286, #325): a held control shows one flat `accent` tint
-  at `alpha_soft` inside its corners, with no ripple or animation. Sliding
-  off or scrolling cancels it. Destructive controls tint `danger`, Primary
-  ones on-accent (#964). Selected and disabled controls, and controls whose
-  press already changes something (tabs, segments, sliders, part rows, the
-  Network stage card, NetworkFocus rows), show none.
+- **No touch margins,** unlike the reference's 40-in-48 targets: a
+  control's hit area is its drawn size.
+- **Press tint:** a held control shows one flat `accent-soft` tint inside
+  its corners, with no ripple or animation; `danger` on destructive
+  controls, on-accent on Primary ones. Sliding off or scrolling cancels it.
+  Controls whose press already changes something (tabs, segments,
+  sliders, part rows, stage cards) and selected or disabled ones show
+  none.
 
 ## Components
 
@@ -133,160 +125,97 @@ The Component Gallery shows every component; these are the decisions.
 ### Reference component mapping
 
 `UiComponentContracts.ReferenceEntryFor` maps each component to its `c_*`
-entry (#315). The entries that are not a component of their own (#306):
+entry. The entries with no component of their own
+(`ReferenceEntriesWithoutComponent`):
 
-- **`c_round_button`** is `UiSelectionHandle`, which `UiInfoRow` also
-  draws; tool help rows show only a muted glyph (#706).
-- **`c_rows`** is a plain container with a `space-1` gap and an optional
-  danger Delete (#343).
-- **`c_expand`** is `UiExpandSection`, which folds rows such as Advanced
-  (#928): a `control-sm` `Overline` `muted` header with a chevron, no border
-  or fill.
-- **`c_hint`** is `UiHintCard`, the slider hint at the canvas's top right
-  (#867).
-- **`c_bar_cell`** is `UiBarCell`, a cell of the shadow strip (#791).
-- **`c_status`** is Build's readiness chip, a `UiChip` (see "Build" under
-  "Screens").
-- **`c_prog`, `c_meter`** are a `UiSlider` with two Rounded ends.
-- **`c_power`** and read-only facts are `UiValueRow`.
-- **`c_card_actions`** is `UiCardActions`, a bar of text cells.
-- **`c_textfield`** in a bar fills the toolbar width rather than sizing to
-  its text (#485).
-- **`c_call` in a figure** is `UiCalloutLayer` (#593); the look is in
-  `docs/WORLD_VISUALS.md` → "Build canvas". A callout may carry
-  `UiCalloutLine`s of `UiMeterBar`s under its text (#1064), each with an
-  optional heading (#1150), and further `UiCalloutSection`s below a
-  hairline, each its own glyph, text and lines (#1066); their look is in
-  `docs/WORLD_VISUALS.md` → "Port bars" and "Part callout".
+- **`c_inspector`** is Build's Part settings panel, authored in its scene.
+  **`c_panel_head`** is `UiSidePanel`'s own header, and **`c_rows`** a
+  plain container with a `space-1` gap and an optional danger Delete.
+- **`c_status`** is Build's readiness chip, a `UiChip` (Screens → Build).
 - **`c_fact_row`** is an authored row of a `UiIcon` and two `UiLabel`s,
-  as on Import (#899). The trailing count's `BaselineOf` names the label
-  before it, so the two stand on one baseline in their different fonts
-  (#1232).
+  as on Import. The trailing count's `BaselineOf` names the label before
+  it, so the two stand on one baseline in their different fonts.
 - **`c_field_line`** is `UiTextField`'s one line: its error, or else its
-  muted `FactSource` (#1061).
-- **`c_panel_head`** is dropped; a side panel's header is `UiSidePanel`'s
-  own row.
+  muted fact.
 
 ### Buttons and icons
 
 - **Kinds:** Primary, Secondary (default), Tertiary (destructive) and Flat.
-- **Unavailable** (#841): dashed and dimmed like disabled, but tappable, so
-  the screen can say why: a later version, what blocks the action, as
-  danger notes on the parts that block it (#844, #937), also when it is
-  the lock that makes them block it (#990), or a locked Creation, as a
-  notification (#896); a locked Delete shows both (#987).
-  It has no lock glyph, which would read as the creation padlock.
-- **Icon sizes** (#358, #422): 16 beside text, 20 on a textless or stacked
-  button and in a `touch` row, 16 in a `control-sm` row or inside a ring,
-  12 on a chip (16 for a part glyph, never 12). Only the canvas Move handle
-  is filled `accent-soft`.
-- **Icon files** (#1029): one folder, `project/assets/icons/`, each file
-  named `<kind>_<name>.svg` in snake_case, where the kind is `icon` for a
-  UI icon, `part` for a part glyph and `mark` for a mark. Kinds are named,
-  not nested, so a file says what it is. `icons/app/` holds the launcher
-  art, not icons.
-- **Icon drawing** (#1010): every UI icon is drawn 16 on its longer side,
-  centred on a plain 24 viewBox, so icons side by side match in size and
-  air. Part glyphs keep their 20 grid. A mark echoes the launcher glyph
-  and is the one icon drawn 20 on the 24 grid, larger than its
-  neighbours: at the shared stroke a network drawn 16 fills into lumps
-  (#1018). `icon_network` keeps the 16 rule by stopping its lines short of
-  the middle column. `UiIconGridTests` reads each file's kind from its
-  prefix and enforces its grid.
+- **Unavailable:** dashed and dimmed like disabled, but tappable, so the
+  screen can say why: a later version, a locked Creation, or danger notes
+  on the parts that block the action. It has no lock glyph, which would
+  read as the creation padlock.
+- **Icon sizes:** 16 beside text, 20 on a textless or stacked button and
+  in a `touch` row, 16 in a `control-sm` row or inside a ring, 12 on a
+  chip (16 for a part glyph, never 12). `ContentLayout` picks it.
+- **Icon files:** one folder, `project/assets/icons/`, each file named
+  `<kind>_<name>.svg`, where the kind is `icon` (UI icon), `part` (part
+  glyph) or `mark`. Kinds are named, not nested, so a file says what it
+  is. `icons/app/` holds the launcher art, not icons.
+- **Icon drawing:** every UI icon is drawn 16 on its longer side, centred
+  on a plain 24 viewBox, so icons side by side match in size and air. Part
+  glyphs keep their 20 grid. A mark echoes the launcher glyph and is drawn
+  20 on the 24 grid, since at the shared stroke a network drawn 16 fills
+  into lumps. `UiIconGridTests` enforces each kind's grid.
 - **Toggles and checkboxes:** transparent rows with solid indicator
   outlines; a disabled row is 50% opacity, not dashed.
-- **Segmented switch:** the selected segment has an `accent-soft` fill and a
-  2 px outline; its icon does not change (#247).
+- **Segmented switch:** the selected segment has an `accent-soft` fill and
+  an outline; its icon does not change.
 
 ### Popups
 
 Dialogs (centred) and notifications (bottom centre, one at a time) share
-`UiPopupCard`; border and glow take the type colour: `accent`, `halo`,
-`danger` (#355). Only Warning and Danger show an overline, unlike the
-reference (#692). Actions are text cells in a `UiCardActions` bar flush with
-the frame (#353): Default uses Primary, Danger uses Tertiary, Cancel is
-Secondary, and Warning actions use Flat (#964). A dialog covers
-notifications; a notification waits until it closes. A notification with an
-`Id` is not queued again while that Id shows or waits; a repeat restarts the
-showing one's time. A `Replaceable` notification gives way to any newer one,
-closing at once or leaving the queue: tap answers such as Build's lock and
-"comes in version" notes use both (#1004). A failed copy shows the same
-Danger notification whether it started in Creations, Examples or Build,
-built once in `CreationActions.TryCopy` (#1013); a failed import shows its
-own, built beside it in `CreationActions.TryImport` (#899). A failed user
-action uses a Danger notification titled "<Action> failed", with the
-action's icon where one exists: "Create failed" with Plus, "Start failed"
-with Play (#1015). For a specific action, prefer "Could not <verb>
-<object>. Try again." Generic UI-boundary failures may say "The action
-could not be completed. Please try again.", and save failures may say what
-stayed unsaved. Route and state-validation notices, such as a missing
-creation or a training prerequisite, are not action failures and stay
-Default; dialog-inline errors and log-only failures are not notifications.
-A copy to the
-clipboard confirms through `UiClipboard.Copy` at once, beside Android's own
-toast (#1178).
+`UiPopupCard`, whose border and glow take the type colour. Only Warning
+and Danger show an overline. Actions are text cells in a `UiCardActions`
+bar flush with the frame; the confirm action is Primary, Tertiary on a
+Danger popup and Flat on a Warning one. A dialog covers notifications.
+Notification `Id` and `Replaceable` keep repeated tap answers, such as
+Build's lock note, from piling up.
+
+- A failed user action is a Danger notification titled "<Action> failed",
+  with the action's icon where one exists ("Create failed" with Plus).
+  Its text prefers "Could not <verb> <object>. Try again."; save failures
+  may say what stayed unsaved. One action fails with the same
+  notification wherever it starts.
+- Route and state notices, such as a missing creation or a training
+  prerequisite, are not failures and stay Default. Dialog-inline errors
+  and log-only failures are not notifications.
+- A copy to the clipboard confirms at once (`UiClipboard.Copy`), beside
+  Android's own toast.
 
 ### Menus and pickers
 
-Menus have no row hairlines, unlike the reference (#696); spacing and the
-press tint separate rows. A menu has one density, Standard (48) or Compact
-(32), and clips its square highlights to its rounded surface. A divider is a
-`line` hairline. A `UiPicker` with nothing picked shows its prompt in
-`danger`. A `UiPicker` has no width of its own: it fills its parent, its value
-ends in an ellipsis, and its list opens as wide as the field (#1127).
-Its list always opens below its row, never over its own heading (#1139).
-When the list runs past the screen, the player scrolls the side panel,
-also by dragging on the list, and the list follows its row; a drag never
-picks an option. Other following menus, such as the toolbar's overflow,
-open upward when there is no room below.
-Unlike the reference, which tints every option in the Servo's Fixed part
-picker `detail` and every option in its Target part picker `accent`, only
-the current Fixed part (`detail`) and Target part (`accent`) are tinted, in
-both lists, to match the canvas bands. An option with no role keeps its
-structure colour, `line-strong`; `muted` would make an option that can be
-picked look disabled (#1130).
+- Menus have no row hairlines, unlike the reference; spacing and the press
+  tint separate rows. A menu has one density, Standard or Compact.
+- A `UiPicker` fills its parent, ends its value in an ellipsis, and opens
+  its list as wide as the field, always below its row, never over its own
+  heading. A long list scrolls with the side panel. Other menus, such as
+  the overflow, open upward when there is no room below.
+- A picker with nothing picked shows its prompt in `danger`.
+- In a hinge part's side pickers only the current Fixed part (`detail`)
+  and Target part (`accent`) are tinted, in both lists, to match the
+  canvas bands; the reference tints every option. Other options keep
+  `line-strong`, since `muted` would make them look disabled.
 
-### Shell: toolbar, button bar, side panel
+### Shell and panels
 
-The shell is filled `panel` over the frame card's `bg` (#347).
-
-- **`UiToolbar`** (#319): 48 high. Content that does not fit scrolls
-  sideways. Creations has no Back and insets its title 48 to match.
-- **`UiButtonBar`** (#320): 56 wide, with an `edge` divider, not the
-  reference's `line`. Locked tools keep the 20 px icon.
-- **`UiSidePanel`** (#321): 176 wide, its header an optional icon and title
-  and a bare 16 px `muted` chevron. Content scrolls under the header. The
-  chevron collapses it in 200 ms to a 28 px tab with the title on its side,
-  in Label letter spacing rather than the reference's 0.08em.
-
-### Cards, sliders, value rows, tray tabs
-
+- The shell is filled `panel` over the frame card's `bg`. A toolbar's
+  content scrolls sideways when it does not fit, and a toolbar text field
+  fills the toolbar's width rather than sizing to its text.
+- `UiButtonBar` takes an `edge` divider, not the reference's `line`.
+- `UiSidePanel` collapses to a narrow tab with its title on its side, in
+  Label letter spacing rather than the reference's 0.08em.
 - **Cards:** content flush with a card's edge rounds the corners it shares
-  with it. Card action text is `accent` for Primary, `danger` for Tertiary
-  and `ink` otherwise.
-- **Sliders:** each end is Rounded, Thumb or Marker. Where selected parts
-  differ the readout shows `low–high` between Marker ends, with no thumb
-  (#704). Uneven stops sit evenly along the track (#801). `TouchStarted`
-  and `TouchEnded` bracket a finger on a slider: it ends when the finger
-  lifts, even after a scroll took over, or when the slider is disabled or
-  hidden. A disabled slider is dashed; one the screen can explain answers
-  a tap (`DisabledPressed`, not after a scroll began) like an Unavailable
-  button (#578).
-- **Hint card** (`UiHintCard`, #867): a `UiCard` that ignores input, fades
-  in over 0.12 s, and after `HideAfterLinger` stays `LingerSeconds` (2 s)
-  then fades out over 0.2 s. The scene that uses it authors its children.
-- **Value rows:** label left, readout right, no padding.
-- **Tray tabs** (#330): glyph tabs sharing the strip's width, 4 px apart, 32
-  high, selected with `accent-soft`; also used for the "On this joint"
-  strip in Part settings (#1044). **Tray rows** are `control-sm`
-  `UiPartRow`s with 20 px glyphs; a locked row shows only its lock and fades
-  whole (#374, #964). A row is a native button: a tap that does not turn
-  into a drag picks it (#805). The picked row has an `accent-soft` fill, an
-  `accent` signal border and an `accent` glyph, and a `UiPickList` fades its
-  info line in right under it over 0.12 s, in the Parts tray and the Links
-  list alike. A locked row answers a tap with a notification
-  titled after the screen, with the padlock icon (#896, #992); its text
-  is Build's (`docs/BUILD_MODE.md` → Locked Build).
+  with it.
+- **Sliders:** where selected parts differ, the readout shows `low–high`
+  between Marker ends, with no thumb. Uneven stops sit evenly along the
+  track. A disabled slider is dashed; one the screen can explain answers a
+  tap like an Unavailable button.
+- **Tray rows and tabs:** glyph tabs share the strip's width, selected
+  with `accent-soft`; Part settings' "On this joint" strip reuses them. A
+  locked row shows only its lock and fades whole. The picked row has an
+  `accent-soft` fill, an `accent` border and glyph, and its info line
+  fades in right under it, in the Parts tray and the Links list alike.
 
 ## Screens
 
@@ -295,134 +224,107 @@ What each screen does is in `docs/BUILD_MODE.md` and
 
 ### Creations
 
-A card shows its creature, "12 generations", and the latest result as one
-stat per row with its unit, not the reference's bare numbers in one row
-(#479, #846). The `distance` icon is `|->` and `elevation` lies on its side.
-The trophy is Unavailable (#199).
+A card shows its creature, its generations and the latest result as one
+stat per row with its unit, not the reference's bare numbers in one row.
+The trophy is Unavailable until achievements exist (#199).
 
 ### Import
 
-Import creation in Creations' overflow menu (`icon_paste`) opens it (#899).
-Its toolbar holds Back, the title, Paste and Add to Creations, enabled
-only while a build shows and its name is not blank. The next step is the
-one Primary: Paste until a build shows, then Add (#1061).
-There is no field for the code: Paste reads the clipboard only when
-tapped. The left card says what to do, shows the build, or shows why the
-code was refused under a danger `icon_warn`. The build draws on Build's
-grid, as large as Build at 1:1, never larger: what it previews is what
-Build opens with (cards stop at half and show no grid). It does not pan
-or zoom (#1061). Beside it, a column at least 176 px wide holds a Name
-field with the build's name, a muted "You already have one by this
-name." under it while a creation has that name (the reference's "You
-already have a {0}." fits no article to every name or language), one
-authored row per kind of part it has (icon, name in `Body`, count in
-`ReadoutSmall`, no border: they are facts, not buttons), and a muted
-"Shared creations come untrained.", then, for a code from an older
-version, the warn icon in `halo` beside a muted "Shared from an older
-version, import may differ from original." (#1094), like Train setup's
-Shadows note. Add saves it
-under that name and opens it in Build in place of Import, like an
-example's Copy. Build's Share build uses `icon_share`, three linked nodes,
-and confirms with a "Code copied" notification.
+Import previews a pasted build before it is added. There is no field for
+the code: Paste reads the clipboard only when tapped. Paste is the Primary
+until a build shows, then Add to Creations. The preview draws on Build's
+grid at Build's true size, never larger, so it shows what Build opens
+with. Beside it, the parts are fact rows, not buttons. The reference's
+"You already have a {0}." fits no article to every name or language, so
+the app says "You already have one by this name.".
 
 ### Build
 
-- **Rail:** Joint, Links, Parts, Select, and the Primary play button at
-  the bottom in every state (#370, #706). Parts uses the project's own
-  `icon_parts.svg`: three tiles and a lifted diamond.
-- **Top bar:** the name field, padlock, Undo and Redo as Secondary icon
-  buttons (#689), and the overflow, where Stats (#198) and Power budget say
-  "Coming soon".
-- **Side panel:** the tool's panel or the selection's settings
-  (`docs/BUILD_MODE.md`).
-- **Part copy** (#1297): a part's description (`PartInfo`) is one short
-  sentence to take in at a glance, saying what the part does, not how it is
-  wired or what else it needs. A placement hint is at most one short
-  sentence. Neither lists other parts by name.
-- **Readiness** (#1163): a `c_chip` at the canvas's bottom right,
-  `space-3` in, says whether the creature can train: `accent` with a check
-  when ready, `danger` with a warning and a short counted reason when
-  blocked, and neutral with the Joint icon on an empty canvas, which is a
-  start rather than a fault. It is one line, so every reason has a short
-  form. It shows in every Build state and takes no taps; parts pass under
-  it, and the selection handles and callouts draw over it.
-- **Setting hint** (#867): a finger on a Part settings slider shows a
-  240 px `Frame` hint card at the canvas's top right, `space-3` in: the
-  setting's name in `Overline` `accent` over one `Body` `ink` line, no icon.
+- **Rail:** the tools and the Primary play button at the bottom in every
+  state.
+- **Top bar:** the name field, padlock, Undo, Redo and the overflow.
+- **Part copy:** a part's description (`PartInfo`) is one short sentence
+  saying what the part does, not how it is wired or what else it needs. A
+  placement hint is at most one short sentence. Neither names other parts.
+- **Readiness:** a chip at the canvas's bottom right says whether the
+  creature can train: `accent` with a check when ready, `danger` with a
+  warning and a short reason when blocked, and neutral with the Joint icon
+  on an empty canvas, which is a start rather than a fault. It is one
+  line, so every reason has a short form. It takes no taps, and it is not
+  a callout, so it never reads as a note whose part is missing.
+- **Setting hint:** a finger on a slider shows a hint card at the canvas's
+  top right: the setting's name in `Overline` `accent` over one `Body`
+  line, no icon.
 
 ### Train setup
 
-Shadows and Run length are `UiSlider`s; in Simulate both are empty dashed
-tracks, off their scale. A creature with no powered part gets a `halo` warn
-row at the top. The note under Shadows is `muted`, or the warn icon in
-`halo` or `danger` (#318). Locked maps are disabled cards with a lock, not
-the library's `Locked` card ("the only choice"); each card shows a
-`MapPreview`, `accent` on the map in use. There are no profiles (#194).
+Shadows and Run length are `UiSlider`s. A creature with no powered part
+gets a `halo` warn row at the top. Locked maps are disabled cards with a
+lock, not the library's `Locked` card ("the only choice"); each card shows
+a `MapPreview`, `accent` on the map in use. There are no profiles.
 
 ### Training
 
-The signal flow is a collapsible `UiSidePanel` titled "Status" (#813). The
-"Generation 37" caption ends in a bare `UiSlider` filling as the run goes by
-(#715). Only the Network stage looks like a button, Raised with glow; the
-other stages are plain frames without glow (#847). Only the followed
-shadow's strip cell is marked (`accent`). Stats is Unavailable (#198).
+The signal flow is a collapsible `UiSidePanel` titled "Status". Only the
+Network stage looks like a button, raised with glow; the other stages are
+plain frames. Only the followed shadow's strip cell is marked (`accent`).
+Stats is Unavailable (#198).
 
 ### NetworkFocus
 
-NetworkFocus shows the direct network, inputs straight to outputs (#536; hidden
-layers: #549). The sheet is titled "Network", after the stage that opens it;
-NetworkFocus is the component's name, not player copy.
+NetworkFocus shows the direct network, inputs straight to outputs (hidden
+layers: #549). The sheet is titled "Network", after the stage that opens
+it; NetworkFocus is the component's name, not player copy.
 
-- "INPUTS" and "OUTPUTS" (#660, #1155) sit over the label columns, flush with
-  their inner edge; the sheet's margins are 12 (bottom 8).
-- Every row keeps its `Caption` label (#908), at least one line apart;
-  rows scroll under the pinned headings.
+- "INPUTS" and "OUTPUTS" head the label columns; rows scroll under them.
+- Every row keeps its label, at least one line apart.
 - Only the tapped neuron gets the `halo` ring; its strongest partners get
   an `ink` label and full-strength links, and a sentence names them.
 - With no powered part the no-power warning replaces the hint and legend.
 
 ## App icon
 
-The launcher icon is the Network glyph (the 2-3-2 network) in Neon colours
-(#820). Inputs are `accent`, connections fade through `line_strong` to
+The launcher icon is the Network glyph (the 2-3-2 network) in Neon
+colours. Inputs are `accent`, connections fade through `line_strong` to
 `output`, hidden neurons are `ink`, and the centre neuron wears the `halo`
 focus ring. Neurons sit on `panel_raised` discs over a vignette to
 `background` with a faint `muted` dot grid. Glow is the base colour at low
-alpha. Neurons stay inside the 66 dp safe circle. The monochrome layer is a
-flat white silhouette. The Android 12+ launch splash is the foreground
-alone on `background`, the colour of the window behind the first frame, so
-launch stays one dark field (#829). `docs/RELEASING.md` → "App icon" lists
-the files.
+alpha. Neurons stay inside the 66 dp safe circle. The monochrome layer is
+a flat white silhouette. The Android 12+ launch splash is the foreground
+alone on `background`, the colour of the window behind the first frame,
+so launch stays one dark field. `docs/RELEASING.md` → "App icon" lists the
+files.
 
 ## Departures from the reference
 
-Where the app differs from `reference design/` and someone might follow the
-guide back by mistake. Departures stated in this doc's own sections are not
-repeated. The last column owns the detail (BM = `docs/BUILD_MODE.md`, TL =
-`docs/TRAINING_LOOP.md`, WV = `docs/WORLD_VISUALS.md`).
+Where the app differs from `reference design/` and someone might follow
+the guide back by mistake. Departures stated in this doc's own sections
+are not repeated. The last column owns the detail (BM =
+`docs/BUILD_MODE.md`, TL = `docs/TRAINING_LOOP.md`, WV =
+`docs/WORLD_VISUALS.md`).
 
 | Reference | Ours | Owner |
 | --- | --- | --- |
-| Start training in the top bar | Play on the rail in both states (#370) | Screens → Build |
-| Rail says Beam and Move; Links tab | Links and Parts tools (#705, #706, #913) | BM → Interactions |
-| Part counts ("1 left") | Unlimited (#374, #525) | BM → Parts tray |
-| Core part | Sensors on beams (#127) | WV → Sensors |
-| Piston: one cylinder as long as its travel; Spring: one damper body | A three-part telescope, starting past a Fixed Servo's housing (#1210) | WV → Piston, Spring |
-| Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top (#1107) | WV → Draw layers, BM → Interactions |
-| "Sensors go on a beam" | Each sensor names itself: "Cameras go on a beam" (#1053) | BM → Sensors |
-| Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with other joint parts; its own glyph (#665, #1044, #1045) | BM → Touch sensor, WV → Touch sensor |
-| "Senses" for the brain's inputs (stages, BrainFocus, accent) | "Inputs", the machine-learning word (#1155) | TL → The Training scene, Screens → NetworkFocus, WV → Port bars |
-| Brain setup screen; hidden neurons | Removed; the direct network (#536) | Screens → NetworkFocus |
-| Speed control | None (#787) | TL → No speed-up |
-| The followed shadow about 43% from the left | Its centre in the middle, the ground never above 80% down, and the room speed adds mostly in front (#1169, #1190) | TL → Camera |
-| Callout above the whole creature; ground always 80% down | Callout docked at the arena top; the camera keeps a shelf for it (#1137) | WV → Training arena, TL → Camera |
-| Ruler hanging from the ground line | Distance and height scales on the view's bottom and left edges (#1170) | WV → Training arena, TL → Scales |
+| Start training in the top bar | Play on the rail in both states | Screens → Build |
+| Rail says Beam and Move; Links tab | Links and Parts tools | BM → Interactions |
+| Part counts ("1 left") | Unlimited | BM → Parts tray |
+| Core part | Sensors on beams | WV → Sensors |
+| Piston: one cylinder as long as its travel; Spring: one damper body | A three-part telescope, starting past a Fixed Servo's housing | WV → Piston, Spring |
+| Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top | WV → Draw layers, BM → Interactions |
+| "Sensors go on a beam" | Each part names itself: "Cameras go on a beam" | BM → Interactions |
+| Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with other joint parts; its own glyph | BM → Interactions, WV → Touch sensor |
+| "Senses" for the brain's inputs | "Inputs", the machine-learning word | Screens → NetworkFocus, WV → Port bars |
+| Brain setup screen; hidden neurons | Removed; the direct network | Screens → NetworkFocus |
+| Speed control | None | TL → No speed-up |
+| The followed shadow about 43% from the left | Its centre in the middle, the ground never above 80% down | TL → Camera |
+| Callout above the whole creature; ground always 80% down | Callout docked at the arena top; the camera keeps a shelf for it | WV → Training arena, TL → Camera |
+| Ruler hanging from the ground line | Distance and height scales on the view's bottom and left edges | WV → Training arena, TL → Scales |
 | Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
-| UI size multiplies the canvas | Pixels per unit (#299, #738) | UI size |
-| Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim (#578) | BM → Parameters |
-| Velocity motor | Motor; Velocity motor only in code and the save format (#454) | BM → Interactions |
-| Stepper as a Servo with a dashed dial (#531 brief) | A detent wheel with one notch per step and a pawl on the Target side; its own glyph (#1067) | WV → Stepper |
-| Servo Max speed in °/s | In rpm, like the Motor's (#454) | BM → Parameters |
-| Max speed always under Advanced | The Motor's is basic; the Piston's and Servo's stay Advanced (#1189) | BM → Parameters |
-| Brake "Max strength 30 N·m" | "Strength", ending in Locked (#1041) | BM → Parameters |
+| UI size multiplies the canvas | Pixels per unit | UI size |
+| Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim | `docs/CREATURE_MODEL.md` → Camera |
+| Velocity motor | Motor; Velocity motor only in code and the save format | `docs/GLOSSARY.md` |
+| Stepper as a Servo with a dashed dial | A detent wheel with a pawl; its own glyph | WV → Stepper |
+| Servo Max speed in °/s | In rpm, like the Motor's | `docs/CREATURE_MODEL.md` → Servo |
+| Max speed always under Advanced | The Motor's is basic | BM → Parameters |
+| Brake "Max strength 30 N·m" | "Strength", ending in Locked | `PartParameters` |
 | Brake "Power: None: passive" | No Power row until the Power budget (#460) | — |

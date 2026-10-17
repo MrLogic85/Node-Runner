@@ -1,39 +1,27 @@
-<!--
-Delete sections that don't apply. docs/REVIEW.md owns the Definition of Done
-and the PR title format ("PR title and commit hygiene").
--->
+<!-- Delete sections that don't apply. docs/REVIEW.md owns the Definition of Done. -->
 
 ## What & why
 
-<!-- 1–3 sentences. What does this PR do, and why? -->
+<!-- 1–3 sentences. -->
 
 Closes #123
 
 ## Scope
 
-<!-- Bullet the concrete changes. If a change isn't in this list, split it out. -->
+<!-- The concrete changes. A change not in this list belongs in another PR. -->
 
 -
 
 ## How to verify
 
-<!-- Commands run and their results; see docs/MANUAL_TESTING.md "What belongs in a PR". -->
+<!-- docs/MANUAL_TESTING.md → "What belongs in a PR". -->
 
-Manual testing decision (`docs/MANUAL_TESTING.md`):
-
-- Required? <!-- yes/no + why -->
-- If required, result/evidence:
-- If skipped, reason:
+- Automated:
+- Manual testing: <!-- required? why; result and evidence, or why skipped -->
 
 ## Screenshots / recordings
 
-<!-- Delete this section if not applicable. -->
-
-## Definition of Done
-
-Confirm that [`docs/REVIEW.md`](docs/REVIEW.md#definition-of-done) is
-satisfied. Explain any item that does not apply in **Notes for the reviewer**.
-
 ## Notes for the reviewer
 
-<!-- Shortcuts taken, follow-ups filed, alternatives rejected. -->
+<!-- Review findings and dispositions, shortcuts taken, follow-ups filed,
+and any Definition of Done item that does not apply, with why. -->

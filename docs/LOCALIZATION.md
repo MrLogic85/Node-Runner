@@ -1,99 +1,71 @@
 # Localization
 
-How Node Runner's text is written and translated. The game is written in
-English, and the English text is the translation key (gettext msgid).
-`docs/ARCHITECTURE.md` → "UI text and translation" owns how text crosses
-the layers, and `.claude/rules/ui.md` how UI code shows it.
-
-The game ships in English only, but all text goes through Godot's
-translation system (#682), so adding a language needs no code changes.
+How Node Runner's text is written and translated. The game ships in
+English only, but all text goes through Godot's translation system, so
+adding a language needs no code changes. The English text is the
+translation key (gettext msgid). `docs/ARCHITECTURE.md` → "UI text and
+translation" owns how text crosses the layers, and `.claude/rules/ui.md`
+how UI code shows it.
 
 ## Text rules
 
 - Text written in a scene is English and is its own translation key.
 - Text the player wrote, such as a creation's or part's own name, is never
-  translated. A default name such as "Joint 2" is. A creation's default
-  name, such as "Untitled Creation", is saved in the player's language when
-  it is made and is their own text from then on (#757, #759).
+  translated; a default name such as "Joint 2" is. A creation's default
+  name, such as "Untitled Creation", is saved in the player's language
+  when it is made and is their own text from then on.
 - Godot translates whole messages only, so text is never put together in
-  code (#773).
+  code.
 - Counted text is one whole sentence per plural form, and Godot picks the
   form; never add an "s" in code.
-- Numbers are arguments, never part of the English: "{0} m", not "2.5 m".
-  Godot swaps in the language's own digits (#756).
-- Uppercase is display only and applied after translating, by the
-  TextServer in the current language, never by .NET casing (#776).
-- A translation context tells two meanings of the same English apart, such
-  as "Run" the verb and "Run" the noun (#777).
+- Numbers are arguments, never part of the English: "{0} m", not "2.5 m",
+  so the language's own digits show.
+- Uppercase is display only, applied after translating by the TextServer
+  in the current language, never by .NET casing.
+- A translation context tells two meanings of the same English apart,
+  such as "Run" the verb and "Run" the noun.
 
 ## The template
 
-`project/locale/messages.pot` lists every text the player can see, with the
-files it comes from. Translators start from it. It is generated, so never
-edit it by hand.
-
-`TranslationTemplateTests` builds the template from the code and scenes and
-fails when the committed file is out of date. After changing shown text,
-regenerate it:
+`project/locale/messages.pot` lists every text the player can see, with
+the files it comes from; translators start from it. It is generated,
+never edited by hand. `TranslationTemplateTests` fails when it is out of
+date; after changing shown text, regenerate it and commit it with the
+change:
 
 ```sh
 NODE_RUNNER_UPDATE_POT=1 dotnet test tests/NodeRunner.Ui.Tests --filter TranslationTemplateTests
 ```
 
-Then commit the new `messages.pot` with the change.
+The test builds the template from scene text (with a node's
+`translation_context` as msgctxt), every `UiText`, and constant text set
+in code that reaches a text property or popup, followed through locals,
+fields, parameters and returns. It leaves out text without letters, text
+not from a literal (such as a creation's name), nodes with auto-translate
+Disabled, `Id`s, and the galleries, which are developer tools. It fails
+on a `UiText` it cannot trace to literal text and on an English text used
+both alone and counted.
 
-The template holds:
-
-- **Scene text:** `text`, `tooltip_text`, `placeholder_text`, `title`, and
-  our components' exported text properties, such as `LabelText` or
-  `StepLabels`. A node's own `translation_context` becomes its msgctxt.
-  Nodes with auto-translate Disabled, and their children that inherit it,
-  are left out. A player's own text field value (`TextValue`) is never text
-  to translate.
-- **`UiText`:** the message of every `UiText.Plain`, `Format` and `Counted`,
-  with its plural and its `InContext` context.
-- **Text set in code:** constant text that reaches a Godot text property,
-  one of our components' text properties or a popup's text, but not an
-  `Id` such as a notification's (#1004). The test follows it through
-  locals, fields, parameters, returns, records and `?:`/`??`/switch
-  branches.
-
-Text without letters, such as "—" or "1", and text that does not come from
-a literal, such as a creation's name, are left out. The test fails on a
-`UiText` it cannot trace to literal text (an interpolated string, or a
-non-literal plural or context) and on an English text used both alone and
-counted.
-
-The galleries (Component Gallery, Popup Gallery, Colors & Styles and
-Toolbars) are developer tools, so they stay in English and are left out.
-Preview text that a scene or component shows before the game fills it in,
-such as "Generation 1", is in the template too; translating it is
-harmless.
-
-### Why not Godot's generator
-
-Godot's own POT generator (Project Settings → Localization → Template
-Generation) runs only from the editor UI and reads only scenes and
-GDScript. It would miss our components' text properties, every `UiText` and
-all text set in C#, and it cannot be checked in a test.
+Godot's own generator runs only from the editor, reads only scenes and
+GDScript, and cannot be checked in a test, so it would miss our
+components' text properties and all text set in C#.
 
 ## Adding a language
 
-A language is a `project/locale/<language>.po` file made from the template.
-In a translation, each `{0}`, `{1}` … is used exactly once, and a plural
-entry has one `msgstr[n]` per form of the language. Godot reads the system
-language when the game starts, so a check in another language restarts the
-game after changing it; a change through `TranslationServer.SetLocale`
-updates open screens at once. The `add-language` skill has the steps.
+A language is a `project/locale/<language>.po` file made from the
+template; the `add-language` skill has the steps. In a translation, each
+`{0}`, `{1}` … is used exactly once, and a plural entry has one
+`msgstr[n]` per form of the language. Godot reads the system language at
+start, so checking another language means restarting the game in it.
 
 When the template changes, update each language with Poedit (Update from
 POT) or `msgmerge -U <language>.po messages.pot`.
 
 ## Text server data
 
-`internationalization/locale/include_text_server_data` is off, since English
-does not need it. Turn it on in Project Settings → Internationalization →
-Locale when adding a language. It adds about 5 MB of ICU data to the APK.
-Without it, an exported build cases text like English in every language
-(Turkish "i" becomes "I", not "İ") and cannot break lines in languages
-without spaces, such as Thai or Chinese.
+`internationalization/locale/include_text_server_data` is off, since
+English does not need it; turn it on when adding a language. It adds
+about 5 MB of ICU data to the APK. Without it, an exported build cases
+text like English in every language (Turkish "i" becomes "I", not "İ")
+and cannot break lines in languages without spaces, such as Thai or
+Chinese.

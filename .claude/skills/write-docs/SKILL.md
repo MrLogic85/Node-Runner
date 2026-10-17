@@ -5,8 +5,7 @@ description: Write or change Node Runner documentation in its single owning docu
 
 # Write docs
 
-`docs/CODE_DESIGN_PRINCIPLES.md` §9 owns how docs are written; this skill
-owns the steps.
+`docs/CODE_DESIGN_PRINCIPLES.md` §9 owns how docs are written.
 
 1. Find the topic's owner in `README.md` → "Documentation", which also
    names where a review agent's focus lives, or by §9 for a layer's rule

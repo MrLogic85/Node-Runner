@@ -31,9 +31,8 @@ something you can watch, poke and understand.
   parts you keep; new parts start almost unused.
 
 A genetic algorithm trains the network; all the math is in
-`libs/NodeRunner.ML/`, readable in an evening.
-What comes next is in [`docs/ROADMAP.md`](docs/ROADMAP.md) and the
-[milestones](https://github.com/MrLogic85/Node-Runner/milestones).
+`libs/NodeRunner.ML/`, readable in an evening. What comes next is in
+[`docs/ROADMAP.md`](docs/ROADMAP.md) and the [milestones](https://github.com/MrLogic85/Node-Runner/milestones).
 
 ## Building
 
@@ -45,14 +44,13 @@ dotnet build NodeRunner.slnx     # builds all libs + tests + Godot csproj
 # Open project/project.godot in Godot and hit F5
 ```
 
-Running the tests: `docs/TEST_STRATEGY.md` → "Running the suite".
-
-Android export: `docs/RELEASING.md` → "Android export".
+Tests: `docs/TEST_STRATEGY.md` → "Running the suite". Android export:
+`docs/RELEASING.md` → "Android export".
 
 ### Tools
 
-Every tool a script, doc or agent relies on is listed here; machine-specific
-state goes in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
+Every tool a script, doc or agent relies on; machine-specific state goes
+in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
 
 | Tool | Required or recommended for | macOS install |
 | --- | --- | --- |
@@ -60,16 +58,16 @@ state goes in `LOCAL_CONFIG.md` (`AGENTS.md` → "Machine-local setup").
 | Godot 4.7.2, .NET build | Required: running the app | `brew install --cask godot-mono` |
 | `git` 2.31+ | Required: the hooks and `.github/scripts/review-receipt.sh` | Xcode Command Line Tools, or `brew install git` |
 | `gh` 2.94+ | Required: scripts in `.github/scripts/` and the skills | `brew install gh` |
-| `jq` | Required: the same scripts and the hook tests; without it the agent hooks are off | `brew install jq` |
+| `jq` | Required: the same scripts, the hooks, which are off without it, and the hook specs | `brew install jq` |
 | `adb` | Required: Android checks | `brew install --cask android-platform-tools` |
 | `rg` (ripgrep) | Recommended: fast search that skips build output | `brew install ripgrep` |
-| `csharp-ls` | Recommended: the agents' `LSP` tool for C# definitions and callers; without it they use `git grep` | Pinned in `dotnet-tools.json`; a new agent session runs `dotnet tool restore`, or run it yourself. Copilot CLI needs no other step; Claude Code loads it only in a trusted folder |
+| `csharp-ls` | Recommended: the agents' `LSP` tool; without it they use `git grep` | Pinned in `dotnet-tools.json`; a new agent session runs `dotnet tool restore`. Claude Code loads it only in a trusted folder |
 | `gettext` | Recommended: adding a language; Poedit does the same | `brew install gettext` |
 
 The `dotnet-sdk` cask installs the newest SDK; the build needs 10.x. The
 scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
-"Setting project fields"). Releases need more tools: `docs/RELEASING.md`
-→ "Android export".
+"Setting project fields"). Releases need more: `docs/RELEASING.md` →
+"Android export".
 
 ## Documentation
 
@@ -101,8 +99,8 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 
 This is primarily a solo learning project; suggestions and pull requests
 are welcome. Work is tracked in GitHub Issues (`docs/ISSUES.md`), and
-`AGENTS.md` is the working process. Expect opinionated review, especially
-around clarity of the ML code, since the app is meant to *teach*.
+`AGENTS.md` is the working process. Expect opinionated review of the ML
+code's clarity, since the app is meant to *teach*.
 
 ## License
 

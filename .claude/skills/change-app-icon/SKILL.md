@@ -6,8 +6,7 @@ description: Change Node Runner's launcher icon or Android launch splash and che
 # Change the app icon
 
 `docs/UI_DIRECTION.md` → "App icon" owns the design, and
-`docs/RELEASING.md` → "App icon" the files and how they relate. This
-skill owns the steps.
+`docs/RELEASING.md` → "App icon" the files.
 
 1. Agree the change with the human and the `design-lead` agent, and
    update the design in `docs/UI_DIRECTION.md` → "App icon" first if it

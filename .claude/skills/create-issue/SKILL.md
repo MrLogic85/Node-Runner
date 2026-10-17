@@ -5,8 +5,8 @@ description: File a new Node Runner GitHub issue with its labels, project fields
 
 # Create an issue
 
-`docs/ISSUES.md` owns what an issue needs and when to file one; this skill
-owns the steps. Read `LOCAL_CONFIG.md` first for the `gh` login.
+`docs/ISSUES.md` owns the rules. Read `LOCAL_CONFIG.md` first for the
+`gh` login.
 
 1. Search for a duplicate: `gh issue list --state all --search "<words>"`.
    If one exists, comment there instead.

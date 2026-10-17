@@ -4,7 +4,7 @@ Which machine-learning ideas Node Runner teaches and how each is made
 visible. For each concept:
 
 - **What:** one-sentence definition
-- **Where:** code location and issue
+- **Where:** code location
 - **How we show it:** the visual or interactive hook
 
 Live knobs for the GA and activations, side-by-side runs and switching a
@@ -14,43 +14,41 @@ sensor off are #960.
 
 - **What:** Layers of linear maps with a nonlinearity in between.
 - **Where:** `libs/NodeRunner.ML/NeuralNetwork.cs`; the direct network
-  (`Networks/DirectNetwork`, #536)
-- **How we show it:** The creature moves at all. The network is direct, inputs
-  straight to outputs, and NetworkFocus draws it with nodes and edges (#536).
+  (`Networks/DirectNetwork.cs`).
+- **How we show it:** The creature moves at all. The network is direct,
+  inputs straight to outputs, and NetworkFocus draws it with nodes and
+  edges.
 
 ## Activation functions
 
 - **What:** The nonlinearity between layers. Without it, a deep network
   collapses to a single linear map.
 - **Where:** `libs/NodeRunner.ML/Activation.cs` (`Tanh`, `ReLU`,
-  `Sigmoid`); each output uses its signal's activation (#535; `docs/CREATURE_MODEL.md`
-  → Output conventions).
+  `Sigmoid`); each output uses its signal's activation
+  (`docs/CREATURE_MODEL.md` → Output conventions).
 - **How we show it:** Swapping the activation of a trained network and
   watching its behaviour change (#960).
 
 ## Genetic algorithm (neuroevolution)
 
-- **What:** Search weights by simulating a population, keeping the fit ones,
-  recombining them, mutating a bit, repeating.
-- **Where:** `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`. Training resumes
-  from the saved network (#538), and Shadows sets the population size per
-  Creation (#528). A part added to a trained network is explored hard: every
-  child redraws its genes as generation 0 would, while the elite keeps the
-  trained gait (`Networks/NewPortExploration.cs`, #1180).
+- **What:** Search weights by simulating a population, keeping the fit
+  ones, recombining them, mutating a bit, repeating.
+- **Where:** `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`; how Training
+  uses it is `docs/TRAINING_LOOP.md` → Generations.
 - **How we show it:** Every candidate races at once as a shadow behind the
   followed creature, the best marker moves forward, and mutations produce
   weird outliers.
 
 ## Fitness function
 
-- **What:** The scalar that says "this individual was this good". *Choice of
-  fitness is the most important design decision in evolutionary ML.*
+- **What:** The scalar that says "this individual was this good". *Choice
+  of fitness is the most important design decision in evolutionary ML.*
 - **Where:** `libs/NodeRunner.ML/Ga/TrialMeasurement.cs`
-- **How we show it:** Fitness is how far the creature's centre got, but the
-  app shows where its front ended (#725, `docs/TRAINING_LOOP.md` → Trial),
-  so the number on screen matches the distance scale. The GA ranks by a number the
-  player does not see directly. Several fitness functions at once, each
-  winner a parent of the next generation, are #317 and #546.
+- **How we show it:** Fitness is how far the creature's centre got, but
+  the app shows where its front ended (`docs/TRAINING_LOOP.md` → Trial),
+  so the number on screen matches the distance scale; the GA ranks by a
+  number the player does not see directly. Several fitness functions at
+  once, each winner a parent of the next generation, are #317 and #546.
 
 ## Mutation rate & exploration/exploitation
 
@@ -73,38 +71,38 @@ sensor off are #960.
 - **What:** What the network gets to *see*. Bad inputs cap performance;
   redundant inputs waste capacity.
 - **Where:** Sensor parts on beams (Accelerometer, Camera) and on joints
-  (Touch, Angle sensor; `docs/CREATURE_MODEL.md`) and Servo, Motor,
-  Stepper and Piston readings. There is no speed or elevation input: the network learns
-  movement from what its parts feel. Pulse, a rhythm input, is #527.
-- **Why a turning angle reads as sine and cosine (#454):** a Motor, a
-  Stepper (#1036), or the joint under an Angle sensor (#1204), may turn round and round, so a plain angle would jump from one
-  end to the other after each full turn, and the network would see a sudden
-  change where nothing moved. Its sine and cosine change smoothly all the
-  way round and together still say exactly where it is: where its Target
-  side points relative to its Fixed side (#1207). A Motor at rest still
-  reads its angle, so neither input means "nothing" the way the "nothing
-  seen" 0 below does.
-- **Why "nothing seen" reads 0 (#604):** a zero input adds nothing to the
-  network's weighted sum, so the weight on a camera ray only matters while
-  something is in view. Mutating that weight adds no noise while the
-  camera sees nothing, and the network learns to react to something being
-  there. Reading 1 for "nothing" would act like an extra bias that vanishes
-  the moment the ground appears. The reading is also linear and smooth at
-  the range edge: something just inside range reads about 0, the same as
-  nothing, so the input never jumps, and half the bar means half the
-  range.
+  (Touch sensor, Angle sensor), and Servo, Motor, Stepper and Piston
+  readings (`docs/CREATURE_MODEL.md`). There is no speed or elevation
+  input: the network learns movement from what its parts feel. Pulse, a
+  rhythm input, is #527.
+- **Why a turning angle reads as sine and cosine:** a Motor, a Stepper or
+  the joint under an Angle sensor may turn round and round, so a plain
+  angle would jump from one end to the other after each full turn, and
+  the network would see a sudden change where nothing moved. Its sine and
+  cosine change smoothly all the way round and together still say
+  exactly where it is. Neither means "nothing" the way the "nothing seen"
+  0 below does.
+- **Why "nothing seen" reads 0:** a zero input adds nothing to the
+  network's weighted sum, so the weight on a camera ray only matters
+  while something is in view. Mutating that weight adds no noise while
+  the camera sees nothing, and the network learns to react to something
+  being there. Reading 1 for "nothing" would act like an extra bias that
+  vanishes the moment the ground appears. The reading is also linear and
+  smooth at the range edge: something just inside range reads about 0,
+  the same as nothing, so the input never jumps, and half the bar means
+  half the range.
 - **How we show it:** NetworkFocus lists every input by its part with its
   live value.
 
 ## Live activation visualization
 
 - **What:** Which neuron fires at which moment, and how strongly.
-- **Where:** NetworkFocus for the direct network (#536), and the selected
-  parts' live input and output values in Training's part callout (#1064,
-  `docs/WORLD_VISUALS.md` → "Part callout" and "Port bars"); network views
-  with hidden layers are #196, #197 and #548.
-- **How we show it:** Nodes glow. Edges pulse. You literally see the thought
-  behind each step.
+- **Where:** NetworkFocus for the direct network, and the selected parts'
+  live input and output values in Training's part callout
+  (`docs/WORLD_VISUALS.md` → "Part callout" and "Port bars"); network
+  views with hidden layers are #196, #197 and #548.
+- **How we show it:** Nodes glow. Edges pulse. You literally see the
+  thought behind each step.
 
 ## Concepts with an issue
 
@@ -113,10 +111,11 @@ Each issue owns its hook; these lines say what the concept teaches.
 - **Network capacity (#543):** a hidden layer added on top of the kept
   direct connections keeps the skill the network had; too little capacity
   plateaus, a huge net learns slowly and erratically.
-- **Generalisation across maps (#540, #541):** a network that only sees one
-  map overfits to it; Stats shows a learning curve per map.
+- **Generalisation across maps (#540, #541):** a network that only sees
+  one map overfits to it; Stats shows a learning curve per map.
 - **Cost of acting (#128, #458, #460):** a power budget that ends the run
-  when spent makes the network trade force now against staying in the run.
+  when spent makes the network trade force now against staying in the
+  run.
 - **Checkpoints (#256):** training is a path, not only its end point;
   restoring one rewinds the history.
 - **Gradient training (#955):** backprop, loss functions, optimizers and

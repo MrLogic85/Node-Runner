@@ -5,16 +5,14 @@ description: Export, install and run the Node Runner debug build on an Android p
 
 # Android check
 
-`docs/MANUAL_TESTING.md` owns when an Android check is needed, which
-device to use and what counts as evidence ("Android checks", "Agent-run
-manual tests"); `docs/RELEASING.md` → "Android export" owns the export.
-This skill owns how to run one. Each shell call starts afresh, so every
-block below sets the variables it uses.
+Rules: `docs/MANUAL_TESTING.md` → "Android checks" and `docs/RELEASING.md`
+→ "Android export". Each shell call starts afresh, so every block sets
+the variables it uses.
 
-1. **Pick the device** as "Android checks" says, and follow the device
-   rules in `LOCAL_CONFIG.md`, including any local skill it names, until
-   step 7 is done. Note the serial of an emulator you start. With more
-   than one device in `adb devices -l`, add `ANDROID_SERIAL=<serial>` to
+1. **Pick the device** as "Android checks" says, and follow
+   `LOCAL_CONFIG.md`'s device rules, including any local skill it names,
+   until step 7 is done. Note the serial of an emulator you start. With
+   more than one device in `adb devices -l`, add `ANDROID_SERIAL=<serial>` to
    each block.
 2. **Note how you found it**, for step 7. The block records one state:
    `not-installed`, `never-ran` (installed, with no saved files yet) or
@@ -119,6 +117,6 @@ block below sets the variables it uses.
 
    The step is done when the `.scratch/android-*` files are gone.
 
-   Then release the device as `LOCAL_CONFIG.md`'s rules say, stop an
-   emulator you started as "Android checks" says, and delete
+   Then release the device as `LOCAL_CONFIG.md` says, stop an emulator
+   you started (`adb -s <serial> emu kill`), and delete
    `build/node-runner-debug.apk` and the other scratch files.

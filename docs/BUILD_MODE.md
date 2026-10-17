@@ -3,548 +3,309 @@
 How Build behaves: its tools, gestures, selection, panels and validation.
 How it looks is in `docs/UI_DIRECTION.md` and `docs/WORLD_VISUALS.md`; when
 a Creation is locked is in `docs/TRAINING_LOOP.md` → Product lifecycle
-boundary. `reference design/components/Build/README.md`,
-`BuildLocked/README.md` and `Navigation/README.md` are its guide.
+boundary. What each part is, and which have network ports, is in
+`docs/CREATURE_MODEL.md`. `reference design/components/Build/`,
+`BuildLocked/` and `Navigation/` are its guide.
 
-Wherever a rule here says *joint motor* (`docs/GLOSSARY.md` → Joint
-motor), Build treats every kind alike.
+Wherever a rule here says *joint motor* or *hinge part*
+(`docs/GLOSSARY.md`), Build treats every kind alike.
 
 ## Mode
 
-- Build state lives in `BuildViewModel` while Build is open. Build always
-  edits a saved creation: + New saves an empty "Untitled Creation", named in
-  the player's language (`NewCreationWorkflow`), before Build opens. Its
-  network is direct (#536), so it needs no setup.
-- Build and Training share only the save (#469); the play button saves and
-  opens Train setup (`docs/TRAINING_LOOP.md` step 1).
-- **Autosave (#368).** There is no Save button. Every edit is saved once
-  edits have settled for 0.5 s, and when Build is left (Back, Start
-  training, another scene) or the app pauses or closes. A failed save keeps
-  the edits unsaved and tries again on the next save; Back, Start training
-  and Reset training report every failure, background saves only the first
-  in a row. Back always leaves, so a failing disk never traps the player in
-  Build. A creation opened by + New that has no nodes when Build is left is
-  removed again; if Android ends the app in the background, it stays in
-  the list.
-- **Locked Build.** A locked creation (`CreationLock`) opens in Joint like
-  any other, and `BuildViewModel` refuses on its own what changes the network
-  (#638, #896). Joints, beams, Springs, Wheels, Rubbers and Brakes have no network ports, so
-  they can be added, copied and deleted. A joint motor's, Brake's or Angle sensor's sides change
-  from its pickers (#1041, #1179, #1206), since a part keeps its id and ports through them (#1177); joints move, sensors move to another beam (#806),
-  cameras aim, the selection handles all work (scaling changes only beam
-  lengths), parameters change, except a Camera's Rays (#578), and parts can
-  be renamed. A part with ports (a sensor, Touch sensor, Angle sensor, Piston or joint motor) can be neither
-  added nor deleted: every tray row except the Brake's, the Wheel's and the Rubber's is locked, and so is
-  the Piston row; the tray's help line says "Unlock to add parts the network
-  uses.", and tapping a row so locked shows "The creation is locked to avoid changes to the network, unlock to enable."
-  (`BuildViewModel.LockedReason`) in a notification; a Coming later row
-  still names its version (see Parts tray). Delete stays,
-  Unavailable, when it would take a part with ports along, also by cascade,
-  or clear a joint motor's or Angle sensor's link (`BuildViewModel.DeleteLockedReason`); a tap shows
-  the same notification and the danger note "Locked: would change the network"
-  on each part that blocks it: each part with ports it would take and each
-  kept joint motor or Angle sensor whose link it would clear (#987), which clear like Copy's.
-  Copy stays too (see Selection panel). There is no
-  training summary: the Creations card shows the latest training (#479).
-  The padlock unlocks it for this visit and keeps the training
-  (`docs/TRAINING_LOOP.md` step 6).
-- **Overflow menu.** It follows training, not the lock. A trained creation
-  lists Stats (#198) and Power budget (#460), both unavailable, then Copy
-  creation, Share build, Reset training and Delete creation; an untrained
-  one lists Power budget, Copy creation, Share build and Delete creation.
-  Share build copies the build, not its training, as a code to paste in a
-  chat, which Import creation in Creations adds back (#899,
-  `docs/SAVE_FORMAT.md` → "Share code"). Copy creation and Share build are
-  offered for anything drawn, trained or not (#840). Copy creation saves edits first, keeps
-  any trained network, names the copy "Copy of …", opens it in place of the
-  original and confirms with a notification. Reset training (#370, #687)
-  and Delete creation each ask first in a dialog confirmed with a tap
-  (#866); Reset training's names the generations lost.
-- **Undo and Redo (#689, `BuildHistory`)** sit in the top bar and work on a
-  locked creation too; each is disabled when there is nothing to undo or
-  redo. One finished action that changes the body is one step: a placed
-  part, a link, a delete, a part rename, or a whole drag (a joint, a
-  selection's move, turn or scale, a sensor's move to another beam, a
-  camera's aim, a slider). Selection,
-  tool, zoom and pan never count, and a cancelled gesture adds nothing and
-  keeps Redo. A new step clears Redo. A visit holds 100 steps; opening
-  Build, also after Train setup, Reset training or Copy creation, starts
-  empty. Renaming the creation, Unlock, Reset training, Copy creation and
-  Delete creation are not steps and cannot be undone.
+- Build always edits a saved creation: + New saves an empty "Untitled
+  Creation" in the player's language before Build opens. Build and
+  Training share only the save; the play button saves and opens
+  Train setup (`docs/TRAINING_LOOP.md` step 1).
+- **Autosave.** There is no Save button. Edits are saved once they
+  have settled for 0.5 s, and when Build is left or the app pauses or
+  closes. A failed save keeps the edits and retries on the next save; Back,
+  Start training and Reset training report every failure, background saves
+  only the first in a row. Back always leaves, so a failing disk never
+  traps the player in Build. A creation opened by + New that has no joints
+  when Build is left is removed again.
+- **Locked Build.** A locked creation (`CreationLock`) opens like any
+  other, and `BuildViewModel` refuses only what would change the
+  network's ports. So a part with ports (a sensor, Touch
+  sensor, Angle sensor, Piston or joint motor) can be neither added nor
+  deleted, and a Camera's Rays cannot change. Everything else works:
+  joints, beams, Springs, Wheels, Rubbers and Brakes are added, copied and
+  deleted; parts move, rename and change parameters; hinge parts change
+  sides through their pickers, since a part keeps its id and ports through
+  them; a Beam and a Spring may replace each other.
+  - Refused tray rows and sliders are locked, and a tap on one shows
+    `BuildViewModel.LockedReason` in a notification.
+  - Delete and Copy stay, Unavailable, when they would take a part with
+    ports along, also by cascade, or clear a kept hinge part's side
+    (`DeleteLockedReason`, `CopyBlockers`). A tap puts "Locked: would
+    change the network" on each part that blocks it; Delete also shows
+    the notification.
+  - The padlock unlocks it for this visit and keeps the training
+    (`docs/TRAINING_LOOP.md` step 6).
+- **Overflow menu.** It follows training, not the lock. Stats and Reset
+  training show only on a trained creation, Copy creation and Share build
+  only when something is drawn, and Power budget and Delete
+  creation always; Stats (#198) and Power budget (#460) say "Coming
+  soon". Share build
+  copies the build, not its training, as a code that Import creation adds
+  back (`docs/SAVE_FORMAT.md` → "Share code"). Copy creation saves
+  first, keeps any trained network, names the copy "Copy of …" and opens
+  it in place of the original. Reset training and Delete creation each ask
+  first in a dialog.
+- **Undo and Redo (`BuildHistory`)** work on a locked creation too.
+  One finished action that changes the body is one step: a placed part, a
+  link, a delete, a part rename, or a whole drag or slider move.
+  Selection, tool, zoom and pan never count, and a cancelled gesture adds
+  nothing and keeps Redo. A visit holds 100 steps and starts empty.
+  Renaming the creation, Unlock, Reset training, Copy creation and Delete
+  creation cannot be undone.
   - Undo keeps the selected parts that still exist; undoing a delete
-    selects the deleted parts again and Redo of it clears them (#878).
-    An undone delete gets its trained weights back
-    (`docs/CREATURE_MODEL.md` → "Build refits the network it opened with").
-  - Each edit has an owner, the canvas or a slider, so one never closes or
-    drops the other's; a canvas tap while a slider is held is a step of its
-    own. Undo and Redo do nothing while an edit is open, so a second finger
-    cannot undo under a drag.
+    selects the deleted parts again and gets their trained weights back
+    (`docs/CREATURE_MODEL.md` → "Build refits the network it opened
+    with").
+  - Each edit has an owner, the canvas or a slider, so one never closes
+    the other's. Undo and Redo do nothing while an edit is open, so a
+    second finger cannot undo under a drag.
 
 ## Interactions
 
-The rail holds the tools Joint, Links, Parts and Select (#365, #705, #706,
-#913); "joint" is the player-facing name for a node. Start training is the
-play button at the bottom of the rail in both states (#370). Build opens in
-Joint, the default tool, locked or not (#896). `BuildGestures`
-turns pointer presses, drags and releases into edits for the active tool
-and into zoom and pan; `BuildCanvas` only forwards input and draws.
+The rail holds the tools Joint, Links, Parts and Select, and the play
+button at its bottom in every state. "Joint" is the player-facing
+name for a node. Build opens in Joint, locked or not.
+`BuildGestures` turns pointer input into edits, zoom and pan;
+`BuildCanvas` only forwards input and draws.
 
-- A pointer that travels at most `TapSlop` view units is a tap. A tap or
-  drop hits the part drawn on top there (#1107, `docs/WORLD_VISUALS.md` →
-  Draw layers), in Build and Training alike: a joint's ring, joint motor or a
-  Wheel's hub, each with the selection gap (#710); a sensor's picture; or a
-  link within `SelectionMarks.LinkBody` of its line, outside its ends' hubs,
-  as it is drawn (#1086). A press or drop touches a Wheel only at its hub,
-  never its see-through face or tyre (#1086). Raised targets of a placed part count
-  as drawn over the rest. Off
-  every part, Build falls back to finger-sized reach: a link (the nearest,
-  a Spring on a tie), then a beam. Only a released tap that reaches nothing
-  else, not even a handle, falls back to a Wheel's disc, face and tyre out
-  to its Radius, and adds or removes that Wheel (#1143); where discs overlap
-  the Wheel with the nearest hub wins, then the lower id
-  (`DrawGroups.WheelDiscAt`), even over a tyre drawn on top. So a disc
-  covers nothing but other discs, and a tap on one selects the Wheel
-  instead of adding a joint in Joint or clearing the picked link in Links
-  (owner's choice). The face never takes a press or drop, raised or not.
-  Training's part taps follow the same order. Joints and sensors
-  are in canvas units, so they grow and shrink with the drawing; beams,
-  links and handles reach finger-sized areas on screen at any zoom.
-- **Every tool (#746, #803)** shares one selection model; the tools differ
+- **What a touch hits.** A pointer that travels at most `TapSlop`
+  view units is a tap. A tap or drop hits the part drawn on top
+  (`docs/WORLD_VISUALS.md` → Draw layers), in Build and Training alike:
+  a joint's ring, hinge part or Wheel hub, each with the selection gap; a
+  sensor's picture; or a link near its line, outside its ends' hubs. Off
+  every part, Build falls back to finger-sized reach: a link, then a beam.
+  A Wheel's face and tyre never take a press or drop, so links and
+  joints inside it stay reachable; only a released tap that reaches
+  nothing else, not even a handle, falls back to a Wheel's disc and
+  selects that Wheel (`DrawGroups.WheelDiscAt`). Joints and sensors
+  hit in canvas units, so they grow with zoom; beams, links and handles
+  keep finger-sized areas at any zoom.
+- **Every tool shares one selection model;** the tools differ
   only in their main action, below.
-  - A tap on any joint, beam, sensor or link adds it to the selection or
-    removes it, even under a handle (`BuildViewModel.ToggleSelected`). A
-    tap on empty canvas clears the selection; a tap on a handle over empty
-    canvas does nothing. A tap on a joint with parts steps down its
-    stack, top → down (joint motor, Brake or Angle sensor, then Wheel, then Rubber, then Touch sensor): the first tap
-    adds the top part, each next tap swaps it for the one below, and a tap
-    on the last, or with more than one of them selected, removes the
-    joint's parts. The rest of the selection stays
-    (`BuildViewModel.ToggleJointSelected`, #1044).
-  - **Parts stand in for their joint** (#973, #1044): while any part sits
-    on a joint (a joint motor, Brake, Wheel, Rubber, Touch sensor or Angle sensor), the joint itself is never selected, so it
-    gets no selection mark and no panel; only a bare joint does. Links
-    still start and end on it. Selecting a part never also
-    selects the joint under it, but the selection moves that joint, and
-    it counts as a joint for the group.
-  - Two or more selected joints are a *group*, with a frame and three
-    handles: **Move** in the middle, **Rotate** on a stem above and
-    **Scale** at the bottom-right corner.
-  - A drag is settled by where it starts, first match wins: a handle moves,
-    turns or scales the selection; in Links, with a link picked, an
-    unselected joint or a selected part's joint draws it; a selected joint, or
-    a joint with a selected part, moves the selection;
-    anywhere inside a group's frame moves the group; an unselected joint is
-    selected alone and moved, or, if it holds parts, its top part is; a sensor is moved to another beam (see
-    Sensors).
-    Any other drag draws a box in Select and pans in the other tools.
-  - After a Rotate the frame stays turned with the group until the
-    selection changes. Rotate and Scale turn about the frame's centre;
-    Scale counts only the drag along its diagonal and is clamped to
-    `MinSelectionScale`..`MaxSelectionScale`. Every drag frame is computed
-    from a `SelectionSnapshot` taken when the drag starts, so nothing
-    drifts.
-  - A move stops the group at the build area's edge; a turn or scale that
-    would leave it is ignored. The frame and handles keep their screen size
-    at any zoom, and each handle hits within `HandleHitRadius`.
-- **Joint:** with nothing selected, a tap on empty canvas adds a joint;
-  with a selection, that tap only clears it. Beams are never split (#746).
-- **Links (#705, #913):** with nothing selected, the panel lists Beam,
-  Piston, Spring and a locked Wing row (#130). The picked link's row shows
-  what it does right under it (`PartInfo`) and "Drag from joint to joint to
-  add it.", and the help line under the rows says "Tap a link to pick it."
-  Beam is picked when Build opens. Tapping the picked row again, or empty
-  canvas with nothing selected, clears the pick (#1057), as in Parts; with
-  a selection, that tap clears the selection first. Back does not clear a
-  link pick, since Beam is where Links starts. The pick, or none,
-  then stays for the visit, across tool switches and selections (#874),
-  and is not saved. Drag from an unselected joint to another joint to draw
-  the picked link; a new link is not selected, and dropping away from a
-  joint places nothing. While a link is picked, those joints are marked
-  (`BuildGestures.LinkDrawnFrom`; see `docs/WORLD_VISUALS.md` → "Picked
-  link"). With none picked, Links works like the other tools (#803).
-  - While dragging, the line shows whether it will attach (#920): dashed
-    over no joint, solid once it will attach, and dashed danger with a
-    crossed ring when that joint would refuse. Dropping there shows the
-    reason at the joint (`BuildViewModel.CanConnectLink`): "A beam already
-    joins these joints", "These joints already have a piston", "These
-    joints already have a spring", or "A sensor sits on this beam".
-  - Any link dropped on a pair a link of another kind joins replaces it
-    (#849, #1176), with its own default settings; while dragging, the
-    replaced link is outlined. A beam with a sensor on it is never
-    replaced. A hinge part that held the old link holds the new
-    one in the same role (`docs/CREATURE_MODEL.md` → "Editing identity
-    rules" says it keeps its id). One Undo brings the
-    old link back with its id and settings. On a locked creation, a Beam
-    and a Spring may replace each other, but nothing replaces a Piston:
-    that drop shows the locked reason.
-- **Parts:** with nothing selected, the panel shows the Parts tray; drag a
-  part from it onto the creature, or tap it and then tap where it goes
-  (see Parts tray). Parts never adds a joint.
-- **Select (#366, #704):** a drag on empty canvas, or from a beam or
-  link, outside any group's frame draws a box that shows the parts it
-  would catch as selected. It selects every part whose centre is in it (a
-  joint's centre, a beam's or link's midpoint, a sensor's beam midpoint)
-  and replaces the selection, so a box can catch only beams. A joint with
-  parts comes in as all its parts, each with its own mark (#973, #1044).
-- **Sensors (#127, #575):** placed from the tray on a beam, by drag or tap
-  (see Parts tray), one per beam (#376). A joint, Piston or Spring refuses
-  with the part's own reason, "Accelerometers go on a beam" or "Cameras go
-  on a beam" (#1053).
-  - **Moving a sensor (#806):** drag its picture to another beam in any
-    tool, locked or not. It keeps its id, name and settings, so its network
-    ports and trained weights stay (`CreatureBuilder.MoveSensor`); a
-    Camera keeps the direction it looks in the world. How the drag looks
-    is in `docs/WORLD_VISUALS.md` → "Moving a sensor". A drop on a beam
-    with another sensor, a joint, or a Piston or Spring leaves it where it was with the
-    reason as a note ("One sensor per beam", or the sensor's own "goes on a
-    beam" reason above); a
-    drop on empty canvas leaves it where it was and says nothing (#1026).
-    A good drop selects it.
-- **Servo (#452, #577):** placed from Parts → Moving parts on any joint, by
-  drag or tap (see Parts tray). A beam, sensor or link refuses with "Servos
-  go on a joint"; a joint that already has a joint motor, Brake or Angle sensor refuses with
-  "One Servo, Stepper, Motor, Brake or Angle sensor per joint", while a Wheel's joint takes it (#1044). A good placement picks its Fixed and Target as
-  `docs/CREATURE_MODEL.md` → "Servo" says and is one Undo step; a drop also selects the Servo. Without two sides the missing roles
-  stay empty and the Servo's panel note says "A Servo needs two links, or a
-  link and a Wheel" until another link or a Wheel is added there and picked: drop first,
-  finish later. Its canvas note waits for a Play tap, like "Not connected"
-  (#1006).
-  Tapping or dragging that joint selects the Servo; dragging moves the
-  joint with it.
-- **Motor (#454):** placed from Parts → Moving parts on any joint
-  exactly like a Servo, in its joint's hinge-part slot
-  (`docs/CREATURE_MODEL.md` → Node → One part per slot). A beam, sensor or
-  link refuses with "Motors go on a joint"; its sides, missing
-  roles and notes follow the Servo's, with "A Motor needs two
-  links, or a link and a Wheel".
-- **Stepper (#1038):** placed from Parts → Moving parts on any joint
-  exactly like a Motor, in the same slot. A beam, sensor or link refuses
-  with "Steppers go on a joint"; its sides, missing roles and notes follow
-  the Servo's, with "A Stepper needs two links, or a link and a Wheel".
-- **Brake (#1041):** placed from Parts → Moving parts on any joint exactly
-  like a Motor, in the same slot, also on a locked creation. A beam, sensor
-  or link refuses with "Brakes go on a joint"; its sides, missing roles and
-  notes follow the Servo's, with "A Brake needs two links, or a link and a
-  Wheel".
-- **Wheel (#129):** placed from Parts → Moving parts on any joint, by drag
-  or tap, like a Servo. A beam, sensor or link refuses with "Wheels go on a
-  joint"; a joint with a Wheel refuses with "One wheel per joint", while a
-  joint motor's joint takes it (#1044). A placement is one Undo step; a drop also
-  selects the Wheel. Tapping or dragging its joint selects the Wheel, as a
-  joint motor's; a joint with both follows the stack rule in Interactions.
-- **Rubber (#1142):** placed from Parts → Moving parts on any joint, by
-  drag or tap, like a Wheel, also on a locked creation. A beam, sensor or
-  link refuses with "Rubber goes on a joint"; a joint with one refuses with
-  "One rubber per joint", while a joint with other parts takes it
-  (`docs/CREATURE_MODEL.md` → Node → One part per slot). Its skin adds no tap area: tapping or dragging its joint
-  selects it as the stack rule says, and its panel shows only Name and its
-  note. It cannot be dragged to another joint; delete it and place it
-  again.
-- **Touch sensor (#665, #1045):** placed from Parts → Sensors on any joint,
-  by drag or tap, like a Wheel. A beam, sensor or link refuses with "Touch
-  sensors go on a joint"; a joint with one refuses with "One Touch sensor per
-  joint", while a joint with other parts takes it
-  (`docs/CREATURE_MODEL.md` → Node → One part per slot). Its cushion adds
-  no tap area (Touch sensor → Size there): tapping or dragging its joint
-  selects it as the stack rule says, and its panel shows only
-  Name and its note. It cannot be dragged to another joint; delete it and
-  place it again.
-- **Angle sensor (#1206):** placed from Parts → Sensors on any joint,
-  by drag or tap, exactly like a Brake, in the same slot
-  (`docs/CREATURE_MODEL.md` → Node → One part per slot), so a joint with a
-  Wheel, Rubber or Touch sensor takes it. A beam, sensor or link refuses with
-  "Angle sensors go on a joint"; its sides, missing roles and notes follow
-  the Servo's, with "An Angle sensor needs two links, or a link and a
-  Wheel". It has ports, so a locked creation refuses it (see Locked Build).
-- **Camera aim (#594, #622):** a Camera selected alone shows an Aim handle
-  out along its centre ray, in any tool; the handle may cover a
-  joint, which then cannot be tapped there (#639). Dragging the handle
-  turns the camera to look at the finger (`CameraRays.AimAlong`); the aim
-  is saved relative to the beam. The handle is hit before anything under
-  it, a tap on it does nothing, and a second finger puts the aim back.
-- **Deleting:** there is no Delete tool; the Part settings and selection
-  panels delete the selection. Deleting a joint removes every link on it,
-  its joint motor, Brake or Angle sensor, Wheel, Rubber and Touch sensor and those beams' sensors
-  (`CreatureBuilder.RemoveNode`),
-  and deleting a beam removes its sensor. Deleting a joint motor, Brake, Wheel, Rubber, Touch sensor or Angle sensor leaves
-  its joint, with its other part or bare,
-  unless the same delete takes every part and every link on that joint and
-  the joint had a link before: then the joint goes too, so a box that
-  clears an area leaves no bare joint (#973, #1044); a joint that had no
-  link stays. Deleting a link or Wheel a joint motor, Brake or Angle sensor holds keeps
-  it with that role missing (see `docs/CREATURE_MODEL.md` → "Servo").
-- **Two fingers, any tool (#400):** pinch zooms about the point between the
-  fingers and dragging both pans. The second finger cancels the first
-  finger's gesture, putting back any joint it moved and any selection its
-  press changed, and nothing edits until every finger lifts, so navigation
-  never changes the creature.
-- **Build area (#400):** joints live inside `BuildViewModel.BuildArea`
-  (x −600..600, y −300..300 canvas units, 12 × 6 m), small enough that any
-  creature fits the Training view without zooming out far (#884). Placing
-  or moving a joint keeps its ring inside; a group move stops as a whole at
-  the edge, and a Joint tap outside adds nothing. A grid of `BuildGridStep`
-  cells (50 units, half a metre) covers exactly the area.
-  Every joint Build places or moves lands on whole units, 1 cm
-  (`CreatureBuilder.OnWholeUnits`, #1094), so a save and a share code hold
-  short numbers.
-- **View:** `CanvasView` holds zoom and pan and maps view units to canvas
-  units; it never touches saved positions and is not saved. Build opens
-  with the creation centred and `FitMargin` (20%) of air on every side,
-  zoomed out if needed but never magnified past true size; an empty
-  creation opens at true size in the middle of the area. True size is 1× at
-  a UI size root factor of 1; the zoom limits are divided by that factor
-  (`CanvasView.UiScale`), so true size and the limits keep their size on
-  screen and only how far Fit zooms out changes (#299). The view can show
-  `BuildViewBounds`, the area plus one cell on every side, and, while a
-  selected Camera's rays show, the largest those rays have been since the
-  selection changed, plus one cell (`CanvasView.Reach`):
-  zooming out stops when all of it is in view (`MinZoom`), and panning
-  stops at its edge or centres it where it fits. When the rays stop
-  showing, the view eases back inside `BuildViewBounds`, once no finger is
-  on the canvas. Distances are in view or canvas units
-  (`docs/GLOSSARY.md` → Build canvas).
-- Changing tool mid-gesture, or Android cancelling the touch, cancels the
-  gesture the same way. A refused edit changes nothing; where the player
-  needs a reason, a canvas note next to the part gives it.
+  - A tap on a part adds it to the selection or removes it, even under a
+    handle. A tap on empty canvas clears the selection.
+  - **Parts stand in for their joint**: a joint with parts
+    on it is never selected itself; only a bare joint is. A tap on it
+    steps down its stack (the `JointSlot` order: hinge part, Wheel,
+    Rubber, Touch sensor): the first tap adds the top part, each next tap
+    swaps it for the one below, and a tap on the last, or with more than
+    one of them selected, removes them (`ToggleJointSelected`). A selected
+    part moves its joint and counts as a joint for the group.
+  - Two or more selected joints are a *group*, with a frame and Move,
+    Rotate and Scale handles. Rotate and Scale turn about the frame's
+    centre, and every drag is computed from a `SelectionSnapshot` taken
+    when it starts, so nothing drifts.
+  - A drag is settled by where it starts, first match wins: a handle; in
+    Links with a link picked, a joint that can start the link; a selected
+    joint or a joint with a selected part, which moves the selection;
+    inside a group's frame, which moves the group; an unselected joint,
+    which is selected alone (or its top part is) and moved; a sensor,
+    which moves to another beam. Any other drag draws a box in Select and
+    pans in the other tools.
+  - A group move stops at the build area's edge; a turn or scale that
+    would leave it is ignored.
+- **Joint:** with nothing selected, a tap on empty canvas adds a joint.
+  Beams are never split.
+- **Links:** the panel lists Beam, Piston, Spring and a
+  locked Wing. Beam is picked when Build opens; the pick, or none, then
+  stays for the visit and is not saved. Tapping the picked row or
+  empty canvas clears it. Drag from an unselected joint to another
+  to draw the picked link; the new link is not selected. With none picked,
+  Links works like the other tools.
+  - The drag line shows whether the drop will attach, before a finger
+    covers the target; a refused drop shows the reason at the joint
+    (`BuildViewModel.CanConnectLink`).
+  - A link dropped on a pair another kind joins replaces it, with its own
+    default settings. A beam with a sensor is never
+    replaced, and a hinge part keeps holding the new link in the same role
+    (`docs/CREATURE_MODEL.md` → "Editing identity rules"). One Undo brings
+    the old link back.
+- **Parts:** drag a part from the tray onto the creature, or pick it and
+  tap where it goes (Parts tray). Parts never adds a joint.
+- **Select:** a drag that would pan in the other tools draws
+  a box. It selects every part whose centre is in it and replaces the
+  selection, so a box can catch only beams.
+- **Placing a part.** Each part knows where it goes and refuses anywhere
+  else with its own canvas note (`CreatureBuilder.*Reason`). A beam sensor
+  goes on a beam, one per beam. A joint part goes on a
+  joint, one per slot (`docs/CREATURE_MODEL.md` → Node → One part per
+  slot): the hinge part slot (joint motor, Brake or Angle sensor), Wheel,
+  Rubber and Touch sensor. A hinge part picks its sides as
+  `docs/CREATURE_MODEL.md` → "Servo" says; with fewer than two sides it is
+  placed anyway and its note asks for another link or a Wheel: drop
+  first, finish later. A placement is one Undo step, and a drop selects
+  the part.
+  - **Rubber and Touch sensor** add no tap area (`docs/CREATURE_MODEL.md`
+    → Rubber, Touch sensor), so their joint selects them by the stack
+    rule. Their panel shows only Name and the note, and they cannot be
+    dragged to another joint.
+- **Moving a sensor:** drag its picture to another beam, in any
+  tool, locked or not. It keeps its id, name and settings, so its ports
+  and trained weights stay (`CreatureBuilder.MoveSensor`); a Camera keeps
+  the direction it looks in the world. A refused drop leaves it with the
+  reason as a note; a drop on empty canvas leaves it silently.
+- **Camera aim:** a Camera selected alone shows an Aim handle
+  along its centre ray, in any tool. Dragging it turns the camera toward
+  the finger; the aim is saved relative to the beam. The handle is hit
+  before anything under it.
+- **Deleting:** the Part settings and selection panels delete the
+  selection. Deleting a joint removes its links, its parts and those
+  beams' sensors (`CreatureBuilder.RemoveNode`); deleting a beam removes
+  its sensor. Deleting a joint part leaves its joint, unless the same
+  delete takes every part and link on a joint that had a link: then the
+  joint goes too, so a box that clears an area leaves no bare joint.
+  Deleting a side a hinge part holds leaves that role missing.
+- **Two fingers, any tool:** pinch zooms and dragging both pans.
+  The second finger cancels the first finger's gesture, putting back
+  anything it moved or selected, so navigation never edits the creature.
+  Changing tool mid-gesture or Android cancelling the touch cancels the
+  same way.
+- **Build area:** joints live inside `BuildViewModel.BuildArea`
+  (12 × 6 m), small enough that any creature fits the Training view
+  without zooming far out. The grid of `BuildGridStep` cells covers
+  exactly the area. Every joint Build places or moves lands on whole
+  units, 1 cm (`CreatureBuilder.OnWholeUnits`), so saves and share
+  codes hold short numbers.
+- **View:** `CanvasView` holds zoom and pan, which are never saved. Build
+  opens with the creation fitted with `FitMargin` of air, never magnified
+  past true size. The zoom limits are divided by the UI size, so
+  true size and the limits keep their size on screen. The view can show
+  `BuildViewBounds`, stretched while a selected Camera's rays reach past
+  it (`CanvasView.Reach`), and eases back once they stop showing
+  and no finger is down.
+- A refused edit changes nothing; where the player needs a reason, a
+  canvas note at the part gives it until the next touch or for 3 s.
 
 ## Parts tray
 
-With nothing selected, the side panel shows the active tool's panel: Parts
-shows the Parts tray (#374), Links the link list (#705), and Joint and
-Select short help (#706). One selected part shows its Part settings and
-several the selection panel instead. Picking a tool on the rail, even the
-active one, clears the selection so its panel shows (#1096).
+With nothing selected, the side panel shows the active tool's panel:
+Parts the Parts tray, Links the link list, and Joint and
+Select short help. One selected part shows its Part settings, and
+several the selection panel. Picking a tool on the rail, even the active
+one, clears the selection so its panel shows.
 
 - Three tabs, Moving parts, Sensors and Blocks, group parts by what they
-  do, not where they go: Moving parts holds the joint motors, Brake, Wheel and Rubber,
-  and Sensors every sensor, on a beam or, like the Touch sensor (#665) and
-  the Angle sensor (#1206), on a joint. Each part decides its own placement. `PartTray` owns the groups,
-  their order, the help line and each row's state.
-- Each visit opens on the first tab with an available part
-  (`PartTray.OpeningGroup`), so a tab of padlocks never reads as every part
-  being locked (#887). The open tab then stays for the visit (#874).
-- Parts are unlimited (#525), so rows show no count. Every planned part has
-  a locked row, so the tray shows what is coming: the Pulse (#527) is a
-  locked row in Sensors. A tap on a locked row
-  names the part and the version that brings it, as "Battery comes in version 0.18.0", in a
-  notification (#992); `PartTray.ComingLaterReason` and
-  `BuildLinkList.ComingLaterReason` own it.
-- An available row is dragged out (#376). The drop lands where a tap would
-  hit (Interactions; `BuildGestures.DropTargetAt`), except that a sensor's
-  picture stands for its beam. A joint motor, Brake, Wheel, Rubber, Touch sensor or Angle sensor lands first on the
-  joint whose placing ring (`PlacingTargets.JointRingOf`;
-  `docs/WORLD_VISUALS.md` → Placing a part) it is inside, ahead of the beams the ring crosses
-  (#1055). `BuildViewModel.PlacePart` places it with
-  a fresh id and selects it, or refuses it with a canvas note at that part
-  (`PlacementNote`) until the next touch or for 3 s. A Piston or Spring
-  takes no tray part, so a drop on it refuses (#1033). A drop on empty
+  do, not where they go, so a tab may mix beam and joint parts.
+  `PartTray` owns the groups, their order, the help line and each row's
+  state. Each visit opens on the first tab with an available part, so a
+  tab of padlocks never reads as every part being locked; the tab
+  then stays for the visit.
+- Parts are unlimited, so rows show no count. Every planned part
+  has a locked row, so the tray shows what is coming; a tap on it names
+  the version that brings it (`PartTray.ComingLaterReason`).
+- A drop lands where a tap would hit, except that a joint part lands
+  first on the joint whose placing ring it is inside, ahead of the beams
+  the ring crosses (`PlacingTargets.JointRingOf`). A drop on empty
   canvas or back on the panel changes nothing.
-- A tap on an available row picks it (#805; `BuildViewModel.PickedPart`):
-  the row shows selected, and a line fades in right under it, as under the
-  picked link in the Links list: its `PartInfo` (the same as its Part
-  settings note) and where it goes ("Drag onto a joint, or tap a joint to
-  place it." or "… a beam …" for an Accelerometer or Camera), per part,
-  not per tab, as a tab can mix placements. It does not say how many fit:
-  Build already shows which spots are free (#1297). Under the rows the help line says "Tap a part to pick it, or drag it onto the
-  creature." A canvas tap then places the part where a drop there would
-  land, with the same refusals, notes and Undo. The placed part is not
-  selected, so the tray stays and the part stays picked for the next one.
-  Tapping the row again or empty canvas (#1055), another tab or tool, a
-  selection (which replaces the tray), collapsing the side panel, or Back
-  clears the pick; Back
-  leaves Build only once nothing is picked. While a part is picked, the
-  canvas marks where it can go as a drag would (#1016; see
-  `docs/WORLD_VISUALS.md` → "Placing a part").
+- A tap on a row picks it (`BuildViewModel.PickedPart`): its
+  `PartInfo` and where it goes show under it, and the canvas marks where
+  it can go. A canvas tap then places it as a drop there would.
+  The placed part is not selected, so the part stays picked for the next
+  one. Tapping the row again or empty canvas, another tab or tool, a
+  selection, collapsing the panel, or Back clears the pick; Back leaves
+  Build only once nothing is picked.
 
 ## Part settings
 
-One selected joint, beam, sensor or link shows its Part settings in the side
-panel (#343). The title carries the part's glyph and kind ("Accelerometer",
-"Joint"; `PartSettingsPresentation.Title`), so a renamed part still says
-what it is; there is no close button, and tapping empty canvas deselects.
-The rows are **Name**, then what the part is joined to (a beam's two
-joints, a sensor's beam; joints and links list nothing, as the canvas shows
-them, #913), then its note, and last a full-width **Delete**, Unavailable on
-a locked creation when deleting would change the network (see Locked Build).
-Delete acts on a tap, with no dialog; Undo brings the part
-back, selected (#866, #878). Structure is read-only here: a beam's length
-is drawn, not a number. A part's note is its `PartInfo` line, the same as
-its row in the Links list; `BuildPresentationViewModel.SinglePart` owns the
-rows and copy. The panel scrolls back to the top when it shows another
-part, tool or selection count, but keeps its place when a picker, Undo or
-Redo changes the part it shows (#910).
+One selected part shows its Part settings: a title with its glyph
+and kind, so a renamed part still says what it is; **Name**; what it is
+joined to (a beam's joints, a sensor's beam); its parameters; its note
+(`PartInfo`); and a full-width **Delete**. Delete acts at once, with no
+dialog, since Undo brings the part back. Structure is read-only: a
+beam's length is drawn, not a number. `BuildPresentationViewModel.SinglePart`
+owns the rows and copy. The panel scrolls to the top when it shows
+another part, but keeps its place when a picker, Undo or Redo changes the
+part it shows.
 
-**On this joint (#1044).** When the selected part's joint holds two or more
-parts, a small "On this joint" label and a strip of glyph tabs sit between
-the title and Name (`PartSettingsPresentation.OnThisJoint`), one per part,
-in the joint's stack order (Interactions → "Every tool"). The strip is the tray's tab
-strip (`UiIconTabs`), with the selected part's tab filled. A tab tap selects
-that part alone, which moves the canvas mark and scrolls the panel to the
-top. A joint with one part shows no strip; tabs work on a locked creation
-too.
+**On this joint.** When the selected part's joint holds two or
+more parts, a strip of glyph tabs under the title, in stack order, lets
+the player select each of them alone.
 
-### Parameters (#704)
+### Parameters
 
-A part's settings are parameters (`PartParameters`): an id, whether several
-selected parts can share one value (`MultiEditable`), and a slider when the
-panel shows it (`InPanel`). Each kind lists its own
-(`CreatureBuilder.ParametersOf`); what each means is in
-`docs/CREATURE_MODEL.md`.
+A part's settings are `PartParameters`, listed per kind by
+`CreatureBuilder.ParametersOf`; what each means is in
+`docs/CREATURE_MODEL.md`. `PartParameters` owns each slider's range,
+steps and units, and whether it is `Advanced`. A Motor is all about
+speed, so its Max speed is basic. The panel shows Name, the basic
+sliders and controls such as a hinge part's side pickers, then a closed
+Advanced section with the rest; whether it is open lasts the visit.
 
-Each parameter is basic or `Advanced` for every part that has it (#903):
-Start position, the Piston's and the Servo's Max speed, Rise time, Damping,
-Coil length (#989) are advanced. A Motor is all about speed, so its own
-Max speed is basic (#1189), and a Stepper has no advanced settings (#1296). The panel shows Name, the basic sliders and any other controls,
-like a joint motor's link pickers, then a closed Advanced section with the rest, left out when there
-is none, then the part's note. The section stays open or closed across selections
-until the next Build visit (`BuildViewModel.AdvancedSettingsOpen`).
-
-- **Piston:** Max strength (20–400 N, step 10), Stroke (10–200%, step 5, #1211),
-  Start position (0–100%, step 5, #870), Max speed (0.5–4.0 m/s, step 0.1)
-  and Rise time (0.1, 0.2, 0.5 or 1 s, evenly spaced along the slider so
-  the short ones are as easy to pick, #801).
-- **Spring:** Stiffness (50–2000 N/m, step 50), Damping (0–100 N·s/m,
-  step 1), Stroke (as the Piston's) and Coil length (0–100%, step 1, #835;
-  a new Stroke keeps it).
-- **Servo:** Max strength (5–200 N·m, step 5), Range (20°–360°), Start position
-  (0–100%), Max speed (5–120 rpm, step 5) and Rise time, plus "Fixed part" and
-  "Target part" pickers, "part" since a side can be a Wheel (#1225). They list the joint's links by id, then its
-  Wheel with a Wheel icon (#1118). A missing role's picker reads "Pick a
-  Fixed part" or "Pick a Target part" in danger colour and lists only the
-  real links and Wheel; its Play-tap canvas note says the same, or "Pick Fixed and
-  Target parts" when both are empty, since one may be the Wheel. Both lists colour the current Fixed and Target parts
-  as their canvas bands (`docs/UI_DIRECTION.md` → "Menus and pickers").
-  When both roles are set, each list marks the other role's part "swaps",
-  because picking it swaps the two; with one empty, picking the other
-  role's part just moves it, so nothing says "swaps" (#1130). If the joint has neither two links nor a link and a Wheel, its note and its
-  Play-tap canvas note say "A Servo needs two links, or a link and a Wheel" instead,
-  and the play-blocked reason asks to connect another link or add a Wheel there, because
-  no pick could fix it. Changing a picker follows `docs/CREATURE_MODEL.md` →
+- **Side pickers.** A hinge part's "Fixed part" and "Target part" list
+  its joint's links and Wheel ("part", since a side can be a Wheel). An
+  empty role reads "Pick a Fixed part" in danger. With both
+  roles set, each list marks the other role's part "swaps", since picking
+  it swaps them. A joint with fewer than two sides gets a note
+  that no pick could fix it. Changes follow `docs/CREATURE_MODEL.md` →
   "Editing identity rules".
-- **Motor (#454):** Max strength (5–40 N·m, step 5), Max speed (10–240
-  rpm, step 10) and the Servo's Rise time, and the Servo's "Fixed part" and "Target part" pickers,
-  Wheel included. It has no Range or Start
-  position, since it turns round and round.
-- **Stepper (#1036):** Max strength (the Servo's setting, so it edits
-  together with a selected Servo's), Notches (2–24, step 1) and Max
-  frequency (1.0–5.0 Hz, step 0.1; it starts at 1 Hz, since the network's Frequency output near 0 slows it
-  down to a stop, #1296; an older saved value under 1 Hz loads and reads as it is, but a share code with
-  one is refused, like any setting off its slider),
-  and the Servo's "Fixed part" and "Target part" pickers, Wheel included.
-- **Brake (#1041):** Strength (20–400 N·m, step 20, then a last step that
-  reads "Locked", an endless Strength; a span up to it reads "60 N·m–Locked"),
-  and the Servo's "Fixed part" and "Target part" pickers, Wheel included.
-- **Angle sensor (#1206):** no parameters, so no sliders and no Advanced
-  section: Name, the Motor's pickers, its note and Delete.
-- **Wheel:** Radius (0.4–1.0 m, step 0.1), then a read-only Weight
-  ("1.2 kg", `PartSettingsPresentation.Readouts`) that follows Radius.
-- **Camera:** Aim, set on the canvas, one Camera at a time; Rays (1, 3 or
-  5, three evenly spaced stops, #578), Spread (15°–90°, step 5) and Range
-  (1.0–10.0 m, step 0.1, #1097) in the panel. Spread shows disabled while every
-  selected Camera has one ray, since one ray has no spread
-  (`BuildViewModel.HasEffect`); a tap on it says so
-  (`PartParameter.NoEffectReason`).
+- **Uneven stops** (Rise time, Rays) sit evenly along the slider, so the
+  short ones are as easy to pick.
+- **No effect.** Spread is disabled while every selected Camera has one
+  ray, and a tap says why (`PartParameter.NoEffectReason`).
 
-A finger on a slider shows what that setting does in a box at the canvas's
-top right (`ParameterScale.Help`, one short line each, #867). It stays while
-the finger is down, scrolling included, and 2 s after it lifts; touching
-another slider swaps it, and it hides at once when the panel shows something
-else or collapses. Turning it off belongs to Settings (#381).
+A finger on a slider shows what that setting does in a hint card at the
+canvas's top right (`ParameterScale.Help`), until 2 s after it
+lifts.
 
-The selection can change one part's own parameters, or those every selected
-part has and can share (`BuildViewModel.ShownParameters`); a Piston and
-a Spring selected together share Stroke, but a Piston and a Servo share no
-Start position: one is along a stroke, the other a rotation (#867). A slider sets its value on every
-selected part (`SetParameter`). The canvas shows what a parameter changes
-only while it can be changed: a Piston's stroke ticks while Stroke or Start
-position can, a Spring's ticks and rest-length ring while Stroke or Coil
-length can, a selected Camera's own rays while every selected part is a
-Camera, and its Aim handle while Aim can. When a slider changes and those rays
-no longer fit, the view eases out until they and one cell around them do,
-even past `BuildViewBounds` (`BuildGestures.ShowSelectedCameraRays`, #1092).
-It grows only toward the side the rays reach past, so the opposite edge
-stays put, eases at the Training camera's zoom-out rate, and never zooms
-in, not even when Range goes back down. A pinch or pan stops the move, and
-it waits while a finger is on the canvas. Parameters change no network port,
-so a locked creation can change them, except a Camera's Rays, which add or
-remove ports (`PartParameter.ChangesPorts`): on a locked creation its
-slider shows disabled (`BuildViewModel.EditableParameters`), and a tap on
-it shows the locked notification, like a locked tray row.
+Several selected parts show the parameters they all have
+(`ShownParameters`); a slider sets its value on every one. A Piston and a
+Spring share Stroke, but a Piston and a Servo share no Start position:
+one is along a stroke, the other a rotation. The canvas shows what
+a parameter changes only while it can be changed: link travel ticks, a
+Spring's rest length, a Camera's rays and Aim handle. When a Camera
+slider makes its rays outgrow the view, the view eases out toward them,
+never in.
 
 ## Names
 
-- A part with no name of its own shows a default that follows its place in
-  the lists (`BuildViewModel.DefaultPartName`: "Joint 2", "Beam 1", "Accel
-  1", "Camera 1", a sensor numbered among its kind). Renaming (`RenamePart`)
-  goes by id, so an edit lands on the part it started on even if the
-  selection moves. It trims the text, and a blank name, or the default left
-  unchanged, clears the part's own name.
-- A name field stops at `NameLimits`: 40 characters for a creation and 10
-  for a part, and a copy's "Copy of …" name is cut to fit (#868). Every
-  default part name fits, which is why an Accelerometer is named "Accel 1"
-  while the tray and the Part settings title say "Accelerometer". A longer
-  saved name is never cut by the field: it shows whole, cannot grow, and
-  only gets shorter as the player deletes.
-- Names are labels only (#220), so a locked creation can be renamed too; a
-  rename autosaves like any edit. Two creations may share a name: an
-  imported build keeps the name its Name field shows on Import, its own
-  unless the player changes it (#899).
+- A part with no name of its own shows a default that follows its place
+  in the lists (`BuildViewModel.DefaultPartName`). Renaming goes by id,
+  so it lands on the part it started on even if the selection moves. A
+  blank name, or the default left unchanged, clears the part's own name.
+- A name stops at `NameLimits`, and a copy's "Copy of …" is cut to
+  fit. Every default part name fits, which is why an Accelerometer is
+  named "Accel 1". A longer saved name is never cut by the field.
+- Names are labels only, so a locked creation can be renamed, and
+  two creations may share a name.
 
 ## Selection panel
 
-Several selected parts show the selection panel instead (#558, #704), titled
-"N selected"; there is no close button.
-- First a slider for each parameter they share, split into basic and
-  Advanced like a part's, then the note "A slider sets one value for all of
-  them."
-- With a frame, three rows explain its handles (Move, Rotate, Scale). With
-  neither settings nor a frame: "These parts share no settings."
-- Last full-width **Copy N** and **Delete N**. A locked creation makes
-  Delete Unavailable like a part's Delete. Delete acts on a tap (Undo
-  restores it), and its note says what else a delete removes.
-- Copy (#937, #990) duplicates the selected parts one grid step aside,
-  with their settings but not their names, and selects the copy; Undo
-  removes it. A part copies only with what it sits on: a beam, Spring or
-  Piston with both its joints and a sensor with its beam. A joint motor is its
-  joint to the player, so it brings that joint along (#1000), as do a
-  Brake, a Wheel, a Rubber, a Touch sensor and an Angle sensor; a joint's other part is copied only when it is selected itself, and
-  the copied joint is sized for the parts it carries (#1044). A copied joint motor, Brake or Angle sensor uses the copies of its Fixed
-  and Target links or Wheel and leaves a role empty whose link was not copied, so
-  it shows its error note. On a locked creation a sensor, Touch sensor,
-  Angle sensor, Piston or joint motor would change the network, so it blocks Copy too, with the note "Locked:
-  would change the network". Copy is dimmed while the selection
-  holds a part it cannot take; a tap then puts a danger note on each such
-  part until the selection changes, the creation is unlocked or the next
-  canvas touch (#991).
-  `BuildViewModel.CopySelectedParts` and `CopyBlockers` own these rules.
+Several selected parts show the selection panel, titled "N selected"
+(wording: `BuildPresentationViewModel.Selection`): the
+parameters they share, the group frame's handles explained, and
+full-width **Copy N** and **Delete N**.
 
-`BuildPresentationViewModel.Selection` owns the panel's wording.
+- Delete acts at once; its note says what else it removes.
+- Copy duplicates the selection one grid step aside, with
+  settings but not names, and selects the copy. A part copies only with
+  what it sits on: a link with both joints, a sensor with its beam, and a
+  joint part with its joint. A joint's other parts come only when
+  selected. A copied hinge part uses the copies of its sides and leaves a
+  side empty whose part was not copied. Copy is Unavailable while the
+  selection holds a part it cannot take; a tap marks each such part.
+  `BuildViewModel.CopySelectedParts` and `CopyBlockers` own the
+  rules.
 
 ## Validation
 
-A saved Creation stores any drawing: `CreatureDef` checks only that part ids
-are unique and below `NextPartId` and that references point at existing
-parts (one sensor per beam), so an empty or unfinished creature is still a
-Creation (#515). Only training needs a finished creature, and
-`CreatureReadiness` is the single source of truth for that: `Problems` lists
-why the creature cannot be simulated yet (the readiness rules are in
-`docs/CREATURE_MODEL.md`), and `CanTrain` is true when there are none. It
-needs no powered part (#845, `docs/TRAINING_LOOP.md` step 2).
-`CreatureBuilder.TryBuild` applies `Problems` to the creature in progress.
-The UI shows those messages and does not duplicate the rules; Build's
-readiness chip shortens them to one line and treats an empty canvas as a
-start rather than a blocker (`docs/UI_DIRECTION.md` → "Build").
+A saved Creation stores any drawing: `CreatureDef` checks only ids and
+references, so an empty or unfinished creature is still a Creation.
+Only training needs a finished creature, and `CreatureReadiness`
+is the single source of truth for that (rules: `docs/CREATURE_MODEL.md`);
+the UI shows its messages and never repeats its rules. Build's readiness
+chip shortens them to one line and treats an empty canvas as a start, not
+a blocker (`docs/UI_DIRECTION.md` → "Build").
 
-The play button is dimmed until the creature can train, and the readiness
-chip says why; `BuildViewModel.TryLeave` and `CanTrain` gate it. The
-dimmed button can still be tapped
-(#844): the tap starts nothing, and `BuildViewModel.ShowTrainingBlockers`
-gives each joint loose at that moment a "Not connected" canvas note until
-it is joined or removed. A creation in separate pieces gets the same note
-on every piece's joint nearest another piece, none being the main one, until
-it is one piece (#930), and every joint motor, Brake or Angle sensor missing a side gets its
-missing-side note (see Servo settings) until it has both (#1006); a blocker
-that appears later waits for the next tap. The next canvas touch hides
-these notes, so they do not stay in the way while building (#991). Too-short parts always have their "Too short" note. The edits are saved first either way. Back never validates: it saves
-the drawing as it stands (#474). Training refuses a saved creature that
+The play button is dimmed until the creature can train, but still answers
+a tap: it starts nothing and puts a note on each blocker at that
+moment (a loose joint, a piece cut off from the rest, or a hinge part
+missing a side) until it is fixed or the next canvas touch. "Too short"
+notes always show. Back never validates: it saves the
+drawing as it stands. Training refuses a saved creature that
 cannot train and returns to Creations.

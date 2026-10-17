@@ -5,15 +5,13 @@ description: Commit, push and open a Node Runner pull request, enable squash aut
 
 # Ship a PR
 
-`docs/REVIEW.md` owns the rules this follows: "Definition of Done",
-"Review receipts", "Auto-merge" and "PR title and commit hygiene". A
-release's PRs also follow the `release-milestone` or `fix-release`
-skill. Read `LOCAL_CONFIG.md` first for the `gh` login and push remote.
+`docs/REVIEW.md` owns the rules. A release's PRs also follow the
+`release-milestone` or `fix-release` skill. Read `LOCAL_CONFIG.md` first
+for the `gh` login and push remote.
 
-1. Check every "Definition of Done" box, including the `review-change`
-   skill run on the final diff and the manual testing decision
-   (`docs/MANUAL_TESTING.md`; the `plan-manual-tests` skill). The
-   required checks come later; the ruleset holds the merge for them.
+1. Check every "Definition of Done" box except the required checks, which
+   the ruleset waits for. Make a missing manual testing decision with the
+   `plan-manual-tests` skill.
 2. Commit with the PR title as the subject and the `Co-authored-by:`
    trailers "PR title and commit hygiene" asks for.
 3. Push the branch: `git push -u origin <branch>`. If the hook denies it
