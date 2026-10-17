@@ -27,6 +27,7 @@ public sealed class AgentFilesSpec : IDisposable
             name: {_lead}
             description: "Proposes fixture designs: layouts # and colours."
             tools: Read
+            model: haiku
             hooks:
                 Stop:
                 - hooks:
@@ -92,7 +93,8 @@ public sealed class AgentFilesSpec : IDisposable
     [InlineData(_reviewer, "diff — one focus", "diff: one focus", "description has an unquoted")]
     [InlineData(_reviewer, "description: Reviews", "description: >\n  Reviews", "description must be one line")]
     [InlineData(_reviewer, "tools:", "description: Again.\ntools:", "sets description twice")]
-    [InlineData(_reviewer, "tools:", "model: gpt-5\ntools:", "sets model")]
+    [InlineData(_reviewer, "tools:", "model: claude-haiku-4.5\ntools:", "model must be haiku")]
+    [InlineData(_reviewer, "tools:", "color: blue\ntools:", "sets color")]
     [InlineData(_reviewer, AgentFiles.ReviewerTools, "Read, Bash", "a reviewer has tools")]
     [InlineData(_reviewer, AgentFiles.ReviewerLspHookScript, "guard-edit.sh", "a reviewer registers reviewer-bash.sh and reviewer-lsp.sh")]
     [InlineData(_lead, "\n    Stop:\n    - hooks:\n        - type: command\n          command: \"./done.sh\"", "", "hooks must use Claude Code's shape")]

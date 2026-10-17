@@ -42,7 +42,8 @@ internal static class AgentFiles
     internal static bool IsSkipped(string name) =>
         name.StartsWith(LocalPrefix, StringComparison.Ordinal) || name.StartsWith('.');
 
-    private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks"];
+    private static readonly string[] _allowedKeys = ["name", "description", "tools", "model", "hooks"];
+
 
     /// <summary>Every broken rule under <paramref name="root"/>, each naming its file.</summary>
     internal static List<string> Problems(string root)
@@ -124,6 +125,11 @@ internal static class AgentFiles
         foreach (var key in values.Keys.Where(key => !_allowedKeys.Contains(key)))
         {
             problems.Add($"{shown}: sets {key}; agent frontmatter has only {string.Join(", ", _allowedKeys)}.");
+        }
+
+        if (values.TryGetValue("model", out var model) && model != "haiku")
+        {
+            problems.Add($"{shown}: model must be haiku.");
         }
 
         if (!values.TryGetValue("name", out var actual) || actual != name)

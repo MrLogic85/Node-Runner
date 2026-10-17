@@ -95,8 +95,11 @@ each file loading in both Copilot CLI and Claude Code.
   `.github/agents/`: Copilot would load it first and Claude Code not at
   all.
 - An agent's frontmatter has only `name` (the file's `<name>`), a
-  one-line `description`, `tools` and `hooks`, and never `model`. A value
-  with `: ` or ` #` is invalid YAML unless quoted; prefer ` — `.
+  one-line `description`, `tools`, `model` and `hooks`. `model` is only
+  `haiku`, Claude Code's alias that Copilot CLI also maps to Haiku; other
+  aliases and model IDs differ between the tools. Without it, an agent
+  runs on its caller's model. A value with `: ` or ` #` is invalid YAML
+  unless quoted; prefer ` — `.
 - A reviewer (`*-reviewer`) has `tools: Read, Grep, Glob, Bash, LSP` and
   registers `reviewer-bash.sh` and `reviewer-lsp.sh` in its frontmatter
   in Claude Code's nested `hooks` shape, as the existing reviewers do:
