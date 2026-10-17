@@ -13,7 +13,7 @@ description: File a new Node Runner GitHub issue with its labels, project fields
    and stop; with no current change, file it as a *quick fix* below.
 2. Search for a duplicate: `gh issue list --state all --search "<words>"`.
    If one exists, comment there instead; for a quick fix, also set it
-   **Ready** unless it is In progress, and start it with `start-issue`.
+   **Ready** unless it is In progress, and start it as step 7 says.
 3. Write the body to `.scratch/issue.md`: the outcome, the context with
    evidence (files, lines, logs, issue numbers), acceptance criteria and a
    test plan. Title it as `docs/ISSUES.md` says.
@@ -32,5 +32,6 @@ description: File a new Node Runner GitHub issue with its labels, project fields
    `.github/scripts/issue-fields.sh N --status … --priority … [--size …]`.
 6. Run `.github/scripts/issue-audit.sh` and fix what it lists for the new
    issue.
-7. Tell the human its number, and start a quick fix at once with the
-   `start-issue` skill.
+7. Tell the human its number, and start a quick fix with the
+   `start-issue` skill: at once, or once the human agrees if it came up
+   in a conversation with them.

@@ -49,8 +49,9 @@ number. A remark in a reply, PR or review is not enough.
 A **simple** problem (Size 1 or 2, with no open decision, design or
 manual testing) is fixed rather than left waiting: fix it in the current
 change and name it in the PR, or, with no current change, file it as
-**Ready** and start it at once. Any other problem is not folded into the
-current change.
+**Ready** and start it at once; if it came up in a conversation with the
+human, start it only once they agree. Any other problem is not folded
+into the current change.
 
 Automation sets only Status **Needs review**, so the creator sets the
 rest of "Required metadata" at once, with **Idea** instead if the issue
