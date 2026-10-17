@@ -44,8 +44,13 @@ It uses the caller's `gh` login, whose token needs the `project` scope
 File an issue as soon as you spot a problem or improvement outside the
 current task, such as a bug, a code smell, duplication or a missing
 abstraction, while the evidence is at hand, and tell the human its
-number. A remark in a reply, PR or review is not enough, and the work is
-not folded into the current change.
+number. A remark in a reply, PR or review is not enough.
+
+A **simple** problem (Size 1 or 2, with no open decision, design or
+manual testing) is fixed rather than left waiting: fix it in the current
+change and name it in the PR, or, with no current change, file it as
+**Ready** and start it at once. Any other problem is not folded into the
+current change.
 
 Automation sets only Status **Needs review**, so the creator sets the
 rest of "Required metadata" at once, with **Idea** instead if the issue
@@ -97,7 +102,8 @@ Story points, set once the issue is shaped. **Idea**, `type: question`,
 - **Blocked** — Waits on another issue, recorded as blocked-by. A wait on
   an external tool or person gets its own issue to block on. When the
   last blocker closes, set **Ready**.
-- **Ready** — Reviewed and actionable, with no open blocked-by issue.
+- **Ready** — Reviewed, or simple (see "Creating an issue"), and
+  actionable, with no open blocked-by issue.
 - **In progress** — Set it when you start.
 - **Done** — Set automatically when the issue closes.
 
@@ -117,8 +123,8 @@ sub-issues.
 
 ## Reviewing an issue
 
-Trivial issues can be worked directly. Review an issue before
-implementation when it:
+Simple issues (see "Creating an issue") can be worked directly. Review
+any other issue before implementation when it:
 
 - might need splitting;
 - affects architecture, persistence, ML behaviour, physics, UI flow, CI
