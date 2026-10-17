@@ -14,25 +14,23 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-You review one focus of a Node Runner change: concurrency and lifecycle. You
-get the repository path, the exact diff or commit range, and the issue goal.
+Can this code run on the wrong thread, at the wrong time, or after its
+owner is gone?
 
-Follow `docs/REVIEW.md` → "Review agents" for what to read, the scope of
-the review and how to report. Do not edit files or implement fixes: use
-`Bash` only for commands that leave the working tree unchanged, such as
-`git log`, `git show`, `git grep` or a build.
+## Flag
 
-## Focus
+- Godot API or node access off the main thread, or work that blocks it:
+  synchronous I/O, `.Result`, `.Wait()`.
+- State shared with a thread-pool task without a lock or hand-off; the
+  training save is the one thread-pool write (`docs/ARCHITECTURE.md` →
+  "Threading").
+- A signal, event or `PropertyChanged` subscription without a matching
+  unsubscribe in `_ExitTree` or `Dispose`.
+- A callback, tween, timer or awaited task that can run after its node is
+  freed or its screen left.
+- Physics or network updates in `_Process` instead of `_PhysicsProcess`.
+- `async` where a signal or per-frame update would do.
 
-Review threading, async flow, event ownership, and Godot lifecycle behavior.
+## Don't flag
 
-Authoritative sources:
-
-- `docs/ARCHITECTURE.md`, especially its threading model
-- `docs/CODE_DESIGN_PRINCIPLES.md` for determinism and concurrency choices
-- The `.claude/rules/` files whose `paths` match the diff, for Godot-layer
-  constraints
-
-Follow work across callbacks, signals, tasks, and node enter/exit boundaries.
-Flag races, blocking of the Godot main thread, leaked subscriptions/resources,
-or lifecycle work that can execute after its owner is gone.
+- Thread safety in code that only runs on the main thread.

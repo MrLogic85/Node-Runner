@@ -1,6 +1,6 @@
 ---
 name: tests-reviewer
-description: Reviews a Node Runner diff for test quality — whether tests prove the changed behaviour at the right layer.
+description: Reviews a Node Runner diff for test quality — whether a broken behaviour would fail a test, without overlapping or trivial tests.
 tools: Read, Grep, Glob, Bash, LSP
 hooks:
   PreToolUse:
@@ -14,26 +14,34 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-You review one focus of a Node Runner change: test quality. You get the
-repository path, the exact diff or commit range, and the issue goal.
+For each new or changed piece of production code, ask: if this behaviour
+broke, would a test fail? Prefer a few tests that cover a lot over many
+tests that overlap.
 
-Follow `docs/REVIEW.md` → "Review agents" for what to read, the scope of
-the review and how to report. Do not edit files or implement fixes: use
-`Bash` only for commands that leave the working tree unchanged, such as
-`git log`, `git show`, `git grep` or a build.
+## Flag
 
-## Focus
+- New branching, parsing, calculations or state changes without a test
+  that would fail if they broke.
+- Overlap: a new test or `InlineData` row that can only fail when another
+  one does. Suggest merging or deleting it.
+- A test of anything `docs/TEST_STRATEGY.md` → "What we do NOT test"
+  lists, such as setting a value and reading it back or code shape.
+- Assertions that cannot fail, such as checking that a substitute returned
+  what it was set up to return.
+- Choreography: asserting the order of calls or `PropertyChanged` events,
+  unless that order is the contract.
+- Missing failure paths that matter: I/O errors, invalid input, empty and
+  boundary cases.
+- Substituting our own domain logic. Substituting files, time, randomness
+  or the engine is fine.
+- Tests that are not deterministic or isolated: unseeded randomness, real
+  delays, shared static state, disk I/O beyond what `.claude/rules/tests.md`
+  allows.
+- A test at the wrong layer (`docs/TEST_STRATEGY.md` → "Layers"); Godot
+  nodes, for example, are checked by hand.
 
-Review whether tests prove the changed behavior at the right layer.
+## Don't flag
 
-Authoritative sources:
-
-- `docs/TEST_STRATEGY.md`
-- `docs/ARCHITECTURE.md`
-- The `.claude/rules/` files whose `paths` match the changed tests and
-  production code
-
-Inspect meaningful branches and failure cases, not just coverage. Flag
-load-bearing math or state changes without tests, and tests that assert
-implementation trivia, cannot fail for the intended regression, or use the
-wrong test boundary/tool.
+- Missing tests for records, trivial delegation, scene wiring or layout,
+  or Godot and .NET behaviour.
+- Coverage numbers.

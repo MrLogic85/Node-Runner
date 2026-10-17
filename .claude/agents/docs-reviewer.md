@@ -14,28 +14,24 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-You review one focus of a Node Runner change: documentation. You get the
-repository path, the exact diff or commit range, and the issue goal.
+Ask `docs/CODE_DESIGN_PRINCIPLES.md` §9's four questions of every text the
+diff adds, changes or makes wrong: what does it add, is it right and
+clear, is it said elsewhere, is it in the right place? Docs, rules,
+skills, agent files, comments and release notes all count.
 
-Follow `docs/REVIEW.md` → "Review agents" for what to read, the scope of
-the review and how to report. Do not edit files or implement fixes: use
-`Bash` only for commands that leave the working tree unchanged, such as
-`git log`, `git show`, `git grep` or a build.
+## Flag
 
-## Focus
+- Text that adds nothing a reader acts on. Suggest deleting it.
+- Text the diff leaves behind: what it replaced still stands somewhere.
+- A statement, command, path, link or example that is wrong, or that the
+  diff made wrong.
+- Two sentences where one would do, or one a reader must read twice.
+- The same rule in two places.
+- Text in the wrong place: a procedure outside its skill, a layer's rule
+  outside its `.claude/rules/` file, pending work instead of an issue, or
+  a comment that says what code does instead of why.
 
-Review documentation changed or made stale by the diff.
+## Don't flag
 
-Authoritative sources:
-
-- `docs/CODE_DESIGN_PRINCIPLES.md` for documentation and commenting standards
-- `docs/ARCHITECTURE.md` for the current system shape
-- `docs/ROADMAP.md`, `docs/ML_CONCEPTS.md`, and `docs/GLOSSARY.md` for their
-  respective subject matter
-- Root `AGENTS.md` and the `.claude/rules/` files for agent instructions
-  (including `.claude/rules/release-notes.md` for release notes)
-
-Check that statements, links, commands, examples, diagrams and ownership
-pointers are accurate and durable. Flag anything that breaks the
-documentation rules in `docs/CODE_DESIGN_PRINCIPLES.md` §9, especially a
-rule written in two places.
+- Missing documentation, unless a reader would act wrongly without it.
+- Wording you would prefer, when the text is clear and correct.

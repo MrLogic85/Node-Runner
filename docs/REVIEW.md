@@ -58,10 +58,12 @@ not apply:
 
 ## Review agents
 
-Each review agent owns one focus and the documents it is judged against.
-Its definition lives in `.claude/agents/<name>.md` (see "Agent, rule and
-skill files"). This section owns when the agents run, how they report
-and how their files are written.
+Each review agent's file, `.claude/agents/<name>.md`, holds its focus as
+a checklist (see "Agent, rule and skill files"); the `review-change` skill
+gives it the diff and the report format, finding levels included.
+`issue-reviewer` keeps its own levels (`docs/ISSUES.md` → "Reviewing an
+issue"). This
+section owns when the agents run and how their files are written.
 
 ### Choosing reviewers
 
@@ -86,36 +88,6 @@ or fresh screenshots or recordings from the target device
 (`docs/MANUAL_TESTING.md` → "Android checks"), and the `reference
 design/` path when it guides a new surface. Without them it reports
 **insufficient evidence** (see "Definition of Done").
-
-### Reporting
-
-Every review agent must:
-
-- Read root `AGENTS.md`, the `.claude/rules/` files whose `paths` match
-  the diff, and the documents its definition names, and judge the diff
-  against them without inventing stricter rules.
-- Stay within the diff. Mention preexisting problems separately; they do
-  not block.
-- Report only actionable correctness, maintainability or process
-  problems, not preferences.
-- Classify each finding by level, mark it **new** or **preexisting**, and
-  give file, lines, evidence, impact and a suggested direction.
-- Return "No findings" when nothing clears that bar.
-- Find a C# symbol's definition, callers or implementations with the
-  `LSP` tool when the agent has it, since it resolves overloads and `?.`
-  calls that a text search misses; otherwise, or when it fails to start,
-  use `git grep` (#1352).
-
-The levels rank findings:
-
-- **Major**: wrong behaviour, a wrong statement, or a broken rule in the
-  owning documents.
-- **Medium**: a risk or gap worth fixing now.
-- **Minor**: a small, actionable fix.
-
-"Definition of Done" says how each level gates a commit. Issue reviews use
-`issue-reviewer` (`docs/ISSUES.md` → "Reviewing an issue"), which reports
-in its own format and finding levels.
 
 ### Review receipts
 
@@ -212,7 +184,6 @@ with its reason; when the script is missing, it is allowed.
   `NodeRunner.Arch.Tests` check the rules above (#1334, #1315, #1317), so
   `Test & coverage` fails when an agent, rule or skill would load in only
   one tool, or never.
-- Each reviewer's file tells it not to edit files.
 - Committed agent instructions require only the tools `README.md` →
   "Tools" marks as required; for a recommended tool they name a fallback
   that always exists, such as `git grep` for `rg`.

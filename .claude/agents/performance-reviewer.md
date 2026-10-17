@@ -14,24 +14,19 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-You review one focus of a Node Runner change: performance and resources. You
-get the repository path, the exact diff or commit range, and the issue goal.
+Does this change slow a hot path, or let something grow without bound?
 
-Follow `docs/REVIEW.md` → "Review agents" for what to read, the scope of
-the review and how to report. Do not edit files or implement fixes: use
-`Bash` only for commands that leave the working tree unchanged, such as
-`git log`, `git show`, `git grep` or a build.
+## Flag
 
-## Focus
+- Allocations, LINQ or string building per frame or tick (`_Process`,
+  `_PhysicsProcess`, `_Draw`), per candidate or per generation.
+- I/O, logging or scene instancing in a hot path.
+- Resources kept past their use: nodes never freed, textures, files or
+  subscriptions held.
+- Collections, caches or history that grow every generation without a cap.
+- Work repeated per candidate that could run once per generation.
 
-Review user-visible performance and resource ownership where the diff touches
-a hot path or long-lived state.
+## Don't flag
 
-Authoritative sources:
-
-- `docs/CODE_DESIGN_PRINCIPLES.md` for the project's optimization policy
-- `docs/ARCHITECTURE.md` for runtime and tick boundaries
-- The issue's performance acceptance criteria, if any
-
-Trace allocations, I/O, resource lifetime, and unbounded growth in relevant
-paths. Distinguish measured risks from speculative micro-optimization.
+- Micro-optimizations with no hot path or measurement behind them.
+- Code that runs once per user action.

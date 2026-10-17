@@ -124,18 +124,19 @@ Docs and comments describe what is true now and why. Pending work, such as
 TODOs, "move this when touched" lists and wished-for improvements, goes in a
 GitHub issue; the doc or comment may link to it.
 
-Documentation follows these rules:
+Ask four questions of every text you write, change or make wrong:
 
-- Each file has one responsibility.
-- Nothing is written twice; other files link to the owner.
-- One clear sentence beats two.
-- Instructions that add nothing are removed: generic advice, restating what
-  code, tests or CI enforce without a why, and history that no longer guides
-  decisions.
-- A procedure's steps live in a skill in `.claude/skills/`; the owning doc
-  keeps the rules and the why, and links to the skill.
-- Layer-specific instructions live in a `.claude/rules/` file whose `paths`
-  cover the files they govern.
+1. **What does it add; is it needed?** Delete text no reader acts on:
+   generic advice, a restatement without a why of what code, tests or CI
+   enforce, and history that no longer guides a decision. A change removes what it
+   makes unneeded, not only adds.
+2. **Is it right and clear?** One clear sentence beats two.
+3. **Is it said somewhere else?** Nothing is written twice; other files
+   link to the owner, which `README.md` → "Documentation" names.
+4. **Is it in the right place?** Each file has one responsibility. A
+   procedure's steps live in a skill in `.claude/skills/`, and the owning
+   doc keeps the rules and the why; a layer's instructions live in the
+   `.claude/rules/` file whose `paths` cover it.
 
 ## 10. Testing
 
