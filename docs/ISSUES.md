@@ -7,7 +7,7 @@ GitHub Issues track all work. Issue metadata lives in three places:
   [Node Runner project](https://github.com/users/MrLogic85/projects/2) say
   where it *stands*: Status, Priority and Size.
 - **GitHub itself** holds milestones (the roadmap version), sub-issues
-  (parent/child) and blocked-by relationships (dependencies).
+  and blocked-by relationships.
 
 Titles describe the problem or outcome, with no `[BUG]`-style prefixes.
 
@@ -20,8 +20,10 @@ Every open issue has:
 - A **Priority** and a **Status**
 - A **Size** once it is a shaped leaf issue (see "Size")
 
-The milestone is the roadmap version; backlog work has none. Labels never
+Backlog work has no milestone. Labels never
 repeat GitHub state, milestones or project fields.
+`.github/scripts/issue-audit.sh` lists open issues that break this
+document's rules.
 
 ## Setting project fields
 
@@ -30,69 +32,31 @@ New issues join the project automatically. Read and set fields with
 
 ```bash
 .github/scripts/issue-fields.sh 286                       # print Status, Priority, Size
-.github/scripts/issue-fields.sh 286 --status Ready
-.github/scripts/issue-fields.sh 286 --priority Major --size 3
+.github/scripts/issue-fields.sh 286 --status Ready --priority Major --size 3
 .github/scripts/issue-fields.sh 286 --size none           # clear a field
 ```
 
-The script uses the caller's `gh` login, whose token needs the `project`
-scope (`gh auth refresh -h github.com -s project`).
+It uses the caller's `gh` login, whose token needs the `project` scope
+(`gh auth refresh -h github.com -s project`).
 
 ## Creating an issue
 
 File an issue as soon as you spot a problem or improvement outside the
-current task: a bug, a code smell, duplication or a missing abstraction.
-Do it right away, while the evidence is at hand, and tell the human its
-number. A remark in a reply, PR or review is not enough. The issue is
-worked on separately, not folded into the current change.
+current task, such as a bug, a code smell, duplication or a missing
+abstraction, while the evidence is at hand, and tell the human its
+number. A remark in a reply, PR or review is not enough, and the work is
+not folded into the current change.
 
-Automation only sets Status **Needs review**, so whoever creates the issue
-sets the rest of the "Required metadata" at once, with **Idea** instead of
-Needs review if the issue is not shaped yet. Record its parent as a GitHub
-sub-issue relationship and each issue it waits on as a **blocked-by** one;
-"Blocked by #N" in the body does not record them. The `create-issue` skill has the
-steps.
+Automation sets only Status **Needs review**, so the creator sets the
+rest of "Required metadata" at once, with **Idea** instead if the issue
+is not shaped yet. A parent and each issue it waits on are GitHub
+sub-issue and blocked-by relationships; "Blocked by #N" in the body does
+not record them.
 
-## Type labels
+## Labels
 
-Exactly one:
-
-- `type: bug` — Something behaves incorrectly
-- `type: feature` — New user-visible capability
-- `type: chore` — Maintenance, setup, dependency or process work
-- `type: refactor` — Internal restructuring without behaviour change
-- `type: docs` — Documentation-only change
-- `type: test` — Test-only change
-- `type: question` — Open decision needing discussion
-- `type: epic` — A large outcome tracked through its sub-issues
-- `type: spike` — Time-boxed investigation that ends in a decision or
-  follow-up issue
-
-CI work is `type: chore` or `type: bug` plus `area: ci`; the PR title type
-`ci` is only for the squash commit.
-
-## Area labels
-
-One or more:
-
-- `area: ml` — Neural networks, GA, backprop, math, determinism
-- `area: domain` — Pure domain records, invariants, serialization types
-- `area: app` — View-models, repositories, services
-- `area: creature` — Creature nodes, beams, sensors
-- `area: sim` — Population orchestration, evolver loop, scoring
-- `area: physics` — Godot physics behaviour and tuning
-- `area: ui` — Screens, controls, presentation logic
-- `area: visualization` — Network, training and creature visualization
-- `area: audio` — Sound effects, music, audio settings
-- `area: android` — Export, install, permissions, device behaviour
-- `area: ci` — GitHub Actions, branch protection, required checks
-- `area: docs` — Documentation structure and content
-- `area: repo` — Repository process, labels, issues, PR conventions
-
-## Optional labels
-
-- `good-first` — Small, well-bounded, low architectural risk
-- `maintenance` — Cleanup that prevents drift without changing behaviour
+`gh label list` shows each label and what it means. CI work is `type: chore` or
+`type: bug` plus `area: ci`.
 
 ## Priority
 
@@ -102,49 +66,40 @@ outranks features.
 - **1 Critical** — Fix now: broken build or demo, data loss, unusable core
   flow, or a broken delivery gate.
 - **2 Major** — Blocks safe progress toward the next roadmap version,
-  including work that protects CI, review, release, architecture boundaries
-  or issue quality.
+  including work that protects CI, review, release, architecture
+  boundaries or issue quality.
 - **3 Default** — Important, but safe work can continue meanwhile.
 - **4 Minor** — Nice-to-have, polish or backlog.
 
 ## Size
 
 Story points, set once the issue is shaped. **Idea**, `type: question`,
-`type: epic` and parent issues have no Size. A table view grouped by
-Milestone with the Size sum shows each milestone's total.
+`type: epic` and parent issues have no Size.
 
 - **1** — About a one-liner
 - **2** — Touches one or two files
 - **3** — Touches several files, straightforward
 - **5** — Large but manageable; needs complex thinking
-- **8** — Too big: split it into sub-issues before it can become **Ready**,
-  then clear its Size and estimate only the sub-issues
+- **8** — Too big: split it into sub-issues before it can become
+  **Ready**, then clear its Size and estimate only the sub-issues
 
 ## Status
 
-The `start-issue` skill takes the route each Status calls for.
-
-- **Idea** — Unshaped; not reviewed or implemented. When discussion gives
-  it one clear outcome and acceptance criteria, set **Needs review**.
+- **Idea** — Unshaped. When discussion gives it one clear outcome and
+  acceptance criteria, set **Needs review**.
 - **Needs review** — Shaped; review it before implementation (see
   "Reviewing an issue").
 - **Needs design** — Waits for a `design-lead` proposal that the owner
-  approves, recorded on the issue (`reference design/` may guide it but is
-  not updated). Then set **Needs review**, or **Ready** if the issue already
-  passed review and the design changes neither its scope nor its acceptance
-  criteria.
+  approves, recorded on the issue. Then set **Needs review**, or **Ready**
+  if the issue already passed review and the design changes neither its
+  scope nor its acceptance criteria.
 - **Needs decision** — A product or design choice must be settled first.
-- **Blocked** — Waits on another issue, recorded as blocked-by. A wait on an
-  external tool or person gets its own issue to block on, so
-  `issue-audit.sh` can check every Blocked issue. When the last blocker
-  closes, set **Ready**.
+- **Blocked** — Waits on another issue, recorded as blocked-by. A wait on
+  an external tool or person gets its own issue to block on. When the
+  last blocker closes, set **Ready**.
 - **Ready** — Reviewed and actionable, with no open blocked-by issue.
 - **In progress** — Set it when you start.
 - **Done** — Set automatically when the issue closes.
-
-`issue-audit.sh` flags missing labels and fields, a Size on a parent, a
-Blocked issue without an open blocker, a Ready or In progress issue that
-still has one, and a parent that breaks "Parent issues".
 
 ### Parent issues
 
@@ -166,27 +121,23 @@ Trivial issues can be worked directly. Review an issue before
 implementation when it:
 
 - might need splitting;
-- affects architecture, persistence, ML behaviour, physics, UI flow, CI or
-  release;
+- affects architecture, persistence, ML behaviour, physics, UI flow, CI
+  or release;
 - is ambiguous about behaviour or acceptance criteria;
 - likely needs manual testing; or
 - is in **Needs review** or **Needs decision**.
 
-The `review-issue` skill runs the review with the `issue-reviewer` agent
-(`.claude/agents/issue-reviewer.md`), which owns what to check and
-what each finding level means. The review is recorded on the issue: the
-body holds what it changed, and a comment its summary.
-
-The result sets the Status:
+`issue-reviewer` (`.claude/agents/issue-reviewer.md`) owns what to check
+and the finding levels. The issue body records what the review changed,
+and a comment its summary. The result sets the Status:
 
 - A Major or Medium finding left open: **Needs decision** when it waits
   on the owner's choice, otherwise **Needs review**; review it again once
   the body is fixed.
-- Otherwise: **Needs design** if it changes what the user sees without an
-  approved design, else **Blocked** if it has an open blocker, else
-  **Ready**. Minor findings do not hold it back. A Size 8 issue's
-  sub-issues (see "Size") take this Status, and it follows "Parent
-  issues".
+- Otherwise: **Needs design** if it changes what the user sees without
+  an approved design, else **Blocked** if it has an open blocker, else
+  **Ready**. A Size 8 issue's sub-issues take this Status, and the parent
+  follows "Parent issues".
 
 Each milestone that changes UI has a design brief that `design-lead`
 reviews before its screens are built.

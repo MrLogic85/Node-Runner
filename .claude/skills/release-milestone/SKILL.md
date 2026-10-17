@@ -5,9 +5,9 @@ description: Release a Node Runner milestone X.Y.Z from main, from the release n
 
 # Release a milestone
 
-`docs/RELEASING.md` → "Releasing a milestone" owns the rules, the PRs'
-titles and what `release.sh` does; this skill owns the steps. Read
-`LOCAL_CONFIG.md` first for the `gh` login and the signing key.
+`docs/RELEASING.md` → "Releasing a milestone" owns the rules and the
+PRs' titles. Read `LOCAL_CONFIG.md` first for the `gh` login and the
+signing key.
 
 1. Stop unless the human has asked for this release. Find the release
    issue `#N` and check it is the milestone's last open issue; if others

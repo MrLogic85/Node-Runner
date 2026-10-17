@@ -5,9 +5,8 @@ description: Build and run Node Runner on the desktop to check a change by hand,
 
 # Desktop check
 
-`docs/MANUAL_TESTING.md` owns when a desktop check is needed, which window
-and UI sizes to try ("Desktop checks") and what counts as evidence
-("Agent-run manual tests"); this skill owns how to run one on macOS.
+Rules: `docs/MANUAL_TESTING.md` → "Desktop checks". These steps are for
+macOS.
 
 1. Build the game, since Godot runs the last built assemblies, and stop if
    the build fails:
@@ -17,12 +16,13 @@ and UI sizes to try ("Desktop checks") and what counts as evidence
    ```
 
 2. Capture each screen the plan names with the `Screenshot` tool
-   (`.claude/rules/tools.md`), which takes the scene, the image's absolute
-   path and a frame count (60 if left out). `--resolution` sets the
-   window to the size for a ratio "Desktop checks" names (16:9 1280x720,
-   20:9 1600x720, 4:3 960x720, 1:1 720x720). The runs share a throwaway `HOME`, so Godot's `user://` is
-   `.scratch/home` and the human's saves are never read or changed; delete
-   it before a new check. The block fails when no image was saved.
+   (`project/src/tools/Screenshot.cs`), which takes the scene, the
+   image's absolute path and a frame count (60 if left out).
+   `--resolution` sets the window for a ratio "Desktop checks" names (16:9
+   1280x720, 20:9 1600x720, 4:3 960x720, 1:1 720x720). The runs share a
+   throwaway `HOME`, so Godot's `user://` is under `.scratch/home` and the
+   human's saves are never touched; delete it before a new check. The
+   block fails when no image was saved.
 
    ```bash
    godot=/Applications/Godot_mono.app/Contents/MacOS/Godot
@@ -43,10 +43,10 @@ and UI sizes to try ("Desktop checks") and what counts as evidence
 3. Read `.scratch/desktop.log` for `ERROR`, `SCRIPT ERROR` and C#
    exceptions, then look at the image. The tool exits 0 even when the
    scene logged errors, so the log is the only sign of them.
-4. The human runs what the agent cannot drive or judge
-   (`docs/MANUAL_TESTING.md` → "Agent-run manual tests"), with
-   `godot --path project`. That includes Min and Max UI size, which is set
-   by hand in the running game, while the tool sees Auto.
+4. Leave to the human, with `godot --path project`, what you cannot drive
+   or judge (`docs/MANUAL_TESTING.md` → "Agent-run manual tests"),
+   including Min and Max UI size, which is set by hand in the running
+   game; the tool sees Auto.
 5. Record the run in the PR's **How to verify** as `docs/MANUAL_TESTING.md`
    → "What belongs in a PR" lists, with the window size, then delete
    `.scratch/home` and the other scratch files.

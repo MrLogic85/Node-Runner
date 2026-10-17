@@ -30,6 +30,12 @@ skills, agent files, comments and release notes all count.
 - Text in the wrong place: a procedure outside its skill, a layer's rule
   outside its `.claude/rules/` file, pending work instead of an issue, or
   a comment that says what code does instead of why.
+- Comments and docs that break §9's comment rules: history, issue
+  numbers, callers instead of purpose, a comment where clearer code
+  would do, doc comments §9 does not ask for.
+
+Unneeded text is a real finding, not a nit: Medium when it bloats a file
+agents load, Major when it misleads.
 
 ## Don't flag
 

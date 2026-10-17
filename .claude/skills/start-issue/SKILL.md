@@ -5,8 +5,8 @@ description: Start or resume work on a Node Runner GitHub issue by reading its s
 
 # Start an issue
 
-`docs/ISSUES.md` → "Status" owns what each Status means; this skill owns
-what to do about it. Read `LOCAL_CONFIG.md` first for the `gh` login.
+`docs/ISSUES.md` → "Status" owns what each Status means. Read
+`LOCAL_CONFIG.md` first for the `gh` login.
 
 1. Read the issue, its comments, fields, parent, sub-issues and blockers:
 
@@ -39,8 +39,8 @@ what to do about it. Read `LOCAL_CONFIG.md` first for the `gh` login.
    - `.github/scripts/issue-fields.sh N --status "In progress"`.
    - Follow up your earlier PRs and `main`'s runs (the `ship-pr` skill,
      step 6).
-   - `git pull --ff-only`, then branch with the name in `docs/REVIEW.md`
-     → "TL;DR".
+   - `git pull --ff-only`, then branch as `<type>/N-<slug>`, with the
+     type the PR title will have, for example `fix/1234-joint-drift`.
 4. Implement; if the issue has no manual testing decision, make one with
    the `plan-manual-tests` skill. Then run the `review-change` skill and
    the `ship-pr` skill.

@@ -5,7 +5,6 @@ paths:
 
 # Reference design rules — `reference design/`
 
-Do not change the design in this folder, do not codereview it either
-The implementation should be well done in the design, but it is build in HTML
-and it might contain errors. It is more important to get the look correct than to
-follow the implmenentation exactly.
+Never edit or review this folder. It is an HTML guide to the app's look and
+may contain errors: match its look, not its implementation
+(`docs/UI_DIRECTION.md`).

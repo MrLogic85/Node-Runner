@@ -5,8 +5,7 @@ description: Add a translation of Node Runner into a new language, from the .po 
 
 # Add a language
 
-`docs/LOCALIZATION.md` owns the text rules, the template and the rules
-for a translation; this skill owns the steps.
+`docs/LOCALIZATION.md` owns the rules.
 
 1. Check `project/locale/messages.pot` is current; if the test fails,
    regenerate it as "The template" says:

@@ -5,10 +5,8 @@ description: Ship a Node Runner fix release X.Y.Z (Z > 0) from release/vX.Y with
 
 # Fix release
 
-`docs/RELEASING.md` → "Fix releases" owns the rules: the version number,
-renaming planned milestones, how its PRs merge, the order with `main` and
-closing the issue. This skill owns the steps. Read `LOCAL_CONFIG.md`
-first for the `gh` login and the signing key.
+`docs/RELEASING.md` → "Fix releases" owns the rules. Read
+`LOCAL_CONFIG.md` first for the `gh` login and the signing key.
 
 1. Find X.Y.Z, the newest `vX.Y.*` tag plus one patch:
 
@@ -26,9 +24,10 @@ first for the `gh` login and the signing key.
    gh api -X PATCH repos/MrLogic85/Node-Runner/milestones/<number> -f title=<new>
    ```
 
-3. Branch from `release/vX.Y` and make the fix as usual (`start-issue`),
-   then run `.github/scripts/set-version.sh X.Y.Z` and write
-   `docs/release-notes/X.Y.Z.md` with the `write-release-notes` skill.
+3. Branch from `release/vX.Y` and make the fix as usual (the
+   `start-issue` skill), then run `.github/scripts/set-version.sh X.Y.Z`
+   and write `docs/release-notes/X.Y.Z.md` with the `write-release-notes`
+   skill.
 4. Ship it with `ship-pr`, but open it with
    `gh pr create --base release/vX.Y …` and skip auto-merge. Merge with
    `gh pr merge --squash` only after `gh pr checks --watch` exits 0; if it

@@ -5,27 +5,21 @@ paths:
 
 # Test rules — `tests/`
 
-CLI xUnit tests. This file owns test-code conventions; how to run them,
-tools, projects and what each layer tests are in `docs/TEST_STRATEGY.md`,
-and each library's test focus is in its rule in `.claude/rules/`
-(`domain.md`, `mechanics.md`, `ml.md`, `app.md`).
+Test-code conventions. What each layer tests is in `docs/TEST_STRATEGY.md`
+→ "Layers".
 
 ## Rules
 
-- **Mirror the production layout.** `libs/NodeRunner.ML/Networks/DirectNetwork.cs`
-  is tested in `tests/NodeRunner.ML.Tests/Networks/DirectNetworkTests.cs`.
-- **One test class per production class.** When a production file splits,
-  split its tests the same way. Test files have no size limit.
-- **Names describe behaviour:** `Forward_WithZeroInput_ReturnsZeroesForTanh`,
-  not `Test1`.
+- **Follow `docs/TEST_STRATEGY.md` → "Guiding principles"** and test
+  nothing its "What we do NOT test" lists.
+- **Mirror the production layout:** `libs/NodeRunner.ML/Networks/DirectNetwork.cs`
+  is tested in `tests/NodeRunner.ML.Tests/Networks/DirectNetworkTests.cs`,
+  one test class per production class. Test files have no size limit.
+- **Names describe behaviour:** `Forward_WithZeroInput_ReturnsZeroesForTanh`.
 - **AAA layout:** Arrange, blank line, Act, blank line, Assert.
-- **Global usings live in each `*.Tests.csproj`;** don't import them per
-  file.
-- **Disk I/O only in a per-test temp directory.** The exceptions are committed
-  fixtures, pins and share dictionaries, which a test may read from the
-  checkout (`TestRepository.Root`). It rewrites them only when its opt-in
-  `NODE_RUNNER_UPDATE_*` variable is set. The hook specs make their
-  throwaway repositories under the test output rather than `/tmp`
-  (`docs/REVIEW.md` → "Hooks").
-- **`NodeRunner.Ui.Tests` never constructs Godot nodes**
-  (`docs/TEST_STRATEGY.md`).
+- **Global usings live in each `*.Tests.csproj`,** not in each file.
+- **Disk I/O only in a per-test temp directory.** Committed fixtures, pins
+  and share dictionaries are read from the checkout
+  (`TestRepository.Root`) and rewritten only when the test's opt-in
+  `NODE_RUNNER_UPDATE_*` variable is set.
+- **`NodeRunner.Ui.Tests` never constructs Godot nodes.**

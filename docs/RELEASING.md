@@ -5,97 +5,87 @@ Releases. Changes still land through PRs (`docs/REVIEW.md`).
 
 ## Versions
 
-`application/config/version` in `project/project.godot` is the only version
-source, and `main` carries the version of the milestone in progress. The
-`Android` export preset leaves `version/name` empty so the export reads it,
-and sets `version/code` to 1000000·major + 1000·minor + patch (0.13.0 →
-13000, #809). Change both with `.github/scripts/set-version.sh X.Y.Z`;
-`ArchitectureSpec` checks they agree.
+`application/config/version` in `project/project.godot` is the only
+version source, and `main` carries the version of the milestone in
+progress. The `Android` export preset leaves `version/name` empty so the
+export reads it, and sets `version/code` to 1000000·major + 1000·minor +
+patch (0.13.0 → 13000). `.github/scripts/set-version.sh X.Y.Z` changes
+both; `ArchitectureSpec` checks they agree.
 
 ## Releasing a milestone
 
-A milestone is named after the version it ships. Usually that is X.Y.0, but
-a minor can ship in steps from `main` as milestones X.Y.0, X.Y.1, … (0.14 is
-split this way, #1072). Every milestone has a "Release X.Y.Z" issue
-(`type: chore`, `area: android`), blocked by the milestone's other issues
-and by the previous release issue. When it is the milestone's last open
-issue and the human has asked for the release, the `release-milestone`
-skill releases it in three parts, in this order:
+A milestone is named after the version it ships, usually X.Y.0; a minor
+can also ship in steps from `main` as X.Y.0, X.Y.1, …. Every milestone
+has a "Release X.Y.Z" issue (`type: chore`, `area: android`), blocked by
+the milestone's other issues and by the previous release issue. When it
+is the last open issue and the human has asked for the release, the
+`release-milestone` skill releases it in three parts:
 
 - A PR titled `docs(#N): Release notes for X.Y.Z` adds
   `docs/release-notes/X.Y.Z.md` (`.claude/rules/release-notes.md`). It
-  says `Part of #N`, not a closing keyword, so the issue stays open until
-  the release is out.
-- `.github/scripts/release.sh`, run from an up-to-date `main`, exports a
-  signed release APK, checks its version and signature, tags `vX.Y.Z`,
-  creates or moves `release/vX.Y` to the tag, and creates the GitHub
-  release with the APK attached. The release text is exactly the notes
-  file. `release.sh --dry-run` exports and checks without publishing.
+  says `Part of #N`, so the issue stays open until the release is out.
+- `.github/scripts/release.sh`, from an up-to-date `main`, exports and
+  checks a signed release APK, tags `vX.Y.Z`, creates or moves
+  `release/vX.Y` to the tag, and publishes the GitHub release with the
+  notes file as its text and the APK attached.
 - A PR titled `chore(#N): Bump main to <next>` sets the next milestone's
-  version with `.github/scripts/set-version.sh` and closes the release
-  issue.
+  version and closes the release issue.
 
 ## Fix releases
 
 A fix that the human decides cannot wait for the next milestone lands on
-`release/vX.Y` by PR (also on `main` when it applies there). That PR bumps
-the patch to the next free number with `set-version.sh X.Y.Z` and adds
-`docs/release-notes/X.Y.Z.md`; after it merges, `release.sh` from that
-branch publishes it. If a milestone on `main` planned that number, rename
-it, the later ones and their release issues up by one, and bump `main` to
-match. A fix that applies to `main` must be merged there before the next
-release from `main`, which force-moves `release/vX.Y`. `release.sh` refuses
-that move while the branch tip has no tag, and refuses any version older
-than the newest `vX.Y.*` tag.
+`release/vX.Y` by PR, and also on `main` when it applies there. That PR
+bumps the patch to the next free number and adds its release notes; once
+merged, `release.sh` publishes it from that branch. If a milestone on
+`main` planned that number, rename it, the later ones and their release
+issues up by one, and bump `main` to match. A fix that applies to `main`
+must reach it before the next release from `main`, which force-moves
+`release/vX.Y`; `release.sh` refuses that move while the branch tip has
+no tag, and refuses a version older than the newest `vX.Y.*` tag.
 
-GitHub only honours closing keywords on PRs into `main`, so close the fix's
-issue by hand after the fix release unless its `main` PR closes it. CI runs
-on `release/**` as on `main`, but no ruleset protects those branches, so
-auto-merge is not available there: merge a PR into one by hand once its
-checks pass. For the same reason `release.sh` refuses to publish unless
-the checks in its `required_checks` passed on HEAD. The `fix-release`
-skill has the steps.
+No ruleset protects `release/**`, so auto-merge is not available there:
+merge by hand once the checks pass, and `release.sh` refuses to publish
+unless they passed on HEAD. GitHub honours closing keywords only on PRs
+into `main`, so close the issue by hand unless its `main` PR closes it.
+The `fix-release` skill has the steps.
 
 ## Publishing safeguards
 
-`release.sh` checks before tagging that the active `gh` login can push to
-the repository (`LOCAL_CONFIG.md` names the account). From `main` it pushes
-the tag and `release/vX.Y` together, so a failed push leaves nothing on
-GitHub. When a push fails, the script says how to remove the local tag. If
-`gh release create` fails after the tag is pushed, the script prints the
-command to retry it; never re-tag a pushed version.
+`release.sh` checks that the active `gh` login can push before it tags,
+and from `main` pushes the tag and `release/vX.Y` together, so a failed
+push leaves nothing on GitHub. When it stops, follow its message; never
+re-tag a pushed version.
 
 ## Signing key
 
-The release keystore is a 4096-bit RSA key kept outside the repo. Every release
-must be signed with the same key, or installed copies cannot update; back it up
-together with its password. `release.sh` reads its location, alias and password
-from `NODE_RUNNER_KEYSTORE*` environment variables or the macOS Keychain (see
-the script header). Machine-specific values belong in `LOCAL_CONFIG.md`.
+The release keystore is kept outside the repository. Every release must
+be signed with the same key, or installed copies cannot update, so back
+it up with its password. `release.sh` reads its location, alias and
+password from `NODE_RUNNER_KEYSTORE*` environment variables or the macOS
+Keychain (see the script header); machine-specific values belong in
+`LOCAL_CONFIG.md`.
 
 ## Android export
 
 The one `Android` preset in `project/export_presets.cfg` exports through
-Godot's Gradle build (#914). A debug export gets its own package
-(`dev.mrlogic85.noderunner.debug`) and app name (Node Runner Debug), so it
-installs next to the release with its own saved data (#898); Android never
-replaces an app with one signed by another key. Two tracked files do this
-on top of Godot's build template: `applicationIdSuffix ".debug"` in the
-`debug` build type of `project/android/build/build.gradle`, and the label in
-`project/android/build/src/monoDebug/AndroidManifest.xml` (Godot rewrites
-`src/debug` on every export). `ArchitectureSpec` checks both and the preset.
+Godot's Gradle build. A debug export gets its own package
+(`dev.mrlogic85.noderunner.debug`) and app name (Node Runner Debug), so
+it installs next to the release with its own saved data; Android never
+replaces an app with one signed by another key. Three tracked files
+change Godot's build template, and `ArchitectureSpec` checks them:
 
-A third tracked file changes the app itself:
-`project/android/build/src/main/java/com/godot/game/GodotApp.java`, Godot's
-activity, turns on sentence capitalization for the keyboard Godot opens
-with its default type, so a name starts with a capital (#906).
-`ArchitectureSpec` checks that the hook is there.
+- `project/android/build/build.gradle`: `applicationIdSuffix ".debug"` in
+  the `debug` build type.
+- `project/android/build/src/monoDebug/AndroidManifest.xml`: the debug
+  label (Godot rewrites `src/debug` on every export).
+- `project/android/build/src/main/java/com/godot/game/GodotApp.java`:
+  turns on sentence capitalization for the keyboard Godot opens, so a
+  name starts with a capital.
 
-The rest of `project/android/` is Godot's template, about 270 MB of
-libraries before a build, so it is git-ignored. Install it once per clone,
-and again after a Godot upgrade. Godot installs it only as part of an
-export, which then has to be redone, since the install also overwrites the
-tracked files:
+The rest of `project/android/` is Godot's template, about 270 MB, so it
+is git-ignored. Install it once per clone and after a Godot upgrade.
+Godot installs it only as part of an export, which overwrites the
+tracked files, so restore them and export again:
 
 ```bash
 cd project
@@ -107,10 +97,10 @@ rm ../.scratch/template.apk
 ```
 
 After an upgrade, keep Godot's new `build.gradle` and `GodotApp.java`
-instead, add the `applicationIdSuffix` line back, and carry the #906
-keyboard hook over to the new activity.
+instead, and carry the `applicationIdSuffix` line and the keyboard hook
+over.
 
-A debug APK for development, signed with the developer's debug key:
+A debug APK, signed with the developer's debug key:
 
 ```bash
 /Applications/Godot_mono.app/Contents/MacOS/Godot \
@@ -118,36 +108,30 @@ A debug APK for development, signed with the developer's debug key:
   --export-debug Android ../build/node-runner-debug.apk
 ```
 
-`release.sh` deletes the ignored template, installs a fresh one with a
-throwaway debug export, restores the tracked files, and only then runs
-`--export-release`, so local template edits never reach a release and ours
-always do. It stops if those tracked files have uncommitted changes, even
-for `--dry-run`, as restoring them would discard the changes. It passes the
-release keystore through Godot's `GODOT_ANDROID_KEYSTORE_RELEASE_*`
-environment variables. A release
-export is not a debug build, so `OS.IsDebugBuild()` is false and debug-only
-UI such as the Component library link is hidden (#808).
+`release.sh` installs a fresh template and restores the tracked files
+before `--export-release`, so local template edits never reach a release
+and ours always do; it stops if those files have uncommitted changes. A
+release build hides debug-only UI such as the Component library link,
+since `OS.IsDebugBuild()` is false.
 
-Local prerequisites: Godot's Mono export templates for the version
-`README.md` → "Tools" names, JDK 21, Android SDK platform 36 and
-build-tools 36.1, platform-tools, and a user-local debug keystore in the
-Godot editor settings. The first Gradle build downloads
-Gradle and its dependencies, so it needs a network. The committed preset
-holds no secrets; keystore paths and passwords stay in user-local Godot
-settings, ignored credential files or the macOS Keychain.
+Local prerequisites: Godot's Mono export templates for the version in
+`README.md` → "Tools", JDK 21, Android SDK platform 36 and build-tools
+36.1, platform-tools, a user-local debug keystore in the Godot editor
+settings, and a network for the first Gradle build. Keystore paths and
+passwords stay in user-local Godot settings, ignored credential files or
+the macOS Keychain, never in the preset.
 
-Godot's template sets min SDK 24 and target/compile SDK 36
-(`android/build/config.gradle`); the preset leaves both empty to keep them.
-
-Android uses the Compatibility renderer because Mobile/Vulkan crashed in
-Godot's `VkThread` on the SM-S938B (#104); #961 re-checks it.
+The preset leaves min SDK and target SDK empty to keep the template's
+(24 and 36, `android/build/config.gradle`). Android uses the
+Compatibility renderer because Mobile/Vulkan crashed in Godot's
+`VkThread` on the SM-S938B; #961 re-checks it.
 
 ### App icon
 
 The preset's `launcher_icons/*` and `splash_screen/icon`, and
-`application/config/icon`, point at the SVGs in `project/assets/icons/app/`.
-Godot imports each at its declared size and the export scales it to every
-density (#820). `docs/UI_DIRECTION.md` → "App icon" owns the design.
+`application/config/icon`, point at the SVGs in
+`project/assets/icons/app/`, which the export scales to every density.
+`docs/UI_DIRECTION.md` → "App icon" owns the design.
 
 - `main.svg` (192 px): the full icon for Android 7 and
   `application/config/icon`.
@@ -155,6 +139,5 @@ density (#820). `docs/UI_DIRECTION.md` → "App icon" owns the design.
   `foreground.svg` is also the Android 12+ launch splash.
 - `monochrome.svg` (432 px): Android 13 themed icons; white only.
 
-`foreground.svg` owns the art; `main.svg` copies it, so change them
-together. `AppIconTests` checks the colours, sizes, the preset and the
-copy. The `change-app-icon` skill has the steps for changing the icon.
+`foreground.svg` owns the art and `main.svg` copies it, so change them
+together; `AppIconTests` checks colours, sizes, the preset and the copy.

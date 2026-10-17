@@ -5,8 +5,7 @@ description: Review a Node Runner GitHub issue before implementation with the is
 
 # Review an issue
 
-`docs/ISSUES.md` → "Reviewing an issue" owns when to review and the Status
-each result leads to; `issue-reviewer` owns what it checks. Read
+`docs/ISSUES.md` → "Reviewing an issue" owns the rules. Read
 `LOCAL_CONFIG.md` first for the `gh` login.
 
 1. Run the `issue-reviewer` agent with the issue URL.

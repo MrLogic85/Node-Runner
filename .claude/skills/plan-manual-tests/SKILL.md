@@ -5,9 +5,8 @@ description: Decide whether a Node Runner change needs manual testing and write 
 
 # Plan manual tests
 
-`docs/MANUAL_TESTING.md` owns when manual testing is required, the plan's
-format and what counts as evidence; this skill owns writing the plan. Read
-`LOCAL_CONFIG.md` first for the `gh` login.
+`docs/MANUAL_TESTING.md` owns the rules. Read `LOCAL_CONFIG.md` first
+for the `gh` login.
 
 1. Read the issue and what the change touches, and decide with
    `docs/MANUAL_TESTING.md` → "Decision point". If no manual test is
@@ -20,8 +19,8 @@ format and what counts as evidence; this skill owns writing the plan. Read
    - The human for what needs subjective judgement, such as touch or
      animation feel.
 3. Write steps a reader can repeat. Name the creation each step needs and
-   where it comes from, the seed, the settings and what is expected. Write
-   one check per behaviour the issue changes, and no ritual checks.
+   where it comes from, the seed, the settings and what is expected, with
+   one check per behaviour the issue changes.
 4. Add the plan to the issue body in the format of "What belongs in an
    issue". Fetch the body first and stop if that fails or the file is
    empty, since the edit replaces the whole body:
