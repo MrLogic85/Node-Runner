@@ -56,12 +56,12 @@ public sealed class HookFixture : IDisposable
         }
     }
 
-    /// <summary>Runs the hook, requires exit code 0, and returns its stdout.</summary>
-    internal string Run(string hook, JsonObject payload, string? cwd = null)
+    /// <summary>Runs the hook, when given only that PATH, requires exit code 0, and returns its stdout.</summary>
+    internal string Run(string hook, JsonObject payload, string? cwd = null, string? path = null)
     {
         payload["session_id"] = SessionId;
         payload["cwd"] = cwd ?? Root;
-        return RunRaw(hook, payload.ToJsonString());
+        return RunRaw(hook, payload.ToJsonString(), path);
     }
 
     /// <summary>
