@@ -1,8 +1,8 @@
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Agent files load in both Copilot CLI and Claude Code: docs/REVIEW.md → "Agent, rule and skill files".
-/// The fixtures live in a temp directory, so neither tool loads them as agents.
+/// Agent files load in Claude Code: docs/REVIEW.md → "Agent, rule and skill files".
+/// The fixtures live in a temp directory, so Claude Code does not load them as agents.
 /// </summary>
 public sealed class AgentFilesSpec : IDisposable
 {
@@ -63,18 +63,16 @@ public sealed class AgentFilesSpec : IDisposable
     [Fact]
     public void Fixture_WithAgentsOutsideTheirFolder_NamesEach()
     {
-        Directory.CreateDirectory(Path.Combine(_root, ".github", "agents"));
         File.WriteAllText(Path.Combine(AgentsDirectory, "notes.txt"), "Notes.\n");
         Directory.CreateDirectory(Path.Combine(AgentsDirectory, "old.md"));
         File.WriteAllText(Path.Combine(AgentsDirectory, "localnotes.md"), "Notes.\n");
 
         var problems = AgentFiles.Problems(_root);
 
-        problems.Count.ShouldBe(4);
-        problems[0].ShouldStartWith(".github/agents: remove it");
-        problems[1].ShouldStartWith(".claude/agents/localnotes.md: no frontmatter");
-        problems[2].ShouldStartWith(".claude/agents/notes.txt: holds only agent files");
-        problems[3].ShouldStartWith(".claude/agents/old.md: holds only agent files");
+        problems.Count.ShouldBe(3);
+        problems[0].ShouldStartWith(".claude/agents/localnotes.md: no frontmatter");
+        problems[1].ShouldStartWith(".claude/agents/notes.txt: holds only agent files");
+        problems[2].ShouldStartWith(".claude/agents/old.md: holds only agent files");
     }
 
     [Fact]

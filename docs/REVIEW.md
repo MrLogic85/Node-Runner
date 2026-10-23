@@ -3,9 +3,8 @@
 How a change lands in `main`. The `start-issue`, `review-change` and
 `ship-pr` skills hold the steps; this document holds the rules.
 
-Every PR is reviewed by the review agents before it is pushed; Copilot
-code review is not used. Human review is optional, and `nit:` comments
-don't block.
+Every PR is reviewed by the review agents before it is pushed. Human
+review is optional, and `nit:` comments don't block.
 
 ## Definition of Done
 
@@ -120,12 +119,10 @@ prose, and each denial or failure says what to do instead.
 
 `AgentFilesSpec`, `RuleFilesSpec` and `SkillFilesSpec` in
 `NodeRunner.Arch.Tests` check the rules below, all but the last, which keep
-each file loading in both Copilot CLI and Claude Code.
+each file loading in Claude Code.
 
 - Each agent is one `.claude/agents/<name>.md`. The folder holds nothing
-  else but git-ignored `local_*` agents and dot-files, and there is no
-  `.github/agents/`: Copilot would load it first and Claude Code not at
-  all.
+  else but git-ignored `local_*` agents and dot-files.
 - An agent's frontmatter has `name` (the file's `<name>`), a one-line
   `description`, `tools` and `model` (`sonnet`, `opus` or `haiku`), and
   may add `hooks`; nothing else. A value with `: ` or ` #` is invalid
@@ -133,14 +130,12 @@ each file loading in both Copilot CLI and Claude Code.
 - A reviewer (`*-reviewer`) has `tools: Read, Grep, Glob, Bash, LSP` and
   registers `reviewer-bash.sh` and `reviewer-lsp.sh` in its frontmatter
   in Claude Code's nested `hooks` shape, as the existing reviewers do:
-  Claude Code drops an agent written in Copilot's flat shape. The
-  matcher is `LSP|lsp`, since Copilot's matchers are case-sensitive.
+  Claude Code drops an agent whose hooks are flat.
   `design-lead` is no reviewer and keeps plain `Bash`, since it runs the
   app and writes screenshots and mockups in `.scratch/`.
-- The `LSP` tool runs `csharp-ls`, pinned in `dotnet-tools.json`. Copilot
-  reads `.github/lsp.json`, and Claude Code the `node-runner-csharp`
-  plugin that `.claude/settings.json` enables from `.claude/marketplace/`;
-  `LspConfigSpec` checks that they agree.
+- The `LSP` tool runs `csharp-ls`, pinned in `dotnet-tools.json`, from
+  the `node-runner-csharp` plugin that `.claude/settings.json` enables
+  from `.claude/marketplace/`; `LspConfigSpec` checks the chain.
 - A rule in `.claude/rules/<topic>.md` has frontmatter with only `paths`:
   at least one quoted glob, one per line, each an existing file or
   `<folder>/**`.
@@ -157,8 +152,8 @@ each file loading in both Copilot CLI and Claude Code.
 ## Hooks
 
 `.claude/settings.json` registers the scripts in `.claude/hooks/` for
-every agent in both tools; only `reviewer-bash.sh` and `reviewer-lsp.sh`
-are registered by each reviewer's frontmatter. They hold what an
+every agent; only `reviewer-bash.sh` and `reviewer-lsp.sh` are
+registered by each reviewer's frontmatter. They hold what an
 instruction alone does not reliably hold:
 
 | Event | Script | Does |
@@ -166,7 +161,7 @@ instruction alone does not reliably hold:
 | `SessionStart` | `session-start.sh` | Tells the agent the branch and any uncommitted changes, records the running emulators, and runs `dotnet tool restore` for the `LSP` tool, waiting at most `NODE_RUNNER_RESTORE_WAIT` seconds (10 by default) |
 | `PreToolUse` on `Bash` | `guard-bash.sh` | Denies the git commands `AGENTS.md` → "Working copy" forbids, a commit or push to `main`, a push without a review receipt, `gh pr create` without `--title`, and a PR title CI would reject |
 | `PreToolUse` on `Bash`, in reviewers | `reviewer-bash.sh` | Allows only commands that read or build, such as read-only `git` and `gh`, `rg`, `dotnet build` and `dotnet test`; denies the rest and every redirect into a file |
-| `PreToolUse` on `LSP`, in reviewers | `reviewer-lsp.sh` | Allows only lookups; Copilot's `rename` writes the files |
+| `PreToolUse` on `LSP`, in reviewers | `reviewer-lsp.sh` | Allows only lookups, so a reviewer stays read-only if the tool gains an operation that writes |
 | `PreToolUse` on edits | `guard-edit.sh` | Denies writes into `/tmp` and `issues/` |
 | `PostToolUse` on `Bash` | `after-push.sh` | After a `git push`, reminds the agent once of each emulator or `build/` APK that appeared during the session |
 | `SessionEnd` | `session-end.sh` | Removes the session's state in `.git/agent-hooks/` |
@@ -177,9 +172,9 @@ denies it.
 
 A hook is a bash script that needs only bash, `git`, `jq` and POSIX
 tools, plus a fractional `sleep`, which macOS and GNU accept (`session-start.sh` also runs `dotnet` when installed). It writes
-its verdict in both tools' JSON shapes and always exits 0, allowing the
-call when `jq` is missing, because both tools block the call when a
-`PreToolUse` hook fails. The settings command is
+its verdict in Claude Code's JSON shape and always exits 0, allowing the
+call when `jq` is missing, because exit code 2 denies a `PreToolUse`
+call and any other failure shows the human a hook error. The settings command is
 `"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/<name>.sh`:
 quoted for paths with spaces, and found from the repository root when
 `CLAUDE_PROJECT_DIR` is unset. `guard-bash.sh` copies CI's PR title rule.

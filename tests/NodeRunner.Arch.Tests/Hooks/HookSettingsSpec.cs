@@ -5,7 +5,7 @@ namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
 /// .claude/settings.json registers the repository's hooks but the reviewers' own, with the
-/// quoted command path both tools need, and guard-bash.sh checks PR titles as CI's
+/// quoted command path Claude Code needs, and guard-bash.sh checks PR titles as CI's
 /// `PR title` check does. See docs/REVIEW.md → "Hooks".
 /// </summary>
 public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixture<HookFixture>

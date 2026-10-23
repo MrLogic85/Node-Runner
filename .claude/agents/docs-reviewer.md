@@ -9,7 +9,7 @@ hooks:
       hooks:
         - type: command
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-bash.sh'
-    - matcher: "LSP|lsp"
+    - matcher: "LSP"
       hooks:
         - type: command
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
