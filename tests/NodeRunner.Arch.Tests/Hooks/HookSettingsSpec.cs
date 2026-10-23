@@ -113,7 +113,7 @@ public sealed partial class HookSettingsSpec(HookFixture fixture) : IClassFixtur
 
     private static (string Header, string Subject, string RequireScope, List<string> Scopes, List<string> Types) CiTitleCheck()
     {
-        var lines = File.ReadAllLines(Path.Combine(_root, ".github", "workflows", "ci.yml"));
+        var lines = File.ReadAllLines(Path.Combine(_root, ".github", "workflows", "pr-title.yml"));
         string Value(string key) => lines.Select(line => line.Trim())
             .Single(line => line.StartsWith(key + ": ", StringComparison.Ordinal))[(key.Length + 2)..].Trim('\'');
         List<string> Block(string key)

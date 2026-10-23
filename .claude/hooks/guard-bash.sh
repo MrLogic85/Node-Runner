@@ -4,7 +4,7 @@
 . "${0%/*}/common.sh"
 
 main_branch=main
-# Must match .github/workflows/ci.yml → semantic-pr-title; HookSettingsSpec fails when they differ.
+# Must match .github/workflows/pr-title.yml; HookSettingsSpec fails when they differ.
 title_types='feat fix docs chore refactor test build ci perf style revert'
 title_pattern="^(${title_types// /|})\\((#[1-9][0-9]*(, #[1-9][0-9]*)*)\\): [A-Z].+\$"
 
