@@ -41,7 +41,8 @@ Talk to me in my language.
 ## Prime directives
 
 1. **Follow the owning documents and keep them current and short.** Write
-   docs with the `write-docs` skill.
+   docs with the `write-docs` skill, and agents, skills, rules files,
+   hooks and this file with the `write-agent-files` skill.
 2. **Godot first, always** (`docs/CODE_DESIGN_PRINCIPLES.md` §2).
 3. **Run the review agents before every commit or push** with the
    `review-change` skill, then ship with the `ship-pr` skill.

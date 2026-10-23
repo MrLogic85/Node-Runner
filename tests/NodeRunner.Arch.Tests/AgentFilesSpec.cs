@@ -18,6 +18,7 @@ public sealed class AgentFilesSpec : IDisposable
             name: {_reviewer}
             description: Reviews a fixture diff — one focus, read-only.
             tools: {AgentFiles.ReviewerTools}
+            model: sonnet
             {AgentFiles.ReviewerHook}
             """);
         // Valid YAML the checks must not flag: a comment, a quoted ": " and " #", and hooks
@@ -92,7 +93,8 @@ public sealed class AgentFilesSpec : IDisposable
     [InlineData(_reviewer, "diff — one focus", "diff: one focus", "description has an unquoted")]
     [InlineData(_reviewer, "description: Reviews", "description: >\n  Reviews", "description must be one line")]
     [InlineData(_reviewer, "tools:", "description: Again.\ntools:", "sets description twice")]
-    [InlineData(_reviewer, "tools:", "model: gpt-5\ntools:", "sets model")]
+    [InlineData(_reviewer, "model: sonnet", "model: claude-sonnet-5-5", "model must be one of sonnet, opus, haiku")]
+    [InlineData(_reviewer, "tools:", "effort: high\ntools:", "sets effort")]
     [InlineData(_reviewer, AgentFiles.ReviewerTools, "Read, Bash", "a reviewer has tools")]
     [InlineData(_reviewer, AgentFiles.ReviewerLspHookScript, "guard-edit.sh", "a reviewer registers reviewer-bash.sh and reviewer-lsp.sh")]
     [InlineData(_lead, "\n    Stop:\n    - hooks:\n        - type: command\n          command: \"./done.sh\"", "", "hooks must use Claude Code's shape")]

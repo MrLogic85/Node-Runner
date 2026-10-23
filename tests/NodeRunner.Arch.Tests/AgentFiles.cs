@@ -42,7 +42,10 @@ internal static class AgentFiles
     internal static bool IsSkipped(string name) =>
         name.StartsWith(LocalPrefix, StringComparison.Ordinal) || name.StartsWith('.');
 
-    private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks"];
+    private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks", "model"];
+
+    /// <summary>The model aliases an agent may pin: docs/REVIEW.md → "Agent, rule and skill files".</summary>
+    private static readonly string[] _models = ["sonnet", "opus", "haiku"];
 
     /// <summary>Every broken rule under <paramref name="root"/>, each naming its file.</summary>
     internal static List<string> Problems(string root)
@@ -134,6 +137,11 @@ internal static class AgentFiles
         if (!values.TryGetValue("description", out var description) || description.Length == 0)
         {
             problems.Add($"{shown}: needs a one-line description.");
+        }
+
+        if (values.TryGetValue("model", out var model) && !_models.Contains(model))
+        {
+            problems.Add($"{shown}: model must be one of {string.Join(", ", _models)}.");
         }
 
         if (name.EndsWith("-reviewer", StringComparison.Ordinal)
