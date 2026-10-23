@@ -129,10 +129,8 @@ Ask four questions of every text you write, change or make wrong:
 2. **Is it right and clear?** One clear sentence beats two.
 3. **Is it said somewhere else?** Nothing is written twice; other files
    link to the owner, which `README.md` → "Documentation" names.
-4. **Is it in the right place?** Each file has one responsibility. A
-   procedure's steps live in a skill in `.claude/skills/`, and the owning
-   doc keeps the rules and the why; a layer's instructions live in the
-   `.claude/rules/` file whose `paths` cover it.
+4. **Is it in the right place?** Each file has one responsibility, as
+   `docs/REVIEW.md` → "Agent, rule and skill files" lists.
 
 ## 10. Testing
 

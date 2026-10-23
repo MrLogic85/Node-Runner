@@ -25,13 +25,10 @@ Rules: `docs/REVIEW.md` → "Choosing reviewers", "Review receipts" and
    Review `<diff command>` for <issue URL>.
    Report only problems in your focus worth acting on, judged by this
    repository's rules, not stricter ones of your own. Read the
-   `.claude/rules/` files whose `paths` match the changed files. For each: its level
-   (Major: wrong behaviour, a wrong statement or a broken rule; Medium: a
-   risk or gap worth fixing now; Minor: a small fix), new or preexisting
-   (outside the diff), file and lines, evidence, impact and a direction.
-   Find C# definitions and callers with the LSP tool when you have it,
-   otherwise with git grep. Prefer fixing code to documenting a limit.
-   If nothing qualifies, say "No findings".
+   `.claude/rules/` files whose `paths` match the changed files. Report
+   as `docs/REVIEW.md` → "Findings format" says. Find C# definitions and
+   callers with the LSP tool when you have it, otherwise with git grep.
+   Prefer fixing code to documenting a limit.
    ```
 4. Judge each finding as "Definition of Done" says: fix it, or dismiss it
    with a short reason. File an issue with the `create-issue` skill only

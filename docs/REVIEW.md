@@ -59,6 +59,17 @@ reviewer whose trigger the final diff touches; when unsure, include it.
 `design-lead` runs after the other reviewers have finished: it builds and
 runs the app, which would overlap their builds and tests.
 
+## Findings format
+
+A review agent reports each finding with:
+
+- its level: Major for wrong behaviour, a wrong statement or a broken
+  rule; Medium for a risk or gap worth fixing now; Minor for a small fix;
+- whether it is new or preexisting (outside the diff);
+- the file and lines, the evidence, the impact and a direction.
+
+With nothing to report, it says "No findings".
+
 ## Review receipts
 
 Review runs on the change as it will be committed, measured from where
@@ -89,8 +100,24 @@ changes what the push sends, run `git push` as its own command. Tags, deletes, d
 
 ## Agent, rule and skill files
 
+Each kind of file holds one kind of content, and says nothing another
+already says:
+
+| File | Holds |
+|---|---|
+| `AGENTS.md` | Hard rules no script can check, and facts an agent would not guess |
+| Docs | Rules and their why, tersely, in the owner `README.md` → "Documentation" names |
+| `.claude/rules/<topic>.md` | A layer's code rules, loaded when a file its `paths` match is read |
+| `.claude/agents/<name>.md` | One agent's focus, inputs, work and output |
+| `.claude/skills/<name>/SKILL.md` | A procedure's steps, naming the doc heading that owns each rule |
+| Hooks | Rules on actions (see "Hooks") |
+| Arch tests | Rules on file contents, in `NodeRunner.Arch.Tests` |
+
+A rule a script can check lives in a hook or an arch test, not only in
+prose, and each denial or failure says what to do instead.
+
 `AgentFilesSpec`, `RuleFilesSpec` and `SkillFilesSpec` in
-`NodeRunner.Arch.Tests` check these rules, all but the last, which keep
+`NodeRunner.Arch.Tests` check the rules below, all but the last, which keep
 each file loading in both Copilot CLI and Claude Code.
 
 - Each agent is one `.claude/agents/<name>.md`. The folder holds nothing
@@ -98,7 +125,8 @@ each file loading in both Copilot CLI and Claude Code.
   `.github/agents/`: Copilot would load it first and Claude Code not at
   all.
 - An agent's frontmatter has only `name` (the file's `<name>`), a
-  one-line `description`, `tools` and `hooks`, and never `model`. A value
+  one-line `description`, `tools`, `hooks` and `model`, which is
+  `sonnet`, `opus` or `haiku`. A value
   with `: ` or ` #` is invalid YAML unless quoted; prefer ` — `.
 - A reviewer (`*-reviewer`) has `tools: Read, Grep, Glob, Bash, LSP` and
   registers `reviewer-bash.sh` and `reviewer-lsp.sh` in its frontmatter
