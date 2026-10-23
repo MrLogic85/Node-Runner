@@ -85,6 +85,10 @@ emulator, and stop it as soon as you are done, since emulators load the
 local processor. If neither is available, record the missing
 prerequisite.
 
+A subagent cannot ask, so it uses an emulator unless its caller's prompt
+says the phone is free. The caller then claims any device lock before
+the subagent starts and releases it after the subagent returns.
+
 Evidence: the `adb install` result, an `adb logcat` excerpt for launch or
 runtime failures, a screenshot or recording, and the device model,
 Android version, build type, seed and relevant settings.

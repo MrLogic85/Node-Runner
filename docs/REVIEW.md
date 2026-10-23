@@ -24,8 +24,8 @@ not apply:
       is simple (`docs/ISSUES.md` → "Creating an issue"); otherwise one of
       Medium or higher has an issue, and a lower one may be noted in the
       PR. For a UI-touching change, `design-lead`'s "insufficient
-      evidence" blocks until live app access, screenshots or recordings,
-      or a human waiver is recorded in the PR.
+      evidence" blocks until a rerun reports evidence, or a human waiver
+      is recorded in the PR.
 - [ ] Docs and the matching `.claude/rules/` files updated where
       behaviour, architecture or a rule changed
 - [ ] A change to a saved shape follows `docs/SAVE_FORMAT.md` →
@@ -55,6 +55,9 @@ reviewer whose trigger the final diff touches; when unsure, include it.
 | `performance-reviewer` | Per-frame or per-tick paths, training loops or long-lived state |
 | `build-reviewer` | CI, scripts, project, package or editor config, agent, rule or skill files, or hooks |
 | `design-lead` | Anything visible: screens, controls, layout, theme or world visuals |
+
+`design-lead` runs after the other reviewers have finished: it builds and
+runs the app, which would overlap their builds and tests.
 
 ## Review receipts
 
@@ -102,8 +105,8 @@ each file loading in both Copilot CLI and Claude Code.
   in Claude Code's nested `hooks` shape, as the existing reviewers do:
   Claude Code drops an agent written in Copilot's flat shape. The
   matcher is `LSP|lsp`, since Copilot's matchers are case-sensitive.
-  `design-lead` is no reviewer and keeps plain `Bash`, since it writes
-  screenshots and mockups in `.scratch/`.
+  `design-lead` is no reviewer and keeps plain `Bash`, since it runs the
+  app and writes screenshots and mockups in `.scratch/`.
 - The `LSP` tool runs `csharp-ls`, pinned in `dotnet-tools.json`. Copilot
   reads `.github/lsp.json`, and Claude Code the `node-runner-csharp`
   plugin that `.claude/settings.json` enables from `.claude/marketplace/`;
