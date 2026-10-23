@@ -17,12 +17,13 @@ Rules: `docs/REVIEW.md` → "Choosing reviewers", "Review receipts" and
 2. Select the reviewers by "Choosing reviewers".
 3. Run the selected agents in parallel as subagents, each with this
    prompt; run `design-lead` after the others have finished ("Choosing
-   reviewers"), and add to its prompt whether the phone is free. If it
-   is, claim any device lock before `design-lead` starts and release it
-   when it returns:
+   reviewers"), and in its prompt replace `Reply with findings only.`
+   with a sentence saying whether the phone is free. If it is, claim any
+   device lock before `design-lead` starts and release it when it
+   returns:
 
    ```text
-   Review `<diff command>` for <issue URL>.
+   Review `<diff command>` for <issue URL>. Reply with findings only.
    ```
 4. Judge each finding as "Definition of Done" says: fix it, or dismiss it
    with a short reason. File an issue with the `create-issue` skill only
