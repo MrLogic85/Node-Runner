@@ -12,14 +12,12 @@ description: Write or change a Node Runner agent, skill, .claude/rules/ file, ho
    of prose.
 3. Write an agent with a `description` saying when to use it, a `model`
    (`sonnet` by default, `opus` where the focus needs deeper reasoning,
-   `haiku` for a light, mechanical task) and these sections:
+   `haiku` for a light, mechanical task) and these sections, in this order:
    - `## Input`: what it is given, and the doc sections it reads.
    - `## Rules`: only what `AGENTS.md`, docs and hooks don't say.
    - `## Work`: its steps.
    - `## Output`: for a reviewer, `docs/REVIEW.md` → "Findings format";
      `design-lead` may add proposals in its own shape.
-
-   Until #1407 moves the others, this applies to new and changed agents.
 4. Name a doc by its heading, as `` `docs/X.md` → "Heading" ``, wherever
    you reference one.
 5. Ask `docs/CODE_DESIGN_PRINCIPLES.md` §9's four questions of every

@@ -61,7 +61,9 @@ runs the app, which would overlap their builds and tests.
 
 ## Findings format
 
-A review agent reports each finding with:
+A review agent reports only problems in its focus worth acting on,
+judged by this repository's rules, not stricter ones of its own, and
+prefers fixing code to documenting a limit. Each finding has:
 
 - its level: Major for wrong behaviour, a wrong statement or a broken
   rule; Medium for a risk or gap worth fixing now; Minor for a small fix;
@@ -124,10 +126,10 @@ each file loading in both Copilot CLI and Claude Code.
   else but git-ignored `local_*` agents and dot-files, and there is no
   `.github/agents/`: Copilot would load it first and Claude Code not at
   all.
-- An agent's frontmatter has only `name` (the file's `<name>`), a
-  one-line `description`, `tools`, `hooks` and `model`, which is
-  `sonnet`, `opus` or `haiku`. A value
-  with `: ` or ` #` is invalid YAML unless quoted; prefer ` — `.
+- An agent's frontmatter has `name` (the file's `<name>`), a one-line
+  `description`, `tools` and `model` (`sonnet`, `opus` or `haiku`), and
+  may add `hooks`; nothing else. A value with `: ` or ` #` is invalid
+  YAML unless quoted; prefer ` — `.
 - A reviewer (`*-reviewer`) has `tools: Read, Grep, Glob, Bash, LSP` and
   registers `reviewer-bash.sh` and `reviewer-lsp.sh` in its frontmatter
   in Claude Code's nested `hooks` shape, as the existing reviewers do:

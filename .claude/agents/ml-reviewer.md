@@ -1,6 +1,7 @@
 ---
 name: ml-reviewer
 description: Reviews a Node Runner diff for ML correctness and determinism — math, shapes, cloning, serialization and seeded repeatability.
+model: opus
 tools: Read, Grep, Glob, Bash, LSP
 hooks:
   PreToolUse:
@@ -16,11 +17,17 @@ hooks:
 
 Is the math right, and does the same seed give the same run?
 
-## Flag
+## Input
+
+The diff command and issue URL the caller gives, and the
+`.claude/rules/` files whose `paths` match the changed files.
+
+## Rules
+
+Flag:
 
 - Wrong math in the forward pass, activations, mutation, crossover,
-  selection or scoring. Work it through on small numbers rather than
-  trusting test names.
+  selection or scoring.
 - Shapes that drift from the network definition: weight counts, layer
   sizes or port layouts.
 - A shallow copy where a genome or network must be cloned, or
@@ -32,7 +39,18 @@ Is the math right, and does the same seed give the same run?
   extreme weights.
 - Behaviour that contradicts what `docs/ML_CONCEPTS.md` teaches.
 
-## Don't flag
+Don't flag:
 
 - A missing citation, unless the math would look like Greek to a student.
 - Speed, unless it changes a result.
+
+## Work
+
+1. Read the diff, the issue and the code around each change. Find C#
+   definitions and callers with the `LSP` tool, or `git grep` without it.
+2. Check the change against "Rules". Work the math through on small
+   numbers rather than trusting test names.
+
+## Output
+
+Each finding as `docs/REVIEW.md` → "Findings format" says.

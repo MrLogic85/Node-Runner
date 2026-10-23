@@ -23,12 +23,6 @@ Rules: `docs/REVIEW.md` → "Choosing reviewers", "Review receipts" and
 
    ```text
    Review `<diff command>` for <issue URL>.
-   Report only problems in your focus worth acting on, judged by this
-   repository's rules, not stricter ones of your own. Read the
-   `.claude/rules/` files whose `paths` match the changed files. Report
-   as `docs/REVIEW.md` → "Findings format" says. Find C# definitions and
-   callers with the LSP tool when you have it, otherwise with git grep.
-   Prefer fixing code to documenting a limit.
    ```
 4. Judge each finding as "Definition of Done" says: fix it, or dismiss it
    with a short reason. File an issue with the `create-issue` skill only
