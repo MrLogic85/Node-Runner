@@ -29,6 +29,36 @@ internal static class AgentFiles
                   command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerLspHookScript}}'
         """;
 
+    /// <summary>
+    /// The findings format each code reviewer's <c>## Output</c> spells out:
+    /// docs/REVIEW.md → "Findings format".
+    /// </summary>
+    internal const string FindingsFormat = """
+        Report only problems in your focus worth acting on, judged by this
+        repository's rules rather than stricter ones of your own, and prefer
+        fixing code to documenting a limit. Give each finding in this shape,
+        with no other levels, labels or headings:
+
+        ```text
+        **<Major|Medium|Minor>, <new|preexisting>**: `<file>:<lines>`
+        - Evidence: what the code or text says or does.
+        - Impact: what goes wrong because of it.
+        - Direction: what to change.
+        ```
+
+        - Major is wrong behaviour, a wrong statement or a broken rule;
+          Medium a risk or gap worth fixing now; Minor a small fix.
+        - A finding is new when the diff adds or changes the lines it is
+          about, and preexisting otherwise.
+        - Write no preamble, no summary, no account of what you read or ran,
+          and no remark outside a finding.
+
+        With no findings, write exactly `No findings`, with no full stop, in
+        their place.
+        """;
+
+    internal const string IssueReviewer = "issue-reviewer";
+
     /// <summary>Git-ignored machine-local agents and rules: AGENTS.md → "Machine-local setup".</summary>
     internal const string LocalPrefix = "local_";
 
@@ -157,7 +187,17 @@ internal static class AgentFiles
         {
             problems.Add($"{shown}: the body has the sections {string.Join(", ", _sections)}, in that order.");
         }
+
+        var output = string.Join('\n', lines[(end + 1)..].SkipWhile(line => line != "## Output"));
+        if (UsesFindingsFormat(name) && !output.Contains(FindingsFormat.ReplaceLineEndings("\n"), StringComparison.Ordinal))
+        {
+            problems.Add($"{shown}: ## Output holds AgentFiles.FindingsFormat word for word: docs/REVIEW.md → \"Findings format\".");
+        }
     }
+
+    /// <summary>The code reviewers; issue-reviewer reviews issues and keeps its own format.</summary>
+    private static bool UsesFindingsFormat(string name) =>
+        name.EndsWith("-reviewer", StringComparison.Ordinal) && name != IssueReviewer;
 
     /// <summary>An unquoted <c>: </c> or <c> #</c> makes the line invalid YAML or cuts the value short.</summary>
     internal static void CheckScalar(string shown, string key, string value, List<string> problems)

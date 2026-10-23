@@ -16,8 +16,8 @@ description: Write or change a Node Runner agent, skill, .claude/rules/ file, ho
    - `## Input`: what it is given, and the doc sections it reads.
    - `## Rules`: only what `AGENTS.md`, docs and hooks don't say.
    - `## Work`: its steps.
-   - `## Output`: for a reviewer, `docs/REVIEW.md` → "Findings format";
-     `design-lead` may add proposals in its own shape.
+   - `## Output`: for a code reviewer, `AgentFiles.FindingsFormat` word
+     for word (`docs/REVIEW.md` → "Findings format").
 4. Name a doc by its heading, as `` `docs/X.md` → "Heading" ``, wherever
    you reference one.
 5. Ask `docs/CODE_DESIGN_PRINCIPLES.md` §9's four questions of every

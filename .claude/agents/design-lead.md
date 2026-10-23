@@ -61,14 +61,18 @@ and recommend one, each shown as a picture: read and follow
 
 ## Output
 
-- Each finding as `docs/REVIEW.md` → "Findings format" says, or
-  **insufficient evidence** with the reason.
-- The evidence, in your reply rather than in a PR's **How to verify** as
-  the skills say: the screenshot paths, the window size or the device
-  model and Android version, the log errors and what the skills left to
-  the human.
-- Each proposal with its alternatives, mockup paths and recommendation,
-  naming the choices that need a new direction decision from the human.
+- For a review, each finding with its level (Major for a broken rule
+  or a surface that misleads, Medium for a gap worth fixing now, Minor
+  for a small fix), whether it is new or preexisting, the screenshot
+  and file that show it, the impact and a direction; or exactly
+  `No findings`; or **insufficient evidence** with the reason.
+- For a review, the evidence, in your reply rather than in a PR's
+  **How to verify** as the skills say: the screenshot paths, the window
+  size or the device model and Android version, the log errors and what
+  the skills left to the human.
+- For a design, each proposal with its alternatives, mockup paths and
+  recommendation, naming the choices that need a new direction decision
+  from the human.
 - When a change alters the visual direction, the update to suggest to
   `docs/UI_DIRECTION.md` or `docs/WORLD_VISUALS.md`.
 - A reminder to the caller to delete `.scratch/design-<topic>/` when done.
