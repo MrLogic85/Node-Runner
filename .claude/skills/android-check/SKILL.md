@@ -11,7 +11,8 @@ the variables it uses.
 
 1. **Pick the device** as "Android checks" says, and follow
    `LOCAL_CONFIG.md`'s device rules, including any local skill it names,
-   until step 7 is done. Note the serial of an emulator you start. With
+   until step 7 is done; a subagent leaves any device lock to its
+   caller. Note the serial of an emulator you start. With
    more than one device in `adb devices -l`, add `ANDROID_SERIAL=<serial>` to
    each block.
 2. **Note how you found it**, for step 7. The block records one state:
@@ -117,6 +118,7 @@ the variables it uses.
 
    The step is done when the `.scratch/android-*` files are gone.
 
-   Then release the device as `LOCAL_CONFIG.md` says, stop an emulator
-   you started (`adb -s <serial> emu kill`), and delete
+   Then release the device as `LOCAL_CONFIG.md` says (a subagent leaves
+   its caller's lock, step 1), stop an emulator you started
+   (`adb -s <serial> emu kill`), and delete
    `build/node-runner-debug.apk` and the other scratch files.

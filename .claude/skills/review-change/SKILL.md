@@ -16,7 +16,10 @@ Rules: `docs/REVIEW.md` → "Choosing reviewers", "Review receipts" and
    - someone else's PR: `gh pr diff N`.
 2. Select the reviewers by "Choosing reviewers".
 3. Run the selected agents in parallel as subagents, each with this
-   prompt, and give `design-lead` the evidence its file asks for:
+   prompt; run `design-lead` after the others have finished ("Choosing
+   reviewers"), and add to its prompt whether the phone is free. If it
+   is, claim any device lock before `design-lead` starts and release it
+   when it returns:
 
    ```text
    Review `<diff command>` for <issue URL>.
