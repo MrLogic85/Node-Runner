@@ -83,6 +83,17 @@ public static class UiSize
         public const int VerticalMeterWidth = 8;
         public const int VerticalMeterHeight = 24;
 
+        /// <summary>
+        /// A half dial: its box, the hub's height in it, the arc's radius, the needle's length from
+        /// the hub and the hub disc's radius.
+        /// </summary>
+        public const int DialWidth = 30;
+        public const int DialHeight = 24;
+        public const int DialHubY = 21;
+        public const int DialRadius = 13;
+        public const int DialNeedleLength = 11;
+        public const float DialHubRadius = 2.5f;
+
         /// <summary>A creature's beam in Build, Training and thumbnails.</summary>
         public const int CreatureBeamWidth = 6;
 

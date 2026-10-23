@@ -28,6 +28,7 @@
 [ext_resource type="Script" uid="uid://ceoq80oxw56og" path="res://src/ui/lib/UiTextField.cs" id="24_text_field"]
 [ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="25_chip"]
 [ext_resource type="Script" uid="uid://cpa2e382ape81" path="res://src/ui/lib/UiMeterBar.cs" id="26_meter_bar"]
+[ext_resource type="Script" uid="uid://ht7wqduck8e5" path="res://src/ui/lib/UiDial.cs" id="26_dial"]
 [ext_resource type="Script" uid="uid://b1nqvpdy0fk4h" path="res://src/ui/lib/UiCallout.cs" id="26_callout"]
 [ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="27_info_row"]
 [ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="28_toolbar"]
@@ -3182,6 +3183,125 @@ script = ExtResource("26_meter_bar")
 Value = 1.0
 Centred = false
 Vertical = true
+
+[node name="Dial" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=1079339379]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial" unique_id=1903822584]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Heading" unique_id=-888865185]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Dial"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Heading" unique_id=-1791212410]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "one live value as a half dial: centred is upright at 0 and fills from the top, filling runs from the left end; NaN, -1, 0, 0.5, 1"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Centred" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial" unique_id=1313648424]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Centred" unique_id=-1141798725]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "centred"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="NaN" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Centred" unique_id=1033572638]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = nan
+Centred = true
+
+[node name="MinusOne" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Centred" unique_id=-1038712976]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = -1.0
+Centred = true
+
+[node name="Zero" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Centred" unique_id=339541753]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = 0.0
+Centred = true
+
+[node name="Half" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Centred" unique_id=276360427]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = 0.5
+Centred = true
+
+[node name="One" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Centred" unique_id=1808812308]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = 1.0
+Centred = true
+
+[node name="Filling" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial" unique_id=805611101]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Filling" unique_id=-1837038028]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "filling"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="NaN" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Filling" unique_id=-1065023950]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = nan
+Centred = false
+
+[node name="MinusOne" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Filling" unique_id=1329589204]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = -1.0
+Centred = false
+
+[node name="Zero" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Filling" unique_id=1832442901]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = 0.0
+Centred = false
+
+[node name="Half" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Filling" unique_id=1091538645]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = 0.5
+Centred = false
+
+[node name="One" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/Dial/Filling" unique_id=-2135737758]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_dial")
+Value = 1.0
+Centred = false
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar"]

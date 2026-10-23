@@ -208,8 +208,9 @@ Build's lock note, from piling up.
 - **Cards:** content flush with a card's edge rounds the corners it shares
   with it.
 - **Meters:** `UiMeterBar` also stands upright, 8 × 24 and fully rounded,
-  for the Status panel's Inputs bars; like the callout's meter it has no
-  `c_*` entry.
+  for the Status panel's Inputs bars, and `UiDial`, a 30 × 24 half dial
+  from the SignalFlow reference, shows its Outputs; like the callout's
+  meter neither has a `c_*` entry.
 - **Sliders:** where selected parts differ, the readout shows `low–high`
   between Marker ends, with no thumb. Uneven stops sit evenly along the
   track. A disabled slider is dashed; one the screen can explain answers a
@@ -318,6 +319,7 @@ are not repeated. The last column owns the detail (BM =
 | Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with other joint parts; its own glyph | BM → Interactions, WV → Touch sensor |
 | "Senses" for the brain's inputs | "Inputs", the machine-learning word | Screens → NetworkFocus, WV → Port bars |
 | The eight most active senses as bars | The first eight in port order, which never move | TL → The Training scene |
+| Output dials in `accent` | In `output`, like the callout's output bars | WV → Port bars |
 | Brain setup screen; hidden neurons | Removed; the direct network | Screens → NetworkFocus |
 | Speed control | None | TL → No speed-up |
 | The followed shadow about 43% from the left | Its centre in the middle, the ground never above 80% down | TL → Camera |

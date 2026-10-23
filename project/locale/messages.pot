@@ -1555,12 +1555,6 @@ msgid_plural "{0} outputs"
 msgstr[0] ""
 msgstr[1] ""
 
-#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
-msgid "{0} part"
-msgid_plural "{0} parts"
-msgstr[0] ""
-msgstr[1] ""
-
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "{0} part missing a side"
 msgid_plural "{0} parts missing a side"

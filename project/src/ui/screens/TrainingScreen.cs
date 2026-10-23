@@ -316,19 +316,38 @@ public partial class TrainingScreen : Control
             return;
         }
 
-        if (changed is null or nameof(SignalFlowPresentationViewModel.OutputsNote))
-        {
-            GetNode<UiStageCard>("%OutputsStage").NoteSource = UiTextTranslation.Source(signalFlow.OutputsNote);
-        }
-
         if (changed is null or nameof(SignalFlowPresentationViewModel.InputBars))
         {
-            ApplyInputBars(signalFlow);
+            ApplyMeters(
+                GetNode<UiStageCard>("%InputsStage"),
+                GetNode<HBoxContainer>("%InputBars"),
+                GetNode<UiChip>("%MoreInputs"),
+                signalFlow.InputBars,
+                UiTextTranslation.Source(signalFlow.InputsNote),
+                UiTextTranslation.Source(signalFlow.MoreInputs),
+                static centred => new UiMeterBar { Vertical = true, Centred = centred });
         }
 
         if (changed is null or nameof(SignalFlowPresentationViewModel.InputBars) or nameof(SignalFlowPresentationViewModel.InputValues))
         {
-            ApplyInputValues(signalFlow);
+            ApplyValues(GetNode<HBoxContainer>("%InputBars"), signalFlow.InputValues, static (UiMeterBar bar, double value) => bar.Value = value);
+        }
+
+        if (changed is null or nameof(SignalFlowPresentationViewModel.OutputDials))
+        {
+            ApplyMeters(
+                GetNode<UiStageCard>("%OutputsStage"),
+                GetNode<HBoxContainer>("%OutputDials"),
+                GetNode<UiChip>("%MoreOutputs"),
+                signalFlow.OutputDials,
+                UiTextTranslation.Source(signalFlow.OutputsNote),
+                UiTextTranslation.Source(signalFlow.MoreOutputs),
+                static centred => new UiDial { Centred = centred });
+        }
+
+        if (changed is null or nameof(SignalFlowPresentationViewModel.OutputDials) or nameof(SignalFlowPresentationViewModel.OutputValues))
+        {
+            ApplyValues(GetNode<HBoxContainer>("%OutputDials"), signalFlow.OutputValues, static (UiDial dial, double value) => dial.Value = value);
         }
 
         if (changed is null or nameof(SignalFlowPresentationViewModel.DistanceReadout))
@@ -337,38 +356,36 @@ public partial class TrainingScreen : Control
         }
     }
 
-    // Rebuilds the bars, which happens only when the followed creature's inputs change; the chip stays last.
-    private void ApplyInputBars(SignalFlowPresentationViewModel signalFlow)
+    // Rebuilds a stage's bars or dials, which happens only when the followed creature's ports
+    // change; the chip stays last, and a stage with none collapses.
+    private static void ApplyMeters<T>(UiStageCard stage, HBoxContainer row, UiChip more, IReadOnlyList<PortRange> ranges, Func<string>? note, Func<string>? moreText, Func<bool, T> create)
+        where T : Control
     {
-        var stage = GetNode<UiStageCard>("%InputsStage");
-        var bars = GetNode<HBoxContainer>("%InputBars");
-        var more = GetNode<UiChip>("%MoreInputs");
-        foreach (var bar in bars.GetChildren().OfType<UiMeterBar>())
+        foreach (var meter in row.GetChildren().OfType<T>())
         {
-            bars.RemoveChild(bar);
-            bar.QueueFree();
+            row.RemoveChild(meter);
+            meter.QueueFree();
         }
 
-        foreach (var range in signalFlow.InputBars)
+        foreach (var range in ranges)
         {
-            bars.AddChild(new UiMeterBar { Vertical = true, Centred = range == PortRange.MinusOneToOne });
+            row.AddChild(create(range == PortRange.MinusOneToOne));
         }
 
-        bars.MoveChild(more, -1);
-        var moreSource = UiTextTranslation.Source(signalFlow.MoreInputs);
-        more.TextSource = moreSource;
-        more.Visible = moreSource is not null;
-        stage.NoteSource = UiTextTranslation.Source(signalFlow.InputsNote);
-        stage.Collapsed = signalFlow.InputBars.Count == 0;
+        row.MoveChild(more, -1);
+        more.TextSource = moreText;
+        more.Visible = moreText is not null;
+        stage.NoteSource = note;
+        stage.Collapsed = ranges.Count == 0;
     }
 
-    // A bar redraws only when its value changed (UiMeterBar.Value).
-    private void ApplyInputValues(SignalFlowPresentationViewModel signalFlow)
+    // A bar or dial redraws only when its value changed (UiMeterBar.Value, UiDial.Value).
+    private static void ApplyValues<T>(HBoxContainer row, IReadOnlyList<double> values, Action<T, double> show)
+        where T : Control
     {
-        var bars = GetNode<HBoxContainer>("%InputBars");
-        for (var i = 0; i < signalFlow.InputValues.Count; i++)
+        for (var i = 0; i < values.Count; i++)
         {
-            bars.GetChild<UiMeterBar>(i).Value = signalFlow.InputValues[i];
+            show(row.GetChild<T>(i), values[i]);
         }
     }
 

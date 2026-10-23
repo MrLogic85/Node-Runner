@@ -6,16 +6,22 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The SignalFlow column's four stages at rest: 1 Inputs, 2 Network, 3 Outputs, 4 Distance.
-/// Inputs shows a bar per input, Outputs a short note and Distance a readout in its body; the
-/// other pictures on the cards come with #196.
+/// Inputs shows a bar per input, Outputs a dial per driven part and Distance a readout in its
+/// body; the other pictures on the cards come with #196.
 /// </summary>
 public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 {
     /// <summary>The most inputs the Inputs card shows as bars; the rest are counted in <see cref="MoreInputs"/>.</summary>
     public const int MaxInputBars = 8;
 
-    private IReadOnlyList<NetworkPort> _inputPorts = [];
-    private double[] _inputValues = [];
+    /// <summary>
+    /// The most driven parts the Outputs card shows as dials. With more, the last dial's place
+    /// goes to <see cref="MoreOutputs"/>, which counts the rest.
+    /// </summary>
+    public const int MaxOutputDials = 4;
+
+    private Meters _inputs = Meters.Empty();
+    private Meters _outputs = Meters.Empty();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -27,19 +33,35 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// changes only with the port layout, together with <see cref="InputsNote"/> and
     /// <see cref="MoreInputs"/>, so one notification covers all three and a view builds its bars then.
     /// </summary>
-    public IReadOnlyList<PortRange> InputBars { get; private set; } = [];
+    public IReadOnlyList<PortRange> InputBars => _inputs.Ranges;
 
     /// <summary>
     /// What each input bar shows, in <see cref="InputBars"/> order; NaN with no live network. It
     /// changes with every sample, and is notified only when a value changed.
     /// </summary>
-    public IReadOnlyList<double> InputValues { get; private set; } = [];
+    public IReadOnlyList<double> InputValues => _inputs.Values;
 
     /// <summary>How many inputs have no bar, such as "+4"; null when every input has one.</summary>
     public UiText? MoreInputs { get; private set; }
 
-    /// <summary>The parts the network drives, such as "1 part" or "2 parts"; null with none.</summary>
+    /// <summary>How many output ports the network sets, such as "7"; null with none.</summary>
     public UiText? OutputsNote { get; private set; }
+
+    /// <summary>
+    /// The range of each output dial: one per driven part in port order, showing the part's drive,
+    /// its first output that is not a Strength. It changes only with the port layout, together with
+    /// <see cref="OutputsNote"/> and <see cref="MoreOutputs"/>, so one notification covers all three.
+    /// </summary>
+    public IReadOnlyList<PortRange> OutputDials => _outputs.Ranges;
+
+    /// <summary>
+    /// What each output dial shows, in <see cref="OutputDials"/> order; NaN with no live network. It
+    /// changes with every sample, and is notified only when a value changed.
+    /// </summary>
+    public IReadOnlyList<double> OutputValues => _outputs.Values;
+
+    /// <summary>How many driven parts have no dial, such as "+2"; null when every part has one.</summary>
+    public UiText? MoreOutputs { get; private set; }
 
     /// <summary>
     /// How far the visible creature has got in this try, such as "12.4 m", or "Crash 3.4 m" once a
@@ -53,95 +75,152 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// </summary>
     public bool DistanceTorn { get; private set; }
 
-    /// <summary>Refreshes the Outputs note and the distance readout from this tick.</summary>
-    /// <param name="parts">How many parts the network drives (Servos, Motors and Pistons); a part can have several outputs, so the note counts parts.</param>
+    /// <summary>Refreshes the distance readout from this tick.</summary>
     /// <param name="distance">How far the visible creature has got, in world units; NaN when no try runs.</param>
     /// <param name="crashed">Whether a beam of the visible creature has torn, so <paramref name="distance"/> froze there.</param>
-    public void Update(int parts, double distance, bool crashed = false)
+    public void Update(double distance, bool crashed = false)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(parts);
-
-        var outputsNote = parts > 0 ? UiText.Counted("{0} part", "{0} parts", parts) : null;
         var distanceReadout = !double.IsFinite(distance) ? null
             : crashed ? TrainingPresentationViewModel.CrashText(distance)
             : Metres.WithUnit(distance);
-        var distanceTorn = crashed && distanceReadout is not null;
-
-        // Each change is notified by name, so a view applies only what changed.
-        if (!Equals(OutputsNote, outputsNote))
+        if (Equals(DistanceReadout, distanceReadout))
         {
-            OutputsNote = outputsNote;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OutputsNote)));
-        }
-
-        if (!Equals(DistanceReadout, distanceReadout))
-        {
-            DistanceReadout = distanceReadout;
-            DistanceTorn = distanceTorn;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DistanceReadout)));
-        }
-    }
-
-    /// <summary>
-    /// Shows one sample of the visible creature's inputs. The bars are rebuilt only when the port
-    /// layout changes; otherwise only the values that changed are notified.
-    /// </summary>
-    /// <param name="creature">The visible creature, whose part kinds give each bar its range; null with none.</param>
-    /// <param name="values">The sample, taken with <paramref name="creature"/>'s port layout.</param>
-    public void ShowInputs(CreatureDef? creature, NetworkPortValues values)
-    {
-        ArgumentNullException.ThrowIfNull(values);
-
-        var ports = creature is null ? [] : values.Layout.Inputs;
-        if (!ReferenceEquals(ports, _inputPorts) && !ports.SequenceEqual(_inputPorts))
-        {
-            LayOutInputs(creature, ports);
-            ReadInputs(values);
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InputBars)));
             return;
         }
 
-        _inputPorts = ports;
-        if (ReadInputs(values))
+        DistanceReadout = distanceReadout;
+        DistanceTorn = crashed && distanceReadout is not null;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DistanceReadout)));
+    }
+
+    /// <summary>
+    /// Shows one sample of the visible creature's ports. A stage's bars or dials are rebuilt only
+    /// when its port layout changes; otherwise only the values that changed are notified. Each
+    /// change is notified by name, so a view applies only what changed.
+    /// </summary>
+    /// <param name="creature">The visible creature, whose part kinds give each bar and dial its range; null with none.</param>
+    /// <param name="values">The sample, taken with <paramref name="creature"/>'s port layout.</param>
+    public void ShowPorts(CreatureDef? creature, NetworkPortValues values)
+    {
+        ArgumentNullException.ThrowIfNull(values);
+
+        var inputs = creature is null ? [] : values.Layout.Inputs;
+        var inputValues = values.IsLive ? values.Inputs : null;
+        if (!_inputs.Matches(inputs))
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InputValues)));
+            _inputs = LayOutInputs(creature, inputs);
+            _inputs.Read(inputValues);
+            Notify(nameof(InputBars));
+        }
+        else if (_inputs.Read(inputValues))
+        {
+            Notify(nameof(InputValues));
+        }
+
+        var outputs = creature is null ? [] : values.Layout.Outputs;
+        var outputValues = values.IsLive ? values.Outputs : null;
+        if (!_outputs.Matches(outputs))
+        {
+            _outputs = LayOutOutputs(creature, outputs);
+            _outputs.Read(outputValues);
+            Notify(nameof(OutputDials));
+        }
+        else if (_outputs.Read(outputValues))
+        {
+            Notify(nameof(OutputValues));
         }
     }
 
-    private void LayOutInputs(CreatureDef? creature, IReadOnlyList<NetworkPort> ports)
+    private Meters LayOutInputs(CreatureDef? creature, IReadOnlyList<NetworkPort> ports)
     {
-        _inputPorts = ports;
-        InputBars = creature is null ? [] : [.. ports.Take(MaxInputBars).Select(port => RangeOf(creature, port))];
-        _inputValues = new double[InputBars.Count];
-        Array.Fill(_inputValues, double.NaN);
-        InputValues = Array.AsReadOnly(_inputValues);
         InputsNote = ports.Count > 0 ? UiText.Number(ports.Count) : null;
         MoreInputs = ports.Count > MaxInputBars ? UiText.Format("+{0}", ports.Count - MaxInputBars) : null;
+        return Meters.Of(creature, ports, [.. Enumerable.Range(0, Math.Min(ports.Count, MaxInputBars))]);
     }
 
-    // The layout comes from the creature, so its parts are always there; a release build that
-    // somehow misses one draws a centred bar, which clamps any value, rather than stop the refresh.
-    private static PortRange RangeOf(CreatureDef creature, NetworkPort port)
+    // Every driven part has exactly one output that is not a Strength, so each gets one dial.
+    private Meters LayOutOutputs(CreatureDef? creature, IReadOnlyList<NetworkPort> ports)
     {
-        var part = creature.FindPart(port.PartId);
-        Debug.Assert(part is not null, $"Input part {port.PartId} is not on the creature.");
-        return part is null ? PortRange.MinusOneToOne : NetworkPortDisplay.Range(part.PartKind, port);
+        var drives = Enumerable.Range(0, ports.Count)
+            .Where(index => ports[index].Signal != PortSignal.Strength)
+            .DistinctBy(index => ports[index].PartId)
+            .ToArray();
+        var shown = drives.Length > MaxOutputDials ? MaxOutputDials - 1 : drives.Length;
+        OutputsNote = ports.Count > 0 ? UiText.Number(ports.Count) : null;
+        MoreOutputs = drives.Length > shown ? UiText.Format("+{0}", drives.Length - shown) : null;
+        return Meters.Of(creature, ports, drives[..shown]);
     }
 
-    // Copies the sample into the bars' values; true when one changed.
-    private bool ReadInputs(NetworkPortValues values)
+    private void Notify(string property) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+
+    // The bars or dials of one stage: the ports laid out, and for each meter the index of its port
+    // in the sample, its range and its value.
+    private sealed class Meters
     {
-        var changed = false;
-        for (var i = 0; i < _inputValues.Length; i++)
+        private readonly int[] _sampleIndices;
+        private readonly double[] _values;
+
+        private Meters(IReadOnlyList<NetworkPort> ports, int[] sampleIndices, PortRange[] ranges)
         {
-            var value = values.IsLive ? values.Inputs[i] : double.NaN;
-            if (!value.Equals(_inputValues[i]))
-            {
-                _inputValues[i] = value;
-                changed = true;
-            }
+            Ports = ports;
+            _sampleIndices = sampleIndices;
+            _values = new double[sampleIndices.Length];
+            Array.Fill(_values, double.NaN);
+            Ranges = Array.AsReadOnly(ranges);
+            Values = Array.AsReadOnly(_values);
         }
 
-        return changed;
+        // Each stage has its own, since Matches keeps the newest equal port list on it.
+        public static Meters Empty() => new([], [], []);
+
+        public IReadOnlyList<NetworkPort> Ports { get; private set; }
+
+        public IReadOnlyList<PortRange> Ranges { get; }
+
+        public IReadOnlyList<double> Values { get; }
+
+        public static Meters Of(CreatureDef? creature, IReadOnlyList<NetworkPort> ports, int[] sampleIndices) =>
+            new(ports, sampleIndices, [.. sampleIndices.Select(index => RangeOf(creature, ports[index]))]);
+
+        /// <summary>
+        /// Whether these meters show <paramref name="ports"/>. Another shadow brings an equal list of
+        /// its own; keeping it lets the next samples match by reference, without comparing the ports.
+        /// </summary>
+        public bool Matches(IReadOnlyList<NetworkPort> ports)
+        {
+            if (!ReferenceEquals(ports, Ports) && !ports.SequenceEqual(Ports))
+            {
+                return false;
+            }
+
+            Ports = ports;
+            return true;
+        }
+
+        // Copies the sample into the values, NaN with no live network; true when one changed.
+        public bool Read(IReadOnlyList<double>? sample)
+        {
+            var changed = false;
+            for (var i = 0; i < _values.Length; i++)
+            {
+                var value = sample is null ? double.NaN : sample[_sampleIndices[i]];
+                if (!value.Equals(_values[i]))
+                {
+                    _values[i] = value;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+
+        // The layout comes from the creature, so its parts are always there; a release build that
+        // somehow misses one draws a centred meter, which clamps any value, rather than stop the refresh.
+        private static PortRange RangeOf(CreatureDef? creature, NetworkPort port)
+        {
+            var part = creature?.FindPart(port.PartId);
+            Debug.Assert(part is not null, $"Network part {port.PartId} is not on the creature.");
+            return part is null ? PortRange.MinusOneToOne : NetworkPortDisplay.Range(part.PartKind, port);
+        }
     }
 }

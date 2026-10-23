@@ -897,9 +897,6 @@ public partial class Creature : Node2D
         inputs.AddRange(_sensorValues);
     }
 
-    /// <summary>How many powered outputs the creature has.</summary>
-    public int MotorCount => _pistons.Length + _servos.Length + _velocityMotors.Length + _steppers.Length;
-
     private float GetHitTolerance()
     {
         var canvasTransform = GetViewport().GetCanvasTransform();

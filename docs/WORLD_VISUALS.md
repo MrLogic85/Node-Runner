@@ -360,7 +360,8 @@ each creature gets its whole set of layers; links past
   never the only cue. Each port is a label and a `Meter` bar; a −1…1 port
   fills from a tick at 0, a 0…1 port from the left, and values outside
   clamp. A Wheel, Rubber or Brake shows its glyph and "No network
-  ports"; a Joint, Beam or Spring shows only its name.
+  ports"; a Joint, Beam or Spring shows only its name. The Status panel's
+  input bars and output dials take the same colours and fill rule.
 - **Slow-motion chip:** a Warning chip, "Too many shadows!", top left.
 
 ## Thumbnails

@@ -168,11 +168,11 @@ public partial class TrainingHost : Node, IRoutedScene
         // smoothed frames fall a microsecond short of the interval, about 20 a second instead of 30.
         _signalRefreshElapsed %= _signalRefreshIntervalSeconds;
         _followed.ReadInputs(_networkInputs);
-        _signalFlow.Update(_followed.Network is null ? 0 : _followed.MotorCount, FollowedDistance, FollowedCrashed);
+        _signalFlow.Update(FollowedDistance, FollowedCrashed);
         ShowCrash();
 
         _portValues = NetworkPortValues.Sample(_followed.Ports, _followed.Network, _networkInputs);
-        _signalFlow.ShowInputs(_followed.Definition, _portValues);
+        _signalFlow.ShowPorts(_followed.Definition, _portValues);
         _networkFocus.Update(_portValues);
         ShowPartCallout();
     }
