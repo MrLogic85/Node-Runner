@@ -113,9 +113,9 @@ already says, except the copies "Findings format" names:
 A rule a script can check lives in a hook or an arch test, not only in
 prose, and each denial or failure says what to do instead.
 
-`AgentFilesSpec`, `RuleFilesSpec` and `SkillFilesSpec` in
-`NodeRunner.Arch.Tests` check the rules below, all but the last, which keep
-each file loading in Claude Code.
+`AgentFilesSpec`, `RuleFilesSpec`, `SkillFilesSpec` and `DocReferencesSpec`
+in `NodeRunner.Arch.Tests` check the rules below; no script checks the
+last.
 
 - Each agent is one `.claude/agents/<name>.md`. The folder holds nothing
   else but git-ignored `local_*` agents and dot-files.
@@ -141,6 +141,10 @@ each file loading in Claude Code.
   at most 64 characters, and a one-line `description` of at most 1024
   characters saying what it does and when to use it, since the model
   matches tasks against it. A skill the instructions name exists.
+- A skill, agent or rule names each doc by an existing heading, as
+  `` `docs/X.md` → "Heading" `` or `` `docs/X.md` §9 ``, so an agent
+  reads only that section. A whole doc is named only as a topic's owner:
+  `` `docs/X.md` owns … ``.
 - Committed instructions require only the tools `README.md` → "Tools"
   marks as required, and name a fallback for a recommended one, such as
   `git grep` for `rg`.

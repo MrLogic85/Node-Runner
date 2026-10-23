@@ -7,7 +7,8 @@ paths:
 # Manager rules — `project/src/managers/`
 
 App-wide services as Godot autoloads, registered in `project/project.godot`
-→ `[autoload]`. They are the composition root (`docs/ARCHITECTURE.md`).
+→ `[autoload]`. They are the composition root (`docs/ARCHITECTURE.md` →
+"Layers").
 
 ## Rules
 

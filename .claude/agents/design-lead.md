@@ -17,7 +17,8 @@ One of two tasks, and you do only that one:
 - **Design**: a screen, control or interaction to design, usually an
   issue in Needs design.
 
-For both, read `docs/UI_DIRECTION.md` and `docs/WORLD_VISUALS.md`.
+For both, read the two owners of the look: `docs/UI_DIRECTION.md` owns
+the UI, and `docs/WORLD_VISUALS.md` owns the arena and the parts.
 `reference design/` guides surfaces the app does not have yet; where it
 and the app differ, the app wins.
 
@@ -86,5 +87,5 @@ and the app differ, the app wins.
 ### Both
 
 - When the work alters the visual direction, the update to suggest to
-  `docs/UI_DIRECTION.md` or `docs/WORLD_VISUALS.md`.
+  the doc that owns the look it changes (see Input).
 - A reminder to the caller to delete `.scratch/design-<topic>/` when done.

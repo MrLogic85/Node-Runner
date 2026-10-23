@@ -37,7 +37,9 @@ Flag:
   tools, or ignore a failure that must stop them.
 - Hooks, agent, rule or skill files that break `docs/REVIEW.md` → "Hooks"
   or "Agent, rule and skill files".
-- Release or signing changes that break `docs/RELEASING.md`.
+- Release or signing changes that break `docs/RELEASING.md` →
+  "Releasing a milestone", "Fix releases", "Publishing safeguards" or
+  "Signing key".
 
 Don't flag:
 

@@ -13,7 +13,8 @@ description: Review a Node Runner GitHub issue before implementation with the is
    docs and earlier discussion. Ask the human a product or design choice
    you cannot settle; if nobody answers, post it as an issue comment.
 3. If the review changes the issue, edit its body, and its labels or
-   relationships per `docs/ISSUES.md`. File other problems it found with
+   relationships per `docs/ISSUES.md` →
+   "Required metadata". File other problems it found with
    the `create-issue` skill.
 4. Post the review summary as an issue comment, saying what changed.
 5. Set or confirm its Size, and split a Size 8 (`docs/ISSUES.md` →

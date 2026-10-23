@@ -16,7 +16,8 @@ description: File a new Node Runner GitHub issue with its labels, project fields
    **Ready** unless it is In progress, and start it as step 7 says.
 3. Write the body to `.scratch/issue.md`: the outcome, the context with
    evidence (files, lines, logs, issue numbers), acceptance criteria and a
-   test plan. Title it as `docs/ISSUES.md` says.
+   test plan. Title it as `docs/ISSUES.md` → "Creating an issue"
+   says.
 4. Create it with the labels "Required metadata" asks for, the milestone
    if it belongs to one, and its parent and blockers:
 

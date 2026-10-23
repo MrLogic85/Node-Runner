@@ -66,6 +66,18 @@ internal static class AgentFiles
     internal static bool IsSkipped(string name) =>
         name.StartsWith(LocalPrefix, StringComparison.Ordinal) || name.StartsWith('.');
 
+    /// <summary>
+    /// The committed Markdown files under <paramref name="folders"/>, in a stable order: any path
+    /// inside the repository with <see cref="LocalPrefix"/> in it is machine-local.
+    /// </summary>
+    internal static IEnumerable<string> Instructions(string root, IEnumerable<string> folders) =>
+        folders
+            .Select(folder => Path.Combine(root, folder))
+            .Where(Directory.Exists)
+            .SelectMany(folder => Directory.EnumerateFiles(folder, "*.md", SearchOption.AllDirectories))
+            .Where(path => !Path.GetRelativePath(root, path).Contains(LocalPrefix, StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal);
+
     private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks", "model"];
 
     private static readonly string[] _models = ["sonnet", "opus", "haiku"];

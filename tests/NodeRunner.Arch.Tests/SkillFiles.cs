@@ -68,11 +68,7 @@ internal static partial class SkillFiles
     /// <summary>A skill the instructions name but that does not exist is a step no tool can load.</summary>
     private static void CheckCitations(string root, string skills, List<string> problems)
     {
-        var files = _citingFolders
-            .Select(folder => Path.Combine(root, folder))
-            .Where(Directory.Exists)
-            .SelectMany(folder => Directory.EnumerateFiles(folder, "*.md", SearchOption.AllDirectories))
-            .Where(path => !Path.GetRelativePath(root, path).Contains(AgentFiles.LocalPrefix, StringComparison.Ordinal))
+        var files = AgentFiles.Instructions(root, _citingFolders)
             .Prepend(Path.Combine(root, "AGENTS.md"))
             .Prepend(Path.Combine(root, "README.md"))
             .Where(File.Exists)
