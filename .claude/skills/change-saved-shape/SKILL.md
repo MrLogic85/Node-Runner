@@ -10,7 +10,8 @@ description: Change what Node Runner saves in creation.json or progression.json,
 1. Decide by "Changing a saved shape" whether the change needs a
    migration. If not, record why in "Versions and migration" and skip
    steps 3–5.
-2. Change the record and `docs/SAVE_FORMAT.md`. `SaveFormatTests` then
+2. Change the record and its section in `docs/SAVE_FORMAT.md` →
+   "`creation.json`" or "`progression.json`". `SaveFormatTests` then
    fails and prints where it wrote the new schema; copy that file over
    its `docs/save-schema/` copy and read the diff.
 3. Append a `SaveMigration` to the file's list

@@ -99,5 +99,5 @@ these rules by number, so keep the numbering.
     measures share one read; `Build` and `ResetPose` clear it.
 
 Pure sums belong in `libs/NodeRunner.Mechanics`, where they are tested;
-`docs/MANUAL_TESTING.md` decides when a physics change needs a manual
-check.
+`docs/MANUAL_TESTING.md` → "Decision point" decides when a physics
+change needs a manual check.

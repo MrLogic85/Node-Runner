@@ -20,7 +20,9 @@ verified, not how to build it.
 
 ## Input
 
-The issue URL the caller gives. Read `docs/ISSUES.md`.
+The issue URL the caller gives. Read `docs/ISSUES.md` →
+"Required metadata", "Creating an issue", "Size", "Status" and
+"Reviewing an issue".
 
 ## Rules
 
@@ -29,9 +31,11 @@ Flag:
 - Scope: more than one outcome. Suggest a split.
 - Acceptance criteria that are vague, untestable or prescribe the
   implementation.
-- Labels, fields, milestone or relationships that break `docs/ISSUES.md`.
+- Labels, fields, milestone or relationships that break `docs/ISSUES.md` →
+  "Required metadata".
 - Dependencies not recorded as blocked-by or sub-issues.
-- No test plan, automated or manual (`docs/MANUAL_TESTING.md`).
+- No test plan, automated or manual (`docs/MANUAL_TESTING.md` →
+  "What belongs in an issue").
 - Unnamed risk: architecture, data loss, determinism, performance, device
   behaviour, UX surprises.
 - Missing context: screenshots, logs, seed and settings, steps to

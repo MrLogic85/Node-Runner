@@ -6,8 +6,9 @@ paths:
 # Release-note rules — `docs/release-notes/`
 
 One file per published version, `X.Y.Z.md`, used unchanged as the GitHub
-release text (`docs/RELEASING.md`). The `write-release-notes` skill has the
-steps; the owner approves the text in the notes PR.
+release text (`docs/RELEASING.md` → "Releasing a milestone"). The
+`write-release-notes` skill has the steps; the owner approves the text in
+the notes PR.
 
 - **Sources:** the milestone's closed issues and the PRs merged since the
   previous release from `main`, minus fixes a fix release has already

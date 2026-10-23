@@ -25,8 +25,8 @@ The app's vocabulary as plain data, with no behaviour beyond invariants.
 
 Pure, stateless static classes over Domain types, or immutable values
 computed from them, kept because a layer that cannot use Mechanics needs
-them (`docs/ARCHITECTURE.md`). This is the one list; add or move one only
-with an issue.
+them (`docs/ARCHITECTURE.md` → "Dependency rules"). This is the one
+list; add or move one only with an issue.
 
 | Type | Why it is here |
 |---|---|

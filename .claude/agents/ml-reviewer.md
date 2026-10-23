@@ -37,7 +37,7 @@ Flag:
   (`docs/CODE_DESIGN_PRINCIPLES.md` §4).
 - NaN, infinity or overflow on edge inputs: zeros, an empty population,
   extreme weights.
-- Behaviour that contradicts what `docs/ML_CONCEPTS.md` teaches.
+- Behaviour that contradicts a concept `docs/ML_CONCEPTS.md` owns.
 
 Don't flag:
 

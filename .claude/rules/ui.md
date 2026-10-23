@@ -76,5 +76,5 @@ code shows it.
 ## Tests
 
 Pure presentation helpers (number formatters, string builders) get unit
-tests; `docs/MANUAL_TESTING.md` decides when a UI change needs a manual
-check.
+tests; `docs/MANUAL_TESTING.md` → "Decision point" decides when a UI change
+needs a manual check.

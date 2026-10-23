@@ -34,15 +34,17 @@ identity, not display or draw order; network ports are sorted by them
 (see "Sensor–network contract"). Display names are optional, may repeat
 and are never keys.
 
-**Air drag:** air slows a moving creature by about a tenth of its speed
-each second, and its turning more, so a creature that builds up speed, on
-Wheels for example, keeps most of it. Add drag only where a real need
-shows up, and record the reason here.
-
 ```
 CreatureDef ──build──▶ physical body ──sensors──▶ network ──outputs──▶ powered parts ──force──▶ physical body
    (data)                 (physics)               (control)                                      (physics)
 ```
+
+### Air drag
+
+Air slows a moving creature by about a tenth of its speed each second,
+and its turning more, so a creature that builds up speed, on Wheels for
+example, keeps most of it. Add drag only where a real need shows up, and
+record the reason here.
 
 ### Node
 

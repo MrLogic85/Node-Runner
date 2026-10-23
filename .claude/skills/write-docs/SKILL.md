@@ -16,7 +16,7 @@ description: Write or change Node Runner documentation in its single owning docu
    replace each with a link to the owner, as
    `` `docs/X.md` → "Heading" ``.
 3. When the change alters what a `.claude/rules/` file, an agent, a
-   skill, a hook or `AGENTS.md` says, update it in the same change with
+   skill, a hook or AGENTS.md says, update it in the same change with
    the `write-agent-files` skill.
 4. When you rename or move a heading, update every link to it
    (`git grep -n '"Old heading"'`).

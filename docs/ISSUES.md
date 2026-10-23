@@ -9,8 +9,6 @@ GitHub Issues track all work. Issue metadata lives in three places:
 - **GitHub itself** holds milestones (the roadmap version), sub-issues
   and blocked-by relationships.
 
-Titles describe the problem or outcome, with no `[BUG]`-style prefixes.
-
 ## Required metadata
 
 Every open issue has:
@@ -40,6 +38,8 @@ It uses the caller's `gh` login, whose token needs the `project` scope
 (`gh auth refresh -h github.com -s project`).
 
 ## Creating an issue
+
+Titles describe the problem or outcome, with no `[BUG]`-style prefixes.
 
 File an issue as soon as you spot a problem or improvement outside the
 current task, such as a bug, a code smell, duplication or a missing
