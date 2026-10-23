@@ -14,7 +14,8 @@ something you can watch, poke and understand.
 
 ## Status
 
-**Alpha** (`docs/ROADMAP.md` → "Project stage"). Signed APKs are on
+**Development with testers** (alpha) since 0.13.0
+(`docs/SAVE_FORMAT.md` → "Project stage"). Signed APKs are on
 [GitHub Releases](https://github.com/MrLogic85/Node-Runner/releases).
 
 ## What you can do
@@ -31,8 +32,8 @@ something you can watch, poke and understand.
   parts you keep; new parts start almost unused.
 
 A genetic algorithm trains the network; all the math is in
-`libs/NodeRunner.ML/`, readable in an evening. What comes next is in
-[`docs/ROADMAP.md`](docs/ROADMAP.md) and the [milestones](https://github.com/MrLogic85/Node-Runner/milestones).
+`libs/NodeRunner.ML/`, readable in an evening. What comes next is in the
+[milestones](https://github.com/MrLogic85/Node-Runner/milestones).
 
 ## Building
 
@@ -75,7 +76,6 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 | Topic | Document | Audience |
 | --- | --- | --- |
 | Agent and contributor entry point | [`AGENTS.md`](AGENTS.md) | Agents |
-| Vision, project stage, plan | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Both |
 | Layers, dependencies, solution layout | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Both |
 | Creature parts and the network's ports | [`docs/CREATURE_MODEL.md`](docs/CREATURE_MODEL.md) | Agents |
 | Build mode | [`docs/BUILD_MODE.md`](docs/BUILD_MODE.md) | Agents |
@@ -85,7 +85,7 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 | UI direction | [`docs/UI_DIRECTION.md`](docs/UI_DIRECTION.md) | Agents |
 | How parts and the arena look | [`docs/WORLD_VISUALS.md`](docs/WORLD_VISUALS.md) | Agents |
 | Text and translation | [`docs/LOCALIZATION.md`](docs/LOCALIZATION.md) | Agents |
-| Save format | [`docs/SAVE_FORMAT.md`](docs/SAVE_FORMAT.md) | Both |
+| Save format and project stage | [`docs/SAVE_FORMAT.md`](docs/SAVE_FORMAT.md) | Both |
 | Code and doc rules | [`docs/CODE_DESIGN_PRINCIPLES.md`](docs/CODE_DESIGN_PRINCIPLES.md) | Agents |
 | Automated tests | [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md) | Agents |
 | Manual tests | [`docs/MANUAL_TESTING.md`](docs/MANUAL_TESTING.md) | Agents |

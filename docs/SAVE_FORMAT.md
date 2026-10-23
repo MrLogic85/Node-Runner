@@ -6,8 +6,8 @@ same PR.
 
 ## Rules
 
-- **Old saves keep loading** as the project stage requires
-  (`docs/ROADMAP.md` → "Project stage"); see "Versions and migration".
+- **Old saves keep loading** as "Project stage" requires; see "Versions
+  and migration".
 - **Schemas.** `docs/save-schema/` holds a JSON Schema for each file,
   generated from the domain records by .NET's `JsonSchemaExporter`. It is
   the exact field list: types, required fields, which may be `null`,
@@ -140,6 +140,17 @@ Schema: [`save-schema/progression.schema.json`](save-schema/progression.schema.j
 - Compiled runtime arrays of the network.
 - Physics state.
 - A generation that hasn't finished.
+
+## Project stage
+
+The project stage decides how changes treat data already saved on a
+device (Creations, training, progression, settings). `README.md` →
+"Status" names the current stage.
+
+| Stage | Saved user data |
+| --- | --- |
+| **Development with testers** (alpha) | Every Creation and Progression save from 0.13.0 on must load in every later version: a change to their shape migrates older files on load (see "Versions and migration"). Other saved data may still be reset when migrating it is not worth it. |
+| **Released** | Everything saved must be migrated. |
 
 ## Versions and migration
 

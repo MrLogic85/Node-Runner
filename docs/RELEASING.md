@@ -16,9 +16,12 @@ both; `ArchitectureSpec` checks they agree.
 
 A milestone is named after the version it ships, usually X.Y.0; a minor
 can also ship in steps from `main` as X.Y.0, X.Y.1, …. Every milestone
-has a "Release X.Y.Z" issue (`type: chore`, `area: android`), blocked by
-the milestone's other issues and by the previous release issue. When it
-is the last open issue and the human has asked for the release, the
+is an always-shippable increment, an APK you can install and demo: start
+the next milestone only once the previous one runs end-to-end on a
+device. Its
+"Release X.Y.Z" issue (`type: chore`, `area: android`) is blocked by the
+milestone's other issues and by the previous release issue. When that
+issue is the last open one and the human has asked for the release, the
 `release-milestone` skill releases it in three parts:
 
 - A PR titled `docs(#N): Release notes for X.Y.Z` adds

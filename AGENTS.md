@@ -13,8 +13,8 @@ interactive.
 
 - Godot (.NET) and C# for everything; versions in `README.md` → "Tools".
 - Android, with desktop for development.
-- The stage (`docs/ROADMAP.md` → "Project stage") decides whether a
-  change to saved data needs a migration.
+- The project stage (`docs/SAVE_FORMAT.md` → "Project stage") decides
+  whether a change to saved data needs a migration.
 
 Read the documents your task touches, not all of `docs/`: `README.md` →
 "Documentation" names the owner of each topic.
