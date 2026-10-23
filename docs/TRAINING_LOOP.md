@@ -265,8 +265,9 @@ layer owns that. "Locked" means "has trained at least one generation".
     least, so it stays easy to hit zoomed out. The selected parts' names
     show in one callout with a live bar for each of their network ports
     (`docs/WORLD_VISUALS.md` → Part callout). Each refresh samples the
-    followed network once into one `NetworkPortValues`; the Inputs stage,
-    NetworkFocus and the callout all read it, so they always agree.
+    followed network once into one `NetworkPortValues`; the Inputs and
+    Outputs stages, NetworkFocus and the callout all read it, so they
+    always agree.
   - **Resume (warm start).** Opening Training continues from the saved
     `TrainingStateDef`: the generation count goes on, and the saved
     network (the latest) is the elite, shadow 1, with its mutated children
@@ -286,11 +287,15 @@ layer owns that. "Locked" means "has trained at least one generation".
   (`SignalFlowPresentationViewModel`). Inputs counts the input ports and
   shows the first eight in port order as upright bars, filled like the
   callout's port bars, with a "+N" chip for the rest; the bars are empty
-  with no live network and hold on pause. Outputs counts the parts the
-  network drives (Servos, Motors, Steppers and Pistons). The Distance
-  stage is a one-line readout of the shown distance; once the followed
-  run has torn it reads "Crash 3.4 m" in `danger`, the word, not colour
-  alone, carrying the state. Collapsing the panel widens the arena.
+  with no live network and hold on pause. Outputs counts the output ports
+  and shows a dial per driven part in port order, at its drive, the
+  first output that is not Strength (a Servo's angle, a Motor's speed, a
+  Stepper's frequency, a Piston's length): up to four, or three and a
+  "+N" chip; like the bars they are empty with no live network and hold
+  on pause. The Distance stage is a one-line readout of the shown
+  distance; once the followed run has torn it reads "Crash 3.4 m" in
+  `danger`, the word, not colour alone, carrying the state. Collapsing
+  the panel widens the arena.
   Under the arena are Pause and the generation caption.
   - **Pause** freezes the trial mid-run and resumes exactly where it left
     off; the screen keeps responding. Each visit starts unpaused.
