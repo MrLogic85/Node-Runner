@@ -113,9 +113,8 @@ already says:
 | Hooks | Rules on actions (see "Hooks") |
 | Arch tests | Rules on file contents, in `NodeRunner.Arch.Tests` |
 
-A rule a script can check lives in a hook when it is about an action, or
-in an arch test when it is about a file's contents, not only in prose.
-Each denial or failure says what to do instead.
+A rule a script can check lives in a hook or an arch test, not only in
+prose, and each denial or failure says what to do instead.
 
 `AgentFilesSpec`, `RuleFilesSpec` and `SkillFilesSpec` in
 `NodeRunner.Arch.Tests` check the rules below, all but the last, which keep

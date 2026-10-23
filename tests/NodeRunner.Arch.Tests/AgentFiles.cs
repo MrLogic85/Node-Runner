@@ -44,7 +44,6 @@ internal static class AgentFiles
 
     private static readonly string[] _allowedKeys = ["name", "description", "tools", "hooks", "model"];
 
-    /// <summary>The model aliases an agent may pin: docs/REVIEW.md → "Agent, rule and skill files".</summary>
     private static readonly string[] _models = ["sonnet", "opus", "haiku"];
 
     /// <summary>Every broken rule under <paramref name="root"/>, each naming its file.</summary>

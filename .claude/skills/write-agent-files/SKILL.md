@@ -8,9 +8,8 @@ description: Write or change a Node Runner agent, skill, .claude/rules/ file, ho
 `docs/REVIEW.md` → "Agent, rule and skill files" owns the structure.
 
 1. Choose the kind of file from that section's table.
-2. If a script can check the rule, write a hook (`docs/REVIEW.md` →
-   "Hooks") or an arch
-   test instead of prose.
+2. If a script can check the rule, write a hook or an arch test instead
+   of prose.
 3. Write an agent with a `description` saying when to use it, a `model`
    (`sonnet` by default, `opus` where the focus needs deeper reasoning,
    `haiku` for a light, mechanical task) and these sections:
@@ -23,7 +22,6 @@ description: Write or change a Node Runner agent, skill, .claude/rules/ file, ho
    Until #1407 moves the others, this applies to new and changed agents.
 4. Name a doc by its heading, as `` `docs/X.md` → "Heading" ``, wherever
    you reference one.
-5. From the file you write, delete what `AGENTS.md`, a doc or a hook
-   already says. From other files, delete what your change makes
-   unneeded.
+5. Ask `docs/CODE_DESIGN_PRINCIPLES.md` §9's four questions of every
+   text you touched.
 6. Run the `review-change` skill.
