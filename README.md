@@ -72,29 +72,29 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 
 ## Documentation
 
-| Topic | Document |
-| --- | --- |
-| Agent and contributor entry point | [`AGENTS.md`](AGENTS.md) |
-| Vision, project stage, plan | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
-| Layers, dependencies, solution layout | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
-| Creature parts and the network's ports | [`docs/CREATURE_MODEL.md`](docs/CREATURE_MODEL.md) |
-| Build mode | [`docs/BUILD_MODE.md`](docs/BUILD_MODE.md) |
-| Training loop | [`docs/TRAINING_LOOP.md`](docs/TRAINING_LOOP.md) |
-| ML concepts the app teaches | [`docs/ML_CONCEPTS.md`](docs/ML_CONCEPTS.md) |
-| Words used in code and UI | [`docs/GLOSSARY.md`](docs/GLOSSARY.md) |
-| UI direction | [`docs/UI_DIRECTION.md`](docs/UI_DIRECTION.md) |
-| How parts and the arena look | [`docs/WORLD_VISUALS.md`](docs/WORLD_VISUALS.md) |
-| Text and translation | [`docs/LOCALIZATION.md`](docs/LOCALIZATION.md) |
-| Save format | [`docs/SAVE_FORMAT.md`](docs/SAVE_FORMAT.md) |
-| Code and doc rules | [`docs/CODE_DESIGN_PRINCIPLES.md`](docs/CODE_DESIGN_PRINCIPLES.md) |
-| Automated tests | [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md) |
-| Manual tests | [`docs/MANUAL_TESTING.md`](docs/MANUAL_TESTING.md) |
-| Issues, labels and project fields | [`docs/ISSUES.md`](docs/ISSUES.md) |
-| Tools to install | `README.md` → "Tools" |
-| How a change lands, review agents, hooks | [`docs/REVIEW.md`](docs/REVIEW.md) |
-| What each review agent checks | [`.claude/agents/`](.claude/agents/) |
-| Procedures (skills) | [`.claude/skills/`](.claude/skills/) |
-| Releasing | [`docs/RELEASING.md`](docs/RELEASING.md) |
+| Topic | Document | Audience |
+| --- | --- | --- |
+| Agent and contributor entry point | [`AGENTS.md`](AGENTS.md) | Agents |
+| Vision, project stage, plan | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Both |
+| Layers, dependencies, solution layout | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Both |
+| Creature parts and the network's ports | [`docs/CREATURE_MODEL.md`](docs/CREATURE_MODEL.md) | Agents |
+| Build mode | [`docs/BUILD_MODE.md`](docs/BUILD_MODE.md) | Agents |
+| Training loop | [`docs/TRAINING_LOOP.md`](docs/TRAINING_LOOP.md) | Agents |
+| ML concepts the app teaches | [`docs/ML_CONCEPTS.md`](docs/ML_CONCEPTS.md) | Humans |
+| Words used in code and UI | [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | Agents |
+| UI direction | [`docs/UI_DIRECTION.md`](docs/UI_DIRECTION.md) | Agents |
+| How parts and the arena look | [`docs/WORLD_VISUALS.md`](docs/WORLD_VISUALS.md) | Agents |
+| Text and translation | [`docs/LOCALIZATION.md`](docs/LOCALIZATION.md) | Agents |
+| Save format | [`docs/SAVE_FORMAT.md`](docs/SAVE_FORMAT.md) | Both |
+| Code and doc rules | [`docs/CODE_DESIGN_PRINCIPLES.md`](docs/CODE_DESIGN_PRINCIPLES.md) | Agents |
+| Automated tests | [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md) | Agents |
+| Manual tests | [`docs/MANUAL_TESTING.md`](docs/MANUAL_TESTING.md) | Agents |
+| Issues, labels and project fields | [`docs/ISSUES.md`](docs/ISSUES.md) | Agents |
+| Tools to install | `README.md` → "Tools" | Humans |
+| How a change lands, review agents, hooks | [`docs/REVIEW.md`](docs/REVIEW.md) | Agents |
+| What each review agent checks | [`.claude/agents/`](.claude/agents/) | Agents |
+| Procedures (skills) | [`.claude/skills/`](.claude/skills/) | Agents |
+| Releasing | [`docs/RELEASING.md`](docs/RELEASING.md) | Agents |
 
 ## Contributing
 

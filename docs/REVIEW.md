@@ -103,7 +103,7 @@ already says, except the copies "Findings format" names:
 | File | Holds |
 |---|---|
 | `AGENTS.md` | Hard rules no script can check, and facts an agent would not guess |
-| Docs | Rules and their why, tersely, in the owner `README.md` → "Documentation" names |
+| Docs | A topic, in the owner `README.md` → "Documentation" names, for the audience it names (below) |
 | `.claude/rules/<topic>.md` | A layer's code rules, loaded when a file its `paths` match is read |
 | `.claude/agents/<name>.md` | One agent's focus, inputs, work and output |
 | `.claude/skills/<name>/SKILL.md` | A procedure's steps, naming the doc heading that owns each rule |
@@ -112,6 +112,12 @@ already says, except the copies "Findings format" names:
 
 A rule a script can check lives in a hook or an arch test, not only in
 prose, and each denial or failure says what to do instead.
+
+`README.md` → "Documentation" names each doc's audience. A doc for
+agents is terse and addressed by heading. A doc for humans explains, and
+links to the agent doc for a rule rather than restating it. A doc for
+both is terse, with the why a human needs; split it only where the two
+pull against each other, keeping one owner per topic.
 
 `AgentFilesSpec`, `RuleFilesSpec`, `SkillFilesSpec` and `DocReferencesSpec`
 in `NodeRunner.Arch.Tests` check the rules below; no script checks the
