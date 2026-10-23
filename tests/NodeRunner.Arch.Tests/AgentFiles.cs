@@ -29,10 +29,7 @@ internal static class AgentFiles
                   command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerLspHookScript}}'
         """;
 
-    /// <summary>
-    /// The findings format each code reviewer's <c>## Output</c> spells out:
-    /// docs/REVIEW.md → "Findings format".
-    /// </summary>
+    /// <summary>The findings format each code reviewer's <c>## Output</c> holds word for word.</summary>
     internal const string FindingsFormat = """
         Report only problems in your focus worth acting on, judged by this
         repository's rules rather than stricter ones of your own, and prefer
