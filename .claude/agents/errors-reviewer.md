@@ -1,6 +1,7 @@
 ---
 name: errors-reviewer
 description: Reviews a Node Runner diff for error handling and resilience — failure paths, swallowed errors, partial state and the dev/release policy.
+model: sonnet
 tools: Read, Grep, Glob, Bash, LSP
 hooks:
   PreToolUse:
@@ -16,7 +17,14 @@ hooks:
 
 When this fails, does someone find out, and is the state still valid?
 
-## Flag
+## Input
+
+The diff command and issue URL the caller gives, and the
+`.claude/rules/` files whose `paths` match the changed files.
+
+## Rules
+
+Flag:
 
 - Swallowed errors: an empty `catch`, a broad `catch` that hides the
   cause, or an ignored return value or exit code.
@@ -29,7 +37,17 @@ When this fails, does someone find out, and is the state still valid?
 - An invariant without a `Debug.Assert`, or a release build that crashes
   where it should clamp and log (`docs/CODE_DESIGN_PRINCIPLES.md` §8).
 
-## Don't flag
+Don't flag:
 
 - Checks for states the types already rule out, or defensive code for
   failures that cannot happen.
+
+## Work
+
+1. Read the diff, the issue and the code around each change. Find C#
+   definitions and callers with the `LSP` tool, or `git grep` without it.
+2. Check the change against "Rules".
+
+## Output
+
+Each finding as `docs/REVIEW.md` → "Findings format" says.

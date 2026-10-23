@@ -46,6 +46,8 @@ internal static class AgentFiles
 
     private static readonly string[] _models = ["sonnet", "opus", "haiku"];
 
+    private static readonly string[] _sections = ["## Input", "## Rules", "## Work", "## Output"];
+
     /// <summary>Every broken rule under <paramref name="root"/>, each naming its file.</summary>
     internal static List<string> Problems(string root)
     {
@@ -138,7 +140,7 @@ internal static class AgentFiles
             problems.Add($"{shown}: needs a one-line description.");
         }
 
-        if (values.TryGetValue("model", out var model) && !_models.Contains(model))
+        if (!values.TryGetValue("model", out var model) || !_models.Contains(model))
         {
             problems.Add($"{shown}: model must be one of {string.Join(", ", _models)}.");
         }
@@ -158,6 +160,11 @@ internal static class AgentFiles
         if (values.ContainsKey("hooks"))
         {
             CheckHooks(shown, hooks, problems);
+        }
+
+        if (!lines[(end + 1)..].Where(line => line.StartsWith("## ", StringComparison.Ordinal)).SequenceEqual(_sections))
+        {
+            problems.Add($"{shown}: the body has the sections {string.Join(", ", _sections)}, in that order.");
         }
     }
 

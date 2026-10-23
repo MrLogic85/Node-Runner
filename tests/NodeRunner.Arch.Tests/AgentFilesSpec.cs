@@ -28,6 +28,7 @@ public sealed class AgentFilesSpec : IDisposable
             name: {_lead}
             description: "Proposes fixture designs: layouts # and colours."
             tools: Read
+            model: haiku
             hooks:
                 Stop:
                 - hooks:
@@ -94,6 +95,9 @@ public sealed class AgentFilesSpec : IDisposable
     [InlineData(_reviewer, "description: Reviews", "description: >\n  Reviews", "description must be one line")]
     [InlineData(_reviewer, "tools:", "description: Again.\ntools:", "sets description twice")]
     [InlineData(_reviewer, "model: sonnet", "model: claude-sonnet-5-5", "model must be one of sonnet, opus, haiku")]
+    [InlineData(_reviewer, "model: sonnet\n", "", "model must be one of")]
+    [InlineData(_reviewer, "## Work\n", "## Steps\n", "the body has the sections")]
+    [InlineData(_reviewer, "## Rules\n\n## Work\n", "## Work\n\n## Rules\n", "the body has the sections")]
     [InlineData(_reviewer, "tools:", "effort: high\ntools:", "sets effort")]
     [InlineData(_reviewer, AgentFiles.ReviewerTools, "Read, Bash", "a reviewer has tools")]
     [InlineData(_reviewer, AgentFiles.ReviewerLspHookScript, "guard-edit.sh", "a reviewer registers reviewer-bash.sh and reviewer-lsp.sh")]
@@ -114,6 +118,6 @@ public sealed class AgentFilesSpec : IDisposable
     private void WriteAgent(string name, string frontmatter)
     {
         File.WriteAllText(Path.Combine(AgentsDirectory, name + ".md"),
-            $"---\n{frontmatter.ReplaceLineEndings("\n")}\n---\n\nYou are {name}.\n");
+            $"---\n{frontmatter.ReplaceLineEndings("\n")}\n---\n\nYou are {name}.\n\n## Input\n\n## Rules\n\n## Work\n\n## Output\n");
     }
 }
