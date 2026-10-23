@@ -6,7 +6,7 @@ GitHub Issues track all work. Issue metadata lives in three places:
 - **Project fields** in the
   [Node Runner project](https://github.com/users/MrLogic85/projects/2) say
   where it *stands*: Status, Priority and Size.
-- **GitHub itself** holds milestones (the roadmap version), sub-issues
+- **GitHub itself** holds milestones (the plan, one per version), sub-issues
   and blocked-by relationships.
 
 ## Required metadata
@@ -71,7 +71,7 @@ outranks features.
 
 - **1 Critical** — Fix now: broken build or demo, data loss, unusable core
   flow, or a broken delivery gate.
-- **2 Major** — Blocks safe progress toward the next roadmap version,
+- **2 Major** — Blocks safe progress toward the next milestone,
   including work that protects CI, review, release, architecture
   boundaries or issue quality.
 - **3 Default** — Important, but safe work can continue meanwhile.
