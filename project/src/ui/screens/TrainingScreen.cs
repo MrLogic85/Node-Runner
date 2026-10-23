@@ -279,8 +279,7 @@ public partial class TrainingScreen : Control
 
     private void OnTrainingChanged(object? sender, PropertyChangedEventArgs args) => ApplyGeneration();
 
-    private void OnSignalFlowChanged(object? sender, PropertyChangedEventArgs args) =>
-        ApplySignalFlow(counts: args.PropertyName != nameof(SignalFlowPresentationViewModel.DistanceReadout));
+    private void OnSignalFlowChanged(object? sender, PropertyChangedEventArgs args) => ApplySignalFlow(args.PropertyName);
 
     private void Apply()
     {
@@ -309,20 +308,68 @@ public partial class TrainingScreen : Control
         }
     }
 
-    private void ApplySignalFlow(bool counts = true)
+    // Applies only the property that changed; null, for a new view-model, applies all.
+    private void ApplySignalFlow(string? changed = null)
     {
         if (_signalFlow is not { } signalFlow)
         {
             return;
         }
 
-        if (counts)
+        if (changed is null or nameof(SignalFlowPresentationViewModel.OutputsNote))
         {
-            GetNode<UiStageCard>("%InputsStage").NoteSource = UiTextTranslation.Source(signalFlow.InputsNote);
             GetNode<UiStageCard>("%OutputsStage").NoteSource = UiTextTranslation.Source(signalFlow.OutputsNote);
         }
 
-        ApplyDistanceReadout(signalFlow);
+        if (changed is null or nameof(SignalFlowPresentationViewModel.InputBars))
+        {
+            ApplyInputBars(signalFlow);
+        }
+
+        if (changed is null or nameof(SignalFlowPresentationViewModel.InputBars) or nameof(SignalFlowPresentationViewModel.InputValues))
+        {
+            ApplyInputValues(signalFlow);
+        }
+
+        if (changed is null or nameof(SignalFlowPresentationViewModel.DistanceReadout))
+        {
+            ApplyDistanceReadout(signalFlow);
+        }
+    }
+
+    // Rebuilds the bars, which happens only when the followed creature's inputs change; the chip stays last.
+    private void ApplyInputBars(SignalFlowPresentationViewModel signalFlow)
+    {
+        var stage = GetNode<UiStageCard>("%InputsStage");
+        var bars = GetNode<HBoxContainer>("%InputBars");
+        var more = GetNode<UiChip>("%MoreInputs");
+        foreach (var bar in bars.GetChildren().OfType<UiMeterBar>())
+        {
+            bars.RemoveChild(bar);
+            bar.QueueFree();
+        }
+
+        foreach (var range in signalFlow.InputBars)
+        {
+            bars.AddChild(new UiMeterBar { Vertical = true, Centred = range == PortRange.MinusOneToOne });
+        }
+
+        bars.MoveChild(more, -1);
+        var moreSource = UiTextTranslation.Source(signalFlow.MoreInputs);
+        more.TextSource = moreSource;
+        more.Visible = moreSource is not null;
+        stage.NoteSource = UiTextTranslation.Source(signalFlow.InputsNote);
+        stage.Collapsed = signalFlow.InputBars.Count == 0;
+    }
+
+    // A bar redraws only when its value changed (UiMeterBar.Value).
+    private void ApplyInputValues(SignalFlowPresentationViewModel signalFlow)
+    {
+        var bars = GetNode<HBoxContainer>("%InputBars");
+        for (var i = 0; i < signalFlow.InputValues.Count; i++)
+        {
+            bars.GetChild<UiMeterBar>(i).Value = signalFlow.InputValues[i];
+        }
     }
 
     // A tear shows smaller and in danger: "Crash 3.4 m" does not fit the card at the live size.

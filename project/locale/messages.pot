@@ -1585,12 +1585,6 @@ msgid_plural "{0} pistons too short"
 msgstr[0] ""
 msgstr[1] ""
 
-#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
-msgid "{0} reading"
-msgid_plural "{0} readings"
-msgstr[0] ""
-msgstr[1] ""
-
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "{0} rpm"
 msgstr ""

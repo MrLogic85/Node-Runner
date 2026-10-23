@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" uid="uid://bxxwv8m0f8sml" path="res://scenes/ui/UiStageCard.tscn" id="23_stage_card"]
 [ext_resource type="Script" uid="uid://ceoq80oxw56og" path="res://src/ui/lib/UiTextField.cs" id="24_text_field"]
 [ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="25_chip"]
+[ext_resource type="Script" uid="uid://cpa2e382ape81" path="res://src/ui/lib/UiMeterBar.cs" id="26_meter_bar"]
 [ext_resource type="Script" uid="uid://b1nqvpdy0fk4h" path="res://src/ui/lib/UiCallout.cs" id="26_callout"]
 [ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="27_info_row"]
 [ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="28_toolbar"]
@@ -2968,8 +2969,7 @@ theme_override_constants/v_separation = 12
 [node name="Senses" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556226 instance=ExtResource("23_stage_card")]
 layout_mode = 2
 Title = "Inputs"
-Note = "Left foot"
-Collapsed = true
+Note = "12"
 
 [node name="Thinks" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples" unique_id=-2010556225 instance=ExtResource("23_stage_card")]
 layout_mode = 2
@@ -2986,13 +2986,81 @@ Note = "Opens"
 Opens = true
 Collapsed = true
 
-[node name="Detail" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body" parent_id_path=PackedInt32Array(-2010556226, 188724460) unique_id=-2010556223]
+[node name="Bars" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body" parent_id_path=PackedInt32Array(-2010556226, 188724460) unique_id=732516493]
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_filter = 2
-text = "9 readings · top first"
-autowrap_mode = 3
-script = ExtResource("2_cpfof")
+theme_override_constants/separation = 4
+
+[node name="Bar1" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=171361966]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 1
+Centred = false
+Vertical = true
+
+[node name="Bar2" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=1998683147]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 0.2
+Centred = true
+Vertical = true
+
+[node name="Bar3" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=-1354481003]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = -0.4
+Centred = true
+Vertical = true
+
+[node name="Bar4" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=777513205]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 0.6
+Centred = true
+Vertical = true
+
+[node name="Bar5" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=-1619762257]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = -0.3
+Centred = true
+Vertical = true
+
+[node name="Bar6" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=1922093187]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 0.1
+Centred = true
+Vertical = true
+
+[node name="Bar7" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=117768055]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 0.7
+Centred = true
+Vertical = true
+
+[node name="Bar8" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=-839203412]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = -0.2
+Centred = true
+Vertical = true
+
+[node name="More" type="PanelContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Senses/Stack/Body/Bars" unique_id=-610205168]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("25_chip")
+Text = "+4"
 
 [node name="Detail" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/StageCard/Examples/Thinks/Stack/Body" parent_id_path=PackedInt32Array(-2010556225, 188724460) unique_id=-2010556222]
 layout_mode = 2
@@ -3001,6 +3069,119 @@ mouse_filter = 2
 text = "24 neurons · 8 outputs"
 autowrap_mode = 3
 script = ExtResource("2_cpfof")
+
+[node name="MeterBar" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=-1909587504]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar" unique_id=683211327]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Heading" unique_id=-59871151]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Vertical meter"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Heading" unique_id=1395296807]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "one live value as an upright bar: centred fills from the 0 tick, filling from the bottom; NaN, -1, 0, 1"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Centred" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar" unique_id=188319318]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Centred" unique_id=1728934575]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "centred"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="NaN" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Centred" unique_id=-1697793892]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = nan
+Centred = true
+Vertical = true
+
+[node name="MinusOne" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Centred" unique_id=-1065231084]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = -1.0
+Centred = true
+Vertical = true
+
+[node name="Zero" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Centred" unique_id=1370742008]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 0.0
+Centred = true
+Vertical = true
+
+[node name="One" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Centred" unique_id=-1053169594]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 1.0
+Centred = true
+Vertical = true
+
+[node name="Filling" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar" unique_id=-1971762553]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Filling" unique_id=-171776491]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "filling"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="NaN" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Filling" unique_id=-221974755]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = nan
+Centred = false
+Vertical = true
+
+[node name="MinusOne" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Filling" unique_id=-1391095136]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = -1.0
+Centred = false
+Vertical = true
+
+[node name="Zero" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Filling" unique_id=-1337169480]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 0.0
+Centred = false
+Vertical = true
+
+[node name="One" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/MeterBar/Filling" unique_id=-953551306]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_meter_bar")
+Value = 1.0
+Centred = false
+Vertical = true
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar"]
