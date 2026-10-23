@@ -79,6 +79,10 @@ public static class UiSize
         public const int MeterTrackWidth = SliderTrackWidth;
         public const int MeterTickHeight = 7;
 
+        /// <summary>A vertical meter bar, as in the Status panel's Inputs card: its width and height; the track fills it.</summary>
+        public const int VerticalMeterWidth = 8;
+        public const int VerticalMeterHeight = 24;
+
         /// <summary>A creature's beam in Build, Training and thumbnails.</summary>
         public const int CreatureBeamWidth = 6;
 

@@ -50,7 +50,7 @@ public partial class TrainingHost : Node, IRoutedScene
     private TrialController? _playback;
     private TrainingScreen _screen = null!;
     private TrainingPresentationViewModel _trainingPresentation = new();
-    // The last network sample, taken once per signal refresh and read by both NetworkFocus and the part callout.
+    // The last network sample, taken once per signal refresh so every view of the network agrees.
     private NetworkPortValues _portValues = NetworkPortValues.Empty;
     private double _signalRefreshElapsed;
     // Training's slow-motion chip; null in Simulate, which races one shadow.
@@ -168,11 +168,11 @@ public partial class TrainingHost : Node, IRoutedScene
         // smoothed frames fall a microsecond short of the interval, about 20 a second instead of 30.
         _signalRefreshElapsed %= _signalRefreshIntervalSeconds;
         _followed.ReadInputs(_networkInputs);
-        _signalFlow.Update(_networkInputs.Count, _followed.Network is null ? 0 : _followed.MotorCount, FollowedDistance, FollowedCrashed);
+        _signalFlow.Update(_followed.Network is null ? 0 : _followed.MotorCount, FollowedDistance, FollowedCrashed);
         ShowCrash();
 
-        // One sample of the network's ports per refresh, read by both NetworkFocus and the part callout.
         _portValues = NetworkPortValues.Sample(_followed.Ports, _followed.Network, _networkInputs);
+        _signalFlow.ShowInputs(_followed.Definition, _portValues);
         _networkFocus.Update(_portValues);
         ShowPartCallout();
     }
