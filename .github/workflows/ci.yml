@@ -5,47 +5,10 @@ on:
     branches: [main, 'release/**']
   pull_request:
     branches: [main, 'release/**']
-  pull_request_target:
-    types: [opened, reopened, edited, synchronize]
 
 jobs:
-  semantic-pr-title:
-    name: PR title
-    if: github.event_name == 'pull_request_target'
-    runs-on: ubuntu-24.04
-    permissions:
-      pull-requests: read
-    steps:
-      - uses: amannn/action-semantic-pull-request@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          headerPattern: '^(\w+)(?:\((#[1-9][0-9]*(?:, #[1-9][0-9]*)*)\))?: (.+)$'
-          headerPatternCorrespondence: type, scope, subject
-          requireScope: true
-          scopes: |
-            #[1-9][0-9]*
-          types: |
-            feat
-            fix
-            docs
-            chore
-            refactor
-            test
-            build
-            ci
-            perf
-            style
-            revert
-          subjectPattern: ^[A-Z].+$
-          subjectPatternError: |
-            PR title must be `type(#123): Description` or
-            `type(#123, #124): Description`, e.g.
-            `ci(#15): Preserve CI test results`.
-
   build:
     name: Build
-    if: github.event_name != 'pull_request_target'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -64,7 +27,6 @@ jobs:
 
   test:
     name: Test & coverage
-    if: github.event_name != 'pull_request_target'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -103,7 +65,6 @@ jobs:
 
   format:
     name: Format check
-    if: github.event_name != 'pull_request_target'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
