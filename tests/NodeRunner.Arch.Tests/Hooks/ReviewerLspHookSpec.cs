@@ -3,8 +3,8 @@ using System.Text.Json.Nodes;
 namespace NodeRunner.Arch.Tests.Hooks;
 
 /// <summary>
-/// .claude/hooks/reviewer-lsp.sh lets a review agent use the LSP tool only for lookups, since
-/// Copilot's rename writes the files. See docs/REVIEW.md → "Hooks".
+/// .claude/hooks/reviewer-lsp.sh lets a review agent use the LSP tool only for lookups, so it
+/// stays read-only if the tool gains an operation that writes. See docs/REVIEW.md → "Hooks".
 /// </summary>
 public sealed class ReviewerLspHookSpec(HookFixture fixture) : IClassFixture<HookFixture>
 {
@@ -26,6 +26,6 @@ public sealed class ReviewerLspHookSpec(HookFixture fixture) : IClassFixture<Hoo
             input["operation"] = operation;
         }
 
-        return new JsonObject { ["hook_event_name"] = "PreToolUse", ["tool_name"] = "lsp", ["tool_input"] = input };
+        return new JsonObject { ["hook_event_name"] = "PreToolUse", ["tool_name"] = "LSP", ["tool_input"] = input };
     }
 }

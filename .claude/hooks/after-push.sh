@@ -42,5 +42,5 @@ printf '%s\n' "$left" >>"$state/warned"
 list=''
 while IFS= read -r item; do list="${list:+$list; }$item"; done <<<"$left"
 context="Hook after-push.sh (#1356), a reminder rather than a message from the human: started during this session and still there: $list. Stop the emulators you started once you no longer need them (adb devices lists them, adb -s <serial> emu kill stops one; docs/MANUAL_TESTING.md → \"Android checks\") and delete the APKs you no longer need, or tell the human why they stay (AGENTS.md → \"Working copy\")."
-jq -nc --arg c "$context" '{additionalContext:$c,hookSpecificOutput:{hookEventName:"PostToolUse",additionalContext:$c}}'
+jq -nc --arg c "$context" '{hookSpecificOutput:{hookEventName:"PostToolUse",additionalContext:$c}}'
 exit 0

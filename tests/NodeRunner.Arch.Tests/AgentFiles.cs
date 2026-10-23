@@ -2,7 +2,7 @@ namespace NodeRunner.Arch.Tests;
 
 /// <summary>
 /// Checks the agent-file rules in docs/REVIEW.md → "Agent, rule and skill files": a broken one silently
-/// removes an agent from Copilot CLI or Claude Code. Reads only the frontmatter keys
+/// removes an agent from Claude Code. Reads only the frontmatter keys
 /// these files use; it is not a YAML parser.
 /// </summary>
 internal static class AgentFiles
@@ -15,10 +15,7 @@ internal static class AgentFiles
     /// <summary>The agent-scoped hook that keeps a reviewer's LSP tool to lookups.</summary>
     internal const string ReviewerLspHookScript = "reviewer-lsp.sh";
 
-    /// <summary>
-    /// The frontmatter each reviewer registers its hooks with, in Claude Code's shape. The LSP tool
-    /// is <c>LSP</c> in Claude Code and <c>lsp</c> in Copilot, whose matchers are case-sensitive.
-    /// </summary>
+    /// <summary>The frontmatter each reviewer registers its hooks with, in Claude Code's shape.</summary>
     internal const string ReviewerHook = $$"""
         hooks:
           PreToolUse:
@@ -26,7 +23,7 @@ internal static class AgentFiles
               hooks:
                 - type: command
                   command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerHookScript}}'
-            - matcher: "LSP|lsp"
+            - matcher: "LSP"
               hooks:
                 - type: command
                   command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/{{ReviewerLspHookScript}}'
@@ -53,12 +50,6 @@ internal static class AgentFiles
     {
         var problems = new List<string>();
         var agents = Path.Combine(root, ".claude", "agents");
-        if (Directory.Exists(Path.Combine(root, ".github", "agents")))
-        {
-            // Copilot would load it first, and Claude Code not at all.
-            problems.Add(".github/agents: remove it; every agent lives in .claude/agents (#1359).");
-        }
-
         if (!Directory.Exists(agents))
         {
             problems.Add(".claude/agents: missing; the review agents live there.");
@@ -180,8 +171,8 @@ internal static class AgentFiles
 
     /// <summary>
     /// Claude Code's shape: each event lists entries that hold an inner <c>hooks</c> list, with a
-    /// <c>matcher</c> where the event takes one. Copilot's flat shape puts <c>type</c> and the
-    /// command in the entry itself, and makes Claude Code drop the whole agent.
+    /// <c>matcher</c> where the event takes one. A flat shape, with <c>type</c> and the command in
+    /// the entry itself, makes Claude Code drop the whole agent.
     /// </summary>
     private static void CheckHooks(string shown, List<string> lines, List<string> problems)
     {

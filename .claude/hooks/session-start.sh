@@ -62,5 +62,5 @@ If these are not yours, or this is not the branch for your task, stop and ask th
   fi
 fi
 context="$context${note:-}"
-jq -nc --arg c "$context" '{additionalContext:$c,hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$c}}'
+jq -nc --arg c "$context" '{hookSpecificOutput:{hookEventName:"SessionStart",additionalContext:$c}}'
 exit 0

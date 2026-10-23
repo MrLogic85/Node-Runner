@@ -2,14 +2,9 @@
 # PreToolUse on the edit tools (#1320). See docs/REVIEW.md → "Hooks".
 . "${0%/*}/common.sh"
 
-# Claude Code sends file_path, Copilot path, and Copilot's apply_patch the whole patch as a string.
+# Write and Edit send file_path, NotebookEdit notebook_path.
 targets() {
-  jq -r '.tool_input
-    | if type == "string" then
-        split("\n")[] | select(test("^\\*\\*\\* ((Add|Update|Delete) File|Move to): ")) | sub("^\\*\\*\\* [^:]+: "; "")
-      else
-        (.file_path, .path, .notebook_path) | strings
-      end' <<<"$input"
+  jq -r '.tool_input | (.file_path, .notebook_path) | strings' <<<"$input"
 }
 
 # Resolves . and .. without touching the file system, since the file may not exist yet.

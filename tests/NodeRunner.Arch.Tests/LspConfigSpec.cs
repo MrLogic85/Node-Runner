@@ -3,8 +3,8 @@ using System.Text.Json.Nodes;
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Both tools start the same pinned C# language server: docs/REVIEW.md → "Agent, rule and skill
-/// files". A broken link here only makes the agents fall back to git grep, so nothing
+/// Claude Code's LSP tool starts the pinned C# language server: docs/REVIEW.md → "Agent, rule
+/// and skill files". A broken link here only makes the agents fall back to git grep, so nothing
 /// else would notice it.
 /// </summary>
 public sealed class LspConfigSpec
@@ -12,17 +12,14 @@ public sealed class LspConfigSpec
     private static readonly string _root = RepositoryRoot.Find();
 
     [Fact]
-    public void BothTools_RunTheSameServerForCSharp_PinnedInTheToolManifest()
+    public void Plugin_RunsTheServerForCSharp_PinnedInTheToolManifest()
     {
-        var copilot = Read(".github", "lsp.json")["lspServers"]!["csharp"]!;
-        var claude = Read(".claude", "marketplace", Plugin(), ".lsp.json")["csharp"]!;
+        var server = Read(".claude", "marketplace", Plugin(), ".lsp.json")["csharp"]!;
         var tools = Read("dotnet-tools.json")["tools"]!.AsObject();
 
-        var command = Command(copilot);
+        var command = Command(server);
 
-        Command(claude).ShouldBe(command);
-        copilot["fileExtensions"]![".cs"]!.GetValue<string>().ShouldBe("csharp");
-        claude["extensionToLanguage"]![".cs"]!.GetValue<string>().ShouldBe("csharp");
+        server["extensionToLanguage"]![".cs"]!.GetValue<string>().ShouldBe("csharp");
         command.Take(3).ShouldBe(["dotnet", "tool", "run"]);
         var tool = tools.Single(entry => entry.Value!["commands"]!.AsArray().Any(name => name!.GetValue<string>() == command[3]));
         tool.Value!["version"]!.GetValue<string>().ShouldMatch(@"^\d+\.\d+\.\d+$");

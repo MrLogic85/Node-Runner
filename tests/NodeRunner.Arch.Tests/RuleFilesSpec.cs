@@ -2,7 +2,7 @@ namespace NodeRunner.Arch.Tests;
 
 /// <summary>
 /// Rule files load for the files they govern: docs/REVIEW.md → "Agent, rule and skill files". The
-/// fixtures live in a temp directory, so neither tool loads them as rules.
+/// fixtures live in a temp directory, so Claude Code does not load them as rules.
 /// </summary>
 public sealed class RuleFilesSpec : IDisposable
 {

@@ -100,16 +100,6 @@ public sealed class SessionHooksSpec : IDisposable
     }
 
     [Fact]
-    public void SessionStart_WithACamelCaseSessionId_KeepsState()
-    {
-        var payload = new JsonObject { ["sessionId"] = "camel", ["cwd"] = _fixture.Root };
-
-        _fixture.RunRaw("session-start.sh", payload.ToJsonString());
-
-        Directory.Exists(Path.Combine(_fixture.Root, ".git", "agent-hooks", "camel")).ShouldBeTrue();
-    }
-
-    [Fact]
     public void SessionStart_WhenGitFails_SaysToAsk()
     {
         Directory.Move(Path.Combine(_fixture.Root, ".git"), Path.Combine(_fixture.Root, "moved.git"));
@@ -164,7 +154,7 @@ public sealed class SessionHooksSpec : IDisposable
         var output = _fixture.RunRaw("session-start.sh", new JsonObject { ["cwd"] = _fixture.Root }.ToJsonString());
 
         Directory.Exists(State).ShouldBeTrue();
-        JsonNode.Parse(output)!["additionalContext"]!.GetValue<string>()
+        JsonNode.Parse(output)!["hookSpecificOutput"]!["additionalContext"]!.GetValue<string>()
             .ShouldEndWith("the after-push check for emulators and APKs is off.");
     }
 
@@ -278,9 +268,9 @@ public sealed class SessionHooksSpec : IDisposable
     private static string Reminder(string output)
     {
         var json = JsonNode.Parse(output)!;
-        var context = json["additionalContext"]!.GetValue<string>();
+        json.AsObject().Select(entry => entry.Key).ShouldBe(["hookSpecificOutput"]);
         json["hookSpecificOutput"]!["hookEventName"]!.GetValue<string>().ShouldBe("PostToolUse");
-        json["hookSpecificOutput"]!["additionalContext"]!.GetValue<string>().ShouldBe(context);
+        var context = json["hookSpecificOutput"]!["additionalContext"]!.GetValue<string>();
         context.ShouldStartWith("Hook after-push.sh (#1356)");
         return context;
     }
@@ -337,9 +327,9 @@ public sealed class SessionHooksSpec : IDisposable
             ["cwd"] = _fixture.Root,
         };
         var json = JsonNode.Parse(_fixture.RunRaw("session-start.sh", payload.ToJsonString(), path, environment))!;
-        var context = json["additionalContext"]!.GetValue<string>();
+        json.AsObject().Select(entry => entry.Key).ShouldBe(["hookSpecificOutput"]);
         json["hookSpecificOutput"]!["hookEventName"]!.GetValue<string>().ShouldBe("SessionStart");
-        json["hookSpecificOutput"]!["additionalContext"]!.GetValue<string>().ShouldBe(context);
+        var context = json["hookSpecificOutput"]!["additionalContext"]!.GetValue<string>();
         return context;
     }
 
