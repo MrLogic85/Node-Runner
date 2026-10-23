@@ -14,7 +14,7 @@ public sealed class AgentFilesSpec : IDisposable
     public AgentFilesSpec()
     {
         Directory.CreateDirectory(AgentsDirectory);
-        WriteAgent(_reviewer, $"""
+        WriteAgent(_reviewer, output: AgentFiles.FindingsFormat, frontmatter: $"""
             name: {_reviewer}
             description: Reviews a fixture diff — one focus, read-only.
             tools: {AgentFiles.ReviewerTools}
@@ -85,6 +85,22 @@ public sealed class AgentFilesSpec : IDisposable
         problems.ShouldHaveSingleItem().ShouldStartWith(".claude/agents: missing");
     }
 
+    [Fact]
+    public void Fixture_IssueReviewerWithItsOwnFormat_HasNoProblems()
+    {
+        WriteAgent(AgentFiles.IssueReviewer, $"""
+            name: {AgentFiles.IssueReviewer}
+            description: Reviews a fixture issue.
+            tools: {AgentFiles.ReviewerTools}
+            model: sonnet
+            {AgentFiles.ReviewerHook}
+            """, output: "Its own format.");
+
+        var problems = AgentFiles.Problems(_root);
+
+        problems.ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData(_reviewer, "---\n", "", "no frontmatter")]
     [InlineData(_reviewer, $"name: {_reviewer}", "name: other-reviewer", $"name must be {_reviewer}")]
@@ -99,6 +115,7 @@ public sealed class AgentFilesSpec : IDisposable
     [InlineData(_reviewer, "tools:", "effort: high\ntools:", "sets effort")]
     [InlineData(_reviewer, AgentFiles.ReviewerTools, "Read, Bash", "a reviewer has tools")]
     [InlineData(_reviewer, AgentFiles.ReviewerLspHookScript, "guard-edit.sh", "a reviewer registers reviewer-bash.sh and reviewer-lsp.sh")]
+    [InlineData(_reviewer, "with no other levels", "with your own levels", "## Output holds AgentFiles.FindingsFormat")]
     [InlineData(_lead, "\n    Stop:\n    - hooks:\n        - type: command\n          command: \"./done.sh\"", "", "hooks must use Claude Code's shape")]
     [InlineData(_lead, "    - hooks:\n        - type: command\n          command:", "    - type: command\n      bash:", "hooks must use Claude Code's shape")]
     public void Fixture_WithOneRuleBroken_NamesTheFileAndRule(string agent, string from, string to, string expected)
@@ -113,9 +130,9 @@ public sealed class AgentFilesSpec : IDisposable
         problems.ShouldHaveSingleItem().ShouldStartWith($".claude/agents/{agent}.md: {expected}");
     }
 
-    private void WriteAgent(string name, string frontmatter)
+    private void WriteAgent(string name, string frontmatter, string output = "")
     {
         File.WriteAllText(Path.Combine(AgentsDirectory, name + ".md"),
-            $"---\n{frontmatter.ReplaceLineEndings("\n")}\n---\n\nYou are {name}.\n\n## Input\n\n## Rules\n\n## Work\n\n## Output\n");
+            $"---\n{frontmatter.ReplaceLineEndings("\n")}\n---\n\nYou are {name}.\n\n## Input\n\n## Rules\n\n## Work\n\n## Output\n\n{output.ReplaceLineEndings("\n")}\n");
     }
 }

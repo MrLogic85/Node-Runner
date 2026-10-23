@@ -60,16 +60,12 @@ runs the app, which would overlap their builds and tests.
 
 ## Findings format
 
-A review agent reports only problems in its focus worth acting on,
-judged by this repository's rules, not stricter ones of its own, and
-prefers fixing code to documenting a limit. Each finding has:
-
-- its level: Major for wrong behaviour, a wrong statement or a broken
-  rule; Medium for a risk or gap worth fixing now; Minor for a small fix;
-- whether it is new or preexisting (outside the diff);
-- the file and lines, the evidence, the impact and a direction.
-
-With nothing to report, it says "No findings".
+`AgentFiles.FindingsFormat` in `NodeRunner.Arch.Tests` holds the format,
+with what each level means. Each code reviewer's `## Output` copies it
+word for word, because agents do not reliably follow a link and fall
+back on their own style. `AgentFilesSpec` fails when a copy differs.
+`issue-reviewer` and `design-lead` are no code reviewers and give their
+own shape in their `## Output`.
 
 ## Review receipts
 
@@ -102,7 +98,7 @@ changes what the push sends, run `git push` as its own command. Tags, deletes, d
 ## Agent, rule and skill files
 
 Each kind of file holds one kind of content, and says nothing another
-already says:
+already says, except the copies "Findings format" names:
 
 | File | Holds |
 |---|---|
