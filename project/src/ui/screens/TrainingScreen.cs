@@ -335,6 +335,13 @@ public partial class TrainingScreen : Control
             ApplyValues(GetNode<HBoxContainer>("%InputBars"), signalFlow.InputValues, static (UiMeterBar bar, double value) => bar.Value = value);
         }
 
+        if (changed is null or nameof(SignalFlowPresentationViewModel.NetworkSize))
+        {
+            var source = UiTextTranslation.Source(signalFlow.NetworkSize);
+            GetNode<UiLabel>("%NetworkSize").TextSource = source;
+            GetNode<UiStageCard>("%NetworkStage").Collapsed = source is null;
+        }
+
         if (changed is null or nameof(SignalFlowPresentationViewModel.OutputDials))
         {
             ApplyMeters(

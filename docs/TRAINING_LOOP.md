@@ -296,11 +296,12 @@ layer owns that. "Locked" means "has trained at least one generation".
   ones that fit beside a chip at the right edge that counts the rest. A
   creature with no inputs says "No sensors" in the Inputs card, and one
   with no driven parts "No driven parts" in Outputs, rather than an
-  empty box. Until the Network card has its picture
-  (#196), it says "Picture comes later". The Distance stage is a
-  one-line readout of the shown distance; once the followed run has torn
-  it reads "Crash 3.4 m" in `danger`, the word, not colour alone,
-  carrying the state. Collapsing the panel widens the arena.
+  empty box. The Network card gives the network's size in learnable
+  parameters, such as "91 parameters" or "45.2k parameters"; it changes
+  only when the ports do. The Distance
+  stage is a one-line readout of the shown distance; once the followed
+  run has torn it reads "Crash 3.4 m" in `danger`, the word, not colour
+  alone, carrying the state. Collapsing the panel widens the arena.
   Under the arena are Pause and the generation caption.
   - **Pause** freezes the trial mid-run and resumes exactly where it left
     off; the screen keeps responding. Each visit starts unpaused.

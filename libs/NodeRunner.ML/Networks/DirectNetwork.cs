@@ -147,9 +147,16 @@ public static class DirectNetwork
     public static NeuralNetworkDef Refit(NeuralNetworkDef network, NetworkPortLayout ports, NeuralNetworkDef? idsFrom = null) =>
         ToNeuralNetworkDef(ports, Compile(network, ports), network, idsFrom);
 
-    // NeuralNetwork's genome length for these layer sizes, which is also defined, as empty, for a
-    // creature with no inputs or no outputs: one rebuilt down to bare sensors or bare Pistons.
-    private static int GenomeLength(NetworkPortLayout ports) => (ports.Inputs.Count * ports.Outputs.Count) + ports.Outputs.Count;
+    /// <summary>
+    /// The network's learnable parameters: a weight per (output, input) pair and a bias per output,
+    /// <see cref="NeuralNetwork"/>'s genome length for these layer sizes. It is also defined, as
+    /// empty, for a creature with no inputs or no outputs: one rebuilt down to bare sensors or bare Pistons.
+    /// </summary>
+    public static int GenomeLength(NetworkPortLayout ports)
+    {
+        ArgumentNullException.ThrowIfNull(ports);
+        return (ports.Inputs.Count * ports.Outputs.Count) + ports.Outputs.Count;
+    }
 
     private static Activation ToActivation(NeuronActivation activation) => activation switch
     {
