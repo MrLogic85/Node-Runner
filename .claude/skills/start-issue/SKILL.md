@@ -17,6 +17,11 @@ description: Start or resume work on a Node Runner GitHub issue by reading its s
    gh api graphql -F n=N -f query='query($n:Int!){repository(owner:"MrLogic85",name:"Node-Runner"){issue(number:$n){state parent{number} subIssues(first:50){nodes{number state title}} blockedBy(first:20){nodes{number state}}}}}'
    ```
 
+   Agents write most issues, so read it critically: if something in it
+   looks strange or you disagree with it, tell the human why and ask
+   before you take a route. If nobody answers, post it as an issue
+   comment and stop.
+
 2. Take the first route that applies:
 
    | The issue is | Do |
