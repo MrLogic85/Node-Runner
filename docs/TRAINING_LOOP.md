@@ -48,6 +48,9 @@ layer owns that. "Locked" means "has trained at least one generation".
     penalising a creature that surges forward and then settles back.
   - `TopSpeed`: the highest forward speed of the centre over a sliding
     half-second window, so one-tick physics jolts do not dominate.
+  - `TrialMeasurement.CurrentSpeed`, not a `TrialResult` field since only
+    the followed run shows it: the centre's signed forward speed now over
+    the same window, 0 until the window is full.
   - `Elevation`: the largest gap between the creature's lowest point and
     the ground once it has landed; a crawler scores 0.
   - `FrontDistance`: how far ahead of its start the creature's front-most
@@ -59,8 +62,8 @@ layer owns that. "Locked" means "has trained at least one generation".
     or a tracked point moved further in one tick than
     `TrialMeasurement.MaxPlausibleSpeed` allows. An invalid trial stops
     measuring.
-  - **Tears:** the first tear freezes `Distance`, `TopSpeed`, `Elevation`
-    and `FrontDistance` at their values before it
+  - **Tears:** the first tear freezes `Distance`, `TopSpeed`, `Elevation`,
+    `FrontDistance` and the current speed at their values before it
     (`TrialMeasurement.Freeze`). The creature runs on to the end of the
     trial and is still checked for blow-ups, but a tear alone does not make
     the trial invalid. A creature that breaks keeps the progress it made
@@ -299,9 +302,15 @@ layer owns that. "Locked" means "has trained at least one generation".
   empty box. The Network card gives the network's size in learnable
   parameters, such as "91 parameters" or "45.2k parameters"; it changes
   only when the ports do. The Distance
-  stage is a one-line readout of the shown distance; once the followed
-  run has torn it reads "Crash 3.4 m" in `danger`, the word, not colour
-  alone, carrying the state. Collapsing the panel widens the arena.
+  stage shows the shown distance beside the current speed, signed, such
+  as "−0.8 m/s", and under them a track strip that fills towards the
+  best ever (the best marker's distance) at its `ink` marker. The strip's
+  full length, named at its end, is the farther of the best and the
+  distance, so with no best the strip is full with the marker at 0 m,
+  and past the best the marker moves left. Once the followed run has torn
+  the stage reads "Crash 3.4 m" in `danger`, the word, not colour alone,
+  carrying the state, and the strip freezes in `danger` with a cap where
+  it stopped, without the speed. Collapsing the panel widens the arena.
   Under the arena are Pause and the generation caption.
   - **Pause** freezes the trial mid-run and resumes exactly where it left
     off; the screen keeps responding. Each visit starts unpaused.

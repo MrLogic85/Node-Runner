@@ -38,6 +38,9 @@ public partial class TrialController : Node
     /// <summary>What the trial in progress (or the last one) has measured so far.</summary>
     public TrialResult Measured => _measurement.Result;
 
+    /// <summary>The centre's forward speed now in the trial in progress (or at the end of the last one), in units per second; see <see cref="TrialMeasurement.CurrentSpeed"/>.</summary>
+    public double CurrentSpeed => _measurement.CurrentSpeed;
+
     /// <summary>Whether a tear has frozen what the trial in progress (or the last one) measures.</summary>
     public bool IsFrozen => _measurement.IsFrozen;
 

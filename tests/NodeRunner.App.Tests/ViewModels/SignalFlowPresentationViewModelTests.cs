@@ -12,44 +12,88 @@ public sealed class SignalFlowPresentationViewModelTests
         [new SensorDef(8, 5, SensorKind.Accelerometer), new SensorDef(9, 6, SensorKind.Camera, "Eye", rays: 5)]);
 
     [Fact]
-    public void Update_ReadsTheDistance_AndNotifiesOnlyWhenItChanged()
+    public void Update_ReadsTheDistanceAndSpeed_AndNotifiesOnlyWhenTheCardChanged()
     {
         var viewModel = new SignalFlowPresentationViewModel();
         var changed = new List<string?>();
         viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
 
-        viewModel.Update(double.NaN);
+        viewModel.Update(double.NaN, double.NaN, double.NaN);
 
-        viewModel.DistanceReadout.ShouldBeNull();
+        (viewModel.DistanceReadout, viewModel.SpeedReadout, viewModel.TrackEnd).ShouldBe((null, null, null));
         changed.ShouldBeEmpty();
 
-        viewModel.Update(4225);
+        viewModel.Update(4225, 120, 5000);
 
         viewModel.DistanceReadout.ShouldBe(UiText.Format("{0} m", new FixedNumber(42.3, 1)));
+        viewModel.SpeedReadout.ShouldBe(UiText.Format("{0} m/s", new FixedNumber(1.2, 1)));
         viewModel.DistanceTorn.ShouldBeFalse();
         changed.ShouldBe([nameof(SignalFlowPresentationViewModel.DistanceReadout)]);
         changed.Clear();
 
-        viewModel.Update(4226);
+        viewModel.Update(4225, 121, 5000);
 
-        changed.ShouldBeEmpty("The readout rounds to the same text.");
+        changed.ShouldBeEmpty("The card reads the same.");
 
-        viewModel.Update(340, crashed: true);
+        viewModel.Update(4226, 121, 5000);
+
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.TrackFill)], "Only the strip moved.");
+        changed.Clear();
+
+        viewModel.Update(4225, -80, 5000);
+
+        viewModel.SpeedReadout.ShouldBe(UiText.Format("{0} m/s", new FixedNumber(-0.8, 1)));
+
+        viewModel.Update(4225, -4, 5000);
+
+        viewModel.SpeedReadout.ShouldBe(UiText.Format("{0} m/s", new FixedNumber(0, 1)), "−0.04 m/s reads 0.0, not −0.0.");
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.DistanceReadout), nameof(SignalFlowPresentationViewModel.DistanceReadout)]);
+    }
+
+    // The full length is the farther of the best ever (none counts as 0 m) and the distance, so
+    // the scale follows a try past the best and returns to it when the try falls back; the fill stays in 0…1.
+    [Theory]
+    [InlineData(double.NaN, 1200, 1, 0, 1200)]
+    [InlineData(0, 1200, 1, 0, 1200)]
+    [InlineData(2000, 500, 0.25, 1, 2000)]
+    [InlineData(2000, 4000, 1, 0.5, 4000)]
+    [InlineData(2000, 1000, 0.5, 1, 2000)]
+    [InlineData(double.NaN, 0, 0, 0, 0)]
+    [InlineData(2000, -100, 0, 1, 2000)]
+    public void Update_ScalesTheTrackToTheFartherOfTheBestAndTheDistance(double best, double distance, double fill, double marker, double full)
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+
+        viewModel.Update(distance, 0, best);
+
+        (viewModel.TrackFill, viewModel.TrackMarker).ShouldBe((fill, marker));
+        viewModel.TrackEnd.ShouldBe(Metres.WithUnit(full));
+    }
+
+    // A tear freezes the distance, says "Crash" and hides the speed; with no try the card has no
+    // body, and a new try reads plainly again.
+    [Fact]
+    public void Update_AfterATear_SaysCrash_AndHidesTheSpeed()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+
+        viewModel.Update(340, 50, 1000, crashed: true);
 
         viewModel.DistanceReadout.ShouldBe(UiText.Format("Crash {0}", UiText.Format("{0} m", new FixedNumber(3.4, 1))));
         viewModel.DistanceTorn.ShouldBeTrue();
-        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.DistanceReadout)]);
+        viewModel.SpeedReadout.ShouldBeNull();
+        (viewModel.TrackFill, viewModel.TrackMarker).ShouldBe((0.34, 1));
 
-        viewModel.Update(double.NaN, crashed: true);
+        viewModel.Update(double.NaN, double.NaN, 1000, crashed: true);
 
-        viewModel.DistanceReadout.ShouldBeNull("No try runs.");
+        (viewModel.DistanceReadout, viewModel.SpeedReadout, viewModel.TrackEnd).ShouldBe((null, null, null), "No try runs.");
         viewModel.DistanceTorn.ShouldBeFalse("There is nothing to show in danger.");
 
-        viewModel.Update(340, crashed: true);
-        viewModel.Update(100);
+        viewModel.Update(100, 50, 1000);
 
         viewModel.DistanceReadout.ShouldBe(UiText.Format("{0} m", new FixedNumber(1, 1)));
         viewModel.DistanceTorn.ShouldBeFalse();
+        viewModel.SpeedReadout.ShouldNotBeNull();
     }
 
     // Past the bars that fit, the first inputs in port order that fit beside the chip get bars, each with its port's range, and the chip counts the rest.

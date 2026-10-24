@@ -29,6 +29,7 @@
 [ext_resource type="Script" uid="uid://b32bnhbgasedd" path="res://src/ui/lib/UiChip.cs" id="25_chip"]
 [ext_resource type="Script" uid="uid://cpa2e382ape81" path="res://src/ui/lib/UiMeterBar.cs" id="26_meter_bar"]
 [ext_resource type="Script" uid="uid://ht7wqduck8e5" path="res://src/ui/lib/UiDial.cs" id="26_dial"]
+[ext_resource type="Script" uid="uid://blgys4mqguw0l" path="res://src/ui/lib/UiTrackBar.cs" id="26_track_bar"]
 [ext_resource type="Script" uid="uid://b1nqvpdy0fk4h" path="res://src/ui/lib/UiCallout.cs" id="26_callout"]
 [ext_resource type="Script" uid="uid://c6loxvqr7tfvr" path="res://src/ui/lib/UiInfoRow.cs" id="27_info_row"]
 [ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="28_toolbar"]
@@ -3302,6 +3303,133 @@ mouse_filter = 2
 script = ExtResource("26_dial")
 Value = 1.0
 Centred = false
+
+[node name="TrackBar" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=2040224418]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar" unique_id=-1151389601]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Heading" unique_id=1131093955]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Track bar"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Heading" unique_id=-1874473407]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "progress along a length, with a marker and a cap"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Empty" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar" unique_id=470251160]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Empty" unique_id=1403516073]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "empty"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Bar" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Empty" unique_id=-189387102]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_track_bar")
+Fill = nan
+Marker = nan
+
+[node name="Start" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar" unique_id=-9468648]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Start" unique_id=941413875]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "no best"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Bar" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Start" unique_id=-1801341319]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_track_bar")
+Fill = 1.0
+Marker = 0.0
+
+[node name="Below" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar" unique_id=1965250984]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Below" unique_id=-358267486]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "below best"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Bar" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Below" unique_id=-361167354]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_track_bar")
+Fill = 0.5
+Marker = 1.0
+
+[node name="Past" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar" unique_id=-217430644]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Past" unique_id=-1089984039]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "past best"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Bar" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Past" unique_id=1270673764]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_track_bar")
+Fill = 1.0
+Marker = 0.6
+
+[node name="Capped" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar" unique_id=191524183]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Capped" unique_id=2019075105]
+custom_minimum_size = Vector2(76, 0)
+layout_mode = 2
+text = "torn"
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Bar" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/TrackBar/Capped" unique_id=1024166893]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("26_track_bar")
+Fill = 0.3
+Marker = 1.0
+Capped = true
+FillColor = 12
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar"]

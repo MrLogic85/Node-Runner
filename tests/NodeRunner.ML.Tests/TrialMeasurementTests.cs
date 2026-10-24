@@ -50,6 +50,28 @@ public sealed class TrialMeasurementTests
         }
     }
 
+    // The speed now over the same half second, signed: 0 until the window is full, like the top
+    // speed, then following the last five ticks, back to 0 at a standstill and negative going back.
+    [Fact]
+    public void CurrentSpeed_IsTheSignedSpeedOverTheLastHalfSecond()
+    {
+        foreach (var (positions, currentSpeed) in new[]
+        {
+            (new[] { 2.0, 4, 6, 8 }, 0.0),
+            ([2, 4, 6, 8, 10], 20),
+            ([2, 4, 6, 8, 10, 10, 10, 10, 10, 10], 0),
+            ([-2, -4, -6, -8, -10, -12], -20),
+            ([0, 0, 0, 0, 0, 5], 10),
+        })
+        {
+            Run(positions).CurrentSpeed.ShouldBe(currentSpeed, 1e-9, string.Join(", ", positions));
+        }
+
+        var again = Run([2, 4, 6, 8, 10]);
+        again.Reset(0, 0);
+        again.CurrentSpeed.ShouldBe(0);
+    }
+
     // The largest ground clearance once it has landed (at most 0.5 up), so the starting drop does not count, a
     // crawler sinking in scores 0, and a new trial starts the drop again.
     [Fact]
@@ -128,11 +150,13 @@ public sealed class TrialMeasurementTests
         measurement.Record(50, 90, 5);
         var before = measurement.Result;
         (before.TopSpeed, before.Elevation, before.FrontDistance).ShouldBe((100, 5, 40));
+        measurement.CurrentSpeed.ShouldBe(100);
         measurement.Freeze(50, 90, 5);
         measurement.IsFrozen.ShouldBeTrue();
         measurement.Record(300, 400, 80);
         measurement.Record(600, 700, 160);
         measurement.Result.ShouldBe(before);
+        measurement.CurrentSpeed.ShouldBe(100);
         measurement.Reset(0, 0);
         measurement.IsFrozen.ShouldBeFalse();
         measurement.Record(10, 10, 0);

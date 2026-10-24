@@ -168,7 +168,7 @@ public partial class TrainingHost : Node, IRoutedScene
         // smoothed frames fall a microsecond short of the interval, about 20 a second instead of 30.
         _signalRefreshElapsed %= _signalRefreshIntervalSeconds;
         _followed.ReadInputs(_networkInputs);
-        _signalFlow.Update(FollowedDistance, FollowedCrashed);
+        _signalFlow.Update(FollowedDistance, FollowedSpeed, _trainingPresentation.BestShownDistance, FollowedCrashed);
         ShowCrash();
 
         _portValues = NetworkPortValues.Sample(_followed.Ports, _followed.Network, _networkInputs);
@@ -454,6 +454,9 @@ public partial class TrainingHost : Node, IRoutedScene
 
     private double FollowedDistance =>
         _evolver?.FollowedTrialDistance ?? (_playback is { IsRunning: true } playback ? playback.Measured.FrontDistance : double.NaN);
+
+    private double FollowedSpeed =>
+        _evolver?.FollowedTrialSpeed ?? (_playback is { IsRunning: true } playback ? playback.CurrentSpeed : double.NaN);
 
     // Whether the followed run's distance froze at a tear.
     private bool FollowedCrashed => _evolver?.FollowedTrialCrashed ?? _playback is { IsRunning: true, IsFrozen: true };

@@ -365,6 +365,11 @@ public partial class TrainingScreen : Control
         {
             ApplyDistanceReadout(signalFlow);
         }
+
+        if (changed is null or nameof(SignalFlowPresentationViewModel.DistanceReadout) or nameof(SignalFlowPresentationViewModel.TrackFill))
+        {
+            ApplyTrackStrip(signalFlow);
+        }
     }
 
     // Rebuilds a stage's bars or dials, which happens only when the followed creature's ports
@@ -402,14 +407,31 @@ public partial class TrainingScreen : Control
         }
     }
 
-    // A tear shows smaller and in danger: "Crash 3.4 m" does not fit the card at the live size.
     private void ApplyDistanceReadout(SignalFlowPresentationViewModel signalFlow)
     {
         var readout = GetNode<UiLabel>("%DistanceReadout");
         var source = UiTextTranslation.Source(signalFlow.DistanceReadout);
         GetNode<UiStageCard>("%DistanceStage").Collapsed = source is null;
-        readout.TextStyle = signalFlow.DistanceTorn ? UiTokens.Typography.ReadoutMedium : UiTokens.Typography.ReadoutLarge;
         readout.TextColor = signalFlow.DistanceTorn ? UiTokens.Color.Danger : UiTokens.Color.Ink;
         readout.TextSource = source;
+
+        var speed = UiTextTranslation.Source(signalFlow.SpeedReadout);
+        GetNode<UiIcon>("%SpeedIcon").Visible = speed is not null;
+        var speedReadout = GetNode<UiLabel>("%SpeedReadout");
+        speedReadout.Visible = speed is not null;
+        speedReadout.TextSource = speed;
+
+        GetNode<UiLabel>("%TrackEnd").TextSource = UiTextTranslation.Source(signalFlow.TrackEnd);
+    }
+
+    // A tear freezes the strip in danger, capped where the distance stopped. It redraws only when a
+    // value changed (UiTrackBar's setters).
+    private void ApplyTrackStrip(SignalFlowPresentationViewModel signalFlow)
+    {
+        var strip = GetNode<UiTrackBar>("%TrackStrip");
+        strip.Fill = signalFlow.TrackFill;
+        strip.Marker = signalFlow.TrackMarker;
+        strip.Capped = signalFlow.DistanceTorn;
+        strip.FillColor = signalFlow.DistanceTorn ? UiTokens.Color.Danger : UiTokens.Color.Accent;
     }
 }

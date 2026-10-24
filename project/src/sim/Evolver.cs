@@ -87,6 +87,12 @@ public partial class Evolver : Node
     /// <summary>How far the followed shadow's front has got in its current trial; NaN when none is running.</summary>
     public double FollowedTrialDistance => ShadowDistance(_followedShadow);
 
+    /// <summary>How fast the followed shadow's centre moves forward now, in units per second; NaN when none is running.</summary>
+    public double FollowedTrialSpeed =>
+        _followedShadow < _trialControllers.Count && _trialControllers[_followedShadow] is { IsRunning: true } controller
+            ? controller.CurrentSpeed
+            : double.NaN;
+
     /// <summary>Whether a beam of the followed shadow has torn in its current trial, freezing its distance; false when none is running.</summary>
     public bool FollowedTrialCrashed =>
         _followedShadow < _trialControllers.Count && _trialControllers[_followedShadow] is { IsRunning: true, IsFrozen: true };
