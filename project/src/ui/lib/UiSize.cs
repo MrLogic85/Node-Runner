@@ -83,6 +83,10 @@ public static class UiSize
         public const int VerticalMeterWidth = 8;
         public const int VerticalMeterHeight = 24;
 
+        /// <summary>A track strip: its track's height, and the height of the marker and cap that stand past it.</summary>
+        public const int TrackStripHeight = 6;
+        public const int TrackStripTickHeight = 12;
+
         /// <summary>
         /// A half dial: its box, the hub's height in it, the arc's radius, the needle's length from
         /// the hub and the hub disc's radius.

@@ -209,8 +209,10 @@ Build's lock note, from piling up.
   with it.
 - **Meters:** `UiMeterBar` also stands upright, 8 × 24 and fully rounded,
   for the Status panel's Inputs bars, and `UiDial`, a 30 × 24 half dial
-  from the SignalFlow reference, shows its Outputs; like the callout's
-  meter neither has a `c_*` entry.
+  from the SignalFlow reference, shows its Outputs. `UiTrackBar`, a
+  6-tall strip with a marker and an optional cap, shows how far the
+  Distance card has got; like the callout's meter none has a `c_*`
+  entry.
 - **Sliders:** where selected parts differ, the readout shows `low–high`
   between Marker ends, with no thumb. Uneven stops sit evenly along the
   track. A disabled slider is dashed; one the screen can explain answers a

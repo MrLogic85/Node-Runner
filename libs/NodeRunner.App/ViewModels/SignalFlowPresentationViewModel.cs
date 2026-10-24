@@ -7,8 +7,8 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The SignalFlow column's four stages at rest: 1 Inputs, 2 Network, 3 Outputs, 4 Distance.
-/// Inputs shows a bar per input, Network its size, Outputs a dial per driven part and Distance a
-/// readout in its body; the other pictures on the cards come with #196.
+/// Inputs shows a bar per input, Network its size, Outputs a dial per driven part and Distance the
+/// distance, the speed and a track strip towards the best ever.
 /// </summary>
 public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 {
@@ -102,28 +102,74 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// </summary>
     public UiText? DistanceReadout { get; private set; }
 
-    /// <summary>
-    /// Whether <see cref="DistanceReadout"/> says the distance froze at a tear, so the card shows it
-    /// in danger. It changes only together with the readout, so one notification covers both.
-    /// </summary>
+    /// <summary>Whether <see cref="DistanceReadout"/> says the distance froze at a tear, so the card shows it in danger.</summary>
     public bool DistanceTorn { get; private set; }
 
-    /// <summary>Refreshes the distance readout from this tick.</summary>
-    /// <param name="distance">How far the visible creature has got, in world units; NaN when no try runs.</param>
-    /// <param name="crashed">Whether a beam of the visible creature has torn, so <paramref name="distance"/> froze there.</param>
-    public void Update(double distance, bool crashed = false)
-    {
-        var distanceReadout = !double.IsFinite(distance) ? null
-            : crashed ? TrainingPresentationViewModel.CrashText(distance)
-            : Metres.WithUnit(distance);
-        if (Equals(DistanceReadout, distanceReadout))
-        {
-            return;
-        }
+    /// <summary>
+    /// How fast the visible creature moves forward now, signed, such as "−0.8 m/s"; null when no try
+    /// runs or after a tear.
+    /// </summary>
+    public UiText? SpeedReadout { get; private set; }
 
+    /// <summary>
+    /// How much of the track strip the distance fills, 0…1. The track's full length is the farther
+    /// of the best ever and the distance, so the bar is full while the try is past the best; it is
+    /// 0 when that length is 0.
+    /// </summary>
+    public double TrackFill { get; private set; }
+
+    /// <summary>Where the best ever stands on the track strip, 0…1: at 0 with no best ever, or when the full length is 0.</summary>
+    public double TrackMarker { get; private set; }
+
+    /// <summary>The track strip's full length, such as "25.0 m"; null when no try runs.</summary>
+    public UiText? TrackEnd { get; private set; }
+
+    /// <summary>
+    /// Refreshes the Distance card from this tick. When a text on it or <see cref="DistanceTorn"/>
+    /// changed, <see cref="DistanceReadout"/> is notified for the whole card; when only the strip
+    /// moved, <see cref="TrackFill"/> is notified for <see cref="TrackFill"/> and <see cref="TrackMarker"/>.
+    /// </summary>
+    /// <param name="distance">How far the visible creature has got, in world units; NaN when no try runs.</param>
+    /// <param name="speed">How fast its centre moves forward now, in world units per second; NaN with no speed to show.</param>
+    /// <param name="best">The best ever distance on this map, in world units, as the arena's best marker shows it; NaN until there is one.</param>
+    /// <param name="crashed">Whether a beam of the visible creature has torn, so <paramref name="distance"/> froze there.</param>
+    public void Update(double distance, double speed, double best, bool crashed = false)
+    {
+        var running = double.IsFinite(distance);
+        var torn = crashed && running;
+        var distanceReadout = !running ? null
+            : torn ? TrainingPresentationViewModel.CrashText(distance)
+            : Metres.WithUnit(distance);
+        var speedReadout = running && !torn && double.IsFinite(speed) ? Metres.SpeedWithUnit(speed) : null;
+        var (fill, marker, full) = running ? Track(distance, best) : (0, 0, 0);
+        var trackEnd = running ? Metres.WithUnit(full) : null;
+        var textChanged = !Equals(DistanceReadout, distanceReadout)
+            || DistanceTorn != torn
+            || !Equals(SpeedReadout, speedReadout)
+            || !Equals(TrackEnd, trackEnd);
+        var trackChanged = !TrackFill.Equals(fill) || !TrackMarker.Equals(marker);
         DistanceReadout = distanceReadout;
-        DistanceTorn = crashed && distanceReadout is not null;
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DistanceReadout)));
+        DistanceTorn = torn;
+        SpeedReadout = speedReadout;
+        TrackFill = fill;
+        TrackMarker = marker;
+        TrackEnd = trackEnd;
+        if (textChanged)
+        {
+            Notify(nameof(DistanceReadout));
+        }
+        else if (trackChanged)
+        {
+            Notify(nameof(TrackFill));
+        }
+    }
+
+    // NaN, or no best yet, counts as 0 m, so the bar is full and the marker sits at its left end.
+    private static (double Fill, double Marker, double Full) Track(double distance, double best)
+    {
+        var bestSoFar = double.IsFinite(best) ? Math.Max(0, best) : 0;
+        var full = Math.Max(bestSoFar, distance);
+        return full > 0 ? (Math.Clamp(distance / full, 0, 1), bestSoFar / full, full) : (0, 0, 0);
     }
 
     /// <summary>

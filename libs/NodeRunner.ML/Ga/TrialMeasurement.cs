@@ -57,6 +57,7 @@ public sealed class TrialMeasurement
     private double _distance;
     private double _frontDistance;
     private double _topSpeed;
+    private double _currentSpeed;
     private double _elevation;
     private bool _landed;
     private bool _valid;
@@ -76,6 +77,12 @@ public sealed class TrialMeasurement
 
     public TrialResult Result => new(_distance, _topSpeed, _elevation, _frontDistance, _valid);
 
+    /// <summary>
+    /// The centre's forward speed now, averaged over the same window as <see cref="TrialResult.TopSpeed"/>
+    /// and 0 until that window is full; negative while it moves back. A tear freezes it like the rest.
+    /// </summary>
+    public double CurrentSpeed => _currentSpeed;
+
     /// <summary>Whether <see cref="Freeze"/> has been called since the last <see cref="Reset"/>.</summary>
     public bool IsFrozen => _frozen;
 
@@ -87,6 +94,7 @@ public sealed class TrialMeasurement
         _distance = 0;
         _frontDistance = 0;
         _topSpeed = 0;
+        _currentSpeed = 0;
         _elevation = 0;
         _landed = false;
         _frozen = false;
@@ -161,7 +169,8 @@ public sealed class TrialMeasurement
 
         if (_count == _window.Length)
         {
-            _topSpeed = Math.Max(_topSpeed, (centerX - _window[_next]) / _windowSeconds);
+            _currentSpeed = (centerX - _window[_next]) / _windowSeconds;
+            _topSpeed = Math.Max(_topSpeed, _currentSpeed);
         }
 
         Push(centerX);
