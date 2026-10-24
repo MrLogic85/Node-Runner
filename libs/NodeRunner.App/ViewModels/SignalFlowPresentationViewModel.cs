@@ -36,8 +36,8 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The range of each input bar: the first inputs in port order, as many as fit. It
-    /// changes only with the port layout, together with <see cref="InputsNote"/> and
-    /// <see cref="MoreInputs"/>, so one notification covers all three and a view builds its bars then.
+    /// changes only with the port layout, together with <see cref="InputsNote"/>, <see cref="MoreInputs"/>
+    /// and <see cref="HasNoInputs"/>, so one notification covers them all and a view builds its bars then.
     /// </summary>
     public IReadOnlyList<PortRange> InputBars => _inputs.Ranges;
 
@@ -50,13 +50,20 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// <summary>How many inputs have no bar, such as "+4"; null when every input has one.</summary>
     public UiText? MoreInputs { get; private set; }
 
+    /// <summary>
+    /// Whether the visible creature has no inputs, so the Inputs card says so rather than collapse;
+    /// false with no creature. It is notified as <see cref="InputBars"/>.
+    /// </summary>
+    public bool HasNoInputs { get; private set; }
+
     /// <summary>How many output ports the network sets, such as "7"; null with none.</summary>
     public UiText? OutputsNote { get; private set; }
 
     /// <summary>
     /// The range of each output dial: one per driven part in port order, showing the part's drive,
     /// its first output that is not a Strength. It changes only with the port layout, together with
-    /// <see cref="OutputsNote"/> and <see cref="MoreOutputs"/>, so one notification covers all three.
+    /// <see cref="OutputsNote"/>, <see cref="MoreOutputs"/> and <see cref="HasNoOutputs"/>, so one
+    /// notification covers them all.
     /// </summary>
     public IReadOnlyList<PortRange> OutputDials => _outputs.Ranges;
 
@@ -68,6 +75,12 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
     /// <summary>How many driven parts have no dial, such as "+2"; null when every part has one.</summary>
     public UiText? MoreOutputs { get; private set; }
+
+    /// <summary>
+    /// Whether the visible creature has no driven parts, so the Outputs card says so rather than
+    /// collapse; false with no creature. It is notified as <see cref="OutputDials"/>.
+    /// </summary>
+    public bool HasNoOutputs { get; private set; }
 
     /// <summary>
     /// How far the visible creature has got in this try, such as "12.4 m", or "Crash 3.4 m" once a
@@ -112,8 +125,10 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
         var inputs = creature is null ? [] : values.Layout.Inputs;
         var inputValues = values.IsLive ? values.Inputs : null;
-        if (!_inputs.Matches(inputs))
+        var noInputs = creature is not null && inputs.Count == 0;
+        if (!_inputs.Matches(inputs) || noInputs != HasNoInputs)
         {
+            HasNoInputs = noInputs;
             _inputs = LayOutInputs(creature, inputs);
             _inputs.Read(inputValues);
             Notify(nameof(InputBars));
@@ -125,8 +140,10 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
         var outputs = creature is null ? [] : values.Layout.Outputs;
         var outputValues = values.IsLive ? values.Outputs : null;
-        if (!_outputs.Matches(outputs))
+        var noOutputs = creature is not null && outputs.Count == 0;
+        if (!_outputs.Matches(outputs) || noOutputs != HasNoOutputs)
         {
+            HasNoOutputs = noOutputs;
             _outputs = LayOutOutputs(creature, outputs);
             _outputs.Read(outputValues);
             Notify(nameof(OutputDials));

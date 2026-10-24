@@ -247,6 +247,17 @@ mouse_filter = 2
 script = ExtResource("14_chip")
 Text = "+4"
 
+[node name="NoInputs" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/InputsStage/Stack/Body"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+text = "None yet"
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 4
+TextColor = 8
+
 [node name="InputsArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
@@ -279,7 +290,16 @@ NumberText = "2"
 Title = "Network"
 Note = ""
 Opens = true
-Collapsed = true
+
+[node name="NetworkLater" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/NetworkStage/Stack/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+text = "Picture comes later"
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 4
+TextColor = 8
 
 [node name="NetworkArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
 custom_minimum_size = Vector2(0, 8)
@@ -331,6 +351,17 @@ mouse_filter = 2
 script = ExtResource("14_chip")
 Text = "+2"
 
+[node name="NoOutputs" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/OutputsStage/Stack/Body"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+text = "None yet"
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 4
+TextColor = 8
+
 [node name="OutputsArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
 custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
@@ -381,5 +412,6 @@ layout_mode = 1
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Body/SidePanel"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/InputsStage"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/NetworkStage"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/OutputsStage"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/DistanceStage"]

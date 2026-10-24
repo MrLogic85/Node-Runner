@@ -322,6 +322,8 @@ public partial class TrainingScreen : Control
                 GetNode<UiStageCard>("%InputsStage"),
                 GetNode<HBoxContainer>("%InputBars"),
                 GetNode<UiChip>("%MoreInputs"),
+                GetNode<Control>("%NoInputs"),
+                signalFlow.HasNoInputs,
                 signalFlow.InputBars,
                 UiTextTranslation.Source(signalFlow.InputsNote),
                 UiTextTranslation.Source(signalFlow.MoreInputs),
@@ -339,6 +341,8 @@ public partial class TrainingScreen : Control
                 GetNode<UiStageCard>("%OutputsStage"),
                 GetNode<HBoxContainer>("%OutputDials"),
                 GetNode<UiChip>("%MoreOutputs"),
+                GetNode<Control>("%NoOutputs"),
+                signalFlow.HasNoOutputs,
                 signalFlow.OutputDials,
                 UiTextTranslation.Source(signalFlow.OutputsNote),
                 UiTextTranslation.Source(signalFlow.MoreOutputs),
@@ -357,8 +361,8 @@ public partial class TrainingScreen : Control
     }
 
     // Rebuilds a stage's bars or dials, which happens only when the followed creature's ports
-    // change; the chip stays last, and a stage with none collapses.
-    private static void ApplyMeters<T>(UiStageCard stage, HBoxContainer row, UiChip more, IReadOnlyList<PortRange> ranges, Func<string>? note, Func<string>? moreText, Func<bool, T> create)
+    // change; the chip stays last. A creature with none says so, and with no creature the stage collapses.
+    private static void ApplyMeters<T>(UiStageCard stage, HBoxContainer row, UiChip more, Control none, bool hasNone, IReadOnlyList<PortRange> ranges, Func<string>? note, Func<string>? moreText, Func<bool, T> create)
         where T : Control
     {
         foreach (var meter in row.GetChildren().OfType<T>())
@@ -375,8 +379,10 @@ public partial class TrainingScreen : Control
         row.MoveChild(more, -1);
         more.TextSource = moreText;
         more.Visible = moreText is not null;
+        row.Visible = ranges.Count > 0;
+        none.Visible = hasNone;
         stage.NoteSource = note;
-        stage.Collapsed = ranges.Count == 0;
+        stage.Collapsed = ranges.Count == 0 && !hasNone;
     }
 
     // A bar or dial redraws only when its value changed (UiMeterBar.Value, UiDial.Value).
