@@ -649,6 +649,10 @@ msgstr ""
 msgid "New part unlocked"
 msgstr ""
 
+#: project/scenes/screens/TrainingScreen.tscn
+msgid "No driven parts"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartCalloutPresentation.cs
 msgid "No network ports"
 msgstr ""
@@ -658,7 +662,7 @@ msgid "No saved Creations yet."
 msgstr ""
 
 #: project/scenes/screens/TrainingScreen.tscn
-msgid "None yet"
+msgid "No sensors"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
@@ -773,10 +777,6 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Pick a Target part"
-msgstr ""
-
-#: project/scenes/screens/TrainingScreen.tscn
-msgid "Picture comes later"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
@@ -1563,6 +1563,12 @@ msgid_plural "{0} outputs"
 msgstr[0] ""
 msgstr[1] ""
 
+#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
+msgid "{0} parameter"
+msgid_plural "{0} parameters"
+msgstr[0] ""
+msgstr[1] ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 msgid "{0} part missing a side"
 msgid_plural "{0} parts missing a side"
@@ -1684,6 +1690,14 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: touch"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
+msgid "{0}M parameters"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs
+msgid "{0}k parameters"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs

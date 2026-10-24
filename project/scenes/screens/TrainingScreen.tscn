@@ -252,7 +252,7 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
-text = "None yet"
+text = "No sensors"
 autowrap_mode = 3
 script = ExtResource("4_label")
 TextStyle = 4
@@ -290,16 +290,16 @@ NumberText = "2"
 Title = "Network"
 Note = ""
 Opens = true
+Collapsed = true
 
-[node name="NetworkLater" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/NetworkStage/Stack/Body"]
+[node name="NetworkSize" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent/NetworkStage/Stack/Body"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-text = "Picture comes later"
 autowrap_mode = 3
 script = ExtResource("4_label")
 TextStyle = 4
-TextColor = 8
+TextColor = 7
 
 [node name="NetworkArrow" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Body/SidePanel/SidePanelDrawer/SidePanelPadding/SidePanelExpanded/SidePanelScroll/SidePanelContentInset/SidePanelContent"]
 custom_minimum_size = Vector2(0, 8)
@@ -356,7 +356,7 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
-text = "None yet"
+text = "No driven parts"
 autowrap_mode = 3
 script = ExtResource("4_label")
 TextStyle = 4

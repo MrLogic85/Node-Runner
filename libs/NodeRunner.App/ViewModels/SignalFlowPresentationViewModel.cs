@@ -1,13 +1,14 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using NodeRunner.Domain;
+using NodeRunner.ML.Networks;
 
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The SignalFlow column's four stages at rest: 1 Inputs, 2 Network, 3 Outputs, 4 Distance.
-/// Inputs shows a bar per input, Outputs a dial per driven part and Distance a readout in its
-/// body; the other pictures on the cards come with #196.
+/// Inputs shows a bar per input, Network its size, Outputs a dial per driven part and Distance a
+/// readout in its body; the other pictures on the cards come with #196.
 /// </summary>
 public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 {
@@ -25,6 +26,12 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 
     /// <summary>How many dials the Outputs card shows beside <see cref="MoreOutputs"/>, with more than <see cref="OutputDialsThatFit"/> driven parts.</summary>
     public const int OutputDialsBesideChip = 3;
+
+    /// <summary>
+    /// The smallest <see cref="NetworkSize"/> shortened to thousands, such as "45.2k parameters";
+    /// below it the count is exact, so adding a part shows exactly how many parameters it adds.
+    /// </summary>
+    public const int ShortenedParametersFrom = 10_000;
 
     private Meters _inputs = Meters.Empty();
     private Meters _outputs = Meters.Empty();
@@ -55,6 +62,13 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     /// false with no creature. It is notified as <see cref="InputBars"/>.
     /// </summary>
     public bool HasNoInputs { get; private set; }
+
+    /// <summary>
+    /// How many learnable parameters the network has, such as "91 parameters", or from
+    /// <see cref="ShortenedParametersFrom"/> "45.2k parameters", "123k parameters" or "1.2M parameters";
+    /// null with no creature. It changes only with the port layout.
+    /// </summary>
+    public UiText? NetworkSize { get; private set; }
 
     /// <summary>How many output ports the network sets, such as "7"; null with none.</summary>
     public UiText? OutputsNote { get; private set; }
@@ -126,8 +140,10 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         var inputs = creature is null ? [] : values.Layout.Inputs;
         var inputValues = values.IsLive ? values.Inputs : null;
         var noInputs = creature is not null && inputs.Count == 0;
+        var laidOut = false;
         if (!_inputs.Matches(inputs) || noInputs != HasNoInputs)
         {
+            laidOut = true;
             HasNoInputs = noInputs;
             _inputs = LayOutInputs(creature, inputs);
             _inputs.Read(inputValues);
@@ -143,6 +159,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         var noOutputs = creature is not null && outputs.Count == 0;
         if (!_outputs.Matches(outputs) || noOutputs != HasNoOutputs)
         {
+            laidOut = true;
             HasNoOutputs = noOutputs;
             _outputs = LayOutOutputs(creature, outputs);
             _outputs.Read(outputValues);
@@ -151,6 +168,29 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         else if (_outputs.Read(outputValues))
         {
             Notify(nameof(OutputValues));
+        }
+
+        if (laidOut)
+        {
+            ShowNetworkSize(creature is null ? null : Parameters(DirectNetwork.GenomeLength(values.Layout)));
+        }
+    }
+
+    /// <summary>A network size of <paramref name="count"/> learnable parameters, as <see cref="NetworkSize"/> words it.</summary>
+    public static UiText Parameters(int count) =>
+        count < ShortenedParametersFrom ? UiText.Counted("{0} parameter", "{0} parameters", count)
+        : count < 999_500 ? UiText.Format("{0}k parameters", Shortened(count / 1e3))
+        : UiText.Format("{0}M parameters", Shortened(count / 1e6));
+
+    // One decimal while the rounded value stays under 100, so 99,960 reads 100k, not 100.0k.
+    private static FixedNumber Shortened(double value) => new(value, value < 99.95 ? 1 : 0);
+
+    private void ShowNetworkSize(UiText? networkSize)
+    {
+        if (!Equals(networkSize, NetworkSize))
+        {
+            NetworkSize = networkSize;
+            Notify(nameof(NetworkSize));
         }
     }
 

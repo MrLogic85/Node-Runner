@@ -17,7 +17,8 @@ sensor off are #960.
   (`Networks/DirectNetwork.cs`).
 - **How we show it:** The creature moves at all. The network is direct,
   inputs straight to outputs, and NetworkFocus draws it with nodes and
-  edges.
+  edges. The Status panel's Network card gives its size in learnable
+  parameters, the numbers training tunes.
 
 ## Activation functions
 

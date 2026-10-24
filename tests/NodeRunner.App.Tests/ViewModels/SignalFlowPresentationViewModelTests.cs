@@ -100,7 +100,7 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.InputsNote.ShouldBe(UiText.Number(PortedCreature.Layout.Inputs.Count));
         viewModel.InputBars.Count.ShouldBe(SignalFlowPresentationViewModel.InputBarsBesideChip);
         viewModel.InputValues.ShouldAllBe(value => double.IsNaN(value));
-        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials)]);
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials), nameof(SignalFlowPresentationViewModel.NetworkSize)]);
         changed.Clear();
 
         viewModel.ShowPorts(PortedCreature.Def, live);
@@ -182,7 +182,7 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.OutputsNote.ShouldBe(UiText.Number(7));
         viewModel.OutputDials.Count.ShouldBe(4);
         viewModel.OutputValues.ShouldAllBe(value => double.IsNaN(value));
-        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials)]);
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials), nameof(SignalFlowPresentationViewModel.NetworkSize)]);
         changed.Clear();
 
         viewModel.ShowPorts(PortedCreature.Def, live);
@@ -204,6 +204,55 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.OutputDials.ShouldBeEmpty();
         viewModel.OutputValues.ShouldBeEmpty();
         viewModel.MoreOutputs.ShouldBeNull();
+    }
+
+    // The Network card counts what training tunes: a weight per input and output pair and a bias per
+    // output. It is notified only when the port layout changes, and has no size with no creature.
+    [Fact]
+    public void ShowPorts_SizesTheNetworkByItsLearnableParameters()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
+        var inputs = PortedCreature.Layout.Inputs.Count;
+        var live = NetworkPortValues.Sample(PortedCreature.Layout, PortedCreature.Network(), PortedCreature.Readings());
+
+        viewModel.ShowPorts(PortedCreature.Def, NetworkPortValues.Sample(PortedCreature.Layout, null, []));
+
+        viewModel.NetworkSize.ShouldBe(UiText.Counted("{0} parameter", "{0} parameters", (inputs * 7) + 7));
+        changed.ShouldContain(nameof(SignalFlowPresentationViewModel.NetworkSize));
+        changed.Clear();
+
+        viewModel.ShowPorts(PortedCreature.Def, live);
+
+        changed.ShouldNotContain(nameof(SignalFlowPresentationViewModel.NetworkSize));
+
+        viewModel.ShowPorts(_eightInputs, NetworkPortValues.Sample(NetworkPorts.Of(_eightInputs), null, []));
+
+        viewModel.NetworkSize.ShouldBe(UiText.Counted("{0} parameter", "{0} parameters", 0), "With nothing to drive there is nothing to tune.");
+
+        viewModel.ShowPorts(null, NetworkPortValues.Empty);
+
+        viewModel.NetworkSize.ShouldBeNull();
+    }
+
+    // Exact below the threshold, so a part's parameters add up visibly; past it at most three
+    // significant digits, with no ".0" once the rounded value reaches 100.
+    [Theory]
+    [InlineData(SignalFlowPresentationViewModel.ShortenedParametersFrom - 1, null, 0, 0)]
+    [InlineData(SignalFlowPresentationViewModel.ShortenedParametersFrom, "{0}k parameters", 10.0, 1)]
+    [InlineData(99_949, "{0}k parameters", 99.9, 1)]
+    [InlineData(99_950, "{0}k parameters", 100, 0)]
+    [InlineData(999_499, "{0}k parameters", 999, 0)]
+    [InlineData(999_500, "{0}M parameters", 1.0, 1)]
+    [InlineData(1_234_567, "{0}M parameters", 1.2, 1)]
+    public void Parameters_IsExactBelowTheThreshold_AndShortenedPastIt(int count, string? shortened, double shown, int decimals)
+    {
+        var text = SignalFlowPresentationViewModel.Parameters(count);
+
+        text.ShouldBe(shortened is null
+            ? UiText.Counted("{0} parameter", "{0} parameters", count)
+            : UiText.Format(shortened, new FixedNumber(shown, decimals)));
     }
 
     // A creature with no sensors or driven parts has stages that say so; with no creature, or once
@@ -228,7 +277,7 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.HasNoOutputs.ShouldBeTrue();
         viewModel.InputsNote.ShouldBeNull();
         viewModel.OutputsNote.ShouldBeNull();
-        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials)]);
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials), nameof(SignalFlowPresentationViewModel.NetworkSize)]);
         changed.Clear();
 
         viewModel.ShowPorts(_eightInputs, NetworkPortValues.Sample(NetworkPorts.Of(_eightInputs), null, []));
