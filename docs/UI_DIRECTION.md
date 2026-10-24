@@ -271,7 +271,9 @@ a `MapPreview`, `accent` on the map in use. There are no profiles.
 
 The signal flow is a collapsible `UiSidePanel` titled "Status". Only the
 Network stage looks like a button, raised with glow; the other stages are
-plain frames. Only the followed shadow's strip cell is marked (`accent`).
+plain frames. A stage's empty-state line sits in its body in Body
+`muted`, not Caption like the header note, so a sentence stays readable
+on a phone. Only the followed shadow's strip cell is marked (`accent`).
 Stats is Unavailable (#198).
 
 ### NetworkFocus

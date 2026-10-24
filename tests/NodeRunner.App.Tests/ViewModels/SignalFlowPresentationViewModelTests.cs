@@ -206,6 +206,42 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.MoreOutputs.ShouldBeNull();
     }
 
+    // A creature with no sensors or driven parts has stages that say so; with no creature, or once
+    // it has ports, they do not. The first creature brings no new ports, yet it is notified.
+    [Fact]
+    public void ShowPorts_SaysAStageHasNone_OnlyForACreatureWithNoPorts()
+    {
+        var viewModel = new SignalFlowPresentationViewModel();
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, args) => changed.Add(args.PropertyName);
+        var bare = new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new BeamDef(3, 1, 2)]);
+
+        viewModel.ShowPorts(null, NetworkPortValues.Empty);
+
+        viewModel.HasNoInputs.ShouldBeFalse("No creature is shown.");
+        viewModel.HasNoOutputs.ShouldBeFalse("No creature is shown.");
+        changed.ShouldBeEmpty();
+
+        viewModel.ShowPorts(bare, NetworkPortValues.Sample(NetworkPorts.Of(bare), null, []));
+
+        viewModel.HasNoInputs.ShouldBeTrue();
+        viewModel.HasNoOutputs.ShouldBeTrue();
+        viewModel.InputsNote.ShouldBeNull();
+        viewModel.OutputsNote.ShouldBeNull();
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials)]);
+        changed.Clear();
+
+        viewModel.ShowPorts(_eightInputs, NetworkPortValues.Sample(NetworkPorts.Of(_eightInputs), null, []));
+
+        viewModel.HasNoInputs.ShouldBeFalse();
+        viewModel.HasNoOutputs.ShouldBeTrue("The sensors drive nothing.");
+        changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars)]);
+
+        viewModel.ShowPorts(null, NetworkPortValues.Empty);
+
+        viewModel.HasNoOutputs.ShouldBeFalse("No creature is shown.");
+    }
+
     // An Accelerometer (2 inputs), a 5-ray Camera (6) and a 1-ray Camera (2), with a Touch sensor (1) on each of the first nodes.
     private static CreatureDef TenInputsAnd(int touchSensors)
     {

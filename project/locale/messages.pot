@@ -657,6 +657,10 @@ msgstr ""
 msgid "No saved Creations yet."
 msgstr ""
 
+#: project/scenes/screens/TrainingScreen.tscn
+msgid "None yet"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
 msgid "Not a share code"
 msgstr ""
@@ -769,6 +773,10 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Pick a Target part"
+msgstr ""
+
+#: project/scenes/screens/TrainingScreen.tscn
+msgid "Picture comes later"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/LinkListPresentation.cs
