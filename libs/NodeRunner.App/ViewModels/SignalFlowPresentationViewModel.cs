@@ -11,14 +11,20 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
 {
-    /// <summary>The most inputs the Inputs card shows as bars; the rest are counted in <see cref="MoreInputs"/>.</summary>
-    public const int MaxInputBars = 8;
+    // The "+N" chip works like a text ellipsis: a card shows every meter when they all fit its
+    // row, and otherwise the ones that fit beside the chip. The counts follow the card's row width.
 
-    /// <summary>
-    /// The most driven parts the Outputs card shows as dials. With more, the last dial's place
-    /// goes to <see cref="MoreOutputs"/>, which counts the rest.
-    /// </summary>
-    public const int MaxOutputDials = 4;
+    /// <summary>The most inputs the Inputs card shows as bars with no <see cref="MoreInputs"/> chip.</summary>
+    public const int InputBarsThatFit = 11;
+
+    /// <summary>How many bars the Inputs card shows beside <see cref="MoreInputs"/>, with more than <see cref="InputBarsThatFit"/> inputs.</summary>
+    public const int InputBarsBesideChip = 8;
+
+    /// <summary>The most driven parts the Outputs card shows as dials with no <see cref="MoreOutputs"/> chip.</summary>
+    public const int OutputDialsThatFit = 4;
+
+    /// <summary>How many dials the Outputs card shows beside <see cref="MoreOutputs"/>, with more than <see cref="OutputDialsThatFit"/> driven parts.</summary>
+    public const int OutputDialsBesideChip = 3;
 
     private Meters _inputs = Meters.Empty();
     private Meters _outputs = Meters.Empty();
@@ -29,7 +35,7 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     public UiText? InputsNote { get; private set; }
 
     /// <summary>
-    /// The range of each input bar: the first <see cref="MaxInputBars"/> inputs in port order. It
+    /// The range of each input bar: the first inputs in port order, as many as fit. It
     /// changes only with the port layout, together with <see cref="InputsNote"/> and
     /// <see cref="MoreInputs"/>, so one notification covers all three and a view builds its bars then.
     /// </summary>
@@ -134,8 +140,9 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     private Meters LayOutInputs(CreatureDef? creature, IReadOnlyList<NetworkPort> ports)
     {
         InputsNote = ports.Count > 0 ? UiText.Number(ports.Count) : null;
-        MoreInputs = ports.Count > MaxInputBars ? UiText.Format("+{0}", ports.Count - MaxInputBars) : null;
-        return Meters.Of(creature, ports, [.. Enumerable.Range(0, Math.Min(ports.Count, MaxInputBars))]);
+        var shown = Shown(ports.Count, InputBarsThatFit, InputBarsBesideChip);
+        MoreInputs = ports.Count > shown ? UiText.Format("+{0}", ports.Count - shown) : null;
+        return Meters.Of(creature, ports, [.. Enumerable.Range(0, shown)]);
     }
 
     // Every driven part has exactly one output that is not a Strength, so each gets one dial.
@@ -145,11 +152,13 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
             .Where(index => ports[index].Signal != PortSignal.Strength)
             .DistinctBy(index => ports[index].PartId)
             .ToArray();
-        var shown = drives.Length > MaxOutputDials ? MaxOutputDials - 1 : drives.Length;
+        var shown = Shown(drives.Length, OutputDialsThatFit, OutputDialsBesideChip);
         OutputsNote = ports.Count > 0 ? UiText.Number(ports.Count) : null;
         MoreOutputs = drives.Length > shown ? UiText.Format("+{0}", drives.Length - shown) : null;
         return Meters.Of(creature, ports, drives[..shown]);
     }
+
+    private static int Shown(int count, int fit, int besideChip) => count <= fit ? count : besideChip;
 
     private void Notify(string property) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
 

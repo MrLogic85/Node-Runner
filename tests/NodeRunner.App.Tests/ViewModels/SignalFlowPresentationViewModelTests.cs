@@ -5,7 +5,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class SignalFlowPresentationViewModelTests
 {
-    // An Accelerometer (2 inputs) and a 5-ray Camera (6): exactly as many inputs as there are bars.
+    // An Accelerometer (2 inputs) and a 5-ray Camera (6), with no driven parts.
     private static readonly CreatureDef _eightInputs = new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0))],
         [new BeamDef(5, 1, 2), new BeamDef(6, 2, 3)],
@@ -52,9 +52,9 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.DistanceTorn.ShouldBeFalse();
     }
 
-    // Past eight inputs the first eight in port order get bars, each with its port's range, and a chip counts the rest.
+    // Past the bars that fit, the first inputs in port order that fit beside the chip get bars, each with its port's range, and the chip counts the rest.
     [Fact]
-    public void ShowPorts_BarsTheFirstEightInPortOrder_AndCountsTheRest()
+    public void ShowPorts_WithMoreInputsThanFit_BarsTheFirstInPortOrder_AndCountsTheRest()
     {
         var viewModel = new SignalFlowPresentationViewModel();
         var values = NetworkPortValues.Sample(PortedCreature.Layout, PortedCreature.Network(), PortedCreature.Readings());
@@ -62,21 +62,26 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.ShowPorts(PortedCreature.Def, values);
 
         viewModel.InputsNote.ShouldBe(UiText.Number(PortedCreature.Layout.Inputs.Count));
-        viewModel.InputBars.ShouldBe(PortedCreature.Ports.Take(SignalFlowPresentationViewModel.MaxInputBars).Select(entry => entry.Range));
-        viewModel.InputValues.ShouldBe(values.Inputs!.Take(SignalFlowPresentationViewModel.MaxInputBars));
-        viewModel.MoreInputs.ShouldBe(UiText.Format("+{0}", PortedCreature.Layout.Inputs.Count - SignalFlowPresentationViewModel.MaxInputBars));
+        viewModel.InputBars.ShouldBe(PortedCreature.Ports.Take(SignalFlowPresentationViewModel.InputBarsBesideChip).Select(entry => entry.Range));
+        viewModel.InputValues.ShouldBe(values.Inputs!.Take(SignalFlowPresentationViewModel.InputBarsBesideChip));
+        viewModel.MoreInputs.ShouldBe(UiText.Format("+{0}", PortedCreature.Layout.Inputs.Count - SignalFlowPresentationViewModel.InputBarsBesideChip));
     }
 
-    [Fact]
-    public void ShowPorts_WithExactlyEightInputs_ShowsEveryBarAndNoChip()
+    // The chip works like an ellipsis: every input gets a bar while they all fit, and only one more
+    // gives the last bars' places to the chip.
+    [Theory]
+    [InlineData(1, 11, null)]
+    [InlineData(2, 8, 4)]
+    public void ShowPorts_BarsEveryInputThatFits_AndMakesRoomForTheChipOnlyPastThat(int touchSensors, int bars, int? more)
     {
         var viewModel = new SignalFlowPresentationViewModel();
+        var creature = TenInputsAnd(touchSensors);
 
-        viewModel.ShowPorts(_eightInputs, NetworkPortValues.Sample(NetworkPorts.Of(_eightInputs), null, []));
+        viewModel.ShowPorts(creature, NetworkPortValues.Sample(NetworkPorts.Of(creature), null, []));
 
-        viewModel.InputsNote.ShouldBe(UiText.Number(8));
-        viewModel.InputBars.Count.ShouldBe(8);
-        viewModel.MoreInputs.ShouldBeNull();
+        viewModel.InputsNote.ShouldBe(UiText.Number(10 + touchSensors));
+        viewModel.InputBars.Count.ShouldBe(bars);
+        viewModel.MoreInputs.ShouldBe(more is { } rest ? UiText.Format("+{0}", rest) : null);
     }
 
     // The bars are rebuilt only for a new layout; a sample notifies only when a value changed, and
@@ -93,7 +98,7 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.ShowPorts(PortedCreature.Def, NetworkPortValues.Sample(PortedCreature.Layout, null, []));
 
         viewModel.InputsNote.ShouldBe(UiText.Number(PortedCreature.Layout.Inputs.Count));
-        viewModel.InputBars.Count.ShouldBe(SignalFlowPresentationViewModel.MaxInputBars);
+        viewModel.InputBars.Count.ShouldBe(SignalFlowPresentationViewModel.InputBarsBesideChip);
         viewModel.InputValues.ShouldAllBe(value => double.IsNaN(value));
         changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials)]);
         changed.Clear();
@@ -101,7 +106,7 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.ShowPorts(PortedCreature.Def, live);
         viewModel.ShowPorts(PortedCreature.Def, live);
 
-        viewModel.InputValues.ShouldBe(readings.Take(SignalFlowPresentationViewModel.MaxInputBars));
+        viewModel.InputValues.ShouldBe(readings.Take(SignalFlowPresentationViewModel.InputBarsBesideChip));
         changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputValues), nameof(SignalFlowPresentationViewModel.OutputValues)]);
         changed.Clear();
 
@@ -199,6 +204,19 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.OutputDials.ShouldBeEmpty();
         viewModel.OutputValues.ShouldBeEmpty();
         viewModel.MoreOutputs.ShouldBeNull();
+    }
+
+    // An Accelerometer (2 inputs), a 5-ray Camera (6) and a 1-ray Camera (2), with a Touch sensor (1) on each of the first nodes.
+    private static CreatureDef TenInputsAnd(int touchSensors)
+    {
+        List<IPartDef> parts =
+        [
+            new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(4, new Vector2D(6, 0)),
+            new BeamDef(5, 1, 2), new BeamDef(6, 2, 3), new BeamDef(7, 3, 4),
+            new SensorDef(8, 5, SensorKind.Accelerometer), new SensorDef(9, 6, SensorKind.Camera, rays: 5), new SensorDef(10, 7, SensorKind.Camera, rays: 1),
+        ];
+        parts.AddRange(Enumerable.Range(1, touchSensors).Select(node => new TouchSensorDef(10 + node, node)));
+        return new CreatureDef(parts);
     }
 
     // Pistons side by side, each spanning its own two nodes.

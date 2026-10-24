@@ -285,14 +285,16 @@ layer owns that. "Locked" means "has trained at least one generation".
   ground") and the Network and Stats buttons. Beside the arena the
   **Status** panel shows the Inputs → Network → Outputs → Distance stages
   (`SignalFlowPresentationViewModel`). Inputs counts the input ports and
-  shows the first eight in port order as upright bars, filled like the
-  callout's port bars, with a "+N" chip for the rest; the bars are empty
-  with no live network and hold on pause. Outputs counts the output ports
-  and shows a dial per driven part in port order, at its drive, the
-  first output that is not Strength (a Servo's angle, a Motor's speed, a
-  Stepper's frequency, a Piston's length): up to four, or three and a
-  "+N" chip; like the bars they are empty with no live network and hold
-  on pause. The Distance stage is a one-line readout of the shown
+  shows them in port order as upright bars, filled like the callout's
+  port bars; the bars are empty with no live network and hold on pause.
+  Outputs counts the output ports and shows a dial per driven part in
+  port order, at its drive, the first output that is not Strength (a
+  Servo's angle, a Motor's speed, a Stepper's frequency, a Piston's
+  length); like the bars they are empty with no live network and hold on
+  pause. A card's "+N" chip works like a text ellipsis: the card shows
+  every meter while they all fit its row, and with more it shows the
+  ones that fit beside a chip at the right edge that counts the rest. The
+  Distance stage is a one-line readout of the shown
   distance; once the followed run has torn it reads "Crash 3.4 m" in
   `danger`, the word, not colour alone, carrying the state. Collapsing
   the panel widens the arena.
