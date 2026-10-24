@@ -649,6 +649,10 @@ msgstr ""
 msgid "New part unlocked"
 msgstr ""
 
+#: project/scenes/screens/TrainingScreen.tscn
+msgid "No driven parts"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartCalloutPresentation.cs
 msgid "No network ports"
 msgstr ""
@@ -658,7 +662,7 @@ msgid "No saved Creations yet."
 msgstr ""
 
 #: project/scenes/screens/TrainingScreen.tscn
-msgid "None yet"
+msgid "No sensors"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
