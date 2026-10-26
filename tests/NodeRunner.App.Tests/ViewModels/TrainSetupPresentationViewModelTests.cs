@@ -11,7 +11,7 @@ public sealed class TrainSetupPresentationViewModelTests
     [Fact]
     public void NewCreation_StartsFromTheDefault_SaysItHasNotTrained_AndCannotSimulate()
     {
-        var setup = new TrainSetupPresentationViewModel(Creation());
+        var setup = Setup(Creation());
 
         setup.Title.ShouldBe(UiText.Format("Train {0}", "Worm"));
         setup.Subtitle.ShouldBe(UiText.Plain("Not trained yet"));
@@ -29,10 +29,20 @@ public sealed class TrainSetupPresentationViewModelTests
         Should.Throw<InvalidOperationException>(() => setup.SetMode(TrainingRunMode.Simulate));
     }
 
+    // Before its first Start a Creation takes the Shadows default from Settings; after, its own values.
+    [Fact]
+    public void NewCreation_TakesTheShadowsDefaultFromSettings_AndATrainedOneKeepsItsOwn()
+    {
+        new TrainSetupPresentationViewModel(Creation(), defaultShadows: 20).Settings
+            .ShouldBe(new TrainSettingsDef(20, TrainSettingsDef.Default.RunLengthSeconds));
+        new TrainSetupPresentationViewModel(Creation(new TrainSettingsDef(12, 30), generation: 3), defaultShadows: 20).Settings
+            .ShouldBe(new TrainSettingsDef(12, 30));
+    }
+
     [Fact]
     public void TrainedCreation_FillsTheSlidersFromItsSavedSettings_AndCanSimulate()
     {
-        var setup = new TrainSetupPresentationViewModel(Creation(new TrainSettingsDef(TrainSettingsDef.MaxShadows, TrainSettingsDef.MinRunLengthSeconds), generation: 12));
+        var setup = Setup(Creation(new TrainSettingsDef(TrainSettingsDef.MaxShadows, TrainSettingsDef.MinRunLengthSeconds), generation: 12));
 
         setup.Subtitle.ShouldBe(UiText.Counted("{0} generation so far", "{0} generations so far", 12));
         setup.Shadows.Position.ShouldBe(1);
@@ -50,7 +60,7 @@ public sealed class TrainSetupPresentationViewModelTests
     [InlineData(0.5, 51)]
     public void SetShadows_SnapsToAWholeShadowWithinTheRange(double position, int expected)
     {
-        var setup = new TrainSetupPresentationViewModel(Creation());
+        var setup = Setup(Creation());
 
         setup.SetShadows(position);
 
@@ -62,7 +72,7 @@ public sealed class TrainSetupPresentationViewModelTests
     [InlineData(0.3, 20)]
     public void SetRunLength_SnapsToFiveSecondSteps(double position, int expected)
     {
-        var setup = new TrainSetupPresentationViewModel(Creation());
+        var setup = Setup(Creation());
 
         setup.SetRunLength(position);
 
@@ -73,7 +83,7 @@ public sealed class TrainSetupPresentationViewModelTests
     [Fact]
     public void SetShadows_MovesTheNote_AndFiresChangedOnlyWhenTheValueChanges()
     {
-        var setup = new TrainSetupPresentationViewModel(Creation(creature: ShadowsBudgetTests.Creature(ShadowsBudget.ReferenceParts)));
+        var setup = Setup(Creation(creature: ShadowsBudgetTests.Creature(ShadowsBudget.ReferenceParts)));
         var changes = 0;
         setup.Changed += (_, _) => changes++;
 
@@ -90,7 +100,7 @@ public sealed class TrainSetupPresentationViewModelTests
     [Fact]
     public void Simulate_DimsTheSliders_ToOneShadowUntilYouLeave_AndBackToTrainKeepsTheSettings()
     {
-        var setup = new TrainSetupPresentationViewModel(Creation(new TrainSettingsDef(12, 30), generation: 3));
+        var setup = Setup(Creation(new TrainSettingsDef(12, 30), generation: 3));
         var before = setup.Shadows;
         var changes = 0;
         setup.Changed += (_, _) => changes++;
@@ -123,8 +133,8 @@ public sealed class TrainSetupPresentationViewModelTests
             [],
             [new PistonDef(301, 1, 3)]);
 
-        new TrainSetupPresentationViewModel(Creation()).HasPoweredParts.ShouldBeFalse();
-        new TrainSetupPresentationViewModel(Creation(creature: creature)).HasPoweredParts.ShouldBeTrue();
+        Setup(Creation()).HasPoweredParts.ShouldBeFalse();
+        Setup(Creation(creature: creature)).HasPoweredParts.ShouldBeTrue();
     }
 
     // A small creature runs every shadow smoothly.
@@ -135,7 +145,7 @@ public sealed class TrainSetupPresentationViewModelTests
     [InlineData(TrainSettingsDef.MaxShadows, false, ShadowsLoad.Smooth, "The network learns faster with more shadows.")]
     public void ShadowsNote_FollowsTheBudget(int shadows, bool referenceCreature, ShadowsLoad load, string message)
     {
-        var setup = new TrainSetupPresentationViewModel(Creation(
+        var setup = Setup(Creation(
             new TrainSettingsDef(shadows, 10),
             creature: referenceCreature ? ShadowsBudgetTests.Creature(ShadowsBudget.ReferenceParts) : null));
 
@@ -145,6 +155,9 @@ public sealed class TrainSetupPresentationViewModelTests
             ? UiText.Format(message, ShadowsBudget.ReferenceSmoothLimit)
             : UiText.Plain(message));
     }
+
+    private static TrainSetupPresentationViewModel Setup(CreationDef creation) =>
+        new(creation, SettingsDef.Default.DefaultShadows);
 
     private static CreationDef Creation(TrainSettingsDef? settings = null, int? generation = null, CreatureDef? creature = null) =>
         new(

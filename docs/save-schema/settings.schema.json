@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "properties": {
+    "formatVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "uiSizePercent": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "default": null
+    },
+    "theme": {
+      "enum": [
+        "neon",
+        "paper",
+        "usePhone"
+      ],
+      "default": "neon"
+    },
+    "sounds": {
+      "type": "boolean",
+      "default": true
+    },
+    "defaultShadows": {
+      "type": "integer",
+      "default": 8
+    }
+  },
+  "required": [
+    "formatVersion",
+    "uiSizePercent",
+    "theme",
+    "sounds",
+    "defaultShadows"
+  ],
+  "additionalProperties": false
+}

@@ -16,7 +16,9 @@ layer owns that. "Locked" means "has trained at least one generation".
    network to the edited anatomy (`docs/CREATURE_MODEL.md` → "A rebuild
    keeps the network"); Training resumes from the refitted network.
 2. Train setup (`TrainSetupRoute`) sets Shadows and Run length, filled
-   from the Creation's saved values or `TrainSettingsDef.Default`. Start
+   from the Creation's saved values or, before its first Start, the
+   Shadows default from Settings and 10 s (`docs/SAVE_FORMAT.md` →
+   "`settings.json`"). Start
    saves them and opens Training in Train setup's place, so Back from
    Training returns to Build; Back from Train setup discards the changes.
    **Simulate** plays the saved network with one shadow until the player

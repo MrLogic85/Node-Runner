@@ -20,7 +20,8 @@ public sealed record SettingNote(UiText Text, ShadowsLoad Load);
 
 /// <summary>
 /// Train setup, between Build and Training: Train or Simulate, and the Shadows and Run length
-/// sliders, filled from the Creation's saved values or the default. Training starts by saving
+/// sliders, filled from the Creation's saved values or, before its first Start, the Shadows default
+/// from Settings and the default Run length. Training starts by saving
 /// <see cref="Settings"/> on the Creation. Simulate needs a trained Creation, so an
 /// untrained one has no Train or Simulate choice at all; it plays one shadow until the player
 /// leaves, so it dims both sliders and saves nothing. The selected map
@@ -33,7 +34,9 @@ public sealed class TrainSetupPresentationViewModel
 
     public static SettingRange RunLengthRange { get; } = new(TrainSettingsDef.MinRunLengthSeconds, TrainSettingsDef.MaxRunLengthSeconds, 5);
 
-    public TrainSetupPresentationViewModel(CreationDef creation)
+    /// <param name="creation">The Creation to set up.</param>
+    /// <param name="defaultShadows">The Shadows default from Settings, for a Creation without Train setup values.</param>
+    public TrainSetupPresentationViewModel(CreationDef creation, int defaultShadows)
     {
         ArgumentNullException.ThrowIfNull(creation);
         CreationId = creation.Id;
@@ -41,7 +44,7 @@ public sealed class TrainSetupPresentationViewModel
         Subtitle = creation.Training is { } training
             ? UiText.Counted("{0} generation so far", "{0} generations so far", training.Generation)
             : UiText.Plain("Not trained yet");
-        Settings = creation.TrainSettings ?? TrainSettingsDef.Default;
+        Settings = creation.TrainSettings ?? new TrainSettingsDef(defaultShadows, TrainSettingsDef.Default.RunLengthSeconds);
         ShadowsBudget = ShadowsBudget.For(creation.Creature);
         CanSimulate = creation.Training is not null;
         HasPoweredParts = NetworkPorts.Of(creation.Creature).Outputs.Count > 0;

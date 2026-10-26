@@ -15,8 +15,11 @@ public sealed record TrainSettingsDef
 
     public const int MaxRunLengthSeconds = 60;
 
-    /// <summary>What Train setup offers a Creation that has not trained yet, until Settings stores a default (#379).</summary>
-    public static TrainSettingsDef Default { get; } = new(8, 10);
+    /// <summary>The Shadows default in Settings until the player changes it.</summary>
+    public const int DefaultShadows = 8;
+
+    /// <summary>The Shadows and Run length used when neither the Creation nor Settings gives one.</summary>
+    public static TrainSettingsDef Default { get; } = new(DefaultShadows, 10);
 
     public TrainSettingsDef(int shadows, int runLengthSeconds)
     {

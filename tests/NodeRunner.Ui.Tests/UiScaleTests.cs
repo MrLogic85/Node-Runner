@@ -1,4 +1,5 @@
 using Godot;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
@@ -14,6 +15,17 @@ public sealed class UiScaleTests
 
     private static Vector2 Canvas(Vector2I window, int percent) =>
         (Vector2)window / (UiScale.BaseStretch(window) * UiScale.RootFactorFor(percent, window));
+
+    // The UI library may not use Domain, so SettingsDef keeps its own copy of the grid.
+    [Fact]
+    public void A_saved_UI_size_snaps_to_the_same_grid_as_the_applied_one()
+    {
+        (UiScale.MinPercent, UiScale.StepPercent).ShouldBe((SettingsDef.MinUiSizePercent, SettingsDef.UiSizeStepPercent));
+        for (var percent = -10; percent <= 450; percent++)
+        {
+            new SettingsDef(uiSizePercent: percent).UiSizePercent.ShouldBe(UiScale.Snap(percent), $"{percent}%");
+        }
+    }
 
     [Fact]
     public void S25_auto_is_280_and_its_max_canvas_fits_the_layouts_while_a_tablet_gets_more_canvas()

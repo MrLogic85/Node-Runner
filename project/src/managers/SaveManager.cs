@@ -105,9 +105,4 @@ public partial class SaveManager : Node
 
     private INewCreationWorkflow NewCreationWorkflow =>
         _newCreationWorkflow ?? throw new InvalidOperationException("SaveManager is not ready.");
-
-    private sealed class GodotStorageLocation(string directoryPath) : IStorageLocation
-    {
-        public string DirectoryPath { get; } = directoryPath;
-    }
 }

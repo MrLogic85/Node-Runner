@@ -42,7 +42,7 @@ public partial class TrainSetupHost : Node, IRoutedScene
             return;
         }
 
-        _setup = new TrainSetupPresentationViewModel(creation);
+        _setup = new TrainSetupPresentationViewModel(creation, GetNode<SettingsManager>("/root/SettingsManager").Current.DefaultShadows);
         screen.Setup(_setup);
         screen.StartRequested += Start;
     }
