@@ -311,6 +311,10 @@ msgstr ""
 msgid "Could not reset training. Try again."
 msgstr ""
 
+#: project/src/hosts/SettingsHost.cs
+msgid "Could not save the theme. Try again."
+msgstr ""
+
 #: project/src/hosts/TrainSetupHost.cs
 msgid "Could not start training. Try again."
 msgstr ""
@@ -636,6 +640,10 @@ msgstr ""
 msgid "Needs a battery or generator"
 msgstr ""
 
+#: project/scenes/screens/SettingsScreen.tscn
+msgid "Neon"
+msgstr ""
+
 #: project/scenes/screens/TrainingScreen.tscn
 #: project/scenes/widgets/NetworkFocusSheet.tscn
 msgid "Network"
@@ -671,6 +679,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
 msgid "Not connected"
+msgstr ""
+
+#: project/src/hosts/SettingsHost.cs
+msgid "Not saved"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
@@ -737,6 +749,10 @@ msgstr ""
 #: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs
 #: project/scenes/screens/TrainingScreen.tscn
 msgid "Outputs"
+msgstr ""
+
+#: project/scenes/screens/SettingsScreen.tscn
+msgid "Paper"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
@@ -935,6 +951,11 @@ msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "Servos go on a joint"
+msgstr ""
+
+#: project/scenes/screens/CreationsScreen.tscn
+#: project/scenes/screens/SettingsScreen.tscn
+msgid "Settings"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
@@ -1181,6 +1202,10 @@ msgstr ""
 msgid "The spring between joint {0} and joint {1} is too short. Move one of the joints apart."
 msgstr ""
 
+#: project/scenes/screens/SettingsScreen.tscn
+msgid "Theme"
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
 msgid "These joints already have a piston"
 msgstr ""
@@ -1293,6 +1318,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/ImportPresentation.cs
 msgid "Update Node Runner to open this creation."
+msgstr ""
+
+#: project/scenes/screens/SettingsScreen.tscn
+msgid "Use phone"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/NetworkFocusPresentationViewModel.cs

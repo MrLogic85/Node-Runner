@@ -284,7 +284,7 @@ public partial class BuildHost : Control, IRoutedScene
         }
 
         var saved = false;
-        CreationActions.TryRunFileOperation(
+        FileOperations.TryRun(
             () => saved = autosave.Save(),
             $"Saving edits to Creation {autosave.CreationId}");
         if (saved)
@@ -312,7 +312,7 @@ public partial class BuildHost : Control, IRoutedScene
         {
             var id = _autosave.CreationId;
             StopAutosave();
-            CreationActions.TryRunFileOperation(() => Saves.Delete(id), $"Removing empty new Creation {id}");
+            FileOperations.TryRun(() => Saves.Delete(id), $"Removing empty new Creation {id}");
             return;
         }
 
@@ -327,7 +327,7 @@ public partial class BuildHost : Control, IRoutedScene
         }
 
         CreationDef? renamed = null;
-        if (!CreationActions.TryRunFileOperation(
+        if (!FileOperations.TryRun(
             () => renamed = Saves.UpdateIfPresent(
                 id,
                 source => source.WithName(name)),
@@ -360,7 +360,7 @@ public partial class BuildHost : Control, IRoutedScene
             return false;
         }
 
-        if (!CreationActions.TryRunFileOperation(
+        if (!FileOperations.TryRun(
             () => Saves.ResetTraining(id),
             $"Resetting training for Creation {id}"))
         {

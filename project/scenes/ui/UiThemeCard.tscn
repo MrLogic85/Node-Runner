@@ -1,0 +1,65 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/lib/UiThemeCard.cs" id="1_theme_card"]
+[ext_resource type="Script" path="res://src/ui/lib/UiThemePreview.cs" id="2_preview"]
+[ext_resource type="Script" uid="uid://fw1i2vfgkd7q" path="res://src/ui/lib/UiDivider.cs" id="3_divider"]
+[ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="4_icon"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="5_label"]
+
+[node name="UiThemeCard" type="PanelContainer"]
+mouse_filter = 1
+script = ExtResource("1_theme_card")
+SizeVariant = 4
+ClipContent = true
+
+[node name="Stack" type="VBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Preview" type="Control" parent="Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("2_preview")
+
+[node name="Divider" type="Control" parent="Stack"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_divider")
+Color = 4
+
+[node name="Strip" type="MarginContainer" parent="Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="Row" type="HBoxContainer" parent="Stack/Strip"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Icon" type="Control" parent="Stack/Strip/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("4_icon")
+
+[node name="Name" type="Label" parent="Stack/Strip/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text_overrun_behavior = 3
+script = ExtResource("5_label")
+TextStyle = 7
+
+[node name="Check" type="Control" parent="Stack/Strip/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("4_icon")

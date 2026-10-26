@@ -100,8 +100,8 @@ get the space left.
   area. **Min** is 50%.
 
 Auto and Max follow the window; a fixed size is limited to the range.
-Until Settings exists (#201), Colors & Styles sets the UI size for the
-session.
+Until Settings has its UI size row (#1275), Colors & Styles sets the UI
+size for the session.
 
 ## Touch and press feedback
 
@@ -244,6 +244,15 @@ with. Beside it, the parts are fact rows, not buttons. The reference's
 "You already have a {0}." fits no article to every name or language, so
 the app says "You already have one by this name.".
 
+### Settings
+
+Settings is the first item in the Creations overflow. Its rows sit in one
+centred column, `w-form` wide. Each change applies and saves at once,
+with no Save button, so the screen itself is the preview. The Theme row is
+three `UiThemeCard`s, each a `UiThemePreview` drawn in that card's own
+palette over its name; Use phone's picture is split Neon | Paper, so it
+does not read as a fourth theme.
+
 ### Build
 
 - **Rail:** the tools and the Primary play button at the bottom in every
@@ -338,3 +347,5 @@ are not repeated. The last column owns the detail (BM =
 | Max speed always under Advanced | The Motor's is basic | BM → Parameters |
 | Brake "Max strength 30 N·m" | "Strength", ending in Locked | `PartParameters` |
 | Brake "Power: None: passive" | No Power row until the Power budget (#460) | — |
+| Settings rows UI size, Sounds and Theme; Neon the default | Theme only until #743, #1275 and #1440; Use phone the default | Screens → Settings, `docs/SAVE_FORMAT.md` |
+| A theme card's picture has a corner circle; a line under the cards names the phone's theme | Neither: the circle read as a radio beside the check, and the screen already shows the phone's theme | Screens → Settings |

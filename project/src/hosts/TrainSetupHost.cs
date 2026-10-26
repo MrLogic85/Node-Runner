@@ -63,7 +63,7 @@ public partial class TrainSetupHost : Control, IRoutedScene
         var settings = _setup.Settings;
         var saves = GetNode<SaveManager>("/root/SaveManager");
         CreationDef? saved = null;
-        if (!CreationActions.TryRunFileOperation(
+        if (!FileOperations.TryRun(
                 () => saved = saves.UpdateIfPresent(_setup.CreationId, creation => creation.WithTrainSettings(settings)),
                 "Saving the Train setup"))
         {

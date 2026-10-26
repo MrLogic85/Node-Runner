@@ -2,6 +2,7 @@ using Godot;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
+using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Hosts;
 
@@ -22,15 +23,7 @@ public sealed partial class SettingsApplier : Node
 
     public override void _ExitTree() => Settings.Changed -= OnChanged;
 
-    public static UiThemeChoice ThemeOf(ThemeChoice theme) => theme switch
-    {
-        ThemeChoice.Neon => UiThemeChoice.Neon,
-        ThemeChoice.Paper => UiThemeChoice.Paper,
-        ThemeChoice.UsePhone => UiThemeChoice.Phone,
-        _ => throw new ArgumentOutOfRangeException(nameof(theme), theme, null),
-    };
-
     private void OnChanged(object? sender, SettingsDef settings) => Apply(settings);
 
-    private void Apply(SettingsDef settings) => UiAppTheme.Of(this).Choose(ThemeOf(settings.Theme));
+    private void Apply(SettingsDef settings) => UiAppTheme.Of(this).Choose(ThemeChoices.ToUi(settings.Theme));
 }

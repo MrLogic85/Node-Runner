@@ -3,9 +3,9 @@ namespace NodeRunner.Domain.Tests;
 public sealed class SettingsDefTests
 {
     [Fact]
-    public void Default_IsAutoNeonWithSoundsAndTrainSetupsDefaultShadows()
+    public void Default_IsAutoUsePhoneWithSoundsAndTrainSetupsDefaultShadows()
     {
-        SettingsDef.Default.ShouldBe(new SettingsDef(null, ThemeChoice.Neon, sounds: true, TrainSettingsDef.Default.Shadows));
+        SettingsDef.Default.ShouldBe(new SettingsDef(null, ThemeChoice.UsePhone, sounds: true, TrainSettingsDef.Default.Shadows));
     }
 
     // A UI size snaps to the 5% grid (halves up) and never below the smallest; Auto stays null.

@@ -98,6 +98,16 @@ public static class UiSize
         public const int DialNeedleLength = 11;
         public const float DialHubRadius = 2.5f;
 
+        /// <summary>
+        /// A theme preview: its height, its two bars' thickness and tops, and the short bar's
+        /// length. The bars are inset <see cref="Space.S2"/> from the left, the long one from both sides.
+        /// </summary>
+        public const int ThemePreviewHeight = 48;
+        public const int ThemePreviewBarHeight = 5;
+        public const int ThemePreviewLongBarTop = 12;
+        public const int ThemePreviewShortBarTop = 24;
+        public const int ThemePreviewShortBarWidth = 56;
+
         /// <summary>A creature's beam in Build, Training and thumbnails.</summary>
         public const int CreatureBeamWidth = 6;
 

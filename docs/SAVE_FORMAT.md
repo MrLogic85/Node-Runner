@@ -151,7 +151,8 @@ load over one; any other value outside the schema, such as an unknown
 | `sounds` | bool | Whether sounds play. |
 | `defaultShadows` | int | The Shadows of a Creation before its first Start, 2–100 as `trainSettings.shadows`. |
 
-Without the file, the settings are `SettingsDef.Default`.
+Without the file, the settings are `SettingsDef.Default`, whose theme is
+`usePhone`.
 
 ## Never saved
 
