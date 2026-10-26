@@ -51,7 +51,8 @@ public partial class BuildCanvas : Node2D
         _overlay.Draw += () => DrawOverlay(_overlay);
     }
 
-    public VisualTheme Theme { get; set; } = VisualTheme.Neon;
+    /// <summary>The theme of the world it is in (<see cref="VisualTheme.For"/>).</summary>
+    public VisualTheme Theme { get; private set; } = VisualTheme.Project;
 
     /// <summary>The view this canvas is the world of; its parent is the slot the handles and notes share.</summary>
     [Export]
@@ -138,6 +139,7 @@ public partial class BuildCanvas : Node2D
 
     public override void _EnterTree()
     {
+        Theme = VisualTheme.For(this);
         if (WorldView is null)
         {
             GD.PushError($"{Name} needs its WorldView: the UiWorldView it is the world of (#769).");
@@ -393,7 +395,6 @@ public partial class BuildCanvas : Node2D
         // A touch hits what rises, so both come from the view-model.
         var targets = _gestures.TargetsOf(PlacingPart);
         _creature.Transform = ViewTransform();
-        _creature.Theme = Theme;
         _creature.Show(
             new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Servos, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors, _viewModel.Wheels, _viewModel.TouchSensors, _viewModel.Rubbers, _viewModel.VelocityMotors, _viewModel.Brakes, _viewModel.AngleSensors, _viewModel.Steppers),
             new CreatureMarks(

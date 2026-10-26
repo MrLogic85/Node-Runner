@@ -12,8 +12,10 @@ Routed scene roots that wire screens to managers and the navigator
 ## Rules
 
 1. **One `*Host` per routed screen.** The script is the root of
-   `project/scenes/hosts/<Name>Host.tscn` and instances its screen from
-   `project/scenes/screens/`. Helpers only hosts use live here too.
+   `project/scenes/hosts/<Name>Host.tscn`, a full-rect Control that
+   ignores the mouse (`.claude/rules/ui-lib.md` → "Theme and tokens"),
+   and instances its screen from `project/scenes/screens/`. Helpers only
+   hosts use live here too, and the `SettingsApplier` autoload.
 2. **Pause is global.** `TrainingHost` resets `GetTree().Paused` in `_Ready`
    and `_ExitTree`, and its root is `ProcessMode.Always` so the screen
    keeps responding while paused; the creature, `Evolver` and each slot are

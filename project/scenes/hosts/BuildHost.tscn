@@ -4,7 +4,14 @@
 [ext_resource type="PackedScene" uid="uid://b6ty5hxv7nm0i" path="res://scenes/screens/BuildScreen.tscn" id="2_screen"]
 [ext_resource type="Script" uid="uid://cbdercgul0a4h" path="res://src/ui/lib/UiDialog.cs" id="3_dialog"]
 
-[node name="BuildHost" type="Node"]
+[node name="BuildHost" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_host")
 
 [node name="BuildScreen" parent="." instance=ExtResource("2_screen")]

@@ -70,21 +70,7 @@ public partial class UiLevelLayer : CanvasLayer
         }
     }
 
-    // The nearest Control or Window with a theme, stopping at any other node. Godot would fall
-    // through to outer themes for an item the nearest one lacks; a menu's opener theme is always a
-    // full palette (the app's or a gallery's), so the nearest one is enough. None means the
-    // project theme, which applies anyway.
-    private Godot.Theme? OpenerTheme()
-    {
-        for (var node = GetParent(); node is Control or Window; node = node.GetParent())
-        {
-            var theme = node is Control control ? control.Theme : ((Window)node).Theme;
-            if (theme is not null)
-            {
-                return theme;
-            }
-        }
-
-        return null;
-    }
+    // A menu's opener theme is always a full palette (the app's or a gallery's), so the nearest
+    // one is enough.
+    private Godot.Theme? OpenerTheme() => GetParent() is { } parent ? UiThemes.NearestOf(parent) : null;
 }

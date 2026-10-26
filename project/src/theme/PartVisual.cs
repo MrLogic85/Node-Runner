@@ -16,7 +16,7 @@ public partial class PartVisual : Node2D
 {
     private readonly int _layer;
     private readonly DrawSlot? _slot;
-    private VisualTheme _theme = VisualTheme.Neon;
+    private VisualTheme _theme = VisualTheme.Project;
     private bool _selected;
     private bool _raised;
     private int? _group;

@@ -38,7 +38,10 @@ public partial class CreatureParts : Node2D
         AddChild(_previewSensor);
     }
 
-    public VisualTheme Theme { get; set; } = VisualTheme.Neon;
+    /// <summary>The theme of the world it is in (<see cref="VisualTheme.For"/>).</summary>
+    public VisualTheme Theme { get; private set; } = VisualTheme.Project;
+
+    public override void _EnterTree() => Theme = VisualTheme.For(this);
 
     /// <summary>A saved creature, plain: nothing selected and no edit marks.</summary>
     public void Show(CreatureDef creature)

@@ -67,9 +67,14 @@ rules. `docs/UI_DIRECTION.md` owns how it looks.
   reach the token's `lineHeight`: top = floor(adjustment / 2), bottom the
   rest, adjustment = `lineHeight` − font height. Recompute when a style's
   size or line height changes.
-- Screens inherit Neon. Assign another `Theme` only to switch palette, in
-  `_EnterTree` or before `AddChild`, never in `_Ready`: authored children
-  run `_Ready` first and would measure against Godot's default theme.
+- Screens inherit the app's palette, which `UiAppTheme` sets on the root
+  window. Assign another `Theme` only to switch palette, in `_EnterTree`
+  or before `AddChild`, never in `_Ready`: authored children run `_Ready`
+  first and would measure against Godot's default theme.
+- Any node that is neither a Control nor a Window cuts Godot's theme
+  inheritance. Where one must sit between Controls, such as a
+  `CanvasLayer` or a world's SubViewport, the Controls under it take
+  `UiThemes.NearestOf` the node above it; they never pick a palette.
 - A `NotificationThemeChanged` handler is only for caches that cannot be a
   variation (draw geometry, styleboxes, icon tints). Godot sends it on every
   tree entry, before `_Ready`, so a rebuilding handler checks

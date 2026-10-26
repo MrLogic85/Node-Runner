@@ -25,12 +25,12 @@ namespace NodeRunner.Hosts;
 /// one run that lasts until the player leaves, and saves nothing. Run on its own (F6) it trains the
 /// Walker example without saving.
 /// </summary>
-public partial class TrainingHost : Node, IRoutedScene
+public partial class TrainingHost : Control, IRoutedScene
 {
     private const double _signalRefreshIntervalSeconds = 1.0 / 30;
 
 
-    private readonly VisualTheme _theme = VisualTheme.Neon;
+    private VisualTheme _theme = VisualTheme.Project;
     // The map Training runs on and records: the one Train setup selects.
     private readonly MapDef _map = Maps.Default;
     private readonly SelectionViewModel _selection = new();
@@ -273,18 +273,14 @@ public partial class TrainingHost : Node, IRoutedScene
     // The world's colours come from the same theme as the creature's; the ground's shape from the map.
     private void BuildWorld()
     {
-        GetNode<ColorRect>("%ArenaFill").Color = _theme.ArenaBackground;
-        Ruler.Theme = _theme;
-        BestMarker.Theme = _theme;
-        Shadows.Theme = _theme;
+        _theme = VisualTheme.For(World);
+        _theme.Bind(this, ApplyArenaFill);
         Ground.ZIndex = ArenaLayers.Ground;
         // The markers are children of the ground, so their layers are made absolute, not added to the ground's.
         BestMarker.ZAsRelative = false;
         BestMarker.ZIndex = ArenaLayers.BestMarker;
-        CrashMarker.Theme = _theme;
         CrashMarker.ZAsRelative = false;
         CrashMarker.ZIndex = ArenaLayers.BestMarker;
-        StartSign.Theme = _theme;
         StartSign.ZAsRelative = false;
         StartSign.ZIndex = ArenaLayers.StartSign;
         // The shadows' picture stands in for every shadow, so it takes their layer, under the followed
@@ -294,8 +290,11 @@ public partial class TrainingHost : Node, IRoutedScene
         Shadows.Visible = Mode == TrainingRunMode.Train;
         // Every creature is under the world, so it must be on both arena views for either to draw one.
         World.VisibilityLayer = ArenaVisibility.Both;
-        Ground.Build(_map.Ground, _theme);
+        Ground.Build(_map.Ground);
     }
+
+    // A Control, so it keeps its colour rather than drawing it.
+    private void ApplyArenaFill() => GetNode<ColorRect>("%ArenaFill").Color = _theme.ArenaBackground;
 
     private void AddCreature(CreationDef? creation)
     {

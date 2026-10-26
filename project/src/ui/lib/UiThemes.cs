@@ -34,6 +34,27 @@ public static class UiThemes
 
     public static GodotTheme Paper => For(UiTokenType.Paper);
 
+    /// <summary>
+    /// The theme <paramref name="node"/> inherits: the nearest one set on it or on a Control or
+    /// Window above it, stopping at any other node, which cuts Godot's inheritance. Godot would
+    /// fall through to outer themes for an item the nearest one lacks. None means the project
+    /// theme, which applies anyway.
+    /// </summary>
+    public static GodotTheme? NearestOf(Node node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        for (Node? at = node; at is Control or Window; at = at.GetParent())
+        {
+            var theme = at is Control control ? control.Theme : ((Window)at).Theme;
+            if (theme is not null)
+            {
+                return theme;
+            }
+        }
+
+        return null;
+    }
+
     public static Color Color(GodotTheme theme, UiTokens.Color token)
     {
         ArgumentNullException.ThrowIfNull(theme);

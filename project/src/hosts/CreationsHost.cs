@@ -12,7 +12,7 @@ namespace NodeRunner.Hosts;
 /// The Creations scene, the root of the app's navigation: wires <see cref="CreationsScreen"/> to the
 /// saved creations and opens the other scenes through the router.
 /// </summary>
-public partial class CreationsHost : Node, IRoutedScene
+public partial class CreationsHost : Control, IRoutedScene
 {
     private ISceneNavigator? _navigator;
     private UiDialog? _deleteDialog;

@@ -20,6 +20,20 @@ public sealed partial class SceneContractTests
             .ToHashSet();
     });
 
+    // Any other root cuts Godot's theme inheritance, so the screen would never get the app's theme.
+    [Fact]
+    public void Host_roots_are_controls_that_ignore_the_mouse()
+    {
+        var hosts = Directory.EnumerateFiles(Path.Combine(SceneNodes.FindRepositoryRoot(), "project", "scenes", "hosts"), "*.tscn")
+            .Select(path => SceneNodes.InScene(Path.Combine("hosts", Path.GetFileName(path))).Single(node => node.IsRoot))
+            .ToList();
+
+        hosts.ShouldNotBeEmpty();
+        hosts.Where(root => root.Type != "Control" || !root.Node.Body.Contains("\nmouse_filter = 2", StringComparison.Ordinal))
+            .Select(root => root.Node.ToString())
+            .ShouldBeEmpty("A host's root is a full-rect Control with mouse_filter Ignore (.claude/rules/hosts.md).");
+    }
+
     // Export re-packs a scene and PackedScene.Pack drops nodes added inside an instance without its marker.
     [Fact]
     public void Nodes_added_inside_an_instance_mark_it_editable()

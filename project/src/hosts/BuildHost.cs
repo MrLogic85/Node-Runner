@@ -16,7 +16,7 @@ namespace NodeRunner.Hosts;
 /// whenever the player leaves Build or the app pauses. Training lives in its own scene,
 /// <see cref="TrainingHost"/>.
 /// </summary>
-public partial class BuildHost : Node, IRoutedScene
+public partial class BuildHost : Control, IRoutedScene
 {
     private BuildScreen _buildScreen = null!;
     private UiDialog _dialog = null!;

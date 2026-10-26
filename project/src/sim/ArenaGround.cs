@@ -17,10 +17,14 @@ public partial class ArenaGround : StaticBody2D
     // for hours could pass the drawn end; the collision ground is endless.
     private const float _reach = 1_000_000f;
 
-    public void Build(MapGround ground, VisualTheme theme)
+    private readonly Polygon2D _fill = new()
+    {
+        Polygon = [new(-_reach, 0), new(_reach, 0), new(_reach, _reach), new(-_reach, _reach)],
+    };
+
+    public void Build(MapGround ground)
     {
         ArgumentNullException.ThrowIfNull(ground);
-        ArgumentNullException.ThrowIfNull(theme);
         if (ground is not FlatGround)
         {
             throw new NotSupportedException($"The arena builds only flat ground, not a {ground.GetType().Name}.");
@@ -28,13 +32,10 @@ public partial class ArenaGround : StaticBody2D
 
         // Behind the scene's own children, such as the ruler drawn along the edge.
         AddBehind(new CollisionShape2D { Shape = new WorldBoundaryShape2D() }, 0);
-        AddBehind(
-            new Polygon2D
-            {
-                Polygon = [new(-_reach, 0), new(_reach, 0), new(_reach, _reach), new(-_reach, _reach)],
-                Color = theme.GroundFill,
-            },
-            1);
+        AddBehind(_fill, 1);
+        // A Polygon2D keeps its colour rather than drawing it from the theme.
+        var theme = VisualTheme.For(this);
+        theme.Bind(this, () => _fill.Color = theme.GroundFill);
     }
 
     private void AddBehind(Node child, int index)

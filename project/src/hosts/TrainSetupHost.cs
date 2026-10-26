@@ -14,7 +14,7 @@ namespace NodeRunner.Hosts;
 /// first saves the Shadows and Run length on the creation; Simulate saves nothing.
 /// Back discards the changes.
 /// </summary>
-public partial class TrainSetupHost : Node, IRoutedScene
+public partial class TrainSetupHost : Control, IRoutedScene
 {
     private ISceneNavigator? _navigator;
     private TrainSetupRoute? _route;
