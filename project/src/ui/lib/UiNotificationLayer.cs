@@ -6,7 +6,8 @@ namespace NodeRunner.Ui.Lib;
 /// The app's notification queue, registered as the <see cref="AutoloadName"/> autoload so it
 /// outlives scene changes: a notification raised just before a scene change still shows after it.
 /// It draws on <see cref="UiLayers.Notification"/>, over screens and menus but under a dialog's
-/// embedded Window, and keeps running while the tree is paused.
+/// embedded Window, and keeps running while the tree is paused. It hands its queue the root
+/// window's theme, the app's (<see cref="UiAppTheme"/>).
 /// </summary>
 public sealed partial class UiNotificationLayer : CanvasLayer
 {
@@ -19,7 +20,13 @@ public sealed partial class UiNotificationLayer : CanvasLayer
         Layer = UiLayers.Notification;
         ProcessMode = ProcessModeEnum.Always;
         AddChild(_notifications);
+        GetTree().Root.ThemeChanged += PassTheme;
+        PassTheme();
     }
+
+    public override void _ExitTree() => GetTree().Root.ThemeChanged -= PassTheme;
+
+    private void PassTheme() => _notifications.Theme = GetTree().Root.Theme;
 
     /// <summary>
     /// Queues a notification on the app's layer, found from any node in the tree. The queue outlives

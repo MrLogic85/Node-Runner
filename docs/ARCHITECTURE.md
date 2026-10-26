@@ -36,7 +36,9 @@ breach.
 - **Managers** are the **composition root**: Godot autoloads that wire
   concrete implementations into ViewModels at startup.
 - **Scene roots** (the `*Host` scenes) wire a screen's signals to managers
-  and the navigator (`.claude/rules/hosts.md`).
+  and the navigator (`.claude/rules/hosts.md`). The `SettingsApplier`
+  autoload lives with them, since applying the saved settings to the UI
+  autoloads reaches both.
 - **Sim** raises C# events and a host adapts them for ViewModels:
   `EvolverTrainingProgressSource` turns `Evolver`'s events into the App's
   `ITrainingProgressSource`.
@@ -118,7 +120,7 @@ so anything the player expects to find again is saved before it closes.
   goes back (how to code it: `.claude/rules/ui.md`).
 - What must outlive a scene change lives in `ui/lib` autoloads, not
   `managers/`, because managers hold no UI: `Notifications`, `BackPress`,
-  `SafeArea` and `UiScale`.
+  `SafeArea`, `UiScale` and `AppTheme`.
 
 ## UI text and translation
 

@@ -12,18 +12,11 @@ namespace NodeRunner.Ui.Widgets;
 /// </summary>
 public abstract partial class ArenaMark : Node2D
 {
-    private VisualTheme _theme = VisualTheme.Neon;
     private double _startX;
+    private bool _faded;
 
-    public VisualTheme Theme
-    {
-        get => _theme;
-        set
-        {
-            _theme = value;
-            OnChanged();
-        }
-    }
+    /// <summary>The theme of the world it is in (<see cref="VisualTheme.For"/>).</summary>
+    public VisualTheme Theme { get; private set; } = VisualTheme.Project;
 
     /// <summary>Where 0 m is, in the ground's coordinates: the ruler's start.</summary>
     public double StartX
@@ -39,12 +32,28 @@ public abstract partial class ArenaMark : Node2D
     /// <summary>Drawn at the shadows' opacity, behind what is in focus.</summary>
     public bool Faded
     {
-        get => Modulate.A < 1f;
-        set => Modulate = Colors.White with { A = value ? _theme.ShadowAlpha : 1f };
+        get => _faded;
+        set
+        {
+            _faded = value;
+            ApplyFaded();
+        }
     }
+
+    public override void _EnterTree() => Theme = VisualTheme.For(this);
+
+    public override void _Ready() => Theme.Bind(this, OnThemeChanged);
 
     /// <summary>Called when the theme or the start changes.</summary>
     protected abstract void OnChanged();
+
+    private void OnThemeChanged()
+    {
+        ApplyFaded();
+        OnChanged();
+    }
+
+    private void ApplyFaded() => Modulate = Colors.White with { A = _faded ? Theme.ShadowAlpha : 1f };
 
     /// <summary>What the camera shows, in the ground's coordinates.</summary>
     protected Rect2 VisibleArea() =>

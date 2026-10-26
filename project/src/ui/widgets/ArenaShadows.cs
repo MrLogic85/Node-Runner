@@ -18,17 +18,7 @@ public partial class ArenaShadows : Node2D
     private SubViewport? _shadowViewport;
     private SubViewport? _arenaViewport;
     private Vector2 _drawnSize;
-    private VisualTheme _theme = VisualTheme.Neon;
-
-    public VisualTheme Theme
-    {
-        get => _theme;
-        set
-        {
-            _theme = value;
-            ApplyTheme();
-        }
-    }
+    private VisualTheme _theme = VisualTheme.Project;
 
     public override void _Ready()
     {
@@ -48,7 +38,7 @@ public partial class ArenaShadows : Node2D
         // The picture's colours are already multiplied by its own alpha, so it is blended as such,
         // as UiWorldView shows the arena's.
         Material = new CanvasItemMaterial { BlendMode = CanvasItemMaterial.BlendModeEnum.PremultAlpha };
-        ApplyTheme();
+        _theme.Bind(this, ApplyTheme);
         ApplyVisible();
         RenderingServer.FramePreDraw += FollowArena;
     }
@@ -60,6 +50,8 @@ public partial class ArenaShadows : Node2D
             ApplyVisible();
         }
     }
+
+    public override void _EnterTree() => _theme = VisualTheme.For(this);
 
     public override void _ExitTree() => RenderingServer.FramePreDraw -= FollowArena;
 

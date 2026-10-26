@@ -12,7 +12,7 @@ namespace NodeRunner.Hosts;
 /// example as a new creation and opens it in Build in place of Examples, so Back from Build lands on
 /// Creations, where the copy now has its own card.
 /// </summary>
-public partial class ExamplesHost : Node, IRoutedScene
+public partial class ExamplesHost : Control, IRoutedScene
 {
     private ISceneNavigator? _navigator;
 

@@ -10,7 +10,14 @@
 [ext_resource type="Script" uid="uid://5c5k0sixm2oc" path="res://src/ui/widgets/ArenaStartSign.cs" id="8_start_sign"]
 [ext_resource type="Script" uid="uid://bmd4r656osleb" path="res://src/ui/lib/UiSignpost.cs" id="9_signpost"]
 
-[node name="TrainingHost" type="Node"]
+[node name="TrainingHost" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_host")
 
 [node name="TrainingScreen" parent="." instance=ExtResource("2_screen")]

@@ -12,7 +12,7 @@ namespace NodeRunner.Hosts;
 /// the previewed build under the name the player gave it and opens it in Build in place of Import,
 /// so Back from Build lands on Creations, like a copied example.
 /// </summary>
-public partial class ImportHost : Node, IRoutedScene
+public partial class ImportHost : Control, IRoutedScene
 {
     private ISceneNavigator? _navigator;
     private ImportPresentation _presentation = ImportPresentation.Waiting;

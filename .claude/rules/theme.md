@@ -34,3 +34,9 @@ owns how parts look and their draw order.
      link bands lie along other parts' links, so the Build canvas draws
      them on `CreatureLayers.SelectedUnderlays`, under the selected
      surface.
+4. **Theme values are read through the `VisualTheme` handle, never
+   copied.** Take it from `VisualTheme.For(node)` for the node's world, or
+   from whatever holds the parts, and read a value where it is used,
+   normally in `_Draw`; the handle redraws its world on a theme change.
+   A value kept outside `_Draw`, such as a `Polygon2D`'s colour or a
+   `Modulate`, is set through `VisualTheme.Bind`.

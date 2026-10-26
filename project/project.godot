@@ -27,6 +27,8 @@ Notifications="*res://src/ui/lib/UiNotificationLayer.cs"
 BackPress="*res://src/ui/lib/UiBackPress.cs"
 SafeArea="*res://src/ui/lib/UiSafeArea.cs"
 UiScale="*res://src/ui/lib/UiScale.cs"
+AppTheme="*res://src/ui/lib/UiAppTheme.cs"
+SettingsApplier="*res://src/hosts/SettingsApplier.cs"
 
 [display]
 

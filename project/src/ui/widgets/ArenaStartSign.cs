@@ -8,8 +8,8 @@ namespace NodeRunner.Ui.Widgets;
 /// The start sign in the Training arena: its child <see cref="UiSignpost"/>, <c>Signpost</c>,
 /// stands on the ground at 0 m and points the way that counts, since a run's shown distance never
 /// goes below 0. It stands behind every creature and is half a metre tall in the world, so
-/// it zooms with the world like the creatures do. The sign is outside the screen's Controls,
-/// so it takes the project theme, Neon, like the arena (<see cref="NodeRunner.Theme.VisualTheme.Neon"/>).
+/// it zooms with the world like the creatures do. The sign takes the world's theme
+/// (<see cref="NodeRunner.Theme.VisualTheme.ControlTheme"/>).
 /// </summary>
 public partial class ArenaStartSign : ArenaMark
 {
@@ -21,14 +21,20 @@ public partial class ArenaStartSign : ArenaMark
     public override void _Ready()
     {
         Sign.Resized += OnChanged;
-        OnChanged();
+        base._Ready();
     }
 
     // The sign is drawn at UI size from this node's origin, so the node scales it to its height and
     // moves it to put the sign's foot on the ground.
     protected override void OnChanged()
     {
-        if (!IsInsideTree() || Sign.Size.Y <= 0)
+        if (!IsInsideTree())
+        {
+            return;
+        }
+
+        Sign.Theme = Theme.ControlTheme;
+        if (Sign.Size.Y <= 0)
         {
             return;
         }

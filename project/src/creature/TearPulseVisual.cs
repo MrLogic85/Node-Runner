@@ -25,7 +25,7 @@ public partial class TearPulseVisual : Node2D, IShadowVisual
         set => Visible = !value;
     }
 
-    public VisualTheme Theme { get; init; } = VisualTheme.Neon;
+    public VisualTheme Theme { get; init; } = VisualTheme.Project;
 
     /// <summary>The joint's outer drawn radius.</summary>
     public float Radius { get; init; }

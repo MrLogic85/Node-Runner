@@ -89,7 +89,7 @@ public partial class Creature : Node2D
 
     public CreatureDef? Definition { get; set; }
 
-    public VisualTheme Theme { get; set; } = VisualTheme.Neon;
+    public VisualTheme Theme { get; set; } = VisualTheme.Project;
 
     /// <summary>The network driving the creature; <c>null</c> until training or Simulate sets one.</summary>
     public NeuralNetwork? Network { get; private set; }

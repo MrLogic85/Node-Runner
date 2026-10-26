@@ -71,6 +71,18 @@ public static class UiThemeLookup
         }
     }
 
+    public static Font Font(Control control, UiTokens.Typography token)
+    {
+        ArgumentNullException.ThrowIfNull(control);
+        var variation = UiTokens.Variation(token);
+        if (_reportMissing && !control.HasThemeFont("font", variation))
+        {
+            ReportMissing("font", "font", variation);
+        }
+
+        return control.GetThemeFont("font", variation);
+    }
+
     public static int FontSize(Control control, UiTokens.Typography token)
     {
         ArgumentNullException.ThrowIfNull(control);

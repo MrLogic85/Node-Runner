@@ -45,21 +45,11 @@ public partial class ArenaRuler : Node2D
     // stay whole. A scissor rect, as Control.ClipContents sets, not clip_children: that would need a
     // drawn mask and an extra buffer, and the ruler draws in the world, not as a laid-out Control.
     private readonly Node2D _heightScale = new() { Name = "HeightScale" };
-    private VisualTheme _theme = VisualTheme.Neon;
+    private VisualTheme _theme = VisualTheme.Project;
     private double _startX;
     private Rect2 _drawnView;
     private int _metresPerLabel = 1;
     private float _widestLabel;
-
-    public VisualTheme Theme
-    {
-        get => _theme;
-        set
-        {
-            _theme = value;
-            Redraw();
-        }
-    }
 
     /// <summary>Where 0 m is, in this node's coordinates: the trial's start.</summary>
     public double StartX
@@ -71,6 +61,8 @@ public partial class ArenaRuler : Node2D
             Redraw();
         }
     }
+
+    public override void _EnterTree() => _theme = VisualTheme.For(this);
 
     public override void _Ready()
     {
