@@ -21,6 +21,7 @@ config/icon="res://assets/icons/app/main.svg"
 
 RngProvider="*res://src/managers/RngProvider.cs"
 SaveManager="*res://src/managers/SaveManager.cs"
+SettingsManager="*res://src/managers/SettingsManager.cs"
 SceneRouter="*res://src/managers/SceneRouter.cs"
 Notifications="*res://src/ui/lib/UiNotificationLayer.cs"
 BackPress="*res://src/ui/lib/UiBackPress.cs"

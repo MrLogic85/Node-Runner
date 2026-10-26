@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using NodeRunner.Domain;
 
 namespace NodeRunner.App.Repositories;
@@ -11,16 +10,7 @@ public sealed class FileProgressionRepository : IProgressionRepository
     /// </summary>
     public static VersionedSaveFile<ProgressionDef> Format { get; } = new([]);
 
-    // Keyed by absolute path (not per-instance) so that even if more than
-    // one FileProgressionRepository instance pointed at the same file,
-    // a Load()'s read-validate-quarantine sequence still can't
-    // interleave with another instance's Save() and quarantine away a file
-    // that was actually just written successfully.
-    private static readonly ConcurrentDictionary<string, object> _pathLocks = new();
-
-    private readonly string _path;
-    private readonly object _writeLock;
-    private readonly VersionedSaveFile<ProgressionDef> _format;
+    private readonly VersionedFileStore<ProgressionDef> _store;
 
     public FileProgressionRepository(IStorageLocation storageLocation)
         : this(storageLocation, Format)
@@ -32,104 +22,14 @@ public sealed class FileProgressionRepository : IProgressionRepository
     {
         ArgumentNullException.ThrowIfNull(storageLocation);
         ArgumentNullException.ThrowIfNull(format);
-        _path = Path.Combine(storageLocation.DirectoryPath, "progression.json");
-        _writeLock = _pathLocks.GetOrAdd(_path, static _ => new object());
-        _format = format;
+        _store = new VersionedFileStore<ProgressionDef>(
+            Path.Combine(storageLocation.DirectoryPath, "progression.json"),
+            format,
+            static () => new ProgressionDef(),
+            nameof(FileProgressionRepository));
     }
 
-    public ProgressionDef Load()
-    {
-        // Shares _writeLock with Save() so a concurrent Save can never land
-        // mid-read/mid-quarantine: without this, Quarantine() could rename
-        // away a just-written valid file instead of the corrupt one it read
-        // moments earlier.
-        lock (_writeLock)
-        {
-            if (!File.Exists(_path))
-            {
-                return new ProgressionDef();
-            }
+    public ProgressionDef Load() => _store.Load();
 
-            VersionedLoad<ProgressionDef> load;
-            try
-            {
-                // Strict loading (SaveJson) also rejects "{}": a missing field
-                // must not silently read as a fresh progression. A file
-                // newer than the app, or one a migration can't change, fails
-                // here too and is quarantined, never overwritten.
-                load = _format.Deserialize(File.ReadAllText(_path), _path);
-            }
-            catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
-            {
-                // A corrupt progression file must not crash startup seeding;
-                // log it, quarantine it so it isn't reported again on the next
-                // Load(), and recover to a fresh progression rather than
-                // letting the exception propagate.
-                Console.Error.WriteLine(
-                    $"[FileProgressionRepository] Progression file '{_path}' is corrupt, resetting to defaults: {ex}");
-                Quarantine();
-                return new ProgressionDef();
-            }
-
-            if (load.IsOutdated)
-            {
-                WriteBack(load.Value);
-            }
-
-            return load.Value;
-        }
-    }
-
-    public void Save(ProgressionDef progression)
-    {
-        ArgumentNullException.ThrowIfNull(progression);
-        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-        var json = _format.Serialize(progression);
-
-        lock (_writeLock)
-        {
-            WriteAtomically(json);
-        }
-    }
-
-    // Called under _writeLock, so no Save can land between the read and this write. A failed write
-    // only leaves the file outdated, to migrate again next time.
-    private void WriteBack(ProgressionDef progression)
-    {
-        try
-        {
-            WriteAtomically(_format.Serialize(progression));
-        }
-        catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
-        {
-            Console.Error.WriteLine($"[FileProgressionRepository] Could not write back migrated progression file '{_path}': {ex}");
-        }
-    }
-
-    private void WriteAtomically(string json)
-    {
-        var temporaryPath = $"{_path}.{Guid.NewGuid():N}.tmp";
-        File.WriteAllText(temporaryPath, json);
-        File.Move(temporaryPath, _path, overwrite: true);
-    }
-
-    private void Quarantine()
-    {
-        try
-        {
-            var quarantinePath = $"{_path}.corrupt-{DateTime.UtcNow:yyyyMMddHHmmssfff}";
-            File.Move(_path, quarantinePath, overwrite: true);
-        }
-        catch (Exception ex)
-        {
-            // Best-effort: quarantining is a diagnostic nicety, not the
-            // recovery itself (Load() already returns a fresh ProgressionDef
-            // regardless). Its own failure modes are open-ended (permission,
-            // read-only media, path-too-long, ...), so this catches broadly
-            // and logs rather than letting a secondary failure escape the
-            // recovery path it's supposed to be inside of.
-            Console.Error.WriteLine(
-                $"[FileProgressionRepository] Could not quarantine corrupt progression file '{_path}': {ex}");
-        }
-    }
+    public void Save(ProgressionDef progression) => _store.Save(progression);
 }

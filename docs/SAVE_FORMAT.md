@@ -33,6 +33,7 @@ The root is Godot's `user://` folder.
 
 ```
 progression.json                 player progress
+settings.json                    the player's settings
 creations/<id>/
   creation.json                  the Creation
 ```
@@ -69,7 +70,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `name` | string | Not empty. A default name is saved in the player's language. |
 | `creature` | object | The drawn body; see below. |
 | `training` | object or `null` | `null` until a generation has finished. |
-| `trainSettings` | `{ shadows, runLengthSeconds }` or `null` | Train setup's values from its last Start; `shadows` is 2–100, `runLengthSeconds` 5–60. `null` until the first Start; until then Train setup uses `TrainSettingsDef.Default` (8 shadows, 10 s). |
+| `trainSettings` | `{ shadows, runLengthSeconds }` or `null` | Train setup's values from its last Start; `shadows` is 2–100, `runLengthSeconds` 5–60. `null` until the first Start; until then Train setup uses the Shadows default from `settings.json` and 10 s. |
 
 `creature` (what each part means: `docs/CREATURE_MODEL.md`):
 
@@ -134,6 +135,24 @@ Schema: [`save-schema/progression.schema.json`](save-schema/progression.schema.j
 | `formatVersion` | int | Written first; see "Versions and migration". |
 | `defaultCreationsSeeded` | bool | The example Creations were copied in on first start. Required. |
 
+## `settings.json`
+
+Schema: [`save-schema/settings.schema.json`](save-schema/settings.schema.json).
+Settings belong to the device, not to a Creation. A number out of range
+loads clamped or snapped (`SettingsDef`), so this file never fails to
+load over one; any other value outside the schema, such as an unknown
+`theme`, fails it as "Writing and reading" says.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `formatVersion` | int | Written first; see "Versions and migration". |
+| `uiSizePercent` | int or `null` | The chosen UI size in device pixels per canvas unit, as a percentage (`docs/UI_DIRECTION.md` → "UI size"), on the 5% grid and at least 50. `null` is Auto, the screen's own. A size above the screen's largest is kept and shown at the largest. |
+| `theme` | `neon`, `paper` or `usePhone` | The chosen theme; `usePhone` follows the phone's dark or light mode. |
+| `sounds` | bool | Whether sounds play. |
+| `defaultShadows` | int | The Shadows of a Creation before its first Start, 2–100 as `trainSettings.shadows`. |
+
+Without the file, the settings are `SettingsDef.Default`.
+
 ## Never saved
 
 - Ports; they follow from the parts.
@@ -155,10 +174,11 @@ device (Creations, training, progression, settings). `README.md` →
 ## Versions and migration
 
 The baseline is the 0.13.0 shape: every `creation.json` and
-`progression.json` that 0.13.0 writes.
+`progression.json` that 0.13.0 writes. `settings.json`'s version 1 is
+its first shape, in 0.14.4.
 
-- A versioned file starts with `formatVersion`, a whole number. Both files
-  have it. The 0.13.0 shape is version 1, and a file without the field is
+- A versioned file starts with `formatVersion`, a whole number. Every
+  file has it. The 0.13.0 shape is version 1, and a file without the field is
   version 1.
 - Loading reads the version, runs the migrations from that version to the
   current one in order, then loads the result strictly as above.
@@ -303,5 +323,5 @@ owns it.
   it, so a crash never leaves half a file.
 - A `creation.json` that fails to load is skipped and logged; the other
   Creations still list.
-- A `progression.json` that fails to load is renamed to
-  `progression.json.corrupt-<time>` and progress starts fresh.
+- A `progression.json` or `settings.json` that fails to load is renamed to
+  `<file>.corrupt-<time>`, and progress or settings start fresh.

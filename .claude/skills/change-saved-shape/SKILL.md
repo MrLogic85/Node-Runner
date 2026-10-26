@@ -1,6 +1,6 @@
 ---
 name: change-saved-shape
-description: Change what Node Runner saves in creation.json or progression.json, with the migration, tests, share dictionary and pins it needs. Use when a change adds, removes, renames or reinterprets a saved field, or changes what a saved value means.
+description: Change what Node Runner saves in creation.json, progression.json or settings.json, with the migration, tests, share dictionary and pins it needs. Use when a change adds, removes, renames or reinterprets a saved field, or changes what a saved value means.
 ---
 
 # Change a saved shape
@@ -11,12 +11,13 @@ description: Change what Node Runner saves in creation.json or progression.json,
    migration. If not, record why in "Versions and migration" and skip
    steps 3–5.
 2. Change the record and its section in `docs/SAVE_FORMAT.md` →
-   "`creation.json`" or "`progression.json`". `SaveFormatTests` then
-   fails and prints where it wrote the new schema; copy that file over
-   its `docs/save-schema/` copy and read the diff.
+   "`creation.json`", "`progression.json`" or "`settings.json`".
+   `SaveFormatTests` then fails and prints where it wrote the new schema;
+   copy that file over its `docs/save-schema/` copy and read the diff.
 3. Append a `SaveMigration` to the file's list
    (`FileCreationRepository.Format` for `creation.json`,
-   `FileProgressionRepository.Format` for `progression.json`), and list it
+   `FileProgressionRepository.Format` for `progression.json`,
+   `FileSettingsRepository.Format` for `settings.json`), and list it
    in "Versions and migration" as the `creation.json` migrations are.
 4. Add a test that loads a file in the previous version.
 5. For `creation.json`, make the new version's share dictionary, then run
