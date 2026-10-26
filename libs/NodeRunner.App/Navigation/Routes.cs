@@ -44,3 +44,6 @@ public sealed record TrainSetupRoute(Guid CreationId) : SceneRoute;
 /// saved network with one shadow until the player leaves, and saves nothing.
 /// </summary>
 public sealed record TrainingRoute(Guid CreationId, TrainingRunMode Mode = TrainingRunMode.Train) : SceneRoute;
+
+/// <summary>The player's settings for this device.</summary>
+public sealed record SettingsRoute : SceneRoute;

@@ -29,7 +29,7 @@ public partial class CreationsHost : Control, IRoutedScene
         screen.ShowComponentLibraryLink = OS.IsDebugBuild()
             && ProjectSettings.GetSetting("ui/show_component_library_link", true).AsBool();
         // Here, not in SaveManager: the Walker's name is saved in the player's language.
-        CreationActions.TryRunFileOperation(
+        FileOperations.TryRun(
             () => Saves.SeedDefaultCreations(UiTextTranslation.Now), "Copying the Walker on the first start");
         screen.Setup(Saves.CreationsPresentation);
         screen.OpenRequested += OpenCreation;
@@ -37,6 +37,7 @@ public partial class CreationsHost : Control, IRoutedScene
         screen.DuplicateRequested += DuplicateCreation;
         screen.DeleteRequested += RequestDelete;
         screen.AchievementsRequested += ShowAchievementsCue;
+        screen.SettingsRequested += () => Navigate(new SettingsRoute());
         screen.ExamplesRequested += () => Navigate(new ExamplesRoute());
         screen.ImportRequested += () => Navigate(new ImportRoute());
         screen.ComponentLibraryRequested += () => Navigate(new ComponentGalleryRoute());
@@ -78,7 +79,7 @@ public partial class CreationsHost : Control, IRoutedScene
     private void CreateCreation()
     {
         CreationDef creation = null!;
-        if (!CreationActions.TryRunFileOperation(() => creation = Saves.CreateNew(UiTextTranslation.Now), "Creating a new Creation"))
+        if (!FileOperations.TryRun(() => creation = Saves.CreateNew(UiTextTranslation.Now), "Creating a new Creation"))
         {
             UiNotificationLayer.Enqueue(this, new UiNotificationSpec(
                 UiPopupType.Danger, "Create failed", "Could not create a new creation. Try again.", Icon: new(UiIconId.Plus)));

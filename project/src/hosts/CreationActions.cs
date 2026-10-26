@@ -1,5 +1,4 @@
 using Godot;
-using NodeRunner.App.Repositories;
 using NodeRunner.App.ViewModels;
 using NodeRunner.Domain;
 using NodeRunner.Managers;
@@ -11,21 +10,6 @@ namespace NodeRunner.Hosts;
 /// <summary>What the scenes that change saved creations share.</summary>
 internal static class CreationActions
 {
-    /// <summary>Runs a save-file change; a recoverable file error is logged and returns false.</summary>
-    public static bool TryRunFileOperation(Action action, string description)
-    {
-        try
-        {
-            action();
-            return true;
-        }
-        catch (Exception ex) when (FilePersistenceExceptions.IsRecoverable(ex))
-        {
-            GD.PrintErr($"{description} failed: {ex}");
-            return false;
-        }
-    }
-
     /// <summary>Copies a creation; a failure shows the shared "Copy failed" notification and returns null.</summary>
     public static CreationDef? TryCopy(Node from, string name, Func<CreationDef> copy) =>
         TryAdd(from, name, copy, $"Copying Creation '{name}'", "Copy failed", UiIconId.Copy, $"creation.copy.failed.{name}",
@@ -40,7 +24,7 @@ internal static class CreationActions
         Node from, string name, Func<CreationDef> add, string description, string failedTitle, UiIconId icon, string id, Func<string>? failedText)
     {
         CreationDef? added = null;
-        if (TryRunFileOperation(() => added = add(), description) && added is not null)
+        if (FileOperations.TryRun(() => added = add(), description) && added is not null)
         {
             return added;
         }
@@ -55,7 +39,7 @@ internal static class CreationActions
 
     /// <summary>Deletes a saved creation; a missing one counts as a failure.</summary>
     public static bool TryDelete(SaveManager saves, Guid id, string name) =>
-        TryRunFileOperation(
+        FileOperations.TryRun(
             () =>
             {
                 if (!saves.Delete(id))

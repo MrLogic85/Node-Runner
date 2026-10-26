@@ -30,7 +30,7 @@ public sealed record SettingsDef
     /// <param name="defaultShadows">The Shadows a Creation that has not trained yet starts with.</param>
     public SettingsDef(
         int? uiSizePercent = null,
-        ThemeChoice theme = ThemeChoice.Neon,
+        ThemeChoice theme = ThemeChoice.UsePhone,
         bool sounds = true,
         int defaultShadows = TrainSettingsDef.DefaultShadows)
     {

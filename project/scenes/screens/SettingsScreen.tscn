@@ -1,0 +1,86 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/screens/SettingsScreen.cs" id="1_screen"]
+[ext_resource type="PackedScene" uid="uid://dokr6l5stu6ll" path="res://scenes/ui/UiFrame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
+[ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
+[ext_resource type="PackedScene" path="res://scenes/ui/UiThemeCard.tscn" id="5_theme_card"]
+
+[node name="SettingsScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="UiFrame" parent="." instance=ExtResource("2_frame")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="Shell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card" index="0"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Toolbar" parent="UiFrame/MarginContainer/Card/Shell" instance=ExtResource("3_toolbar")]
+unique_name_in_owner = true
+layout_mode = 2
+ShowOverflow = false
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="0"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Settings"
+script = ExtResource("4_label")
+TextStyle = 1
+
+[node name="Body" type="MarginContainer" parent="UiFrame/MarginContainer/Card/Shell"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Form" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 4
+
+[node name="ThemeLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Form"]
+layout_mode = 2
+text = "Theme"
+script = ExtResource("4_label")
+TextStyle = 12
+TextColor = 8
+
+[node name="ThemeCards" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Form"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NeonCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeCards" instance=ExtResource("5_theme_card")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+Title = "Neon"
+
+[node name="PaperCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeCards" instance=ExtResource("5_theme_card")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+Choice = 1
+Title = "Paper"
+
+[node name="PhoneCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeCards" instance=ExtResource("5_theme_card")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+Choice = 2
+Title = "Use phone"
+IconId = 23
+
+[editable path="UiFrame"]
+[editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

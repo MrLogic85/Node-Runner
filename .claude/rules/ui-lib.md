@@ -175,7 +175,8 @@ come from `Button` or a generated variation.
   read one. The reference values: `w-dialog` 300, `w-card` 326, `w-sheet`
   720, `w-sheet-wide` 880, `w-brain` (the network sheet) 460, `w-well` 250,
   `h-well` 64, `w-tile` 156, `h-stage` 170, `h-thumb` 100, `w-col-xs` 40,
-  `w-col-md` 76, `w-col-lg` 96, `w-col-xl` 128.
+  `w-col-md` 76, `w-col-lg` 96, `w-col-xl` 128, `w-form` (Settings'
+  column) 400.
 - `UiDialogContent.tscn` and `UiNotificationContent.tscn` are the runtime
   layout, not mocks: keep their `%` names.
 - The gallery pages share `GalleryScreen`; each page scene authors its own

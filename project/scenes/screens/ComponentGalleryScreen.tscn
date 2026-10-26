@@ -36,6 +36,7 @@
 [ext_resource type="Script" uid="uid://bjt8et7kcs50x" path="res://src/ui/lib/UiCardActions.cs" id="29_card_actions"]
 [ext_resource type="Script" uid="uid://bmd4r656osleb" path="res://src/ui/lib/UiSignpost.cs" id="50_signpost"]
 [ext_resource type="Script" uid="uid://bmmmlxr5268v7" path="res://src/ui/lib/UiExpandSection.cs" id="51_expand_section"]
+[ext_resource type="PackedScene" path="res://scenes/ui/UiThemeCard.tscn" id="52_theme_card"]
 
 [sub_resource type="Resource" id="Resource_theme_neon"]
 script = ExtResource("5_theme_segment")
@@ -3430,6 +3431,56 @@ Fill = 0.3
 Marker = 1.0
 Capped = true
 FillColor = 12
+
+[node name="ThemeCard" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content" unique_id=381000001]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ThemeCard" unique_id=381000002]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ThemeCard/Heading" unique_id=381000003]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Theme card"
+script = ExtResource("2_cpfof")
+TextStyle = 12
+
+[node name="Description" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ThemeCard/Heading" unique_id=381000004]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 8
+text = "one theme to pick: a picture in its own palette, its name, and a check when chosen"
+autowrap_mode = 3
+script = ExtResource("2_cpfof")
+TextStyle = 9
+TextColor = 8
+
+[node name="Examples" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ThemeCard" unique_id=381000005]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 8
+
+[node name="Neon" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ThemeCard/Examples" unique_id=381000006 instance=ExtResource("52_theme_card")]
+layout_mode = 2
+size_flags_horizontal = 3
+Title = "Neon"
+Chosen = true
+
+[node name="Paper" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ThemeCard/Examples" unique_id=381000007 instance=ExtResource("52_theme_card")]
+layout_mode = 2
+size_flags_horizontal = 3
+Choice = 1
+Title = "Paper"
+
+[node name="Phone" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/ThemeCard/Examples" unique_id=381000008 instance=ExtResource("52_theme_card")]
+layout_mode = 2
+size_flags_horizontal = 3
+Choice = 2
+Title = "Use phone"
+IconId = 23
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/HeaderHost/Toolbar"]
