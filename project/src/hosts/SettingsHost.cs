@@ -1,7 +1,6 @@
 using Godot;
 using NodeRunner.App.Navigation;
 using NodeRunner.App.ViewModels;
-using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
