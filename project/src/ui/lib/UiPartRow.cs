@@ -233,7 +233,15 @@ public partial class UiPartRow : BaseButton
             label.AutoTranslateMode = AutoTranslateModeEnum.Disabled;
         }
 
-        row.AddChild(label);
+        // The name and value stand on one baseline inside a line, which stays centred beside the icon.
+        var line = new HBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+        };
+        line.AddThemeConstantOverride("separation", (int)UiSize.Space.S2);
+        row.AddChild(line);
+        line.AddChild(label);
         _nameLabel = label;
 
         if (State == PartRowState.Locked)
@@ -244,7 +252,8 @@ public partial class UiPartRow : BaseButton
         {
             var value = CreateTrailingLabel(ValueText);
             UiTranslation.ShareContext(this, value);
-            row.AddChild(value);
+            line.AddChild(value);
+            UiBaseline.Align(label, value);
         }
     }
 
@@ -302,7 +311,7 @@ public partial class UiPartRow : BaseButton
     private Label CreateTrailingLabel(string text)
     {
         var label = UiFieldAndRows.Label(text, UiTokens.Typography.ReadoutMedium, UiTokens.Color.Ink, HorizontalAlignment.Right);
-        label.CustomMinimumSize = new Vector2(UiLayout.ColumnSmallWidth, 0);
+        label.CustomMinimumSize = label.CustomMinimumSize with { X = UiLayout.ColumnSmallWidth };
         label.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         return label;
     }

@@ -31,7 +31,6 @@ public sealed class SceneDerivedStateTests
         ["UiSegmentedSwitch.cs"] = ["theme_override_constants/separation"],
         ["UiTextField.cs"] = ["theme_override_constants/separation"],
         ["UiNameField.cs"] = ["theme_override_constants/separation"],
-        ["UiValueRow.cs"] = ["theme_override_constants/separation"],
     };
 
     [Fact]

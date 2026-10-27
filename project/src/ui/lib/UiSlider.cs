@@ -574,13 +574,11 @@ public partial class UiSlider : Control, ISerializationListener
         AddChild(_header, false, InternalMode.Front);
         _header.SetAnchorsAndOffsetsPreset(LayoutPreset.TopWide);
         _label.Name = "Label";
-        _label.SizeFlagsVertical = SizeFlags.ShrinkBegin;
 
         // The label fills the row and trims first, so a long readout stays inside it.
         _label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _label.TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis;
         _readout.Name = "Readout";
-        _readout.SizeFlagsVertical = SizeFlags.ShrinkBegin;
         _header.AddChild(_label, false, InternalMode.Front);
         _header.AddChild(_readout, false, InternalMode.Front);
         _markerLabel.Name = "Marker";
@@ -790,6 +788,16 @@ public partial class UiSlider : Control, ISerializationListener
         ApplyLabelStyle(_label, UiTokens.Typography.Overline, UiTokens.Color.Muted);
         ApplyLabelStyle(_readout, UiTokens.Typography.ReadoutMedium, UiTokens.Color.Ink);
         ApplyLabelStyle(_markerLabel, UiTokens.Typography.ReadoutSmall, UiTokens.Color.Halo);
+        if (HasMarkerBelowRow)
+        {
+            UiBaseline.Release(_markerLabel);
+            UiBaseline.Align(_label, _readout);
+        }
+        else
+        {
+            UiBaseline.Align(_label, _readout, _markerLabel);
+        }
+
         _thumbStyle = UiThemeLookup.CreateStyleBox(UiThemeLookup.Color(this, UiTokens.Color.Accent),
             Colors.Transparent,
             borderWidth: 0,
@@ -834,7 +842,7 @@ public partial class UiSlider : Control, ISerializationListener
             var markerX = maximumX >= minimumX
                 ? Mathf.Clamp(desiredCenter - (_markerLabel.Size.X * 0.5f), minimumX, maximumX)
                 : minimumX;
-            _markerLabel.Position = new Vector2(markerX, HasMarkerBelowRow ? TrackY + UiSize.Space.S2 : 0);
+            _markerLabel.Position = new Vector2(markerX, HasMarkerBelowRow ? TrackY + UiSize.Space.S2 : _header!.Position.Y);
         }
 
         if (!HasStepLabelRow)

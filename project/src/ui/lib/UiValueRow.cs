@@ -79,15 +79,8 @@ public partial class UiValueRow : HBoxContainer
         Refresh();
     }
 
-    private readonly UiUnsavedState _unsaved = new("theme_override_constants/separation");
-
     public override void _Notification(int what)
     {
-        if (_unsaved.Handle(this, what, Refresh))
-        {
-            return;
-        }
-
         // Godot sends a language change while it walks the tree, when this node may not add
         // children, so the labels keep their nodes and only take the new text.
         if (what == NotificationTranslationChanged)
@@ -102,8 +95,7 @@ public partial class UiValueRow : HBoxContainer
         }
     }
 
-    // Rebuild writes its own separation override, which re-sends NotificationThemeChanged; without
-    // the guard a runtime text change rebuilds twice and doubles the row's children.
+    // Rebuilding adds themed children, whose theme notices must not rebuild the row again.
     private void Refresh() => UiThemeRefresh.Guarded(this, Rebuild);
 
     private void Rebuild()
@@ -119,20 +111,23 @@ public partial class UiValueRow : HBoxContainer
             child.QueueFree();
         }
 
-        var spacing = UiSize.Space.S2;
-        AddThemeConstantOverride("separation", spacing);
-        var label = UiFieldAndRows.Label(LabelText, UiTokens.Typography.Caption, UiTokens.Color.Muted);
-        UiTranslation.ShareContext(this, label);
-        label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        AddChild(label);
-        _label = label;
-        var readout = new HBoxContainer
+        // The texts stand on one baseline inside a line, which stays centred in the row.
+        var line = new HBoxContainer
         {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
             SizeFlagsVertical = SizeFlags.ShrinkCenter,
             MouseFilter = MouseFilterEnum.Ignore,
         };
+        line.AddThemeConstantOverride("separation", UiSize.Space.S2);
+        AddChild(line);
+        var label = UiFieldAndRows.Label(LabelText, UiTokens.Typography.Caption, UiTokens.Color.Muted);
+        UiTranslation.ShareContext(this, label);
+        label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        line.AddChild(label);
+        _label = label;
+        var readout = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
         readout.AddThemeConstantOverride("separation", UiSize.Space.S1);
-        AddChild(readout);
+        line.AddChild(readout);
         if (IconId != UiIconId.None)
         {
             var glyph = UiFieldAndRows.Icon(IconId, UiIconSize.Small, UiThemeLookup.Color(this, UiTokens.Color.Ink));
@@ -149,6 +144,7 @@ public partial class UiValueRow : HBoxContainer
         value.SizeFlagsHorizontal = SizeFlags.ShrinkEnd;
         readout.AddChild(value);
         _value = value;
+        UiBaseline.Align(label, value);
         ShowTexts();
     }
 

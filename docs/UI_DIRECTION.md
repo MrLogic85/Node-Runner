@@ -122,6 +122,12 @@ size for the session.
 
 The Component Gallery shows every component; these are the decisions.
 
+**The layout decides alignment, never a nudge.** Texts that share a line
+stand on one baseline (`UiBaseline`, or `UiLabel.BaselineOf` in a scene),
+and what sits in a centred layout is centred. No text or icon is moved a
+few pixels to look right: a font that looks off-centre is fixed in the
+theme, for every text that uses it.
+
 ### Reference component mapping
 
 `UiComponentContracts.ReferenceEntryFor` maps each component to its `c_*`
@@ -134,7 +140,7 @@ entry. The entries with no component of their own
 - **`c_status`** is Build's readiness chip, a `UiChip` (Screens → Build).
 - **`c_fact_row`** is an authored row of a `UiIcon` and two `UiLabel`s,
   as on Import. The trailing count's `BaselineOf` names the label before
-  it, so the two stand on one baseline in their different fonts.
+  it.
 - **`c_field_line`** is `UiTextField`'s one line: its error, or else its
   muted fact.
 
