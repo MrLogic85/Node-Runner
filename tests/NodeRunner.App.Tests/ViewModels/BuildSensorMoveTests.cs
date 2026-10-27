@@ -32,7 +32,7 @@ public sealed class BuildSensorMoveTests
         build.Snapshot().Sensors.ShouldBe(after.Sensors);
 
         build.MoveSensor(20, Beam(12)).ShouldBeTrue();
-        build.SingleSelectedSensorId.ShouldBe(20);
+        build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(20);
         var updated = new CreationUpdateCoordinator(repository).ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
         updated.Creature.Sensors.Select(sensor => (sensor.Id, sensor.BeamId)).ShouldBe([(20, 12), (21, 11)]);
         NetworkPorts.Of(updated.Creature).Inputs.ShouldBe(NetworkPorts.Of(creation.Creature).Inputs);

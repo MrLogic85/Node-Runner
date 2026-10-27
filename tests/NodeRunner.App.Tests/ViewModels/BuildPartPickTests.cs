@@ -88,7 +88,7 @@ public sealed class BuildPartPickTests
 
         build.PickPart(BuildPart.Accelerometer);
         var servo = gestures.DropPart(BuildPart.Servo, new Vector2D(0, 0));
-        build.SingleSelectedServoId.ShouldBe(servo);
+        build.SingleSelectedId(CreatureElementKind.Servo).ShouldBe(servo);
         build.PickedPart.ShouldBeNull();
     }
 

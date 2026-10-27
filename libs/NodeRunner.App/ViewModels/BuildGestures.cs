@@ -154,7 +154,7 @@ public sealed class BuildGestures
     /// the picked link, in Links, from a joint that is not selected. The canvas marks these joints.
     /// </summary>
     public BuildLink? LinkDrawnFrom(int nodeId) =>
-        _build.ActiveTool == BuildTool.Beam && !_build.Selection.Nodes.Contains(nodeId) ? _build.PickedLink : null;
+        _build.ActiveTool == BuildTool.Beam && !_build.IsSelected(CreatureElementKind.Node, nodeId) ? _build.PickedLink : null;
 
     /// <summary>The node a Beam or link drag started from.</summary>
     public int? BeamStartNodeId { get; private set; }
@@ -565,8 +565,7 @@ public sealed class BuildGestures
 
     private void RestoreSelection(PartSet before)
     {
-        var now = _build.Selection;
-        if (!Enum.GetValues<CreatureElementKind>().All(kind => now.SetOf(kind).SetEquals(before.SetOf(kind))))
+        if (!_build.Selection.SetEquals(before))
         {
             _build.ReplaceSelection(before);
         }
@@ -852,21 +851,15 @@ public sealed class BuildGestures
 
         bool Inside(Vector2D point) => point.X >= min.X && point.X <= max.X && point.Y >= min.Y && point.Y <= max.Y;
         bool MidInside(int nodeA, int nodeB) => Inside(Midpoint(NodeById(nodeA).Position, NodeById(nodeB).Position));
-        var beams = _build.Beams.Where(beam => MidInside(beam.NodeA, beam.NodeB)).Select(beam => beam.Id).ToHashSet();
+        var links = LinkRef.All(_build.Beams, _build.Pistons, _build.Springs).Where(link => MidInside(link.NodeA, link.NodeB)).ToList();
+        var beams = links.Where(link => link.Kind == CreatureElementKind.Beam).Select(link => link.Id).ToHashSet();
         return new PartSet(
-            _build.Nodes.Where(node => Inside(node.Position) && _build.JointPartsAt(node.Id).Count == 0).Select(node => node.Id).ToHashSet(),
-            beams,
-            _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id).ToHashSet(),
-            _build.Servos.Where(servo => Inside(NodeById(servo.NodeId).Position)).Select(servo => servo.Id).ToHashSet(),
-            _build.Pistons.Where(piston => MidInside(piston.NodeA, piston.NodeB)).Select(piston => piston.Id).ToHashSet(),
-            _build.Springs.Where(spring => MidInside(spring.NodeA, spring.NodeB)).Select(spring => spring.Id).ToHashSet(),
-            _build.Wheels.Where(wheel => Inside(NodeById(wheel.NodeId).Position)).Select(wheel => wheel.Id).ToHashSet(),
-            _build.TouchSensors.Where(touch => Inside(NodeById(touch.NodeId).Position)).Select(touch => touch.Id).ToHashSet(),
-            _build.Rubbers.Where(rubber => Inside(NodeById(rubber.NodeId).Position)).Select(rubber => rubber.Id).ToHashSet(),
-            _build.VelocityMotors.Where(motor => Inside(NodeById(motor.NodeId).Position)).Select(motor => motor.Id).ToHashSet(),
-            _build.Brakes.Where(brake => Inside(NodeById(brake.NodeId).Position)).Select(brake => brake.Id).ToHashSet(),
-            _build.AngleSensors.Where(angleSensor => Inside(NodeById(angleSensor.NodeId).Position)).Select(angleSensor => angleSensor.Id).ToHashSet(),
-            _build.Steppers.Where(stepper => Inside(NodeById(stepper.NodeId).Position)).Select(stepper => stepper.Id).ToHashSet());
+        [
+            .. _build.Nodes.Where(node => Inside(node.Position) && _build.JointPartsAt(node.Id).Count == 0).Select(node => new CreatureElementSelection(CreatureElementKind.Node, node.Id)),
+            .. links.Select(link => new CreatureElementSelection(link.Kind, link.Id)),
+            .. _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(CreatureElementSelection.Of),
+            .. _build.JointParts.Where(part => Inside(NodeById(part.NodeId).Position)).Select(CreatureElementSelection.Of),
+        ]);
     }
 
     private double HitDistance(double viewDistance) => viewDistance / View.Zoom;

@@ -368,9 +368,9 @@ public partial class BuildCanvas : Node2D
         var caught = _gestures.SelectionBoxCatches;
         var selected = caught.Count > 0 ? caught : _viewModel.Selection;
         // A sensor being moved looks selected, so its preview never reads as a copy.
-        if (_gestures.MovingSensorId is { } moving && !selected.Sensors.Contains(moving))
+        if (_gestures.MovingSensorId is { } moving)
         {
-            selected = selected with { Sensors = new HashSet<int>(selected.Sensors) { moving } };
+            selected = new PartSet([.. selected.Parts, new CreatureElementSelection(CreatureElementKind.Sensor, moving)]);
         }
 
         (BeamDef, SensorKind, double?)? previewSensor = null;
@@ -458,8 +458,7 @@ public partial class BuildCanvas : Node2D
         var stroke = _viewModel!.CanEdit(PartParameterId.Stroke);
         if (stroke || _viewModel.CanEdit(PartParameterId.StartPosition))
         {
-            var selected = _viewModel.Selection.Pistons;
-            foreach (var piston in _viewModel.Pistons.Where(piston => selected.Contains(piston.Id)))
+            foreach (var piston in _viewModel.Pistons.Where(piston => _viewModel.IsSelected(CreatureElementKind.Piston, piston.Id)))
             {
                 var built = BuiltLength(piston.NodeA, piston.NodeB);
                 DrawTravel(canvas, piston.NodeA, piston.NodeB, Piston.ShortestLength(piston, built, Travel.HubRadii), Piston.LongestLength(piston, built, Travel.HubRadii), PistonDrawing.TickHalf(Theme), rest: null);
@@ -468,8 +467,7 @@ public partial class BuildCanvas : Node2D
 
         if (stroke || _viewModel.CanEdit(PartParameterId.CoilLength))
         {
-            var selected = _viewModel.Selection.Springs;
-            foreach (var spring in _viewModel.Springs.Where(spring => selected.Contains(spring.Id)))
+            foreach (var spring in _viewModel.Springs.Where(spring => _viewModel.IsSelected(CreatureElementKind.Spring, spring.Id)))
             {
                 var built = BuiltLength(spring.NodeA, spring.NodeB);
                 DrawTravel(canvas, spring.NodeA, spring.NodeB, Spring.ShortestLength(spring, built, Travel.HubRadii), Spring.LongestLength(spring, built, Travel.HubRadii), SpringDrawing.SeatHalf(Theme), Spring.RestLength(spring, built, Travel.HubRadii));

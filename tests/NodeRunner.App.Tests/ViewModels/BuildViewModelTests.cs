@@ -138,19 +138,19 @@ public sealed class BuildViewModelTests
         build.PropertyChanged += (_, args) => raised.Add(args.PropertyName);
         var changes = build.CountAnatomyChanges();
         build.SelectOnly(CreatureElementKind.Beam, 101);
-        (build.SelectedNodeCount, build.SelectedBeamCount, build.SelectedPartCount, build.SingleSelectedBeamId).ShouldBe((0, 1, 1, 101));
-        new[] { nameof(BuildViewModel.SelectedBeamCount), nameof(BuildViewModel.SelectedPartCount), nameof(BuildViewModel.SingleSelectedBeamId) }.ShouldBeSubsetOf(raised);
+        (build.SelectedNodeCount, build.SelectedPartCount, build.SingleSelected).ShouldBe((0, 1, Beam(101)));
+        new[] { nameof(BuildViewModel.SelectedNodeCount), nameof(BuildViewModel.SelectedPartCount), nameof(BuildViewModel.SingleSelected) }.ShouldBeSubsetOf(raised);
         changes().ShouldBe(1);
         raised.Clear();
         build.ClearSelection();
-        (build.SelectedPartCount, build.SingleSelectedBeamId).ShouldBe((0, null));
-        raised.ShouldContain(nameof(BuildViewModel.SingleSelectedBeamId));
+        (build.SelectedPartCount, build.SingleSelected).ShouldBe((0, null));
+        raised.ShouldContain(nameof(BuildViewModel.SingleSelected));
         changes().ShouldBe(2);
 
         build.SelectOnly(CreatureElementKind.Sensor, 201);
-        build.SingleSelectedSensorId.ShouldBe(201);
+        build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(201);
         build.SelectOnly(CreatureElementKind.Beam, 102);
-        (build.SingleSelectedSensorId, build.SelectedPartCount).ShouldBe((null, 1));
+        (build.SingleSelectedId(CreatureElementKind.Sensor), build.SelectedPartCount).ShouldBe((null, 1));
         build.DeleteSelectedParts();
         build.Nodes.Count.ShouldBe(3);
         build.Undo();

@@ -453,7 +453,7 @@ public sealed class BuildJointPartTests
 
         var second = build.PlacePart(BuildPart.Brake, Joint(1))!.Value;
         build.ReplaceSelection(Set(new(CreatureElementKind.Brake, 6), new(CreatureElementKind.Brake, second)));
-        build.SelectedBrakeCount.ShouldBe(2);
+        build.Selection.IdsOf(CreatureElementKind.Brake).Count.ShouldBe(2);
         new BuildPresentationViewModel(build).Selection!.Settings.Single().Readout.ShouldBe(UiText.Format("{0} N·m–Locked", new FixedNumber(200, 0)));
 
         build.Load(build.Snapshot(), locked: true);
@@ -542,22 +542,22 @@ public sealed class BuildJointPartTests
         var gestures = new BuildGestures(build);
 
         gestures.Tap(new Vector2D(100, 10));
-        build.SingleSelectedWheelId.ShouldBe(6);
+        build.SingleSelectedId(CreatureElementKind.Wheel).ShouldBe(6);
         build.DrawnPartAt(new Vector2D(100, 0), PlacingTargets.None).ShouldBe(Joint(2));
         gestures.Tap(new Vector2D(100, 10));
         build.SelectedPartCount.ShouldBe(0);
         gestures.Tap(new Vector2D(100, WheelDef.MaxRadius - 2));
-        build.SingleSelectedWheelId.ShouldBe(6);
+        build.SingleSelectedId(CreatureElementKind.Wheel).ShouldBe(6);
         gestures.Tap(new Vector2D(100, WheelDef.MaxRadius + 2));
         build.SelectedPartCount.ShouldBe(0);
         gestures.Tap(new Vector2D(198, 2));
-        build.SingleSelectedNodeId.ShouldBe(3);
+        build.SingleSelectedId(CreatureElementKind.Node).ShouldBe(3);
         build.ClearSelection();
         gestures.Tap(new Vector2D(40, 60));
-        build.SingleSelectedWheelId.ShouldBe(7);
+        build.SingleSelectedId(CreatureElementKind.Wheel).ShouldBe(7);
         build.ClearSelection();
         gestures.Tap(new Vector2D(50, 60));
-        build.SingleSelectedWheelId.ShouldBe(6);
+        build.SingleSelectedId(CreatureElementKind.Wheel).ShouldBe(6);
 
         // By design, the disc wins over adding a joint and over clearing the picked link.
         foreach (var tool in new[] { BuildTool.Joint, BuildTool.Beam })
@@ -565,7 +565,7 @@ public sealed class BuildJointPartTests
             build.ClearSelection();
             build.ActiveTool = tool;
             gestures.Tap(new Vector2D(100, 50));
-            build.SingleSelectedWheelId.ShouldBe(6);
+            build.SingleSelectedId(CreatureElementKind.Wheel).ShouldBe(6);
             build.Nodes.Count.ShouldBe(3);
         }
 
@@ -581,7 +581,7 @@ public sealed class BuildJointPartTests
         build.ClearSelection();
         gestures.DropTargetAt(new Vector2D(60, 0), BuildPart.Camera).ShouldBe(Beam(crossing));
         gestures.Tap(new Vector2D(60, 0));
-        build.Selection.Beams.ShouldBe([crossing]);
+        build.Selection.IdsOf(CreatureElementKind.Beam).ShouldBe([crossing]);
     }
 
     [Fact]

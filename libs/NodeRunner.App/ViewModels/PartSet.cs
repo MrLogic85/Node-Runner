@@ -2,55 +2,45 @@ using NodeRunner.Domain;
 
 namespace NodeRunner.App.ViewModels;
 
-/// <summary>The joints, beams, sensors, Servos, Pistons, Springs, Wheels, Touch sensors, Rubbers, Velocity motors, Brakes, Angle sensors and Steppers a Select selection or box holds.</summary>
-public sealed record PartSet(IReadOnlySet<int> Nodes, IReadOnlySet<int> Beams, IReadOnlySet<int> Sensors, IReadOnlySet<int> Servos, IReadOnlySet<int> Pistons, IReadOnlySet<int> Springs, IReadOnlySet<int> Wheels, IReadOnlySet<int> TouchSensors, IReadOnlySet<int> Rubbers, IReadOnlySet<int> VelocityMotors, IReadOnlySet<int> Brakes, IReadOnlySet<int> AngleSensors, IReadOnlySet<int> Steppers)
+/// <summary>The parts a Select selection or box holds, each once by its kind and id.</summary>
+public sealed class PartSet
 {
-    public static readonly PartSet None = new(new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>(), new HashSet<int>());
+    private readonly HashSet<CreatureElementSelection> _parts;
 
-    public int Count => Nodes.Count + Beams.Count + Sensors.Count + Servos.Count + Pistons.Count + Springs.Count + Wheels.Count + TouchSensors.Count + Rubbers.Count + VelocityMotors.Count + Brakes.Count + AngleSensors.Count + Steppers.Count;
+    public PartSet(IEnumerable<CreatureElementSelection> parts)
+    {
+        ArgumentNullException.ThrowIfNull(parts);
+        _parts = [.. parts];
+        if (_parts.Contains(null!))
+        {
+            throw new ArgumentException("A part set holds no null part.", nameof(parts));
+        }
+    }
 
-    /// <summary>Every part in the set, kind by kind.</summary>
-    public IEnumerable<CreatureElementSelection> Parts =>
-        Enum.GetValues<CreatureElementKind>().SelectMany(kind => SetOf(kind).Select(id => new CreatureElementSelection(kind, id)));
+    public static PartSet None { get; } = new([]);
+
+    public int Count => _parts.Count;
+
+    /// <summary>Every part in the set, kind by kind in <see cref="CreatureElementKind"/> order, then by id.</summary>
+    public IEnumerable<CreatureElementSelection> Parts => _parts.OrderBy(part => part.Kind).ThenBy(part => part.Id);
 
     public static PartSet Of(CreatureElementSelection part)
     {
         ArgumentNullException.ThrowIfNull(part);
-        var ids = new HashSet<int> { part.Id };
-        return part.Kind switch
-        {
-            CreatureElementKind.Node => None with { Nodes = ids },
-            CreatureElementKind.Beam => None with { Beams = ids },
-            CreatureElementKind.Sensor => None with { Sensors = ids },
-            CreatureElementKind.Servo => None with { Servos = ids },
-            CreatureElementKind.Piston => None with { Pistons = ids },
-            CreatureElementKind.Spring => None with { Springs = ids },
-            CreatureElementKind.Wheel => None with { Wheels = ids },
-            CreatureElementKind.TouchSensor => None with { TouchSensors = ids },
-            CreatureElementKind.Rubber => None with { Rubbers = ids },
-            CreatureElementKind.VelocityMotor => None with { VelocityMotors = ids },
-            CreatureElementKind.Brake => None with { Brakes = ids },
-            CreatureElementKind.AngleSensor => None with { AngleSensors = ids },
-            CreatureElementKind.Stepper => None with { Steppers = ids },
-            _ => throw new ArgumentOutOfRangeException(nameof(part)),
-        };
+        return new([part]);
     }
 
-    public IReadOnlySet<int> SetOf(CreatureElementKind kind) => kind switch
+    public bool Contains(CreatureElementSelection part) => _parts.Contains(part);
+
+    public bool Contains(CreatureElementKind kind, int id) => _parts.Contains(new CreatureElementSelection(kind, id));
+
+    /// <summary>The ids of the parts of <paramref name="kind"/> in the set.</summary>
+    public IReadOnlySet<int> IdsOf(CreatureElementKind kind) => _parts.Where(part => part.Kind == kind).Select(part => part.Id).ToHashSet();
+
+    /// <summary>Whether <paramref name="other"/> holds exactly the same parts.</summary>
+    public bool SetEquals(PartSet other)
     {
-        CreatureElementKind.Node => Nodes,
-        CreatureElementKind.Beam => Beams,
-        CreatureElementKind.Sensor => Sensors,
-        CreatureElementKind.Servo => Servos,
-        CreatureElementKind.Piston => Pistons,
-        CreatureElementKind.Spring => Springs,
-        CreatureElementKind.Wheel => Wheels,
-        CreatureElementKind.TouchSensor => TouchSensors,
-        CreatureElementKind.Rubber => Rubbers,
-        CreatureElementKind.VelocityMotor => VelocityMotors,
-        CreatureElementKind.Brake => Brakes,
-        CreatureElementKind.AngleSensor => AngleSensors,
-        CreatureElementKind.Stepper => Steppers,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-    };
+        ArgumentNullException.ThrowIfNull(other);
+        return _parts.SetEquals(other._parts);
+    }
 }

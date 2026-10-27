@@ -56,7 +56,7 @@ public sealed partial class BuildViewModel
             }
 
             // Within the step: its Undo row refresh must find no deleted part still selected.
-            ClearSelectionSets();
+            _selected.Clear();
         }, Selection);
         NotifySelectionChanged();
         RaiseAnatomyChanged();
@@ -153,67 +153,67 @@ public sealed partial class BuildViewModel
     private static void RemoveParts(CreatureBuilder builder, PartSet parts)
     {
         // Parts first, so none is already gone with a deleted beam or joint.
-        foreach (var sensorId in parts.Sensors)
+        foreach (var sensorId in parts.IdsOf(CreatureElementKind.Sensor))
         {
             builder.RemoveSensor(sensorId);
         }
 
-        foreach (var pistonId in parts.Pistons)
+        foreach (var pistonId in parts.IdsOf(CreatureElementKind.Piston))
         {
             builder.RemovePiston(pistonId);
         }
 
-        foreach (var servoId in parts.Servos)
+        foreach (var servoId in parts.IdsOf(CreatureElementKind.Servo))
         {
             builder.RemoveServo(servoId);
         }
 
-        foreach (var velocityMotorId in parts.VelocityMotors)
+        foreach (var velocityMotorId in parts.IdsOf(CreatureElementKind.VelocityMotor))
         {
             builder.RemoveVelocityMotor(velocityMotorId);
         }
 
-        foreach (var stepperId in parts.Steppers)
+        foreach (var stepperId in parts.IdsOf(CreatureElementKind.Stepper))
         {
             builder.RemoveStepper(stepperId);
         }
 
-        foreach (var brakeId in parts.Brakes)
+        foreach (var brakeId in parts.IdsOf(CreatureElementKind.Brake))
         {
             builder.RemoveBrake(brakeId);
         }
 
-        foreach (var angleSensorId in parts.AngleSensors)
+        foreach (var angleSensorId in parts.IdsOf(CreatureElementKind.AngleSensor))
         {
             builder.RemoveAngleSensor(angleSensorId);
         }
 
-        foreach (var springId in parts.Springs)
+        foreach (var springId in parts.IdsOf(CreatureElementKind.Spring))
         {
             builder.RemoveSpring(springId);
         }
 
-        foreach (var wheelId in parts.Wheels)
+        foreach (var wheelId in parts.IdsOf(CreatureElementKind.Wheel))
         {
             builder.RemoveWheel(wheelId);
         }
 
-        foreach (var touchSensorId in parts.TouchSensors)
+        foreach (var touchSensorId in parts.IdsOf(CreatureElementKind.TouchSensor))
         {
             builder.RemoveTouchSensor(touchSensorId);
         }
 
-        foreach (var rubberId in parts.Rubbers)
+        foreach (var rubberId in parts.IdsOf(CreatureElementKind.Rubber))
         {
             builder.RemoveRubber(rubberId);
         }
 
-        foreach (var beamId in parts.Beams)
+        foreach (var beamId in parts.IdsOf(CreatureElementKind.Beam))
         {
             builder.RemoveBeam(beamId);
         }
 
-        foreach (var nodeId in parts.Nodes)
+        foreach (var nodeId in parts.IdsOf(CreatureElementKind.Node))
         {
             builder.RemoveNode(nodeId);
         }

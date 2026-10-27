@@ -195,7 +195,7 @@ public sealed class BuildPlacementTests
         build.PlacePart(BuildPart.Servo, Joint(2)).ShouldBe(10);
 
         build.Servos.Select(servo => (servo.Id, servo.NodeId, servo.FixedLinkId, servo.TargetLinkId)).ShouldBe([(10, 2, fixedLink, targetLink)]);
-        (build.SingleSelectedServoId, build.NodeRadius(2)).ShouldBe((10, JointMotor.Radius));
+        (build.SingleSelectedId(CreatureElementKind.Servo), build.NodeRadius(2)).ShouldBe((10, JointMotor.Radius));
         new BuildPresentationViewModel(build).SinglePart!.Pickers![0].Options.Select(option => option.LinkId).ShouldBe([fixedLink, targetLink]);
     }
 
@@ -213,11 +213,11 @@ public sealed class BuildPlacementTests
 
         build.SetHingePartLink(servo, fixedRole: true, linkId: 5);
         build.Servos.Select(each => (each.Id, each.FixedLinkId, each.TargetLinkId)).ShouldBe([(servo, 5, 4)]);
-        (build.SingleSelectedServoId, build.Snapshot().NextPartId, build.CanUndo).ShouldBe((servo, servo + 1, true));
+        (build.SingleSelectedId(CreatureElementKind.Servo), build.Snapshot().NextPartId, build.CanUndo).ShouldBe((servo, servo + 1, true));
         build.Undo();
-        (build.SingleSelectedServoId, build.Servos.Single().FixedLinkId).ShouldBe((servo, 4));
+        (build.SingleSelectedId(CreatureElementKind.Servo), build.Servos.Single().FixedLinkId).ShouldBe((servo, 4));
         build.Redo();
-        (build.SingleSelectedServoId, build.Servos.Single().FixedLinkId).ShouldBe((servo, 5));
+        (build.SingleSelectedId(CreatureElementKind.Servo), build.Servos.Single().FixedLinkId).ShouldBe((servo, 5));
         shownIds.ShouldNotBeEmpty();
         shownIds.ShouldAllBe(id => id == servo);
         build.SelectOnly(CreatureElementKind.Piston, 4);
@@ -231,7 +231,7 @@ public sealed class BuildPlacementTests
         build.DeleteSelectedParts();
         build.SelectOnly(CreatureElementKind.Servo, servo);
         build.Undo();
-        (build.SelectedServoCount, build.Selection.Pistons.Single()).ShouldBe((0, 4));
+        (build.Selection.IdsOf(CreatureElementKind.Servo).Count, build.Selection.IdsOf(CreatureElementKind.Piston).Single()).ShouldBe((0, 4));
 
         // A Servo placed again under its selected joint is selected instead.
         build = Loaded(PistonAndSpring());
@@ -239,7 +239,7 @@ public sealed class BuildPlacementTests
         build.Undo();
         build.ReplaceSelection([2]);
         build.Redo();
-        (build.Selection.Nodes.Count, build.SingleSelectedServoId).ShouldBe((0, servo));
+        (build.Selection.IdsOf(CreatureElementKind.Node).Count, build.SingleSelectedId(CreatureElementKind.Servo)).ShouldBe((0, servo));
     }
 
     [Theory]
@@ -404,13 +404,13 @@ public sealed class BuildPlacementTests
         var piston = build.ConnectLink(BuildLink.Piston, 1, 2)!.Value;
         build.Beams.Select(beam => beam.Id).ShouldBe([5]);
         build.Servos.Select(each => (each.Id, each.FixedLinkId, each.TargetLinkId)).ShouldBe([(servo, piston, 5)]);
-        (build.SingleSelectedServoId, build.CanUndo).ShouldBe((servo, true));
+        (build.SingleSelectedId(CreatureElementKind.Servo), build.CanUndo).ShouldBe((servo, true));
         shownIds.ShouldNotBeEmpty();
         shownIds.ShouldAllBe(id => id == servo);
         build.Undo();
-        (build.Beams.Count, build.Pistons.Count, build.SingleSelectedServoId).ShouldBe((2, 0, servo));
+        (build.Beams.Count, build.Pistons.Count, build.SingleSelectedId(CreatureElementKind.Servo)).ShouldBe((2, 0, servo));
         build.Redo();
-        (build.Servos.Single().FixedLinkId, build.SingleSelectedServoId).ShouldBe((piston, servo));
+        (build.Servos.Single().FixedLinkId, build.SingleSelectedId(CreatureElementKind.Servo)).ShouldBe((piston, servo));
 
         build = TwoBeams();
         build.SelectOnly(CreatureElementKind.Beam, 4);

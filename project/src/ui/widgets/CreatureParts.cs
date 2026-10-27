@@ -88,16 +88,16 @@ public partial class CreatureParts : Node2D
             part.Position = ToGodot(node.Position);
             part.Radius = (float)ShownRadius(shape, marks, node.Id);
             part.Loose = marks.ShowsAsLoose(node.Id);
-            part.Selected = marks.Selected.Nodes.Contains(node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointParts);
+            part.Selected = marks.Selected.Contains(CreatureElementKind.Node, node.Id) && !CreatureDef.HasJointPart(node.Id, shape.JointParts);
             part.ShowsRing = !HasWheel(shape, marks, node.Id) && !HasHingePart(shape, marks, node.Id);
             part.ShowsHub = HasWheelAndNoHingePart(shape, marks, node.Id);
             var touch = shape.TouchSensors.FirstOrDefault(touch => touch.NodeId == node.Id);
             part.Cushion = touch is not null || marks.PreviewNodeOf(BuildPart.TouchSensor) == node.Id;
-            part.TouchSelected = touch is not null && marks.Selected.TouchSensors.Contains(touch.Id);
+            part.TouchSelected = touch is not null && marks.Selected.Contains(CreatureElementKind.TouchSensor, touch.Id);
             var rubber = shape.Rubbers.FirstOrDefault(rubber => rubber.NodeId == node.Id);
             part.Skin = rubber is not null || marks.PreviewNodeOf(BuildPart.Rubber) == node.Id;
-            part.SkinSelected = rubber is not null && marks.Selected.Rubbers.Contains(rubber.Id);
-            part.WheelSelected = shape.Wheels.Any(wheel => wheel.NodeId == node.Id && marks.Selected.Wheels.Contains(wheel.Id))
+            part.SkinSelected = rubber is not null && marks.Selected.Contains(CreatureElementKind.Rubber, rubber.Id);
+            part.WheelSelected = shape.Wheels.Any(wheel => wheel.NodeId == node.Id && marks.Selected.Contains(CreatureElementKind.Wheel, wheel.Id))
                 || marks.PreviewNodeOf(BuildPart.Wheel) == node.Id;
             part.Placing = marks.Placing.Joints.Contains(node.Id) ? PlacingMark.Takes : marks.Placing.RefusedJoints.Contains(node.Id) ? PlacingMark.Refuses : PlacingMark.None;
             part.PlacingRadius = (float)(part.Placing switch
@@ -164,7 +164,7 @@ public partial class CreatureParts : Node2D
         foreach (var servo in shape.Servos)
         {
             var part = PartFor(_servos, servo.Id);
-            ShowServoPart(part, shape, nodes, servo.NodeId, servo.FixedLinkId, servo.TargetLinkId, servo.Range, servo.Start, marks.Selected.Servos.Contains(servo.Id));
+            ShowServoPart(part, shape, nodes, servo.NodeId, servo.FixedLinkId, servo.TargetLinkId, servo.Range, servo.Start, marks.Selected.Contains(CreatureElementKind.Servo, servo.Id));
         }
 
         if (marks.PreviewNodeOf(BuildPart.Servo) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
@@ -191,7 +191,7 @@ public partial class CreatureParts : Node2D
         foreach (var motor in shape.VelocityMotors)
         {
             var part = PartFor(_velocityMotors, motor.Id);
-            ShowVelocityMotorPart(part, shape, nodes, motor.NodeId, motor.FixedLinkId, motor.TargetLinkId, marks.Selected.VelocityMotors.Contains(motor.Id));
+            ShowVelocityMotorPart(part, shape, nodes, motor.NodeId, motor.FixedLinkId, motor.TargetLinkId, marks.Selected.Contains(CreatureElementKind.VelocityMotor, motor.Id));
         }
 
         if (marks.PreviewNodeOf(BuildPart.VelocityMotor) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
@@ -229,7 +229,7 @@ public partial class CreatureParts : Node2D
         foreach (var brake in shape.Brakes)
         {
             var part = PartFor(_brakes, brake.Id);
-            ShowBrakePart(part, shape, nodes, brake.NodeId, brake.FixedLinkId, brake.TargetLinkId, brake.Locked, marks.Selected.Brakes.Contains(brake.Id));
+            ShowBrakePart(part, shape, nodes, brake.NodeId, brake.FixedLinkId, brake.TargetLinkId, brake.Locked, marks.Selected.Contains(CreatureElementKind.Brake, brake.Id));
         }
 
         if (marks.PreviewNodeOf(BuildPart.Brake) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
@@ -268,7 +268,7 @@ public partial class CreatureParts : Node2D
         foreach (var stepper in shape.Steppers)
         {
             var part = PartFor(_steppers, stepper.Id);
-            ShowStepperPart(part, shape, nodes, stepper.NodeId, stepper.FixedLinkId, stepper.TargetLinkId, stepper.StepsPerTurn, marks.Selected.Steppers.Contains(stepper.Id), Cushioned(shape, marks, stepper.NodeId));
+            ShowStepperPart(part, shape, nodes, stepper.NodeId, stepper.FixedLinkId, stepper.TargetLinkId, stepper.StepsPerTurn, marks.Selected.Contains(CreatureElementKind.Stepper, stepper.Id), Cushioned(shape, marks, stepper.NodeId));
         }
 
         if (marks.PreviewNodeOf(BuildPart.Stepper) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
@@ -314,7 +314,7 @@ public partial class CreatureParts : Node2D
         foreach (var angleSensor in shape.AngleSensors)
         {
             var part = PartFor(_angleSensors, angleSensor.Id);
-            ShowAngleSensorPart(part, shape, nodes, marks, angleSensor.NodeId, angleSensor.FixedLinkId, angleSensor.TargetLinkId, marks.Selected.AngleSensors.Contains(angleSensor.Id));
+            ShowAngleSensorPart(part, shape, nodes, marks, angleSensor.NodeId, angleSensor.FixedLinkId, angleSensor.TargetLinkId, marks.Selected.Contains(CreatureElementKind.AngleSensor, angleSensor.Id));
         }
 
         if (marks.PreviewNodeOf(BuildPart.AngleSensor) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
@@ -457,9 +457,9 @@ public partial class CreatureParts : Node2D
             part.RadiusB = (float)NodeRadius(shape, nodeB.Id);
             // A beam too short for training is drawn in danger until its joints move apart.
             part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Beam, nodeA, nodeB, shape.JointMotors);
-            part.HaloA = selected.Nodes.Contains(beam.NodeA);
-            part.HaloB = selected.Nodes.Contains(beam.NodeB);
-            part.Selected = selected.Beams.Contains(beam.Id);
+            part.HaloA = selected.Contains(CreatureElementKind.Node, beam.NodeA);
+            part.HaloB = selected.Contains(CreatureElementKind.Node, beam.NodeB);
+            part.Selected = selected.Contains(CreatureElementKind.Beam, beam.Id);
             part.Placing = marks.Placing.Beams.Contains(beam.Id) ? PlacingMark.Takes
                 : marks.Placing.RefusedBeams.Contains(beam.Id) ? PlacingMark.Refuses
                 : PlacingMark.None;
@@ -485,9 +485,9 @@ public partial class CreatureParts : Node2D
             part.Shortest = (float)Piston.ShortestLength(piston, built, Travel.HubRadii);
             part.Longest = (float)Piston.LongestLength(piston, built, Travel.HubRadii);
             part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Piston, nodeA, nodeB, shape.JointMotors);
-            part.HaloA = selected.Nodes.Contains(piston.NodeA);
-            part.HaloB = selected.Nodes.Contains(piston.NodeB);
-            part.Selected = selected.Pistons.Contains(piston.Id);
+            part.HaloA = selected.Contains(CreatureElementKind.Node, piston.NodeA);
+            part.HaloB = selected.Contains(CreatureElementKind.Node, piston.NodeB);
+            part.Selected = selected.Contains(CreatureElementKind.Piston, piston.Id);
         }
     }
 
@@ -512,9 +512,9 @@ public partial class CreatureParts : Node2D
             part.CoveredA = LinkCover(shape, nodes, link, nodeA.Id);
             part.CoveredB = LinkCover(shape, nodes, link, nodeB.Id);
             part.Danger = marks.ShowsTooShort && CreatureReadiness.IsTooShort(CreatureElementKind.Spring, nodeA, nodeB, shape.JointMotors);
-            part.HaloA = selected.Nodes.Contains(spring.NodeA);
-            part.HaloB = selected.Nodes.Contains(spring.NodeB);
-            part.Selected = selected.Springs.Contains(spring.Id);
+            part.HaloA = selected.Contains(CreatureElementKind.Node, spring.NodeA);
+            part.HaloB = selected.Contains(CreatureElementKind.Node, spring.NodeB);
+            part.Selected = selected.Contains(CreatureElementKind.Spring, spring.Id);
         }
     }
 
@@ -530,7 +530,7 @@ public partial class CreatureParts : Node2D
             var part = PartFor(_sensors, sensor.Id);
             var beam = beams[sensor.BeamId];
             PlaceSensor(part, shape, nodes[beam.NodeA], nodes[beam.NodeB], sensor.Kind, sensor.Aim, marks.WeightOffset(sensor.Id));
-            part.Selected = marks.Selected.Sensors.Contains(sensor.Id);
+            part.Selected = marks.Selected.Contains(CreatureElementKind.Sensor, sensor.Id);
         }
 
         // The sensor a tray drag would place, or a sensor drag would move, on the beam under the finger.

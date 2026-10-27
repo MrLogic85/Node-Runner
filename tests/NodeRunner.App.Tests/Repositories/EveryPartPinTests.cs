@@ -96,7 +96,8 @@ public sealed class EveryPartPinTests
     // sliders, so the share code keeps it exactly. Every setting is off its default, so a refactor
     // that drops one and falls back to the default fails. Node 1 and Beam 8 are named; the rest get
     // their kind's default name.
-    private static CreatureDef Creature() =>
+    /// <summary>One creature holding every part kind, with joints that stack several parts; Build tests reuse it.</summary>
+    public static CreatureDef Creature() =>
         new(
             nodes:
             [
