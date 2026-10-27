@@ -48,6 +48,13 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void RedoRequestedEventHandler();
 
+    /// <summary>A grid size picked in the grid menu: its index in <c>BuildGridDef.SizesCm</c>.</summary>
+    [Signal]
+    public delegate void GridSizePickedEventHandler(int index);
+
+    [Signal]
+    public delegate void SnapToGridToggledEventHandler(bool on);
+
     [Signal]
     public delegate void ResetTrainingRequestedEventHandler();
 
@@ -119,10 +126,12 @@ public partial class BuildScreen : Control
     [Signal]
     public delegate void AdvancedSettingsToggledEventHandler(bool open);
 
-    /// <summary>False while the overflow menu is open; it takes Android Back itself.</summary>
-    public bool CanTakeBack => !Toolbar.Menu.Visible;
+    /// <summary>False while the overflow or grid menu is open; it takes Android Back itself.</summary>
+    public bool CanTakeBack => !Toolbar.Menu.Visible && !GridMenu.Visible;
 
     private UiToolbar Toolbar => GetNode<UiToolbar>("%Toolbar");
+
+    private UiMenu GridMenu => GetNode<UiMenu>("%GridMenu");
 
     /// <summary>Binds the creation being built: the canvas edits it and the panels show it.</summary>
     public void Setup(BuildViewModel build)
@@ -161,6 +170,7 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%Unlock").Activated += () => EmitSignal(SignalName.UnlockRequested);
         GetNode<UiButton>("%Undo").Activated += () => EmitSignal(SignalName.UndoRequested);
         GetNode<UiButton>("%Redo").Activated += () => EmitSignal(SignalName.RedoRequested);
+        BindGridMenu();
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuResetTraining"), () => EmitSignal(SignalName.ResetTrainingRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuCopyCreation"), () => EmitSignal(SignalName.CopyCreationRequested));
         BindMenuItem(toolbar, GetNode<UiMenuActionItem>("%MenuShareBuild"), () => EmitSignal(SignalName.ShareBuildRequested));
@@ -199,6 +209,10 @@ public partial class BuildScreen : Control
     public override void _ExitTree()
     {
         UnsubscribeFromPresentation();
+        if (IsInstanceValid(GridMenu))
+        {
+            GridMenu.Close();
+        }
     }
 
     // The part name field holds a translated default as editable text, which LineEdit never
@@ -221,6 +235,18 @@ public partial class BuildScreen : Control
             toolbar.CloseMenu();
             action();
         };
+
+    // The grid menu stays open while the size or snap changes, so both can be set in one visit; a
+    // tap outside it or Back closes it.
+    private void BindGridMenu()
+    {
+        var button = GetNode<UiButton>("%Grid");
+        button.Activated += () => GridMenu.ToggleUnder(button);
+        var sizes = GetNode<UiSegmentedSwitch>("%GridSizes");
+        sizes.Segments = [.. BuildGridSizes.Labels.Select(label => new UiSegment { TextSource = UiTextTranslation.Source(label) })];
+        sizes.SelectionChanged += index => EmitSignal(SignalName.GridSizePicked, index);
+        GetNode<UiToggleRow>("%SnapRow").Toggled += on => EmitSignal(SignalName.SnapToGridToggled, on);
+    }
 
     private void BindTool(UiButton button, BuildTool tool) =>
         button.Activated += () => EmitSignal(SignalName.ToolRequested, (int)tool);
@@ -419,6 +445,9 @@ public partial class BuildScreen : Control
         GetNode<UiButton>("%Unlock").Visible = locked;
         GetNode<UiButton>("%Undo").Disabled = !presentation.CanUndo;
         GetNode<UiButton>("%Redo").Disabled = !presentation.CanRedo;
+        GetNode<UiButton>("%Grid").IconId = presentation.SnapToGrid ? UiIconId.Grid : UiIconId.GridOff;
+        GetNode<UiSegmentedSwitch>("%GridSizes").SelectedIndex = presentation.GridSizeIndex;
+        GetNode<UiToggleRow>("%SnapRow").On = presentation.SnapToGrid;
         GetNode<UiMenuActionItem>("%MenuStats").Visible = presentation.IsTrained;
         GetNode<UiMenuActionItem>("%MenuResetTraining").Visible = presentation.IsTrained;
         GetNode<UiMenuActionItem>("%MenuCopyCreation").Visible = presentation.CanCopy;

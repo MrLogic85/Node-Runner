@@ -19,6 +19,10 @@
 [ext_resource type="PackedScene" uid="uid://kk3td5f4uebc" path="res://scenes/ui/UiWorldView.tscn" id="41_world_view"]
 [ext_resource type="Script" path="res://src/ui/lib/UiHintCard.cs" id="42_hint_card"]
 [ext_resource type="Script" uid="uid://bmmmlxr5268v7" path="res://src/ui/lib/UiExpandSection.cs" id="43_expand_section"]
+[ext_resource type="Script" uid="uid://brbdaifjy8lyi" path="res://src/ui/lib/UiMenu.cs" id="45_menu"]
+[ext_resource type="Script" uid="uid://mn6dj7hl2yd0" path="res://src/ui/lib/UiLevelLayer.cs" id="46_level_layer"]
+[ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="47_switch"]
+[ext_resource type="Script" uid="uid://b4a8p7be0b3pe" path="res://src/ui/lib/UiToggleRow.cs" id="48_toggle_row"]
 [ext_resource type="Script" path="res://src/ui/lib/UiPickList.cs" id="44_pick_list"]
 
 [node name="BuildScreen" type="Control"]
@@ -67,7 +71,17 @@ IconId = 15
 Kind = 1
 Selected = true
 
-[node name="Undo" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="2"]
+[node name="Grid" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+tooltip_text = "Grid"
+mouse_filter = 1
+script = ExtResource("5_button")
+IconId = 75
+Kind = 1
+
+[node name="Undo" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="3"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
@@ -78,7 +92,7 @@ script = ExtResource("5_button")
 IconId = 65
 Kind = 1
 
-[node name="Redo" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="3"]
+[node name="Redo" type="Button" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent" index="4"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
@@ -687,6 +701,52 @@ IconId = 20
 Title = "Handles"
 Help = "Move, rotate or scale a group."
 ShowHandle = false
+
+[node name="GridMenuLayer" type="CanvasLayer" parent="."]
+script = ExtResource("46_level_layer")
+
+[node name="GridMenu" type="Container" parent="GridMenuLayer"]
+unique_name_in_owner = true
+visible = false
+size_flags_horizontal = 0
+mouse_filter = 0
+script = ExtResource("45_menu")
+Dismissible = true
+
+[node name="Padding" type="MarginContainer" parent="GridMenuLayer/GridMenu"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="Rows" type="VBoxContainer" parent="GridMenuLayer/GridMenu/Padding"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SizeRow" type="VBoxContainer" parent="GridMenuLayer/GridMenu/Padding/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="GridLabel" type="Label" parent="GridMenuLayer/GridMenu/Padding/Rows/SizeRow"]
+layout_mode = 2
+text = "Grid"
+script = ExtResource("12_label")
+TextStyle = 12
+TextColor = 8
+
+[node name="GridSizes" type="HBoxContainer" parent="GridMenuLayer/GridMenu/Padding/Rows/SizeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("47_switch")
+KeepCase = true
+
+[node name="SnapRow" type="Container" parent="GridMenuLayer/GridMenu/Padding/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("48_toggle_row")
+On = false
+LabelText = "Snap to grid"
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

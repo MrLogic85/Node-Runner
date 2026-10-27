@@ -59,6 +59,45 @@ public sealed class BuildAutosaveTests
         autosave.HasUnsavedEdits.ShouldBeTrue();
     }
 
+    // A grid change saves the grid alone: the creature and its training stay as they were saved.
+    [Fact]
+    public void Save_WritesAGridChange_WithoutTheCreature_AndFailsWhenTheCreationIsGone()
+    {
+        var pair = new CreatureDef(
+            [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(20, 0))], [], [], [new PistonDef(3, 1, 2)]);
+        var trained = new CreationDef(Guid.NewGuid(), "Pair", pair, TestTraining.StateFor(pair, 4));
+        var (repository, build, autosave) = Open(trained);
+        var changes = 0;
+        autosave.Changed += (_, _) => changes++;
+
+        build.UseGrid(new BuildGridDef(25, snap: true));
+        changes.ShouldBe(1);
+        autosave.HasUnsavedEdits.ShouldBeTrue();
+        autosave.Save().ShouldBeTrue();
+
+        autosave.HasUnsavedEdits.ShouldBeFalse();
+        repository.Get(trained.Id).ShouldBe(trained with { Grid = new BuildGridDef(25, snap: true) });
+
+        repository.Delete(trained.Id);
+        build.UseGrid(new BuildGridDef(100, snap: false));
+        autosave.Save().ShouldBeFalse();
+        autosave.HasUnsavedEdits.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Save_WritesAnEditAndAGridChange_BothTogether()
+    {
+        var (repository, build, autosave) = Open(TwoNodeCreation());
+
+        build.MoveNode(1, new Vector2D(5, 5));
+        build.UseGrid(new BuildGridDef(100, snap: true));
+        autosave.Save().ShouldBeTrue();
+
+        var saved = repository.Get(autosave.CreationId).ShouldNotBeNull();
+        saved.Creature.Nodes[0].Position.ShouldBe(new Vector2D(5, 5));
+        saved.Grid.ShouldBe(new BuildGridDef(100, snap: true));
+    }
+
     [Fact]
     public void ShouldDiscardOnLeave_OnlyForANewCreationWithNothingDrawn()
     {
@@ -79,6 +118,7 @@ public sealed class BuildAutosaveTests
         autosave.Dispose();
 
         build.MoveNode(1, new Vector2D(5, 5));
+        build.UseGrid(new BuildGridDef(100, snap: true));
 
         autosave.HasUnsavedEdits.ShouldBeFalse();
     }

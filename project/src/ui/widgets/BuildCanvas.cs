@@ -753,7 +753,7 @@ public partial class BuildCanvas : Node2D
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
     {
-        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote) or nameof(BuildViewModel.CanvasNotes) or nameof(BuildViewModel.PickedPart) or nameof(BuildViewModel.PickedLink))
+        if (eventArgs.PropertyName is nameof(BuildViewModel.SelectedNodeCount) or nameof(BuildViewModel.PlacementNote) or nameof(BuildViewModel.CanvasNotes) or nameof(BuildViewModel.PickedPart) or nameof(BuildViewModel.PickedLink) or nameof(BuildViewModel.Grid))
         {
             QueueRedraw();
         }

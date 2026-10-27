@@ -27,6 +27,24 @@ public sealed class BuildEditWorkflowTests
         Should.Throw<ArgumentException>(() => workflow.PersistEdit(Guid.Empty, edited));
     }
 
+    [Fact]
+    public void PersistGrid_SavesOnlyTheGrid_AndReturnsNullForAMissingCreation()
+    {
+        var repository = new InMemoryCreationRepository();
+        var original = new CreationDef(Guid.NewGuid(), "Original", Creature(x: 0), TestTraining.StateFor(Creature(x: 0), 6));
+        repository.Save(original);
+        var workflow = new BuildEditWorkflow(new CreationUpdateCoordinator(repository));
+        var grid = new BuildGridDef(25, snap: true);
+
+        var result = workflow.PersistGrid(original.Id, grid);
+
+        result.ShouldBe(original with { Grid = grid });
+        repository.Get(original.Id).ShouldBe(original with { Grid = grid });
+        workflow.PersistGrid(Guid.NewGuid(), grid).ShouldBeNull();
+        repository.List().Count.ShouldBe(1);
+        Should.Throw<ArgumentException>(() => workflow.PersistGrid(Guid.Empty, grid));
+    }
+
     private static CreatureDef Creature(double x) =>
         new(
             [new NodeDef(1, new Vector2D(x, 0)), new NodeDef(2, new Vector2D(x + 2, 0))],

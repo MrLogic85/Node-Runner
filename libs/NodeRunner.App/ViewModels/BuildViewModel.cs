@@ -91,12 +91,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     // On each part that makes a locked Creation refuse Copy or Delete.
     private static readonly UiText _wouldChangeNetworkNote = UiText.Plain("Locked: would change the network");
 
-    /// <summary>The grid's cell size in canvas units, from the open Creation (<see cref="UseGrid"/>).</summary>
-    public double GridStep { get; private set; } = Metres.WorldUnitsFromCentimetres(BuildGridDef.DefaultSizeCm);
-
-    /// <summary>Whether placed and moved joints land on the grid (<see cref="UseGrid"/>).</summary>
-    public bool SnapToGrid { get; private set; }
-
     public BuildViewModel(CreatureBuilder? builder = null)
     {
         _builder = builder ?? new CreatureBuilder();
@@ -661,17 +655,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     };
 
     /// <summary>
-    /// Draws the grid at <paramref name="grid"/>'s size and snaps joints to it when it says so. It
-    /// moves no placed joint: snapping applies when a joint is next placed or moved.
-    /// </summary>
-    public void UseGrid(BuildGridDef grid)
-    {
-        ArgumentNullException.ThrowIfNull(grid);
-        GridStep = Metres.WorldUnitsFromCentimetres(grid.SizeCm);
-        SnapToGrid = grid.Snap;
-    }
-
-    /// <summary>
     /// Places a new node, moved inside <see cref="BuildArea"/> and onto the grid when
     /// <see cref="SnapToGrid"/>, and returns its id. A joint has no network ports, so a locked
     /// Creation places one too.
@@ -692,23 +675,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     private Vector2D Placed(Vector2D position, double radius) =>
         SnapToGrid ? OnGrid(position, radius) : BuildArea.Clamp(position, radius);
-
-    // The grid point nearest position that keeps a ring of radius inside BuildArea. One always
-    // exists: the area's middle is on every grid, and the largest ring leaves room around it.
-    private Vector2D OnGrid(Vector2D position, double radius) => new(
-        OnGridLine(position.X, BuildArea.Min.X + radius, BuildArea.Max.X - radius),
-        OnGridLine(position.Y, BuildArea.Min.Y + radius, BuildArea.Max.Y - radius));
-
-    private double OnGridLine(double coordinate, double min, double max)
-    {
-        var line = Math.Clamp(
-            Math.Round(coordinate / GridStep, MidpointRounding.AwayFromZero),
-            Math.Ceiling(min / GridStep),
-            Math.Floor(max / GridStep));
-
-        // Adding 0 turns −0 into 0, as CreatureBuilder.OnWholeUnits does.
-        return (line * GridStep) + 0.0;
-    }
 
     /// <summary>
     /// The settings the panel shows for the selection: one part's own, or those every

@@ -13,7 +13,7 @@ public enum UiIconId
     PartBeam, PartBrake, PartCore, PartFuel, PartGenerator, PartCamera, PartNode, PartPiston,
     PartServo, PartSpring, PartStepper, PartVelocity, PartWheel, PartWing, Distance, TopSpeed, Elevation,
     MapFlat, MapHills, MapStairs, PartAccelerometer, ChevronLeft, Sort, Parts, Undo, Redo, PartPulse, PartTouch, NetworkMark,
-    Share, Paste, PartRubber, PartAngleSensor
+    Share, Paste, PartRubber, PartAngleSensor, Grid, GridOff
 }
 
 /// <summary>The only permitted display sizes for canonical icons.</summary>
@@ -229,6 +229,8 @@ public static class UiIcons
         UiIconId.NetworkMark => Mark("network"),
         UiIconId.Share => Icon("share"),
         UiIconId.Paste => Icon("paste"),
+        UiIconId.Grid => Icon("grid"),
+        UiIconId.GridOff => Icon("grid_off"),
         _ => throw new ArgumentOutOfRangeException(nameof(icon), icon, "Unknown UI icon."),
     };
 

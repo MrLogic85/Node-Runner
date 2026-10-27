@@ -30,6 +30,7 @@ public partial class UiMenu : Container, IUiClipping
     private Vector2 _followOffset;
     private bool _followOpensUpward = true;
     private ScrollContainer? _followScroll;
+    private Control? _underAnchor;
     private int _pressedIndex = -1;
     private bool _pressing;
     private bool _dragScrolling;
@@ -97,6 +98,10 @@ public partial class UiMenu : Container, IUiClipping
         SetProcess(false);
         ApplyItemSizes();
         QueueLayout();
+        if (!Engine.IsEditorHint())
+        {
+            Resized += FollowUnder;
+        }
     }
 
     public void Close()
@@ -106,6 +111,7 @@ public partial class UiMenu : Container, IUiClipping
             return;
         }
 
+        _underAnchor = null;
         StopFollowing();
         Hide();
         EmitSignal(SignalName.Closed);
@@ -370,6 +376,33 @@ public partial class UiMenu : Container, IUiClipping
             UiSurfaceContracts.FrameSize.Flush,
             glow: true);
         style.Draw(GetCanvasItem(), new Rect2(Vector2.Zero, Size));
+    }
+
+    /// <summary>
+    /// Opens this menu under <paramref name="anchor"/>, right edges aligned, as a toolbar button's
+    /// menu; it closes it instead when it is open. It follows the anchor as <see cref="Follow"/> does.
+    /// </summary>
+    public void ToggleUnder(Control anchor)
+    {
+        ArgumentNullException.ThrowIfNull(anchor);
+        if (Visible)
+        {
+            Close();
+            return;
+        }
+
+        _underAnchor = anchor;
+        Show();
+        FollowUnder();
+    }
+
+    // Placed again on every resize: the offset that aligns the right edges depends on the width.
+    private void FollowUnder()
+    {
+        if (_underAnchor is { } anchor && Visible)
+        {
+            Follow(anchor, Vector2.One, new Vector2(-Size.X, UiSize.Space.S1));
+        }
     }
 
     /// <summary>

@@ -128,6 +128,8 @@ public partial class BuildHost : Control, IRoutedScene
         _buildScreen.AdvancedSettingsToggled += open => Build.AdvancedSettingsOpen = open;
         _buildScreen.UndoRequested += Build.Undo;
         _buildScreen.RedoRequested += Build.Redo;
+        _buildScreen.GridSizePicked += Build.ChooseGridSize;
+        _buildScreen.SnapToGridToggled += Build.ChooseSnapToGrid;
         _buildScreen.StartTrainingRequested += StartTraining;
         _buildScreen.BackRequested += BackFromBuildScreen;
         _buildScreen.CreationNameChanged += RenameActiveCreation;
