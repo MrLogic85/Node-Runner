@@ -407,6 +407,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(PickedLink));
     }
 
+    /// <summary>Every part, each kind in its list order, as <see cref="CreatureBuilder.Parts"/>.</summary>
+    public IReadOnlyList<IPartDef> Parts => _builder.Parts;
+
     public IReadOnlyList<NodeDef> Nodes => _builder.Nodes;
 
     public IReadOnlyList<BeamDef> Beams => _builder.Beams;

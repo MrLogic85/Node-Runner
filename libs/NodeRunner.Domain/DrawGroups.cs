@@ -55,6 +55,20 @@ public sealed class DrawGroups
     public static DrawGroups Of(IEnumerable<NodeDef> nodes, IEnumerable<LinkRef> links) =>
         new(nodes.ToDictionary(node => node.Id, node => node.Position), links);
 
+    /// <summary>
+    /// The id <paramref name="part"/>'s draw group is found by: a joint's own, a joint part's joint,
+    /// a link's own, or a sensor's beam.
+    /// </summary>
+    public static int OwnerOf(IPartDef part) => part switch
+    {
+        NodeDef node => node.Id,
+        IJointPartDef jointPart => jointPart.NodeId,
+        BeamDef or PistonDef or SpringDef => part.Id,
+        SensorDef sensor => sensor.BeamId,
+        null => throw new ArgumentNullException(nameof(part)),
+        _ => throw new ArgumentOutOfRangeException(nameof(part), part.PartKind, "Every part kind draws in a group."),
+    };
+
     /// <summary>The group of a link and the sensor on it.</summary>
     public int? Link(int linkId) => _links.TryGetValue(linkId, out var group) ? group : null;
 

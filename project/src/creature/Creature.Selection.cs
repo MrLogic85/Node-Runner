@@ -120,26 +120,73 @@ public partial class Creature
     /// </summary>
     public Vector2 PartAnchor(CreatureElementSelection selection)
     {
-        ArgumentNullException.ThrowIfNull(selection);
-        return selection.Kind switch
+        if (_parts.TryOf(selection, out var entry))
         {
-            CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Beam => _beamBodies[Definition!.BeamIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == selection.Id)].GlobalPosition,
-            CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.VelocityMotor => _velocityMotorVisuals[Definition!.VelocityMotorIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Brake => _brakeVisuals[Definition!.BrakeIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Piston => Middle(_pistons[Definition!.PistonIndexOf(selection.Id)].NodeA, _pistons[Definition.PistonIndexOf(selection.Id)].NodeB),
-            CreatureElementKind.Spring => Middle(_springVisuals[Definition!.SpringIndexOf(selection.Id)].NodeA, _springVisuals[Definition.SpringIndexOf(selection.Id)].NodeB),
-            CreatureElementKind.Wheel => _wheelVisuals[Definition!.WheelIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.TouchSensor => _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(selection.Id)].NodeId)].GlobalPosition,
-            CreatureElementKind.Rubber => _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(selection.Id)].NodeId)].GlobalPosition,
-            CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(selection.Id)].GlobalPosition,
-            CreatureElementKind.Stepper => _stepperVisuals[Definition!.StepperIndexOf(selection.Id)].GlobalPosition,
-            _ => throw new ArgumentOutOfRangeException(nameof(selection), selection.Kind, "Not a part of a creature."),
-        };
+            return entry.Value.Anchor();
+        }
+
+        GD.PushError($"No {selection.Kind} {selection.Id} to name; its name points to the creature.");
+        return GlobalPosition;
+    }
+
+    // A part's visual, which draws it and its selection, none for a Touch sensor or Rubber,
+    // which their joint draws, and where its name points.
+    private readonly record struct PartView(PartVisual? Visual, Func<Vector2> Anchor);
+
+    // Every part by its id. The typed arrays line up with the definition's lists.
+    private void IndexParts(CreatureDef definition)
+    {
+        _parts = new PartIndex<PartView>();
+        IndexAtVisual(definition.Nodes, _nodeVisuals);
+        IndexAtVisual(definition.Sensors, _sensorVisuals);
+        IndexAtVisual(definition.Servos, _servoVisuals);
+        IndexAtVisual(definition.VelocityMotors, _velocityMotorVisuals);
+        IndexAtVisual(definition.Brakes, _brakeVisuals);
+        IndexAtVisual(definition.AngleSensors, _angleSensorVisuals);
+        IndexAtVisual(definition.Steppers, _stepperVisuals);
+        IndexAtVisual(definition.Wheels, _wheelVisuals);
+        for (var i = 0; i < definition.Beams.Count; i++)
+        {
+            var body = _beamBodies[i];
+            _parts.Add(definition.Beams[i], new PartView(_beamVisuals[i], () => body.GlobalPosition));
+        }
+
+        for (var i = 0; i < definition.Pistons.Count; i++)
+        {
+            var piston = _pistons[i];
+            _parts.Add(definition.Pistons[i], new PartView(_pistonVisuals[i], () => Middle(piston.NodeA, piston.NodeB)));
+        }
+
+        for (var i = 0; i < definition.Springs.Count; i++)
+        {
+            var spring = _springVisuals[i];
+            _parts.Add(definition.Springs[i], new PartView(spring, () => Middle(spring.NodeA, spring.NodeB)));
+        }
+
+        foreach (var jointPart in definition.TouchSensors.Concat<IJointPartDef>(definition.Rubbers))
+        {
+            var joint = _nodeVisuals[definition.NodeIndexOf(jointPart.NodeId)];
+            _parts.Add(jointPart, new PartView(null, () => joint.GlobalPosition));
+        }
+
+        // PartIndexTests keeps every part list here; a part still left out is logged, shown unselectable
+        // and named at the creature, never thrown mid-build.
+        if (_parts.Missing(definition.Parts) is { Count: > 0 } missing)
+        {
+            GD.PushError($"Not indexed: {string.Join(", ", missing)}.");
+        }
 
         static Vector2 Middle(Node2D a, Node2D b) => (a.GlobalPosition + b.GlobalPosition) / 2;
+    }
+
+    private void IndexAtVisual<TPart>(IReadOnlyList<TPart> parts, IReadOnlyList<PartVisual> visuals)
+        where TPart : IPartDef
+    {
+        for (var i = 0; i < parts.Count; i++)
+        {
+            var visual = visuals[i];
+            _parts.Add(parts[i], new PartView(visual, () => visual.GlobalPosition));
+        }
     }
 
     /// <summary>Marks the <paramref name="parts"/> selected, a stacked joint's all at once; none with an empty list.</summary>
@@ -153,9 +200,9 @@ public partial class Creature
     // A shadow never shows a selection, so its parts stay on their unselected layers.
     private void ApplySelection()
     {
-        foreach (var visual in _nodeVisuals.Concat<PartVisual>(_beamVisuals).Concat(_sensorVisuals).Concat(_servoVisuals).Concat(_velocityMotorVisuals).Concat(_brakeVisuals).Concat(_stepperVisuals).Concat(_angleSensorVisuals).Concat(_pistonVisuals).Concat(_springVisuals))
+        foreach (var (_, view) in _parts.Entries)
         {
-            visual.Selected = false;
+            view.Visual?.Selected = false;
         }
 
         foreach (var visual in _nodeVisuals)
@@ -167,48 +214,40 @@ public partial class Creature
 
         var selection = _isShadow ? [] : _selection;
         ApplyDrawGroups(selection);
-        foreach (var part in selection)
+        foreach (var selected in selection)
         {
-            // A Touch sensor's mark is its joint's ring outside the cushion; the joint's own stays unselected.
-            if (part.Kind == CreatureElementKind.TouchSensor)
+            if (!_parts.TryOf(selected, out var entry))
             {
-                _nodeVisuals[Definition!.NodeIndexOf(Definition.TouchSensors[Definition.TouchSensorIndexOf(part.Id)].NodeId)].TouchSelected = true;
+                GD.PushError($"No {selected.Kind} {selected.Id} to mark selected.");
                 continue;
             }
 
-            // A Rubber's mark is its skin in halo, drawn by its joint.
-            if (part.Kind == CreatureElementKind.Rubber)
+            var (part, view) = entry;
+            switch (part)
             {
-                _nodeVisuals[Definition!.NodeIndexOf(Definition.Rubbers[Definition.RubberIndexOf(part.Id)].NodeId)].SkinSelected = true;
-                continue;
-            }
+                // A Touch sensor's mark is its joint's ring outside the cushion; the joint's own stays unselected.
+                case TouchSensorDef touch:
+                    JointVisualOf(touch).TouchSelected = true;
+                    break;
 
-            // A Wheel's joint draws its mark with the hub, over the links.
-            if (part.Kind == CreatureElementKind.Wheel)
-            {
-                _nodeVisuals[Definition!.NodeIndexOf(Definition.Wheels[Definition.WheelIndexOf(part.Id)].NodeId)].WheelSelected = true;
-                continue;
-            }
+                // A Rubber's mark is its skin in halo, drawn by its joint.
+                case RubberDef rubber:
+                    JointVisualOf(rubber).SkinSelected = true;
+                    break;
 
-            VisualOf(part).Selected = true;
+                // A Wheel's joint draws its mark with the hub, over the links.
+                case WheelDef wheel:
+                    JointVisualOf(wheel).WheelSelected = true;
+                    break;
+
+                default:
+                    view.Visual!.Selected = true;
+                    break;
+            }
         }
     }
 
-    private PartVisual VisualOf(CreatureElementSelection part) =>
-        part.Kind switch
-        {
-            CreatureElementKind.Node => _nodeVisuals[Definition!.NodeIndexOf(part.Id)],
-            CreatureElementKind.Beam => _beamVisuals[Definition!.BeamIndexOf(part.Id)],
-            CreatureElementKind.Sensor => _sensorVisuals[Definition!.Sensors.ToList().FindIndex(sensor => sensor.Id == part.Id)],
-            CreatureElementKind.Servo => _servoVisuals[Definition!.ServoIndexOf(part.Id)],
-            CreatureElementKind.VelocityMotor => _velocityMotorVisuals[Definition!.VelocityMotorIndexOf(part.Id)],
-            CreatureElementKind.Brake => _brakeVisuals[Definition!.BrakeIndexOf(part.Id)],
-            CreatureElementKind.AngleSensor => _angleSensorVisuals[Definition!.AngleSensorIndexOf(part.Id)],
-            CreatureElementKind.Stepper => _stepperVisuals[Definition!.StepperIndexOf(part.Id)],
-            CreatureElementKind.Piston => _pistonVisuals[Definition!.PistonIndexOf(part.Id)],
-            CreatureElementKind.Spring => _springVisuals[Definition!.SpringIndexOf(part.Id)],
-            _ => throw new ArgumentOutOfRangeException(nameof(part), part.Kind, "Not a part of a creature."),
-        };
+    private NodeVisual JointVisualOf(IJointPartDef part) => _nodeVisuals[Definition!.NodeIndexOf(part.NodeId)];
 
     // Each part in its draw group, with what belongs with the selection raised as in Build's CreatureParts.
     private void ApplyDrawGroups(IReadOnlyList<CreatureElementSelection> selection)
@@ -219,69 +258,9 @@ public partial class Creature
         }
 
         _raised = groups.Raised(selection, definition.HingeParts, definition.Wheels, definition.TouchSensors, definition.Rubbers);
-        for (var i = 0; i < _nodeVisuals.Length; i++)
+        foreach (var (part, view) in _parts.Entries)
         {
-            var id = definition.Nodes[i].Id;
-            _nodeVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
-        }
-
-        for (var i = 0; i < _servoVisuals.Length; i++)
-        {
-            var id = definition.Servos[i].NodeId;
-            _servoVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
-        }
-
-        for (var i = 0; i < _velocityMotorVisuals.Length; i++)
-        {
-            var id = definition.VelocityMotors[i].NodeId;
-            _velocityMotorVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
-        }
-
-        for (var i = 0; i < _brakeVisuals.Length; i++)
-        {
-            var id = definition.Brakes[i].NodeId;
-            _brakeVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
-        }
-
-        for (var i = 0; i < _stepperVisuals.Length; i++)
-        {
-            var id = definition.Steppers[i].NodeId;
-            _stepperVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
-        }
-
-        for (var i = 0; i < _angleSensorVisuals.Length; i++)
-        {
-            var id = definition.AngleSensors[i].NodeId;
-            _angleSensorVisuals[i].Place(groups, id, _raised.Joints.Contains(id));
-        }
-
-        for (var i = 0; i < _wheelVisuals.Length; i++)
-        {
-            var id = definition.Wheels[i].NodeId;
-            _wheelVisuals[i].Place(groups, id, _raised.Wheels.Contains(id));
-        }
-
-        for (var i = 0; i < _beamVisuals.Length; i++)
-        {
-            var id = definition.Beams[i].Id;
-            _beamVisuals[i].Place(groups, id, _raised.Links.Contains(id));
-        }
-
-        for (var i = 0; i < _pistonVisuals.Length; i++)
-        {
-            var id = definition.Pistons[i].Id;
-            _pistonVisuals[i].Place(groups, id, _raised.Links.Contains(id));
-        }
-
-        for (var i = 0; i < _springVisuals.Length; i++)
-        {
-            var id = definition.Springs[i].Id;
-            _springVisuals[i].Place(groups, id, _raised.Links.Contains(id));
-        }
-
-        for (var i = 0; i < _sensorVisuals.Length; i++)
-        {
-            _sensorVisuals[i].Place(groups, definition.Sensors[i].BeamId, _raised.Sensor(definition.Sensors[i]));
+            view.Visual?.Place(groups, part, _raised);
         }
     }
 }

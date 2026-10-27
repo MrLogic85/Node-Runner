@@ -28,6 +28,9 @@ public partial class CreatureParts : Node2D
     private readonly Dictionary<int, PistonPart> _pistons = [];
     private readonly Dictionary<int, SpringPart> _springs = [];
     private readonly Dictionary<int, SensorPart> _sensors = [];
+
+    // What each visual shows: a part, or a dragged joint part's preview on a joint's slot.
+    private readonly Dictionary<PartVisual, Shown> _shown = [];
     private readonly HatchPart _hatch = new();
     private readonly SensorPart _previewSensor = new() { Visible = false };
     private float _pixelScale;
@@ -47,7 +50,7 @@ public partial class CreatureParts : Node2D
     public void Show(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        Show(new CreatureShape(creature.Nodes, creature.Beams, creature.Servos, creature.Pistons, creature.Springs, creature.Sensors, creature.Wheels, creature.TouchSensors, creature.Rubbers, creature.VelocityMotors, creature.Brakes, creature.AngleSensors, creature.Steppers), CreatureMarks.None);
+        Show(new CreatureShape(creature.Parts), CreatureMarks.None);
     }
 
     /// <summary>
@@ -141,7 +144,7 @@ public partial class CreatureParts : Node2D
 
         if (marks.PreviewNodeOf(BuildPart.Wheel) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
-            ShowWheelPart(PartFor(_wheels, -previewNode), node, WheelDef.DefaultRadius, loose: false);
+            ShowWheelPart(PreviewFor(_wheels, previewNode, JointSlot.Wheel), node, WheelDef.DefaultRadius, loose: false);
         }
     }
 
@@ -166,7 +169,7 @@ public partial class CreatureParts : Node2D
 
         if (marks.PreviewNodeOf(BuildPart.Servo) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
-            var part = PartFor(_servos, -previewNode);
+            var part = PreviewFor(_servos, previewNode, JointSlot.HingePart);
             var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
             ShowServoPart(
                 part,
@@ -194,7 +197,7 @@ public partial class CreatureParts : Node2D
         if (marks.PreviewNodeOf(BuildPart.VelocityMotor) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
-            ShowVelocityMotorPart(PartFor(_velocityMotors, -previewNode), shape, nodes, node.Id, fixedId, targetId, selected: true);
+            ShowVelocityMotorPart(PreviewFor(_velocityMotors, previewNode, JointSlot.HingePart), shape, nodes, node.Id, fixedId, targetId, selected: true);
         }
     }
 
@@ -232,7 +235,7 @@ public partial class CreatureParts : Node2D
         if (marks.PreviewNodeOf(BuildPart.Brake) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
-            ShowBrakePart(PartFor(_brakes, -previewNode), shape, nodes, node.Id, fixedId, targetId, locked: false, selected: true);
+            ShowBrakePart(PreviewFor(_brakes, previewNode, JointSlot.HingePart), shape, nodes, node.Id, fixedId, targetId, locked: false, selected: true);
         }
     }
 
@@ -271,7 +274,7 @@ public partial class CreatureParts : Node2D
         if (marks.PreviewNodeOf(BuildPart.Stepper) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
-            ShowStepperPart(PartFor(_steppers, -previewNode), shape, nodes, node.Id, fixedId, targetId, StepperDef.DefaultStepsPerTurn, selected: true, Cushioned(shape, marks, node.Id));
+            ShowStepperPart(PreviewFor(_steppers, previewNode, JointSlot.HingePart), shape, nodes, node.Id, fixedId, targetId, StepperDef.DefaultStepsPerTurn, selected: true, Cushioned(shape, marks, node.Id));
         }
     }
 
@@ -317,7 +320,7 @@ public partial class CreatureParts : Node2D
         if (marks.PreviewNodeOf(BuildPart.AngleSensor) is { } previewNode && nodes.TryGetValue(previewNode, out var node))
         {
             var (fixedId, targetId) = JointMotor.DefaultSides(LinksAtNode(shape, previewNode), shape.Wheels.FirstOrDefault(wheel => wheel.NodeId == previewNode));
-            ShowAngleSensorPart(PartFor(_angleSensors, -previewNode), shape, nodes, marks, node.Id, fixedId, targetId, selected: true);
+            ShowAngleSensorPart(PreviewFor(_angleSensors, previewNode, JointSlot.HingePart), shape, nodes, marks, node.Id, fixedId, targetId, selected: true);
         }
     }
 
@@ -558,64 +561,16 @@ public partial class CreatureParts : Node2D
     {
         var groups = DrawGroups.Of(shape.Nodes, Links(shape));
         var raised = marks.Raised;
-        foreach (var (id, part) in _joints)
+        foreach (var (visual, shown) in _shown)
         {
-            part.Place(groups, id, raised.Joints.Contains(id));
-        }
-
-        var servoNodes = shape.Servos.ToDictionary(servo => servo.Id, servo => servo.NodeId);
-        foreach (var (id, part) in _servos)
-        {
-            var nodeId = id < 0 ? -id : servoNodes[id];
-            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
-        }
-
-        var velocityMotorNodes = shape.VelocityMotors.ToDictionary(motor => motor.Id, motor => motor.NodeId);
-        foreach (var (id, part) in _velocityMotors)
-        {
-            var nodeId = id < 0 ? -id : velocityMotorNodes[id];
-            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
-        }
-
-        var brakeNodes = shape.Brakes.ToDictionary(brake => brake.Id, brake => brake.NodeId);
-        foreach (var (id, part) in _brakes)
-        {
-            var nodeId = id < 0 ? -id : brakeNodes[id];
-            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
-        }
-
-        var stepperNodes = shape.Steppers.ToDictionary(stepper => stepper.Id, stepper => stepper.NodeId);
-        foreach (var (id, part) in _steppers)
-        {
-            var nodeId = id < 0 ? -id : stepperNodes[id];
-            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
-        }
-
-        var angleSensorNodes = shape.AngleSensors.ToDictionary(angleSensor => angleSensor.Id, angleSensor => angleSensor.NodeId);
-        foreach (var (id, part) in _angleSensors)
-        {
-            var nodeId = id < 0 ? -id : angleSensorNodes[id];
-            part.Place(groups, nodeId, raised.Joints.Contains(nodeId));
-        }
-
-        var wheelNodes = shape.Wheels.ToDictionary(wheel => wheel.Id, wheel => wheel.NodeId);
-        foreach (var (id, part) in _wheels)
-        {
-            var nodeId = id < 0 ? -id : wheelNodes[id];
-            part.Place(groups, nodeId, raised.Wheels.Contains(nodeId));
-        }
-
-        foreach (var (id, part) in _beams.Select(entry => (entry.Key, (PartVisual)entry.Value))
-            .Concat(_pistons.Select(entry => (entry.Key, (PartVisual)entry.Value)))
-            .Concat(_springs.Select(entry => (entry.Key, (PartVisual)entry.Value))))
-        {
-            part.Place(groups, id, raised.Links.Contains(id));
-        }
-
-        var sensors = shape.Sensors.ToDictionary(sensor => sensor.Id);
-        foreach (var (id, part) in _sensors)
-        {
-            part.Place(groups, sensors[id].BeamId, raised.Sensor(sensors[id]));
+            if (shown.PreviewSlot is { } slot)
+            {
+                visual.Place(groups, shown.Id, raised.JointPart(shown.Id, slot));
+            }
+            else
+            {
+                visual.Place(groups, shape.PartById[shown.Id], raised);
+            }
         }
 
         if (marks.PreviewSensor is ({ } previewBeam, _, _))
@@ -690,6 +645,7 @@ public partial class CreatureParts : Node2D
         {
             part = new TPart();
             parts[id] = part;
+            _shown[part] = new Shown(id, PreviewSlot: null);
             AddChild(part);
         }
 
@@ -697,12 +653,25 @@ public partial class CreatureParts : Node2D
         return part;
     }
 
+    // A dragged joint part's preview, kept by its joint's id negated, as no part has that id.
+    private TPart PreviewFor<TPart>(Dictionary<int, TPart> parts, int nodeId, JointSlot slot)
+        where TPart : PartVisual, new()
+    {
+        var part = PartFor(parts, -nodeId);
+        _shown[part] = new Shown(nodeId, slot);
+        return part;
+    }
+
+    // The part a visual shows by its id, or with a PreviewSlot the joint a preview stands on.
+    private readonly record struct Shown(int Id, JointSlot? PreviewSlot);
+
     private void Prune<TPart>(Dictionary<int, TPart> parts, IEnumerable<int> ids)
         where TPart : PartVisual
     {
         var live = ids.ToHashSet();
         foreach (var id in parts.Keys.Where(id => !live.Contains(id)).ToList())
         {
+            _shown.Remove(parts[id]);
             RemoveChild(parts[id]);
             parts[id].QueueFree();
             parts.Remove(id);
