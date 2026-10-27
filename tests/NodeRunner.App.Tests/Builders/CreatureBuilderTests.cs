@@ -228,6 +228,56 @@ public sealed class CreatureBuilderTests
         builder.AddNode(new Vector2D(0, -90)).ShouldBe(built.NextPartId);
     }
 
+    public static TheoryData<PartKind> EveryKind => [.. PartKinds.All.Select(info => info.Kind)];
+
+    // Every kind is found, renamed and removed by its id alone; a removal takes what goes with the part
+    // and leaves each hinge part that used it as a side without that side.
+    [Theory]
+    [MemberData(nameof(EveryKind))]
+    public void EveryPartKind_IsFoundRenamedAndRemovedById(PartKind kind)
+    {
+        var builder = EveryPart().Builder;
+        var before = builder.Build();
+        var part = before.Parts.First(part => part.PartKind == kind);
+
+        builder.FindPart(part.Id).ShouldBe(part);
+
+        builder.Rename(part.Id, "Renamed");
+        builder.FindPart(part.Id).ShouldBe(part.WithName("Renamed"));
+        builder.Build().Parts.Where(other => other.Id != part.Id).ShouldBe(before.Parts.Where(other => other.Id != part.Id));
+
+        builder.RemovePart(part.Id);
+        var gone = GoesWith(before, part).Append(part.Id).ToHashSet();
+        var after = builder.Build();
+        after.Parts.Select(kept => kept.Id).ShouldBe(before.Parts.Select(kept => kept.Id).Where(id => !gone.Contains(id)));
+        after.HingeParts.ShouldBe(before.HingeParts
+            .Where(hinge => !gone.Contains(hinge.Id))
+            .Select(hinge => hinge.WithLinks(Kept(hinge.FixedLinkId), Kept(hinge.TargetLinkId))));
+        builder.FindPart(part.Id).ShouldBeNull();
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.RemovePart(part.Id));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.Rename(part.Id, "Ghost"));
+
+        int? Kept(int? side) => side is { } id && gone.Contains(id) ? null : side;
+    }
+
+    // Every hinge part changes a side by its id alone, as each kind's own method does, and keeps its id.
+    [Fact]
+    public void EveryHingePart_ChangesASideById()
+    {
+        var builder = EveryPart().Builder;
+        var hingeKinds = PartKinds.All.Where(info => info.Slot == JointSlot.HingePart).Select(info => info.Kind).ToArray();
+
+        foreach (var part in hingeKinds.Select(kind => builder.HingeParts.Single(part => part.PartKind == kind)))
+        {
+            builder.SetHingePartLink(part.Id, fixedRole: true, part.TargetLinkId!.Value);
+            ShouldHaveSides(builder, part.Id, part.TargetLinkId, part.FixedLinkId);
+        }
+
+        builder.HingeParts.Select(part => part.PartKind).ShouldBe(hingeKinds, ignoreOrder: true);
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetHingePartLink(builder.Wheels[0].Id, fixedRole: true, builder.Beams[0].Id));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.SetHingePartLink(999, fixedRole: true, builder.Beams[0].Id));
+    }
+
     [Fact]
     public void AWorm_Builds()
     {
@@ -403,6 +453,25 @@ public sealed class CreatureBuilderTests
         int Rubber,
         int Accelerometer,
         int Camera);
+
+    // What removing part takes with it, worked out from the creature: a joint takes its links, the parts
+    // on it and the sensors on its beams; a beam takes its sensor.
+    private static IEnumerable<int> GoesWith(CreatureDef creature, IPartDef part)
+    {
+        if (part is NodeDef node)
+        {
+            var beams = creature.Beams.Where(beam => beam.NodeA == node.Id || beam.NodeB == node.Id).Select(beam => beam.Id).ToArray();
+            return [
+                .. beams,
+                .. creature.Pistons.Where(piston => piston.NodeA == node.Id || piston.NodeB == node.Id).Select(piston => piston.Id),
+                .. creature.Springs.Where(spring => spring.NodeA == node.Id || spring.NodeB == node.Id).Select(spring => spring.Id),
+                .. CreatureDef.JointPartDefs(node.Id, creature.Parts).Select(jointPart => jointPart.Id),
+                .. creature.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id),
+            ];
+        }
+
+        return creature.Sensors.Where(sensor => sensor.BeamId == part.Id).Select(sensor => sensor.Id);
+    }
 
     private static void ShouldHaveSides(CreatureBuilder builder, int partId, int? fixedLink, int? targetLink)
     {

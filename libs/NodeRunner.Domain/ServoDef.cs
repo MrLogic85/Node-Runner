@@ -127,6 +127,10 @@ public sealed record ServoDef : IJointMotorDef
 
     PartKind IPartDef.PartKind => PartKind.Servo;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
+    IHingePartDef IHingePartDef.WithLinks(int? fixedLinkId, int? targetLinkId) => WithLinks(fixedLinkId, targetLinkId);
+
     public ServoDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, Range, Start, MaxSpeed, RiseTime);
 
     public ServoDef WithSettings(double strength, double range, double start, double maxSpeed, double riseTime) =>

@@ -70,30 +70,9 @@ public sealed partial class CreatureBuilder
     /// picking the other role swaps them, and it keeps its id.
     /// </summary>
     public void SetAngleSensorLink(int angleSensorId, bool fixedRole, int linkId) =>
-        SetSide(_angleSensors, AngleSensorIndexOf(angleSensorId), fixedRole, linkId, (angleSensor, fixedLink, targetLink) => angleSensor.WithLinks(fixedLink, targetLink));
+        SetSide(_angleSensors[AngleSensorIndexOf(angleSensorId)], fixedRole, linkId);
 
-    public void RemoveAngleSensor(int angleSensorId) => _angleSensors.RemoveAt(AngleSensorIndexOf(angleSensorId));
+    public void RemoveAngleSensor(int angleSensorId) => RemovePart(_angleSensors[AngleSensorIndexOf(angleSensorId)]);
 
-    public int AngleSensorIndexOf(int angleSensorId)
-    {
-        var index = _angleSensors.FindIndex(angleSensor => angleSensor.Id == angleSensorId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(angleSensorId), "Angle sensor id must point to an existing angle sensor.");
-        }
-
-        return index;
-    }
-
-    private bool RenameAngleSensor(int partId, string? name)
-    {
-        var index = _angleSensors.FindIndex(angleSensor => angleSensor.Id == partId);
-        if (index < 0)
-        {
-            return false;
-        }
-
-        _angleSensors[index] = _angleSensors[index].WithName(name);
-        return true;
-    }
+    public int AngleSensorIndexOf(int angleSensorId) => IndexOf(_angleSensors, angleSensorId, nameof(angleSensorId), "Angle sensor id must point to an existing angle sensor.");
 }

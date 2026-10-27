@@ -57,9 +57,13 @@ public sealed record AngleSensorDef : IHingePartDef
 
     PartKind IPartDef.PartKind => PartKind.AngleSensor;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
+    IHingePartDef IHingePartDef.WithLinks(int? fixedLinkId, int? targetLinkId) => WithLinks(fixedLinkId, targetLinkId);
+
     public AngleSensorDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name);
 
-    /// <summary>The sensor with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
+    /// <summary>The sensor with new sides. It keeps its id (<see cref="IHingePartDef.WithLinks"/>).</summary>
     public AngleSensorDef WithLinks(int? fixedLinkId, int? targetLinkId) => new(Id, NodeId, fixedLinkId, targetLinkId, Name);
 
     /// <summary>The width of its arc, in canvas units: <c>stroke-signal</c>, which its picture draws it with.</summary>

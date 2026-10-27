@@ -40,5 +40,7 @@ public sealed record TouchSensorDef : IJointPartDef
 
     PartKind IPartDef.PartKind => PartKind.TouchSensor;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
     public TouchSensorDef WithName(string? name) => new(Id, NodeId, name);
 }

@@ -11,6 +11,9 @@ public interface IHingePartDef : IJointPartDef
 
     int? TargetLinkId { get; }
 
+    /// <summary>The part with new sides. It keeps its id, and so its ports and training.</summary>
+    IHingePartDef WithLinks(int? fixedLinkId, int? targetLinkId);
+
     /// <summary>Which kind of part this is, as it is selected.</summary>
     CreatureElementKind Kind => PartKinds.Of(PartKind).Element;
 }

@@ -11,4 +11,7 @@ public interface IPartDef
     string? Name { get; }
 
     PartKind PartKind { get; }
+
+    /// <summary>The part with a new name and everything else kept, its id too.</summary>
+    IPartDef WithName(string? name);
 }

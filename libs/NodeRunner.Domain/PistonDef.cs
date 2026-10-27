@@ -107,6 +107,8 @@ public sealed record PistonDef : IPartDef
 
     PartKind IPartDef.PartKind => PartKind.Piston;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
     /// <summary>The most force the Piston can push or pull with, in world units (mass × units/s²).</summary>
     public double Strength { get; }
 

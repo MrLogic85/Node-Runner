@@ -36,5 +36,7 @@ public sealed record RubberDef : IJointPartDef
 
     PartKind IPartDef.PartKind => PartKind.Rubber;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
     public RubberDef WithName(string? name) => new(Id, NodeId, name);
 }

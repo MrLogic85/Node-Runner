@@ -103,12 +103,16 @@ public sealed record StepperDef : IJointMotorDef
 
     PartKind IPartDef.PartKind => PartKind.Stepper;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
+    IHingePartDef IHingePartDef.WithLinks(int? fixedLinkId, int? targetLinkId) => WithLinks(fixedLinkId, targetLinkId);
+
     public StepperDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, StepsPerTurn, MaxFrequency);
 
     public StepperDef WithSettings(double strength, int stepsPerTurn, double maxFrequency) =>
         new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength, stepsPerTurn, maxFrequency);
 
-    /// <summary>The Stepper with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
+    /// <summary>The Stepper with new sides. It keeps its id (<see cref="IHingePartDef.WithLinks"/>).</summary>
     public StepperDef WithLinks(int? fixedLinkId, int? targetLinkId) =>
         new(Id, NodeId, fixedLinkId, targetLinkId, Name, Strength, StepsPerTurn, MaxFrequency);
 }

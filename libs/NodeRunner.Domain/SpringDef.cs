@@ -112,6 +112,8 @@ public sealed record SpringDef : IPartDef
 
     PartKind IPartDef.PartKind => PartKind.Spring;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
     /// <summary>How hard it pulls back per unit stretched or squeezed, in world force units per world unit (N/m).</summary>
     public double Stiffness { get; }
 
