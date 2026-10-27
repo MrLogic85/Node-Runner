@@ -38,17 +38,6 @@ public sealed class SettingsPresentationViewModelTests
         repository.Load().ShouldBe(SettingsDef.Default with { Theme = ThemeChoice.Neon, GridSizeCm = 100, SnapToGrid = true });
     }
 
-    [Fact]
-    public void GridSizeLabels_ShowEachSizeInMetres_WithTheDecimalsItNeeds()
-    {
-        SettingsPresentationViewModel.GridSizeLabels.ShouldBe(
-        [
-            UiText.Format("{0} m", new FixedNumber(0.25, 2)),
-            UiText.Format("{0} m", new FixedNumber(0.5, 1)),
-            UiText.Format("{0} m", new FixedNumber(1, 0)),
-        ]);
-    }
-
     // The screen redraws on any change to the settings, also one made elsewhere, and not after it closes.
     [Fact]
     public void SettingsChange_RaisesPropertyChangedUntilDisposed()

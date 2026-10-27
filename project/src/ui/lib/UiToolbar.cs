@@ -20,7 +20,6 @@ public partial class UiToolbar : MarginContainer
     public delegate void BackPressedEventHandler();
 
     private const float _unbounded = -1;
-    private static readonly Vector2 _overflowBottomRight = Vector2.One;
 
     private UiButton? _back;
     private ScrollContainer? _field;
@@ -88,9 +87,9 @@ public partial class UiToolbar : MarginContainer
         }
 
         _back.Activated += OnBackActivated;
-        _overflow.Activated += ToggleMenu;
+        var overflow = _overflow;
+        overflow.Activated += () => Menu.ToggleUnder(overflow);
         Menu.Dismissible = true;
-        Menu.Resized += FollowOverflow;
         _field = GetNode<ScrollContainer>("%Field");
         _fieldContent = _field.GetChild<Control>(0);
         _field.Resized += ClipOnlyOverflow;
@@ -108,18 +107,6 @@ public partial class UiToolbar : MarginContainer
 
     public void CloseMenu() => Menu.Close();
 
-    private void ToggleMenu()
-    {
-        if (Menu.Visible)
-        {
-            CloseMenu();
-            return;
-        }
-
-        Menu.Show();
-        FollowOverflow();
-    }
-
     // A ScrollContainer always clips, which would cut the glow of toolbar actions even when they fit.
     private void ClipOnlyOverflow()
     {
@@ -132,14 +119,4 @@ public partial class UiToolbar : MarginContainer
     }
 
     private void OnBackActivated() => EmitSignal(SignalName.BackPressed);
-
-    private void FollowOverflow()
-    {
-        if (_overflow is null || !Menu.Visible)
-        {
-            return;
-        }
-
-        Menu.Follow(_overflow, _overflowBottomRight, new Vector2(-Menu.Size.X, UiSize.Space.S1));
-    }
 }

@@ -452,6 +452,10 @@ msgstr ""
 msgid "Generator"
 msgstr ""
 
+#: project/scenes/screens/BuildScreen.tscn
+msgid "Grid"
+msgstr ""
+
 #: project/scenes/screens/SettingsScreen.tscn
 msgid "Grid default"
 msgstr ""
@@ -1008,6 +1012,7 @@ msgstr ""
 msgid "Slows or locks its joint."
 msgstr ""
 
+#: project/scenes/screens/BuildScreen.tscn
 #: project/scenes/screens/SettingsScreen.tscn
 msgid "Snap to grid"
 msgstr ""
@@ -1587,10 +1592,10 @@ msgid_plural "{0} links have zero length"
 msgstr[0] ""
 msgstr[1] ""
 
+#: libs/NodeRunner.App/ViewModels/BuildGridSizes.cs
 #: libs/NodeRunner.App/ViewModels/DistanceRuler.cs
 #: libs/NodeRunner.App/ViewModels/Metres.cs
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
-#: libs/NodeRunner.App/ViewModels/SettingsPresentationViewModel.cs
 msgid "{0} m"
 msgstr ""
 

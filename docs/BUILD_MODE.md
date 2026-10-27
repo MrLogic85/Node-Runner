@@ -54,10 +54,10 @@ Wherever a rule here says *joint motor* or *hinge part*
 - **Undo and Redo (`BuildHistory`)** work on a locked creation too.
   One finished action that changes the body is one step: a placed part, a
   link, a delete, a part rename, or a whole drag or slider move.
-  Selection, tool, zoom and pan never count, and a cancelled gesture adds
-  nothing and keeps Redo. A visit holds 100 steps and starts empty.
-  Renaming the creation, Unlock, Reset training, Copy creation and Delete
-  creation cannot be undone.
+  Selection, tool, the grid, zoom and pan never count, and a cancelled
+  gesture adds nothing and keeps Redo. A visit holds 100 steps and starts
+  empty. Renaming the creation, Unlock, Reset training, Copy creation and
+  Delete creation cannot be undone.
   - Undo keeps the selected parts that still exist; undoing a delete
     selects the deleted parts again and gets their trained weights back
     (`docs/CREATURE_MODEL.md` → "Build refits the network it opened
@@ -181,6 +181,9 @@ name for a node. Build opens in Joint, locked or not.
   frame; the group keeps its shape, and keeping it inside the area wins,
   so at an edge it may sit off the grid. Rotate and Scale do not snap,
   and a joint already placed stays where it is when the grid changes.
+  Build's grid menu (`docs/UI_DIRECTION.md` → "Build") changes the size
+  and snap at once, and they save with Build's other edits, also on a
+  locked Creation, since the grid is not part of the creature.
 - **View:** `CanvasView` holds zoom and pan, which are never saved. Build
   opens with the creation fitted with `FitMargin` of air, never magnified
   past true size. The zoom limits are divided by the UI size, so

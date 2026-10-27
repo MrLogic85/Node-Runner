@@ -65,7 +65,7 @@ public partial class SettingsScreen : Control
         }
 
         _gridSizes = GetNode<UiSegmentedSwitch>("%GridSizes");
-        _gridSizes.Segments = [.. SettingsPresentationViewModel.GridSizeLabels.Select(label => new UiSegment { TextSource = UiTextTranslation.Source(label) })];
+        _gridSizes.Segments = [.. BuildGridSizes.Labels.Select(label => new UiSegment { TextSource = UiTextTranslation.Source(label) })];
         // Apply after each choice puts the controls back when it could not be saved.
         _gridSizes.SelectionChanged += index =>
         {

@@ -349,6 +349,12 @@ public sealed class BuildPresentationViewModel
     /// <summary>Whether the overflow's Redo can be tapped.</summary>
     public bool CanRedo => _build.CanRedo;
 
+    /// <summary>The grid size's place in <see cref="BuildGridDef.SizesCm"/>.</summary>
+    public int GridSizeIndex => BuildGridSizes.IndexOf(_build.Grid.SizeCm);
+
+    /// <summary>Whether placed and moved joints land on the grid.</summary>
+    public bool SnapToGrid => _build.SnapToGrid;
+
     /// <summary>True when the Creation has saved training, locked or unlocked for this visit.</summary>
     public bool IsTrained => _build.TrainingGeneration is not null;
 

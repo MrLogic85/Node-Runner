@@ -43,6 +43,30 @@ public sealed class BuildGridTests
         build.Nodes.Single().Position.ShouldBe(new Vector2D(13, 7));
     }
 
+    // Like zoom, the grid is not part of the creature: no Undo step, and a locked Creation changes it.
+    [Fact]
+    public void ChooseGridSizeAndSnap_OnALockedCreation_ChangeTheGrid_WithoutAnUndoStep()
+    {
+        var build = Loaded(new CreatureDef([new NodeDef(1, new Vector2D(0, 0))], nextPartId: 2), locked: true);
+        var changed = new List<string?>();
+        build.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        build.ChooseGridSize(2);
+        build.ChooseSnapToGrid(true);
+
+        build.Grid.ShouldBe(new BuildGridDef(100, snap: true));
+        changed.ShouldBe([nameof(BuildViewModel.Grid), nameof(BuildViewModel.Grid)]);
+        (build.CanUndo, build.CanRedo).ShouldBe((false, false));
+        build.IsLocked.ShouldBeTrue();
+
+        build.ChooseGridSize(2);
+        build.ChooseSnapToGrid(true);
+        changed.Count.ShouldBe(2);
+
+        build.ChooseGridSize(0);
+        build.Grid.ShouldBe(new BuildGridDef(25, snap: true));
+    }
+
     // The nearest grid point, a half away from 0; at an edge the nearest one that keeps the ring inside.
     [Theory]
     [InlineData(25, 13, 7, 25, 0)]

@@ -259,7 +259,10 @@ to grid as a `UiToggleRow` below it.
 
 - **Rail:** the tools and the Primary play button at the bottom in every
   state.
-- **Top bar:** the name field, padlock, Undo, Redo and the overflow.
+- **Top bar:** the name field, padlock, grid button, Undo, Redo and the
+  overflow. The grid button's icon is crossed out when snap is off; the
+  drawn grid shows the size. Its `UiMenu` is laid out like Settings' Grid
+  default row and stays open while the size or snap changes.
 - **Part copy:** a part's description (`PartInfo`) is one short sentence
   saying what the part does, not how it is wired or what else it needs. A
   placement hint is at most one short sentence. Neither names other parts.
