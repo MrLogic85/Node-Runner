@@ -1,5 +1,5 @@
-using NodeRunner.Creature;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using NodeRunner.Creature;
 using NodeRunner.Domain;
 using NodeRunner.Domain.Tests;
 
