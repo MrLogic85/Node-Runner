@@ -54,7 +54,8 @@ components' text properties and all text set in C#.
 
 A language is a `project/locale/<language>.po` file made from the
 template; the `add-language` skill has the steps. In a translation, each
-`{0}`, `{1}` … is used exactly once, and a plural entry has one
+`{0}`, `{1}` … is used exactly once, in every plural form
+(`TranslationPlaceholdersTests` checks it), and a plural entry has one
 `msgstr[n]` per form of the language. Godot reads the system language at
 start, so checking another language means restarting the game in it.
 
