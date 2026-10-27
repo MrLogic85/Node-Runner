@@ -147,14 +147,19 @@ public class CanvasViewTests
         view.ToView(_area.Min).ShouldBe(new Vector2D(0, 0));
     }
 
-    [Fact]
-    public void BuildArea_IsFilledByWholeGridCells()
+    // The corner marks are two area cells long, so they end on a grid line too.
+    [Theory]
+    [MemberData(nameof(GridSizes))]
+    public void BuildArea_AndItsCornerMarks_AreFilledByWholeGridCells_OfEverySize(int size)
     {
         var area = BuildViewModel.BuildArea;
 
-        (area.Width % BuildViewModel.BuildGridStep).ShouldBe(0);
-        (area.Height % BuildViewModel.BuildGridStep).ShouldBe(0);
+        (area.Width % size).ShouldBe(0);
+        (area.Height % size).ShouldBe(0);
+        (2 * BuildViewModel.BuildAreaCell % size).ShouldBe(0);
     }
+
+    public static TheoryData<int> GridSizes => [.. SettingsDef.GridSizesCm];
 
     // At 1×, centred, the screen shows x −500..500 and y −250..250. It grows only toward a side
     // the target reaches past, evenly where it reaches past both; nothing reached past the top or

@@ -32,18 +32,21 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// so a creature always fits the Training view without zooming out far.
     /// Placing and moving keep a joint's ring inside; the Build view
     /// shows it plus <see cref="BuildViewMargin"/>. Its sides are whole
-    /// multiples of <see cref="BuildGridStep"/> so the grid's cells fill it
-    /// exactly.
+    /// multiples of every grid size (<see cref="SettingsDef.GridSizesCm"/>) so the grid's cells
+    /// fill it exactly.
     /// </summary>
     public static readonly CanvasRect BuildArea = new(
-        new Vector2D(-12 * BuildGridStep, -6 * BuildGridStep),
-        new Vector2D(12 * BuildGridStep, 6 * BuildGridStep));
+        new Vector2D(-12 * BuildAreaCell, -6 * BuildAreaCell),
+        new Vector2D(12 * BuildAreaCell, 6 * BuildAreaCell));
 
-    /// <summary>The Build grid's cell size in canvas units: half a metre.</summary>
-    public const double BuildGridStep = Metres.WorldUnitsPerMetre / 2;
+    /// <summary>
+    /// The unit <see cref="BuildArea"/>, its margin and its corner marks are measured in, in canvas
+    /// units: half a metre, the default <see cref="GridStep"/>. It does not follow the player's grid.
+    /// </summary>
+    public const double BuildAreaCell = Metres.WorldUnitsPerMetre / 2;
 
     /// <summary>How far past <see cref="BuildArea"/> the Build view can show, in canvas units, at any zoom.</summary>
-    public const double BuildViewMargin = BuildGridStep;
+    public const double BuildViewMargin = BuildAreaCell;
 
     /// <summary>The part of the canvas the Build view can show: <see cref="BuildArea"/> plus <see cref="BuildViewMargin"/>.</summary>
     public static readonly CanvasRect BuildViewBounds = new(
@@ -87,6 +90,12 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     // On each part that makes a locked Creation refuse Copy or Delete.
     private static readonly UiText _wouldChangeNetworkNote = UiText.Plain("Locked: would change the network");
+
+    /// <summary>The grid's cell size in canvas units, from the player's settings (<see cref="UseGrid"/>).</summary>
+    public double GridStep { get; private set; } = Metres.WorldUnitsFromCentimetres(SettingsDef.DefaultGridSizeCm);
+
+    /// <summary>Whether placed and moved joints land on the grid (<see cref="UseGrid"/>).</summary>
+    public bool SnapToGrid { get; private set; }
 
     public BuildViewModel(CreatureBuilder? builder = null)
     {
@@ -650,19 +659,54 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
     };
 
-    /// <summary>Places a new node, moved inside <see cref="BuildArea"/>, and returns its id. A joint has no network ports, so a locked Creation places one too.</summary>
+    /// <summary>
+    /// Draws the grid at the player's grid size and snaps joints to it when they chose to. Set
+    /// before Build shows: Settings open only from Creations, so it does not change while Build is open.
+    /// </summary>
+    public void UseGrid(SettingsDef settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        GridStep = Metres.WorldUnitsFromCentimetres(settings.GridSizeCm);
+        SnapToGrid = settings.SnapToGrid;
+    }
+
+    /// <summary>
+    /// Places a new node, moved inside <see cref="BuildArea"/> and onto the grid when
+    /// <see cref="SnapToGrid"/>, and returns its id. A joint has no network ports, so a locked
+    /// Creation places one too.
+    /// </summary>
     public int PlaceNode(Vector2D position)
     {
-        var id = _history.Change(() => _builder.AddNode(BuildArea.Clamp(position, NodeDef.PlainJointRadius)));
+        var id = _history.Change(() => _builder.AddNode(Placed(position, NodeDef.PlainJointRadius)));
         RaiseAnatomyChanged();
         return id;
     }
 
-    /// <summary>Moves an already-placed node to a new position, as far as <see cref="BuildArea"/> reaches.</summary>
+    /// <summary>Moves an already-placed node to a new position, as far as <see cref="BuildArea"/> reaches, and onto the grid when <see cref="SnapToGrid"/>.</summary>
     public void MoveNode(int nodeId, Vector2D position)
     {
-        _history.Change(() => _builder.MoveNode(nodeId, BuildArea.Clamp(position, NodeRadius(nodeId))));
+        _history.Change(() => _builder.MoveNode(nodeId, Placed(position, NodeRadius(nodeId))));
         RaiseAnatomyChanged();
+    }
+
+    private Vector2D Placed(Vector2D position, double radius) =>
+        SnapToGrid ? OnGrid(position, radius) : BuildArea.Clamp(position, radius);
+
+    // The grid point nearest position that keeps a ring of radius inside BuildArea. One always
+    // exists: the area's middle is on every grid, and the largest ring leaves room around it.
+    private Vector2D OnGrid(Vector2D position, double radius) => new(
+        OnGridLine(position.X, BuildArea.Min.X + radius, BuildArea.Max.X - radius),
+        OnGridLine(position.Y, BuildArea.Min.Y + radius, BuildArea.Max.Y - radius));
+
+    private double OnGridLine(double coordinate, double min, double max)
+    {
+        var line = Math.Clamp(
+            Math.Round(coordinate / GridStep, MidpointRounding.AwayFromZero),
+            Math.Ceiling(min / GridStep),
+            Math.Floor(max / GridStep));
+
+        // Adding 0 turns −0 into 0, as CreatureBuilder.OnWholeUnits does.
+        return (line * GridStep) + 0.0;
     }
 
     /// <summary>

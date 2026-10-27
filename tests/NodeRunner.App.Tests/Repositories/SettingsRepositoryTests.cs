@@ -18,12 +18,12 @@ public sealed class SettingsRepositoryTests : IDisposable
     }
 
     [Theory]
-    [InlineData(null, ThemeChoice.Neon, true, 8)]
-    [InlineData(150, ThemeChoice.Paper, false, 2)]
-    [InlineData(300, ThemeChoice.UsePhone, true, 100)]
-    public void Save_ThenLoad_RoundTripsEverySetting(int? uiSize, ThemeChoice theme, bool sounds, int shadows)
+    [InlineData(null, ThemeChoice.Neon, true, 8, 25, false)]
+    [InlineData(150, ThemeChoice.Paper, false, 2, 50, true)]
+    [InlineData(300, ThemeChoice.UsePhone, true, 100, 100, true)]
+    public void Save_ThenLoad_RoundTripsEverySetting(int? uiSize, ThemeChoice theme, bool sounds, int shadows, int gridSize, bool snap)
     {
-        var settings = new SettingsDef(uiSize, theme, sounds, shadows);
+        var settings = new SettingsDef(uiSize, theme, sounds, shadows, gridSize, snap);
 
         new FileSettingsRepository(new TestStorageLocation(_directory)).Save(settings);
 
@@ -34,12 +34,12 @@ public sealed class SettingsRepositoryTests : IDisposable
     [Fact]
     public void Load_OfOutOfRangeNumbers_ClampsThem()
     {
-        const string json = """{ "formatVersion": 1, "uiSizePercent": 12, "theme": "paper", "sounds": false, "defaultShadows": 500 }""";
+        const string json = """{ "formatVersion": 1, "uiSizePercent": 12, "theme": "paper", "sounds": false, "defaultShadows": 500, "gridSizeCm": 80, "snapToGrid": true }""";
         WriteSettings(json);
 
         var loaded = new FileSettingsRepository(new TestStorageLocation(_directory)).Load();
 
-        loaded.ShouldBe(new SettingsDef(SettingsDef.MinUiSizePercent, ThemeChoice.Paper, sounds: false, TrainSettingsDef.MaxShadows));
+        loaded.ShouldBe(new SettingsDef(SettingsDef.MinUiSizePercent, ThemeChoice.Paper, sounds: false, TrainSettingsDef.MaxShadows, gridSizeCm: 100, snapToGrid: true));
         File.ReadAllText(SettingsPath).ShouldBe(json);
         QuarantinedFiles().ShouldBeEmpty();
     }
@@ -48,10 +48,10 @@ public sealed class SettingsRepositoryTests : IDisposable
     // unknown field, not JSON) is quarantined and loads the defaults too.
     [Theory]
     [InlineData(null)]
-    [InlineData("""{ "uiSizePercent": null, "theme": "dark", "sounds": true, "defaultShadows": 8 }""")]
+    [InlineData("""{ "uiSizePercent": null, "theme": "dark", "sounds": true, "defaultShadows": 8, "gridSizeCm": 50, "snapToGrid": false }""")]
     [InlineData("""{ "uiSizePercent": null, "theme": "neon", "sounds": true }""")]
-    [InlineData("""{ "uiSizePercent": null, "theme": "neon", "sounds": true, "defaultShadows": 8, "volume": 1 }""")]
-    [InlineData("""{ "uiSizePercent": "big", "theme": "neon", "sounds": true, "defaultShadows": 8 }""")]
+    [InlineData("""{ "uiSizePercent": null, "theme": "neon", "sounds": true, "defaultShadows": 8, "gridSizeCm": 50, "snapToGrid": false, "volume": 1 }""")]
+    [InlineData("""{ "uiSizePercent": "big", "theme": "neon", "sounds": true, "defaultShadows": 8, "gridSizeCm": 50, "snapToGrid": false }""")]
     [InlineData("{ not valid json")]
     [InlineData("{}")]
     public void Load_OfAMissingOrBadFile_LoadsTheDefaults(string? json)

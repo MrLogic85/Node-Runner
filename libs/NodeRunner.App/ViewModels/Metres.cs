@@ -14,6 +14,9 @@ public static class Metres
 
     public static double FromWorldUnits(double worldUnits) => worldUnits / WorldUnitsPerMetre;
 
+    /// <summary>A length saved in centimetres, such as <see cref="NodeRunner.Domain.SettingsDef.GridSizeCm"/>, in world units.</summary>
+    public static double WorldUnitsFromCentimetres(int centimetres) => centimetres * WorldUnitsPerMetre / 100;
+
     /// <summary>
     /// A world-unit quantity at metre scale to one decimal, such as 2.5: a length becomes metres
     /// and a speed in units/s becomes m/s.

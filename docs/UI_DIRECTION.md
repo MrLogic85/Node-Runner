@@ -238,8 +238,8 @@ The trophy is Unavailable until achievements exist (#199).
 
 Import previews a pasted build before it is added. There is no field for
 the code: Paste reads the clipboard only when tapped. Paste is the Primary
-until a build shows, then Add to Creations. The preview draws on Build's
-grid at Build's true size, never larger, so it shows what Build opens
+until a build shows, then Add to Creations. The preview draws on the Build
+area's half-metre grid at Build's true size, never larger, so it shows what Build opens
 with. Beside it, the parts are fact rows, not buttons. The reference's
 "You already have a {0}." fits no article to every name or language, so
 the app says "You already have one by this name.".
@@ -251,7 +251,8 @@ centred column, `w-form` wide. Each change applies and saves at once,
 with no Save button, so the screen itself is the preview. The Theme row is
 three `UiThemeCard`s, each a `UiThemePreview` drawn in that card's own
 palette over its name; Use phone's picture is split Neon | Paper, so it
-does not read as a fourth theme.
+does not read as a fourth theme. The Grid row is a `UiSegmentedSwitch`
+of the sizes, with Snap to grid as a `UiToggleRow` below it.
 
 ### Build
 

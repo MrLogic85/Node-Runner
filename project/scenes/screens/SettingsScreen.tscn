@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://gydkh1xys4yo" path="res://scenes/ui/UiToolbar.tscn" id="3_toolbar"]
 [ext_resource type="Script" uid="uid://dk67qmt3brp4e" path="res://src/ui/lib/UiLabel.cs" id="4_label"]
 [ext_resource type="PackedScene" path="res://scenes/ui/UiThemeCard.tscn" id="5_theme_card"]
+[ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="6_switch"]
+[ext_resource type="Script" uid="uid://b4a8p7be0b3pe" path="res://src/ui/lib/UiToggleRow.cs" id="7_toggle_row"]
 
 [node name="SettingsScreen" type="Control"]
 layout_mode = 3
@@ -48,39 +50,67 @@ theme_override_constants/margin_bottom = 12
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 size_flags_horizontal = 4
+theme_override_constants/separation = 12
+
+[node name="ThemeRow" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Form"]
+layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="ThemeLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Form"]
+[node name="ThemeLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeRow"]
 layout_mode = 2
 text = "Theme"
 script = ExtResource("4_label")
 TextStyle = 12
 TextColor = 8
 
-[node name="ThemeCards" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Form"]
+[node name="ThemeCards" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeRow"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="NeonCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeCards" instance=ExtResource("5_theme_card")]
+[node name="NeonCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeRow/ThemeCards" instance=ExtResource("5_theme_card")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 Title = "Neon"
 
-[node name="PaperCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeCards" instance=ExtResource("5_theme_card")]
+[node name="PaperCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeRow/ThemeCards" instance=ExtResource("5_theme_card")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 Choice = 1
 Title = "Paper"
 
-[node name="PhoneCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeCards" instance=ExtResource("5_theme_card")]
+[node name="PhoneCard" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/ThemeRow/ThemeCards" instance=ExtResource("5_theme_card")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 Choice = 2
 Title = "Use phone"
 IconId = 23
+
+[node name="GridRow" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Form"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="GridLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/GridRow"]
+layout_mode = 2
+text = "Grid"
+script = ExtResource("4_label")
+TextStyle = 12
+TextColor = 8
+
+[node name="GridSizes" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/GridRow"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_switch")
+KeepCase = true
+
+[node name="SnapRow" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Body/Form"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("7_toggle_row")
+On = false
+LabelText = "Snap to grid"
 
 [editable path="UiFrame"]
 [editable path="UiFrame/MarginContainer/Card/Shell/Toolbar"]

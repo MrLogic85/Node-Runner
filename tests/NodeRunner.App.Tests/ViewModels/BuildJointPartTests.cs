@@ -522,7 +522,7 @@ public sealed class BuildJointPartTests
 
         // A plain joint would fit one step down and right; the big Wheel's would not, so it goes up and left.
         var corner = BuildViewModel.BuildArea.Max;
-        var step = BuildViewModel.BuildGridStep;
+        var step = BuildViewModel.BuildAreaCell;
         build.Load(new CreatureDef(
         [
             new NodeDef(1, new Vector2D(corner.X - 120, corner.Y - 120)), new NodeDef(2, new Vector2D(corner.X - 220, corner.Y - 120)),

@@ -6,7 +6,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 
 public sealed class BuildCopyTests
 {
-    private const double _step = BuildViewModel.BuildGridStep;
+    private const double _step = BuildViewModel.BuildAreaCell;
     private static readonly CreatureElementSelection _camera = new(CreatureElementKind.Sensor, 21);
     private static readonly CreatureElementSelection _servo = new(CreatureElementKind.Servo, 31);
     private static readonly CreatureElementSelection _spring = new(CreatureElementKind.Spring, 13);

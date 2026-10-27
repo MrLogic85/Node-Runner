@@ -796,7 +796,7 @@ public partial class BuildCanvas : Node2D
         var shown = view.VisibleArea is { } visible
             ? new CanvasRect(view.ToCanvas(visible.Min), view.ToCanvas(visible.Max))
             : BuildViewModel.BuildArea;
-        BuildGrid.Draw(this, ViewTransform(), shown, Theme.ArenaGrid);
+        BuildGrid.Draw(this, ViewTransform(), shown, _viewModel!.GridStep, Theme.ArenaGrid);
     }
 
     /// <summary>Marks the corners of the Build area, zooming with the rest of the picture.</summary>
@@ -806,7 +806,7 @@ public partial class BuildCanvas : Node2D
         var topLeft = ToGodot(area.Min);
         var bottomRight = ToGodot(area.Max);
         // Two grid cells, so the marks end on a grid line.
-        var length = (float)(2 * BuildViewModel.BuildGridStep);
+        var length = (float)(2 * BuildViewModel.BuildAreaCell);
         using var pen = ViewPen(this);
         foreach (var (corner, inward) in new[]
         {

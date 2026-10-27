@@ -150,9 +150,11 @@ load over one; any other value outside the schema, such as an unknown
 | `theme` | `neon`, `paper` or `usePhone` | The chosen theme; `usePhone` follows the phone's dark or light mode. |
 | `sounds` | bool | Whether sounds play. |
 | `defaultShadows` | int | The Shadows of a Creation before its first Start, 2–100 as `trainSettings.shadows`. |
+| `gridSizeCm` | int | Build's grid cell in cm: 25, 50 or 100 (`docs/BUILD_MODE.md` → "Interactions"). Any other number loads as the nearest, a tie as the larger. |
+| `snapToGrid` | bool | Whether Build puts placed and moved joints on the grid. |
 
 Without the file, the settings are `SettingsDef.Default`, whose theme is
-`usePhone`.
+`usePhone`, with a 50 cm grid and no snapping.
 
 ## Never saved
 
