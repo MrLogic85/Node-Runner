@@ -25,12 +25,14 @@ public partial class SaveManager : Node
         var directory = ProjectSettings.GlobalizePath("user://creations");
         _repository = new FileCreationRepository(new GodotStorageLocation(directory));
         _updateCoordinator = new CreationUpdateCoordinator(_repository);
-        _newCreationWorkflow = new NewCreationWorkflow(_repository);
+        // Read when a creation is made: SettingsManager is ready by then.
+        BuildGridDef DefaultGrid() => GetNode<SettingsManager>("/root/SettingsManager").Current.Grid;
+        _newCreationWorkflow = new NewCreationWorkflow(_repository, DefaultGrid);
         _buildEditWorkflow = new BuildEditWorkflow(_updateCoordinator);
         var progression = new FileProgressionRepository(new GodotStorageLocation(ProjectSettings.GlobalizePath("user://")));
         _creationDuplicateWorkflow = new CreationDuplicateWorkflow(_repository);
-        _exampleCopyWorkflow = new ExampleCopyWorkflow(_repository);
-        _creationImportWorkflow = new CreationImportWorkflow(_repository);
+        _exampleCopyWorkflow = new ExampleCopyWorkflow(_repository, DefaultGrid);
+        _creationImportWorkflow = new CreationImportWorkflow(_repository, DefaultGrid);
         _defaultCreationSeeder = new DefaultCreationSeeder(_exampleCopyWorkflow, progression);
         _creationsPresentation = new CreationsPresentationViewModel(_repository);
     }

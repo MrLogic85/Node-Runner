@@ -7,21 +7,25 @@ namespace NodeRunner.App.Services;
 /// <summary>
 /// Saves an identical creation, trained network included, from an example under a new id and the
 /// example's name in the player's language, or "Copy of …" when that name is taken
-/// (<see cref="CreationNames"/>).
+/// (<see cref="CreationNames"/>). Like a new creation, it starts on Settings' grid default.
 /// </summary>
 public sealed class ExampleCopyWorkflow : IExampleCopyWorkflow
 {
     private readonly ICreationRepository _repository;
+    private readonly Func<BuildGridDef> _defaultGrid;
     private readonly IReadOnlyList<CreationExample> _examples;
     private readonly Func<Guid> _newId;
 
     public ExampleCopyWorkflow(
         ICreationRepository repository,
+        Func<BuildGridDef> defaultGrid,
         IReadOnlyList<CreationExample>? examples = null,
         Func<Guid>? newId = null)
     {
         ArgumentNullException.ThrowIfNull(repository);
+        ArgumentNullException.ThrowIfNull(defaultGrid);
         _repository = repository;
+        _defaultGrid = defaultGrid;
         _examples = examples ?? CreationExamples.All;
         _newId = newId ?? Guid.NewGuid;
     }
@@ -33,7 +37,7 @@ public sealed class ExampleCopyWorkflow : IExampleCopyWorkflow
             ?? throw new KeyNotFoundException($"Example '{exampleId}' was not found.");
         var name = CreationNames.Free(
             inPlayerLanguage(example.Name), _repository.List().Select(creation => creation.Name), inPlayerLanguage);
-        var copy = new CreationDef(_newId(), name, example.Creature, example.Training);
+        var copy = new CreationDef(_newId(), name, example.Creature, example.Training) { Grid = _defaultGrid() };
         _repository.Save(copy);
         return copy;
     }

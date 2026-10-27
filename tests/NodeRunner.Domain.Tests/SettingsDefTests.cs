@@ -33,21 +33,12 @@ public sealed class SettingsDefTests
         (SettingsDef.Default with { DefaultShadows = saved }).DefaultShadows.ShouldBe(expected);
     }
 
-    // A grid size snaps to the nearest of 25, 50 and 100 cm; a tie goes to the larger.
-    [Theory]
-    [InlineData(25, 25)]
-    [InlineData(50, 50)]
-    [InlineData(100, 100)]
-    [InlineData(37, 25)]
-    [InlineData(38, 50)]
-    [InlineData(75, 100)]
-    [InlineData(0, 25)]
-    [InlineData(int.MinValue, 25)]
-    [InlineData(int.MaxValue, 100)]
-    public void GridSize_SnapsToTheNearestChoice(int saved, int expected)
+    // A hand-edited size moves to the nearest choice as a Creation's grid does (BuildGridDefTests), and becomes a new Creation's grid.
+    [Fact]
+    public void GridSize_SnapsToTheNearestChoice_AndMakesTheNewCreationGrid()
     {
-        new SettingsDef(gridSizeCm: saved).GridSizeCm.ShouldBe(expected);
-        (SettingsDef.Default with { GridSizeCm = saved }).GridSizeCm.ShouldBe(expected);
+        new SettingsDef(gridSizeCm: 37, snapToGrid: true).Grid.ShouldBe(new BuildGridDef(25, snap: true));
+        (SettingsDef.Default with { GridSizeCm = 75 }).GridSizeCm.ShouldBe(100);
     }
 
     [Fact]

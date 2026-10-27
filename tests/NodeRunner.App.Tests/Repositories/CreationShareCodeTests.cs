@@ -12,9 +12,9 @@ namespace NodeRunner.App.Tests.Repositories;
 public sealed class CreationShareCodeTests
 {
     // A code is its version and URL-safe base64, short enough to type into a chat; white space a chat
-    // app adds is ignored, a name beyond the limit is cut, and the training stays behind.
+    // app adds is ignored, a name beyond the limit is cut, and the training and the grid stay behind.
     [Fact]
-    public void Code_OfATrainedWalker_ReadsAsItsBuild_WithoutTheTraining()
+    public void Code_OfATrainedWalker_ReadsAsItsBuild_WithoutTheTrainingOrTheGrid()
     {
         var trained = LoadFixture013("trained-walker.creation.json").WithTrainSettings(new TrainSettingsDef(20, 30));
         trained.Training.ShouldNotBeNull();
@@ -27,6 +27,7 @@ public sealed class CreationShareCodeTests
         (read.Refusal, read.UpdatedFrom).ShouldBe((null, null));
         var build = read.Build.ShouldNotBeNull();
         (build.Training, build.TrainSettings, build.Name).ShouldBe((null, null, trained.Name));
+        CreationShareCode.Create(trained with { Grid = new BuildGridDef(25, snap: true) }).ShouldBe(code);
         SaveJson.Serialize(build.Creature).ShouldBe(SaveJson.Serialize(CreationShareCode.Rounded(trained).Creature));
         CreationShareCode.Read(CreationShareCode.Create(trained.WithName(new string('W', 100)))).Build.ShouldNotBeNull()
             .Name.ShouldBe(new string('W', NameLimits.Creation));

@@ -8,14 +8,15 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class ExampleCopyWorkflowTests
 {
     [Fact]
-    public void Copy_SavesTheExampleUnderANewId_InThePlayersLanguage_AndRefusesAnUnknownExample()
+    public void Copy_SavesTheExampleUnderANewId_InThePlayersLanguage_OnTheGridDefault_AndRefusesAnUnknownExample()
     {
         var repository = new InMemoryCreationRepository();
         repository.Save(new CreationDef(Guid.NewGuid(), "Worm", Example().Creature));
         var example = Example();
         var copyId = Guid.NewGuid();
         UiText? asked = null;
-        var workflow = new ExampleCopyWorkflow(repository, [example], () => copyId);
+        var defaultGrid = new BuildGridDef(25, snap: true);
+        var workflow = new ExampleCopyWorkflow(repository, () => defaultGrid, [example], () => copyId);
 
         var copy = workflow.Copy(example.Id, text =>
         {
@@ -24,7 +25,7 @@ public sealed class ExampleCopyWorkflowTests
         });
 
         asked.ShouldBe(example.Name);
-        copy.ShouldBe(new CreationDef(copyId, "Gångare", example.Creature, example.Training));
+        copy.ShouldBe(new CreationDef(copyId, "Gångare", example.Creature, example.Training) { Grid = defaultGrid });
         repository.Get(copyId).ShouldBe(copy);
         Should.Throw<KeyNotFoundException>(() => workflow.Copy(Guid.NewGuid(), TestLanguage.Untranslated));
     }
@@ -39,7 +40,7 @@ public sealed class ExampleCopyWorkflowTests
         var example = Example();
         repository.Save(new CreationDef(Guid.NewGuid(), "walker", example.Creature));
 
-        var copy = new ExampleCopyWorkflow(repository, [example]).Copy(example.Id, text =>
+        var copy = new ExampleCopyWorkflow(repository, () => BuildGridDef.Default, [example]).Copy(example.Id, text =>
             text.Equals(UiText.Format("Copy of {0}", "Walker")) ? translated : text.Message);
 
         copy.Name.ShouldBe(expected ?? translated[..NameLimits.Creation]);

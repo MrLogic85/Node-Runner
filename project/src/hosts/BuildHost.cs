@@ -43,7 +43,6 @@ public partial class BuildHost : Control, IRoutedScene
 
     public override void _Ready()
     {
-        Build.UseGrid(GetNode<SettingsManager>("/root/SettingsManager").Current);
         BindBuildScreen();
         _dialog = GetNode<UiDialog>("%Dialog");
         _dialog.Finished += OnDialogFinished;

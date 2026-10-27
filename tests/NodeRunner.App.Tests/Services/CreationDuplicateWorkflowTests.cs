@@ -9,7 +9,7 @@ namespace NodeRunner.App.Tests.Services;
 public sealed class CreationDuplicateWorkflowTests
 {
     [Fact]
-    public void Duplicate_SavesATrainedCopy_NamedACopyInThePlayersLanguage()
+    public void Duplicate_SavesATrainedCopyOnTheSameGrid_NamedACopyInThePlayersLanguage()
     {
         var repository = new InMemoryCreationRepository();
         var source = Creation("Walker");
@@ -24,7 +24,7 @@ public sealed class CreationDuplicateWorkflowTests
         });
 
         asked.ShouldBe(UiText.Format("Copy of {0}", "Walker"));
-        copy.ShouldBe(new CreationDef(copyId, "Kopia av Walker", source.Creature, source.Training));
+        copy.ShouldBe(new CreationDef(copyId, "Kopia av Walker", source.Creature, source.Training) { Grid = source.Grid });
         repository.Get(copyId).ShouldBe(copy);
         Should.Throw<KeyNotFoundException>(() => new CreationDuplicateWorkflow(repository).Duplicate(Guid.NewGuid(), TestLanguage.Untranslated));
     }
@@ -50,5 +50,8 @@ public sealed class CreationDuplicateWorkflowTests
                 [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0))],
                 [new BeamDef(101, 1, 2)],
                 [new SensorDef(201, 101, SensorKind.Accelerometer)]),
-            TestTraining.State(8, 1, TestTraining.Run));
+            TestTraining.State(8, 1, TestTraining.Run))
+        {
+            Grid = new BuildGridDef(25, snap: true),
+        };
 }

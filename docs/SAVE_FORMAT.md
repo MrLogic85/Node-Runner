@@ -71,6 +71,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `creature` | object | The drawn body; see below. |
 | `training` | object or `null` | `null` until a generation has finished. |
 | `trainSettings` | `{ shadows, runLengthSeconds }` or `null` | Train setup's values from its last Start; `shadows` is 2–100, `runLengthSeconds` 5–60. `null` until the first Start; until then Train setup uses the Shadows default from `settings.json` and 10 s. |
+| `grid` | `{ sizeCm, snap }` | Build's grid for this Creation (`docs/BUILD_MODE.md` → "Interactions"): `sizeCm` 25, 50 or 100, any other number loading as the nearest, a tie as the larger; `snap` whether placed and moved joints land on it. A new Creation copies `settings.json`'s, so, unlike `trainSettings`, a later change to Settings leaves it as it is. |
 
 `creature` (what each part means: `docs/CREATURE_MODEL.md`):
 
@@ -150,8 +151,8 @@ load over one; any other value outside the schema, such as an unknown
 | `theme` | `neon`, `paper` or `usePhone` | The chosen theme; `usePhone` follows the phone's dark or light mode. |
 | `sounds` | bool | Whether sounds play. |
 | `defaultShadows` | int | The Shadows of a Creation before its first Start, 2–100 as `trainSettings.shadows`. |
-| `gridSizeCm` | int | Build's grid cell in cm: 25, 50 or 100 (`docs/BUILD_MODE.md` → "Interactions"). Any other number loads as the nearest, a tie as the larger. |
-| `snapToGrid` | bool | Whether Build puts placed and moved joints on the grid. |
+| `gridSizeCm` | int | The grid size a new Creation starts with, as `creation.json`'s `grid.sizeCm`. |
+| `snapToGrid` | bool | Whether a new Creation starts with snapping on, as `grid.snap`. |
 
 Without the file, the settings are `SettingsDef.Default`, whose theme is
 `usePhone`, with a 50 cm grid and no snapping.
@@ -214,6 +215,7 @@ Current `creation.json` migrations:
 | 13 | 14 | Add required `creature.steppers: []`. |
 | 14 | 15 | A Stepper's `power` output neuron becomes its `frequency` output; its old `frequency` input and output neurons and their connections are dropped. |
 | 15 | 16 | `training.brain` becomes `training.network`, unchanged. A file without training has nothing to move; one with both keys fails to load. |
+| 16 | 17 | Add required `grid: { sizeCm: 50, snap: false }`, the grid every Creation was built on, whatever `settings.json` holds. |
 
 Two changes of meaning need no migration, as no migration could keep the
 old meaning:
@@ -273,11 +275,11 @@ owns it.
 - The code is `NR`, the format version and a dot, then its JSON
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
-  scratch. The Walker example's is about 50 characters, starting `NR16.`,
-  and so is two joints and a Spring's.
+  scratch on the importer's grid default. The Walker example's is about 50
+  characters, starting `NR17.`, and so is two joints and a Spring's.
 - Its JSON is `creation.json` on one line with `training` and
-  `trainSettings` `null` and the id `00000000-0000-0000-0000-000000000001`,
-  made short:
+  `trainSettings` `null`, the default `grid` and the id
+  `00000000-0000-0000-0000-000000000001`, made short:
   - **Rounded.** Every joint is on whole world units, as Build places them
     (`CreatureBuilder.OnWholeUnits`), and every other setting is kept to 3
     decimals when its slider still allows the result.
