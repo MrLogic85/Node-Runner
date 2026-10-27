@@ -72,55 +72,25 @@ public sealed partial class CreatureBuilder
     /// picking the other role swaps them, and it keeps its id.
     /// </summary>
     public void SetStepperLink(int stepperId, bool fixedRole, int linkId) =>
-        SetSide(_steppers, StepperIndexOf(stepperId), fixedRole, linkId, (stepper, fixedLink, targetLink) => stepper.WithLinks(fixedLink, targetLink));
+        SetSide(_steppers[StepperIndexOf(stepperId)], fixedRole, linkId);
 
-    public void RemoveStepper(int stepperId) => _steppers.RemoveAt(StepperIndexOf(stepperId));
+    public void RemoveStepper(int stepperId) => RemovePart(_steppers[StepperIndexOf(stepperId)]);
 
-    public int StepperIndexOf(int stepperId)
+    public int StepperIndexOf(int stepperId) => IndexOf(_steppers, stepperId, nameof(stepperId), "Stepper id must point to an existing stepper.");
+
+    private static double StepperParameterValue(StepperDef stepper, PartParameterId parameter) => parameter switch
     {
-        var index = _steppers.FindIndex(stepper => stepper.Id == stepperId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(stepperId), "Stepper id must point to an existing stepper.");
-        }
+        PartParameterId.ServoStrength => stepper.Strength,
+        PartParameterId.StepsPerTurn => stepper.StepsPerTurn,
+        PartParameterId.MaxFrequency => stepper.MaxFrequency,
+        _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+    };
 
-        return index;
-    }
-
-    private double StepperParameterValue(int stepperId, PartParameterId parameter)
+    private static StepperDef StepperWithParameter(StepperDef stepper, PartParameterId parameter, double value) => parameter switch
     {
-        var stepper = _steppers[StepperIndexOf(stepperId)];
-        return parameter switch
-        {
-            PartParameterId.ServoStrength => stepper.Strength,
-            PartParameterId.StepsPerTurn => stepper.StepsPerTurn,
-            PartParameterId.MaxFrequency => stepper.MaxFrequency,
-            _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-        };
-    }
-
-    private void SetStepperParameter(int stepperId, PartParameterId parameter, double value)
-    {
-        var index = StepperIndexOf(stepperId);
-        var stepper = _steppers[index];
-        _steppers[index] = parameter switch
-        {
-            PartParameterId.ServoStrength => stepper.WithSettings(value, stepper.StepsPerTurn, stepper.MaxFrequency),
-            PartParameterId.StepsPerTurn => stepper.WithSettings(stepper.Strength, (int)Math.Round(value), stepper.MaxFrequency),
-            PartParameterId.MaxFrequency => stepper.WithSettings(stepper.Strength, stepper.StepsPerTurn, value),
-            _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-        };
-    }
-
-    private bool RenameStepper(int partId, string? name)
-    {
-        var index = _steppers.FindIndex(stepper => stepper.Id == partId);
-        if (index < 0)
-        {
-            return false;
-        }
-
-        _steppers[index] = _steppers[index].WithName(name);
-        return true;
-    }
+        PartParameterId.ServoStrength => stepper.WithSettings(value, stepper.StepsPerTurn, stepper.MaxFrequency),
+        PartParameterId.StepsPerTurn => stepper.WithSettings(stepper.Strength, (int)Math.Round(value), stepper.MaxFrequency),
+        PartParameterId.MaxFrequency => stepper.WithSettings(stepper.Strength, stepper.StepsPerTurn, value),
+        _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+    };
 }

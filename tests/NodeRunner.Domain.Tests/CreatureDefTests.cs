@@ -158,5 +158,7 @@ public sealed class CreatureDefTests
         public string? Name => null;
 
         public PartKind PartKind => PartKind.Node;
+
+        public IPartDef WithName(string? name) => this;
     }
 }

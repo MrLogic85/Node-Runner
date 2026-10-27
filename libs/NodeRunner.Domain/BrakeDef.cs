@@ -87,11 +87,15 @@ public sealed record BrakeDef : IHingePartDef
 
     PartKind IPartDef.PartKind => PartKind.Brake;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
+    IHingePartDef IHingePartDef.WithLinks(int? fixedLinkId, int? targetLinkId) => WithLinks(fixedLinkId, targetLinkId);
+
     public BrakeDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength);
 
     public BrakeDef WithStrength(double strength) => new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength);
 
-    /// <summary>The Brake with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
+    /// <summary>The Brake with new sides. It keeps its id (<see cref="IHingePartDef.WithLinks"/>).</summary>
     public BrakeDef WithLinks(int? fixedLinkId, int? targetLinkId) =>
         new(Id, NodeId, fixedLinkId, targetLinkId, Name, Strength);
 }

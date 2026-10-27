@@ -47,6 +47,8 @@ public sealed record WheelDef : IJointPartDef
 
     PartKind IPartDef.PartKind => PartKind.Wheel;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
     /// <summary>Its drawn and collision radius, in world units: its joint's radius while it is there.</summary>
     public double Radius { get; }
 

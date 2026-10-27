@@ -74,45 +74,27 @@ public sealed partial class CreatureBuilder
     /// Servo's: picking the other role swaps them, and it keeps its id.
     /// </summary>
     public void SetVelocityMotorLink(int velocityMotorId, bool fixedRole, int linkId) =>
-        SetSide(_velocityMotors, VelocityMotorIndexOf(velocityMotorId), fixedRole, linkId, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink));
+        SetSide(_velocityMotors[VelocityMotorIndexOf(velocityMotorId)], fixedRole, linkId);
 
-    public void RemoveVelocityMotor(int velocityMotorId) => _velocityMotors.RemoveAt(VelocityMotorIndexOf(velocityMotorId));
+    public void RemoveVelocityMotor(int velocityMotorId) => RemovePart(_velocityMotors[VelocityMotorIndexOf(velocityMotorId)]);
 
-    public int VelocityMotorIndexOf(int velocityMotorId)
-    {
-        var index = _velocityMotors.FindIndex(motor => motor.Id == velocityMotorId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(velocityMotorId), "Velocity motor id must point to an existing velocity motor.");
-        }
-
-        return index;
-    }
+    public int VelocityMotorIndexOf(int velocityMotorId) => IndexOf(_velocityMotors, velocityMotorId, nameof(velocityMotorId), "Velocity motor id must point to an existing velocity motor.");
 
     private bool HasHingePart(int nodeId) => HingeParts.Any(part => part.NodeId == nodeId);
 
-    private double VelocityMotorParameterValue(int velocityMotorId, PartParameterId parameter)
+    private static double VelocityMotorParameterValue(VelocityMotorDef motor, PartParameterId parameter) => parameter switch
     {
-        var motor = _velocityMotors[VelocityMotorIndexOf(velocityMotorId)];
-        return parameter switch
-        {
-            PartParameterId.MotorStrength => motor.Strength,
-            PartParameterId.MotorMaxSpeed => motor.MaxSpeed,
-            PartParameterId.RiseTime => motor.RiseTime,
-            _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-        };
-    }
+        PartParameterId.MotorStrength => motor.Strength,
+        PartParameterId.MotorMaxSpeed => motor.MaxSpeed,
+        PartParameterId.RiseTime => motor.RiseTime,
+        _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+    };
 
-    private void SetVelocityMotorParameter(int velocityMotorId, PartParameterId parameter, double value)
+    private static VelocityMotorDef VelocityMotorWithParameter(VelocityMotorDef motor, PartParameterId parameter, double value) => parameter switch
     {
-        var index = VelocityMotorIndexOf(velocityMotorId);
-        var motor = _velocityMotors[index];
-        _velocityMotors[index] = parameter switch
-        {
-            PartParameterId.MotorStrength => motor.WithSettings(value, motor.MaxSpeed, motor.RiseTime),
-            PartParameterId.MotorMaxSpeed => motor.WithSettings(motor.Strength, value, motor.RiseTime),
-            PartParameterId.RiseTime => motor.WithSettings(motor.Strength, motor.MaxSpeed, value),
-            _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-        };
-    }
+        PartParameterId.MotorStrength => motor.WithSettings(value, motor.MaxSpeed, motor.RiseTime),
+        PartParameterId.MotorMaxSpeed => motor.WithSettings(motor.Strength, value, motor.RiseTime),
+        PartParameterId.RiseTime => motor.WithSettings(motor.Strength, motor.MaxSpeed, value),
+        _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
+    };
 }

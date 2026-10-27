@@ -40,4 +40,8 @@ public sealed record NodeDef : IPartDef
     public string? Name { get; }
 
     PartKind IPartDef.PartKind => PartKind.Node;
+
+    public NodeDef WithName(string? name) => new(Id, Position, name);
+
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
 }

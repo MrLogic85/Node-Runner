@@ -80,19 +80,11 @@ public sealed partial class CreatureBuilder
     public CreatureBuilder(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
-        _nodes.AddRange(creature.Nodes);
-        _beams.AddRange(creature.Beams);
-        _sensors.AddRange(creature.Sensors);
-        _servos.AddRange(creature.Servos);
-        _pistons.AddRange(creature.Pistons);
-        _springs.AddRange(creature.Springs);
-        _wheels.AddRange(creature.Wheels);
-        _touchSensors.AddRange(creature.TouchSensors);
-        _rubbers.AddRange(creature.Rubbers);
-        _velocityMotors.AddRange(creature.VelocityMotors);
-        _brakes.AddRange(creature.Brakes);
-        _angleSensors.AddRange(creature.AngleSensors);
-        _steppers.AddRange(creature.Steppers);
+        foreach (var part in creature.Parts)
+        {
+            ListOf(part.PartKind).Add(part);
+        }
+
         _nextPartId = creature.NextPartId;
     }
 
@@ -154,27 +146,17 @@ public sealed partial class CreatureBuilder
     public void RemoveNode(int nodeId)
     {
         var nodeIndex = NodeIndexOf(nodeId);
-        var removedLinks = LinksAt(nodeId);
-        var removedBeamIds = removedLinks.Where(link => link.Kind == CreatureElementKind.Beam).Select(link => link.Id).ToHashSet();
-        var removedLinkIds = removedLinks.Select(link => link.Id).ToArray();
-
-        _beams.RemoveAll(beam => removedBeamIds.Contains(beam.Id));
-        _sensors.RemoveAll(sensor => removedBeamIds.Contains(sensor.BeamId));
-        _servos.RemoveAll(servo => servo.NodeId == nodeId);
-        _wheels.RemoveAll(wheel => wheel.NodeId == nodeId);
-        _touchSensors.RemoveAll(touch => touch.NodeId == nodeId);
-        _rubbers.RemoveAll(rubber => rubber.NodeId == nodeId);
-        _velocityMotors.RemoveAll(motor => motor.NodeId == nodeId);
-        _brakes.RemoveAll(brake => brake.NodeId == nodeId);
-        _angleSensors.RemoveAll(angleSensor => angleSensor.NodeId == nodeId);
-        _steppers.RemoveAll(stepper => stepper.NodeId == nodeId);
-        _pistons.RemoveAll(piston => piston.NodeA == nodeId || piston.NodeB == nodeId);
-        _springs.RemoveAll(spring => spring.NodeA == nodeId || spring.NodeB == nodeId);
-        _nodes.RemoveAt(nodeIndex);
-        foreach (var linkId in removedLinkIds)
+        foreach (var part in JointParts.Where(part => part.NodeId == nodeId))
         {
-            ClearSides(linkId);
+            ListOf(part.PartKind).Remove(part.Id);
         }
+
+        foreach (var link in LinksAt(nodeId))
+        {
+            RemovePart(ExistingPart(link.Id));
+        }
+
+        _nodes.RemoveAt(nodeIndex);
     }
 
     /// <summary>
@@ -310,308 +292,55 @@ public sealed partial class CreatureBuilder
             return;
         }
 
-        _beams.RemoveAll(beam => beam.Id == id);
-        _pistons.RemoveAll(piston => piston.Id == id);
-        _springs.RemoveAll(spring => spring.Id == id);
+        ListOf(ExistingPart(id).PartKind).Remove(id);
         ReplaceSides(id, linkId);
     }
 
     // Each hinge part with linkId as a side gets newLinkId there instead, or no side when it is null; each
-    // keeps its id (ServoDef.WithLinks).
+    // keeps its id (IHingePartDef.WithLinks).
     private void ReplaceSides(int linkId, int? newLinkId)
     {
-        ReplaceSide(_servos, linkId, newLinkId, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink));
-        ReplaceSide(_velocityMotors, linkId, newLinkId, (motor, fixedLink, targetLink) => motor.WithLinks(fixedLink, targetLink));
-        ReplaceSide(_steppers, linkId, newLinkId, (stepper, fixedLink, targetLink) => stepper.WithLinks(fixedLink, targetLink));
-        ReplaceSide(_brakes, linkId, newLinkId, (brake, fixedLink, targetLink) => brake.WithLinks(fixedLink, targetLink));
-        ReplaceSide(_angleSensors, linkId, newLinkId, (angleSensor, fixedLink, targetLink) => angleSensor.WithLinks(fixedLink, targetLink));
-    }
-
-    private static void ReplaceSide<T>(List<T> parts, int linkId, int? newLinkId, Func<T, int?, int?, T> withSides)
-        where T : IHingePartDef
-    {
-        for (var i = 0; i < parts.Count; i++)
+        foreach (var part in HingeParts.Where(part => part.FixedLinkId == linkId || part.TargetLinkId == linkId))
         {
-            var part = parts[i];
-            if (part.FixedLinkId == linkId || part.TargetLinkId == linkId)
-            {
-                parts[i] = withSides(
-                    part,
-                    part.FixedLinkId == linkId ? newLinkId : part.FixedLinkId,
-                    part.TargetLinkId == linkId ? newLinkId : part.TargetLinkId);
-            }
+            Replace(part.WithLinks(
+                part.FixedLinkId == linkId ? newLinkId : part.FixedLinkId,
+                part.TargetLinkId == linkId ? newLinkId : part.TargetLinkId));
         }
-    }
-
-    /// <summary>The settings part <paramref name="partId"/> has, in panel order; a joint and a beam have none.</summary>
-    public IReadOnlyList<PartParameterId> ParametersOf(int partId) =>
-        _pistons.Any(piston => piston.Id == partId) ? _pistonParameters
-        : _servos.Any(servo => servo.Id == partId) ? _servoParameters
-        : _velocityMotors.Any(motor => motor.Id == partId) ? _velocityMotorParameters
-        : _steppers.Any(stepper => stepper.Id == partId) ? _stepperParameters
-        : _brakes.Any(brake => brake.Id == partId) ? _brakeParameters
-        : _springs.Any(spring => spring.Id == partId) ? _springParameters
-        : _wheels.Any(wheel => wheel.Id == partId) ? _wheelParameters
-        : _sensors.Any(sensor => sensor.Id == partId && sensor.Kind == SensorKind.Camera) ? _cameraParameters
-        : [];
-
-    /// <summary>
-    /// Whether the drawing is one Build lets a player make: every joint inside
-    /// <see cref="BuildViewModel.BuildArea"/> and every panel setting inside its slider's range, a
-    /// Locked Brake's top step included. A creature from outside the app, like a share code,
-    /// is checked with this.
-    /// </summary>
-    public bool IsWithinBuildLimits() =>
-        _nodes.All(node => BuildViewModel.BuildArea.Contains(node.Position))
-        && PartIdsWithSettings.All(partId => ParametersOf(partId).All(parameter => IsOnItsSlider(parameter, ParameterValue(partId, parameter))));
-
-    /// <summary>Every part with settings (<see cref="ParametersOf"/>).</summary>
-    public IEnumerable<int> PartIdsWithSettings =>
-        _sensors.Select(sensor => sensor.Id)
-            .Concat(_servos.Select(servo => servo.Id))
-            .Concat(_velocityMotors.Select(motor => motor.Id))
-            .Concat(_steppers.Select(stepper => stepper.Id))
-            .Concat(_brakes.Select(brake => brake.Id))
-            .Concat(_pistons.Select(piston => piston.Id))
-            .Concat(_springs.Select(spring => spring.Id))
-            .Concat(_wheels.Select(wheel => wheel.Id))
-            .Where(partId => ParametersOf(partId).Count > 0);
-
-    /// <summary>Whether <paramref name="value"/>, in world units, is one <paramref name="parameter"/>'s slider can set; a setting without one can be any.</summary>
-    public static bool IsOnItsSlider(PartParameterId parameter, double value) =>
-        PartParameters.Of(parameter).Slider is not { } slider || slider.Allows(value);
-
-    /// <summary>
-    /// Whether <paramref name="parameter"/> does anything on part <paramref name="partId"/> as it is
-    /// set now: a one-ray Camera has no Spread.
-    /// </summary>
-    public bool ParameterHasEffect(int partId, PartParameterId parameter) =>
-        parameter != PartParameterId.Spread || Camera(partId).Rays > 1;
-
-    /// <summary>Part <paramref name="partId"/>'s <paramref name="parameter"/>, in world units.</summary>
-    public double ParameterValue(int partId, PartParameterId parameter)
-    {
-        if (_sensors.Any(sensor => sensor.Id == partId))
-        {
-            var camera = Camera(partId);
-            return parameter switch
-            {
-                PartParameterId.Aim => camera.Aim ?? DefaultAim(camera.BeamId),
-                PartParameterId.Rays => camera.Rays!.Value,
-                PartParameterId.Spread => camera.Spread!.Value,
-                PartParameterId.CameraRange => camera.Range!.Value,
-                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-            };
-        }
-
-        if (_springs.Any(spring => spring.Id == partId))
-        {
-            var spring = _springs[SpringIndexOf(partId)];
-            return parameter switch
-            {
-                PartParameterId.Stiffness => spring.Stiffness,
-                PartParameterId.Damping => spring.Damping,
-                PartParameterId.Stroke => spring.Stroke,
-                PartParameterId.CoilLength => spring.CoilLength,
-                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-            };
-        }
-
-        if (_wheels.Any(wheel => wheel.Id == partId))
-        {
-            var wheel = _wheels[WheelIndexOf(partId)];
-            return parameter switch
-            {
-                PartParameterId.WheelRadius => wheel.Radius,
-                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-            };
-        }
-
-        if (_servos.Any(servo => servo.Id == partId))
-        {
-            var servo = _servos[ServoIndexOf(partId)];
-            return parameter switch
-            {
-                PartParameterId.ServoStrength => servo.Strength,
-                PartParameterId.Range => servo.Range,
-                PartParameterId.ServoStartPosition => servo.Start,
-                PartParameterId.AngularMaxSpeed => servo.MaxSpeed,
-                PartParameterId.RiseTime => servo.RiseTime,
-                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-            };
-        }
-
-        if (_velocityMotors.Any(motor => motor.Id == partId))
-        {
-            return VelocityMotorParameterValue(partId, parameter);
-        }
-
-        if (_steppers.Any(stepper => stepper.Id == partId))
-        {
-            return StepperParameterValue(partId, parameter);
-        }
-
-        if (_brakes.Any(brake => brake.Id == partId))
-        {
-            return parameter == PartParameterId.BrakeStrength
-                ? _brakes[BrakeIndexOf(partId)].Strength
-                : throw new ArgumentOutOfRangeException(nameof(parameter));
-        }
-
-        return parameter switch
-        {
-            PartParameterId.Strength => _pistons[PistonIndexOf(partId)].Strength,
-            PartParameterId.Stroke => _pistons[PistonIndexOf(partId)].Stroke,
-            PartParameterId.StartPosition => _pistons[PistonIndexOf(partId)].Start,
-            PartParameterId.MaxSpeed => _pistons[PistonIndexOf(partId)].MaxSpeed,
-            PartParameterId.RiseTime => _pistons[PistonIndexOf(partId)].RiseTime,
-            _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-        };
-    }
-
-    /// <summary>Sets part <paramref name="partId"/>'s <paramref name="parameter"/>, in world units, keeping its other settings.</summary>
-    public void SetParameter(int partId, PartParameterId parameter, double value)
-    {
-        if (_sensors.Any(sensor => sensor.Id == partId))
-        {
-            var camera = Camera(partId);
-            _sensors[SensorIndexOf(partId)] = parameter switch
-            {
-                PartParameterId.Aim => camera.WithAim(value),
-                PartParameterId.Rays => camera.WithRays(value == Math.Round(value) && value is >= int.MinValue and <= int.MaxValue
-                    ? (int)value
-                    : throw new ArgumentOutOfRangeException(nameof(value), "A Camera's rays are a whole number.")),
-                PartParameterId.Spread => camera.WithSpread(value),
-                PartParameterId.CameraRange => camera.WithRange(value),
-                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-            };
-            return;
-        }
-
-        if (_springs.Any(spring => spring.Id == partId))
-        {
-            var springIndex = SpringIndexOf(partId);
-            var spring = _springs[springIndex];
-            _springs[springIndex] = parameter switch
-            {
-                PartParameterId.Stiffness => spring.WithSettings(value, spring.Damping, spring.Stroke, spring.CoilLength),
-                PartParameterId.Damping => spring.WithSettings(spring.Stiffness, value, spring.Stroke, spring.CoilLength),
-                PartParameterId.Stroke => spring.WithSettings(spring.Stiffness, spring.Damping, value, spring.CoilLength),
-                PartParameterId.CoilLength => spring.WithSettings(spring.Stiffness, spring.Damping, spring.Stroke, value),
-                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-            };
-            return;
-        }
-
-        if (_wheels.Any(wheel => wheel.Id == partId))
-        {
-            var wheelIndex = WheelIndexOf(partId);
-            var wheel = _wheels[wheelIndex];
-            _wheels[wheelIndex] = parameter switch
-            {
-                PartParameterId.WheelRadius => wheel.WithSettings(value),
-                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-            };
-            return;
-        }
-
-        if (_servos.Any(servo => servo.Id == partId))
-        {
-            var servoIndex = ServoIndexOf(partId);
-            var servo = _servos[servoIndex];
-            _servos[servoIndex] = parameter switch
-            {
-                PartParameterId.ServoStrength => servo.WithSettings(value, servo.Range, servo.Start, servo.MaxSpeed, servo.RiseTime),
-                PartParameterId.Range => servo.WithSettings(servo.Strength, value, servo.Start, servo.MaxSpeed, servo.RiseTime),
-                PartParameterId.ServoStartPosition => servo.WithSettings(servo.Strength, servo.Range, value, servo.MaxSpeed, servo.RiseTime),
-                PartParameterId.AngularMaxSpeed => servo.WithSettings(servo.Strength, servo.Range, servo.Start, value, servo.RiseTime),
-                PartParameterId.RiseTime => servo.WithSettings(servo.Strength, servo.Range, servo.Start, servo.MaxSpeed, value),
-                _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-            };
-            return;
-        }
-
-        if (_velocityMotors.Any(motor => motor.Id == partId))
-        {
-            SetVelocityMotorParameter(partId, parameter, value);
-            return;
-        }
-
-        if (_steppers.Any(stepper => stepper.Id == partId))
-        {
-            SetStepperParameter(partId, parameter, value);
-            return;
-        }
-
-        if (_brakes.Any(brake => brake.Id == partId))
-        {
-            SetBrakeStrength(partId, parameter == PartParameterId.BrakeStrength ? value : throw new ArgumentOutOfRangeException(nameof(parameter)));
-            return;
-        }
-
-        var index = PistonIndexOf(partId);
-        var piston = _pistons[index];
-        _pistons[index] = parameter switch
-        {
-            PartParameterId.Strength => piston.WithSettings(value, piston.Stroke, piston.Start, piston.MaxSpeed, piston.RiseTime),
-            PartParameterId.Stroke => piston.WithSettings(piston.Strength, value, piston.Start, piston.MaxSpeed, piston.RiseTime),
-            PartParameterId.StartPosition => piston.WithSettings(piston.Strength, piston.Stroke, value, piston.MaxSpeed, piston.RiseTime),
-            PartParameterId.MaxSpeed => piston.WithSettings(piston.Strength, piston.Stroke, piston.Start, value, piston.RiseTime),
-            PartParameterId.RiseTime => piston.WithSettings(piston.Strength, piston.Stroke, piston.Start, piston.MaxSpeed, value),
-            _ => throw new ArgumentOutOfRangeException(nameof(parameter)),
-        };
-    }
-
-    private static readonly PartParameterId[] _pistonParameters = [PartParameterId.Strength, PartParameterId.Stroke, PartParameterId.StartPosition, PartParameterId.MaxSpeed, PartParameterId.RiseTime];
-
-    private static readonly PartParameterId[] _servoParameters = [PartParameterId.ServoStrength, PartParameterId.Range, PartParameterId.ServoStartPosition, PartParameterId.AngularMaxSpeed, PartParameterId.RiseTime];
-
-    private static readonly PartParameterId[] _springParameters = [PartParameterId.Stiffness, PartParameterId.Damping, PartParameterId.Stroke, PartParameterId.CoilLength];
-
-    private static readonly PartParameterId[] _wheelParameters = [PartParameterId.WheelRadius];
-
-    private static readonly PartParameterId[] _cameraParameters = [PartParameterId.Aim, PartParameterId.Rays, PartParameterId.Spread, PartParameterId.CameraRange];
-
-    private SensorDef Camera(int sensorId) => _sensors[SensorIndexOf(sensorId)] is { Kind: SensorKind.Camera } camera
-        ? camera
-        : throw new ArgumentOutOfRangeException(nameof(sensorId), "Only a Camera has settings.");
-
-    private double DefaultAim(int beamId)
-    {
-        var beam = _beams[BeamIndexOf(beamId)];
-        return SensorDef.DefaultAim(_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
 
     /// <summary>Removes a Piston by id, leaving any hinge part that used it incomplete until the player picks another link.</summary>
-    public void RemovePiston(int pistonId)
-    {
-        _pistons.RemoveAt(PistonIndexOf(pistonId));
-        ClearSides(pistonId);
-    }
+    public void RemovePiston(int pistonId) => RemovePart(_pistons[PistonIndexOf(pistonId)]);
 
-    public void RemoveServo(int servoId) => _servos.RemoveAt(ServoIndexOf(servoId));
+    public void RemoveServo(int servoId) => RemovePart(_servos[ServoIndexOf(servoId)]);
 
     /// <summary>Removes a Wheel by id, leaving any hinge part that used it incomplete until the player picks another side.</summary>
-    public void RemoveWheel(int wheelId)
-    {
-        _wheels.RemoveAt(WheelIndexOf(wheelId));
-        ClearSides(wheelId);
-    }
+    public void RemoveWheel(int wheelId) => RemovePart(_wheels[WheelIndexOf(wheelId)]);
 
     /// <summary>Removes a Spring by id, leaving any hinge part that used it incomplete until the player picks another link.</summary>
-    public void RemoveSpring(int springId)
-    {
-        _springs.RemoveAt(SpringIndexOf(springId));
-        ClearSides(springId);
-    }
+    public void RemoveSpring(int springId) => RemovePart(_springs[SpringIndexOf(springId)]);
 
     /// <summary>Removes a beam by id, cascading to sensors on it.</summary>
-    public void RemoveBeam(int beamId)
+    public void RemoveBeam(int beamId) => RemovePart(_beams[BeamIndexOf(beamId)]);
+
+    /// <summary>
+    /// Removes any part by id with what goes with it: a joint takes its links and everything on it, a beam
+    /// takes its sensor, and a link or Wheel leaves each hinge part that used it as a side without that side.
+    /// </summary>
+    public void RemovePart(int partId) => RemovePart(ExistingPart(partId));
+
+    private void RemovePart(IPartDef part)
     {
-        var beamIndex = BeamIndexOf(beamId);
-        _beams.RemoveAt(beamIndex);
-        _sensors.RemoveAll(sensor => sensor.BeamId == beamId);
-        ClearSides(beamId);
+        if (part is NodeDef)
+        {
+            RemoveNode(part.Id);
+            return;
+        }
+
+        ListOf(part.PartKind).Remove(part.Id);
+
+        // Only a beam carries sensors and only a link or Wheel is a side, so for any other part these find none.
+        _sensors.RemoveAll(sensor => sensor.BeamId == part.Id);
+        ClearSides(part.Id);
     }
 
     // A deleted link or Wheel leaves each hinge part that used it as a side without that side.
@@ -706,7 +435,7 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    public void RemoveTouchSensor(int touchSensorId) => _touchSensors.RemoveAt(TouchSensorIndexOf(touchSensorId));
+    public void RemoveTouchSensor(int touchSensorId) => RemovePart(_touchSensors[TouchSensorIndexOf(touchSensorId)]);
 
     /// <summary>
     /// Whether a Rubber can sit on this node; if not, <paramref name="reason"/> says why. A
@@ -743,7 +472,7 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    public void RemoveRubber(int rubberId) => _rubbers.RemoveAt(RubberIndexOf(rubberId));
+    public void RemoveRubber(int rubberId) => RemovePart(_rubbers[RubberIndexOf(rubberId)]);
 
     public bool ServoNeedsTwoSides(int nodeId) => HasNode(nodeId) && !JointMotor.HasTwoSides(LinksAt(nodeId), WheelAt(nodeId) is not null);
 
@@ -796,17 +525,21 @@ public sealed partial class CreatureBuilder
     /// Changes the Servo's fixed or target side, a link at its joint or its Wheel. Picking the
     /// other role swaps them. The Servo keeps its id (<see cref="ServoDef.WithLinks"/>).
     /// </summary>
-    public void SetServoLink(int servoId, bool fixedRole, int linkId) =>
-        SetSide(_servos, ServoIndexOf(servoId), fixedRole, linkId, (servo, fixedLink, targetLink) => servo.WithLinks(fixedLink, targetLink));
+    public void SetServoLink(int servoId, bool fixedRole, int linkId) => SetSide(_servos[ServoIndexOf(servoId)], fixedRole, linkId);
 
-    // Gives parts[index], a hinge part, linkId as its fixed or target side.
-    private void SetSide<T>(List<T> parts, int index, bool fixedRole, int linkId, Func<T, int?, int?, T> withSides)
-        where T : IHingePartDef
+    /// <summary>
+    /// Changes any hinge part's fixed or target side, as <see cref="SetServoLink"/> does a Servo's:
+    /// picking the other role swaps them, and it keeps its id.
+    /// </summary>
+    public void SetHingePartLink(int hingePartId, bool fixedRole, int linkId) =>
+        SetSide(ExistingPart(hingePartId) as IHingePartDef ?? throw new ArgumentOutOfRangeException(nameof(hingePartId), "Part id must point to an existing hinge part."), fixedRole, linkId);
+
+    // Gives the hinge part linkId as its fixed or target side.
+    private void SetSide(IHingePartDef part, bool fixedRole, int linkId)
     {
-        var part = parts[index];
         ValidateServoSide(linkId, part.NodeId);
         var (fixedLink, targetLink) = PickSide(part, fixedRole, linkId);
-        parts[index] = withSides(part, fixedLink, targetLink);
+        Replace(part.WithLinks(fixedLink, targetLink));
     }
 
     // A hinge part's sides once linkId takes the fixed or target role; picking the other role swaps them.
@@ -918,99 +651,10 @@ public sealed partial class CreatureBuilder
         return (_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
 
-    public void RemoveSensor(int sensorId)
-    {
-        var sensorIndex = SensorIndexOf(sensorId);
-        _sensors.RemoveAt(sensorIndex);
-    }
+    public void RemoveSensor(int sensorId) => RemovePart(_sensors[SensorIndexOf(sensorId)]);
 
-    public void Rename(int partId, string? name)
-    {
-        if (partId <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(partId), "Part id must be positive.");
-        }
-
-        var nodeIndex = _nodes.FindIndex(node => node.Id == partId);
-        if (nodeIndex >= 0)
-        {
-            var node = _nodes[nodeIndex];
-            _nodes[nodeIndex] = new NodeDef(node.Id, node.Position, name);
-            return;
-        }
-
-        var beamIndex = _beams.FindIndex(beam => beam.Id == partId);
-        if (beamIndex >= 0)
-        {
-            var beam = _beams[beamIndex];
-            _beams[beamIndex] = new BeamDef(beam.Id, beam.NodeA, beam.NodeB, name);
-            return;
-        }
-
-        var sensorIndex = _sensors.FindIndex(sensor => sensor.Id == partId);
-        if (sensorIndex >= 0)
-        {
-            var sensor = _sensors[sensorIndex];
-            _sensors[sensorIndex] = sensor.WithName(name);
-            return;
-        }
-
-        var pistonIndex = _pistons.FindIndex(piston => piston.Id == partId);
-        if (pistonIndex >= 0)
-        {
-            _pistons[pistonIndex] = _pistons[pistonIndex].WithName(name);
-            return;
-        }
-
-        var servoIndex = _servos.FindIndex(servo => servo.Id == partId);
-        if (servoIndex >= 0)
-        {
-            _servos[servoIndex] = _servos[servoIndex].WithName(name);
-            return;
-        }
-
-        var springIndex = _springs.FindIndex(spring => spring.Id == partId);
-        if (springIndex >= 0)
-        {
-            _springs[springIndex] = _springs[springIndex].WithName(name);
-            return;
-        }
-
-        var wheelIndex = _wheels.FindIndex(wheel => wheel.Id == partId);
-        if (wheelIndex >= 0)
-        {
-            _wheels[wheelIndex] = _wheels[wheelIndex].WithName(name);
-            return;
-        }
-
-        var touchIndex = _touchSensors.FindIndex(touch => touch.Id == partId);
-        if (touchIndex >= 0)
-        {
-            _touchSensors[touchIndex] = _touchSensors[touchIndex].WithName(name);
-            return;
-        }
-
-        var rubberIndex = _rubbers.FindIndex(rubber => rubber.Id == partId);
-        if (rubberIndex >= 0)
-        {
-            _rubbers[rubberIndex] = _rubbers[rubberIndex].WithName(name);
-            return;
-        }
-
-        var velocityMotorIndex = _velocityMotors.FindIndex(motor => motor.Id == partId);
-        if (velocityMotorIndex >= 0)
-        {
-            _velocityMotors[velocityMotorIndex] = _velocityMotors[velocityMotorIndex].WithName(name);
-            return;
-        }
-
-        if (RenameBrake(partId, name) || RenameAngleSensor(partId, name) || RenameStepper(partId, name))
-        {
-            return;
-        }
-
-        throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
-    }
+    /// <summary>Renames any part, keeping its id and everything else.</summary>
+    public void Rename(int partId, string? name) => Replace(ExistingPart(partId).WithName(name));
 
     /// <summary>The current drawing, finished or not: what a saved Creation stores.</summary>
     public CreatureDef Build() => new(Parts, _nextPartId);
@@ -1024,103 +668,30 @@ public sealed partial class CreatureBuilder
         return creature is not null;
     }
 
-    public int NodeIndexOf(int nodeId)
+    public int NodeIndexOf(int nodeId) => IndexOf(_nodes, nodeId, nameof(nodeId), "Node id must point to an existing node.");
+
+    public int BeamIndexOf(int beamId) => IndexOf(_beams, beamId, nameof(beamId), "Beam id must point to an existing beam.");
+
+    public int SensorIndexOf(int sensorId) => IndexOf(_sensors, sensorId, nameof(sensorId), "Sensor id must point to an existing sensor.");
+
+    public int PistonIndexOf(int pistonId) => IndexOf(_pistons, pistonId, nameof(pistonId), "Piston id must point to an existing piston.");
+
+    public int ServoIndexOf(int servoId) => IndexOf(_servos, servoId, nameof(servoId), "Servo id must point to an existing servo.");
+
+    public int SpringIndexOf(int springId) => IndexOf(_springs, springId, nameof(springId), "Spring id must point to an existing spring.");
+
+    public int WheelIndexOf(int wheelId) => IndexOf(_wheels, wheelId, nameof(wheelId), "Wheel id must point to an existing wheel.");
+
+    public int TouchSensorIndexOf(int touchSensorId) => IndexOf(_touchSensors, touchSensorId, nameof(touchSensorId), "Touch sensor id must point to an existing touch sensor.");
+
+    public int RubberIndexOf(int rubberId) => IndexOf(_rubbers, rubberId, nameof(rubberId), "Rubber id must point to an existing rubber.");
+
+    // The index of the part with partId in parts, or an ArgumentOutOfRangeException for parameterName.
+    private static int IndexOf<T>(List<T> parts, int partId, string parameterName, string message)
+        where T : IPartDef
     {
-        var index = _nodes.FindIndex(node => node.Id == nodeId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(nodeId), "Node id must point to an existing node.");
-        }
-
-        return index;
-    }
-
-    public int BeamIndexOf(int beamId)
-    {
-        var index = _beams.FindIndex(beam => beam.Id == beamId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(beamId), "Beam id must point to an existing beam.");
-        }
-
-        return index;
-    }
-
-    public int SensorIndexOf(int sensorId)
-    {
-        var index = _sensors.FindIndex(sensor => sensor.Id == sensorId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(sensorId), "Sensor id must point to an existing sensor.");
-        }
-
-        return index;
-    }
-
-    public int PistonIndexOf(int pistonId)
-    {
-        var index = _pistons.FindIndex(piston => piston.Id == pistonId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(pistonId), "Piston id must point to an existing piston.");
-        }
-
-        return index;
-    }
-
-    public int ServoIndexOf(int servoId)
-    {
-        var index = _servos.FindIndex(servo => servo.Id == servoId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(servoId), "Servo id must point to an existing servo.");
-        }
-
-        return index;
-    }
-
-    public int SpringIndexOf(int springId)
-    {
-        var index = _springs.FindIndex(spring => spring.Id == springId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(springId), "Spring id must point to an existing spring.");
-        }
-
-        return index;
-    }
-
-    public int WheelIndexOf(int wheelId)
-    {
-        var index = _wheels.FindIndex(wheel => wheel.Id == wheelId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(wheelId), "Wheel id must point to an existing wheel.");
-        }
-
-        return index;
-    }
-
-    public int TouchSensorIndexOf(int touchSensorId)
-    {
-        var index = _touchSensors.FindIndex(touch => touch.Id == touchSensorId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(touchSensorId), "Touch sensor id must point to an existing touch sensor.");
-        }
-
-        return index;
-    }
-
-    public int RubberIndexOf(int rubberId)
-    {
-        var index = _rubbers.FindIndex(rubber => rubber.Id == rubberId);
-        if (index < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(rubberId), "Rubber id must point to an existing rubber.");
-        }
-
-        return index;
+        var index = parts.FindIndex(part => part.Id == partId);
+        return index >= 0 ? index : throw new ArgumentOutOfRangeException(parameterName, message);
     }
 
     private static bool IsSamePair(BeamDef beam, int nodeA, int nodeB) => IsSamePair(beam.NodeA, beam.NodeB, nodeA, nodeB);
@@ -1159,4 +730,56 @@ public sealed partial class CreatureBuilder
     private int AllocatePartId() => _nextPartId++;
 
     private IEnumerable<LinkRef> Links() => LinkRef.All(_beams, _pistons, _springs);
+
+    /// <summary>The part with <paramref name="partId"/>, whatever its kind, or null.</summary>
+    public IPartDef? FindPart(int partId) => Parts.FirstOrDefault(part => part.Id == partId);
+
+    private IPartDef ExistingPart(int partId) =>
+        FindPart(partId) ?? throw new ArgumentOutOfRangeException(nameof(partId), "Part id must point to an existing part.");
+
+    // Puts part in place of the one with its id, in its kind's list.
+    private void Replace(IPartDef part) => ListOf(part.PartKind).Replace(part);
+
+    // The list a part of this kind is kept in, so the operations every part has need no branch per kind.
+    private IPartList ListOf(PartKind kind) => kind switch
+    {
+        PartKind.Node => new PartList<NodeDef>(_nodes),
+        PartKind.Beam => new PartList<BeamDef>(_beams),
+        PartKind.Accelerometer or PartKind.Camera => new PartList<SensorDef>(_sensors),
+        PartKind.Servo => new PartList<ServoDef>(_servos),
+        PartKind.Piston => new PartList<PistonDef>(_pistons),
+        PartKind.Spring => new PartList<SpringDef>(_springs),
+        PartKind.Wheel => new PartList<WheelDef>(_wheels),
+        PartKind.TouchSensor => new PartList<TouchSensorDef>(_touchSensors),
+        PartKind.Rubber => new PartList<RubberDef>(_rubbers),
+        PartKind.VelocityMotor => new PartList<VelocityMotorDef>(_velocityMotors),
+        PartKind.Brake => new PartList<BrakeDef>(_brakes),
+        PartKind.AngleSensor => new PartList<AngleSensorDef>(_angleSensors),
+        PartKind.Stepper => new PartList<StepperDef>(_steppers),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Every part kind has a list."),
+    };
+
+    private interface IPartList
+    {
+        void Add(IPartDef part);
+
+        void Replace(IPartDef part);
+
+        void Remove(int partId);
+    }
+
+    // One kind's typed list, taking parts of that kind.
+    private sealed class PartList<T>(List<T> parts) : IPartList
+        where T : IPartDef
+    {
+        public void Add(IPartDef part) => parts.Add((T)part);
+
+        public void Replace(IPartDef part)
+        {
+            var index = parts.FindIndex(listed => listed.Id == part.Id);
+            parts[index >= 0 ? index : throw new InvalidOperationException($"No {part.PartKind} {part.Id} to replace.")] = (T)part;
+        }
+
+        public void Remove(int partId) => parts.RemoveAll(listed => listed.Id == partId);
+    }
 }

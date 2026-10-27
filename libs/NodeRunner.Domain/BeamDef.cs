@@ -44,4 +44,8 @@ public sealed record BeamDef : IPartDef
     public string? Name { get; }
 
     PartKind IPartDef.PartKind => PartKind.Beam;
+
+    public BeamDef WithName(string? name) => new(Id, NodeA, NodeB, name);
+
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
 }

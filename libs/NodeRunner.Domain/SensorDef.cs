@@ -90,6 +90,8 @@ public sealed record SensorDef : IPartDef
 
     PartKind IPartDef.PartKind => PartKinds.Of(Kind).Kind;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
     /// <summary>
     /// A Camera's aim: the angle of its centre ray from its beam's direction, in radians
     /// (the ray math is <c>CameraRays</c> in NodeRunner.Mechanics). A <see cref="CreatureDef"/> gives a

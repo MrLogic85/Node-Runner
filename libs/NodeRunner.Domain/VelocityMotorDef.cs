@@ -104,12 +104,16 @@ public sealed record VelocityMotorDef : IJointMotorDef
 
     PartKind IPartDef.PartKind => PartKind.VelocityMotor;
 
+    IPartDef IPartDef.WithName(string? name) => WithName(name);
+
+    IHingePartDef IHingePartDef.WithLinks(int? fixedLinkId, int? targetLinkId) => WithLinks(fixedLinkId, targetLinkId);
+
     public VelocityMotorDef WithName(string? name) => new(Id, NodeId, FixedLinkId, TargetLinkId, name, Strength, MaxSpeed, RiseTime);
 
     public VelocityMotorDef WithSettings(double strength, double maxSpeed, double riseTime) =>
         new(Id, NodeId, FixedLinkId, TargetLinkId, Name, strength, maxSpeed, riseTime);
 
-    /// <summary>The motor with new sides. It keeps its id, like a Servo (<see cref="ServoDef.WithLinks"/>).</summary>
+    /// <summary>The motor with new sides. It keeps its id (<see cref="IHingePartDef.WithLinks"/>).</summary>
     public VelocityMotorDef WithLinks(int? fixedLinkId, int? targetLinkId) =>
         new(Id, NodeId, fixedLinkId, targetLinkId, Name, Strength, MaxSpeed, RiseTime);
 }
