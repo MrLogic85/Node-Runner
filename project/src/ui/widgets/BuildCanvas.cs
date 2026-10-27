@@ -396,7 +396,7 @@ public partial class BuildCanvas : Node2D
         var targets = _gestures.TargetsOf(PlacingPart);
         _creature.Transform = ViewTransform();
         _creature.Show(
-            new CreatureShape(_viewModel.Nodes, _viewModel.Beams, _viewModel.Servos, _viewModel.Pistons, _viewModel.Springs, _viewModel.Sensors, _viewModel.Wheels, _viewModel.TouchSensors, _viewModel.Rubbers, _viewModel.VelocityMotors, _viewModel.Brakes, _viewModel.AngleSensors, _viewModel.Steppers),
+            new CreatureShape(_viewModel.Parts),
             new CreatureMarks(
                 selected,
                 ShowsAsLoose,

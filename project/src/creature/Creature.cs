@@ -66,6 +66,7 @@ public partial class Creature : Node2D
     private PistonLink[] _pistons = [];
     private PistonVisual[] _pistonVisuals = [];
     private SpringVisual[] _springVisuals = [];
+    private PartIndex<PartView> _parts = new();
     private DrawGroups? _drawGroups;
     private RaisedParts _raised = RaisedParts.None;
     private EndStops[] _pistonEndStops = [];
@@ -244,6 +245,7 @@ public partial class Creature : Node2D
         CreateAngleSensors(definition);
         CreateSteppers(definition);
         CapEndStops(definition);
+        IndexParts(definition);
         _drawGroups = DrawGroups.Of(definition.Nodes, LinkRef.All(definition.Beams, definition.Pistons, definition.Springs));
         ConfigureNetworkBuffers(definition);
         ShowInEitherArenaView(this);

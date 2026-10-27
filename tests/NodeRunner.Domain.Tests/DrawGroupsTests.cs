@@ -174,4 +174,37 @@ public sealed class DrawGroupsTests
         (order[0], order[^1]).ShouldBe((0, (2 * DrawGroups.SurfaceRanks) - 1));
         DrawGroups.Rank(DrawSlot.Link, DrawGroups.MaxGroups + 7, false).ShouldBe(DrawGroups.Rank(DrawSlot.Link, DrawGroups.MaxGroups - 1, false));
     }
+
+    // Each part kind draws in its owner's group: a joint part its joint's, a sensor its beam's.
+    [Fact]
+    public void OwnerOf_EveryPartKind_IsItsJointLinkOrBeam()
+    {
+        var parts = EveryPartKind.Creature.Parts.ToDictionary(part => part.Id);
+
+        EveryPartKind.HoldsEveryKind.ShouldBeTrue();
+        parts.Values.ToDictionary(part => part.Id, DrawGroups.OwnerOf).ShouldBe(new Dictionary<int, int>
+        {
+            [1] = 1,
+            [2] = 2,
+            [3] = 3,
+            [4] = 4,
+            [18] = 18,
+            [5] = 5,
+            [6] = 6,
+            [19] = 19,
+            [20] = 20,
+            [7] = 5,
+            [8] = 6,
+            [9] = 1,
+            [10] = 10,
+            [11] = 11,
+            [12] = 1,
+            [13] = 1,
+            [14] = 1,
+            [15] = 2,
+            [16] = 3,
+            [17] = 4,
+            [21] = 18,
+        });
+    }
 }

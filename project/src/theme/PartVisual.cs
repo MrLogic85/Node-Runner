@@ -7,7 +7,7 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// What every shared part visual has: its theme, whether it is selected, and its place on
 /// a <see cref="CreatureLayers"/> layer. A part in a draw group takes its layer from its
-/// <see cref="DrawSlot"/>, the group <see cref="Place"/> finds for it and its surface: while
+/// <see cref="DrawSlot"/>, the group <see cref="Place(DrawGroups, int, bool)"/> finds for it and its surface: while
 /// selected or raised it moves to the selected surface. A part draws its selection mark in its
 /// own drawing. The parts take plain visual state only,
 /// so Build, Training and thumbnails can all feed them.
@@ -57,6 +57,16 @@ public partial class PartVisual : Node2D
 
         _raised = raised;
         ApplyLayer();
+    }
+
+    /// <summary>
+    /// Puts the visual of <paramref name="part"/> in its owner's draw group (<see cref="DrawGroups.OwnerOf"/>),
+    /// on the selected surface when <paramref name="raised"/> holds it.
+    /// </summary>
+    public void Place(DrawGroups groups, IPartDef part, RaisedParts raised)
+    {
+        ArgumentNullException.ThrowIfNull(raised);
+        Place(groups, DrawGroups.OwnerOf(part), raised.Contains(part));
     }
 
     /// <summary>
