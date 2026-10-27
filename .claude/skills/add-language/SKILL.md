@@ -24,8 +24,12 @@ description: Add a translation of Node Runner into a new language, from the .po 
    ```
 
 3. Translate every entry by "Adding a language". Check the header and
-   plural forms with `msgfmt --check -o /dev/null project/locale/<language>.po`;
-   it does not check the `{0}` placeholders, so compare those by hand.
+   plural forms with `msgfmt --check -o /dev/null project/locale/<language>.po`,
+   and the `{0}` placeholders with the test:
+
+   ```bash
+   dotnet test tests/NodeRunner.Ui.Tests --filter TranslationPlaceholdersTests
+   ```
 4. Register the file in Project Settings → Localization → Translations
    (`internationalization/locale/translations` in `project/project.godot`),
    and turn on the text server data ("Text server data").
