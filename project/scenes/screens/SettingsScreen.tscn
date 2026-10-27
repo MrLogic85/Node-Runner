@@ -94,7 +94,7 @@ theme_override_constants/separation = 4
 
 [node name="GridLabel" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Form/GridRow"]
 layout_mode = 2
-text = "Grid"
+text = "Grid default"
 script = ExtResource("4_label")
 TextStyle = 12
 TextColor = 8

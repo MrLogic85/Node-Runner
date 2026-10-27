@@ -251,8 +251,9 @@ centred column, `w-form` wide. Each change applies and saves at once,
 with no Save button, so the screen itself is the preview. The Theme row is
 three `UiThemeCard`s, each a `UiThemePreview` drawn in that card's own
 palette over its name; Use phone's picture is split Neon | Paper, so it
-does not read as a fourth theme. The Grid row is a `UiSegmentedSwitch`
-of the sizes, with Snap to grid as a `UiToggleRow` below it.
+does not read as a fourth theme. The Grid default row, the grid a new
+Creation starts with, is a `UiSegmentedSwitch` of the sizes, with Snap
+to grid as a `UiToggleRow` below it.
 
 ### Build
 

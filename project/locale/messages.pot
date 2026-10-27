@@ -453,7 +453,7 @@ msgid "Generator"
 msgstr ""
 
 #: project/scenes/screens/SettingsScreen.tscn
-msgid "Grid"
+msgid "Grid default"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn

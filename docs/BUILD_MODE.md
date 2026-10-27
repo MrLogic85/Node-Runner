@@ -171,15 +171,16 @@ name for a node. Build opens in Joint, locked or not.
   without zooming far out. Every joint Build places or moves lands on
   whole units, 1 cm (`CreatureBuilder.OnWholeUnits`), so saves and share
   codes hold short numbers.
-- **Grid:** square cells of the player's grid size, 0.25, 0.5 or 1 m
-  (`docs/SAVE_FORMAT.md` → "`settings.json`"), each of which fills the
+- **Grid:** square cells of the Creation's grid size, 0.25, 0.5 or 1 m
+  (`docs/SAVE_FORMAT.md` → "`creation.json`"), each of which fills the
   area exactly. The area, its margin and its corner marks stay measured
   in half metres (`BuildAreaCell`). With Snap to grid on, a placed joint
   goes to the nearest grid point that keeps its ring inside the area. A
   moved selection, one joint or a group, moves so that the joint nearest a
   grid point lands on it, the lowest id on a tie, picked again each drag
   frame; the group keeps its shape, and keeping it inside the area wins,
-  so at an edge it may sit off the grid. Rotate and Scale do not snap.
+  so at an edge it may sit off the grid. Rotate and Scale do not snap,
+  and a joint already placed stays where it is when the grid changes.
 - **View:** `CanvasView` holds zoom and pan, which are never saved. Build
   opens with the creation fitted with `FitMargin` of air, never magnified
   past true size. The zoom limits are divided by the UI size, so

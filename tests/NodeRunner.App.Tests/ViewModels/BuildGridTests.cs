@@ -12,15 +12,35 @@ public sealed class BuildGridTests
     public void WithoutSnap_JointsGoWhereTheyArePut_OnTheDefaultGrid()
     {
         var build = new BuildViewModel();
-        build.GridStep.ShouldBe(SettingsDef.DefaultGridSizeCm);
+        build.GridStep.ShouldBe(BuildGridDef.DefaultSizeCm);
         build.SnapToGrid.ShouldBeFalse();
 
-        build.UseGrid(new SettingsDef(gridSizeCm: 25));
+        build.UseGrid(new BuildGridDef(25, snap: false));
         build.PlaceNode(new Vector2D(13, 7));
         build.MoveNode(1, new Vector2D(31, -12));
 
         build.GridStep.ShouldBe(25);
         build.Nodes.Single().Position.ShouldBe(new Vector2D(31, -12));
+    }
+
+    // Each Creation opens on its own grid, and changing the grid moves no joint already placed.
+    [Fact]
+    public void LoadCreation_UsesItsGrid_AndAGridChangeMovesNoJoint()
+    {
+        var build = new BuildViewModel();
+        var creature = new CreatureDef([new NodeDef(1, new Vector2D(13, 7))], nextPartId: 2);
+
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Fine", creature) { Grid = new BuildGridDef(25, snap: true) });
+        build.GridStep.ShouldBe(25);
+        build.SnapToGrid.ShouldBeTrue();
+        build.Nodes.Single().Position.ShouldBe(new Vector2D(13, 7));
+
+        build.LoadCreation(new CreationDef(Guid.NewGuid(), "Coarse", creature) { Grid = new BuildGridDef(100, snap: false) });
+        build.GridStep.ShouldBe(100);
+        build.SnapToGrid.ShouldBeFalse();
+
+        build.UseGrid(new BuildGridDef(50, snap: true));
+        build.Nodes.Single().Position.ShouldBe(new Vector2D(13, 7));
     }
 
     // The nearest grid point, a half away from 0; at an edge the nearest one that keeps the ring inside.
@@ -36,7 +56,7 @@ public sealed class BuildGridTests
     public void WithSnap_APlacedOrMovedJoint_LandsOnTheNearestGridPointInside(int size, double x, double y, double gridX, double gridY)
     {
         var build = new BuildViewModel();
-        build.UseGrid(new SettingsDef(gridSizeCm: size, snapToGrid: true));
+        build.UseGrid(new BuildGridDef(size, snap: true));
 
         build.PlaceNode(new Vector2D(x, y));
         build.Nodes.Single().Position.ShouldBe(new Vector2D(gridX, gridY));
@@ -101,7 +121,7 @@ public sealed class BuildGridTests
     {
         var wheel = new WheelDef(2, 1, radius: WheelDef.MaxRadius);
         var build = Loaded(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), wheel], nextPartId: 3));
-        build.UseGrid(new SettingsDef(gridSizeCm: 100, snapToGrid: true));
+        build.UseGrid(new BuildGridDef(100, snap: true));
 
         build.MoveNode(1, new Vector2D(10_000, -10_000));
 
@@ -136,7 +156,7 @@ public sealed class BuildGridTests
     private static BuildViewModel Pair(Vector2D first, Vector2D second, int size = 50)
     {
         var build = Loaded(new CreatureDef([new NodeDef(1, first), new NodeDef(2, second)], nextPartId: 3));
-        build.UseGrid(new SettingsDef(gridSizeCm: size, snapToGrid: true));
+        build.UseGrid(new BuildGridDef(size, snap: true));
         build.ReplaceSelection([1, 2]);
         return build;
     }

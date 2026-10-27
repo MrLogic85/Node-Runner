@@ -159,7 +159,7 @@ public class CanvasViewTests
         (2 * BuildViewModel.BuildAreaCell % size).ShouldBe(0);
     }
 
-    public static TheoryData<int> GridSizes => [.. SettingsDef.GridSizesCm];
+    public static TheoryData<int> GridSizes => [.. BuildGridDef.SizesCm];
 
     // At 1×, centred, the screen shows x −500..500 and y −250..250. It grows only toward a side
     // the target reaches past, evenly where it reaches past both; nothing reached past the top or

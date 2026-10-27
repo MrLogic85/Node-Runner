@@ -184,7 +184,7 @@ public static class CreationShareCode
         return file.ToJsonString(_compact);
     }
 
-    // creation.json with the placeholder id and no training.
+    // creation.json with the placeholder id, no training and the default grid, so a code holds no grid.
     private static JsonObject FileOf(CreationDef creation) =>
         JsonNode.Parse(FileCreationRepository.Format.Serialize(new CreationDef(_placeholderId, creation.Name, creation.Creature)))!.AsObject();
 

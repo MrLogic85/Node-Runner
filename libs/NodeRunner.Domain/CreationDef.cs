@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace NodeRunner.Domain;
 
 /// <summary>
@@ -35,15 +37,26 @@ public sealed record CreationDef
     /// <summary>Train setup's last Start for this Creation; <c>null</c> until then.</summary>
     public TrainSettingsDef? TrainSettings { get; }
 
-    public CreationDef WithName(string name) => new(Id, name, Creature, Training, TrainSettings);
+    /// <summary>
+    /// Build's grid for this Creation, copied from Settings' default when it is made, so a later
+    /// change to the default leaves it as it is.
+    /// </summary>
+    [JsonRequired]
+    public BuildGridDef Grid
+    {
+        get;
+        init => field = value ?? throw new ArgumentNullException(nameof(value));
+    } = BuildGridDef.Default;
 
-    public CreationDef WithTraining(TrainingStateDef? training) => new(Id, Name, Creature, training, TrainSettings);
+    public CreationDef WithName(string name) => new(Id, name, Creature, Training, TrainSettings) { Grid = Grid };
+
+    public CreationDef WithTraining(TrainingStateDef? training) => new(Id, Name, Creature, training, TrainSettings) { Grid = Grid };
 
     public CreationDef WithCreature(CreatureDef creature, TrainingStateDef? training) =>
-        new(Id, Name, creature, training, TrainSettings);
+        new(Id, Name, creature, training, TrainSettings) { Grid = Grid };
 
-    public CreationDef WithTrainSettings(TrainSettingsDef trainSettings) => new(Id, Name, Creature, Training, trainSettings);
+    public CreationDef WithTrainSettings(TrainSettingsDef trainSettings) => new(Id, Name, Creature, Training, trainSettings) { Grid = Grid };
 
-    /// <summary>A new Creation with this one's body, training and Train setup values.</summary>
-    public CreationDef CopyAs(Guid id, string name) => new(id, name, Creature, Training, TrainSettings);
+    /// <summary>A new Creation with this one's body, training, Train setup values and grid.</summary>
+    public CreationDef CopyAs(Guid id, string name) => new(id, name, Creature, Training, TrainSettings) { Grid = Grid };
 }

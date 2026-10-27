@@ -32,7 +32,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// so a creature always fits the Training view without zooming out far.
     /// Placing and moving keep a joint's ring inside; the Build view
     /// shows it plus <see cref="BuildViewMargin"/>. Its sides are whole
-    /// multiples of every grid size (<see cref="SettingsDef.GridSizesCm"/>) so the grid's cells
+    /// multiples of every grid size (<see cref="BuildGridDef.SizesCm"/>) so the grid's cells
     /// fill it exactly.
     /// </summary>
     public static readonly CanvasRect BuildArea = new(
@@ -41,7 +41,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// The unit <see cref="BuildArea"/>, its margin and its corner marks are measured in, in canvas
-    /// units: half a metre, the default <see cref="GridStep"/>. It does not follow the player's grid.
+    /// units: half a metre, the default <see cref="GridStep"/>. It does not follow the Creation's grid.
     /// </summary>
     public const double BuildAreaCell = Metres.WorldUnitsPerMetre / 2;
 
@@ -91,8 +91,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     // On each part that makes a locked Creation refuse Copy or Delete.
     private static readonly UiText _wouldChangeNetworkNote = UiText.Plain("Locked: would change the network");
 
-    /// <summary>The grid's cell size in canvas units, from the player's settings (<see cref="UseGrid"/>).</summary>
-    public double GridStep { get; private set; } = Metres.WorldUnitsFromCentimetres(SettingsDef.DefaultGridSizeCm);
+    /// <summary>The grid's cell size in canvas units, from the open Creation (<see cref="UseGrid"/>).</summary>
+    public double GridStep { get; private set; } = Metres.WorldUnitsFromCentimetres(BuildGridDef.DefaultSizeCm);
 
     /// <summary>Whether placed and moved joints land on the grid (<see cref="UseGrid"/>).</summary>
     public bool SnapToGrid { get; private set; }
@@ -133,6 +133,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(creation);
         Load(creation.Creature, CreationLock.IsLocked(creation), creation.Name, creation.Training);
+        UseGrid(creation.Grid);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -660,14 +661,14 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     };
 
     /// <summary>
-    /// Draws the grid at the player's grid size and snaps joints to it when they chose to. Set
-    /// before Build shows: Settings open only from Creations, so it does not change while Build is open.
+    /// Draws the grid at <paramref name="grid"/>'s size and snaps joints to it when it says so. It
+    /// moves no placed joint: snapping applies when a joint is next placed or moved.
     /// </summary>
-    public void UseGrid(SettingsDef settings)
+    public void UseGrid(BuildGridDef grid)
     {
-        ArgumentNullException.ThrowIfNull(settings);
-        GridStep = Metres.WorldUnitsFromCentimetres(settings.GridSizeCm);
-        SnapToGrid = settings.SnapToGrid;
+        ArgumentNullException.ThrowIfNull(grid);
+        GridStep = Metres.WorldUnitsFromCentimetres(grid.SizeCm);
+        SnapToGrid = grid.Snap;
     }
 
     /// <summary>

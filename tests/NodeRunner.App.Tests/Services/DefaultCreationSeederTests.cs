@@ -14,7 +14,7 @@ public sealed class DefaultCreationSeederTests
         var creations = new InMemoryCreationRepository();
         creations.Save(new CreationDef(Guid.NewGuid(), "Player Build", CreationExamples.CreateWalkerCreature()));
         var progression = new InMemoryProgressionRepository();
-        var seeder = new DefaultCreationSeeder(new ExampleCopyWorkflow(creations), progression);
+        var seeder = new DefaultCreationSeeder(new ExampleCopyWorkflow(creations, () => BuildGridDef.Default), progression);
 
         var seeded = seeder.SeedIfNeeded(text => text.Equals(UiText.Plain("Walker")) ? "Gångare" : "?");
 

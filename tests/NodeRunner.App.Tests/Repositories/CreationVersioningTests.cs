@@ -45,7 +45,7 @@ public sealed class CreationVersioningTests : IDisposable
         written[_versionField]!.GetValue<int>().ShouldBe(FileCreationRepository.Format.CurrentVersion);
         written.Remove(_versionField);
         var expected = JsonNode.Parse(original)!.AsObject();
-        AddMissingArrays(expected);
+        AddMissingFields(expected);
         foreach (var piston in expected["creature"]!["pistons"]!.AsArray())
         {
             piston!["stroke"] = 2 * 0.3 / (1 - 0.3);
@@ -295,6 +295,23 @@ public sealed class CreationVersioningTests : IDisposable
         JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
     }
 
+    // Version 16 had no grid of its own; version 17 gives it the half-metre grid without snapping
+    // it was built on, whatever Settings' grid default is.
+    [Fact]
+    public void AVersion16Save_GetsTheHalfMetreGridWithoutSnap()
+    {
+        var current = CurrentTrainedWalker();
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 16;
+        file.Remove("grid");
+        var path = WriteCreation(file.ToJsonString());
+
+        var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        creation.Grid.ShouldBe(new BuildGridDef(50, snap: false));
+        JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
+    }
+
     // A save its version could not have written, one newer than the app or one that fails the strict
     // load is skipped and left as it is, and the others still list. One row for each way a migration
     // or the strict load refuses one (docs/SAVE_FORMAT.md → "Versions and migration").
@@ -326,6 +343,9 @@ public sealed class CreationVersioningTests : IDisposable
     [InlineData("v15", "training.network=@training.brain")]
     [InlineData("current", "-creature.steppers")]
     [InlineData("current", "unknown=1")]
+    [InlineData("current", "-grid")]
+    [InlineData("current", "grid=null")]
+    [InlineData("current", "grid.snap=\"on\"")]
     [InlineData("newer", "")]
     public void ASaveItsVersionCouldNotHaveWritten_IsSkipped_AndLeftAsItIs(string save, string changes)
     {
@@ -375,7 +395,7 @@ public sealed class CreationVersioningTests : IDisposable
                     throw new InvalidDataException("Cannot migrate.");
             }
 
-            AddMissingArrays(file);
+            AddMissingFields(file);
         }]);
         if (outcome == "migrated")
         {
@@ -500,7 +520,7 @@ public sealed class CreationVersioningTests : IDisposable
     };
 
     // The arrays a 0.13.0 file lacks that loading now requires.
-    private static void AddMissingArrays(JsonObject file)
+    private static void AddMissingFields(JsonObject file)
     {
         file["creature"]!.AsObject()["servos"] = new JsonArray();
         file["creature"]!.AsObject()["wheels"] = new JsonArray();
@@ -510,6 +530,7 @@ public sealed class CreationVersioningTests : IDisposable
         file["creature"]!.AsObject()["brakes"] = new JsonArray();
         file["creature"]!.AsObject()["angleSensors"] = new JsonArray();
         file["creature"]!.AsObject()["steppers"] = new JsonArray();
+        file["grid"] = new JsonObject { ["sizeCm"] = 50, ["snap"] = false };
     }
 
     private static CreationDef LoadFixture013(string name) =>

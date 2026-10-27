@@ -794,13 +794,30 @@
       ],
       "additionalProperties": false,
       "default": null
+    },
+    "grid": {
+      "type": "object",
+      "properties": {
+        "sizeCm": {
+          "type": "integer"
+        },
+        "snap": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sizeCm",
+        "snap"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [
     "formatVersion",
     "id",
     "name",
-    "creature"
+    "creature",
+    "grid"
   ],
   "additionalProperties": false
 }
