@@ -5,16 +5,18 @@ namespace NodeRunner.Ui.Widgets;
 
 /// <summary>
 /// Build's faint blueprint grid over <see cref="BuildViewModel.BuildArea"/>, the only place joints
-/// can go: fixed <see cref="BuildViewModel.BuildGridStep"/> cells drawn as hairlines that stay one
-/// pixel wide, behind Build's canvas and Import's preview.
+/// can go: square cells drawn as hairlines that stay one pixel wide, behind Build's canvas and
+/// Import's preview.
 /// </summary>
 public static class BuildGrid
 {
-    /// <summary>Draws the grid lines that cross <paramref name="shown"/>, in world units placed on <paramref name="item"/> by <paramref name="toItem"/>.</summary>
-    public static void Draw(CanvasItem item, Transform2D toItem, CanvasRect shown, Color color)
+    /// <summary>
+    /// Draws the grid lines <paramref name="step"/> apart that cross <paramref name="shown"/>, in
+    /// world units placed on <paramref name="item"/> by <paramref name="toItem"/>.
+    /// </summary>
+    public static void Draw(CanvasItem item, Transform2D toItem, CanvasRect shown, double step, Color color)
     {
         var area = BuildViewModel.BuildArea;
-        var step = BuildViewModel.BuildGridStep;
         var top = (float)area.Min.Y;
         var bottom = (float)area.Max.Y;
         var left = (float)area.Min.X;

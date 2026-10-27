@@ -69,7 +69,7 @@ public partial class CreatureThumbnail : Control
             var offset = new Vector2((float)fit.Offset.X, (float)fit.Offset.Y);
             var toThumbnail = new Transform2D(0, Vector2.One * (float)fit.Scale, 0, offset);
             var shown = new CanvasRect(new((0 - offset.X) / fit.Scale, (0 - offset.Y) / fit.Scale), new((Size.X - offset.X) / fit.Scale, (Size.Y - offset.Y) / fit.Scale));
-            BuildGrid.Draw(this, toThumbnail, shown, UiThemeLookup.Color(this, UiTokens.Color.Line));
+            BuildGrid.Draw(this, toThumbnail, shown, BuildViewModel.BuildAreaCell, UiThemeLookup.Color(this, UiTokens.Color.Line));
         }
     }
 

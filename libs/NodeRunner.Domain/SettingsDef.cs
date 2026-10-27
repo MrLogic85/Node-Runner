@@ -22,22 +22,34 @@ public sealed record SettingsDef
     /// <summary>The step between UI sizes; <c>UiScale.StepPercent</c>.</summary>
     public const int UiSizeStepPercent = 5;
 
+    /// <summary>The Build grid sizes the player can pick, in cm, smallest first.</summary>
+    public static IReadOnlyList<int> GridSizesCm { get; } = [25, 50, 100];
+
+    /// <summary>The Build grid size a fresh install has, in cm: half a metre.</summary>
+    public const int DefaultGridSizeCm = 50;
+
     public static SettingsDef Default { get; } = new();
 
     /// <param name="uiSizePercent">The chosen UI size, or null for Auto, the screen's own.</param>
     /// <param name="theme">The chosen theme.</param>
     /// <param name="sounds">Whether sounds play.</param>
     /// <param name="defaultShadows">The Shadows a Creation that has not trained yet starts with.</param>
+    /// <param name="gridSizeCm">The Build grid's cell size in cm, one of <see cref="GridSizesCm"/>.</param>
+    /// <param name="snapToGrid">Whether Build puts placed and moved joints on the grid.</param>
     public SettingsDef(
         int? uiSizePercent = null,
         ThemeChoice theme = ThemeChoice.UsePhone,
         bool sounds = true,
-        int defaultShadows = TrainSettingsDef.DefaultShadows)
+        int defaultShadows = TrainSettingsDef.DefaultShadows,
+        int gridSizeCm = DefaultGridSizeCm,
+        bool snapToGrid = false)
     {
         UiSizePercent = uiSizePercent;
         Theme = theme;
         Sounds = sounds;
         DefaultShadows = defaultShadows;
+        GridSizeCm = gridSizeCm;
+        SnapToGrid = snapToGrid;
     }
 
     /// <summary>
@@ -71,6 +83,17 @@ public sealed record SettingsDef
         get;
         init => field = Math.Clamp(value, TrainSettingsDef.MinShadows, TrainSettingsDef.MaxShadows);
     }
+
+    /// <summary>The nearest of <see cref="GridSizesCm"/>; a tie goes to the larger.</summary>
+    [JsonRequired]
+    public int GridSizeCm
+    {
+        get;
+        init => field = GridSizesCm.MinBy(size => (Math.Abs((long)value - size), -size));
+    }
+
+    [JsonRequired]
+    public bool SnapToGrid { get; init; }
 
     // The same grid as UiScale.Snap, which the UI library keeps apart from Domain. Halves round up.
     private static int SnapUiSize(int percent)

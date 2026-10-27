@@ -312,6 +312,14 @@ msgid "Could not reset training. Try again."
 msgstr ""
 
 #: project/src/hosts/SettingsHost.cs
+msgid "Could not save snap to grid. Try again."
+msgstr ""
+
+#: project/src/hosts/SettingsHost.cs
+msgid "Could not save the grid size. Try again."
+msgstr ""
+
+#: project/src/hosts/SettingsHost.cs
 msgid "Could not save the theme. Try again."
 msgstr ""
 
@@ -442,6 +450,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
 msgid "Generator"
+msgstr ""
+
+#: project/scenes/screens/SettingsScreen.tscn
+msgid "Grid"
 msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
@@ -994,6 +1006,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartInfo.cs
 msgid "Slows or locks its joint."
+msgstr ""
+
+#: project/scenes/screens/SettingsScreen.tscn
+msgid "Snap to grid"
 msgstr ""
 
 #: project/scenes/widgets/ShadowStrip.tscn
@@ -1574,6 +1590,7 @@ msgstr[1] ""
 #: libs/NodeRunner.App/ViewModels/DistanceRuler.cs
 #: libs/NodeRunner.App/ViewModels/Metres.cs
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+#: libs/NodeRunner.App/ViewModels/SettingsPresentationViewModel.cs
 msgid "{0} m"
 msgstr ""
 

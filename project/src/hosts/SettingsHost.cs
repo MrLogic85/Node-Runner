@@ -1,7 +1,6 @@
 using Godot;
 using NodeRunner.App.Navigation;
 using NodeRunner.App.ViewModels;
-using NodeRunner.Domain;
 using NodeRunner.Managers;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Screens;
@@ -22,25 +21,23 @@ public partial class SettingsHost : Control, IRoutedScene
 
     public override void _Ready()
     {
-        _presentation = new SettingsPresentationViewModel(GetNode<SettingsManager>("/root/SettingsManager"));
+        var presentation = new SettingsPresentationViewModel(GetNode<SettingsManager>("/root/SettingsManager"));
+        _presentation = presentation;
         var screen = GetNode<SettingsScreen>("%SettingsScreen");
-        screen.Setup(_presentation);
+        screen.Setup(presentation);
         screen.BackRequested += () => _navigator?.Back();
-        screen.ThemePicked += ChooseTheme;
+        screen.ThemePicked += theme => Save(() => presentation.ChooseTheme(theme), $"Saving the theme {theme}", "Could not save the theme. Try again.");
+        screen.GridSizePicked += index => Save(() => presentation.ChooseGridSize(index), $"Saving grid size {index}", "Could not save the grid size. Try again.");
+        screen.SnapToGridToggled += on => Save(() => presentation.ChooseSnapToGrid(on), $"Saving snap to grid {on}", "Could not save snap to grid. Try again.");
     }
 
     public override void _ExitTree() => _presentation?.Dispose();
 
-    private void ChooseTheme(ThemeChoice theme)
+    private void Save(Action choose, string operation, string failure)
     {
-        if (_presentation is null)
+        if (!FileOperations.TryRun(choose, operation))
         {
-            return;
-        }
-
-        if (!FileOperations.TryRun(() => _presentation.ChooseTheme(theme), $"Saving the theme {theme}"))
-        {
-            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Danger, "Not saved", "Could not save the theme. Try again.", Icon: new(UiIconId.Warn))
+            UiNotificationLayer.Enqueue(this, new UiNotificationSpec(UiPopupType.Danger, "Not saved", failure, Icon: new(UiIconId.Warn))
             {
                 Id = "settings.save.failed",
             });

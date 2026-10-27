@@ -17,6 +17,7 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
     private readonly List<Button> _buttons = [];
     private int _selectedIndex;
     private bool _matchWidth = true;
+    private bool _keepCase;
     private ButtonGroup? _group;
     // Object/method callables survive assembly reloads without retaining managed delegates.
     private Callable ChildAddedCallback => new(this, MethodName.WarnAboutExtraChild);
@@ -65,6 +66,18 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
         {
             _matchWidth = value;
             ApplyLayout();
+        }
+    }
+
+    /// <summary>Shows the text as written rather than in the label style's case, for a unit such as "m".</summary>
+    [Export]
+    public bool KeepCase
+    {
+        get => _keepCase;
+        set
+        {
+            _keepCase = value;
+            ApplyContentAndTheme();
         }
     }
 
@@ -282,13 +295,15 @@ public partial class UiSegmentedSwitch : HBoxContainer, ISerializationListener
         {
             Button button = _buttons[index];
             UiSegment? segment = _segments[index];
-            string text = string.IsNullOrWhiteSpace(segment?.Text) ? string.Empty : segment.Text;
+            string text = segment?.TextSource is { } source
+                ? source()
+                : string.IsNullOrWhiteSpace(segment?.Text) ? string.Empty : Atr(segment.Text);
             bool hasText = text.Length > 0;
             bool hasIcon = segment is { IconId: not UiIconId.None };
             button.Disabled = segment is null || segment.Disabled;
             // The switch translates the text itself, so it can be cased after translating.
             button.AutoTranslateMode = AutoTranslateModeEnum.Disabled;
-            button.Text = UiThemeLookup.LetterCase(Atr(text), UiTokens.Typography.Label);
+            button.Text = KeepCase ? text : UiThemeLookup.LetterCase(text, UiTokens.Typography.Label);
             UiThemeLookup.ApplyTypography(button, UiTokens.Typography.Label);
 
             // The segment draws its own text, so only its icon samples Linear.

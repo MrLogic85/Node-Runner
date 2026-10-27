@@ -27,6 +27,14 @@
     "defaultShadows": {
       "type": "integer",
       "default": 8
+    },
+    "gridSizeCm": {
+      "type": "integer",
+      "default": 50
+    },
+    "snapToGrid": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
@@ -34,7 +42,9 @@
     "uiSizePercent",
     "theme",
     "sounds",
-    "defaultShadows"
+    "defaultShadows",
+    "gridSizeCm",
+    "snapToGrid"
   ],
   "additionalProperties": false
 }

@@ -10,19 +10,27 @@ namespace NodeRunner.Ui.Screens;
 /// <summary>
 /// Reference Settings screen: the player's settings for this device.
 /// The layout is authored in <c>scenes/screens/SettingsScreen.tscn</c>; this script binds the
-/// presentation and forwards Back (the toolbar's, Android Back and Escape) and the theme picked.
+/// presentation and forwards Back (the toolbar's, Android Back and Escape) and each choice made.
 /// </summary>
 public partial class SettingsScreen : Control
 {
     private SettingsPresentationViewModel? _presentation;
     private bool _subscribedToPresentation;
     private UiThemeCard[] _themeCards = [];
+    private UiSegmentedSwitch _gridSizes = null!;
+    private UiToggleRow _snapRow = null!;
 
     [Signal]
     public delegate void BackRequestedEventHandler();
 
     [Signal]
     public delegate void ThemePickedEventHandler(ThemeChoice theme);
+
+    [Signal]
+    public delegate void GridSizePickedEventHandler(int index);
+
+    [Signal]
+    public delegate void SnapToGridToggledEventHandler(bool on);
 
     public void Setup(SettingsPresentationViewModel presentation)
     {
@@ -55,6 +63,21 @@ public partial class SettingsScreen : Control
         {
             card.Picked += () => EmitSignal(SignalName.ThemePicked, (int)ThemeChoices.FromUi(card.Choice));
         }
+
+        _gridSizes = GetNode<UiSegmentedSwitch>("%GridSizes");
+        _gridSizes.Segments = [.. SettingsPresentationViewModel.GridSizeLabels.Select(label => new UiSegment { TextSource = UiTextTranslation.Source(label) })];
+        // Apply after each choice puts the controls back when it could not be saved.
+        _gridSizes.SelectionChanged += index =>
+        {
+            EmitSignal(SignalName.GridSizePicked, index);
+            Apply();
+        };
+        _snapRow = GetNode<UiToggleRow>("%SnapRow");
+        _snapRow.Toggled += on =>
+        {
+            EmitSignal(SignalName.SnapToGridToggled, on);
+            Apply();
+        };
 
         Apply();
     }
@@ -100,6 +123,12 @@ public partial class SettingsScreen : Control
         foreach (var card in _themeCards)
         {
             card.Chosen = ThemeChoices.FromUi(card.Choice) == theme;
+        }
+
+        if (_presentation is not null)
+        {
+            _gridSizes.SelectedIndex = _presentation.GridSizeIndex;
+            _snapRow.On = _presentation.SnapToGrid;
         }
     }
 }

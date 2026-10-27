@@ -11,6 +11,12 @@ namespace NodeRunner.App.ViewModels;
 /// </summary>
 public sealed partial class BuildViewModel
 {
+    /// <summary>
+    /// How far a copy goes aside, each way: the fewest whole <see cref="GridStep"/>s that make at
+    /// least <see cref="BuildAreaCell"/>, so a copy never covers its original and lands on the grid.
+    /// </summary>
+    public double CopyStep => Math.Ceiling(BuildAreaCell / GridStep) * GridStep;
+
     /// <summary>Whether enough parts are selected to copy: two or more, locked or not.</summary>
     public bool CanOfferCopy => SelectedPartCount >= 2;
 
@@ -86,7 +92,7 @@ public sealed partial class BuildViewModel
     }
 
     /// <summary>
-    /// Duplicates the selection one grid step aside and selects the copy, as one undo step that
+    /// Duplicates the selection <see cref="CopyStep"/> aside and selects the copy, as one undo step that
     /// selects the originals again. Each copy keeps its settings but not its name; a copied motor, Brake or Angle sensor
     /// sits on the copy of its joint, uses the copies of its Fixed and Target links or Wheel, and
     /// leaves a role empty whose side was not copied. A copied joint part brings its joint along, but the
@@ -229,17 +235,18 @@ public sealed partial class BuildViewModel
         return toPartId;
     }
 
-    // One grid step down and right, or the first other diagonal that keeps every copied joint inside
+    // CopyStep down and right, or the first other diagonal that keeps every copied joint inside
     // the build area; if none does, the first diagonal shortened so the copy keeps its shape.
-    private static Vector2D CopyOffset(IReadOnlyList<NodeDef> nodes, Dictionary<int, double> radii)
+    private Vector2D CopyOffset(IReadOnlyList<NodeDef> nodes, Dictionary<int, double> radii)
     {
         var joints = nodes.Select(node => (node.Position, radii[node.Id])).ToList();
+        var step = CopyStep;
         Vector2D[] offsets =
         [
-            new(BuildGridStep, BuildGridStep),
-            new(-BuildGridStep, BuildGridStep),
-            new(BuildGridStep, -BuildGridStep),
-            new(-BuildGridStep, -BuildGridStep),
+            new(step, step),
+            new(-step, step),
+            new(step, -step),
+            new(-step, -step),
         ];
         foreach (var offset in offsets)
         {

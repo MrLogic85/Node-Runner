@@ -341,15 +341,44 @@ public sealed partial class BuildViewModel
         return new SelectionSnapshot(positions, pivot.Value);
     }
 
-    /// <summary>Moves the snapshot's joints by <paramref name="delta"/>, shortened so the whole group stays inside <see cref="BuildArea"/>.</summary>
+    /// <summary>
+    /// Moves the snapshot's joints by <paramref name="delta"/>, changed to put one joint on the grid
+    /// when <see cref="SnapToGrid"/>, then shortened so the whole group stays inside <see cref="BuildArea"/>.
+    /// </summary>
     public void TranslateSelection(SelectionSnapshot start, Vector2D delta)
     {
         ArgumentNullException.ThrowIfNull(start);
+        if (SnapToGrid)
+        {
+            delta = SnappedToGrid(start, delta);
+        }
+
         delta = ShortenedToBuildArea([.. start.Positions.Select(pair => (pair.Value, NodeRadius(pair.Key)))], delta);
 
         // Clamping each joint too absorbs the rounding in the shortened delta.
         PlaceSelection(start, (id, position) =>
             BuildArea.Clamp(new Vector2D(position.X + delta.X, position.Y + delta.Y), NodeRadius(id)));
+    }
+
+    // The delta changed least so that one joint lands on the grid: the joint nearest a grid point
+    // once moved, the lowest id on a tie. The group keeps its shape.
+    private Vector2D SnappedToGrid(SelectionSnapshot start, Vector2D delta)
+    {
+        var snapped = delta;
+        var nearest = double.PositiveInfinity;
+        foreach (var (id, position) in start.Positions.OrderBy(pair => pair.Key))
+        {
+            var moved = new Vector2D(position.X + delta.X, position.Y + delta.Y);
+            var onGrid = OnGrid(moved, NodeRadius(id));
+            var distance = Math.Pow(onGrid.X - moved.X, 2) + Math.Pow(onGrid.Y - moved.Y, 2);
+            if (distance < nearest)
+            {
+                nearest = distance;
+                snapped = new Vector2D(onGrid.X - position.X, onGrid.Y - position.Y);
+            }
+        }
+
+        return snapped;
     }
 
     // The delta shortened so every joint, moved by it together, stays inside BuildArea.
