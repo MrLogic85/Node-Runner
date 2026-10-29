@@ -151,8 +151,16 @@ public sealed class BuildEveryPartTests
 
         var expected = new Dictionary<int, int[]>
         {
-            [1] = [1], [2] = [2], [3] = [3], [4] = [4], [19] = [19],
-            [5] = [1, 2], [6] = [2, 3], [7] = [1, 4], [20] = [4, 19], [21] = [2, 19],
+            [1] = [1],
+            [2] = [2],
+            [3] = [3],
+            [4] = [4],
+            [19] = [19],
+            [5] = [1, 2],
+            [6] = [2, 3],
+            [7] = [1, 4],
+            [20] = [4, 19],
+            [21] = [2, 19],
             [PortedCreature.Accelerometer] = [1, 2],
             [PortedCreature.Camera] = [2, 3],
             [PortedCreature.Servo] = [1],
