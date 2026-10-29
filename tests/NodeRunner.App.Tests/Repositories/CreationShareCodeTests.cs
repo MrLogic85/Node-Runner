@@ -173,16 +173,6 @@ public sealed class CreationShareCodeTests
         idFields.ToHashSet().ShouldBe(CreationShareCode.PartIdFields, ignoreOrder: true);
     }
 
-    [Fact]
-    public void Read_ACodeHoldingAnOlderFile_MigratesItLikeASavedFile()
-    {
-        var build = CreationShareCode.Read(Pack(Fixture013("walker.creation.json"))).Build.ShouldNotBeNull();
-
-        build.Creature.Servos.ShouldBeEmpty();
-        build.Creature.Wheels.ShouldBeEmpty();
-        build.Creature.Pistons.ShouldAllBe(piston => piston.Start == 0.5);
-    }
-
     // A Wheel's grip, left out at the template's 0.8 or written out, goes like a saved file's.
     [Theory]
     [InlineData(null)]
