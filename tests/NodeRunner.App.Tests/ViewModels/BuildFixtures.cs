@@ -14,15 +14,7 @@ internal static class BuildFixtures
 
     public static CreatureElementSelection Element(BuildPart part, int id) => new(Enum.Parse<CreatureElementKind>(part.ToString()), id);
 
-    public static PartSet Set(params CreatureElementSelection[] parts)
-    {
-        HashSet<int> Ids(CreatureElementKind kind) => [.. parts.Where(part => part.Kind == kind).Select(part => part.Id)];
-        return new PartSet(
-            Ids(CreatureElementKind.Node), Ids(CreatureElementKind.Beam), Ids(CreatureElementKind.Sensor), Ids(CreatureElementKind.Servo),
-            Ids(CreatureElementKind.Piston), Ids(CreatureElementKind.Spring), Ids(CreatureElementKind.Wheel), Ids(CreatureElementKind.TouchSensor),
-            Ids(CreatureElementKind.Rubber), Ids(CreatureElementKind.VelocityMotor), Ids(CreatureElementKind.Brake), Ids(CreatureElementKind.AngleSensor),
-            Ids(CreatureElementKind.Stepper));
-    }
+    public static PartSet Set(params CreatureElementSelection[] parts) => new(parts);
 
     /// <summary>Joints 1 (0,0), 2 (100,0) and 3 (200,0); beam 4 joins 1–2 and beam 5 joins 2–3; then <paramref name="parts"/>.</summary>
     public static CreatureDef TwoBeamsDef(params IPartDef[] parts) => new(

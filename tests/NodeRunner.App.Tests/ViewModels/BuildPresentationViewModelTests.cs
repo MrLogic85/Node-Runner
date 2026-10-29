@@ -309,7 +309,7 @@ public sealed class BuildPresentationViewModelTests
         // A loaded one, from a share code say, has its panel ask for the side.
         build = Loaded(new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(100, 0)), new BeamDef(4, 1, 2), new AngleSensorDef(7, 2, fixedLinkId: 4)]));
         build.SelectOnly(CreatureElementKind.AngleSensor, 7);
-        build.SingleSelectedAngleSensorId.ShouldBe(7);
+        build.SingleSelectedId(CreatureElementKind.AngleSensor).ShouldBe(7);
         new BuildPresentationViewModel(build).SinglePart!.Pickers!.Select(picker => (picker.SelectedIndex, picker.Placeholder)).ShouldBe(
             [(0, null), (null, UiText.Plain("Pick a Target part"))]);
 

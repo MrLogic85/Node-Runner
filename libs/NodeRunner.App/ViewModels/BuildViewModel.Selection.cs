@@ -14,98 +14,27 @@ public sealed partial class BuildViewModel
     /// <summary>The largest factor one Scale drag can grow a selection by.</summary>
     public const double MaxSelectionScale = 4;
 
-    private readonly HashSet<int> _selectedNodeIds = [];
-    private readonly HashSet<int> _selectedBeamIds = [];
-    private readonly HashSet<int> _selectedSensorIds = [];
-    private readonly HashSet<int> _selectedServoIds = [];
-    private readonly HashSet<int> _selectedPistonIds = [];
-    private readonly HashSet<int> _selectedSpringIds = [];
-    private readonly HashSet<int> _selectedWheelIds = [];
-    private readonly HashSet<int> _selectedTouchSensorIds = [];
-    private readonly HashSet<int> _selectedRubberIds = [];
-    private readonly HashSet<int> _selectedVelocityMotorIds = [];
-    private readonly HashSet<int> _selectedBrakeIds = [];
-    private readonly HashSet<int> _selectedAngleSensorIds = [];
-    private readonly HashSet<int> _selectedStepperIds = [];
+    private readonly HashSet<CreatureElementSelection> _selected = [];
 
     /// <summary>How many joints the selection moves: <see cref="SelectedNodeIds"/>.</summary>
     public int SelectedNodeCount => SelectedNodeIds.Count;
 
-    public int SelectedBeamCount => _selectedBeamIds.Count;
+    public int SelectedPartCount => _selected.Count;
 
-    public int SelectedSensorCount => _selectedSensorIds.Count;
-
-    public int SelectedServoCount => _selectedServoIds.Count;
-
-    public int SelectedPistonCount => _selectedPistonIds.Count;
-
-    public int SelectedSpringCount => _selectedSpringIds.Count;
-
-    public int SelectedWheelCount => _selectedWheelIds.Count;
-
-    public int SelectedTouchSensorCount => _selectedTouchSensorIds.Count;
-
-    public int SelectedRubberCount => _selectedRubberIds.Count;
-
-    public int SelectedVelocityMotorCount => _selectedVelocityMotorIds.Count;
-
-    public int SelectedBrakeCount => _selectedBrakeIds.Count;
-
-    public int SelectedAngleSensorCount => _selectedAngleSensorIds.Count;
-
-    public int SelectedStepperCount => _selectedStepperIds.Count;
-
-    public int SelectedPartCount => _selectedNodeIds.Count + SelectedBeamCount + SelectedSensorCount + SelectedServoCount + SelectedPistonCount + SelectedSpringCount + SelectedWheelCount + SelectedTouchSensorCount + SelectedRubberCount + SelectedVelocityMotorCount + SelectedBrakeCount + SelectedAngleSensorCount + SelectedStepperCount;
-
-    public int? SingleSelectedNodeId => Single(_selectedNodeIds);
-
-    public int? SingleSelectedBeamId => Single(_selectedBeamIds);
-
-    public int? SingleSelectedSensorId => Single(_selectedSensorIds);
-
-    public int? SingleSelectedServoId => Single(_selectedServoIds);
-
-    public int? SingleSelectedPistonId => Single(_selectedPistonIds);
-
-    public int? SingleSelectedSpringId => Single(_selectedSpringIds);
-
-    public int? SingleSelectedWheelId => Single(_selectedWheelIds);
-
-    public int? SingleSelectedTouchSensorId => Single(_selectedTouchSensorIds);
-
-    public int? SingleSelectedRubberId => Single(_selectedRubberIds);
-
-    public int? SingleSelectedVelocityMotorId => Single(_selectedVelocityMotorIds);
-
-    public int? SingleSelectedBrakeId => Single(_selectedBrakeIds);
-
-    public int? SingleSelectedAngleSensorId => Single(_selectedAngleSensorIds);
-
-    public int? SingleSelectedStepperId => Single(_selectedStepperIds);
+    /// <summary>The one selected part, or null unless exactly one part is selected.</summary>
+    public CreatureElementSelection? SingleSelected => _selected.Count == 1 ? _selected.First() : null;
 
     /// <summary>A copy of everything selected.</summary>
-    public PartSet Selection => new(
-        _selectedNodeIds.ToHashSet(),
-        _selectedBeamIds.ToHashSet(),
-        _selectedSensorIds.ToHashSet(),
-        _selectedServoIds.ToHashSet(),
-        _selectedPistonIds.ToHashSet(),
-        _selectedSpringIds.ToHashSet(),
-        _selectedWheelIds.ToHashSet(),
-        _selectedTouchSensorIds.ToHashSet(),
-        _selectedRubberIds.ToHashSet(),
-        _selectedVelocityMotorIds.ToHashSet(),
-        _selectedBrakeIds.ToHashSet(),
-        _selectedAngleSensorIds.ToHashSet(),
-        _selectedStepperIds.ToHashSet());
+    public PartSet Selection => new(_selected);
 
     /// <summary>
     /// The joints the selection moves: the selected joints and the joints under selected joint
-    /// parts, Servos, Velocity motors, Steppers, Brakes, Angle sensors, Wheels, Touch sensors and Rubbers, since to the player a joint part is its joint.
+    /// parts, since to the player a joint part is its joint.
     /// </summary>
-    public IReadOnlyCollection<int> SelectedNodeIds => _selectedServoIds.Count == 0 && _selectedWheelIds.Count == 0 && _selectedTouchSensorIds.Count == 0 && _selectedRubberIds.Count == 0 && _selectedVelocityMotorIds.Count == 0 && _selectedBrakeIds.Count == 0 && _selectedAngleSensorIds.Count == 0 && _selectedStepperIds.Count == 0
-        ? _selectedNodeIds
-        : _selectedNodeIds.Union(SelectedJointPartJoints()).ToHashSet();
+    public IReadOnlyCollection<int> SelectedNodeIds => SelectedIds(CreatureElementKind.Node).Union(SelectedJointPartJoints()).ToHashSet();
+
+    /// <summary>The id of the one selected part if it is a <paramref name="kind"/>, else null.</summary>
+    public int? SingleSelectedId(CreatureElementKind kind) => SingleSelected is { } part && part.Kind == kind ? part.Id : null;
 
     /// <summary>Adds the part to the selection, or removes it if it is already selected.</summary>
     public void ToggleSelected(CreatureElementSelection element)
@@ -116,10 +45,9 @@ public sealed partial class BuildViewModel
             throw new ArgumentException($"No {element.Kind} {element.Id}.", nameof(element));
         }
 
-        var set = SelectedSet(element.Kind);
-        if (!set.Add(element.Id))
+        if (!_selected.Add(element))
         {
-            set.Remove(element.Id);
+            _selected.Remove(element);
         }
 
         SelectionChanged();
@@ -140,22 +68,27 @@ public sealed partial class BuildViewModel
             return;
         }
 
-        var deepest = parts.ToList().FindLastIndex(part => SelectedSet(part.Kind).Contains(part.Id));
-        foreach (var part in parts)
-        {
-            SelectedSet(part.Kind).Remove(part.Id);
-        }
-
+        var deepest = parts.ToList().FindLastIndex(_selected.Contains);
+        _selected.ExceptWith(parts);
         if (deepest + 1 < parts.Count)
         {
-            SelectedSet(parts[deepest + 1].Kind).Add(parts[deepest + 1].Id);
+            _selected.Add(parts[deepest + 1]);
         }
 
         SelectionChanged();
     }
 
-    private IEnumerable<int> SelectedPartIds() =>
-        _selectedNodeIds.Concat(_selectedBeamIds).Concat(_selectedSensorIds).Concat(_selectedServoIds).Concat(_selectedPistonIds).Concat(_selectedSpringIds).Concat(_selectedWheelIds).Concat(_selectedTouchSensorIds).Concat(_selectedRubberIds).Concat(_selectedVelocityMotorIds).Concat(_selectedBrakeIds).Concat(_selectedAngleSensorIds).Concat(_selectedStepperIds);
+    // Ids of every kind mixed, which the builder's parameter calls take, since a part id is unique across kinds.
+    private IEnumerable<int> SelectedPartIds() => Selection.Parts.Select(part => part.Id);
+
+    /// <summary>Whether that part is selected, without copying the <see cref="Selection"/>.</summary>
+    public bool IsSelected(CreatureElementKind kind, int id) => _selected.Contains(new CreatureElementSelection(kind, id));
+
+    // The joints under the selected joint parts, each once, though several parts of a stack can be selected.
+    private HashSet<int> SelectedJointPartJoints() =>
+        [.. JointParts.Where(part => _selected.Contains(CreatureElementSelection.Of(part))).Select(part => part.NodeId)];
+
+    private IEnumerable<int> SelectedIds(CreatureElementKind kind) => _selected.Where(part => part.Kind == kind).Select(part => part.Id);
 
     public void ClearSelection()
     {
@@ -164,7 +97,7 @@ public sealed partial class BuildViewModel
             return;
         }
 
-        ClearSelectionSets();
+        _selected.Clear();
         NotifySelectionChanged();
         RaiseAnatomyChanged();
     }
@@ -172,146 +105,31 @@ public sealed partial class BuildViewModel
     public void ReplaceSelection(IEnumerable<int> nodeIds)
     {
         ArgumentNullException.ThrowIfNull(nodeIds);
-        ReplaceSelection(PartSet.None with { Nodes = nodeIds.ToHashSet() });
+        ReplaceSelection(new PartSet(nodeIds.Select(id => new CreatureElementSelection(CreatureElementKind.Node, id))));
     }
 
     /// <summary>Selects exactly the <paramref name="parts"/> that still exist.</summary>
     public void ReplaceSelection(PartSet parts)
     {
         ArgumentNullException.ThrowIfNull(parts);
-        ClearSelectionSets();
-        foreach (var kind in Enum.GetValues<CreatureElementKind>())
-        {
-            SelectedSet(kind).UnionWith(parts.SetOf(kind).Where(id => Exists(new CreatureElementSelection(kind, id))));
-        }
-
+        _selected.Clear();
+        _selected.UnionWith(parts.Parts.Where(Exists));
         SelectionChanged();
     }
 
-    private HashSet<int> SelectedSet(CreatureElementKind kind) => kind switch
-    {
-        CreatureElementKind.Node => _selectedNodeIds,
-        CreatureElementKind.Beam => _selectedBeamIds,
-        CreatureElementKind.Sensor => _selectedSensorIds,
-        CreatureElementKind.Servo => _selectedServoIds,
-        CreatureElementKind.Piston => _selectedPistonIds,
-        CreatureElementKind.Spring => _selectedSpringIds,
-        CreatureElementKind.Wheel => _selectedWheelIds,
-        CreatureElementKind.TouchSensor => _selectedTouchSensorIds,
-        CreatureElementKind.Rubber => _selectedRubberIds,
-        CreatureElementKind.VelocityMotor => _selectedVelocityMotorIds,
-        CreatureElementKind.Brake => _selectedBrakeIds,
-        CreatureElementKind.AngleSensor => _selectedAngleSensorIds,
-        CreatureElementKind.Stepper => _selectedStepperIds,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
-    };
+    // Drops the parts the body no longer has.
+    private void PruneSelection() => _selected.RemoveWhere(part => !Exists(part));
 
-    private void ClearSelectionSets()
-    {
-        _selectedNodeIds.Clear();
-        _selectedBeamIds.Clear();
-        _selectedSensorIds.Clear();
-        _selectedServoIds.Clear();
-        _selectedPistonIds.Clear();
-        _selectedSpringIds.Clear();
-        _selectedWheelIds.Clear();
-        _selectedTouchSensorIds.Clear();
-        _selectedRubberIds.Clear();
-        _selectedVelocityMotorIds.Clear();
-        _selectedBrakeIds.Clear();
-        _selectedAngleSensorIds.Clear();
-        _selectedStepperIds.Clear();
-    }
-
-    private int? Single(HashSet<int> set) => SelectedPartCount == 1 && set.Count == 1 ? set.First() : null;
-
-    // The joints under the selected joint parts, motors, Steppers, Brakes, Angle sensors, Wheels, Rubbers and Touch sensors.
-    // Each joint once, though several parts of a stack can be selected.
-    private HashSet<int> SelectedJointPartJoints() =>
-    [
-        .. _builder.Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).Select(servo => servo.NodeId),
-        .. _builder.VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).Select(motor => motor.NodeId),
-        .. _builder.Steppers.Where(stepper => _selectedStepperIds.Contains(stepper.Id)).Select(stepper => stepper.NodeId),
-        .. _builder.Brakes.Where(brake => _selectedBrakeIds.Contains(brake.Id)).Select(brake => brake.NodeId),
-        .. _builder.AngleSensors.Where(angleSensor => _selectedAngleSensorIds.Contains(angleSensor.Id)).Select(angleSensor => angleSensor.NodeId),
-        .. _builder.Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).Select(wheel => wheel.NodeId),
-        .. _builder.Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).Select(rubber => rubber.NodeId),
-        .. _builder.TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).Select(touch => touch.NodeId),
-    ];
-
-    // Drops the ids the body no longer has.
-    private void PruneSelection()
-    {
-        foreach (var kind in Enum.GetValues<CreatureElementKind>())
-        {
-            SelectedSet(kind).RemoveWhere(id => !Exists(new CreatureElementSelection(kind, id)));
-        }
-    }
-
-    // A joint part stands in for its joint, also when Undo or Redo brings one back under a kept joint selection.
+    // A joint part stands in for its joint, also when Undo or Redo brings one back under a kept
+    // joint selection: the top of its stack, as a tap selects it.
     private void SelectJointPartsInsteadOfTheirJoints()
     {
-        foreach (var servo in _builder.Servos)
+        foreach (var nodeId in SelectedIds(CreatureElementKind.Node).ToList())
         {
-            if (_selectedNodeIds.Remove(servo.NodeId))
+            if (JointPartsAt(nodeId) is [var top, ..])
             {
-                _selectedServoIds.Add(servo.Id);
-            }
-        }
-
-        foreach (var motor in _builder.VelocityMotors)
-        {
-            if (_selectedNodeIds.Remove(motor.NodeId))
-            {
-                _selectedVelocityMotorIds.Add(motor.Id);
-            }
-        }
-
-        foreach (var stepper in _builder.Steppers)
-        {
-            if (_selectedNodeIds.Remove(stepper.NodeId))
-            {
-                _selectedStepperIds.Add(stepper.Id);
-            }
-        }
-
-        foreach (var brake in _builder.Brakes)
-        {
-            if (_selectedNodeIds.Remove(brake.NodeId))
-            {
-                _selectedBrakeIds.Add(brake.Id);
-            }
-        }
-
-        foreach (var angleSensor in _builder.AngleSensors)
-        {
-            if (_selectedNodeIds.Remove(angleSensor.NodeId))
-            {
-                _selectedAngleSensorIds.Add(angleSensor.Id);
-            }
-        }
-
-        foreach (var wheel in _builder.Wheels)
-        {
-            if (_selectedNodeIds.Remove(wheel.NodeId))
-            {
-                _selectedWheelIds.Add(wheel.Id);
-            }
-        }
-
-        foreach (var rubber in _builder.Rubbers)
-        {
-            if (_selectedNodeIds.Remove(rubber.NodeId))
-            {
-                _selectedRubberIds.Add(rubber.Id);
-            }
-        }
-
-        foreach (var touch in _builder.TouchSensors)
-        {
-            if (_selectedNodeIds.Remove(touch.NodeId))
-            {
-                _selectedTouchSensorIds.Add(touch.Id);
+                _selected.Remove(new CreatureElementSelection(CreatureElementKind.Node, nodeId));
+                _selected.Add(top);
             }
         }
     }
@@ -474,31 +292,7 @@ public sealed partial class BuildViewModel
         }
 
         OnPropertyChanged(nameof(SelectedNodeCount));
-        OnPropertyChanged(nameof(SelectedBeamCount));
         OnPropertyChanged(nameof(SelectedPartCount));
-        OnPropertyChanged(nameof(SingleSelectedNodeId));
-        OnPropertyChanged(nameof(SingleSelectedBeamId));
-        OnPropertyChanged(nameof(SelectedSensorCount));
-        OnPropertyChanged(nameof(SingleSelectedSensorId));
-        OnPropertyChanged(nameof(SelectedServoCount));
-        OnPropertyChanged(nameof(SingleSelectedServoId));
-        OnPropertyChanged(nameof(SelectedPistonCount));
-        OnPropertyChanged(nameof(SingleSelectedPistonId));
-        OnPropertyChanged(nameof(SelectedSpringCount));
-        OnPropertyChanged(nameof(SingleSelectedSpringId));
-        OnPropertyChanged(nameof(SelectedWheelCount));
-        OnPropertyChanged(nameof(SingleSelectedWheelId));
-        OnPropertyChanged(nameof(SelectedTouchSensorCount));
-        OnPropertyChanged(nameof(SingleSelectedTouchSensorId));
-        OnPropertyChanged(nameof(SelectedRubberCount));
-        OnPropertyChanged(nameof(SingleSelectedRubberId));
-        OnPropertyChanged(nameof(SelectedVelocityMotorCount));
-        OnPropertyChanged(nameof(SingleSelectedVelocityMotorId));
-        OnPropertyChanged(nameof(SelectedBrakeCount));
-        OnPropertyChanged(nameof(SingleSelectedBrakeId));
-        OnPropertyChanged(nameof(SelectedAngleSensorCount));
-        OnPropertyChanged(nameof(SingleSelectedAngleSensorId));
-        OnPropertyChanged(nameof(SelectedStepperCount));
-        OnPropertyChanged(nameof(SingleSelectedStepperId));
+        OnPropertyChanged(nameof(SingleSelected));
     }
 }

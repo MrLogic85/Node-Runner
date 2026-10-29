@@ -34,13 +34,13 @@ public sealed partial class BuildViewModel
         var joints = SelectedNodeIds;
         if (_locked)
         {
-            AddNetworkPortNotes(CreatureElementKind.Sensor, _selectedSensorIds);
-            AddNetworkPortNotes(CreatureElementKind.Servo, _selectedServoIds);
-            AddNetworkPortNotes(CreatureElementKind.VelocityMotor, _selectedVelocityMotorIds);
-            AddNetworkPortNotes(CreatureElementKind.Piston, _selectedPistonIds);
-            AddNetworkPortNotes(CreatureElementKind.TouchSensor, _selectedTouchSensorIds);
-            AddNetworkPortNotes(CreatureElementKind.AngleSensor, _selectedAngleSensorIds);
-            AddNetworkPortNotes(CreatureElementKind.Stepper, _selectedStepperIds);
+            AddNetworkPortNotes(CreatureElementKind.Sensor);
+            AddNetworkPortNotes(CreatureElementKind.Servo);
+            AddNetworkPortNotes(CreatureElementKind.VelocityMotor);
+            AddNetworkPortNotes(CreatureElementKind.Piston);
+            AddNetworkPortNotes(CreatureElementKind.TouchSensor);
+            AddNetworkPortNotes(CreatureElementKind.AngleSensor);
+            AddNetworkPortNotes(CreatureElementKind.Stepper);
         }
 
         foreach (var beam in Beams)
@@ -64,16 +64,16 @@ public sealed partial class BuildViewModel
             AddOpenLinkNote(CreatureElementKind.Piston, piston.Id, piston.NodeA, piston.NodeB);
         }
 
-        foreach (var sensor in Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id) && !_selectedBeamIds.Contains(sensor.BeamId)))
+        foreach (var sensor in Sensors.Where(sensor => IsSelected(CreatureElementKind.Sensor, sensor.Id) && !IsSelected(CreatureElementKind.Beam, sensor.BeamId)))
         {
             notes.Add(Note(CreatureElementKind.Sensor, sensor.Id, UiText.Plain("Select its beam")));
         }
 
         return notes;
 
-        void AddNetworkPortNotes(CreatureElementKind kind, HashSet<int> selected)
+        void AddNetworkPortNotes(CreatureElementKind kind)
         {
-            foreach (var id in selected.Order())
+            foreach (var id in SelectedIds(kind).Order())
             {
                 notes.Add(Note(kind, id, _wouldChangeNetworkNote));
             }
@@ -81,7 +81,7 @@ public sealed partial class BuildViewModel
 
         void AddOpenLinkNote(CreatureElementKind kind, int id, int nodeA, int nodeB)
         {
-            if (SelectedSet(kind).Contains(id) && !(joints.Contains(nodeA) && joints.Contains(nodeB)))
+            if (IsSelected(kind, id) && !(joints.Contains(nodeA) && joints.Contains(nodeB)))
             {
                 notes.Add(Note(kind, id, UiText.Plain("Select both its joints")));
             }
@@ -115,27 +115,27 @@ public sealed partial class BuildViewModel
         }
 
         var joints = SelectedNodeIds;
-        var selectedJoints = _selectedNodeIds.ToHashSet();
+        var selectedJoints = SelectedIds(CreatureElementKind.Node).ToHashSet();
         var nodes = Nodes.Where(node => joints.Contains(node.Id)).ToList();
-        var beams = Beams.Where(beam => _selectedBeamIds.Contains(beam.Id)).ToList();
-        var pistons = Pistons.Where(piston => _selectedPistonIds.Contains(piston.Id)).ToList();
-        var springs = Springs.Where(spring => _selectedSpringIds.Contains(spring.Id)).ToList();
-        var sensors = Sensors.Where(sensor => _selectedSensorIds.Contains(sensor.Id)).ToList();
-        var servos = Servos.Where(servo => _selectedServoIds.Contains(servo.Id)).ToList();
-        var velocityMotors = VelocityMotors.Where(motor => _selectedVelocityMotorIds.Contains(motor.Id)).ToList();
-        var steppers = Steppers.Where(stepper => _selectedStepperIds.Contains(stepper.Id)).ToList();
-        var brakes = Brakes.Where(brake => _selectedBrakeIds.Contains(brake.Id)).ToList();
-        var angleSensors = AngleSensors.Where(angleSensor => _selectedAngleSensorIds.Contains(angleSensor.Id)).ToList();
-        var wheels = Wheels.Where(wheel => _selectedWheelIds.Contains(wheel.Id)).ToList();
-        var touchSensors = TouchSensors.Where(touch => _selectedTouchSensorIds.Contains(touch.Id)).ToList();
-        var rubbers = Rubbers.Where(rubber => _selectedRubberIds.Contains(rubber.Id)).ToList();
+        var beams = Beams.Where(beam => IsSelected(CreatureElementKind.Beam, beam.Id)).ToList();
+        var pistons = Pistons.Where(piston => IsSelected(CreatureElementKind.Piston, piston.Id)).ToList();
+        var springs = Springs.Where(spring => IsSelected(CreatureElementKind.Spring, spring.Id)).ToList();
+        var sensors = Sensors.Where(sensor => IsSelected(CreatureElementKind.Sensor, sensor.Id)).ToList();
+        var servos = Servos.Where(servo => IsSelected(CreatureElementKind.Servo, servo.Id)).ToList();
+        var velocityMotors = VelocityMotors.Where(motor => IsSelected(CreatureElementKind.VelocityMotor, motor.Id)).ToList();
+        var steppers = Steppers.Where(stepper => IsSelected(CreatureElementKind.Stepper, stepper.Id)).ToList();
+        var brakes = Brakes.Where(brake => IsSelected(CreatureElementKind.Brake, brake.Id)).ToList();
+        var angleSensors = AngleSensors.Where(angleSensor => IsSelected(CreatureElementKind.AngleSensor, angleSensor.Id)).ToList();
+        var wheels = Wheels.Where(wheel => IsSelected(CreatureElementKind.Wheel, wheel.Id)).ToList();
+        var touchSensors = TouchSensors.Where(touch => IsSelected(CreatureElementKind.TouchSensor, touch.Id)).ToList();
+        var rubbers = Rubbers.Where(rubber => IsSelected(CreatureElementKind.Rubber, rubber.Id)).ToList();
 
         // A copied joint is as big as the joint parts that come along with it.
         var copiedRadii = nodes.ToDictionary(node => node.Id, node => CreatureDef.JointRadius(node.Id, [.. servos, .. velocityMotors, .. steppers], wheels));
         var offset = CopyOffset(nodes, copiedRadii);
         _history.Change(() =>
         {
-            ClearSelectionSets();
+            _selected.Clear();
             var nodeCopies = new Dictionary<int, int>();
             var linkCopies = new Dictionary<int, int>();
             foreach (var node in nodes)
@@ -145,78 +145,78 @@ public sealed partial class BuildViewModel
                 nodeCopies[node.Id] = _builder.AddNode(BuildArea.Clamp(position, copiedRadii[node.Id]));
                 if (selectedJoints.Contains(node.Id))
                 {
-                    _selectedNodeIds.Add(nodeCopies[node.Id]);
+                    _selected.Add(new CreatureElementSelection(CreatureElementKind.Node, nodeCopies[node.Id]));
                 }
             }
 
             foreach (var beam in beams)
             {
                 linkCopies[beam.Id] = _builder.AddBeam(nodeCopies[beam.NodeA], nodeCopies[beam.NodeB]);
-                _selectedBeamIds.Add(linkCopies[beam.Id]);
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Beam, linkCopies[beam.Id]));
             }
 
             foreach (var piston in pistons)
             {
                 linkCopies[piston.Id] = CopySettings(piston.Id, _builder.AddPiston(nodeCopies[piston.NodeA], nodeCopies[piston.NodeB]));
-                _selectedPistonIds.Add(linkCopies[piston.Id]);
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Piston, linkCopies[piston.Id]));
             }
 
             foreach (var spring in springs)
             {
                 linkCopies[spring.Id] = CopySettings(spring.Id, _builder.AddSpring(nodeCopies[spring.NodeA], nodeCopies[spring.NodeB]));
-                _selectedSpringIds.Add(linkCopies[spring.Id]);
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Spring, linkCopies[spring.Id]));
             }
 
             foreach (var sensor in sensors)
             {
                 _builder.AddSensor(linkCopies[sensor.BeamId], sensor.Kind, out var copy, out _);
-                _selectedSensorIds.Add(CopySettings(sensor.Id, copy));
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Sensor, CopySettings(sensor.Id, copy)));
             }
 
             // A Wheel before its motor: to the motor it is a one-sided link.
             foreach (var wheel in wheels)
             {
                 linkCopies[wheel.Id] = CopySettings(wheel.Id, _builder.AddWheel(nodeCopies[wheel.NodeId]));
-                _selectedWheelIds.Add(linkCopies[wheel.Id]);
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Wheel, linkCopies[wheel.Id]));
             }
 
             foreach (var servo in servos)
             {
                 var copy = _builder.AddServo(nodeCopies[servo.NodeId], CopyOf(servo.FixedLinkId), CopyOf(servo.TargetLinkId));
-                _selectedServoIds.Add(CopySettings(servo.Id, copy));
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Servo, CopySettings(servo.Id, copy)));
             }
 
             foreach (var motor in velocityMotors)
             {
                 var copy = _builder.AddVelocityMotor(nodeCopies[motor.NodeId], CopyOf(motor.FixedLinkId), CopyOf(motor.TargetLinkId));
-                _selectedVelocityMotorIds.Add(CopySettings(motor.Id, copy));
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.VelocityMotor, CopySettings(motor.Id, copy)));
             }
 
             foreach (var stepper in steppers)
             {
                 var copy = _builder.AddStepper(nodeCopies[stepper.NodeId], CopyOf(stepper.FixedLinkId), CopyOf(stepper.TargetLinkId));
-                _selectedStepperIds.Add(CopySettings(stepper.Id, copy));
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Stepper, CopySettings(stepper.Id, copy)));
             }
 
             foreach (var brake in brakes)
             {
                 var copy = _builder.AddBrake(nodeCopies[brake.NodeId], CopyOf(brake.FixedLinkId), CopyOf(brake.TargetLinkId));
-                _selectedBrakeIds.Add(CopySettings(brake.Id, copy));
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Brake, CopySettings(brake.Id, copy)));
             }
 
             foreach (var angleSensor in angleSensors)
             {
-                _selectedAngleSensorIds.Add(_builder.AddAngleSensor(nodeCopies[angleSensor.NodeId], CopyOf(angleSensor.FixedLinkId), CopyOf(angleSensor.TargetLinkId)));
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.AngleSensor, _builder.AddAngleSensor(nodeCopies[angleSensor.NodeId], CopyOf(angleSensor.FixedLinkId), CopyOf(angleSensor.TargetLinkId))));
             }
 
             foreach (var touch in touchSensors)
             {
-                _selectedTouchSensorIds.Add(_builder.AddTouchSensor(nodeCopies[touch.NodeId]));
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.TouchSensor, _builder.AddTouchSensor(nodeCopies[touch.NodeId])));
             }
 
             foreach (var rubber in rubbers)
             {
-                _selectedRubberIds.Add(_builder.AddRubber(nodeCopies[rubber.NodeId]));
+                _selected.Add(new CreatureElementSelection(CreatureElementKind.Rubber, _builder.AddRubber(nodeCopies[rubber.NodeId])));
             }
 
             int? CopyOf(int? linkId) => linkId is { } id && linkCopies.TryGetValue(id, out var copy) ? copy : null;

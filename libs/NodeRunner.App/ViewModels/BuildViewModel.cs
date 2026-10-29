@@ -102,7 +102,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     {
         ArgumentNullException.ThrowIfNull(creature);
         _builder = new CreatureBuilder(creature);
-        ClearSelectionSets();
+        _selected.Clear();
         _creationName = creationName ?? string.Empty;
         _trainingGeneration = training?.Generation;
         _openedNetwork = training?.Network;
@@ -215,11 +215,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _builder = new CreatureBuilder(new CreatureDef(body.Parts, nextPartId));
         if (reselect is not null)
         {
-            ClearSelectionSets();
-            foreach (var kind in Enum.GetValues<CreatureElementKind>())
-            {
-                SelectedSet(kind).UnionWith(reselect.SetOf(kind));
-            }
+            _selected.Clear();
+            _selected.UnionWith(reselect.Parts);
         }
 
         PruneSelection();
@@ -262,7 +259,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public int? TrainingGeneration => _trainingGeneration;
 
     /// <summary>The Camera whose aim handle shows: Aim can be set, so it is the one selected part.</summary>
-    public int? AimableCameraId => CanEdit(PartParameterId.Aim) ? SingleSelectedSensorId : null;
+    public int? AimableCameraId => CanEdit(PartParameterId.Aim) ? SingleSelectedId(CreatureElementKind.Sensor) : null;
 
     public void SetCreationName(string creationName)
     {
@@ -722,8 +719,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             return [];
         }
 
-        var selected = Selection.Sensors;
-        return [.. Sensors.Where(sensor => sensor.Kind == SensorKind.Camera && selected.Contains(sensor.Id)).Select(camera =>
+        return [.. Sensors.Where(sensor => sensor.Kind == SensorKind.Camera && IsSelected(CreatureElementKind.Sensor, sensor.Id)).Select(camera =>
         {
             var beam = Beams[BeamIndexOf(camera.BeamId)];
             var nodeA = Nodes[NodeIndexOf(beam.NodeA)].Position;

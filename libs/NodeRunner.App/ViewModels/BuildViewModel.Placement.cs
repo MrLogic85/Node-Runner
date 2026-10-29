@@ -150,56 +150,56 @@ public sealed partial class BuildViewModel
         if (part == BuildPart.Servo)
         {
             var servoId = _history.Change(() => _builder.AddServo(target.Id));
-            SelectPlaced(PartSet.None with { Servos = new HashSet<int> { servoId } }, select);
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.Servo, servoId)), select);
             return servoId;
         }
 
         if (part == BuildPart.Stepper)
         {
             var stepperId = _history.Change(() => _builder.AddStepper(target.Id));
-            SelectPlaced(PartSet.None with { Steppers = new HashSet<int> { stepperId } }, select);
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.Stepper, stepperId)), select);
             return stepperId;
         }
 
         if (part == BuildPart.VelocityMotor)
         {
             var motorId = _history.Change(() => _builder.AddVelocityMotor(target.Id));
-            SelectPlaced(PartSet.None with { VelocityMotors = new HashSet<int> { motorId } }, select);
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.VelocityMotor, motorId)), select);
             return motorId;
         }
 
         if (part == BuildPart.Brake)
         {
             var brakeId = _history.Change(() => _builder.AddBrake(target.Id));
-            SelectPlaced(PartSet.None with { Brakes = new HashSet<int> { brakeId } }, select);
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.Brake, brakeId)), select);
             return brakeId;
         }
 
         if (part == BuildPart.AngleSensor)
         {
             var angleSensorId = _history.Change(() => _builder.AddAngleSensor(target.Id));
-            SelectPlaced(PartSet.None with { AngleSensors = new HashSet<int> { angleSensorId } }, select);
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.AngleSensor, angleSensorId)), select);
             return angleSensorId;
         }
 
         if (part == BuildPart.Wheel)
         {
             var wheelId = _history.Change(() => _builder.AddWheel(target.Id));
-            SelectPlaced(PartSet.None with { Wheels = new HashSet<int> { wheelId } }, select);
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.Wheel, wheelId)), select);
             return wheelId;
         }
 
         if (part == BuildPart.TouchSensor)
         {
             var touchId = _history.Change(() => _builder.AddTouchSensor(target.Id));
-            SelectPlaced(PartSet.None with { TouchSensors = new HashSet<int> { touchId } }, select);
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.TouchSensor, touchId)), select);
             return touchId;
         }
 
         if (part == BuildPart.Rubber)
         {
             var rubberId = _history.Change(() => _builder.AddRubber(target.Id));
-            SelectPlaced(PartSet.None with { Rubbers = new HashSet<int> { rubberId } }, select);
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.Rubber, rubberId)), select);
             return rubberId;
         }
 
@@ -208,7 +208,7 @@ public sealed partial class BuildViewModel
             _builder.AddSensor(target.Id, PartTray.SensorKindOf(part)!.Value, out var id, out _);
             return id;
         });
-        SelectPlaced(PartSet.None with { Sensors = new HashSet<int> { sensorId } }, select);
+        SelectPlaced(PartSet.Of(new(CreatureElementKind.Sensor, sensorId)), select);
         return sensorId;
     }
 
@@ -330,7 +330,7 @@ public sealed partial class BuildViewModel
             _history.Change(() => _builder.MoveSensor(sensorId, target.Id, out _));
         }
 
-        SelectPlaced(PartSet.None with { Sensors = new HashSet<int> { sensorId } }, select: true);
+        SelectPlaced(PartSet.Of(new(CreatureElementKind.Sensor, sensorId)), select: true);
         return true;
     }
 

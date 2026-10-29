@@ -124,7 +124,7 @@ public class BuildGesturesTests
         servoBuild.ActiveTool = tool;
         servoGestures.DragAcross(new Vector2D(100, 0), new Vector2D(100, 40));
         Positions(servoBuild).ShouldBe([new(0, 0), new(100, moves ? 40 : 0)]);
-        servoBuild.Selection.Servos.ShouldBe(moves ? [servo] : []);
+        servoBuild.Selection.IdsOf(CreatureElementKind.Servo).ShouldBe(moves ? [servo] : []);
     }
 
     [Fact]
@@ -255,7 +255,7 @@ public class BuildGesturesTests
         cameraGestures.Release(new Vector2D(400, 400), 1);
         cameraGestures.Press(new Vector2D(300, 300), 0);
         cameraGestures.Press(new Vector2D(400, 400), 1);
-        camera.SingleSelectedSensorId.ShouldBe(4);
+        camera.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(4);
 
         var (sensors, sensorGestures) = SensorsOnThreeBeams();
         sensorGestures.Press(new Vector2D(100, 0), 0);
@@ -413,7 +413,7 @@ public class BuildGesturesTests
 
         build.Beams.Select(beam => (beam.NodeA, beam.NodeB)).ShouldBe([(2, 1)]);
         Positions(build).ShouldBe([new(0, 0), new(100, 0)]);
-        build.SingleSelectedServoId.ShouldBe(servo);
+        build.SingleSelectedId(CreatureElementKind.Servo).ShouldBe(servo);
 
         (build, gestures) = ThreeLooseJoints(BuildTool.Beam);
         var piston = build.ConnectLink(BuildLink.Piston, 1, 2);
@@ -450,7 +450,7 @@ public class BuildGesturesTests
         build.Nodes.Count.ShouldBe(4);
         build.ClearSelection();
         gestures.Tap(new Vector2D(50, 0));
-        build.Selection.Beams.ShouldBe([101]);
+        build.Selection.IdsOf(CreatureElementKind.Beam).ShouldBe([101]);
         build.Nodes.Count.ShouldBe(4);
         gestures.View.Offset.ShouldBe(pan);
     }
@@ -489,7 +489,7 @@ public class BuildGesturesTests
         gestures.Press(new Vector2D(230, 30));
         gestures.Drag(new Vector2D(90, -40));
         gestures.SelectionBox.ShouldBe((new Vector2D(230, 30), new Vector2D(90, -40)));
-        gestures.SelectionBoxCatches.Beams.ShouldBe([5]);
+        gestures.SelectionBoxCatches.IdsOf(CreatureElementKind.Beam).ShouldBe([5]);
         build.SelectedPartCount.ShouldBe(0);
         gestures.Release(new Vector2D(90, -40));
         ShouldSelect(build, nodes: [2], beams: [5], sensors: [6]);
@@ -504,13 +504,13 @@ public class BuildGesturesTests
         var (servoBuild, servoGestures, servo) = ServoOnABeamsEnd();
         servoGestures.DragAcross(new Vector2D(-30, -30), new Vector2D(130, 30));
         ShouldSelect(servoBuild, nodes: [1], beams: [3]);
-        servoBuild.Selection.Servos.ShouldBe([servo]);
+        servoBuild.Selection.IdsOf(CreatureElementKind.Servo).ShouldBe([servo]);
         servoBuild.SelectedNodeCount.ShouldBe(2);
 
         servoBuild.ReplaceSelection(Set(Joint(1), new(CreatureElementKind.Servo, servo)));
         servoGestures.DragAcross(new Vector2D(100, 0), new Vector2D(100, 30));
         Positions(servoBuild).ShouldBe([new(0, 30), new(100, 30)]);
-        servoBuild.Selection.Servos.ShouldBe([servo]);
+        servoBuild.Selection.IdsOf(CreatureElementKind.Servo).ShouldBe([servo]);
     }
 
     [Theory]
@@ -524,7 +524,7 @@ public class BuildGesturesTests
         build.ReplaceSelection(group);
 
         gestures.Tap(new Vector2D(x, y));
-        build.Selection.SetOf(kind).ShouldBe([id]);
+        build.Selection.IdsOf(kind).ShouldBe([id]);
         build.SelectedNodeIds.ShouldBe(group, ignoreOrder: true);
         build.SelectedPartCount.ShouldBe(group.Length + 1);
 
@@ -606,7 +606,7 @@ public class BuildGesturesTests
         var beam = build.ConnectLink(BuildLink.Beam, 1, 2)!.Value;
         build.ReplaceSelection([1, 2]);
         gestures.Tap(_moveHandle);
-        build.Selection.Beams.ShouldBe([beam]);
+        build.Selection.IdsOf(CreatureElementKind.Beam).ShouldBe([beam]);
         build.SelectedNodeIds.ShouldBe([1, 2], ignoreOrder: true);
     }
 
@@ -681,26 +681,26 @@ public class BuildGesturesTests
     {
         var (build, gestures) = BeamWithSensor(100);
         gestures.Tap(new Vector2D(50, 9));
-        build.SingleSelectedSensorId.ShouldBe(4);
-        build.SingleSelectedBeamId.ShouldBeNull();
+        build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(4);
+        build.SingleSelectedId(CreatureElementKind.Beam).ShouldBeNull();
         build.ClearSelection();
         build.ActiveTool = BuildTool.Joint;
         gestures.Tap(new Vector2D(50, 0));
-        build.SingleSelectedSensorId.ShouldBe(4);
+        build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(4);
         build.Nodes.Count.ShouldBe(2);
 
         // A short beam: the picture sits inside both joints' touch reach but off their rings.
         (build, gestures) = BeamWithSensor(50);
         gestures.Tap(new Vector2D(22, 0));
-        build.SingleSelectedSensorId.ShouldBe(4);
+        build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(4);
         (build, gestures) = BeamWithSensor(30);
         gestures.Tap(new Vector2D(10, 0));
         build.SelectedNodeIds.ShouldBe([1]);
 
         build = TwoBeams(new ServoDef(6, 2, 4, 5));
         new BuildGestures(build).Tap(new Vector2D(100, 0));
-        build.SingleSelectedServoId.ShouldBe(6);
-        build.SingleSelectedNodeId.ShouldBeNull();
+        build.SingleSelectedId(CreatureElementKind.Servo).ShouldBe(6);
+        build.SingleSelectedId(CreatureElementKind.Node).ShouldBeNull();
     }
 
     [Fact]
@@ -750,11 +750,11 @@ public class BuildGesturesTests
 
         gestures.DragAcross(gestures.SelectionHandles.Single().Position, new Vector2D(50 + 100, -5));
         build.Sensors[0].Aim!.Value.ShouldBe(Math.Atan2(-5, 100), 1e-9);
-        build.SingleSelectedSensorId.ShouldBe(4);
+        build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(4);
         build.Nodes[0].Position.ShouldBe(new Vector2D(0, 0));
         var aim = build.Sensors[0].Aim;
         gestures.Tap(gestures.SelectionHandles.Single().Position);
-        build.SingleSelectedSensorId.ShouldBe(4);
+        build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(4);
         build.Sensors[0].Aim.ShouldBe(aim);
         build.Nodes.Count.ShouldBe(2);
         build.Beams.Count.ShouldBe(1);
@@ -838,7 +838,7 @@ public class BuildGesturesTests
         gestures.DragAcross(new Vector2D(100, 0), new Vector2D(100, 150));
 
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(7);
-        build.SingleSelectedSensorId.ShouldBe(6);
+        build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(6);
         Positions(build).ShouldBe([new(0, 0), new(200, 0), new(0, 150), new(200, 150)]);
         build.Undo();
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
@@ -954,10 +954,10 @@ public class BuildGesturesTests
     private static void ShouldSelect(BuildViewModel build, int[]? nodes = null, int[]? beams = null, int[]? sensors = null, int[]? pistons = null)
     {
         var selection = build.Selection;
-        selection.Nodes.ShouldBe(nodes ?? [], ignoreOrder: true);
-        selection.Beams.ShouldBe(beams ?? [], ignoreOrder: true);
-        selection.Sensors.ShouldBe(sensors ?? [], ignoreOrder: true);
-        selection.Pistons.ShouldBe(pistons ?? [], ignoreOrder: true);
+        selection.IdsOf(CreatureElementKind.Node).ShouldBe(nodes ?? [], ignoreOrder: true);
+        selection.IdsOf(CreatureElementKind.Beam).ShouldBe(beams ?? [], ignoreOrder: true);
+        selection.IdsOf(CreatureElementKind.Sensor).ShouldBe(sensors ?? [], ignoreOrder: true);
+        selection.IdsOf(CreatureElementKind.Piston).ShouldBe(pistons ?? [], ignoreOrder: true);
     }
 
     private static Vector2D Handle(BuildGestures gestures, SelectionHandle handle) =>

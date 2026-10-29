@@ -79,7 +79,7 @@ public sealed class BuildUndoTests
         build.DeleteSelectedParts();
         build.SelectedPartCount.ShouldBe(0);
         build.Undo();
-        build.SingleSelectedBeamId.ShouldBe(beam);
+        build.SingleSelectedId(CreatureElementKind.Beam).ShouldBe(beam);
         build.Redo();
         build.SelectedPartCount.ShouldBe(0);
         build.Undo();

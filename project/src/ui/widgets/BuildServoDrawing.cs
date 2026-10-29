@@ -19,11 +19,8 @@ public static class BuildServoDrawing
 
     public static void DrawSelectedBands(CanvasItem canvas, BuildViewModel viewModel, VisualTheme theme, Transform2D viewTransform)
     {
-        IHingePartDef? part = viewModel.SingleSelectedServoId is { } servoId ? viewModel.Servos[viewModel.ServoIndexOf(servoId)]
-            : viewModel.SingleSelectedVelocityMotorId is { } motorId ? viewModel.VelocityMotors[viewModel.VelocityMotorIndexOf(motorId)]
-            : viewModel.SingleSelectedStepperId is { } stepperId ? viewModel.Steppers[viewModel.StepperIndexOf(stepperId)]
-            : viewModel.SingleSelectedBrakeId is { } brakeId ? viewModel.Brakes[viewModel.BrakeIndexOf(brakeId)]
-            : viewModel.SingleSelectedAngleSensorId is { } angleSensorId ? viewModel.AngleSensors[viewModel.AngleSensorIndexOf(angleSensorId)]
+        var part = viewModel.SingleSelected is { } selected
+            ? viewModel.HingeParts.FirstOrDefault(hingePart => hingePart.Kind == selected.Kind && hingePart.Id == selected.Id)
             : null;
         if (part is null)
         {

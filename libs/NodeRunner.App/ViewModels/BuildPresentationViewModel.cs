@@ -61,8 +61,6 @@ public sealed class BuildPresentationViewModel
 
     public int SelectedNodeCount => _build.SelectedNodeCount;
 
-    public int SelectedBeamCount => _build.SelectedBeamCount;
-
     public int SelectedPartCount => _build.SelectedPartCount;
 
     /// <summary>The Part settings for the one selected part, or null unless exactly one part is selected.</summary>
@@ -71,7 +69,7 @@ public sealed class BuildPresentationViewModel
         get
         {
             var canDelete = _build.DeleteLockedReason is null;
-            if (_build.SingleSelectedServoId is { } servoId)
+            if (_build.SingleSelectedId(CreatureElementKind.Servo) is { } servoId)
             {
                 var servo = ServoById(servoId);
                 return new PartSettingsPresentation(
@@ -88,7 +86,7 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(servo.NodeId));
             }
 
-            if (_build.SingleSelectedVelocityMotorId is { } velocityMotorId)
+            if (_build.SingleSelectedId(CreatureElementKind.VelocityMotor) is { } velocityMotorId)
             {
                 var motor = _build.VelocityMotors[_build.VelocityMotorIndexOf(velocityMotorId)];
                 return new PartSettingsPresentation(
@@ -105,7 +103,7 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(motor.NodeId));
             }
 
-            if (_build.SingleSelectedStepperId is { } stepperId)
+            if (_build.SingleSelectedId(CreatureElementKind.Stepper) is { } stepperId)
             {
                 var stepper = _build.Steppers[_build.StepperIndexOf(stepperId)];
                 return new PartSettingsPresentation(
@@ -122,7 +120,7 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(stepper.NodeId));
             }
 
-            if (_build.SingleSelectedBrakeId is { } brakeId)
+            if (_build.SingleSelectedId(CreatureElementKind.Brake) is { } brakeId)
             {
                 var brake = _build.Brakes[_build.BrakeIndexOf(brakeId)];
                 return new PartSettingsPresentation(
@@ -139,7 +137,7 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(brake.NodeId));
             }
 
-            if (_build.SingleSelectedAngleSensorId is { } angleSensorId)
+            if (_build.SingleSelectedId(CreatureElementKind.AngleSensor) is { } angleSensorId)
             {
                 var angleSensor = _build.AngleSensors[_build.AngleSensorIndexOf(angleSensorId)];
                 return new PartSettingsPresentation(
@@ -156,7 +154,7 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(angleSensor.NodeId));
             }
 
-            if (_build.SingleSelectedPistonId is { } pistonId)
+            if (_build.SingleSelectedId(CreatureElementKind.Piston) is { } pistonId)
             {
                 return new PartSettingsPresentation(
                     pistonId,
@@ -170,7 +168,7 @@ public sealed class BuildPresentationViewModel
                     PanelSliders());
             }
 
-            if (_build.SingleSelectedWheelId is { } wheelId)
+            if (_build.SingleSelectedId(CreatureElementKind.Wheel) is { } wheelId)
             {
                 var wheel = _build.Wheels[_build.WheelIndexOf(wheelId)];
                 return new PartSettingsPresentation(
@@ -187,7 +185,7 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(wheel.NodeId));
             }
 
-            if (_build.SingleSelectedTouchSensorId is { } touchId)
+            if (_build.SingleSelectedId(CreatureElementKind.TouchSensor) is { } touchId)
             {
                 var touch = _build.TouchSensors[_build.TouchSensorIndexOf(touchId)];
                 return new PartSettingsPresentation(
@@ -203,7 +201,7 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(touch.NodeId));
             }
 
-            if (_build.SingleSelectedRubberId is { } rubberId)
+            if (_build.SingleSelectedId(CreatureElementKind.Rubber) is { } rubberId)
             {
                 var rubber = _build.Rubbers[_build.RubberIndexOf(rubberId)];
                 return new PartSettingsPresentation(
@@ -219,7 +217,7 @@ public sealed class BuildPresentationViewModel
                     OnThisJoint: OnThisJoint(rubber.NodeId));
             }
 
-            if (_build.SingleSelectedSpringId is { } springId)
+            if (_build.SingleSelectedId(CreatureElementKind.Spring) is { } springId)
             {
                 return new PartSettingsPresentation(
                     springId,
@@ -233,7 +231,7 @@ public sealed class BuildPresentationViewModel
                     PanelSliders());
             }
 
-            if (_build.SingleSelectedSensorId is { } sensorId)
+            if (_build.SingleSelectedId(CreatureElementKind.Sensor) is { } sensorId)
             {
                 var sensor = SensorById(sensorId);
                 return new PartSettingsPresentation(
@@ -248,7 +246,7 @@ public sealed class BuildPresentationViewModel
                     PanelSliders());
             }
 
-            if (_build.SingleSelectedBeamId is { } beamId)
+            if (_build.SingleSelectedId(CreatureElementKind.Beam) is { } beamId)
             {
                 var beam = BeamById(beamId);
                 return new PartSettingsPresentation(
@@ -263,7 +261,7 @@ public sealed class BuildPresentationViewModel
                     PanelSliders());
             }
 
-            if (_build.SingleSelectedNodeId is { } nodeId)
+            if (_build.SingleSelectedId(CreatureElementKind.Node) is { } nodeId)
             {
                 return new PartSettingsPresentation(
                     nodeId,
@@ -318,9 +316,9 @@ public sealed class BuildPresentationViewModel
             var selection = _build.Selection;
             var settings = PanelSliders();
             var showFrameRows = _build.SelectedNodeCount >= 2;
-            var deleteNote = selection.Nodes.Count > 0
+            var deleteNote = selection.IdsOf(CreatureElementKind.Node).Count > 0
                 ? UiText.Plain("Links on a deleted joint go with it.")
-                : _build.Sensors.Any(sensor => selection.Beams.Contains(sensor.BeamId) && !selection.Sensors.Contains(sensor.Id))
+                : _build.Sensors.Any(sensor => selection.Contains(CreatureElementKind.Beam, sensor.BeamId) && !selection.Contains(CreatureElementKind.Sensor, sensor.Id))
                     ? UiText.Plain("A sensor on a deleted beam goes with it.")
                     : null;
             return new SelectionPanelPresentation(
