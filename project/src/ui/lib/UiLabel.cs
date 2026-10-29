@@ -10,6 +10,7 @@ public sealed partial class UiLabel : Label
     private UiTokens.Typography _textStyle = UiTokens.Typography.Body;
     private UiTokens.Color _textColor = UiTokens.Color.Ink;
     private Func<string>? _textSource;
+    private Func<string>? _widthSource;
     private AutoTranslateModeEnum _authoredTranslateMode;
     private Label? _baselineOf;
     private readonly UiUnsavedState _unsaved = new("custom_minimum_size", "size_flags_vertical", "vertical_alignment");
@@ -76,6 +77,27 @@ public sealed partial class UiLabel : Label
     }
 
     /// <summary>
+    /// Text built in code whose width the label keeps as its least, such as the longest number it
+    /// shows, so a changing number does not resize it. Each digit counts as the font's widest
+    /// digit. It follows the language and the theme as <see cref="TextSource"/> does. While set the
+    /// label owns its minimum width; null hands it back at 0.
+    /// </summary>
+    public Func<string>? WidthSource
+    {
+        get => _widthSource;
+        set
+        {
+            _widthSource = value;
+            if (value is null)
+            {
+                CustomMinimumSize = CustomMinimumSize with { X = 0 };
+            }
+
+            ApplyWidth();
+        }
+    }
+
+    /// <summary>
     /// A label beside this one whose baseline this one stands on, for a scene: as
     /// <see cref="UiBaseline"/> does for a row built in code, this label starts at the top of its
     /// row, as tall as the other label's top margin and ascent plus its own descent and bottom
@@ -115,11 +137,17 @@ public sealed partial class UiLabel : Label
         if (what == NotificationThemeChanged)
         {
             ApplyBaseline();
+            ApplyWidth();
         }
 
-        if (_textSource is not null && (what == NotificationTranslationChanged || what == NotificationEnterTree))
+        if (what == NotificationTranslationChanged || what == NotificationEnterTree)
         {
-            Text = _textSource();
+            if (_textSource is not null)
+            {
+                Text = _textSource();
+            }
+
+            ApplyWidth();
         }
     }
 
@@ -137,6 +165,22 @@ public sealed partial class UiLabel : Label
         }
 
         UiBaseline.Stand(this, UiBaseline.ExtentOf(_baselineOf).Above + UiBaseline.ExtentOf(this).Below);
+    }
+
+    private void ApplyWidth()
+    {
+        if (_widthSource is null || !IsInsideTree())
+        {
+            return;
+        }
+
+        var font = GetThemeFont("font");
+        var fontSize = GetThemeFontSize("font_size");
+        var widestDigit = "0123456789".MaxBy(digit => font.GetStringSize(digit.ToString(), fontSize: fontSize).X);
+        var text = string.Concat(_widthSource().Select(c => char.IsAsciiDigit(c) ? widestDigit : c));
+        text = Uppercase ? UiThemeLookup.Uppercase(text) : text;
+        var width = font.GetStringSize(text, fontSize: fontSize).X + GetThemeStylebox("normal").GetMinimumSize().X;
+        CustomMinimumSize = CustomMinimumSize with { X = Mathf.Ceil(width) };
     }
 
     // Both values are theme-independent names; the inherited Theme resolves the font and color.

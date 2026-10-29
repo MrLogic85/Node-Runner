@@ -226,6 +226,7 @@ public partial class TrainingScreen : Control
         GetNode<UiButton>("%Stats").Activated += () => EmitSignal(SignalName.StatsRequested);
         GetNode<UiButton>("%Pause").Activated += () => EmitSignal(SignalName.PauseRequested);
         GetNode<UiWorldView>("%ArenaView").WorldPressed += position => EmitSignal(SignalName.ArenaPressed, position);
+        GetNode<UiLabel>("%TrackEnd").WidthSource = UiTextTranslation.Source(SignalFlowPresentationViewModel.TrackEndRoom);
         Apply();
     }
 

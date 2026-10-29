@@ -125,6 +125,12 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
     public UiText? TrackEnd { get; private set; }
 
     /// <summary>
+    /// The longest <see cref="TrackEnd"/> the card keeps room for, "999.9 m", so the strip keeps
+    /// its width while the track grows; a longer track widens the end label.
+    /// </summary>
+    public static UiText TrackEndRoom { get; } = Metres.WithUnit(999.9 * Metres.WorldUnitsPerMetre);
+
+    /// <summary>
     /// Refreshes the Distance card from this tick. When a text on it or <see cref="DistanceTorn"/>
     /// changed, <see cref="DistanceReadout"/> is notified for the whole card; when only the strip
     /// moved, <see cref="TrackFill"/> is notified for <see cref="TrackFill"/> and <see cref="TrackMarker"/>.

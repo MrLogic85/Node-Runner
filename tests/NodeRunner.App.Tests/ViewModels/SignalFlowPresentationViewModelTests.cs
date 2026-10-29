@@ -70,6 +70,10 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.TrackEnd.ShouldBe(Metres.WithUnit(full));
     }
 
+    [Fact]
+    public void TrackEndRoom_ReadsTheLongestTrackEndTheCardKeepsRoomFor() =>
+        SignalFlowPresentationViewModel.TrackEndRoom.ShouldBe(UiText.Format("{0} m", new FixedNumber(999.9, 1)));
+
     // A tear freezes the distance, says "Crash" and hides the speed; with no try the card has no
     // body, and a new try reads plainly again.
     [Fact]
