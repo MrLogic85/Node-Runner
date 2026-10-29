@@ -286,9 +286,10 @@ layer owns that. "Locked" means "has trained at least one generation".
     epoch guards it). Saves for one creation land in order, and reading a
     creation (`ICreationUpdateCoordinator.Get`) waits for them, so Build
     opened right after Training never shows a stale lock.
-- The top bar shows the creation's name, the status ("Training · Flat
-  ground") and the Network and Stats buttons. Beside the arena the
-  **Status** panel shows the Inputs → Network → Outputs → Distance stages
+- The top bar shows the creation's name, the status
+  (`docs/UI_DIRECTION.md` → "Training") and the Network and Stats
+  buttons. Beside the arena the **Status** panel shows the Inputs →
+  Network → Outputs → Distance stages
   (`SignalFlowPresentationViewModel`). Inputs counts the input ports and
   shows them in port order as upright bars, filled like the callout's
   port bars; the bars are empty with no live network and hold on pause.

@@ -298,6 +298,12 @@ plain frames. A stage's empty-state line sits in its body in Body
 on a phone. Only the followed shadow's strip cell is marked (`accent`).
 Stats is Unavailable (#198).
 
+The top bar's subtitle reads "Training · {map}" or "Simulating · {map}"
+after an `accent` dot. While the run is paused it reads "Paused · {map}"
+in both modes, and the Pause icon (Small, `muted`) replaces the dot, so
+the pause shows in shape and word, not colour alone. Train keeps its
+generation caption while paused.
+
 ### NetworkFocus
 
 NetworkFocus shows the direct network, inputs straight to outputs (hidden

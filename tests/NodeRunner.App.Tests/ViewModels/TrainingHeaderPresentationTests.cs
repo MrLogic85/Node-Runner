@@ -10,23 +10,21 @@ public sealed class TrainingHeaderPresentationTests
     [Theory]
     [InlineData(TrainingRunMode.Train, "Training · {0}", true)]
     [InlineData(TrainingRunMode.Simulate, "Simulating · {0}", false)]
-    public void For_SaysWhatRunsOnTheMap_AndShowsTheGenerationOnlyWhenTraining(TrainingRunMode mode, string status, bool showsGeneration)
+    public void Status_SaysWhatRunsOnTheMap_OrThatItIsPaused_AndOnlyTrainingShowsTheGeneration(TrainingRunMode mode, string running, bool showsGeneration)
     {
         var header = TrainingHeaderPresentation.For("Walker-1", mode, MapIds.Flat);
 
-        header.ShouldBe(new TrainingHeaderPresentation(
-            UiText.AsWritten("Walker-1"),
-            UiText.Format(status, UiText.Plain("Flat ground")),
-            showsGeneration));
+        header.CreationName.ShouldBe(UiText.AsWritten("Walker-1"));
+        header.Status(paused: false).ShouldBe(UiText.Format(running, UiText.Plain("Flat ground")));
+        header.Status(paused: true).ShouldBe(UiText.Format("Paused · {0}", UiText.Plain("Flat ground")));
+        header.ShowsGeneration.ShouldBe(showsGeneration);
     }
 
     [Fact]
-    public void ForWalker_NamesTheWalkerExample_AndAnUnknownMapOrBlankNameThrows()
+    public void ForWalker_NamesTheWalkerExample_AndAnUnknownModeMapOrBlankNameThrows()
     {
-        TrainingHeaderPresentation.ForWalker(TrainingRunMode.Train, MapIds.Flat).ShouldBe(new TrainingHeaderPresentation(
-            CreationExamples.Walker.Name,
-            UiText.Format("Training · {0}", UiText.Plain("Flat ground")),
-            ShowsGeneration: true));
+        TrainingHeaderPresentation.ForWalker(TrainingRunMode.Train, MapIds.Flat).CreationName.ShouldBe(CreationExamples.Walker.Name);
+        Should.Throw<ArgumentOutOfRangeException>(() => TrainingHeaderPresentation.For("Walker-1", (TrainingRunMode)99, MapIds.Flat));
         Should.Throw<ArgumentOutOfRangeException>(() => TrainingHeaderPresentation.For("Walker-1", TrainingRunMode.Train, "moon"));
         Should.Throw<ArgumentException>(() => TrainingHeaderPresentation.For(" ", TrainingRunMode.Train, MapIds.Flat));
     }

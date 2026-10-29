@@ -793,6 +793,10 @@ msgstr ""
 msgid "Pause"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/TrainingHeaderPresentation.cs
+msgid "Paused · {0}"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 msgid "Phone may stutter above {0}."
 msgstr ""
