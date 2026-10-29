@@ -456,7 +456,10 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public bool ShowsLooseMark(int nodeId) => IsLoose(nodeId)
         && !CreatureDef.HasJointPart(nodeId, _builder.JointParts.Where(part => PartKinds.SlotOf(part) is JointSlot.HingePart or JointSlot.Wheel));
 
-    /// <summary>Why a Servo, Motor, Stepper, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work.</summary>
+    /// <summary>
+    /// Why a Servo, Motor, Stepper, Brake or Angle sensor of <paramref name="kind"/> on a joint without two sides cannot work.
+    /// A subset switch: it takes the kinds in <see cref="JointSlot.HingePart"/>.
+    /// </summary>
     public static UiText NeedsTwoSidesReason(CreatureElementKind kind) => kind switch
     {
         CreatureElementKind.Servo => CreatureBuilder.ServoNeedsTwoSidesReason,
@@ -624,22 +627,16 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// The part drawn on top at <paramref name="position"/>, so a touch hits what it sees
     /// (<see cref="DrawGroups.PartAt"/>), with the selection and the <paramref name="targets"/> on
-    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A motor, Stepper, Brake, Angle sensor or Wheel
+    /// the selected surface as the canvas draws them (<see cref="RaisedParts"/>). A part on a joint
     /// is hit as its joint; a Touch sensor and a Rubber add no tap area. Null off every part.
     /// </summary>
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
     {
         var groups = DrawGroups();
         var hit = groups.PartAt(position, nodeId => NodeById(nodeId).Position, _builder.HingeParts, _builder.Wheels, _builder.Sensors, RaisedIn(groups, Selection, targets));
-        return hit?.Kind switch
-        {
-            CreatureElementKind.Servo => new CreatureElementSelection(CreatureElementKind.Node, _builder.Servos[_builder.ServoIndexOf(hit.Id)].NodeId),
-            CreatureElementKind.VelocityMotor => new CreatureElementSelection(CreatureElementKind.Node, _builder.VelocityMotors[_builder.VelocityMotorIndexOf(hit.Id)].NodeId),
-            CreatureElementKind.Brake => new CreatureElementSelection(CreatureElementKind.Node, _builder.Brakes[_builder.BrakeIndexOf(hit.Id)].NodeId),
-            CreatureElementKind.Stepper => new CreatureElementSelection(CreatureElementKind.Node, _builder.Steppers[_builder.StepperIndexOf(hit.Id)].NodeId),
-            CreatureElementKind.Wheel => new CreatureElementSelection(CreatureElementKind.Node, _builder.Wheels[_builder.WheelIndexOf(hit.Id)].NodeId),
-            _ => hit,
-        };
+        return hit is not null && _builder.FindPart(hit.Id) is IJointPartDef part
+            ? new CreatureElementSelection(CreatureElementKind.Node, part.NodeId)
+            : hit;
     }
 
     /// <summary>
@@ -668,7 +665,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
             parts = parts.Append(new CreatureElementSelection(CreatureElementKind.Sensor, moving));
         }
 
-        return groups.Raised(parts, HingeParts, _builder.Wheels, _builder.TouchSensors, _builder.Rubbers, targets.Beams, targets.Joints);
+        return groups.Raised(parts, _builder.JointParts, targets.Beams, targets.Joints);
     }
 
     private DrawGroups DrawGroups() => Domain.DrawGroups.Of(_builder.Nodes, LinkRef.All(_builder.Beams, _builder.Pistons, _builder.Springs));

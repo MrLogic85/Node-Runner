@@ -719,6 +719,11 @@ public partial class BuildScreen : Control
         _ => UiIconId.None,
     };
 
+    /// <summary>A hinge part side picker's glyph for a side: a link or the Wheel.</summary>
+    public static UiIconId SideIcon(CreatureElementKind kind) => kind == CreatureElementKind.Wheel
+        ? UiIconId.PartWheel
+        : PartKinds.OfLink(kind, () => UiIconId.PartBeam, () => UiIconId.PartPiston, () => UiIconId.PartSpring);
+
     /// <summary>The tray glyph for a part.</summary>
     public static UiIconId PartIcon(BuildPart part) => part switch
     {
@@ -842,7 +847,7 @@ public partial class BuildScreen : Control
                 UiTextTranslation.Source(presentation.Label)(),
                 presentation.Options.Select(option => new UiPickerOption(
                     UiTextTranslation.Source(option.Name)(),
-                    IconForLinkKind(option.Kind),
+                    SideIcon(option.Kind),
                     Note: UiTextTranslation.Source(option.Note)?.Invoke(),
                     IconTint: TintForRole(option.Role))).ToArray(),
                 presentation.SelectedIndex ?? -1,
@@ -866,15 +871,6 @@ public partial class BuildScreen : Control
             ServoLinkRole.Fixed => UiTokens.Color.Detail,
             ServoLinkRole.Target => UiTokens.Color.Accent,
             _ => UiTokens.Color.LineStrong,
-        };
-
-        static UiIconId? IconForLinkKind(CreatureElementKind kind) => kind switch
-        {
-            CreatureElementKind.Beam => UiIconId.PartBeam,
-            CreatureElementKind.Piston => UiIconId.PartPiston,
-            CreatureElementKind.Spring => UiIconId.PartSpring,
-            CreatureElementKind.Wheel => UiIconId.PartWheel,
-            _ => null,
         };
     }
 

@@ -76,6 +76,25 @@ public sealed class CreatureBuilderTests
         builder.HingeParts.ShouldBeEmpty();
     }
 
+    // AddHingePart's subset switch takes every kind in the hinge-part slot and refuses every other.
+    [Fact]
+    public void AddHingePart_TakesEveryHingePartKind_AndRefusesEveryOther()
+    {
+        foreach (var info in PartKinds.All)
+        {
+            var builder = Joint(out var joint, out _, out var first, out var second);
+
+            if (info.Slot == JointSlot.HingePart)
+            {
+                builder.FindPart(builder.AddHingePart(info.Kind, joint, first, second))!.PartKind.ShouldBe(info.Kind);
+            }
+            else
+            {
+                Should.Throw<ArgumentOutOfRangeException>(() => builder.AddHingePart(info.Kind, joint, first, second));
+            }
+        }
+    }
+
     // A Wheel, a Touch sensor and a Rubber each take one slot of their own at a joint, beside a hinge part.
     [Theory]
     [InlineData(CreatureElementKind.Wheel)]

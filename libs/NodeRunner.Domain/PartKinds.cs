@@ -54,6 +54,24 @@ public static class PartKinds
         return Of(part.PartKind).IsLink;
     }
 
+    /// <summary>
+    /// The value of link kind <paramref name="kind"/>: the one switch over the link kinds, so a new link kind
+    /// adds a parameter here and every caller fails to compile until it says what that kind takes.
+    /// </summary>
+    public static T OfLink<T>(CreatureElementKind kind, Func<T> beam, Func<T> piston, Func<T> spring)
+    {
+        ArgumentNullException.ThrowIfNull(beam);
+        ArgumentNullException.ThrowIfNull(piston);
+        ArgumentNullException.ThrowIfNull(spring);
+        return kind switch
+        {
+            CreatureElementKind.Beam => beam(),
+            CreatureElementKind.Piston => piston(),
+            CreatureElementKind.Spring => spring(),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a link."),
+        };
+    }
+
     public static JointSlot SlotOf(IJointPartDef part)
     {
         ArgumentNullException.ThrowIfNull(part);

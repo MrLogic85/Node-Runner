@@ -257,7 +257,7 @@ public partial class Creature
             return;
         }
 
-        _raised = groups.Raised(selection, definition.HingeParts, definition.Wheels, definition.TouchSensors, definition.Rubbers);
+        _raised = groups.Raised(selection, definition.Parts.OfType<IJointPartDef>());
         foreach (var (part, view) in _parts.Entries)
         {
             view.Visual?.Place(groups, part, _raised);

@@ -43,20 +43,19 @@ public sealed record PartCalloutPresentation(
 
         var name = PartNames.Display(creature.Parts, selection.Id);
         var kind = (creature.FindPart(selection.Id) ?? throw new ArgumentException($"Part {selection.Id} is not on the creature.", nameof(selection))).PartKind;
-        switch (kind)
-        {
-            case PartKind.Node or PartKind.Beam or PartKind.Spring:
-                return new PartCalloutPresentation(kind, name, ShowsGlyph: false, [], [], null);
-            case PartKind.Wheel or PartKind.Rubber or PartKind.Brake:
-                return new PartCalloutPresentation(kind, name, ShowsGlyph: true, [], [], _noNetworkPorts);
-        }
 
-        var ports = values.Of(selection.Id);
-        PartCalloutPort[] Of(PortDirection direction) => ports
+        PartCalloutPort[] Of(PortDirection direction) => values.Of(selection.Id)
             .Where(value => value.Port.Direction == direction)
             .Select(value => new PartCalloutPort(value.Port, NetworkPortDisplay.ShortLabel(kind, value.Port), NetworkPortDisplay.Range(kind, value.Port), value.Value))
             .ToArray();
-        return new PartCalloutPresentation(kind, name, ShowsGlyph: true, Of(PortDirection.Input), Of(PortDirection.Output), null);
+        return kind switch
+        {
+            PartKind.Node or PartKind.Beam or PartKind.Spring => new PartCalloutPresentation(kind, name, ShowsGlyph: false, [], [], null),
+            PartKind.Wheel or PartKind.Rubber or PartKind.Brake => new PartCalloutPresentation(kind, name, ShowsGlyph: true, [], [], _noNetworkPorts),
+            PartKind.Accelerometer or PartKind.Camera or PartKind.Servo or PartKind.Piston or PartKind.TouchSensor
+                or PartKind.VelocityMotor or PartKind.AngleSensor or PartKind.Stepper =>
+                new PartCalloutPresentation(kind, name, ShowsGlyph: true, Of(PortDirection.Input), Of(PortDirection.Output), null),
+        };
     }
 
 }

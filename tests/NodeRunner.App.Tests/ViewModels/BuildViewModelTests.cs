@@ -10,6 +10,27 @@ public sealed class BuildViewModelTests
     private static readonly CanvasRect _area = BuildViewModel.BuildArea;
     private static readonly double _r = NodeDef.PlainJointRadius;
 
+    // NeedsTwoSidesReason's subset switch has a reason for every kind in the hinge-part slot, each its own.
+    [Fact]
+    public void NeedsTwoSidesReason_NamesEveryHingePartKind_AndRefusesEveryOther()
+    {
+        var reasons = new List<UiText>();
+        foreach (var element in Enum.GetValues<CreatureElementKind>())
+        {
+            if (PartKinds.All.Any(info => info.Element == element && info.Slot == JointSlot.HingePart))
+            {
+                reasons.Add(BuildViewModel.NeedsTwoSidesReason(element));
+            }
+            else
+            {
+                Should.Throw<ArgumentOutOfRangeException>(() => BuildViewModel.NeedsTwoSidesReason(element));
+            }
+        }
+
+        reasons.ShouldBeUnique();
+        reasons.Count.ShouldBe(PartKinds.All.Count(info => info.Slot == JointSlot.HingePart));
+    }
+
     [Fact]
     public void Joints_LandOnWholeUnits_InsideTheBuildArea_AndEachPlaceOrMoveRedraws()
     {

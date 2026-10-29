@@ -77,8 +77,8 @@ public sealed class DrawGroups
         _joints.TryGetValue(nodeId, out var span) ? slot == DrawSlot.Under ? span.First : span.Last : null;
 
     /// <summary>
-    /// What rises to the selected surface: the <paramref name="selected"/> joints, a motor
-    /// (a Servo or Velocity motor) or Brake, Wheel, Touch sensor or Rubber as its joint, with their links; the selected links; the joints at the ends of all
+    /// What rises to the selected surface: the <paramref name="selected"/> joints, a part on a joint
+    /// (a hinge part, Wheel, Touch sensor or Rubber) as its joint, with their links; the selected links; the joints at the ends of all
     /// those links, so a link never covers the ring, hub or motor at its end; every link whose ends
     /// both rose with its sensor, so a raised motor never hides it; and the selected sensors. A
     /// Wheel's face, under its links, rises only with a selected joint, so a raised link never makes
@@ -88,33 +88,16 @@ public sealed class DrawGroups
     /// </summary>
     public RaisedParts Raised(
         IEnumerable<CreatureElementSelection> selected,
-        IEnumerable<IHingePartDef> hingeParts,
-        IEnumerable<WheelDef> wheels,
-        IEnumerable<TouchSensorDef> touchSensors,
-        IEnumerable<RubberDef> rubbers,
+        IEnumerable<IJointPartDef> jointParts,
         IEnumerable<int>? targetLinks = null,
         IEnumerable<int>? targetJoints = null)
     {
         ArgumentNullException.ThrowIfNull(selected);
-        ArgumentNullException.ThrowIfNull(hingeParts);
-        ArgumentNullException.ThrowIfNull(wheels);
-        ArgumentNullException.ThrowIfNull(touchSensors);
-        ArgumentNullException.ThrowIfNull(rubbers);
+        ArgumentNullException.ThrowIfNull(jointParts);
         var parts = selected.ToArray();
-        var hingePartNodes = hingeParts.ToDictionary(part => (part.Kind, part.Id), part => part.NodeId);
-        var wheelNodes = wheels.ToDictionary(wheel => wheel.Id, wheel => wheel.NodeId);
-        var touchNodes = touchSensors.ToDictionary(touch => touch.Id, touch => touch.NodeId);
-        var rubberNodes = rubbers.ToDictionary(rubber => rubber.Id, rubber => rubber.NodeId);
+        var jointPartNodes = jointParts.ToDictionary(part => (PartKinds.Of(part.PartKind).Element, part.Id), part => part.NodeId);
         var joints = parts
-            .Select(part => part.Kind switch
-            {
-                CreatureElementKind.Node => part.Id,
-                CreatureElementKind.Servo or CreatureElementKind.VelocityMotor or CreatureElementKind.Brake or CreatureElementKind.AngleSensor or CreatureElementKind.Stepper => hingePartNodes.GetValueOrDefault((part.Kind, part.Id), -1),
-                CreatureElementKind.Wheel => wheelNodes.GetValueOrDefault(part.Id, -1),
-                CreatureElementKind.TouchSensor => touchNodes.GetValueOrDefault(part.Id, -1),
-                CreatureElementKind.Rubber => rubberNodes.GetValueOrDefault(part.Id, -1),
-                _ => -1,
-            })
+            .Select(part => part.Kind == CreatureElementKind.Node ? part.Id : jointPartNodes.GetValueOrDefault((part.Kind, part.Id), -1))
             .Where(nodeId => nodeId >= 0)
             .ToHashSet();
         var wheelJoints = joints.ToHashSet();

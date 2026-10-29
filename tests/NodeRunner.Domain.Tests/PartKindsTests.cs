@@ -24,6 +24,26 @@ public sealed class PartKindsTests
         creature.Parts.ShouldAllBe(part => PartKinds.IsLink(part) == links.Contains(part.Id));
     }
 
+    // OfLink, the one switch over link kinds, gives each link kind its own value and refuses every other kind.
+    [Fact]
+    public void OfLink_TakesEveryLinkKind_AndRefusesEveryOther()
+    {
+        var links = new List<CreatureElementKind>();
+        foreach (var element in Enum.GetValues<CreatureElementKind>())
+        {
+            if (PartKinds.All.Any(info => info.Element == element && info.IsLink))
+            {
+                links.Add(PartKinds.OfLink(element, () => CreatureElementKind.Beam, () => CreatureElementKind.Piston, () => CreatureElementKind.Spring));
+            }
+            else
+            {
+                Should.Throw<ArgumentOutOfRangeException>(() => PartKinds.OfLink(element, () => 0, () => 0, () => 0));
+            }
+        }
+
+        links.ShouldBe(PartKinds.All.Where(info => info.IsLink).Select(info => info.Element));
+    }
+
     // A new part list on CreatureDef must hold parts the common contract reaches.
     [Fact]
     public void EverySavedPartList_HoldsPartDefs_AndThoseOnAJoint_AreJointParts()

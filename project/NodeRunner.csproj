@@ -7,6 +7,8 @@
     <RootNamespace>NodeRunner</RootNamespace>
     <!-- Godot generates code we can't control; don't fail the build on its warnings -->
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- A switch over an enum that misses a named member, so a new part kind fails every complete switch -->
+    <WarningsAsErrors>$(WarningsAsErrors);CS8509</WarningsAsErrors>
     <!-- Godot.NET.Sdk manages its own SourceGenerators/GodotSharp versions; opt out of CPM -->
     <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>

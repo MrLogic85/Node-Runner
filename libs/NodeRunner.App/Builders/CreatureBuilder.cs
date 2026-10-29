@@ -498,7 +498,8 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Adds a hinge part of <paramref name="kind"/>, a Servo, Velocity motor, Stepper, Brake or Angle sensor,
-    /// with the given Fixed and Target sides, each at the joint or empty, as a copied one has.
+    /// with the given Fixed and Target sides, each at the joint or empty, as a copied one has. A subset
+    /// switch: it takes the kinds in <see cref="JointSlot.HingePart"/>.
     /// </summary>
     public int AddHingePart(PartKind kind, int nodeId, int? fixedLinkId, int? targetLinkId) => kind switch
     {
@@ -744,7 +745,6 @@ public sealed partial class CreatureBuilder
         PartKind.Brake => new PartList<BrakeDef>(_brakes),
         PartKind.AngleSensor => new PartList<AngleSensorDef>(_angleSensors),
         PartKind.Stepper => new PartList<StepperDef>(_steppers),
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Every part kind has a list."),
     };
 
     private interface IPartList

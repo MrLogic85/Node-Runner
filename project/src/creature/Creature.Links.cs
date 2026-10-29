@@ -242,13 +242,11 @@ public partial class Creature
             return _nodeBodies[definition.NodeIndexOf(nodeId)];
         }
 
-        return definition.Link(linkId).Kind switch
-        {
-            CreatureElementKind.Beam => _beamBodies[definition.BeamIndexOf(linkId)],
-            CreatureElementKind.Piston => _pistonEndStops[definition.PistonIndexOf(linkId)].Cylinder,
-            CreatureElementKind.Spring => _springEndStops[definition.SpringIndexOf(linkId)].Cylinder,
-            var kind => throw new InvalidOperationException($"A {kind} is no link."),
-        };
+        return PartKinds.OfLink(
+            definition.Link(linkId).Kind,
+            () => _beamBodies[definition.BeamIndexOf(linkId)],
+            () => _pistonEndStops[definition.PistonIndexOf(linkId)].Cylinder,
+            () => _springEndStops[definition.SpringIndexOf(linkId)].Cylinder);
     }
 
     private HingePartSides HingePartSidesFor(CreatureDef definition, IHingePartDef part) => new(
