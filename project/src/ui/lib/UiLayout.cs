@@ -26,9 +26,10 @@ public static class UiLayout
     public const int MenuWidth = 200;
     public const int ColumnSmallWidth = 52;
 
-    public static void ApplyScreen(Control root)
-    {
+    /// <summary>
+    /// Fills its parent: the viewport, or a host that fills it. Godot keeps Full Rect anchors at the
+    /// parent's size through every resize, so setting the size too only logs a warning.
+    /// </summary>
+    public static void ApplyScreen(Control root) =>
         root.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-        root.Size = root.GetViewportRect().Size;
-    }
 }
