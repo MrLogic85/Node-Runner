@@ -113,8 +113,8 @@ public partial class JointPart : PartVisual
 
     /// <summary>
     /// Whether its Wheel is selected: the joint ring's selection mark outside the tyre, at
-    /// <see cref="Radius"/>'s halo. The joint draws it, as it draws the hub the Wheel is chosen
-    /// at, so it lies over the links and the cushion, as a joint's own mark does.
+    /// <see cref="Radius"/>'s halo. It is one of the joint's bands, after the cushion and skin, so it
+    /// lies over the links and the cushion and under the hub the Wheel is chosen at.
     /// </summary>
     public bool WheelSelected
     {

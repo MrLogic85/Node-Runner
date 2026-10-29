@@ -28,8 +28,8 @@ owns how parts look and their draw order.
    whole to the selected surface while selected or raised; never on a
    separate layer. `JointPart` draws the marks of the Touch sensor's
    cushion and the Rubber's skin. Two exceptions:
-   - A Wheel's mark is drawn by its `JointPart` after its bands, so it lies
-     over the links and the cushion.
+   - A Wheel's mark is one of its `JointPart`'s bands
+     (`docs/WORLD_VISUALS.md` → "Selection marks").
    - A selected joint motor's, Brake's or Angle sensor's Fixed and Target
      link bands lie along other parts' links, so the Build canvas draws
      them on `CreatureLayers.SelectedUnderlays`, under the selected

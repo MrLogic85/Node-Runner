@@ -249,8 +249,8 @@ itself.
   joints, so the group reads as one outline.
 - **Sensor:** its lines turn `halo`. **Rubber:** its skin turns `halo`.
   **Touch sensor:** a ring outside the cushion.
-- **Wheel:** a ring outside the tyre, drawn by the joint over the links
-  and cushion.
+- **Wheel:** a ring outside the tyre, one of its joint's bands ("Draw
+  layers"), over the links and cushion and under the hub.
 - **Servo:** a keyhole outline round ring and housing. **Stepper:** a ring
   with a keyhole round the pawl that turns with it; it cannot follow the
   notched rim, which would fill every notch.
