@@ -19,6 +19,9 @@ public sealed class PartKindsTests
         }
 
         EveryPartKind.Creature.HingeParts.ShouldAllBe(part => PartKinds.SlotOf(part) == JointSlot.HingePart);
+        var creature = EveryPartKind.Creature;
+        var links = LinkRef.All(creature.Beams, creature.Pistons, creature.Springs).Select(link => link.Id).ToHashSet();
+        creature.Parts.ShouldAllBe(part => PartKinds.IsLink(part) == links.Contains(part.Id));
     }
 
     // A new part list on CreatureDef must hold parts the common contract reaches.

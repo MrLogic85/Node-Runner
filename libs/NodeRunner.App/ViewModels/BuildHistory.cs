@@ -159,21 +159,9 @@ public sealed class BuildHistory
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    // Parts only: NextPartId is not part of the body.
-    private static bool SameBody(CreatureDef a, CreatureDef b) =>
-        a.Nodes.SequenceEqual(b.Nodes)
-        && a.Beams.SequenceEqual(b.Beams)
-        && a.Sensors.SequenceEqual(b.Sensors)
-        && a.Servos.SequenceEqual(b.Servos)
-        && a.Pistons.SequenceEqual(b.Pistons)
-        && a.Springs.SequenceEqual(b.Springs)
-        && a.Wheels.SequenceEqual(b.Wheels)
-        && a.TouchSensors.SequenceEqual(b.TouchSensors)
-        && a.Rubbers.SequenceEqual(b.Rubbers)
-        && a.VelocityMotors.SequenceEqual(b.VelocityMotors)
-        && a.Brakes.SequenceEqual(b.Brakes)
-        && a.AngleSensors.SequenceEqual(b.AngleSensors)
-        && a.Steppers.SequenceEqual(b.Steppers);
+    // Parts only: NextPartId is not part of the body. Each part is a record, so it equals another
+    // with the same kind and values.
+    private static bool SameBody(CreatureDef a, CreatureDef b) => a.Parts.SequenceEqual(b.Parts);
 
     private void Record(CreatureDef before, PartSet? reselect)
     {

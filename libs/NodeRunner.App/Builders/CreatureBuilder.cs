@@ -308,20 +308,6 @@ public sealed partial class CreatureBuilder
         }
     }
 
-    /// <summary>Removes a Piston by id, leaving any hinge part that used it incomplete until the player picks another link.</summary>
-    public void RemovePiston(int pistonId) => RemovePart(_pistons[PistonIndexOf(pistonId)]);
-
-    public void RemoveServo(int servoId) => RemovePart(_servos[ServoIndexOf(servoId)]);
-
-    /// <summary>Removes a Wheel by id, leaving any hinge part that used it incomplete until the player picks another side.</summary>
-    public void RemoveWheel(int wheelId) => RemovePart(_wheels[WheelIndexOf(wheelId)]);
-
-    /// <summary>Removes a Spring by id, leaving any hinge part that used it incomplete until the player picks another link.</summary>
-    public void RemoveSpring(int springId) => RemovePart(_springs[SpringIndexOf(springId)]);
-
-    /// <summary>Removes a beam by id, cascading to sensors on it.</summary>
-    public void RemoveBeam(int beamId) => RemovePart(_beams[BeamIndexOf(beamId)]);
-
     /// <summary>
     /// Removes any part by id with what goes with it: a joint takes its links and everything on it, a beam
     /// takes its sensor, and a link or Wheel leaves each hinge part that used it as a side without that side.
@@ -435,8 +421,6 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    public void RemoveTouchSensor(int touchSensorId) => RemovePart(_touchSensors[TouchSensorIndexOf(touchSensorId)]);
-
     /// <summary>
     /// Whether a Rubber can sit on this node; if not, <paramref name="reason"/> says why. A
     /// joint holds one, in its own joint-part slot next to a Servo, a Wheel and a Touch sensor.
@@ -471,8 +455,6 @@ public sealed partial class CreatureBuilder
         _rubbers.Add(new RubberDef(id, nodeId));
         return id;
     }
-
-    public void RemoveRubber(int rubberId) => RemovePart(_rubbers[RubberIndexOf(rubberId)]);
 
     public bool ServoNeedsTwoSides(int nodeId) => HasNode(nodeId) && !JointMotor.HasTwoSides(LinksAt(nodeId), WheelAt(nodeId) is not null);
 
@@ -514,6 +496,20 @@ public sealed partial class CreatureBuilder
     /// <summary>The beam, Piston or Spring with <paramref name="linkId"/>.</summary>
     public LinkRef Link(int linkId) => LinkRef.Find(Links(), linkId);
 
+    /// <summary>
+    /// Adds a hinge part of <paramref name="kind"/>, a Servo, Velocity motor, Stepper, Brake or Angle sensor,
+    /// with the given Fixed and Target sides, each at the joint or empty, as a copied one has.
+    /// </summary>
+    public int AddHingePart(PartKind kind, int nodeId, int? fixedLinkId, int? targetLinkId) => kind switch
+    {
+        PartKind.Servo => AddServo(nodeId, fixedLinkId, targetLinkId),
+        PartKind.VelocityMotor => AddVelocityMotor(nodeId, fixedLinkId, targetLinkId),
+        PartKind.Stepper => AddStepper(nodeId, fixedLinkId, targetLinkId),
+        PartKind.Brake => AddBrake(nodeId, fixedLinkId, targetLinkId),
+        PartKind.AngleSensor => AddAngleSensor(nodeId, fixedLinkId, targetLinkId),
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Only a hinge part has sides."),
+    };
+
     /// <summary>A node's current drawn/collision radius without building a CreatureDef.</summary>
     public double NodeRadius(int nodeId)
     {
@@ -522,14 +518,8 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Changes the Servo's fixed or target side, a link at its joint or its Wheel. Picking the
-    /// other role swaps them. The Servo keeps its id (<see cref="ServoDef.WithLinks"/>).
-    /// </summary>
-    public void SetServoLink(int servoId, bool fixedRole, int linkId) => SetSide(_servos[ServoIndexOf(servoId)], fixedRole, linkId);
-
-    /// <summary>
-    /// Changes any hinge part's fixed or target side, as <see cref="SetServoLink"/> does a Servo's:
-    /// picking the other role swaps them, and it keeps its id.
+    /// Changes any hinge part's fixed or target side, a link at its joint or its Wheel. Picking the
+    /// other role swaps them, and the part keeps its id (<see cref="IHingePartDef.WithLinks"/>).
     /// </summary>
     public void SetHingePartLink(int hingePartId, bool fixedRole, int linkId) =>
         SetSide(ExistingPart(hingePartId) as IHingePartDef ?? throw new ArgumentOutOfRangeException(nameof(hingePartId), "Part id must point to an existing hinge part."), fixedRole, linkId);
@@ -650,8 +640,6 @@ public sealed partial class CreatureBuilder
         var beam = _beams[BeamIndexOf(beamId)];
         return (_nodes[NodeIndexOf(beam.NodeA)].Position, _nodes[NodeIndexOf(beam.NodeB)].Position);
     }
-
-    public void RemoveSensor(int sensorId) => RemovePart(_sensors[SensorIndexOf(sensorId)]);
 
     /// <summary>Renames any part, keeping its id and everything else.</summary>
     public void Rename(int partId, string? name) => Replace(ExistingPart(partId).WithName(name));

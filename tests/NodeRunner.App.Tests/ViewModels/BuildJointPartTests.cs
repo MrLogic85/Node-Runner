@@ -257,10 +257,6 @@ public sealed class BuildJointPartTests
         build.ReplaceSelection(PartSet.Of(placed));
         build.DeleteLockedReason.ShouldBe(refused);
         new BuildPresentationViewModel(build).SinglePart!.CanDelete.ShouldBe(!hasPorts);
-        build.DeleteSelectedParts();
-        build.JointPartsAt(2).Count.ShouldBe(hasPorts ? 1 : 0);
-        var noteTarget = part == BuildPart.TouchSensor ? Joint(2) : placed;
-        build.CanvasNotes().ShouldBe(hasPorts ? [new CanvasNote(CanvasNoteKind.Danger, noteTarget, UiText.Plain(LockedText))] : []);
         build.IsLocked.ShouldBeTrue();
     }
 

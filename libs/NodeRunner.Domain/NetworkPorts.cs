@@ -102,11 +102,18 @@ public static class NetworkPorts
 
         var ports = creature.Parts
             .OrderBy(part => part.Id)
-            .SelectMany(part => PartKinds.Of(part.PartKind).Ports(part))
+            .SelectMany(part => Of(part))
             .ToArray();
         return new NetworkPortLayout(
             ports.Where(port => port.Direction == PortDirection.Input).ToArray(),
             ports.Where(port => port.Direction == PortDirection.Output).ToArray());
+    }
+
+    /// <summary>The ports <paramref name="part"/> declares, in the order its kind declares them (<see cref="PartKinds"/>).</summary>
+    public static IEnumerable<NetworkPort> Of(IPartDef part)
+    {
+        ArgumentNullException.ThrowIfNull(part);
+        return PartKinds.Of(part.PartKind).Ports(part);
     }
 
     /// <summary>A sensor part's input ports, in the order it writes its readings.</summary>

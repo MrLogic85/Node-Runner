@@ -442,156 +442,6 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<SpringDef> Springs => _builder.Springs;
 
-    /// <summary>
-    /// The messages Build shows in the drawing, each beside the part it is about: why the last
-    /// dropped part was refused, each loose joint and hinge part missing a side
-    /// <see cref="ShowTrainingBlockers"/> pointed at, each separate piece's joint nearest
-    /// another piece and each part a dimmed Copy or a locked Delete pointed at, then each beam or link too
-    /// short to train. Listed most important first:
-    /// notes that would overlap stack, the first listed nearest its part.
-    /// </summary>
-    public IReadOnlyList<CanvasNote> CanvasNotes()
-    {
-        var notes = new List<CanvasNote>();
-        if (_placementNote is { } placement && Exists(placement.Target))
-        {
-            notes.Add(placement);
-        }
-
-        foreach (var node in Nodes)
-        {
-            if (_shownBlockers.Contains(new CreatureElementSelection(CreatureElementKind.Node, node.Id)) && IsLoose(node.Id))
-            {
-                notes.Add(NotConnected(node.Id));
-            }
-        }
-
-        if (_showPieces && Pieces() is { Count: > 1 } pieces)
-        {
-            notes.AddRange(pieces.Select(piece => NotConnected(NearestOtherPiece(piece, pieces))));
-        }
-
-        notes.AddRange(_shownRefusalNotes.Where(note => Exists(note.Target)));
-
-        foreach (var beam in Beams)
-        {
-            AddTooShortNote(CreatureElementKind.Beam, beam.Id, beam.NodeA, beam.NodeB);
-        }
-
-        foreach (var part in HingeParts.Where(part => _shownBlockers.Contains(new CreatureElementSelection(part.Kind, part.Id)) && CreatureReadiness.IsMissingALink(part)))
-        {
-            var text = ServoNeedsTwoSides(part.NodeId)
-                ? NeedsTwoSidesReason(part.Kind)
-                : (part.FixedLinkId is null, part.TargetLinkId is null) switch
-                {
-                    (true, true) => UiText.Plain("Pick Fixed and Target parts"),
-                    (true, false) => UiText.Plain("Pick a Fixed part"),
-                    _ => UiText.Plain("Pick a Target part"),
-                };
-            notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(part.Kind, part.Id), text));
-        }
-
-        foreach (var piston in Pistons)
-        {
-            AddTooShortNote(CreatureElementKind.Piston, piston.Id, piston.NodeA, piston.NodeB);
-        }
-
-        foreach (var spring in Springs)
-        {
-            AddTooShortNote(CreatureElementKind.Spring, spring.Id, spring.NodeA, spring.NodeB);
-        }
-
-        return notes;
-
-        // The piece's joint nearest another piece, where a joining link would go; the first on a tie.
-        int NearestOtherPiece(IReadOnlyList<int> piece, IReadOnlyList<IReadOnlyList<int>> pieces)
-        {
-            var nearest = piece[0];
-            var nearestDistanceSquared = double.PositiveInfinity;
-            foreach (var id in piece)
-            {
-                var position = Nodes[NodeIndexOf(id)].Position;
-                foreach (var other in pieces)
-                {
-                    if (other == piece)
-                    {
-                        continue;
-                    }
-
-                    foreach (var otherId in other)
-                    {
-                        var otherPosition = Nodes[NodeIndexOf(otherId)].Position;
-                        var dx = position.X - otherPosition.X;
-                        var dy = position.Y - otherPosition.Y;
-                        var distanceSquared = (dx * dx) + (dy * dy);
-                        if (distanceSquared < nearestDistanceSquared)
-                        {
-                            nearestDistanceSquared = distanceSquared;
-                            nearest = id;
-                        }
-                    }
-                }
-            }
-
-            return nearest;
-        }
-
-        static CanvasNote NotConnected(int nodeId) =>
-            new(CanvasNoteKind.Danger, new CreatureElementSelection(CreatureElementKind.Node, nodeId), UiText.Plain("Not connected"));
-
-        void AddTooShortNote(CreatureElementKind kind, int id, int nodeA, int nodeB)
-        {
-            if (CreatureReadiness.IsTooShort(kind, Nodes[NodeIndexOf(nodeA)], Nodes[NodeIndexOf(nodeB)], JointMotors))
-            {
-                notes.Add(new CanvasNote(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), UiText.Plain("Too short")));
-            }
-        }
-    }
-
-    /// <summary>Why the last part dropped from the tray was refused, shown at the part it was dropped on; null when there is none.</summary>
-    public CanvasNote? PlacementNote
-    {
-        get => _placementNote;
-        private set
-        {
-            if (_placementNote == value)
-            {
-                return;
-            }
-
-            _placementNote = value;
-            OnPropertyChanged();
-        }
-    }
-
-    /// <summary>Hides <see cref="PlacementNote"/> once it has been read.</summary>
-    public void DismissPlacementNote() => PlacementNote = null;
-
-    /// <summary>
-    /// Hides the notes a tap brought up, on the next canvas touch: <see cref="PlacementNote"/>,
-    /// <see cref="ShowTrainingBlockers"/>' notes and a dimmed Copy's or a locked Delete's notes. Too-short parts' notes
-    /// stay, as they mark the drawing itself.
-    /// </summary>
-    public void DismissTapNotes()
-    {
-        PlacementNote = null;
-        if (_shownBlockers.Count == 0 && !_showPieces && _shownRefusalNotes.Count == 0)
-        {
-            return;
-        }
-
-        _shownBlockers.Clear();
-        _showPieces = false;
-        _shownRefusalNotes = [];
-        OnPropertyChanged(nameof(CanvasNotes));
-    }
-
-    private void ShowRefusalNotes(IReadOnlyList<CanvasNote> notes)
-    {
-        _shownRefusalNotes = notes;
-        OnPropertyChanged(nameof(CanvasNotes));
-    }
-
     /// <summary>Joined to nothing by a beam or a link, so the creature cannot train (<see cref="CreatureReadiness.IsAttached"/>).</summary>
     public bool IsLoose(int nodeId) =>
         !Beams.Any(beam => beam.NodeA == nodeId || beam.NodeB == nodeId)
@@ -620,39 +470,14 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>The pieces the links join the joints into (<see cref="Mechanics.Pieces.Of"/>); more than one cannot train.</summary>
     public IReadOnlyList<IReadOnlyList<int>> Pieces() => Mechanics.Pieces.Of(Nodes, LinkRef.All(Beams, Pistons, Springs));
 
-    /// <summary>
-    /// Answers a tap on the dimmed play button: every joint loose now gets a "Not connected"
-    /// note in <see cref="CanvasNotes"/>, kept until it is joined or removed, and so does every
-    /// piece until the creation is one piece and every hinge part missing a side until it has
-    /// both; the next canvas touch hides them all (<see cref="DismissTapNotes"/>). Too-short
-    /// parts already have theirs. A blocker that appears later waits for the next tap.
-    /// </summary>
-    public void ShowTrainingBlockers()
-    {
-        _showPieces = Pieces().Count > 1;
-        _shownBlockers.Clear();
-        _shownBlockers.UnionWith(Nodes.Where(node => IsLoose(node.Id)).Select(node => new CreatureElementSelection(CreatureElementKind.Node, node.Id)));
-        _shownBlockers.UnionWith(HingeParts.Where(CreatureReadiness.IsMissingALink).Select(part => new CreatureElementSelection(part.Kind, part.Id)));
+    /// <summary>The part with <paramref name="partId"/>, whatever its kind, or null.</summary>
+    public IPartDef? FindPart(int partId) => _builder.FindPart(partId);
 
-        OnPropertyChanged(nameof(CanvasNotes));
-    }
+    // The part element names, or null when the body has no part of that kind with that id.
+    private IPartDef? FindPart(CreatureElementSelection element) =>
+        _builder.FindPart(element.Id) is { } part && CreatureElementSelection.Of(part) == element ? part : null;
 
-    private bool Exists(CreatureElementSelection element) => element.Kind switch
-    {
-        CreatureElementKind.Node => _builder.Nodes.Any(node => node.Id == element.Id),
-        CreatureElementKind.Beam => _builder.Beams.Any(beam => beam.Id == element.Id),
-        CreatureElementKind.Servo => _builder.Servos.Any(servo => servo.Id == element.Id),
-        CreatureElementKind.Piston => _builder.Pistons.Any(piston => piston.Id == element.Id),
-        CreatureElementKind.Spring => _builder.Springs.Any(spring => spring.Id == element.Id),
-        CreatureElementKind.Wheel => _builder.Wheels.Any(wheel => wheel.Id == element.Id),
-        CreatureElementKind.TouchSensor => _builder.TouchSensors.Any(touch => touch.Id == element.Id),
-        CreatureElementKind.Rubber => _builder.Rubbers.Any(rubber => rubber.Id == element.Id),
-        CreatureElementKind.VelocityMotor => _builder.VelocityMotors.Any(motor => motor.Id == element.Id),
-        CreatureElementKind.Brake => _builder.Brakes.Any(brake => brake.Id == element.Id),
-        CreatureElementKind.AngleSensor => _builder.AngleSensors.Any(angleSensor => angleSensor.Id == element.Id),
-        CreatureElementKind.Stepper => _builder.Steppers.Any(stepper => stepper.Id == element.Id),
-        _ => _builder.Sensors.Any(sensor => sensor.Id == element.Id),
-    };
+    private bool Exists(CreatureElementSelection element) => FindPart(element) is not null;
 
     /// <summary>
     /// Places a new node, moved inside <see cref="BuildArea"/> and onto the grid when
@@ -864,19 +689,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public void RenamePart(int partId, string name, string? shownDefault)
     {
         ArgumentNullException.ThrowIfNull(name);
-        if (!_builder.Nodes.Any(node => node.Id == partId)
-            && !_builder.Beams.Any(beam => beam.Id == partId)
-            && !_builder.Sensors.Any(sensor => sensor.Id == partId)
-            && !_builder.Servos.Any(servo => servo.Id == partId)
-            && !_builder.Pistons.Any(piston => piston.Id == partId)
-            && !_builder.Springs.Any(spring => spring.Id == partId)
-            && !_builder.Wheels.Any(wheel => wheel.Id == partId)
-            && !_builder.TouchSensors.Any(touch => touch.Id == partId)
-            && !_builder.Rubbers.Any(rubber => rubber.Id == partId)
-            && !_builder.VelocityMotors.Any(motor => motor.Id == partId)
-            && !_builder.Brakes.Any(brake => brake.Id == partId)
-            && !_builder.AngleSensors.Any(angleSensor => angleSensor.Id == partId)
-            && !_builder.Steppers.Any(stepper => stepper.Id == partId))
+        if (_builder.FindPart(partId) is null)
         {
             return;
         }
@@ -1018,11 +831,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public int BeamIndexOf(int beamId) => _builder.BeamIndexOf(beamId);
 
-    public int PistonIndexOf(int pistonId) => _builder.PistonIndexOf(pistonId);
-
     public int ServoIndexOf(int servoId) => _builder.ServoIndexOf(servoId);
-
-    public int SpringIndexOf(int springId) => _builder.SpringIndexOf(springId);
 
     public int WheelIndexOf(int wheelId) => _builder.WheelIndexOf(wheelId);
 
@@ -1064,33 +873,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// </summary>
     public void SetHingePartLink(int partId, bool fixedRole, int linkId)
     {
-        var isBrake = _builder.Brakes.Any(brake => brake.Id == partId);
-        var isAngleSensor = _builder.AngleSensors.Any(angleSensor => angleSensor.Id == partId);
-        var isServo = _builder.Servos.Any(servo => servo.Id == partId);
-        var isStepper = _builder.Steppers.Any(stepper => stepper.Id == partId);
-        _history.Change(() =>
-        {
-            if (isBrake)
-            {
-                _builder.SetBrakeLink(partId, fixedRole, linkId);
-            }
-            else if (isAngleSensor)
-            {
-                _builder.SetAngleSensorLink(partId, fixedRole, linkId);
-            }
-            else if (isServo)
-            {
-                _builder.SetServoLink(partId, fixedRole, linkId);
-            }
-            else if (isStepper)
-            {
-                _builder.SetStepperLink(partId, fixedRole, linkId);
-            }
-            else
-            {
-                _builder.SetVelocityMotorLink(partId, fixedRole, linkId);
-            }
-        });
+        _history.Change(() => _builder.SetHingePartLink(partId, fixedRole, linkId));
         RaiseAnatomyChanged();
     }
 

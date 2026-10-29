@@ -4,31 +4,22 @@ namespace NodeRunner.App.ViewModels;
 
 public static class CanvasNoteTargets
 {
+    /// <summary>
+    /// The joints a note on <paramref name="target"/> stands by: a joint itself, a joint part's
+    /// joint, and both ends of a link or of a sensor's beam.
+    /// </summary>
     public static IReadOnlyList<int> JointIds(CreatureElementSelection target, BuildViewModel build)
     {
+        ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(build);
-        return target.Kind switch
+        return build.FindPart(target.Id) switch
         {
-            CreatureElementKind.Node => [target.Id],
-            CreatureElementKind.Servo => [build.Servos[build.ServoIndexOf(target.Id)].NodeId],
-            CreatureElementKind.Wheel => [build.Wheels[build.WheelIndexOf(target.Id)].NodeId],
-            CreatureElementKind.TouchSensor => [build.TouchSensors[build.TouchSensorIndexOf(target.Id)].NodeId],
-            CreatureElementKind.Rubber => [build.Rubbers[build.RubberIndexOf(target.Id)].NodeId],
-            CreatureElementKind.VelocityMotor => [build.VelocityMotors[build.VelocityMotorIndexOf(target.Id)].NodeId],
-            CreatureElementKind.Brake => [build.Brakes[build.BrakeIndexOf(target.Id)].NodeId],
-            CreatureElementKind.AngleSensor => [build.AngleSensors[build.AngleSensorIndexOf(target.Id)].NodeId],
-            CreatureElementKind.Stepper => [build.Steppers[build.StepperIndexOf(target.Id)].NodeId],
-            CreatureElementKind.Beam or CreatureElementKind.Piston or CreatureElementKind.Spring => LinkJoints(build.Link(target.Id)),
-            CreatureElementKind.Sensor => SensorJoints(target.Id, build),
+            NodeDef node => [node.Id],
+            IJointPartDef part => [part.NodeId],
+            SensorDef sensor => LinkJoints(build.Link(sensor.BeamId)),
+            { } part when PartKinds.IsLink(part) => LinkJoints(build.Link(part.Id)),
             _ => throw new ArgumentOutOfRangeException(nameof(target)),
         };
-    }
-
-    private static int[] SensorJoints(int sensorId, BuildViewModel build)
-    {
-        var sensor = build.Sensors.First(entry => entry.Id == sensorId);
-        var beam = build.Beams[build.BeamIndexOf(sensor.BeamId)];
-        return [beam.NodeA, beam.NodeB];
     }
 
     private static int[] LinkJoints(LinkRef link) => [link.NodeA, link.NodeB];

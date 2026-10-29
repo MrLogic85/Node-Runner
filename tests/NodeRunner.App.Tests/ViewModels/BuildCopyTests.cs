@@ -143,7 +143,7 @@ public sealed class BuildCopyTests
     }
 
     [Fact]
-    public void ADimmedCopysNotes_MarkEachOffenderKindByKind_PortsFirst_AndGoOnASelectionTouchOrUnlock()
+    public void ADimmedCopysNotes_MarkEachOffenderInIdOrder_PortsFirst_AndGoOnASelectionTouchOrUnlock()
     {
         var build = Loaded(Creature());
         build.ReplaceSelection(Set(Joint(5), Beam(12), Beam(11), _spring));
