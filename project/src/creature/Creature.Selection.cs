@@ -235,7 +235,7 @@ public partial class Creature
                     JointVisualOf(rubber).SkinSelected = true;
                     break;
 
-                // A Wheel's joint draws its mark with the hub, over the links.
+                // A Wheel's joint draws its mark as one of its bands, over the links and under the hub.
                 case WheelDef wheel:
                     JointVisualOf(wheel).WheelSelected = true;
                     break;
