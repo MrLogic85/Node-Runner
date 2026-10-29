@@ -33,7 +33,6 @@ public sealed partial class CreatureBuilder
         PartKind.Wheel => _wheelParameters,
         PartKind.Camera => _cameraParameters,
         PartKind.Node or PartKind.Beam or PartKind.Accelerometer or PartKind.TouchSensor or PartKind.Rubber or PartKind.AngleSensor => [],
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Every part kind says which settings it has."),
     };
 
     /// <summary>

@@ -47,31 +47,31 @@ public sealed class DrawGroupsTests
     [Fact]
     public void Raised_FollowsTheSelectionToItsJointsAndLinks()
     {
-        var byJoint = _frame.Raised([P(Node, 3)], [], [], [], []);
+        var byJoint = _frame.Raised([P(Node, 3)], []);
         byJoint.Links.ShouldBe([11]);
         byJoint.Joints.ShouldBe([1, 3], ignoreOrder: true);
         WheelDef[] wheels = [new(40, 4)];
-        var byLink = _frame.Raised([P(Beam, 12)], [], wheels, [], []);
+        var byLink = _frame.Raised([P(Beam, 12)], wheels);
         byLink.Links.ShouldBe([12]);
         byLink.Joints.ShouldBe([2, 4], ignoreOrder: true);
         byLink.Wheels.ShouldBeEmpty();
-        var byWheel = _frame.Raised([P(Wheel, 40)], [], wheels, [], []);
+        var byWheel = _frame.Raised([P(Wheel, 40)], wheels);
         byWheel.Links.ShouldBe([12]);
         byWheel.Wheels.ShouldBe([4]);
-        _frame.Raised([], [], wheels, [], [], targetJoints: [4]).Wheels.ShouldBeEmpty();
+        _frame.Raised([], wheels, targetJoints: [4]).Wheels.ShouldBeEmpty();
 
-        foreach (var (part, hinge, touch, rubber) in new (CreatureElementSelection, IHingePartDef?, TouchSensorDef?, RubberDef?)[]
+        foreach (var (part, onJoint) in new (CreatureElementSelection, IJointPartDef)[]
         {
-            (P(Servo, 30), new ServoDef(30, 3), null, null), (P(VelocityMotor, 70), new VelocityMotorDef(70, 3), null, null),
-            (P(Brake, 80), new BrakeDef(80, 3), null, null), (P(Stepper, 90), new StepperDef(90, 3), null, null),
-            (P(TouchSensor, 50), null, new TouchSensorDef(50, 3), null), (P(Rubber, 60), null, null, new RubberDef(60, 3)),
+            (P(Servo, 30), new ServoDef(30, 3)), (P(VelocityMotor, 70), new VelocityMotorDef(70, 3)),
+            (P(Brake, 80), new BrakeDef(80, 3)), (P(Stepper, 90), new StepperDef(90, 3)),
+            (P(TouchSensor, 50), new TouchSensorDef(50, 3)), (P(Rubber, 60), new RubberDef(60, 3)),
         })
         {
-            _frame.Raised([part], hinge is null ? [] : [hinge], [], touch is null ? [] : [touch], rubber is null ? [] : [rubber])
+            _frame.Raised([part], [onJoint])
                 .Joints.Order().ToArray().ShouldBe([1, 3], $"{part.Kind}");
         }
 
-        var both = _frame.Raised([P(Node, 3), P(Node, 4)], [], [], [], []);
+        var both = _frame.Raised([P(Node, 3), P(Node, 4)], []);
         both.Links.Order().ShouldBe([10, 11, 12]);
         both.Sensor(new SensorDef(7, 10, SensorKind.Camera)).ShouldBeTrue();
     }
@@ -79,14 +79,14 @@ public sealed class DrawGroupsTests
     [Fact]
     public void Raised_Targets_RiseAlone_AndASensorRisesSelectedOrWithItsBeam()
     {
-        var raised = _frame.Raised([P(Sensor, 7)], [], [], [], [], targetLinks: [12], targetJoints: [5]);
+        var raised = _frame.Raised([P(Sensor, 7)], [], targetLinks: [12], targetJoints: [5]);
 
         raised.Links.ShouldBe([12]);
         raised.Joints.ShouldBe([5]);
         raised.Sensor(new SensorDef(7, 10, SensorKind.Accelerometer)).ShouldBeTrue();
         raised.Sensor(new SensorDef(8, 12, SensorKind.Accelerometer)).ShouldBeTrue();
         raised.Sensor(new SensorDef(9, 10, SensorKind.Accelerometer)).ShouldBeFalse();
-        _frame.Raised([], [], [], [], [], targetJoints: [1, 2]).Links.ShouldBeEmpty();
+        _frame.Raised([], [], targetJoints: [1, 2]).Links.ShouldBeEmpty();
     }
 
     // A touch hits the part drawn on top, by the same groups and surfaces the drawing uses.
@@ -97,8 +97,8 @@ public sealed class DrawGroupsTests
         HitCross(new Vector2D(0, 50), Spring).ShouldBe(P(Spring, 21));
         NodeDef[] beamLower = [_crossNodes[0], _crossNodes[1], new(3, new Vector2D(-60, 30)), new(4, new Vector2D(60, 120))];
         HitCross(new Vector2D(0, 75), Spring, nodes: beamLower).ShouldBe(P(Beam, 20));
-        HitCross(new Vector2D(0, 50), raised: _cross.Raised([P(Beam, 20)], [], [], [], [])).ShouldBe(P(Beam, 20));
-        HitCross(new Vector2D(0, 50), raised: _cross.Raised([P(Node, 3)], [], [], [], [])).ShouldBe(P(Beam, 20));
+        HitCross(new Vector2D(0, 50), raised: _cross.Raised([P(Beam, 20)], [])).ShouldBe(P(Beam, 20));
+        HitCross(new Vector2D(0, 50), raised: _cross.Raised([P(Node, 3)], [])).ShouldBe(P(Beam, 20));
     }
 
     // A ring or Servo to its halo, a Stepper at a motor's size over its Wheel's hub and inside a Touch sensor's
@@ -117,7 +117,7 @@ public sealed class DrawGroupsTests
         }
 
         StepperDef[] steppers = [new(90, 1)];
-        var touched = _cross.Raised([P(TouchSensor, 50)], steppers, [], [new TouchSensorDef(50, 1)], []);
+        var touched = _cross.Raised([P(TouchSensor, 50)], [.. steppers, new TouchSensorDef(50, 1)]);
         HitCross(new Vector2D(0, _motorHalo), raised: touched, hingeParts: steppers).ShouldBe(P(Stepper, 90));
     }
 
@@ -130,15 +130,15 @@ public sealed class DrawGroupsTests
         var hubHalo = SelectionMarks.JointHalo(NodeDef.HubRadius);
         HitCross(new Vector2D(-60 + hubHalo + 1, 50), wheels: wheels).ShouldBe(P(Beam, 20));
         HitCross(new Vector2D(-60 + hubHalo, 50), wheels: wheels).ShouldBe(P(Wheel, 40));
-        var target = _cross.Raised([], [], [], [], [], targetLinks: [20]);
+        var target = _cross.Raised([], [], targetLinks: [20]);
         HitCross(new Vector2D(-60 + NodeDef.HubRadius - 1, 50), raised: target).ShouldBe(P(Node, 3));
         HitCross(new Vector2D(-60 + NodeDef.HubRadius + 1, 50), raised: target).ShouldBe(P(Beam, 20));
         var onHub = new Vector2D(-60 + NodeDef.HubRadius + 1, 50);
-        HitCross(onHub, raised: _cross.Raised([P(Beam, 20)], [], wheels, [], []), wheels: wheels).ShouldBe(P(Wheel, 40));
+        HitCross(onHub, raised: _cross.Raised([P(Beam, 20)], wheels), wheels: wheels).ShouldBe(P(Wheel, 40));
         HitCross(onHub, wheels: wheels, hingeParts: [new ServoDef(30, 3)]).ShouldBe(P(Servo, 30));
 
         WheelDef[] big = [new(40, 1, radius: 100)];
-        HitCross(new Vector2D(-30, 50), raised: _cross.Raised([P(Wheel, 40)], [], big, [], []), wheels: big).ShouldBe(P(Beam, 20));
+        HitCross(new Vector2D(-30, 50), raised: _cross.Raised([P(Wheel, 40)], big), wheels: big).ShouldBe(P(Beam, 20));
         HitCross(new Vector2D(-50, -50), wheels: big).ShouldBeNull();
         HitCross(new Vector2D(0, -NodeDef.HubRadius), wheels: big).ShouldBe(P(Wheel, 40));
         HitCross(new Vector2D(15, 50), sensors: [new(50, 20, SensorKind.Camera)]).ShouldBe(P(Sensor, 50));

@@ -169,6 +169,12 @@ them:
   planned
 - `record` for immutable data, `class` for identity and state
 - No `#region`; a file that needs regions is too big
+- A switch over `PartKind` or `CreatureElementKind` is complete or a
+  subset. A complete one names every member and has no discard, so a new
+  kind fails the build (CS8509). A value per link kind comes from
+  `PartKinds.OfLink`, which takes one per link kind. Any other subset
+  switch names the category it takes, throws for the rest, and has a test
+  that walks every kind against that category.
 
 ## Anti-patterns we explicitly reject
 
@@ -195,7 +201,7 @@ Changing a choice needs an issue. Test tools are in
 
 - `TreatWarningsAsErrors` is on in `Directory.Build.props`, but off in
   `project/NodeRunner.csproj` because Godot's source generators emit code
-  we don't own.
+  we don't own; that project makes only CS8509 an error.
 - `GenerateDocumentationFile` is on so `IDE0005` (unused usings) fails
   the build; `NoWarn` suppresses the `CS1591` (missing XML docs) it
   triggers.

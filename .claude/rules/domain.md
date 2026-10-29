@@ -30,7 +30,7 @@ list; add or move one only with an issue.
 
 | Type | Why it is here |
 |---|---|
-| `PartKinds`, `PartKindInfo` | Each part kind once (selector, sensor variant, joint slot, ports), so `CreatureDef` and `NetworkPorts` walk the kinds instead of listing them |
+| `PartKinds`, `PartKindInfo` | Each part kind once (selector, sensor variant, joint slot, ports) and the one switch over link kinds, so `CreatureDef`, `NetworkPorts` and every layer walk the kinds instead of listing them |
 | `NetworkPorts` | Every part's ports, their order and channel keys, shared by the sim, Build and ML |
 | `PortSignals` | Each output's activation and passive start: the network's half of the port contract |
 | `SensorDef.DefaultAim` | A new Camera's aim, filled in by `CreatureDef` |

@@ -32,12 +32,7 @@ public static class CreatureReadiness
     /// <see cref="TelescopeExtra"/> for a Piston or Spring.
     /// </summary>
     public static double MinimumLength(CreatureElementKind kind, double coveredA, double coveredB) =>
-        coveredA + coveredB + MinimumLinkGap + kind switch
-        {
-            CreatureElementKind.Beam => 0,
-            CreatureElementKind.Piston or CreatureElementKind.Spring => TelescopeExtra,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a link."),
-        };
+        coveredA + coveredB + MinimumLinkGap + PartKinds.OfLink(kind, () => 0.0, () => TelescopeExtra, () => TelescopeExtra);
 
     /// <summary>True when the non-zero link of <paramref name="kind"/> between two nodes is shorter than its <see cref="MinimumLength"/>, given the creature's joint motors.</summary>
     public static bool IsTooShort(CreatureElementKind kind, NodeDef a, NodeDef b, IEnumerable<IJointMotorDef> jointMotors)
@@ -135,21 +130,19 @@ public static class CreatureReadiness
         var b = indexB + 1;
         if (creature.Nodes[indexA].Position == creature.Nodes[indexB].Position)
         {
-            problems.Add(kind switch
-            {
-                CreatureElementKind.Piston => UiText.Format("The piston between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
-                CreatureElementKind.Spring => UiText.Format("The spring between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
-                _ => UiText.Format("The beam between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
-            });
+            problems.Add(PartKinds.OfLink(
+                kind,
+                () => UiText.Format("The beam between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
+                () => UiText.Format("The piston between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b),
+                () => UiText.Format("The spring between joint {0} and joint {1} has zero length. Move one of the joints apart.", a, b)));
         }
         else if (IsTooShort(creature, kind, nodeA, nodeB))
         {
-            problems.Add(kind switch
-            {
-                CreatureElementKind.Piston => UiText.Format("The piston between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b),
-                CreatureElementKind.Spring => UiText.Format("The spring between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b),
-                _ => UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b),
-            });
+            problems.Add(PartKinds.OfLink(
+                kind,
+                () => UiText.Format("The beam between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b),
+                () => UiText.Format("The piston between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b),
+                () => UiText.Format("The spring between joint {0} and joint {1} is too short. Move one of the joints apart.", a, b)));
         }
     }
 

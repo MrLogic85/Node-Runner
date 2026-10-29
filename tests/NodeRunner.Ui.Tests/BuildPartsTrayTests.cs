@@ -29,6 +29,27 @@ public sealed class BuildPartsTrayTests
         kindGlyphs.ShouldBeUnique();
     }
 
+    // SideIcon has a glyph for every kind a side can be, a link or the Wheel, and refuses every other.
+    [Fact]
+    public void Every_side_kind_has_its_own_glyph_and_no_other_kind_has_one()
+    {
+        var glyphs = new List<UiIconId>();
+        foreach (var element in Enum.GetValues<CreatureElementKind>())
+        {
+            if (element == CreatureElementKind.Wheel || PartKinds.All.Any(info => info.Element == element && info.IsLink))
+            {
+                glyphs.Add(BuildScreen.SideIcon(element));
+            }
+            else
+            {
+                Should.Throw<ArgumentOutOfRangeException>(() => BuildScreen.SideIcon(element));
+            }
+        }
+
+        glyphs.ShouldAllBe(icon => UiIcons.IsPartGlyph(icon));
+        glyphs.ShouldBeUnique();
+    }
+
     [Fact]
     public void Only_available_part_rows_can_be_dragged_out()
     {

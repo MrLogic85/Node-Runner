@@ -73,13 +73,8 @@ public static class BuildServoDrawing
             theme.RigidHatchSpacing);
     }
 
-    private static float BandHalfWidth(CreatureElementKind kind) => kind switch
-    {
-        CreatureElementKind.Beam => _servoBeamBandHalfWidth,
-        CreatureElementKind.Piston => _servoPistonBandHalfWidth,
-        CreatureElementKind.Spring => _servoSpringBandHalfWidth,
-        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Not a hinge-part link kind."),
-    };
+    private static float BandHalfWidth(CreatureElementKind kind) =>
+        PartKinds.OfLink(kind, () => _servoBeamBandHalfWidth, () => _servoPistonBandHalfWidth, () => _servoSpringBandHalfWidth);
 
     private static Vector2 ToGodot(Vector2D position) => new((float)position.X, (float)position.Y);
 }

@@ -12,8 +12,9 @@
     <!--
       NU1507 — NuGet central pinning warning (test host packages)
       CS1591 — Missing XML doc for public type. Re-enable when API stabilises.
+      CS8524 — An unnamed enum value; a complete switch has no discard (docs/CODE_DESIGN_PRINCIPLES.md → "Style specifics (C#)").
     -->
-    <NoWarn>$(NoWarn);NU1507;CS1591</NoWarn>
+    <NoWarn>$(NoWarn);NU1507;CS1591;CS8524</NoWarn>
   </PropertyGroup>
 </Project>
 
