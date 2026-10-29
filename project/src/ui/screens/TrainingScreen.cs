@@ -14,6 +14,7 @@ namespace NodeRunner.Ui.Screens;
 public partial class TrainingScreen : Control
 {
     private TrainingHeaderPresentation? _header;
+    private bool _paused;
     private TrainingPresentationViewModel? _training;
     private SignalFlowPresentationViewModel? _signalFlow;
     private IReadOnlyList<UiCalloutSection> _partCallout = [];
@@ -69,12 +70,14 @@ public partial class TrainingScreen : Control
         }
     }
 
-    /// <summary>Shows whether the run is paused: Pause becomes Run.</summary>
+    /// <summary>Shows whether the run is paused: Pause becomes Run, and the top bar says so.</summary>
     public void ShowPaused(bool paused)
     {
+        _paused = paused;
         var pause = GetNode<UiButton>("%Pause");
         pause.IconId = paused ? UiIconId.Play : UiIconId.Pause;
         pause.TooltipText = paused ? "Run" : "Pause";
+        ApplyStatus();
     }
 
     /// <summary>Shows or hides the "Too many shadows!" chip in the arena's top-left corner.</summary>
@@ -287,11 +290,21 @@ public partial class TrainingScreen : Control
         if (_header is { } header)
         {
             GetNode<UiLabel>("%CreationName").ShowText(header.CreationName);
-            GetNode<UiLabel>("%StatusText").ShowText(header.StatusText);
         }
 
+        ApplyStatus();
         ApplyGeneration();
         ApplySignalFlow();
+    }
+
+    private void ApplyStatus()
+    {
+        GetNode<Control>("%StatusDot").Visible = !_paused;
+        GetNode<Control>("%PausedIcon").Visible = _paused;
+        if (_header is { } header)
+        {
+            GetNode<UiLabel>("%StatusText").ShowText(header.Status(_paused));
+        }
     }
 
     // The shadow strip refreshes itself every frame; the caption follows progress changes.

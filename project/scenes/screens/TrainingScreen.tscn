@@ -65,11 +65,23 @@ mouse_filter = 2
 theme_override_constants/separation = 4
 
 [node name="StatusDot" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Heading/Status"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "●"
 script = ExtResource("4_label")
 TextStyle = 9
 TextColor = 9
+
+[node name="PausedIcon" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Heading/Status"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("9_icon")
+IconId = 22
+IconSize = 0
+Color = 8
 
 [node name="StatusText" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Toolbar/HBoxContainer/Field/MarginContainer/ToolbarContent/Heading/Status"]
 unique_name_in_owner = true
