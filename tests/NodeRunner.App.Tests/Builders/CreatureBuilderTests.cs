@@ -46,31 +46,31 @@ public sealed class CreatureBuilderTests
 
         Should.Throw<ArgumentException>(() => AddHingePart(builder, kind, joint));
         builder.Rename(part, "Knee");
-        SetHingePartLink(builder, kind, part, fixedRole: true, second);
+        builder.SetHingePartLink(part, fixedRole: true, second);
         ShouldHaveSides(builder, part, second, first);
-        SetHingePartLink(builder, kind, part, fixedRole: false, second);
+        builder.SetHingePartLink(part, fixedRole: false, second);
         ShouldHaveSides(builder, part, first, second);
-        Should.Throw<ArgumentException>(() => SetHingePartLink(builder, kind, part, fixedRole: true, elsewhere));
+        Should.Throw<ArgumentException>(() => builder.SetHingePartLink(part, fixedRole: true, elsewhere));
         var spring = builder.AddSpring(joint, far);
         ShouldHaveSides(builder, part, spring, second);
         var third = builder.AddBeam(joint, builder.AddNode(new Vector2D(-120, 0)));
-        SetHingePartLink(builder, kind, part, fixedRole: false, third);
+        builder.SetHingePartLink(part, fixedRole: false, third);
         ShouldHaveSides(builder, part, spring, third);
-        SetHingePartLink(builder, kind, part, fixedRole: true, second);
+        builder.SetHingePartLink(part, fixedRole: true, second);
         ShouldHaveSides(builder, part, second, third);
-        builder.RemoveBeam(third);
+        builder.RemovePart(third);
         ShouldHaveSides(builder, part, second, null);
         builder.HingeParts.Single().Name.ShouldBe("Knee");
-        RemoveHingePart(builder, kind, part);
+        builder.RemovePart(part);
         builder.HingeParts.ShouldBeEmpty();
         builder.CanAddServo(joint, out _).ShouldBeTrue();
-        Should.Throw<ArgumentOutOfRangeException>(() => RemoveHingePart(builder, kind, part));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.RemovePart(part));
 
         // A Wheel is a one-sided link at its joint: a side until it goes.
         var wheel = builder.AddWheel(wheelJoint);
         var onWheel = AddHingePart(builder, kind, wheelJoint);
         ShouldHaveSides(builder, onWheel, wheelBeam, wheel);
-        builder.RemoveWheel(wheel);
+        builder.RemovePart(wheel);
         ShouldHaveSides(builder, onWheel, wheelBeam, null);
         builder.RemoveNode(wheelJoint);
         builder.HingeParts.ShouldBeEmpty();
@@ -107,7 +107,7 @@ public sealed class CreatureBuilderTests
         new CreatureBuilder(builder.Build()).JointParts.ShouldBe(builder.JointParts);
         builder.RemoveNode(joint);
         builder.JointParts.Select(jointPart => (jointPart.Id, jointPart.Name)).ShouldBe([(kept, "Toe")]);
-        RemoveJointPart(builder, kind, kept);
+        builder.RemovePart(kept);
         builder.JointParts.ShouldBeEmpty();
         builder.Nodes.Select(node => node.Id).ShouldBe([other]);
     }
@@ -324,7 +324,7 @@ public sealed class CreatureBuilderTests
         Should.Throw<ArgumentException>(() => builder.AddBeam(b, a));
         Should.Throw<ArgumentException>(() => builder.AddSpring(a, c));
         Should.Throw<ArgumentException>(() => builder.AddPiston(a, b));
-        Should.Throw<ArgumentOutOfRangeException>(() => builder.RemoveSpring(999));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.RemovePart(999));
         builder.Parts.Count.ShouldBe(8);
     }
 
@@ -381,8 +381,8 @@ public sealed class CreatureBuilderTests
         var before = builder.Sensors.ToList();
         builder.MoveSensor(camera, down, out _).ShouldBeTrue();
         builder.Sensors.ShouldBe(before);
-        builder.RemoveSensor(tilt);
-        builder.RemoveBeam(down);
+        builder.RemovePart(tilt);
+        builder.RemovePart(down);
         builder.Sensors.ShouldBeEmpty();
     }
 
@@ -522,50 +522,6 @@ public sealed class CreatureBuilderTests
         _ => builder.AddAngleSensor(nodeId, fixedLink, targetLink),
     };
 
-    private static void SetHingePartLink(CreatureBuilder builder, CreatureElementKind kind, int partId, bool fixedRole, int linkId)
-    {
-        switch (kind)
-        {
-            case CreatureElementKind.Servo:
-                builder.SetServoLink(partId, fixedRole, linkId);
-                break;
-            case CreatureElementKind.VelocityMotor:
-                builder.SetVelocityMotorLink(partId, fixedRole, linkId);
-                break;
-            case CreatureElementKind.Stepper:
-                builder.SetStepperLink(partId, fixedRole, linkId);
-                break;
-            case CreatureElementKind.Brake:
-                builder.SetBrakeLink(partId, fixedRole, linkId);
-                break;
-            default:
-                builder.SetAngleSensorLink(partId, fixedRole, linkId);
-                break;
-        }
-    }
-
-    private static void RemoveHingePart(CreatureBuilder builder, CreatureElementKind kind, int partId)
-    {
-        switch (kind)
-        {
-            case CreatureElementKind.Servo:
-                builder.RemoveServo(partId);
-                break;
-            case CreatureElementKind.VelocityMotor:
-                builder.RemoveVelocityMotor(partId);
-                break;
-            case CreatureElementKind.Stepper:
-                builder.RemoveStepper(partId);
-                break;
-            case CreatureElementKind.Brake:
-                builder.RemoveBrake(partId);
-                break;
-            default:
-                builder.RemoveAngleSensor(partId);
-                break;
-        }
-    }
-
     private static (UiText OffJoint, UiText Full) JointPartReasons(CreatureElementKind kind) => kind switch
     {
         CreatureElementKind.Wheel => (CreatureBuilder.WheelsGoOnAJointReason, CreatureBuilder.OneWheelPerJointReason),
@@ -592,22 +548,6 @@ public sealed class CreatureBuilderTests
         CreatureElementKind.TouchSensor => builder.AddTouchSensor(nodeId),
         _ => builder.AddRubber(nodeId),
     };
-
-    private static void RemoveJointPart(CreatureBuilder builder, CreatureElementKind kind, int partId)
-    {
-        switch (kind)
-        {
-            case CreatureElementKind.Wheel:
-                builder.RemoveWheel(partId);
-                break;
-            case CreatureElementKind.TouchSensor:
-                builder.RemoveTouchSensor(partId);
-                break;
-            default:
-                builder.RemoveRubber(partId);
-                break;
-        }
-    }
 
     private static int AddLink(CreatureBuilder builder, BuildLink link, int nodeIdA, int nodeIdB) => link switch
     {

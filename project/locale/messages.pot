@@ -693,7 +693,7 @@ msgstr ""
 msgid "Not a share code"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Notes.cs
 msgid "Not connected"
 msgstr ""
 
@@ -797,17 +797,17 @@ msgstr ""
 msgid "Phone may stutter above {0}."
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Notes.cs
 msgid "Pick Fixed and Target parts"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Notes.cs
 msgid "Pick a Fixed part"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Notes.cs
 msgid "Pick a Target part"
 msgstr ""
 
@@ -1255,7 +1255,7 @@ msgstr ""
 msgid "Too many shadows!"
 msgstr ""
 
-#: libs/NodeRunner.App/ViewModels/BuildViewModel.cs
+#: libs/NodeRunner.App/ViewModels/BuildViewModel.Notes.cs
 msgid "Too short"
 msgstr ""
 

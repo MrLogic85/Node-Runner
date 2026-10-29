@@ -62,10 +62,11 @@ public sealed partial class BuildViewModel
         RaiseAnatomyChanged();
     }
 
-    // On a locked Creation, a note on each part that makes the delete change the network, in id order
-    // within each kind: each part with network ports it removes, and each kept motor or Angle sensor
-    // whose Fixed or Target link it clears. It tries the delete on a copy of the body, so every cascade counts
-    // exactly as the delete does it. Empty when the delete may go ahead.
+    // On a locked Creation, a note on each part that makes the delete change the network, in id order:
+    // each part whose network ports it removes, and each kept part with ports whose Fixed or Target
+    // side it clears. A Brake has no ports, so losing a side changes no network and gets no note. It
+    // tries the delete on a copy of the body, so every cascade counts exactly as the delete does it.
+    // Empty when the delete may go ahead.
     private List<CanvasNote> DeleteRefusalNotes()
     {
         List<CanvasNote> notes = [];
@@ -78,144 +79,36 @@ public sealed partial class BuildViewModel
         var trial = new CreatureBuilder(before);
         RemoveParts(trial, Selection);
         var after = trial.Build();
+        var keptPorts = after.Parts.SelectMany(part => NetworkPorts.Of(part)).ToHashSet();
 
-        var keptSensors = after.Sensors.Select(sensor => sensor.Id).ToHashSet();
-        foreach (var sensor in before.Sensors)
+        foreach (var part in before.Parts.OrderBy(part => part.Id))
         {
-            if (!keptSensors.Contains(sensor.Id))
+            var ports = NetworkPorts.Of(part).ToList();
+            var portsLost = ports.Any(port => !keptPorts.Contains(port));
+            var sidesLost = ports.Count > 0 && part is IHingePartDef hinge && after.FindPart(part.Id) is IHingePartDef kept
+                && (kept.FixedLinkId, kept.TargetLinkId) != (hinge.FixedLinkId, hinge.TargetLinkId);
+            if (portsLost || sidesLost)
             {
-                AddNote(CreatureElementKind.Sensor, sensor.Id);
-            }
-        }
-
-        var keptServos = after.Servos.Select(MotorLinks).ToHashSet();
-        foreach (var servo in before.Servos)
-        {
-            if (!keptServos.Contains(MotorLinks(servo)))
-            {
-                AddNote(CreatureElementKind.Servo, servo.Id);
-            }
-        }
-
-        var keptVelocityMotors = after.VelocityMotors.Select(MotorLinks).ToHashSet();
-        foreach (var motor in before.VelocityMotors)
-        {
-            if (!keptVelocityMotors.Contains(MotorLinks(motor)))
-            {
-                AddNote(CreatureElementKind.VelocityMotor, motor.Id);
-            }
-        }
-
-        var keptSteppers = after.Steppers.Select(MotorLinks).ToHashSet();
-        foreach (var stepper in before.Steppers)
-        {
-            if (!keptSteppers.Contains(MotorLinks(stepper)))
-            {
-                AddNote(CreatureElementKind.Stepper, stepper.Id);
-            }
-        }
-
-        var keptAngleSensors = after.AngleSensors.Select(MotorLinks).ToHashSet();
-        foreach (var angleSensor in before.AngleSensors)
-        {
-            if (!keptAngleSensors.Contains(MotorLinks(angleSensor)))
-            {
-                AddNote(CreatureElementKind.AngleSensor, angleSensor.Id);
-            }
-        }
-
-        var keptPistons = after.Pistons.Select(piston => piston.Id).ToHashSet();
-        foreach (var piston in before.Pistons)
-        {
-            if (!keptPistons.Contains(piston.Id))
-            {
-                AddNote(CreatureElementKind.Piston, piston.Id);
-            }
-        }
-
-        // A Touch sensor has no picture, so its note sits on its joint.
-        var keptTouchSensors = after.TouchSensors.Select(touch => touch.Id).ToHashSet();
-        foreach (var touch in before.TouchSensors)
-        {
-            if (!keptTouchSensors.Contains(touch.Id))
-            {
-                AddNote(CreatureElementKind.Node, touch.NodeId);
+                notes.Add(new(CanvasNoteKind.Danger, CreatureElementSelection.Of(part), _wouldChangeNetworkNote));
             }
         }
 
         return notes;
-
-        static (int, int?, int?) MotorLinks(IHingePartDef motor) => (motor.Id, motor.FixedLinkId, motor.TargetLinkId);
-        void AddNote(CreatureElementKind kind, int id) =>
-            notes.Add(new(CanvasNoteKind.Danger, new CreatureElementSelection(kind, id), _wouldChangeNetworkNote));
     }
 
+    // Each part goes before what it sits on, so none is already gone with a deleted link or joint
+    // when its turn comes.
     private static void RemoveParts(CreatureBuilder builder, PartSet parts)
     {
-        // Parts first, so none is already gone with a deleted beam or joint.
-        foreach (var sensorId in parts.IdsOf(CreatureElementKind.Sensor))
+        var removed = parts.Parts.Select(part => builder.FindPart(part.Id)).OfType<IPartDef>()
+            .OrderBy(RemoveRank)
+            .ToList();
+        foreach (var part in removed)
         {
-            builder.RemoveSensor(sensorId);
+            builder.RemovePart(part.Id);
         }
 
-        foreach (var pistonId in parts.IdsOf(CreatureElementKind.Piston))
-        {
-            builder.RemovePiston(pistonId);
-        }
-
-        foreach (var servoId in parts.IdsOf(CreatureElementKind.Servo))
-        {
-            builder.RemoveServo(servoId);
-        }
-
-        foreach (var velocityMotorId in parts.IdsOf(CreatureElementKind.VelocityMotor))
-        {
-            builder.RemoveVelocityMotor(velocityMotorId);
-        }
-
-        foreach (var stepperId in parts.IdsOf(CreatureElementKind.Stepper))
-        {
-            builder.RemoveStepper(stepperId);
-        }
-
-        foreach (var brakeId in parts.IdsOf(CreatureElementKind.Brake))
-        {
-            builder.RemoveBrake(brakeId);
-        }
-
-        foreach (var angleSensorId in parts.IdsOf(CreatureElementKind.AngleSensor))
-        {
-            builder.RemoveAngleSensor(angleSensorId);
-        }
-
-        foreach (var springId in parts.IdsOf(CreatureElementKind.Spring))
-        {
-            builder.RemoveSpring(springId);
-        }
-
-        foreach (var wheelId in parts.IdsOf(CreatureElementKind.Wheel))
-        {
-            builder.RemoveWheel(wheelId);
-        }
-
-        foreach (var touchSensorId in parts.IdsOf(CreatureElementKind.TouchSensor))
-        {
-            builder.RemoveTouchSensor(touchSensorId);
-        }
-
-        foreach (var rubberId in parts.IdsOf(CreatureElementKind.Rubber))
-        {
-            builder.RemoveRubber(rubberId);
-        }
-
-        foreach (var beamId in parts.IdsOf(CreatureElementKind.Beam))
-        {
-            builder.RemoveBeam(beamId);
-        }
-
-        foreach (var nodeId in parts.IdsOf(CreatureElementKind.Node))
-        {
-            builder.RemoveNode(nodeId);
-        }
+        // Joint parts and sensors first, then the links they may sit on, then the joints.
+        static int RemoveRank(IPartDef part) => part is NodeDef ? 2 : PartKinds.IsLink(part) ? 1 : 0;
     }
 }

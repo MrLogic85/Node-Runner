@@ -145,7 +145,7 @@ public sealed class CreationShareCodeTests
         builder.SetParameter(builder.AddBrake(nodes[2]), PartParameterId.BrakeStrength, BrakeDef.LockedStrength);
         builder.AddAngleSensor(nodes[0]);
         builder.RemoveNode(builder.AddNode(new Vector2D(300, 300)));
-        builder.RemoveBeam(beams[3]);
+        builder.RemovePart(beams[3]);
         builder.AddBeam(nodes[3], nodes[4]);
         var gappy = builder.Build();
 

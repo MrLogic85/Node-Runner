@@ -69,14 +69,5 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    /// <summary>
-    /// Changes the Brake's fixed or target side, as <see cref="SetServoLink"/> does a Servo's:
-    /// picking the other role swaps them, and it keeps its id.
-    /// </summary>
-    public void SetBrakeLink(int brakeId, bool fixedRole, int linkId) =>
-        SetSide(_brakes[BrakeIndexOf(brakeId)], fixedRole, linkId);
-
-    public void RemoveBrake(int brakeId) => RemovePart(_brakes[BrakeIndexOf(brakeId)]);
-
     public int BrakeIndexOf(int brakeId) => IndexOf(_brakes, brakeId, nameof(brakeId), "Brake id must point to an existing brake.");
 }

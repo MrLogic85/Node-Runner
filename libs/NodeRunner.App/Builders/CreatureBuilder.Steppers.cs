@@ -67,15 +67,6 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    /// <summary>
-    /// Changes the Stepper's fixed or target side, as <see cref="SetServoLink"/> does a Servo's:
-    /// picking the other role swaps them, and it keeps its id.
-    /// </summary>
-    public void SetStepperLink(int stepperId, bool fixedRole, int linkId) =>
-        SetSide(_steppers[StepperIndexOf(stepperId)], fixedRole, linkId);
-
-    public void RemoveStepper(int stepperId) => RemovePart(_steppers[StepperIndexOf(stepperId)]);
-
     public int StepperIndexOf(int stepperId) => IndexOf(_steppers, stepperId, nameof(stepperId), "Stepper id must point to an existing stepper.");
 
     private static double StepperParameterValue(StepperDef stepper, PartParameterId parameter) => parameter switch

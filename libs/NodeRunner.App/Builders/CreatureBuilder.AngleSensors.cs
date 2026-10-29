@@ -65,14 +65,5 @@ public sealed partial class CreatureBuilder
         return id;
     }
 
-    /// <summary>
-    /// Changes the Angle sensor's fixed or target side, as <see cref="SetServoLink"/> does a Servo's:
-    /// picking the other role swaps them, and it keeps its id.
-    /// </summary>
-    public void SetAngleSensorLink(int angleSensorId, bool fixedRole, int linkId) =>
-        SetSide(_angleSensors[AngleSensorIndexOf(angleSensorId)], fixedRole, linkId);
-
-    public void RemoveAngleSensor(int angleSensorId) => RemovePart(_angleSensors[AngleSensorIndexOf(angleSensorId)]);
-
     public int AngleSensorIndexOf(int angleSensorId) => IndexOf(_angleSensors, angleSensorId, nameof(angleSensorId), "Angle sensor id must point to an existing angle sensor.");
 }
