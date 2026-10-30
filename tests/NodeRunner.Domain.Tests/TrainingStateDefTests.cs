@@ -60,6 +60,8 @@ public sealed class TrainingStateDefTests
         Refuses.OutOfRange(() => new TrainSettingsDef(TrainSettingsDef.MaxShadows + 1, 10));
         Refuses.OutOfRange(() => new TrainSettingsDef(8, TrainSettingsDef.MinRunLengthSeconds - 1));
         Refuses.OutOfRange(() => new TrainSettingsDef(8, TrainSettingsDef.MaxRunLengthSeconds + 1));
+        Refuses.OutOfRange(() => new TrainSettingsDef(8, 10, (RunLengthMode)2, null));
+        Refuses.Invalid(() => new TrainSettingsDef(8, 10, RunLengthMode.Ranged, null));
     }
 
     [Fact]

@@ -17,6 +17,7 @@ public partial class Evolver : Node
 {
     private GeneticAlgorithm? _ga;
     private Random? _rng;
+    private Func<Random, int>? _nextTrialTicks;
     private Creature.Creature? _primaryCreature;
     private readonly List<Creature.Creature> _creatures = [];
     private readonly List<TrialController> _trialControllers = [];
@@ -183,6 +184,7 @@ public partial class Evolver : Node
     /// elite and its children open the run, and <see cref="BestFitness"/> starts from
     /// <paramref name="resumeBestFitness"/>, reached in <paramref name="resumeBestGeneration"/>,
     /// and <see cref="BestShownDistance"/> from <paramref name="resumeBestShownDistance"/>.
+    /// <paramref name="nextTrialTicks"/> gives each generation's trial length from <paramref name="rng"/>.
     /// </summary>
     public void Start(
         Creature.Creature creature,
@@ -191,12 +193,12 @@ public partial class Evolver : Node
         GeneticAlgorithm ga,
         Random rng,
         float groundTopY,
+        Func<Random, int> nextTrialTicks,
         double[]? resumeGenome = null,
         int resumeGeneration = 0,
         double resumeBestFitness = double.NegativeInfinity,
         double resumeBestShownDistance = double.NaN,
         int resumeBestGeneration = 0,
-        int trialDurationTicks = 600,
         Func<Creature.Creature>? creatureFactory = null,
         IReadOnlyList<int>? disabledGenes = null)
     {
@@ -204,6 +206,7 @@ public partial class Evolver : Node
         ArgumentNullException.ThrowIfNull(layerSizes);
         ArgumentNullException.ThrowIfNull(ga);
         ArgumentNullException.ThrowIfNull(rng);
+        ArgumentNullException.ThrowIfNull(nextTrialTicks);
         if (populationSize < 1)
         {
             throw new ArgumentOutOfRangeException(nameof(populationSize), "Population size must be at least 1.");
@@ -212,11 +215,6 @@ public partial class Evolver : Node
         if (resumeGeneration < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(resumeGeneration));
-        }
-
-        if (trialDurationTicks < 1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(trialDurationTicks));
         }
 
         if (creatureFactory is not null && populationSize > Creature.Creature.MaximumShadows)
@@ -235,6 +233,7 @@ public partial class Evolver : Node
         _outputActivations = DirectNetwork.OutputActivations(creature.Ports);
         _ga = ga;
         _rng = rng;
+        _nextTrialTicks = nextTrialTicks;
         _disabledGenes = disabledGenes?.ToArray() ?? [];
         _ports = creature.Ports;
         _drawnPositions = creature.Definition is { } definition ? Mechanics.Piston.DrawnPositions(definition) : null;
@@ -252,14 +251,22 @@ public partial class Evolver : Node
         _opensWithPreviousBest = resumeGenome is not null;
 
         SilenceDisabledGenes();
+        var trialTicks = NextTrialTicks();
         _fitness = new double[populationSize];
         _results = new TrialResult[populationSize];
 
         var slotCount = creatureFactory is null ? 1 : populationSize;
         _schedule = new ParallelEvaluationSchedule(populationSize, slotCount);
-        ConfigureSlots(creature, slotCount, trialDurationTicks, groundTopY, creatureFactory);
+        ConfigureSlots(creature, slotCount, trialTicks, groundTopY, creatureFactory);
         StartAvailableSlots();
         FollowedShadowChanged?.Invoke();
+    }
+
+    // After the generation's genomes, so a Ranged draw comes last in the RNG's order.
+    private int NextTrialTicks()
+    {
+        var ticks = _nextTrialTicks!(_rng!);
+        return ticks >= 1 ? ticks : throw new InvalidOperationException($"A trial must last at least one tick, not {ticks}.");
     }
 
     private void SilenceDisabledGenes()
@@ -411,6 +418,13 @@ public partial class Evolver : Node
         _opensWithPreviousBest = eliteCount > 0;
         _genomes = NewPortExploration.Explore(_ga.NextGeneration(_genomes, _fitness, _rng!), eliteCount, _ports, _disabledGenes, _rng!, _drawnPositions);
         SilenceDisabledGenes();
+        // Every slot is idle between generations, so each runs the new length from its next trial.
+        var trialTicks = NextTrialTicks();
+        foreach (var controller in _trialControllers)
+        {
+            controller.TrialDurationTicks = trialTicks;
+        }
+
         _fitness = new double[_genomes.Length];
         _results = new TrialResult[_genomes.Length];
         _schedule!.Reset();

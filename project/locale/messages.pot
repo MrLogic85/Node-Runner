@@ -426,6 +426,10 @@ msgstr ""
 msgid "Finish the creation in Build before training it."
 msgstr ""
 
+#: project/scenes/screens/TrainSetupScreen.tscn
+msgid "Fixed"
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Fixed part"
@@ -652,10 +656,6 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: project/scenes/screens/TrainSetupScreen.tscn
-msgid "Needs a battery or generator"
-msgstr ""
-
 #: project/scenes/screens/SettingsScreen.tscn
 msgid "Neon"
 msgstr ""
@@ -832,8 +832,16 @@ msgstr ""
 msgid "Plays the trained network with one shadow. Nothing is learned or saved."
 msgstr ""
 
+#: project/scenes/screens/TrainSetupScreen.tscn
+msgid "Power"
+msgstr ""
+
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Power budget"
+msgstr ""
+
+#: project/scenes/screens/TrainSetupScreen.tscn
+msgid "Power needs a battery or generator."
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
@@ -850,6 +858,10 @@ msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "Range"
+msgstr ""
+
+#: project/scenes/screens/TrainSetupScreen.tscn
+msgid "Ranged"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -918,7 +930,6 @@ msgstr ""
 msgid "Run length"
 msgstr ""
 
-#: project/scenes/screens/TrainSetupScreen.tscn
 #: project/src/ui/lib/UiCheckRow.cs
 msgid "Run until power is out"
 msgstr ""
@@ -1788,6 +1799,7 @@ msgid "{0}–{1} rpm"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
+#: libs/NodeRunner.App/ViewModels/TrainSetupPresentationViewModel.cs
 msgid "{0}–{1} s"
 msgstr ""
 

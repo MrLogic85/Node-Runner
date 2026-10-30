@@ -15,9 +15,9 @@ layer owns that. "Locked" means "has trained at least one generation".
    (`CreatureReadiness`). Saving an edit keeps any training and refits its
    network to the edited anatomy (`docs/CREATURE_MODEL.md` → "A rebuild
    keeps the network"); Training resumes from the refitted network.
-2. Train setup (`TrainSetupRoute`) sets Shadows and Run length, filled
-   from the Creation's saved values or, before its first Start, the
-   Shadows default from Settings and 10 s (`docs/SAVE_FORMAT.md` →
+2. Train setup (`TrainSetupRoute`) sets Shadows, Run length and its
+   mode, filled from the Creation's saved values or, before its first
+   Start, the Shadows default from Settings and 10 s (`docs/SAVE_FORMAT.md` →
    "`settings.json`"). Start
    saves them and opens Training in Train setup's place, so Back from
    Training returns to Build; Back from Train setup discards the changes.
@@ -109,11 +109,19 @@ layer owns that. "Locked" means "has trained at least one generation".
   Gaussian mutation (`docs/ML_CONCEPTS.md`). Only a finite fitness can be
   an elite.
 - `TrainingHost` creates one `Evolver` from the Train setup values
-  (`EvolutionSetup`): Shadows is the population and Run length the trial
-  duration. Tournament size (3, or the Shadows count if smaller), mutation
+  (`EvolutionSetup`): Shadows is the population and Run length, one length
+  or a range drawn from each generation (below), the trial duration.
+  Tournament size (3, or the Shadows count if smaller), mutation
   rate (0.1) and strength (0.3) are fixed, with Uniform crossover, which
   keeps parent genes. There is no generation budget. Best is plain
   distance, so a longer Run length reaches further.
+- **Ranged Run length:** each generation draws one length, a 5 s step
+  inside the range with both ends included, and all its shadows run it.
+  The draw takes the Evolver's seeded RNG after the generation's genomes
+  are made, so a seed gives the same lengths, and so the same run, every
+  time; Fixed draws nothing, so it leaves the genomes' RNG sequence alone.
+  Best then mixes lengths: a Best set on a long run is rarely beaten on a
+  short one, and the elite, run again at the new length, can score less.
 - `Evolver` runs every shadow at once, one slot per candidate, up to
   `Creature.MaximumShadows` (100): slot 0 is the scene's creature, each
   other slot a clone with its own `TrialController`. The generation ends

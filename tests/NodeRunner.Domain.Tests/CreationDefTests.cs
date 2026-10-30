@@ -4,7 +4,10 @@ namespace NodeRunner.Domain.Tests;
 
 public sealed class CreationDefTests
 {
-    private static readonly CreationDef _creation = new(Guid.NewGuid(), "Worm", EveryPartKind.Creature, TestTraining.State(7, 1, TestTraining.Run), new TrainSettingsDef(12, 20))
+    // Declared first: static fields start in order, and _creation holds it.
+    private static readonly TrainSettingsDef _ranged = new(12, 20, RunLengthMode.Ranged, new RunLengthRangeDef(15, 45));
+
+    private static readonly CreationDef _creation = new(Guid.NewGuid(), "Worm", EveryPartKind.Creature, TestTraining.State(7, 1, TestTraining.Run), _ranged)
     {
         Grid = new BuildGridDef(25, snap: true),
     };
@@ -15,7 +18,7 @@ public sealed class CreationDefTests
         var loaded = JsonSerializer.Deserialize<CreationDef>(JsonSerializer.Serialize(_creation))!;
 
         (loaded.Id, loaded.Name, loaded.TrainSettings, loaded.Grid)
-            .ShouldBe((_creation.Id, "Worm", new TrainSettingsDef(12, 20), new BuildGridDef(25, snap: true)));
+            .ShouldBe((_creation.Id, "Worm", _ranged, new BuildGridDef(25, snap: true)));
         loaded.Creature.Parts.ShouldBe(_creation.Creature.Parts);
         loaded.Training!.Network.Neurons.ShouldBe(_creation.Training!.Network.Neurons);
         loaded.Training.Network.Connections.ShouldBe(_creation.Training.Network.Connections);

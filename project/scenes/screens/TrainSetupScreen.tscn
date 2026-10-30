@@ -8,7 +8,6 @@
 [ext_resource type="Script" uid="uid://pdb6hwlullhe" path="res://src/ui/lib/UiSegmentedSwitch.cs" id="6_switch"]
 [ext_resource type="Script" uid="uid://dd0bugxsg7bvl" path="res://src/ui/lib/UiSegment.cs" id="7_segment"]
 [ext_resource type="Script" uid="uid://bau3bwe6tkv48" path="res://src/ui/lib/UiSlider.cs" id="8_slider"]
-[ext_resource type="Script" uid="uid://c6k3pwf0iv80b" path="res://src/ui/lib/UiCheckRow.cs" id="9_check_row"]
 [ext_resource type="Script" uid="uid://byhbh5da7rpk8" path="res://src/ui/lib/UiCard.cs" id="10_card"]
 [ext_resource type="Script" uid="uid://b4t4jrismbuik" path="res://src/ui/lib/UiIcon.cs" id="11_icon"]
 [ext_resource type="Script" uid="uid://c3nkqcdkwd8" path="res://src/ui/widgets/MapPreview.cs" id="12_map_preview"]
@@ -22,6 +21,19 @@ IconId = 24
 script = ExtResource("7_segment")
 Text = "Simulate"
 IconId = 39
+
+[sub_resource type="Resource" id="Resource_fixed"]
+script = ExtResource("7_segment")
+Text = "Fixed"
+
+[sub_resource type="Resource" id="Resource_ranged"]
+script = ExtResource("7_segment")
+Text = "Ranged"
+
+[sub_resource type="Resource" id="Resource_power"]
+script = ExtResource("7_segment")
+Text = "Power"
+Disabled = true
 
 [node name="TrainSetupScreen" type="Control"]
 layout_mode = 3
@@ -186,12 +198,24 @@ mouse_filter = 1
 script = ExtResource("8_slider")
 LabelText = "Run length"
 
-[node name="UntilPowerOut" type="Container" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup"]
+[node name="RunLengthModeGroup" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup"]
+unique_name_in_owner = true
 layout_mode = 2
-script = ExtResource("9_check_row")
-Disabled = true
-LabelText = "Run until power is out"
-Subtext = "Needs a battery or generator"
+theme_override_constants/separation = 4
+
+[node name="RunLengthMode" type="HBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup/RunLengthModeGroup"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("6_switch")
+Segments = Array[ExtResource("7_segment")]([SubResource("Resource_fixed"), SubResource("Resource_ranged"), SubResource("Resource_power")])
+
+[node name="RunLengthModeNote" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns/Setup/RunLengthModeGroup"]
+layout_mode = 2
+text = "Power needs a battery or generator."
+autowrap_mode = 3
+script = ExtResource("4_label")
+TextStyle = 9
+TextColor = 8
 
 [node name="Map" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Body/Columns"]
 layout_mode = 2

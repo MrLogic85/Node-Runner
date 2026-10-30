@@ -74,7 +74,7 @@ public sealed class TrainSetupPresentationViewModelTests
     {
         var setup = Setup(Creation());
 
-        setup.SetRunLength(position);
+        setup.SetRunLength(0, position);
 
         setup.Settings.RunLengthSeconds.ShouldBe(expected);
         setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", expected));
@@ -116,12 +116,79 @@ public sealed class TrainSetupPresentationViewModelTests
         setup.Settings.ShouldBe(new TrainSettingsDef(12, 30));
         setup.ShadowsNote.ShouldBeNull();
         Should.Throw<InvalidOperationException>(() => setup.SetShadows(1));
-        Should.Throw<InvalidOperationException>(() => setup.SetRunLength(1));
+        Should.Throw<InvalidOperationException>(() => setup.SetRunLength(0, 1));
+        Should.Throw<InvalidOperationException>(() => setup.SetRunLengthMode(RunLengthMode.Ranged));
 
         setup.SetMode(TrainingRunMode.Train);
 
         setup.Shadows.ShouldBe(before);
         setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", 30));
+    }
+
+    [Fact]
+    public void RunLengthMode_IsFixed_AndShownOnlyInTrain()
+    {
+        var setup = Setup(Creation(new TrainSettingsDef(12, 30), generation: 3));
+
+        setup.Settings.RunLengthMode.ShouldBe(RunLengthMode.Fixed);
+        setup.RunLength.HighPosition.ShouldBeNull();
+        setup.ShowsRunLengthMode.ShouldBeTrue();
+
+        setup.SetMode(TrainingRunMode.Simulate);
+
+        setup.ShowsRunLengthMode.ShouldBeFalse();
+    }
+
+    // The first Ranged range runs from the Fixed length to the longest; after that each mode keeps its own value.
+    [Fact]
+    public void Ranged_StartsFromTheFixedLengthToTheLongest_AndEachModeKeepsItsValue()
+    {
+        var setup = Setup(Creation(new TrainSettingsDef(12, 20)));
+
+        setup.SetRunLengthMode(RunLengthMode.Ranged);
+
+        setup.Settings.ShouldBe(new TrainSettingsDef(12, 20, RunLengthMode.Ranged, new RunLengthRangeDef(20, 60)));
+        setup.RunLength.Readout.ShouldBe(UiText.Format("{0}–{1} s", 20, 60));
+        setup.RunLength.Position.ShouldBe(TrainSetupPresentationViewModel.RunLengthRange.Position(20));
+        setup.RunLength.HighPosition.ShouldBe(1);
+
+        setup.SetRunLength(0, TrainSetupPresentationViewModel.RunLengthRange.Position(10));
+        setup.SetRunLength(1, TrainSetupPresentationViewModel.RunLengthRange.Position(40));
+
+        setup.Settings.RunLengthRange.ShouldBe(new RunLengthRangeDef(10, 40));
+        setup.Settings.RunLengthSeconds.ShouldBe(20);
+
+        // A thumb dragged past the other stops at it, so thumb 0 stays the low end.
+        setup.SetRunLength(0, 1);
+        setup.Settings.RunLengthRange.ShouldBe(new RunLengthRangeDef(40, 40));
+        setup.SetRunLength(0, TrainSetupPresentationViewModel.RunLengthRange.Position(10));
+        setup.SetRunLength(1, 0);
+        setup.Settings.RunLengthRange.ShouldBe(new RunLengthRangeDef(10, 10));
+        setup.SetRunLength(1, TrainSetupPresentationViewModel.RunLengthRange.Position(40));
+        setup.Settings.RunLengthRange.ShouldBe(new RunLengthRangeDef(10, 40));
+
+        setup.SetRunLengthMode(RunLengthMode.Fixed);
+
+        setup.Settings.ShouldBe(new TrainSettingsDef(12, 20, RunLengthMode.Fixed, new RunLengthRangeDef(10, 40)));
+        setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", 20));
+        setup.RunLength.HighPosition.ShouldBeNull();
+
+        setup.SetShadows(0);
+        setup.SetRunLengthMode(RunLengthMode.Ranged);
+
+        setup.Settings.ShouldBe(new TrainSettingsDef(TrainSettingsDef.MinShadows, 20, RunLengthMode.Ranged, new RunLengthRangeDef(10, 40)));
+    }
+
+    // Equal ends run one length, so the readout names that one.
+    [Fact]
+    public void Ranged_WithEqualEnds_ReadsOneLength()
+    {
+        var setup = Setup(Creation(new TrainSettingsDef(12, 60)));
+
+        setup.SetRunLengthMode(RunLengthMode.Ranged);
+
+        setup.Settings.RunLengthRange.ShouldBe(new RunLengthRangeDef(60, 60));
+        setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", 60));
     }
 
     [Fact]
