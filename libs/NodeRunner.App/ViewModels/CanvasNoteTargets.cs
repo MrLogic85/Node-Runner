@@ -6,7 +6,7 @@ public static class CanvasNoteTargets
 {
     /// <summary>
     /// The joints a note on <paramref name="target"/> stands by: a joint itself, a joint part's
-    /// joint, and both ends of a link or of a sensor's beam.
+    /// joint, and both ends of a link or of a sensor's or Memory cell's beam.
     /// </summary>
     public static IReadOnlyList<int> JointIds(CreatureElementSelection target, BuildViewModel build)
     {
@@ -16,7 +16,7 @@ public static class CanvasNoteTargets
         {
             NodeDef node => [node.Id],
             IJointPartDef part => [part.NodeId],
-            SensorDef sensor => LinkJoints(build.Link(sensor.BeamId)),
+            IBeamPartDef part => LinkJoints(build.Link(part.BeamId)),
             { } part when PartKinds.IsLink(part) => LinkJoints(build.Link(part.Id)),
             _ => throw new ArgumentOutOfRangeException(nameof(target)),
         };

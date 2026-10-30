@@ -8,7 +8,7 @@ namespace NodeRunner.App.Builders;
 
 /// <summary>
 /// Mutable, in-progress creature anatomy driven by Build-mode UI.
-/// Add/move/remove nodes, beams, sensors, joint parts, Pistons and Springs here; <see cref="Build"/>
+/// Add/move/remove nodes, beams, sensors, Memory cells, joint parts, Pistons and Springs here; <see cref="Build"/>
 /// returns the drawing as an immutable <see cref="CreatureDef"/> for saving, and
 /// <see cref="TryBuild"/> returns it only once it can be simulated. See
 /// docs/CREATURE_MODEL.md for the vocabulary and docs/BUILD_MODE.md for
@@ -20,8 +20,8 @@ namespace NodeRunner.App.Builders;
 /// </summary>
 public sealed partial class CreatureBuilder
 {
-    /// <summary>Why a sensor cannot go on a beam that already has one.</summary>
-    public static UiText OneSensorPerBeamReason { get; } = UiText.Plain("One sensor per beam");
+    /// <summary>Why a sensor or Memory cell cannot go on a beam that already has one of either.</summary>
+    public static UiText OnePartPerBeamReason { get; } = UiText.Plain("One sensor or Memory cell per beam");
 
     /// <summary>Why a hinge part, a Servo, a Stepper, a Velocity motor, a Brake or an Angle sensor, cannot be added to a joint that already has one.</summary>
     public static UiText OneHingePartPerJointReason { get; } = UiText.Plain("One Servo, Stepper, Motor, Brake or Angle sensor per joint");
@@ -59,8 +59,8 @@ public sealed partial class CreatureBuilder
     /// <summary>Why another Spring cannot join two nodes a Spring already links; a Beam or Piston replaces it instead.</summary>
     public static UiText SpringJoinsTheseNodesReason { get; } = UiText.Plain("These joints already have a spring");
 
-    /// <summary>Why a Piston or Spring cannot replace the beam between two nodes: the sensor on it is never deleted silently.</summary>
-    public static UiText SensorSitsOnThisBeamReason { get; } = UiText.Plain("A sensor sits on this beam");
+    /// <summary>Why a Piston or Spring cannot replace the beam between two nodes: the sensor or Memory cell on it is never deleted silently.</summary>
+    public static UiText PartSitsOnThisBeamReason { get; } = UiText.Plain("A sensor or Memory cell sits on this beam");
 
     private readonly List<NodeDef> _nodes = [];
     private readonly List<BeamDef> _beams = [];
@@ -110,7 +110,7 @@ public sealed partial class CreatureBuilder
     public IReadOnlyList<IJointPartDef> JointParts => [.. HingeParts, .. _wheels, .. _touchSensors, .. _rubbers];
 
     /// <summary>Every part, each kind in its list order: what <see cref="Build"/> builds the creature from.</summary>
-    public IReadOnlyList<IPartDef> Parts => [.. _nodes, .. _beams, .. _sensors, .. _pistons, .. _springs, .. JointParts];
+    public IReadOnlyList<IPartDef> Parts => [.. _nodes, .. _beams, .. _sensors, .. _pistons, .. _springs, .. JointParts, .. _memoryCells];
 
     public int NextPartId => _nextPartId;
 
@@ -197,7 +197,7 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Whether <see cref="AddPiston"/> would accept this pair: two distinct, existing nodes
-    /// with no Piston yet. A beam or Spring there is replaced, unless a sensor sits on the
+    /// with no Piston yet. A beam or Spring there is replaced, unless a sensor or Memory cell sits on the
     /// beam; if not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddPiston(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
@@ -214,7 +214,7 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Whether <see cref="AddSpring"/> would accept this pair: two distinct, existing nodes with
-    /// no Spring yet. A beam or Piston there is replaced, unless a sensor sits on the beam;
+    /// no Spring yet. A beam or Piston there is replaced, unless a sensor or Memory cell sits on the beam;
     /// if not, <paramref name="reason"/> says why.
     /// </summary>
     public bool CanAddSpring(int nodeIdA, int nodeIdB, [NotNullWhen(false)] out UiText? reason)
@@ -229,9 +229,9 @@ public sealed partial class CreatureBuilder
         return reason is null;
     }
 
-    // A link of another kind on the pair is replaced, but never a sensor's beam.
+    // A link of another kind on the pair is replaced, but never a beam with a part on it.
     private UiText? ReplacedLinkReason(int nodeIdA, int nodeIdB) =>
-        BeamBetween(nodeIdA, nodeIdB) is { } beamId && _sensors.Any(sensor => sensor.BeamId == beamId) ? SensorSitsOnThisBeamReason : null;
+        BeamBetween(nodeIdA, nodeIdB) is { } beamId && CreatureDef.BeamPartOn(beamId, BeamParts) is not null ? PartSitsOnThisBeamReason : null;
 
     /// <summary>
     /// The Beam, Piston or Spring joining two nodes, or null. A pair has at most one, and a link of
@@ -284,7 +284,7 @@ public sealed partial class CreatureBuilder
     }
 
     // The new link takes the replaced one's place and its hinge-part roles. A replaced
-    // beam never carries a sensor (ReplacedLinkReason).
+    // beam never carries a part (ReplacedLinkReason).
     private void ReplaceLink(int? replacedId, int linkId)
     {
         if (replacedId is not { } id)
@@ -310,7 +310,7 @@ public sealed partial class CreatureBuilder
 
     /// <summary>
     /// Removes any part by id with what goes with it: a joint takes its links and everything on it, a beam
-    /// takes its sensor, and a link or Wheel leaves each hinge part that used it as a side without that side.
+    /// takes its sensor or Memory cell, and a link or Wheel leaves each hinge part that used it as a side without that side.
     /// </summary>
     public void RemovePart(int partId) => RemovePart(ExistingPart(partId));
 
@@ -324,8 +324,9 @@ public sealed partial class CreatureBuilder
 
         ListOf(part.PartKind).Remove(part.Id);
 
-        // Only a beam carries sensors and only a link or Wheel is a side, so for any other part these find none.
+        // Only a beam carries sensors and Memory cells and only a link or Wheel is a side, so for any other part these find none.
         _sensors.RemoveAll(sensor => sensor.BeamId == part.Id);
+        _memoryCells.RemoveAll(memoryCell => memoryCell.BeamId == part.Id);
         ClearSides(part.Id);
     }
 
@@ -558,7 +559,7 @@ public sealed partial class CreatureBuilder
         return (fixedLink, targetLink);
     }
 
-    /// <summary>Adds a sensor mounted on an existing beam unless that beam already has a sensor.</summary>
+    /// <summary>Adds a sensor mounted on an existing beam unless that beam already has a sensor or Memory cell.</summary>
     public bool AddSensor(int beamId, SensorKind kind, out int sensorId, [NotNullWhen(false)] out UiText? reason)
     {
         ValidateBeamId(beamId);
@@ -567,7 +568,7 @@ public sealed partial class CreatureBuilder
             throw new ArgumentOutOfRangeException(nameof(kind), "Sensor kind must be defined.");
         }
 
-        if (!CanMountSensor(beamId, movingSensorId: null, out reason))
+        if (!CanMountOnBeam(beamId, movingPartId: null, out reason))
         {
             sensorId = 0;
             return false;
@@ -584,13 +585,13 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Moves a sensor to another beam unless that beam already has a sensor, as
+    /// Moves a sensor to another beam unless that beam already has a sensor or Memory cell, as
     /// <see cref="SensorMovedTo"/> shows it.
     /// </summary>
     public bool MoveSensor(int sensorId, int beamId, [NotNullWhen(false)] out UiText? reason)
     {
         var moved = SensorMovedTo(sensorId, beamId);
-        if (!CanMountSensor(beamId, sensorId, out reason))
+        if (!CanMountOnBeam(beamId, sensorId, out reason))
         {
             return false;
         }
@@ -600,15 +601,15 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Whether a sensor can sit on <paramref name="beamId"/>: one sensor per beam, not counting
-    /// <paramref name="movingSensorId"/>, the one being moved.
+    /// Whether a sensor or Memory cell can sit on <paramref name="beamId"/>: one part per beam, not counting
+    /// <paramref name="movingPartId"/>, the one being moved.
     /// </summary>
-    public bool CanMountSensor(int beamId, int? movingSensorId, [NotNullWhen(false)] out UiText? reason)
+    public bool CanMountOnBeam(int beamId, int? movingPartId, [NotNullWhen(false)] out UiText? reason)
     {
         ValidateBeamId(beamId);
-        if (_sensors.Any(sensor => sensor.BeamId == beamId && sensor.Id != movingSensorId))
+        if (CreatureDef.BeamPartOn(beamId, BeamParts) is { } part && part.Id != movingPartId)
         {
-            reason = OneSensorPerBeamReason;
+            reason = OnePartPerBeamReason;
             return false;
         }
 
@@ -745,6 +746,7 @@ public sealed partial class CreatureBuilder
         PartKind.Brake => new PartList<BrakeDef>(_brakes),
         PartKind.AngleSensor => new PartList<AngleSensorDef>(_angleSensors),
         PartKind.Stepper => new PartList<StepperDef>(_steppers),
+        PartKind.MemoryCell => new PartList<MemoryCellDef>(_memoryCells),
     };
 
     private interface IPartList

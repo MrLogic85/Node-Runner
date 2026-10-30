@@ -33,4 +33,13 @@ public enum PortSignal
     /// Stepper's. At 0 it does not step.
     /// </summary>
     Frequency,
+
+    /// <summary>What a Memory cell is to remember, −1…1: the value its <see cref="Write"/> moves it towards.</summary>
+    Remember,
+
+    /// <summary>
+    /// How much of the way a Memory cell moves to its <see cref="Remember"/> target this tick, 0…1
+    /// (<c>NodeRunner.Mechanics.MemoryCell</c>). Not a <see cref="Strength"/>: it is a share of a distance, not of a force.
+    /// </summary>
+    Write,
 }

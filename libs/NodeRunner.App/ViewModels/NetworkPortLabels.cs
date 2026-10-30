@@ -4,11 +4,12 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// What the network's ports are called, in port order (<see cref="NetworkPorts"/>): each port's
-/// <see cref="PortDisplay.Label"/> filled with its part's name, such as "Accel 1: along" or "Piston 1: strength".
+/// <see cref="PortDisplay.Label"/> filled with its part's name, such as "Accel 1: along" or "Piston 1: strength",
+/// and whether any output drives a powered part (<see cref="PortSignals.AnyPowered"/>).
 /// </summary>
-public sealed record NetworkPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList<UiText> Outputs)
+public sealed record NetworkPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyList<UiText> Outputs, bool HasPoweredOutputs)
 {
-    public static NetworkPortLabels Empty { get; } = new([], []);
+    public static NetworkPortLabels Empty { get; } = new([], [], HasPoweredOutputs: false);
 
     public static NetworkPortLabels For(CreatureDef creature)
     {
@@ -23,6 +24,7 @@ public sealed record NetworkPortLabels(IReadOnlyList<UiText> Inputs, IReadOnlyLi
         var layout = NetworkPorts.Of(creature);
         return new NetworkPortLabels(
             layout.Inputs.Select(Label).ToArray(),
-            layout.Outputs.Select(Label).ToArray());
+            layout.Outputs.Select(Label).ToArray(),
+            PortSignals.AnyPowered(layout.Outputs));
     }
 }

@@ -14,13 +14,14 @@ public sealed class GenerationZeroTests
     private const double _full = GenerationZero.FullStrengthBias;
 
     // The base genome holds the built pose at full strength: no weights, position biases 0, strength biases full
-    // (a Servo's too), and a Stepper starts still.
+    // (a Servo's too), a Stepper starts still, and a Memory cell's target and write start at 0.
     [Fact]
     public void BaseGenome_HoldsTheBuiltPoseAtFullStrength()
     {
         GenerationZero.BaseGenome(_ports).ShouldBe([0, 0, 0, 0, 0, 0, 0, 0, 0, _full, 0, _full]);
         GenerationZero.BaseGenome(new(NetworkPorts.ServoInputs(4).ToArray(), NetworkPorts.ServoOutputs(4).ToArray())).ShouldBe([0, 0, 0, 0, 0, _full]);
         GenerationZero.BaseGenome(new(NetworkPorts.StepperInputs(4).ToArray(), NetworkPorts.StepperOutputs(4).ToArray())).ShouldBe([0, 0, 0, 0]);
+        GenerationZero.BaseGenome(new(NetworkPorts.MemoryCellInputs(4).ToArray(), NetworkPorts.MemoryCellOutputs(4).ToArray())).ShouldBe([0, 0, 0, 0]);
 
         var drawn = GenerationZero.BaseGenome(_ports, new Dictionary<int, double> { [9] = 0.25, [10] = 1 });
         Sigmoid(drawn[_biasStart]).ShouldBe(0.25, 1e-12);

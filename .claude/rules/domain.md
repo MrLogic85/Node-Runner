@@ -34,7 +34,7 @@ list; add or move one only with an issue.
 | `NetworkPorts` | Every part's ports, their order and channel keys, shared by the sim, Build and ML |
 | `PortSignals` | Each output's activation and passive start: the network's half of the port contract |
 | `SensorDef.DefaultAim` | A new Camera's aim, filled in by `CreatureDef` |
-| `SensorPicture` | Where a sensor's picture sits and senses from, and what a tap on it hits |
+| `SensorPicture` | Where a sensor's or Memory cell's picture sits, where a sensor senses from, and what a tap on it hits |
 | `SelectionMarks` | The selection gap, a joint's halo and touch reach, shared by Build's touches and the drawing |
 | `AngleSensorDef.ArcRadius`, `ArcRadiusAt`, `MarkRadius`, `HaloRadius` | Where an Angle sensor's arc and halo sit, so drawing and Build's rings agree |
 | `MapGround` | A map's ground height at x, read by the arena |

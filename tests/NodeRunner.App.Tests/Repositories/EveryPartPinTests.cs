@@ -84,7 +84,9 @@ public sealed class EveryPartPinTests
 
         read.Refusal.ShouldBeNull();
         read.UpdatedFrom.ShouldBe(15);
-        SaveJson.Serialize(read.Build.ShouldNotBeNull().Creature).ShouldBe(SaveJson.Serialize(_creation.Creature));
+        // Version 15 had no Memory cells, so the code holds the build without its one.
+        var withoutMemoryCells = new CreatureDef(_creation.Creature.Parts.Where(part => part is not MemoryCellDef), nextPartId: 30);
+        SaveJson.Serialize(read.Build.ShouldNotBeNull().Creature).ShouldBe(SaveJson.Serialize(withoutMemoryCells));
     }
 
     // One line per port, in port order: its direction, part id, channel key, signal and label
@@ -94,7 +96,7 @@ public sealed class EveryPartPinTests
 
     // Ids 1, 2, 3 … in the order the parts are listed, joints on whole units and settings on their
     // sliders, so the share code keeps it exactly. Every setting is off its default, so a refactor
-    // that drops one and falls back to the default fails. Node 1 and Beam 8 are named; the rest get
+    // that drops one and falls back to the default fails. Node 1, Beam 8 and Memory cell 30 are named; the rest get
     // their kind's default name.
     /// <summary>One creature holding every part kind, with joints that stack several parts; Build tests reuse it.</summary>
     public static CreatureDef Creature() =>
@@ -140,7 +142,8 @@ public sealed class EveryPartPinTests
             ],
             angleSensors: [new AngleSensorDef(26, 3, fixedLinkId: 9, targetLinkId: 10)],
             steppers: [new StepperDef(29, 7, fixedLinkId: 15, targetLinkId: 16, strength: 400000, stepsPerTurn: 12, maxFrequency: 1.5)],
-            nextPartId: 30);
+            memoryCells: [new MemoryCellDef(30, 14, "Latch")],
+            nextPartId: 31);
 
     private static int Count(CreatureDef creature, CreatureElementKind kind) => kind switch
     {
@@ -157,6 +160,7 @@ public sealed class EveryPartPinTests
         CreatureElementKind.Brake => creature.Brakes.Count,
         CreatureElementKind.AngleSensor => creature.AngleSensors.Count,
         CreatureElementKind.Stepper => creature.Steppers.Count,
+        CreatureElementKind.MemoryCell => creature.MemoryCells.Count,
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "Count has no case for this part kind: add one, then add the kind to Creature()."),
     };
 }

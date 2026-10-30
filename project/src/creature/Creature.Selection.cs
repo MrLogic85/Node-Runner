@@ -46,6 +46,16 @@ public partial class Creature
             }
         }
 
+        for (var cellIndex = 0; cellIndex < _memoryCellVisuals.Length; cellIndex++)
+        {
+            var local = _memoryCellVisuals[cellIndex].ToLocal(globalPosition);
+            if (local.LengthSquared() <= tolerance * tolerance)
+            {
+                selection = new CreatureElementSelection(CreatureElementKind.MemoryCell, Definition!.MemoryCells[cellIndex].Id);
+                return true;
+            }
+        }
+
         for (var pistonIndex = 0; pistonIndex < _pistons.Length; pistonIndex++)
         {
             var piston = _pistons[pistonIndex];
@@ -110,13 +120,13 @@ public partial class Creature
             nodeId => ToDomain(_nodeVisuals[definition.NodeIndexOf(nodeId)].GlobalPosition),
             definition.HingeParts,
             definition.Wheels,
-            definition.Sensors,
+            definition.BeamParts,
             _raised);
     }
 
     /// <summary>
     /// Where a part's name points to, in global coordinates: a joint's centre, a beam's or
-    /// link's middle, or a sensor's picture.
+    /// link's middle, or a sensor's or Memory cell's picture.
     /// </summary>
     public Vector2 PartAnchor(CreatureElementSelection selection)
     {
@@ -139,6 +149,7 @@ public partial class Creature
         _parts = new PartIndex<PartView>();
         IndexAtVisual(definition.Nodes, _nodeVisuals);
         IndexAtVisual(definition.Sensors, _sensorVisuals);
+        IndexAtVisual(definition.MemoryCells, _memoryCellVisuals);
         IndexAtVisual(definition.Servos, _servoVisuals);
         IndexAtVisual(definition.VelocityMotors, _velocityMotorVisuals);
         IndexAtVisual(definition.Brakes, _brakeVisuals);

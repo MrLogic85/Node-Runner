@@ -8,6 +8,7 @@ public enum DrawSlot
 
     Link,
 
+    /// <summary>A beam's sensor or Memory cell, over its beam.</summary>
     Sensor,
 
     /// <summary>

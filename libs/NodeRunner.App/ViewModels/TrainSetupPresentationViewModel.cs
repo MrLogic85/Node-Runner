@@ -47,7 +47,7 @@ public sealed class TrainSetupPresentationViewModel
         Settings = creation.TrainSettings ?? new TrainSettingsDef(defaultShadows, TrainSettingsDef.Default.RunLengthSeconds);
         ShadowsBudget = ShadowsBudget.For(creation.Creature);
         CanSimulate = creation.Training is not null;
-        HasPoweredParts = NetworkPorts.Of(creation.Creature).Outputs.Count > 0;
+        HasPoweredParts = PortSignals.AnyPowered(NetworkPorts.Of(creation.Creature).Outputs);
     }
 
     public event EventHandler? Changed;

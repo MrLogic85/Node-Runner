@@ -234,6 +234,9 @@ selected), upright on the beam's built-up side and turning with it.
 - **Camera:** a body, lens ring and hood, looking along its aim. Its rays
   leave from the picture's edge. In Training the followed shadow draws
   only rays that hit the ground, dashed `halo` to a ring at the hit.
+- **Memory cell:** drawn the same way, as its glyph, brackets round a
+  dot, on a `panel` square. It draws no live value; the part callout and
+  Status panel show its ports.
 
 ## Selection marks
 
@@ -399,4 +402,5 @@ rule 10):
 - **Beam:** its line. **Rigid triangle:** a faint fill.
 - **Tear:** no flash or pulse; an undone triangle's fill goes at once.
 - **Piston, Spring:** as on the followed creature.
-- **Sensors, Touch cushions, Rubber skins and Camera rays:** not drawn.
+- **Sensors, Memory cells, Touch cushions, Rubber skins and Camera
+  rays:** not drawn.

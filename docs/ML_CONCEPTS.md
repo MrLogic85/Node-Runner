@@ -75,7 +75,8 @@ sensor off are #960.
   (Touch sensor, Angle sensor), and Servo, Motor, Stepper and Piston
   readings (`docs/CREATURE_MODEL.md`). There is no speed or elevation
   input: the network learns movement from what its parts feel. Pulse, a
-  rhythm input, is #527.
+  rhythm input, is #527. A Memory cell feeds back what the network wrote
+  last tick (`docs/CREATURE_MODEL.md` → "Memory cell").
 - **Why a turning angle reads as sine and cosine:** a Motor, a Stepper or
   the joint under an Angle sensor may turn round and round, so a plain
   angle would jump from one end to the other after each full turn, and
@@ -122,5 +123,5 @@ Each issue owns its hook; these lines say what the concept teaches.
 - **Gradient training (#955):** backprop, loss functions, optimizers and
   overfitting, taught through an imitation mode and contrasted with
   evolution.
-- **Further paradigms:** NEAT (#522), novelty search (#546), memory cells
-  (#126) and the rest of #965.
+- **Further paradigms:** NEAT (#522), novelty search (#546) and the rest
+  of #965.

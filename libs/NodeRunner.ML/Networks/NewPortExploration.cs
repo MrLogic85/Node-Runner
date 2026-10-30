@@ -79,7 +79,7 @@ public static class NewPortExploration
         var outputs = ports.Outputs.Count;
         var biasStart = inputs * outputs;
 
-        // A part is new while an output whose passive bias is not 0, a strength, still has it exactly, or
+        // A part is new while an output whose passive bias is not 0, a strength or a Memory cell's write, still has it exactly, or
         // while a Stepper's frequency still has bias 0 and no weight: training has not moved it yet.
         var newParts = Enumerable.Range(0, outputs)
             .Where(o => IsStillPassive(ports.Outputs[o].Signal, elite[biasStart + o], Enumerable.Range(0, inputs).All(i => elite[(o * inputs) + i] == 0)))

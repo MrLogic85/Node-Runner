@@ -137,7 +137,7 @@ public sealed class NetworkFocusPresentationViewModel : INotifyPropertyChanged
         var named = new HashSet<(int Layer, int Index)>();
         SelectionText = Selected switch
         {
-            null when _labels.Outputs.Count == 0 => _nothingToDrive,
+            null when !_labels.HasPoweredOutputs => _nothingToDrive,
             null => _noSelection,
             (OutputLayer, var output) => DrivenBy(output, named),
             (_, var input) => Drives(input, named),

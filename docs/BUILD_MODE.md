@@ -25,7 +25,7 @@ Wherever a rule here says *joint motor* or *hinge part*
   when Build is left is removed again.
 - **Locked Build.** A locked creation (`CreationLock`) opens like any
   other, and `BuildViewModel` refuses only what would change the
-  network's ports. So a part with ports (a sensor, Touch
+  network's ports. So a part with ports (a sensor, Memory cell, Touch
   sensor, Angle sensor, Piston or joint motor) can be neither added nor
   deleted, and a Camera's Rays cannot change. Everything else works:
   joints, beams, Springs, Wheels, Rubbers and Brakes are added, copied and
@@ -78,13 +78,13 @@ name for a node. Build opens in Joint, locked or not.
   view units is a tap. A tap or drop hits the part drawn on top
   (`docs/WORLD_VISUALS.md` → Draw layers), in Build and Training alike:
   a joint's ring, hinge part or Wheel hub, each with the selection gap; a
-  sensor's picture; or a link near its line, outside its ends' hubs. Off
+  sensor's or Memory cell's picture; or a link near its line, outside its ends' hubs. Off
   every part, Build falls back to finger-sized reach: a link, then a beam.
   A Wheel's face and tyre never take a press or drop, so links and
   joints inside it stay reachable; only a released tap that reaches
   nothing else, not even a handle, falls back to a Wheel's disc and
-  selects that Wheel (`DrawGroups.WheelDiscAt`). Joints and sensors
-  hit in canvas units, so they grow with zoom; beams, links and handles
+  selects that Wheel (`DrawGroups.WheelDiscAt`). Joints, sensors and
+  Memory cells hit in canvas units, so they grow with zoom; beams, links and handles
   keep finger-sized areas at any zoom.
 - **Every tool shares one selection model;** the tools differ
   only in their main action, below.
@@ -122,7 +122,7 @@ name for a node. Build opens in Joint, locked or not.
     covers the target; a refused drop shows the reason at the joint
     (`BuildViewModel.CanConnectLink`).
   - A link dropped on a pair another kind joins replaces it, with its own
-    default settings. A beam with a sensor is never
+    default settings. A beam with a sensor or Memory cell is never
     replaced, and a hinge part keeps holding the new link in the same role
     (`docs/CREATURE_MODEL.md` → "Editing identity rules"). One Undo brings
     the old link back.
@@ -133,7 +133,7 @@ name for a node. Build opens in Joint, locked or not.
   selection, so a box can catch only beams.
 - **Placing a part.** Each part knows where it goes and refuses anywhere
   else with its own canvas note (`CreatureBuilder.*Reason`). A beam sensor
-  goes on a beam, one per beam. A joint part goes on a
+  or Memory cell goes on a beam, one part per beam. A joint part goes on a
   joint, one per slot (`docs/CREATURE_MODEL.md` → Node → One part per
   slot): the hinge part slot (joint motor, Brake or Angle sensor), Wheel,
   Rubber and Touch sensor. A hinge part picks its sides as
@@ -155,9 +155,9 @@ name for a node. Build opens in Joint, locked or not.
   the finger; the aim is saved relative to the beam. The handle is hit
   before anything under it.
 - **Deleting:** the Part settings and selection panels delete the
-  selection. Deleting a joint removes its links, its parts and those
-  beams' sensors (`CreatureBuilder.RemoveNode`); deleting a beam removes
-  its sensor. Deleting a joint part leaves its joint, unless the same
+  selection. Deleting a joint removes its links, its parts and the
+  sensors and Memory cells on those beams (`CreatureBuilder.RemoveNode`);
+  deleting a beam removes its sensor or Memory cell. Deleting a joint part leaves its joint, unless the same
   delete takes every part and link on a joint that had a link: then the
   joint goes too, so a box that clears an area leaves no bare joint.
   Deleting a side a hinge part holds leaves that role missing.
@@ -227,7 +227,7 @@ one, clears the selection so its panel shows.
 
 One selected part shows its Part settings: a title with its glyph
 and kind, so a renamed part still says what it is; **Name**; what it is
-joined to (a beam's joints, a sensor's beam); its parameters; its note
+joined to (a beam's joints, a sensor's or Memory cell's beam); its parameters; its note
 (`PartInfo`); and a full-width **Delete**. Delete acts at once, with no
 dialog, since Undo brings the part back. Structure is read-only: a
 beam's length is drawn, not a number. `BuildPresentationViewModel.SinglePart`
@@ -297,7 +297,8 @@ full-width **Copy N** and **Delete N**.
 - Copy duplicates the selection aside by 0.5 m, or 1 m on the 1 m grid
   (`CopyStep`), so it lands on the grid and never covers the original, with
   settings but not names, and selects the copy. A part copies only with
-  what it sits on: a link with both joints, a sensor with its beam, and a
+  what it sits on: a link with both joints, a sensor or Memory cell with
+  its beam, and a
   joint part with its joint. A joint's other parts come only when
   selected. A copied hinge part uses the copies of its sides and leaves a
   side empty whose part was not copied. Copy is Unavailable while the

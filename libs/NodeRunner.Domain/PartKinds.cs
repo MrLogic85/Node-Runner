@@ -38,6 +38,7 @@ public static class PartKinds
         new(PartKind.Brake, CreatureElementKind.Brake, Sensor: null, JointSlot.HingePart, IsLink: false, _noPorts),
         new(PartKind.AngleSensor, CreatureElementKind.AngleSensor, Sensor: null, JointSlot.HingePart, IsLink: false, part => NetworkPorts.AngleSensorInputs(part.Id)),
         new(PartKind.Stepper, CreatureElementKind.Stepper, Sensor: null, JointSlot.HingePart, IsLink: false, part => [.. NetworkPorts.StepperInputs(part.Id), .. NetworkPorts.StepperOutputs(part.Id)]),
+        new(PartKind.MemoryCell, CreatureElementKind.MemoryCell, Sensor: null, Slot: null, IsLink: false, part => [.. NetworkPorts.MemoryCellInputs(part.Id), .. NetworkPorts.MemoryCellOutputs(part.Id)]),
     ];
 
     public static PartKindInfo Of(PartKind kind) =>

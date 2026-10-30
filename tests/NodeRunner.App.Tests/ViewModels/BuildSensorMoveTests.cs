@@ -47,7 +47,7 @@ public sealed class BuildSensorMoveTests
         var before = build.Snapshot().Sensors;
 
         build.MoveSensor(20, Beam(12)).ShouldBeFalse();
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Beam(12), UiText.Plain("One sensor per beam")));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Beam(12), UiText.Plain("One sensor or Memory cell per beam")));
         build.MoveSensor(20, Joint(4)).ShouldBeFalse();
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(4), UiText.Plain("Cameras go on a beam")));
         build.MoveSensor(20, null).ShouldBeFalse();

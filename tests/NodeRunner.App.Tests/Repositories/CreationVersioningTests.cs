@@ -330,6 +330,22 @@ public sealed class CreationVersioningTests : IDisposable
         JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
     }
 
+    // Version 18 had no Memory cells; version 19 gives its creature none.
+    [Fact]
+    public void AVersion18Save_LoadsWithNoMemoryCells()
+    {
+        var current = CurrentTrainedWalker();
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 18;
+        file["creature"]!.AsObject().Remove("memoryCells");
+        var path = WriteCreation(file.ToJsonString());
+
+        var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        creation.Creature.MemoryCells.ShouldBeEmpty();
+        JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
+    }
+
     // A save its version could not have written, one newer than the app or one that fails the strict
     // load is skipped and left as it is, and the others still list. One row for each way a migration
     // or the strict load refuses one (docs/SAVE_FORMAT.md → "Versions and migration").
@@ -360,6 +376,7 @@ public sealed class CreationVersioningTests : IDisposable
     [InlineData("v14", "-creature.steppers")]
     [InlineData("v15", "training.network=@training.brain")]
     [InlineData("current", "-creature.steppers")]
+    [InlineData("current", "-creature.memoryCells")]
     [InlineData("current", "unknown=1")]
     [InlineData("current", "-grid")]
     [InlineData("current", "grid=null")]
@@ -556,6 +573,7 @@ public sealed class CreationVersioningTests : IDisposable
         file["creature"]!.AsObject()["brakes"] = new JsonArray();
         file["creature"]!.AsObject()["angleSensors"] = new JsonArray();
         file["creature"]!.AsObject()["steppers"] = new JsonArray();
+        file["creature"]!.AsObject()["memoryCells"] = new JsonArray();
         file["grid"] = new JsonObject { ["sizeCm"] = 50, ["snap"] = false };
         if (file["trainSettings"] is JsonObject trainSettings)
         {
@@ -643,6 +661,7 @@ public sealed class CreationVersioningTests : IDisposable
         var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
         file[_versionField] = 13;
         file["creature"]!.AsObject().Remove("steppers");
+        file["creature"]!.AsObject().Remove("memoryCells");
         return file;
     }
 

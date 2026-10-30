@@ -19,7 +19,7 @@ public sealed class CreatureDefTests
         var loaded = JsonSerializer.Deserialize<CreatureDef>(json)!;
 
         loaded.Parts.ShouldBe(original.Parts);
-        loaded.NextPartId.ShouldBe(22);
+        loaded.NextPartId.ShouldBe(23);
         loaded.Brakes[0].Locked.ShouldBeTrue();
         json.ShouldContain("\"Strength\":\"Infinity\"");
     }
@@ -31,7 +31,10 @@ public sealed class CreatureDefTests
         Refuses.OutOfRange(() => new CreatureDef(_nodes, [new BeamDef(4, 1, 9)], []));
         Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [new SensorDef(6, 9, SensorKind.Accelerometer)]));
         Refuses.Invalid(() => new CreatureDef(_nodes, _beams, [new SensorDef(6, 4, SensorKind.Accelerometer), new SensorDef(7, 4, SensorKind.Camera)]))
-            .Message.ShouldBe("Beam id 4 already has a sensor; a beam holds at most one.");
+            .Message.ShouldBe("Beam id 4 already has a part; a beam holds at most one.");
+        Refuses.Invalid(() => new CreatureDef([.. _nodes, .. _beams, new SensorDef(6, 4, SensorKind.Accelerometer), new MemoryCellDef(7, 4)]))
+            .Message.ShouldBe("Beam id 4 already has a part; a beam holds at most one.");
+        Refuses.OutOfRange(() => new CreatureDef([.. _nodes, .. _beams, new MemoryCellDef(6, 9)]));
         Refuses.Invalid(() => new CreatureDef(_nodes, [new BeamDef(1, 1, 2)], [], 9)).Message.ShouldBe("Part id 1 is used more than once.");
         Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [], 0));
         Refuses.OutOfRange(() => new CreatureDef(_nodes, _beams, [], [new PistonDef(6, 2, 3)], 6));
@@ -85,7 +88,7 @@ public sealed class CreatureDefTests
     {
         var creature = EveryPartKind.Creature;
 
-        creature.PartCount.ShouldBe(21);
+        creature.PartCount.ShouldBe(22);
         creature.JointMotors.Select(part => part.Id).ShouldBe([9, 15, 21]);
         creature.HingeParts.Select(part => part.Id).ShouldBe([9, 15, 21, 16, 17]);
         creature.JointPartsAt(1).ShouldBe([
@@ -109,6 +112,7 @@ public sealed class CreatureDefTests
         {
             creature.ServoIndexOf(9), creature.PistonIndexOf(10), creature.SpringIndexOf(11), creature.WheelIndexOf(12), creature.TouchSensorIndexOf(13),
             creature.RubberIndexOf(14), creature.VelocityMotorIndexOf(15), creature.BrakeIndexOf(16), creature.AngleSensorIndexOf(17), creature.StepperIndexOf(21),
+            creature.MemoryCellIndexOf(22),
         }.ShouldAllBe(index => index == 0);
         Refuses.OutOfRange(() => creature.NodeIndexOf(5));
         Refuses.OutOfRange(() => creature.CoveredRadius(99));
@@ -117,7 +121,8 @@ public sealed class CreatureDefTests
             creature.FindPart(part.Id).ShouldBeSameAs(part);
         }
 
-        creature.FindPart(22).ShouldBeNull();
+        creature.FindPart(23).ShouldBeNull();
+        (creature.BeamPartOn(5)!.Id, creature.BeamPartOn(19)!.Id, creature.BeamPartOn(20)).ShouldBe((7, 22, null));
         creature.WheelAt(1)!.Id.ShouldBe(12);
         creature.WheelAt(2).ShouldBeNull();
         (creature.IsWheel(12), creature.IsWheel(13)).ShouldBe((true, false));

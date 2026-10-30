@@ -254,11 +254,12 @@ public sealed class SignalFlowPresentationViewModel : INotifyPropertyChanged
         return Meters.Of(creature, ports, [.. Enumerable.Range(0, shown)]);
     }
 
-    // Every driven part has exactly one output that is not a Strength, so each gets one dial.
+    // Every driven part has exactly one output that is not a Strength or a Memory cell's write, so
+    // each gets one dial: its drive, or a Memory cell's target.
     private Meters LayOutOutputs(CreatureDef? creature, IReadOnlyList<NetworkPort> ports)
     {
         var drives = Enumerable.Range(0, ports.Count)
-            .Where(index => ports[index].Signal != PortSignal.Strength)
+            .Where(index => ports[index].Signal is not (PortSignal.Strength or PortSignal.Write))
             .DistinctBy(index => ports[index].PartId)
             .ToArray();
         var shown = Shown(drives.Length, OutputDialsThatFit, OutputDialsBesideChip);

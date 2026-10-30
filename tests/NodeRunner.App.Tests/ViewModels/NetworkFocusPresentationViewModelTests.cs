@@ -13,7 +13,7 @@ public sealed class NetworkFocusPresentationViewModelTests
     private static readonly UiText _frontKnee = UiText.Plain("Front knee");
     private static readonly UiText _noSelection = UiText.Plain("Tap an input or an output to see what drives what.");
 
-    private static readonly NetworkPortLabels _labels = new([_along, _kneeSpeed, _centre], [_rearKnee, _frontKnee]);
+    private static readonly NetworkPortLabels _labels = new([_along, _kneeSpeed, _centre], [_rearKnee, _frontKnee], HasPoweredOutputs: true);
 
     private static readonly NetworkPortLayout _layout = new(
         [NetworkPort.Input(1, "along"), NetworkPort.Input(2, "speed"), NetworkPort.Input(3, "centre")],
@@ -145,7 +145,7 @@ public sealed class NetworkFocusPresentationViewModelTests
     public void Update_WithNothingToDrive_LeavesOutTheLegendAndWarns()
     {
         var viewModel = new NetworkFocusPresentationViewModel();
-        viewModel.Configure(new NetworkPortLabels([_along], []), []);
+        viewModel.Configure(new NetworkPortLabels([_along], [], HasPoweredOutputs: false), []);
 
         viewModel.Update(NetworkPortValues.Sample(new NetworkPortLayout([NetworkPort.Input(1, "along")], []), NeuralNetwork.FromGenome([1, 0], [], Activation.Tanh), [0.5]));
 
@@ -155,6 +155,15 @@ public sealed class NetworkFocusPresentationViewModelTests
             "{0} → {1}.",
             UiText.Counted("{0} input", "{0} inputs", 1),
             UiText.Counted("{0} output", "{0} outputs", 0)));
+        viewModel.SelectionText.ShouldBe(UiText.Plain("Warning, no powered parts added! There is nothing to train"));
+
+        // A Memory cell has outputs but drives no part, so it alone still warns.
+        var memoryOnly = new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(90, 0)), new BeamDef(3, 1, 2), new MemoryCellDef(4, 3)]);
+        var layout = NetworkPorts.Of(memoryOnly);
+        viewModel.Configure(NetworkPortLabels.For(memoryOnly), []);
+
+        viewModel.Update(NetworkPortValues.Sample(layout, NeuralNetwork.FromGenome([1, 2], new double[4], Activation.Tanh), [0]));
+
         viewModel.SelectionText.ShouldBe(UiText.Plain("Warning, no powered parts added! There is nothing to train"));
     }
 }

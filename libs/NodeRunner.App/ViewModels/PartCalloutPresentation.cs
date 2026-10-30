@@ -53,7 +53,7 @@ public sealed record PartCalloutPresentation(
             PartKind.Node or PartKind.Beam or PartKind.Spring => new PartCalloutPresentation(kind, name, ShowsGlyph: false, [], [], null),
             PartKind.Wheel or PartKind.Rubber or PartKind.Brake => new PartCalloutPresentation(kind, name, ShowsGlyph: true, [], [], _noNetworkPorts),
             PartKind.Accelerometer or PartKind.Camera or PartKind.Servo or PartKind.Piston or PartKind.TouchSensor
-                or PartKind.VelocityMotor or PartKind.AngleSensor or PartKind.Stepper =>
+                or PartKind.VelocityMotor or PartKind.AngleSensor or PartKind.Stepper or PartKind.MemoryCell =>
                 new PartCalloutPresentation(kind, name, ShowsGlyph: true, Of(PortDirection.Input), Of(PortDirection.Output), null),
         };
     }

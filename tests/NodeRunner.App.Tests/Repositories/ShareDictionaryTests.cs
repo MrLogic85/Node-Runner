@@ -148,6 +148,7 @@ public sealed class ShareDictionaryTests
         builder.AddBeam(backFoot, belly);
         builder.AddBeam(frontFoot, belly);
         builder.AddStepper(belly);
+        builder.AddMemoryCell(builder.AddBeam(back, belly));
         return new CreationDef(Guid.NewGuid(), "Untitled Creation", builder.Build());
     }
 
@@ -194,6 +195,7 @@ public sealed class ShareDictionaryTests
         var stepper = builder.AddStepper(hip);
         builder.SetParameter(stepper, PartParameterId.StepsPerTurn, 12);
         builder.SetParameter(stepper, PartParameterId.MaxFrequency, 1.5);
+        builder.AddMemoryCell(builder.LinkBetween(front, frontFoot)!.Value);
         return new CreationDef(Guid.NewGuid(), "Walker", builder.Build());
     }
 }

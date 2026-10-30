@@ -47,7 +47,7 @@ public sealed class BuildLinkTests
         gestures.Drag(new Vector2D(2, 98));
         (gestures.RefusedTargetNodeId, gestures.ReplacedLinkId).ShouldBe((3, null));
         gestures.Release(new Vector2D(2, 98));
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(3), CreatureBuilder.SensorSitsOnThisBeamReason));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(3), CreatureBuilder.PartSitsOnThisBeamReason));
 
         build.ReplaceSelection([3]);
         gestures.Press(new Vector2D(0, 0), 0);

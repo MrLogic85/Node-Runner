@@ -96,6 +96,15 @@ public static class NetworkPorts
     /// <summary>A Stepper's frequency output key: how often to step and which way, −1…1 of its Max frequency.</summary>
     public const string StepperFrequencyChannel = "frequency";
 
+    /// <summary>A Memory cell's value input key: the number it holds, read as the tick starts.</summary>
+    public const string MemoryCellValueChannel = "value";
+
+    /// <summary>A Memory cell's target output key: what to remember.</summary>
+    public const string MemoryCellTargetChannel = "target";
+
+    /// <summary>A Memory cell's write output key: how much of the way to its target it moves this tick.</summary>
+    public const string MemoryCellWriteChannel = "write";
+
     public static NetworkPortLayout Of(CreatureDef creature)
     {
         ArgumentNullException.ThrowIfNull(creature);
@@ -195,5 +204,18 @@ public static class NetworkPorts
     public static IEnumerable<NetworkPort> StepperOutputs(int stepperId) =>
     [
         NetworkPort.Output(stepperId, StepperFrequencyChannel, PortSignal.Frequency),
+    ];
+
+    /// <summary>A Memory cell's input port: the value it holds.</summary>
+    public static IEnumerable<NetworkPort> MemoryCellInputs(int memoryCellId) =>
+    [
+        NetworkPort.Input(memoryCellId, MemoryCellValueChannel),
+    ];
+
+    /// <summary>A Memory cell's output ports: its target, then its write.</summary>
+    public static IEnumerable<NetworkPort> MemoryCellOutputs(int memoryCellId) =>
+    [
+        NetworkPort.Output(memoryCellId, MemoryCellTargetChannel, PortSignal.Remember),
+        NetworkPort.Output(memoryCellId, MemoryCellWriteChannel, PortSignal.Write),
     ];
 }

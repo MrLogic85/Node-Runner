@@ -581,6 +581,32 @@
             "additionalProperties": false
           }
         },
+        "memoryCells": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "beamId": {
+                "type": "integer"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "id",
+              "beamId"
+            ],
+            "additionalProperties": false
+          }
+        },
         "nextPartId": {
           "type": "integer"
         }
@@ -599,6 +625,7 @@
         "brakes",
         "angleSensors",
         "steppers",
+        "memoryCells",
         "nextPartId"
       ],
       "additionalProperties": false

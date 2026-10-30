@@ -10,10 +10,11 @@ words that would hold for any physics engine: no engine body or joint
 types, and no rules that differ by how a part happens to be simulated. How
 Godot realises each part is in `.claude/rules/creature.md`.
 
-## Parts: Node, Beam, Sensor, Servo, Motor, Stepper, Brake, Angle sensor, Piston, Spring, Wheel, Rubber, Touch sensor
+## Parts: Node, Beam, Sensor, Memory cell, Servo, Motor, Stepper, Brake, Angle sensor, Piston, Spring, Wheel, Rubber, Touch sensor
 
 A creature is built from joints (Node) and the links between them (Beam,
-Piston, Spring). Sensors sit on beams (Accelerometer, Camera); joint parts
+Piston, Spring). Sensors (Accelerometer, Camera) and the Memory cell sit
+on beams, at most one part on a beam; joint parts
 sit on joints: hinge parts that turn the joint (Servo, Motor, Stepper),
 resist it (Brake) or feel it (Angle sensor), and the Wheel, Rubber and
 Touch sensor. A plain joint is passive: a beam turns freely where it
@@ -28,6 +29,8 @@ sensor is one clear idea, the way real sensors are.
 **A part sits on what it senses or moves:** a sensor that senses one beam
 sits on that beam; a part working between two links, or on the ground
 around a joint, sits on that joint; a part joining two joints is a link.
+The Memory cell senses nothing and sits on a beam only to have a place on
+the creature.
 
 Every part has a stable id (see "Editing identity rules"). Ids are machine
 identity, not display or draw order; network ports are sorted by them
@@ -110,6 +113,7 @@ record the reason here.
     go of its hold, and its inputs keep their last values. A sensor on a
     beam gone at one end keeps sensing; on a beam gone at both ends, its
     inputs keep their last values.
+  - **Memory cell:** a tear does not affect it.
   - The trial's score freezes at the first tear (`docs/TRAINING_LOOP.md` →
     Trial). How a tear looks is `docs/WORLD_VISUALS.md` → Tear.
 
@@ -117,8 +121,8 @@ record the reason here.
 
 - **Beginner:** A part on a beam that feels something about that beam and
   feeds it to the network. It is *not* the network.
-- `SensorDef`: its `SensorKind` and the beam it sits on, at most one per
-  beam. It has no position setting: it sits and senses midway between
+- `SensorDef`: its `SensorKind` and the beam it sits on, which holds no
+  other part. It has no position setting: it sits and senses midway between
   what is drawn over the beam's two ends (`SensorPicture`), so off the
   midpoint only when a joint motor sits on one end.
 - **Frame fixed as built:** the side of the beam that faces up in the
@@ -172,6 +176,23 @@ record the reason here.
   is 1 when any ray sees the ground, else 0, so far ground, whose nearness
   is almost 0, differs from none. Why nothing seen reads 0 is in
   `docs/ML_CONCEPTS.md` → "Feature engineering / observation design".
+
+### Memory cell
+
+- **Beginner:** A note the network writes to itself: one number it sets
+  on one tick and reads back on the next, so it can act on what happened
+  a moment ago.
+- `MemoryCellDef`, saved under `memoryCells`; Mechanics: `MemoryCell`. It
+  sits on a beam as a sensor does, with no settings.
+- **Ports:** input `value`, which reads the number `m` (−1…1); outputs
+  `target` (−1…1), what to remember, and `write` (0…1), how much of the
+  way to move `m` towards it.
+- **Each tick** the network runs with the current `m` as `value`, then
+  `m = m + write · (target − m)`: write 0 keeps `m`, 1 takes the target.
+  The loop runs outside the network, which stays feed-forward.
+- `m` is 0 at every trial start and is never saved.
+- **A new cell changes nothing:** its target starts at 0 and `m` at 0, so
+  `m` stays exactly 0 until training moves its weights.
 
 ### Rigid triangles
 
@@ -433,6 +454,7 @@ triangle that loses a beam to a tear can fold again.
   - **Touch sensor:** input `touch`.
   - **Angle sensor:** inputs `angleSin`, `angleCos` and `speed`; no
     outputs.
+  - **Memory cell:** input `value`; outputs `target` and `write`.
   - Joints, beams, Springs, Wheels, Brakes and Rubbers declare none.
 - **Output conventions (`PortSignals`):** the signal fixes the output's
   activation and how a new output starts.
@@ -449,9 +471,11 @@ triangle that loses a beam to a tear can fold again.
     Build; the output is the network's choice of how much of it to use.
   - **Frequency** uses `tanh`: −1…1 of a Stepper's Max frequency,
     counter-clockwise positive; 0 stands still.
+  - A Memory cell's **target** uses `tanh` and its **write** `sigmoid`:
+    the share of the way `m` moves, not a Strength.
   - **New ports start almost passive:** when a part joins a trained
-    network, its incoming weights are 0 and a new strength output starts
-    at bias −4, about 2% force. Position, velocity, length and frequency
+    network, its incoming weights are 0 and a new strength or write output
+    starts at bias −4, about 2% force or write. Position, velocity, length and frequency
     outputs start at bias 0: a length output asks for the middle of its
     travel, and a Stepper stands still. The trained gait therefore never
     breaks; training explores the new port (`docs/TRAINING_LOOP.md` →
@@ -480,7 +504,7 @@ triangle that loses a beam to a tear can fold again.
   goes down.
 - Removing a part retires its id forever, so a part removed and added
   again is a new part. Removing a joint also removes the links and joint
-  parts on it, and removing a beam removes its sensor; the survivors keep
+  parts on it, and removing a beam removes its sensor or Memory cell; the survivors keep
   their ids.
 - Saving, loading, moving, renaming, rebuilding a body and copying a whole
   Creation keep part ids and the counter.

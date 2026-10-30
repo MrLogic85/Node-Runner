@@ -15,14 +15,14 @@ public sealed class BuildEveryPartTests
     // ports go or whose sides change, cascades included (BuildViewModel.DeleteRefusalNotes).
     public static TheoryData<int, int[]> LockedDeleteBlockers => new()
     {
-        { 1, [8, 10, 11, 16, 18] }, // Beams 5 and 7 with Accelerometer 8, Piston 11 and Servo 10; sides of 16 and 18.
+        { 1, [8, 10, 11, 16, 18, 23] }, // Beams 5 and 7 with Accelerometer 8, Memory cell 23, Piston 11 and Servo 10; sides of 16 and 18.
         { 2, [8, 9, 10, 14, 16, 18, 22] },
         { 3, [9, 11, 16] }, // Wheel 13, Rubber 15 and Brake 17 go without ports.
-        { 4, [10, 18, 22] },
+        { 4, [10, 18, 22, 23] },
         { 19, [22] },
         { 5, [8, 10, 16] },
         { 6, [9, 16] }, // Brake 17 loses its Fixed side.
-        { 7, [10, 18] },
+        { 7, [10, 18, 23] },
         { PortedCreature.Accelerometer, [8] },
         { PortedCreature.Camera, [9] },
         { PortedCreature.Servo, [10] },
@@ -37,6 +37,7 @@ public sealed class BuildEveryPartTests
         { 20, [22] },
         { 21, [22] },
         { PortedCreature.Stepper, [22] },
+        { PortedCreature.MemoryCell, [23] },
     };
 
     [Fact]
@@ -173,6 +174,7 @@ public sealed class BuildEveryPartTests
             [PortedCreature.Brake] = [3],
             [PortedCreature.AngleSensor] = [4],
             [PortedCreature.Stepper] = [19],
+            [PortedCreature.MemoryCell] = [1, 4],
         };
 
         expected.Keys.ShouldBe(PortedCreature.Def.Parts.Select(part => part.Id), ignoreOrder: true);
@@ -187,12 +189,13 @@ public sealed class BuildEveryPartTests
     // The parts a part sits on or takes as a side, in a fixed order per kind.
     private static int?[] Uses(IPartDef part) => part switch
     {
+        NodeDef => [],
         BeamDef beam => [beam.NodeA, beam.NodeB],
         PistonDef piston => [piston.NodeA, piston.NodeB],
         SpringDef spring => [spring.NodeA, spring.NodeB],
-        SensorDef sensor => [sensor.BeamId],
+        IBeamPartDef beamPart => [beamPart.BeamId],
         IHingePartDef hinge => [hinge.NodeId, hinge.FixedLinkId, hinge.TargetLinkId],
         IJointPartDef jointPart => [jointPart.NodeId],
-        _ => [],
+        _ => throw new ArgumentOutOfRangeException(nameof(part), part.PartKind, "Uses has no case for this part kind."),
     };
 }

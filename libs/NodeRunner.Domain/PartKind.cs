@@ -20,4 +20,5 @@ public enum PartKind
     Brake,
     AngleSensor,
     Stepper,
+    MemoryCell,
 }

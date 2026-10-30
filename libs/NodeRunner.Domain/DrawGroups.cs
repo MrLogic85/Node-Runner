@@ -57,19 +57,19 @@ public sealed class DrawGroups
 
     /// <summary>
     /// The id <paramref name="part"/>'s draw group is found by: a joint's own, a joint part's joint,
-    /// a link's own, or a sensor's beam.
+    /// a link's own, or a beam part's beam.
     /// </summary>
     public static int OwnerOf(IPartDef part) => part switch
     {
         NodeDef node => node.Id,
         IJointPartDef jointPart => jointPart.NodeId,
         BeamDef or PistonDef or SpringDef => part.Id,
-        SensorDef sensor => sensor.BeamId,
+        IBeamPartDef beamPart => beamPart.BeamId,
         null => throw new ArgumentNullException(nameof(part)),
         _ => throw new ArgumentOutOfRangeException(nameof(part), part.PartKind, "Every part kind draws in a group."),
     };
 
-    /// <summary>The group of a link and the sensor on it.</summary>
+    /// <summary>The group of a link and the sensor or Memory cell on it.</summary>
     public int? Link(int linkId) => _links.TryGetValue(linkId, out var group) ? group : null;
 
     /// <summary>The group a joint's part in <paramref name="slot"/> draws in, or null for a joint joined to no link.</summary>
@@ -80,7 +80,7 @@ public sealed class DrawGroups
     /// What rises to the selected surface: the <paramref name="selected"/> joints, a part on a joint
     /// (a hinge part, Wheel, Touch sensor or Rubber) as its joint, with their links; the selected links; the joints at the ends of all
     /// those links, so a link never covers the ring, hub or motor at its end; every link whose ends
-    /// both rose with its sensor, so a raised motor never hides it; and the selected sensors. A
+    /// both rose with its beam part, so a raised motor never hides it; and the selected beam parts. A
     /// Wheel's face, under its links, rises only with a selected joint, so a raised link never makes
     /// it cover the Wheel's other links. The <paramref name="targetLinks"/> and
     /// <paramref name="targetJoints"/> a placed part can take rise alone, without what they join,
@@ -107,14 +107,14 @@ public sealed class DrawGroups
         links.UnionWith(_linkRefs.Values.Where(link => joints.Contains(link.NodeA) && joints.Contains(link.NodeB)).Select(link => link.Id));
         links.UnionWith(targetLinks ?? []);
         joints.UnionWith(targetJoints ?? []);
-        var sensors = parts.Where(part => part.Kind == CreatureElementKind.Sensor).Select(part => part.Id).ToHashSet();
-        return new RaisedParts(links, joints, sensors, wheelJoints);
+        var beamParts = parts.Where(part => part.Kind is CreatureElementKind.Sensor or CreatureElementKind.MemoryCell).Select(part => part.Id).ToHashSet();
+        return new RaisedParts(links, joints, beamParts, wheelJoints);
     }
 
     /// <summary>
     /// The part drawn on top at <paramref name="position"/>, so a touch hits what it sees,
     /// in Build and Training alike: a joint's ring, hinge part, or a Wheel's hub, each out to its halo
-    /// (<see cref="SelectionMarks.JointHalo"/>); a sensor's picture; or a link within its drawn body
+    /// (<see cref="SelectionMarks.JointHalo"/>); a beam part's picture; or a link within its drawn body
     /// (<see cref="SelectionMarks.LinkBody"/>), outside its ends' hubs, since it is drawn hub to hub,
     /// under a ring, hub or motor. A Wheel is hit only at its hub; its tyre and its
     /// see-through middle are left to a tap's last fallback, <see cref="WheelDiscAt"/>. Parts rank by <see cref="Rank"/>, the <paramref name="raised"/> ones on
@@ -129,13 +129,13 @@ public sealed class DrawGroups
         Func<int, Vector2D> nodeAt,
         IReadOnlyCollection<IHingePartDef> hingeParts,
         IReadOnlyCollection<WheelDef> wheels,
-        IEnumerable<SensorDef> sensors,
+        IEnumerable<IBeamPartDef> beamParts,
         RaisedParts raised)
     {
         ArgumentNullException.ThrowIfNull(nodeAt);
         ArgumentNullException.ThrowIfNull(hingeParts);
         ArgumentNullException.ThrowIfNull(wheels);
-        ArgumentNullException.ThrowIfNull(sensors);
+        ArgumentNullException.ThrowIfNull(beamParts);
         ArgumentNullException.ThrowIfNull(raised);
         var motors = hingeParts.OfType<IJointMotorDef>().ToArray();
         CreatureElementSelection? top = null;
@@ -163,12 +163,12 @@ public sealed class DrawGroups
             }
         }
 
-        foreach (var sensor in sensors)
+        foreach (var beamPart in beamParts)
         {
-            if (_linkRefs.TryGetValue(sensor.BeamId, out var beam)
-                && SensorPicture.Contains(sensor.Kind, position, nodeAt(beam.NodeA), nodeAt(beam.NodeB), CreatureDef.CoveredRadius(beam.NodeA, motors), CreatureDef.CoveredRadius(beam.NodeB, motors)))
+            if (_linkRefs.TryGetValue(beamPart.BeamId, out var beam)
+                && SensorPicture.Contains(SensorPicture.SizeOf(beamPart), position, nodeAt(beam.NodeA), nodeAt(beam.NodeB), CreatureDef.CoveredRadius(beam.NodeA, motors), CreatureDef.CoveredRadius(beam.NodeB, motors)))
             {
-                Consider(new CreatureElementSelection(CreatureElementKind.Sensor, sensor.Id), Rank(DrawSlot.Sensor, Link(beam.Id), raised.Sensor(sensor)));
+                Consider(CreatureElementSelection.Of(beamPart), Rank(DrawSlot.Sensor, Link(beam.Id), raised.BeamPart(beamPart)));
             }
         }
 
