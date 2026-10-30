@@ -70,7 +70,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `name` | string | Not empty. A default name is saved in the player's language. |
 | `creature` | object | The drawn body; see below. |
 | `training` | object or `null` | `null` until a generation has finished. |
-| `trainSettings` | `{ shadows, runLengthSeconds }` or `null` | Train setup's values from its last Start; `shadows` is 2–100, `runLengthSeconds` 5–60. `null` until the first Start; until then Train setup uses the Shadows default from `settings.json` and 10 s. |
+| `trainSettings` | `{ shadows, runLengthSeconds, runLengthMode, runLengthRange }` or `null` | Train setup's values from its last Start; `shadows` is 2–100, `runLengthSeconds` (the Fixed length) 5–60. `runLengthMode` is `"fixed"` or `"ranged"`. `runLengthRange` is `{ lowSeconds, highSeconds }`, `null` until Ranged is first chosen and required while it is; each end is clamped to 5–60 and moved to the nearest 5 s step, a tie up, and inverted ends swap, so a hand-edited range still loads. `null` until the first Start; until then Train setup uses the Shadows default from `settings.json` and 10 s. |
 | `grid` | `{ sizeCm, snap }` | Build's grid for this Creation (`docs/BUILD_MODE.md` → "Interactions"): `sizeCm` 25, 50 or 100, any other number loading as the nearest, a tie as the larger; `snap` whether placed and moved joints land on it. A new Creation copies `settings.json`'s, so, unlike `trainSettings`, a later change to Settings leaves it as it is. |
 
 `creature` (what each part means: `docs/CREATURE_MODEL.md`):
@@ -216,6 +216,7 @@ Current `creation.json` migrations:
 | 14 | 15 | A Stepper's `power` output neuron becomes its `frequency` output; its old `frequency` input and output neurons and their connections are dropped. |
 | 15 | 16 | `training.brain` becomes `training.network`, unchanged. A file without training has nothing to move; one with both keys fails to load. |
 | 16 | 17 | Add required `grid: { sizeCm: 50, snap: false }`, the grid every Creation was built on, whatever `settings.json` holds. |
+| 17 | 18 | A non-null `trainSettings` gets `runLengthMode: "fixed"` and `runLengthRange: null`: every older generation ran one length. |
 
 Two changes of meaning need no migration, as no migration could keep the
 old meaning:
@@ -276,7 +277,7 @@ owns it.
   zlib-compressed against that version's share dictionary, in URL-safe
   base64 without padding. It holds the build only, so the copy trains from
   scratch on the importer's grid default. The Walker example's is about 50
-  characters, starting `NR17.`, and so is two joints and a Spring's.
+  characters, starting `NR18.`, and so is two joints and a Spring's.
 - Its JSON is `creation.json` on one line with `training` and
   `trainSettings` `null`, the default `grid` and the id
   `00000000-0000-0000-0000-000000000001`, made short:

@@ -786,11 +786,38 @@
         },
         "runLengthSeconds": {
           "type": "integer"
+        },
+        "runLengthMode": {
+          "enum": [
+            "fixed",
+            "ranged"
+          ]
+        },
+        "runLengthRange": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "lowSeconds": {
+              "type": "integer"
+            },
+            "highSeconds": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "lowSeconds",
+            "highSeconds"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
         "shadows",
-        "runLengthSeconds"
+        "runLengthSeconds",
+        "runLengthMode",
+        "runLengthRange"
       ],
       "additionalProperties": false,
       "default": null

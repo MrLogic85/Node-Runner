@@ -11,7 +11,7 @@ namespace NodeRunner.Hosts;
 /// <summary>
 /// The Train setup scene: wires <see cref="TrainSetupScreen"/> to the saved creation. Start
 /// opens Training in place of Train setup, so Back from Training returns to Build. To train, it
-/// first saves the Shadows and Run length on the creation; Simulate saves nothing.
+/// first saves the Shadows, Run length and its mode on the creation; Simulate saves nothing.
 /// Back discards the changes.
 /// </summary>
 public partial class TrainSetupHost : Control, IRoutedScene

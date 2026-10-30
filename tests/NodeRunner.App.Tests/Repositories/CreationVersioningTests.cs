@@ -312,6 +312,24 @@ public sealed class CreationVersioningTests : IDisposable
         JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
     }
 
+    // Version 17 ran every generation at one Run length; version 18 makes that the Fixed mode, with no range yet.
+    [Fact]
+    public void AVersion17Save_KeepsItsRunLength_AsTheFixedMode()
+    {
+        var current = CurrentWalkerWithTrainSettings();
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 17;
+        var trainSettings = file["trainSettings"]!.AsObject();
+        trainSettings.Remove("runLengthMode");
+        trainSettings.Remove("runLengthRange");
+        var path = WriteCreation(file.ToJsonString());
+
+        var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        creation.TrainSettings.ShouldBe(new TrainSettingsDef(12, 20));
+        JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
+    }
+
     // A save its version could not have written, one newer than the app or one that fails the strict
     // load is skipped and left as it is, and the others still list. One row for each way a migration
     // or the strict load refuses one (docs/SAVE_FORMAT.md → "Versions and migration").
@@ -346,6 +364,12 @@ public sealed class CreationVersioningTests : IDisposable
     [InlineData("current", "-grid")]
     [InlineData("current", "grid=null")]
     [InlineData("current", "grid.snap=\"on\"")]
+    [InlineData("current trainSettings", "-trainSettings.runLengthMode")]
+    [InlineData("current trainSettings", "-trainSettings.runLengthRange")]
+    [InlineData("current trainSettings", "trainSettings.runLengthMode=\"power\"")]
+    [InlineData("current trainSettings", "trainSettings.runLengthMode=1")]
+    [InlineData("current trainSettings", "trainSettings.runLengthMode=\"ranged\"")]
+    [InlineData("current trainSettings", "trainSettings.runLengthRange={ \"lowSeconds\": 10 }")]
     [InlineData("newer", "")]
     public void ASaveItsVersionCouldNotHaveWritten_IsSkipped_AndLeftAsItIs(string save, string changes)
     {
@@ -461,6 +485,8 @@ public sealed class CreationVersioningTests : IDisposable
                 withAStepper[_versionField] = 14;
                 NetworkUnderItsOldKey(withAStepper);
                 return withAStepper;
+            case "current trainSettings":
+                return CurrentWalkerWithTrainSettings();
             case "current":
                 return JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("walker.creation.json")))!.AsObject();
             case "newer":
@@ -519,7 +545,7 @@ public sealed class CreationVersioningTests : IDisposable
         file[to] = value;
     };
 
-    // The arrays a 0.13.0 file lacks that loading now requires.
+    // The fields a 0.13.0 file lacks that loading now requires.
     private static void AddMissingFields(JsonObject file)
     {
         file["creature"]!.AsObject()["servos"] = new JsonArray();
@@ -531,6 +557,11 @@ public sealed class CreationVersioningTests : IDisposable
         file["creature"]!.AsObject()["angleSensors"] = new JsonArray();
         file["creature"]!.AsObject()["steppers"] = new JsonArray();
         file["grid"] = new JsonObject { ["sizeCm"] = 50, ["snap"] = false };
+        if (file["trainSettings"] is JsonObject trainSettings)
+        {
+            trainSettings["runLengthMode"] = "fixed";
+            trainSettings["runLengthRange"] = null;
+        }
     }
 
     private static CreationDef LoadFixture013(string name) =>
@@ -539,6 +570,11 @@ public sealed class CreationVersioningTests : IDisposable
     // The trained 0.13.0 walker as the current version writes it, with sigmoid Piston target lengths.
     private static JsonObject CurrentTrainedWalker() =>
         JsonNode.Parse(FileCreationRepository.Format.Serialize(LoadFixture013("trained-walker.creation.json")))!.AsObject();
+
+    // The walker with Train setup values, as the current version writes it.
+    private static JsonObject CurrentWalkerWithTrainSettings() =>
+        JsonNode.Parse(FileCreationRepository.Format.Serialize(
+            LoadFixture013("walker.creation.json").WithTrainSettings(new TrainSettingsDef(12, 20))))!.AsObject();
 
     // The trained walker with two Wheels, one named and resized, as the current version writes it.
     private static JsonObject TrainedWalkerOnWheels()

@@ -414,12 +414,12 @@ public partial class TrainingHost : Control, IRoutedScene
             setup.Algorithm,
             Rng.Random,
             GroundTopY,
+            setup.NextTrialTicks,
             resume is null ? null : DirectNetwork.Compile(resume.Network, _creature.Ports),
             resume?.Generation ?? 0,
             resumeBestFitness: resumeBest?.Distance ?? double.NegativeInfinity,
             resumeBestShownDistance: resumeBest?.FrontDistance ?? double.NaN,
             resumeBestGeneration: resumeBest?.Generation ?? 0,
-            trialDurationTicks: setup.TrialTicks,
             creatureFactory: CreateCreatureInstance,
             disabledGenes: disabledGenes);
     }

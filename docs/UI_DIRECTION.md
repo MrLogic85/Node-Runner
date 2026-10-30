@@ -284,8 +284,10 @@ to grid as a `UiToggleRow` below it.
 
 ### Train setup
 
-Shadows and Run length are `UiSlider`s. A creature with no powered part
-gets a `halo` warn row at the top. Locked maps are disabled cards with a
+Shadows and Run length are `UiSlider`s; with Ranged, Run length has two
+thumbs. Its mode is a `UiSegmentedSwitch` under it (Fixed, Ranged, and
+Power disabled with a `muted` note), hidden in Simulate. A creature with no
+powered part gets a `halo` warn row at the top. Locked maps are disabled cards with a
 lock, not the library's `Locked` card ("the only choice"); each card shows
 a `MapPreview`, `accent` on the map in use. There are no profiles.
 

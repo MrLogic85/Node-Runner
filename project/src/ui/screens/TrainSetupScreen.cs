@@ -2,21 +2,26 @@ using Godot;
 using NodeRunner.App.Navigation;
 using NodeRunner.App.Services;
 using NodeRunner.App.ViewModels;
+using NodeRunner.Domain;
 using NodeRunner.Ui.Lib;
 using NodeRunner.Ui.Widgets;
 
 namespace NodeRunner.Ui.Screens;
 
 /// <summary>
-/// Train setup: Train or Simulate, Shadows, Run length and the map, with one Start. The
-/// layout is authored in <c>scenes/screens/TrainSetupScreen.tscn</c>; this script binds the
-/// presentation, forwards the mode, the sliders and Start, and handles Back.
+/// Train setup: Train or Simulate, Shadows, Run length and its mode, and the map, with one Start.
+/// The layout is authored in <c>scenes/screens/TrainSetupScreen.tscn</c>; this script binds the
+/// presentation, forwards the modes, the sliders and Start, and handles Back.
 /// </summary>
 public partial class TrainSetupScreen : Control
 {
     // The mode switch's segments, in the scene's order.
     private const int _trainSegment = 0;
     private const int _simulateSegment = 1;
+
+    // The Run length mode's segments, in the scene's order; Power is a disabled third.
+    private const int _fixedSegment = 0;
+    private const int _rangedSegment = 1;
 
     private TrainSetupPresentationViewModel? _presentation;
 
@@ -53,7 +58,9 @@ public partial class TrainSetupScreen : Control
         GetNode<UiButton>("%Start").Activated += () => EmitSignal(SignalName.StartRequested);
         GetNode<UiSegmentedSwitch>("%ModeSwitch").SelectionChanged += index => _presentation?.SetMode(ModeAt(index));
         GetNode<UiSlider>("%Shadows").ThumbChanged += (_, position) => _presentation?.SetShadows(position);
-        GetNode<UiSlider>("%RunLength").ThumbChanged += (_, position) => _presentation?.SetRunLength(position);
+        GetNode<UiSlider>("%RunLength").ThumbChanged += (thumb, position) => _presentation?.SetRunLength(thumb, position);
+        GetNode<UiSegmentedSwitch>("%RunLengthMode").SelectionChanged += index =>
+            _presentation?.SetRunLengthMode(index == _rangedSegment ? RunLengthMode.Ranged : RunLengthMode.Fixed);
         Apply();
     }
 
@@ -96,6 +103,9 @@ public partial class TrainSetupScreen : Control
         Bind(GetNode<UiSlider>("%Shadows"), _presentation.Shadows, _presentation.ShadowsEnds);
         BindNote(_presentation.ShadowsNote);
         Bind(GetNode<UiSlider>("%RunLength"), _presentation.RunLength, _presentation.RunLengthEnds);
+        GetNode<Control>("%RunLengthModeGroup").Visible = _presentation.ShowsRunLengthMode;
+        GetNode<UiSegmentedSwitch>("%RunLengthMode").SelectedIndex =
+            _presentation.Settings.RunLengthMode == RunLengthMode.Ranged ? _rangedSegment : _fixedSegment;
     }
 
     // The row stays in every state, empty in Simulate, so Run length below it does not move.
@@ -121,8 +131,13 @@ public partial class TrainSetupScreen : Control
         slider.LabelSource = UiTextTranslation.Source(value.Label);
         slider.ReadoutSource = UiTextTranslation.Source(value.Readout);
         slider.Step = value.Step;
-        // No position: an empty track with no thumb or fill.
-        slider.Value = value.Position is { } position ? UiSliderValue.Thumb(position) : UiSliderValue.Progress(0);
+        // No position: an empty track with no thumb or fill. A high position makes it a range.
+        slider.Value = value switch
+        {
+            { Position: { } low, HighPosition: { } high } => UiSliderValue.Thumbs(low, high),
+            { Position: { } position } => UiSliderValue.Thumb(position),
+            _ => UiSliderValue.Progress(0),
+        };
         slider.Disabled = value.Disabled;
         // The ends never change, so they are set once rather than rebuilt on every drag.
         slider.StepLabelSources ??= [.. ends.Select(end => UiTextTranslation.Source(end))];

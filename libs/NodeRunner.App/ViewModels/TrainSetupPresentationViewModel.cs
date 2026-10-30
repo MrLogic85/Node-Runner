@@ -8,9 +8,10 @@ namespace NodeRunner.App.ViewModels;
 /// One stepped slider row: its label, its readout, its thumb at 0…1 and the distance between two
 /// whole steps on that scale, so the thumb stops only where the value does. A disabled row
 /// is shown dimmed and cannot be dragged. A null <paramref name="Position"/> shows no thumb, for a
-/// value the scale does not hold.
+/// value the scale does not hold. A <paramref name="HighPosition"/> makes it a range, from the
+/// <paramref name="Position"/> thumb to this one.
 /// </summary>
-public sealed record SettingSlider(UiText Label, UiText Readout, double? Position, double Step, bool Disabled = false);
+public sealed record SettingSlider(UiText Label, UiText Readout, double? Position, double Step, bool Disabled = false, double? HighPosition = null);
 
 /// <summary>
 /// The line under the Shadows slider: a quiet note while <see cref="ShadowsLoad.Smooth"/>, else a
@@ -19,20 +20,19 @@ public sealed record SettingSlider(UiText Label, UiText Readout, double? Positio
 public sealed record SettingNote(UiText Text, ShadowsLoad Load);
 
 /// <summary>
-/// Train setup, between Build and Training: Train or Simulate, and the Shadows and Run length
-/// sliders, filled from the Creation's saved values or, before its first Start, the Shadows default
-/// from Settings and the default Run length. Training starts by saving
+/// Train setup, between Build and Training: Train or Simulate, the Shadows and Run length
+/// sliders and the Run length mode, filled from the Creation's saved values or, before its first
+/// Start, the Shadows default from Settings and the default Run length. Training starts by saving
 /// <see cref="Settings"/> on the Creation. Simulate needs a trained Creation, so an
 /// untrained one has no Train or Simulate choice at all; it plays one shadow until the player
 /// leaves, so it dims both sliders and saves nothing. The selected map
-/// card names <see cref="Maps.Default"/>. The map choice and Run until power is out come
-/// later (#540).
+/// card names <see cref="Maps.Default"/>. The map choice comes later (#540).
 /// </summary>
 public sealed class TrainSetupPresentationViewModel
 {
     public static SettingRange ShadowsRange { get; } = new(TrainSettingsDef.MinShadows, TrainSettingsDef.MaxShadows, 1);
 
-    public static SettingRange RunLengthRange { get; } = new(TrainSettingsDef.MinRunLengthSeconds, TrainSettingsDef.MaxRunLengthSeconds, 5);
+    public static SettingRange RunLengthRange { get; } = new(TrainSettingsDef.MinRunLengthSeconds, TrainSettingsDef.MaxRunLengthSeconds, TrainSettingsDef.RunLengthStepSeconds);
 
     /// <param name="creation">The Creation to set up.</param>
     /// <param name="defaultShadows">The Shadows default from Settings, for a Creation without Train setup values.</param>
@@ -109,11 +109,26 @@ public sealed class TrainSetupPresentationViewModel
 
     public SettingSlider RunLength => Mode == TrainingRunMode.Simulate
         ? new(UiText.Plain("Run length"), UiText.Plain("Until you leave"), null, RunLengthRange.PositionStep, Disabled: true)
-        : new(
-            UiText.Plain("Run length"),
-            Seconds(Settings.RunLengthSeconds),
-            RunLengthRange.Position(Settings.RunLengthSeconds),
-            RunLengthRange.PositionStep);
+        : Settings is { RunLengthMode: RunLengthMode.Ranged, RunLengthRange: { } range }
+            ? new(
+                UiText.Plain("Run length"),
+                range.LowSeconds == range.HighSeconds
+                    ? Seconds(range.LowSeconds)
+                    : UiText.Format("{0}–{1} s", range.LowSeconds, range.HighSeconds),
+                RunLengthRange.Position(range.LowSeconds),
+                RunLengthRange.PositionStep,
+                HighPosition: RunLengthRange.Position(range.HighSeconds))
+            : new(
+                UiText.Plain("Run length"),
+                Seconds(Settings.RunLengthSeconds),
+                RunLengthRange.Position(Settings.RunLengthSeconds),
+                RunLengthRange.PositionStep);
+
+    /// <summary>
+    /// Whether the Run length mode shows: Simulate plays until the player leaves, so it has no
+    /// mode to choose and Train setup hides it with its note.
+    /// </summary>
+    public bool ShowsRunLengthMode => Mode != TrainingRunMode.Simulate;
 
     /// <summary>The Shadows slider's named ends.</summary>
     public IReadOnlyList<UiText> ShadowsEnds { get; } = [UiText.Number(TrainSettingsDef.MinShadows), UiText.Number(TrainSettingsDef.MaxShadows)];
@@ -138,16 +153,45 @@ public sealed class TrainSetupPresentationViewModel
     }
 
     public void SetShadows(double position) =>
-        Apply(new TrainSettingsDef((int)ShadowsRange.ValueAt(position), Settings.RunLengthSeconds));
+        Apply(new TrainSettingsDef((int)ShadowsRange.ValueAt(position), Settings.RunLengthSeconds, Settings.RunLengthMode, Settings.RunLengthRange));
 
-    public void SetRunLength(double position) =>
-        Apply(new TrainSettingsDef(Settings.Shadows, (int)RunLengthRange.ValueAt(position)));
+    /// <summary>
+    /// Fixed or Ranged. The first Ranged range runs from the Fixed length to the longest; after
+    /// that, each mode keeps its own value.
+    /// </summary>
+    public void SetRunLengthMode(RunLengthMode mode) =>
+        Apply(new TrainSettingsDef(
+            Settings.Shadows,
+            Settings.RunLengthSeconds,
+            mode,
+            Settings.RunLengthRange ?? (mode == RunLengthMode.Ranged
+                ? new RunLengthRangeDef(Settings.RunLengthSeconds, TrainSettingsDef.MaxRunLengthSeconds)
+                : null)));
+
+    /// <summary>
+    /// Moves Run length's <paramref name="thumb"/>: Fixed has thumb 0, Ranged its low end 0 and high end 1.
+    /// A Ranged end stops at the other, so each thumb keeps naming its own end.
+    /// </summary>
+    public void SetRunLength(int thumb, double position)
+    {
+        var seconds = (int)RunLengthRange.ValueAt(position);
+        if (Settings is not { RunLengthMode: RunLengthMode.Ranged, RunLengthRange: { } range })
+        {
+            Apply(new TrainSettingsDef(Settings.Shadows, seconds, Settings.RunLengthMode, Settings.RunLengthRange));
+            return;
+        }
+
+        var moved = thumb == 0
+            ? new RunLengthRangeDef(Math.Min(seconds, range.HighSeconds), range.HighSeconds)
+            : new RunLengthRangeDef(range.LowSeconds, Math.Max(seconds, range.LowSeconds));
+        Apply(new TrainSettingsDef(Settings.Shadows, Settings.RunLengthSeconds, RunLengthMode.Ranged, moved));
+    }
 
     private void Apply(TrainSettingsDef settings)
     {
         if (Mode == TrainingRunMode.Simulate)
         {
-            throw new InvalidOperationException("Simulate has no Shadows or Run length to set.");
+            throw new InvalidOperationException("Simulate has no Shadows, Run length or Run length mode to set.");
         }
 
         if (settings == Settings)

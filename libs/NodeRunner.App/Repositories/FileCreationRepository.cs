@@ -21,7 +21,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray, AddAngleSensorsArray, AddSteppersArray, StepperPowerBecomesFrequency, NetworkKeyFromBrain, AddGrid]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray, AddAngleSensorsArray, AddSteppersArray, StepperPowerBecomesFrequency, NetworkKeyFromBrain, AddGrid, AddRunLengthMode]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -447,6 +447,21 @@ public sealed class FileCreationRepository : ICreationRepository
     // The grid every older Creation was built on, whatever Settings' default is now.
     private static void AddGrid(JsonObject file) =>
         file["grid"] ??= new JsonObject { ["sizeCm"] = 50, ["snap"] = false };
+
+    // Every older Train setup ran one Run length; a Creation without Train setup values has none to change.
+    private static void AddRunLengthMode(JsonObject file)
+    {
+        if (file["trainSettings"] is not JsonObject trainSettings)
+        {
+            return;
+        }
+
+        trainSettings["runLengthMode"] ??= "fixed";
+        if (!trainSettings.ContainsKey("runLengthRange"))
+        {
+            trainSettings["runLengthRange"] = null;
+        }
+    }
 
     private static string? TextOf(JsonNode? node) =>
         node is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;

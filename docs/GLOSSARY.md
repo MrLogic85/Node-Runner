@@ -33,7 +33,13 @@ textbook terms (population, candidate, genome).
   See: `docs/TRAINING_LOOP.md` → "Product lifecycle boundary".
 - **Parts tool** — The Build rail tool that opens the Parts tray when
   nothing is selected. See: `docs/BUILD_MODE.md` → Interactions.
-- **Run length** — How long one trial lasts, set in Train setup.
+- **Run length** — How long one trial lasts, set in Train setup: one
+  length, or with Ranged a range each generation draws its length from.
+- **Run length mode** — Fixed, Ranged or Power, chosen in Train setup.
+  Fixed runs every generation at one Run length; Ranged draws each
+  generation's from a range, so a creature does not learn to fit one
+  length. Power is shown disabled until battery parts exist. See:
+  `docs/TRAINING_LOOP.md` → Generations.
 - **Shadow** — One of the copies that race at once in a generation; the
   App's word for the GA's candidate. See: `docs/TRAINING_LOOP.md` →
   Generations.
@@ -48,8 +54,8 @@ textbook terms (population, candidate, genome).
   the centre. See: `docs/TRAINING_LOOP.md` → Trial.
 - **Simulate** — Plays a Creation's saved network with one shadow and saves
   nothing. See: `docs/TRAINING_LOOP.md` → "Product lifecycle boundary".
-- **Train setup** — The screen between Build and Training that sets Shadows
-  and Run length.
+- **Train setup** — The screen between Build and Training that sets Shadows,
+  Run length and its mode.
 
 ## Creature anatomy
 

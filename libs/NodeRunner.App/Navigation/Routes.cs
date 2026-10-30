@@ -33,7 +33,7 @@ public sealed record ImportRoute : SceneRoute;
 public sealed record BuildRoute(Guid CreationId, bool IsNew = false) : SceneRoute;
 
 /// <summary>
-/// Train setup for one saved creation: Shadows and Run length before Training. Start opens
+/// Train setup for one saved creation: Shadows, Run length and its mode before Training. Start opens
 /// Training in its place, so Back from Training returns to Build.
 /// </summary>
 public sealed record TrainSetupRoute(Guid CreationId) : SceneRoute;
