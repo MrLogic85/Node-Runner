@@ -52,6 +52,11 @@ public partial class Creature : Node2D
     private KnockoutVisual[] _beamKnockouts = [];
     private RigidHatchVisual[] _hatchVisuals = [];
     private SensorVisual[] _sensorVisuals = [];
+    private MemoryCellVisual[] _memoryCellVisuals = [];
+
+    // What each Memory cell holds, m, in the creature's Memory cell order. Build makes it afresh, so
+    // every trial starts it at MemoryCell.Start; it is never saved.
+    private double[] _memoryValues = [];
     private ServoJoint[] _servos = [];
     private ServoVisual[] _servoVisuals = [];
     private VelocityMotorJoint[] _velocityMotors = [];
@@ -174,7 +179,7 @@ public partial class Creature : Node2D
         Network.Forward(_sensorValues, _outputValues, _scratchA, _scratchB);
 
         // Each Servo, Velocity motor and Piston has two outputs in sim order: target or speed, then strength;
-        // each Stepper, last, its frequency.
+        // each Stepper its frequency; each Memory cell, last, its target and write.
         var output = 0;
         foreach (var servo in _servos)
         {
@@ -198,6 +203,13 @@ public partial class Creature : Node2D
         {
             stepper.Drive(_outputValues[_outputPortOf[output]], delta);
             output++;
+        }
+
+        // The network read each cell's m this tick; the new m is what it reads on the next.
+        for (var i = 0; i < _memoryValues.Length; i++)
+        {
+            _memoryValues[i] = MemoryCell.Next(_memoryValues[i], _outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]]);
+            output += 2;
         }
     }
 
@@ -237,6 +249,7 @@ public partial class Creature : Node2D
         PinBeamsToNodes(definition);
         ResetTears(definition);
         CreateSensors(definition);
+        CreateMemoryCells(definition);
         CreateServos(definition);
         CreateVelocityMotors(definition);
         CreatePistons(definition);
@@ -354,6 +367,11 @@ public partial class Creature : Node2D
         }
 
         foreach (var visual in _sensorVisuals)
+        {
+            visual.IsShadow = _isShadow;
+        }
+
+        foreach (var visual in _memoryCellVisuals)
         {
             visual.IsShadow = _isShadow;
         }
@@ -669,7 +687,7 @@ public partial class Creature : Node2D
             _sensors[i] = sensor.Kind switch
             {
                 SensorKind.Accelerometer => CreateAccelerometer(definition, beamIndex, gravity),
-                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], sensor, SensorOnBeam(definition, beamIndex)),
+                SensorKind.Camera => new CameraSensor(_beamBodies[beamIndex], sensor, PictureOnBeam(definition, beamIndex)),
                 _ => throw new InvalidOperationException($"Unknown sensor kind {sensor.Kind}."),
             };
         }
@@ -700,7 +718,7 @@ public partial class Creature : Node2D
             {
                 Name = $"Sensor{i}Picture",
                 Theme = Theme,
-                Position = SensorOnBeam(definition, beamIndex),
+                Position = PictureOnBeam(definition, beamIndex),
                 Rotation = glyphRotation,
                 Kind = sensor.Kind,
                 Accelerometer = _sensors[i] as AccelerometerSensor,
@@ -720,16 +738,42 @@ public partial class Creature : Node2D
         }
     }
 
+    // Each Memory cell's picture rides its beam body, upright on its built up side as a sensor's does.
+    // It reads nothing from the beam, so a tear never stops its m.
+    private void CreateMemoryCells(CreatureDef definition)
+    {
+        _memoryValues = new double[definition.MemoryCells.Count];
+        Array.Fill(_memoryValues, MemoryCell.Start);
+        _memoryCellVisuals = new MemoryCellVisual[definition.MemoryCells.Count];
+        for (var i = 0; i < _memoryCellVisuals.Length; i++)
+        {
+            var beamIndex = definition.BeamIndexOf(definition.MemoryCells[i].BeamId);
+            var beam = definition.Beams[beamIndex];
+            var upSign = Accelerometer.UpSign(
+                definition.Nodes[definition.NodeIndexOf(beam.NodeA)].Position,
+                definition.Nodes[definition.NodeIndexOf(beam.NodeB)].Position);
+            var visual = new MemoryCellVisual
+            {
+                Name = $"MemoryCell{i}Picture",
+                Theme = Theme,
+                Position = PictureOnBeam(definition, beamIndex),
+                Rotation = upSign == 1 ? Mathf.Pi : 0,
+            };
+            _beamBodies[beamIndex].AddChild(visual);
+            _memoryCellVisuals[i] = visual;
+        }
+    }
+
     private AccelerometerSensor CreateAccelerometer(CreatureDef definition, int beamIndex, double gravity)
     {
         var beam = definition.Beams[beamIndex];
         var nodeA = definition.Nodes[definition.NodeIndexOf(beam.NodeA)].Position;
         var nodeB = definition.Nodes[definition.NodeIndexOf(beam.NodeB)].Position;
-        return new AccelerometerSensor(_beamBodies[beamIndex], SensorOnBeam(definition, beamIndex), Accelerometer.UpSign(nodeA, nodeB), gravity);
+        return new AccelerometerSensor(_beamBodies[beamIndex], PictureOnBeam(definition, beamIndex), Accelerometer.UpSign(nodeA, nodeB), gravity);
     }
 
-    // Where a sensor sits on its beam's body, whose +x runs from node A to node B: see SensorPicture.Shift.
-    private static Vector2 SensorOnBeam(CreatureDef definition, int beamIndex)
+    // Where a sensor's or Memory cell's picture sits on its beam's body, whose +x runs from node A to node B: see SensorPicture.Shift.
+    private static Vector2 PictureOnBeam(CreatureDef definition, int beamIndex)
     {
         var beam = definition.Beams[beamIndex];
         var shift = SensorPicture.Shift(definition.CoveredRadius(beam.NodeA), definition.CoveredRadius(beam.NodeB));
@@ -749,6 +793,7 @@ public partial class Creature : Node2D
                 .. definition.VelocityMotors.SelectMany(motor => NetworkPorts.VelocityMotorInputs(motor.Id)),
                 .. definition.Pistons.SelectMany(piston => NetworkPorts.PistonInputs(piston.Id)),
                 .. definition.Steppers.SelectMany(stepper => NetworkPorts.StepperInputs(stepper.Id)),
+                .. definition.MemoryCells.SelectMany(memoryCell => NetworkPorts.MemoryCellInputs(memoryCell.Id)),
             ],
             Ports.Inputs);
         _outputPortOf = PortPositions(
@@ -757,6 +802,7 @@ public partial class Creature : Node2D
                 .. definition.VelocityMotors.SelectMany(motor => NetworkPorts.VelocityMotorOutputs(motor.Id)),
                 .. definition.Pistons.SelectMany(piston => NetworkPorts.PistonOutputs(piston.Id)),
                 .. definition.Steppers.SelectMany(stepper => NetworkPorts.StepperOutputs(stepper.Id)),
+                .. definition.MemoryCells.SelectMany(memoryCell => NetworkPorts.MemoryCellOutputs(memoryCell.Id)),
             ],
             Ports.Outputs);
         _rawInputs = new double[_inputPortOf.Length];
@@ -794,7 +840,7 @@ public partial class Creature : Node2D
     // left to right, then hit), then each Touch sensor its touch, each Angle sensor its angle's sine and
     // cosine and its speed, each Servo its angle and speed,
     // each Velocity motor its angle's sine and cosine and its speed, each Piston its length and speed, and each Stepper its angle's
-    // sine and cosine and its tick, into the raw buffer in sim order; they are then copied into the network's port order (NetworkPorts).
+    // sine and cosine and its tick, and each Memory cell its m, into the raw buffer in sim order; they are then copied into the network's port order (NetworkPorts).
     // After a tear a sensor on a beam gone from the world and a passive part write nothing, so
     // their inputs keep the values they last had.
     private void ReadSensors(double[] values, double delta)
@@ -874,6 +920,11 @@ public partial class Creature : Node2D
             _rawInputs[index++] = sin;
             _rawInputs[index++] = cos;
             _rawInputs[index++] = stepper.TickInput;
+        }
+
+        foreach (var m in _memoryValues)
+        {
+            _rawInputs[index++] = m;
         }
 
         for (var i = 0; i < _rawInputs.Length; i++)

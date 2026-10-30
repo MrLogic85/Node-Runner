@@ -31,4 +31,6 @@ public static class PartInfo
     public static UiText AngleSensor { get; } = UiText.Plain("Measures a joint's angle and velocity.");
 
     public static UiText Rubber { get; } = UiText.Plain("Doubles a joint's friction.");
+
+    public static UiText MemoryCell { get; } = UiText.Plain("Remembers one number from one tick to the next.");
 }

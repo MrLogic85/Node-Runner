@@ -246,6 +246,21 @@ public sealed class BuildPresentationViewModel
                     PanelSliders());
             }
 
+            if (_build.SingleSelectedId(CreatureElementKind.MemoryCell) is { } memoryCellId)
+            {
+                var memoryCell = _build.MemoryCells[_build.MemoryCellIndexOf(memoryCellId)];
+                return new PartSettingsPresentation(
+                    memoryCellId,
+                    PartKind.MemoryCell,
+                    _build.PartDisplayName(memoryCellId),
+                    _build.DefaultPartName(memoryCellId),
+                    UiText.Plain("On"),
+                    _build.PartDisplayName(memoryCell.BeamId),
+                    PartInfo.MemoryCell,
+                    canDelete,
+                    PanelSliders());
+            }
+
             if (_build.SingleSelectedId(CreatureElementKind.Beam) is { } beamId)
             {
                 var beam = BeamById(beamId);
@@ -318,9 +333,12 @@ public sealed class BuildPresentationViewModel
             var showFrameRows = _build.SelectedNodeCount >= 2;
             var deleteNote = selection.IdsOf(CreatureElementKind.Node).Count > 0
                 ? UiText.Plain("Links on a deleted joint go with it.")
-                : _build.Sensors.Any(sensor => selection.Contains(CreatureElementKind.Beam, sensor.BeamId) && !selection.Contains(CreatureElementKind.Sensor, sensor.Id))
-                    ? UiText.Plain("A sensor on a deleted beam goes with it.")
-                    : null;
+                : _build.BeamParts.FirstOrDefault(part => selection.Contains(CreatureElementKind.Beam, part.BeamId) && !selection.Contains(CreatureElementSelection.Of(part))) switch
+                {
+                    SensorDef => UiText.Plain("A sensor on a deleted beam goes with it."),
+                    MemoryCellDef => UiText.Plain("A Memory cell on a deleted beam goes with it."),
+                    _ => null,
+                };
             return new SelectionPanelPresentation(
                 UiText.Counted("{0} selected", "{0} selected", count),
                 settings,

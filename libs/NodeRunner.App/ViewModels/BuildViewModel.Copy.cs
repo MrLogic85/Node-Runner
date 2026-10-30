@@ -59,7 +59,7 @@ public sealed partial class BuildViewModel
             }
         }
 
-        return part is SensorDef sensor && !IsSelected(CreatureElementKind.Beam, sensor.BeamId) ? UiText.Plain("Select its beam") : null;
+        return part is IBeamPartDef beamPart && !IsSelected(CreatureElementKind.Beam, beamPart.BeamId) ? UiText.Plain("Select its beam") : null;
     }
 
     /// <summary>
@@ -121,7 +121,7 @@ public sealed partial class BuildViewModel
         NotifySelectionChanged();
         RaiseAnatomyChanged();
 
-        // Each part after what it sits on or takes as a side: links first, then sensors, Wheels and the
+        // Each part after what it sits on or takes as a side: links first, then sensors, Memory cells, Wheels and the
         // other joint parts, and hinge parts last, since a hinge part may take a copied link or Wheel as a side.
         static int CopyRank(IPartDef part) => PartKinds.IsLink(part) ? 0 : part is IHingePartDef ? 2 : 1;
     }
@@ -143,6 +143,7 @@ public sealed partial class BuildViewModel
         SensorDef sensor => _builder.AddSensor(copies[sensor.BeamId], sensor.Kind, out var copy, out var reason)
             ? copy
             : throw new InvalidOperationException(reason.Message),
+        MemoryCellDef memoryCell => _builder.AddMemoryCell(copies[memoryCell.BeamId]),
         IHingePartDef hinge => _builder.AddHingePart(hinge.PartKind, copies[hinge.NodeId], CopyOf(hinge.FixedLinkId, copies), CopyOf(hinge.TargetLinkId, copies)),
         WheelDef wheel => _builder.AddWheel(copies[wheel.NodeId]),
         TouchSensorDef touch => _builder.AddTouchSensor(copies[touch.NodeId]),

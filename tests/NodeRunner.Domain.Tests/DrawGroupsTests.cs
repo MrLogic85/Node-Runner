@@ -73,7 +73,7 @@ public sealed class DrawGroupsTests
 
         var both = _frame.Raised([P(Node, 3), P(Node, 4)], []);
         both.Links.Order().ShouldBe([10, 11, 12]);
-        both.Sensor(new SensorDef(7, 10, SensorKind.Camera)).ShouldBeTrue();
+        both.BeamPart(new SensorDef(7, 10, SensorKind.Camera)).ShouldBeTrue();
     }
 
     [Fact]
@@ -83,9 +83,9 @@ public sealed class DrawGroupsTests
 
         raised.Links.ShouldBe([12]);
         raised.Joints.ShouldBe([5]);
-        raised.Sensor(new SensorDef(7, 10, SensorKind.Accelerometer)).ShouldBeTrue();
-        raised.Sensor(new SensorDef(8, 12, SensorKind.Accelerometer)).ShouldBeTrue();
-        raised.Sensor(new SensorDef(9, 10, SensorKind.Accelerometer)).ShouldBeFalse();
+        raised.BeamPart(new SensorDef(7, 10, SensorKind.Accelerometer)).ShouldBeTrue();
+        raised.BeamPart(new SensorDef(8, 12, SensorKind.Accelerometer)).ShouldBeTrue();
+        raised.BeamPart(new SensorDef(9, 10, SensorKind.Accelerometer)).ShouldBeFalse();
         _frame.Raised([], [], targetJoints: [1, 2]).Links.ShouldBeEmpty();
     }
 
@@ -205,6 +205,7 @@ public sealed class DrawGroupsTests
             [16] = 3,
             [17] = 4,
             [21] = 18,
+            [22] = 19,
         });
     }
 }

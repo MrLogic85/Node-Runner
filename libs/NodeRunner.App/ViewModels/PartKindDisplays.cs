@@ -101,6 +101,14 @@ public static class PartKindDisplays
             In(NetworkPorts.StepperTickChannel, name => UiText.Format("{0}:\u00A0tick", name), UiText.Plain("tick"), _unsigned),
             Out(NetworkPorts.StepperFrequencyChannel, name => UiText.Format("{0}:\u00A0frequency", name), UiText.Plain("frequency"), _signed),
         ]),
+        new(PartKind.MemoryCell, UiText.Plain("Memory cell"), number => UiText.Format("Memory {0}", number),
+        [
+            In(NetworkPorts.MemoryCellValueChannel, name => UiText.Format("{0}:\u00A0value", name), UiText.Plain("value"), _signed),
+
+            // Target first, so the Status panel's Outputs dial shows what the cell is told to remember.
+            Out(NetworkPorts.MemoryCellTargetChannel, name => UiText.Format("{0}:\u00A0target", name), UiText.Plain("target"), _signed),
+            Out(NetworkPorts.MemoryCellWriteChannel, name => UiText.Format("{0}:\u00A0write", name), UiText.Plain("write"), _unsigned),
+        ]),
     ];
 
     public static PartKindDisplay Of(PartKind kind) => All[(int)kind];

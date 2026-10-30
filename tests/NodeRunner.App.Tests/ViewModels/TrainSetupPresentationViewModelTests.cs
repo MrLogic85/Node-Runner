@@ -191,6 +191,7 @@ public sealed class TrainSetupPresentationViewModelTests
         setup.RunLength.Readout.ShouldBe(UiText.Format("{0} s", 60));
     }
 
+    // A Memory cell drives nothing, so alone it still gets the warning.
     [Fact]
     public void OnlyAPoweredPart_GivesNoWarning()
     {
@@ -200,7 +201,10 @@ public sealed class TrainSetupPresentationViewModelTests
             [],
             [new PistonDef(301, 1, 3)]);
 
+        var memoryOnly = new CreatureDef([new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new BeamDef(3, 1, 2), new MemoryCellDef(4, 3)]);
+
         Setup(Creation()).HasPoweredParts.ShouldBeFalse();
+        Setup(Creation(creature: memoryOnly)).HasPoweredParts.ShouldBeFalse();
         Setup(Creation(creature: creature)).HasPoweredParts.ShouldBeTrue();
     }
 

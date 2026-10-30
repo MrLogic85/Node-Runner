@@ -12,7 +12,7 @@ public sealed class PartTrayTests
         PartTray.Groups().Select(group => group.Rows.Select(row => row.Name).ToArray()).ShouldBe(
         [
             Plain("Servo", "Stepper", "Motor", "Brake", "Wheel", "Rubber"),
-            Plain("Accelerometer", "Camera", "Touch sensor", "Angle sensor", "Pulse"),
+            Plain("Accelerometer", "Camera", "Touch sensor", "Angle sensor", "Pulse", "Memory cell"),
             Plain("Battery", "Generator", "Fuel tank"),
         ]);
         var rows = PartTray.Groups().SelectMany(group => group.Rows).ToArray();

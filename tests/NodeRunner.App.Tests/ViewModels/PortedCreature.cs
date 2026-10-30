@@ -19,6 +19,7 @@ internal static class PortedCreature
     public const int Brake = 17;
     public const int AngleSensor = 18;
     public const int Stepper = 22;
+    public const int MemoryCell = 23;
 
     public static CreatureDef Def { get; } = new(
         [new NodeDef(1, new Vector2D(0, 0)), new NodeDef(2, new Vector2D(2, 0)), new NodeDef(3, new Vector2D(4, 0)), new NodeDef(4, new Vector2D(0, 2)), new NodeDef(19, new Vector2D(2, 2))],
@@ -34,7 +35,8 @@ internal static class PortedCreature
         [new BrakeDef(Brake, 3, 6, Wheel)],
         [new AngleSensorDef(AngleSensor, 4, 7, Spring, "Knee")],
         [new StepperDef(Stepper, 19, 20, 21, "Ratchet")],
-        nextPartId: 23);
+        [new MemoryCellDef(MemoryCell, 7)],
+        nextPartId: 24);
 
     public static NetworkPortLayout Layout { get; } = NetworkPorts.Of(Def);
 
@@ -62,6 +64,7 @@ internal static class PortedCreature
         var drive = UiText.AsWritten("Drive");
         var knee = UiText.AsWritten("Knee");
         var ratchet = UiText.AsWritten("Ratchet");
+        var memory = UiText.Format("Memory {0}", 1);
         return
         [
             (NetworkPort.Input(Accelerometer, "along"), PartKind.Accelerometer, accelerometer, "along", signed),
@@ -86,6 +89,7 @@ internal static class PortedCreature
             (NetworkPort.Input(Stepper, NetworkPorts.StepperAngleSinChannel), PartKind.Stepper, ratchet, "angle sin", signed),
             (NetworkPort.Input(Stepper, NetworkPorts.StepperAngleCosChannel), PartKind.Stepper, ratchet, "angle cos", signed),
             (NetworkPort.Input(Stepper, NetworkPorts.StepperTickChannel), PartKind.Stepper, ratchet, "tick", unsigned),
+            (NetworkPort.Input(MemoryCell, NetworkPorts.MemoryCellValueChannel), PartKind.MemoryCell, memory, "value", signed),
             (Layout.Outputs[0], PartKind.Servo, hip, "angle", signed),
             (Layout.Outputs[1], PartKind.Servo, hip, "strength", unsigned),
             (Layout.Outputs[2], PartKind.Piston, ram, "length", unsigned),
@@ -93,6 +97,8 @@ internal static class PortedCreature
             (Layout.Outputs[4], PartKind.VelocityMotor, drive, "speed", signed),
             (Layout.Outputs[5], PartKind.VelocityMotor, drive, "strength", unsigned),
             (Layout.Outputs[6], PartKind.Stepper, ratchet, "frequency", signed),
+            (Layout.Outputs[7], PartKind.MemoryCell, memory, "target", signed),
+            (Layout.Outputs[8], PartKind.MemoryCell, memory, "write", unsigned),
         ];
     }
 }

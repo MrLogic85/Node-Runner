@@ -6,7 +6,7 @@ namespace NodeRunner.Domain;
 /// <see cref="Rays"/>, <see cref="Spread"/> and <see cref="Range"/>. See
 /// docs/CREATURE_MODEL.md.
 /// </summary>
-public sealed record SensorDef : IPartDef
+public sealed record SensorDef : IBeamPartDef
 {
     /// <summary>A new Camera's <see cref="Rays"/>.</summary>
     public const int DefaultRays = 3;

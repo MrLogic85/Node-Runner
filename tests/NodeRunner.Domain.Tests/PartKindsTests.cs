@@ -54,7 +54,7 @@ public sealed class PartKindsTests
             .Select(property => property.PropertyType.GetGenericArguments()[0])
             .ToArray();
 
-        partLists.Length.ShouldBe(13);
+        partLists.Length.ShouldBe(14);
         foreach (var type in partLists)
         {
             typeof(IPartDef).IsAssignableFrom(type).ShouldBeTrue($"{type.Name} is not an IPartDef.");

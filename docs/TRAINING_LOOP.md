@@ -23,10 +23,10 @@ layer owns that. "Locked" means "has trained at least one generation".
    Training returns to Build; Back from Train setup discards the changes.
    **Simulate** plays the saved network with one shadow until the player
    leaves and saves nothing, not even the settings; an untrained Creation
-   has no Simulate, so Start trains. A creature with no powered part may
-   train: its network has no outputs, every shadow stands still, and Train
-   setup warns "Warning, no powered parts added! There is nothing to
-   train".
+   has no Simulate, so Start trains. A creature with no powered part, even
+   one with Memory cells, may train: every shadow stands still, and Train
+   setup and the Network sheet warn "Warning, no powered parts added!
+   There is nothing to train" (`PortSignals.AnyPowered`).
 3. Each finished generation is saved. Once a Creation has trained a
    generation it is locked (`CreationLock.IsLocked`), so the trained
    network cannot be lost by accident. Only what changes the network is
@@ -164,7 +164,8 @@ layer owns that. "Locked" means "has trained at least one generation".
   network holds the built pose at full strength: all weights 0, every
   strength output at bias 3 (about 95%), a Servo's angle, a Motor's speed
   and a Stepper's frequency at 0 (hold the built pose, stand still, hold
-  the notch), and a Piston's position at the bias that asks for its drawn
+  the notch), a Memory cell's target and write at 0 (so the reference
+  shadow's `m` stays 0), and a Piston's position at the bias that asks for its drawn
   length, clamped to ±6 (about 0.25% short of either end). This is how
   robots start in robotics ML: stiff in a default pose, the network
   learning offsets from it. `GenerationZero` builds the first population
@@ -189,8 +190,8 @@ layer owns that. "Locked" means "has trained at least one generation".
   trained gait. A generation with no elite (every trial invalid) explores
   nothing.
   - Which ports are new is read from the elite, so nothing is saved. A
-    powered part is new while its strength bias is exactly −4, or a
-    Stepper while its frequency bias and every weight into it are exactly
+    powered part is new while its strength bias is exactly −4, a Memory
+    cell while its write bias is, or a Stepper while its frequency bias and every weight into it are exactly
     0; all its outputs' genes are redrawn. An input is new while every
     weight out of it is exactly 0; its weights are redrawn. A disabled
     connection is never redrawn.

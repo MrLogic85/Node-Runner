@@ -5,10 +5,10 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws a sensor on its beam as a small picture of the real thing. Callers pass the draw transform
+/// Draws a sensor on its beam as a small picture of the real thing, and a Memory cell as its glyph. Callers pass the draw transform
 /// they are in, set so the origin is
 /// the picture's centre on its beam (<see cref="SensorPicture.Centre"/>) and -y is the sensor's top (the beam's built up side). Each picture fits its
-/// kind's <see cref="SensorPicture.SizeOf"/> square, which is also its tap area. Everything is
+/// <see cref="SensorPicture.SizeOf(IBeamPartDef)"/> square, which is also its tap area. Everything is
 /// drawn at window-pixel resolution (<see cref="UiPixelSpace"/>), so it stays crisp at any zoom;
 /// the caller's transform is restored afterwards.
 /// </summary>
@@ -40,6 +40,14 @@ public static class SensorDrawing
     private const float _hoodNarrow = 5;
     private const float _hoodWide = 9;
     private const float _lensRadius = 5;
+
+    // The Memory cell: its glyph, brackets round a dot, on a panel square that fills its picture.
+    private const float _cellHalf = (float)(SensorPicture.MemoryCellSize / 2);
+    private const float _cellRadius = 5;
+    private const float _bracketHalfHeight = 7.5f;
+    private const float _bracketX = 7;
+    private const float _bracketArm = 3;
+    private const float _cellDotRadius = 2.8f;
 
     private const int _cornerSegments = 4;
 
@@ -89,6 +97,31 @@ public static class SensorDrawing
         DrawShape(pen, theme, body, line);
         DrawShape(pen, theme, hood, line);
         pen.Ring(bodyCentre.Rotated(turn), _lensRadius, line, _line);
+    }
+
+    /// <summary>A Memory cell: its glyph, brackets round a dot, on a <c>panel</c> square. It draws no live value.</summary>
+    public static void DrawMemoryCell(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, bool selected)
+    {
+        ArgumentNullException.ThrowIfNull(canvas);
+        ArgumentNullException.ThrowIfNull(theme);
+        using var pen = UiPixelPen.Begin(canvas, drawTransform);
+        var line = LineColor(theme, selected);
+        pen.Polygon(RoundedRect(Vector2.Zero, _cellHalf, _cellHalf, _cellRadius), theme.SensorFill);
+        foreach (var side in new[] { -1f, 1f })
+        {
+            var x = side * _bracketX;
+            pen.Polyline(
+                [
+                    new Vector2(x - (side * _bracketArm), -_bracketHalfHeight),
+                    new Vector2(x, -_bracketHalfHeight),
+                    new Vector2(x, _bracketHalfHeight),
+                    new Vector2(x - (side * _bracketArm), _bracketHalfHeight),
+                ],
+                line,
+                _line);
+        }
+
+        pen.Disc(Vector2.Zero, _cellDotRadius, line);
     }
 
     /// <summary>A selected camera's rays in Build, from <paramref name="origin"/> to each end.</summary>

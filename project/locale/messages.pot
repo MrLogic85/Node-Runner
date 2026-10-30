@@ -24,6 +24,10 @@ msgstr ""
 msgid "A Brake needs two links, or a link and a Wheel"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
+msgid "A Memory cell on a deleted beam goes with it."
+msgstr ""
+
 #: libs/NodeRunner.App/Builders/CreatureBuilder.VelocityMotors.cs
 msgid "A Motor needs two links, or a link and a Wheel"
 msgstr ""
@@ -61,7 +65,7 @@ msgid "A sensor on a deleted beam goes with it."
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "A sensor sits on this beam"
+msgid "A sensor or Memory cell sits on this beam"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/BuildPresentationViewModel.cs
@@ -617,6 +621,23 @@ msgstr ""
 msgid "Measures distance to the ground. Drag the round handle to aim it."
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+#: libs/NodeRunner.App/ViewModels/PartTrayPresentation.cs
+msgid "Memory cell"
+msgstr ""
+
+#: project/scenes/screens/ImportScreen.tscn
+msgid "Memory cells"
+msgstr ""
+
+#: libs/NodeRunner.App/Builders/CreatureBuilder.MemoryCells.cs
+msgid "Memory cells go on a beam"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "Memory {0}"
+msgstr ""
+
 #: project/scenes/screens/TrainSetupScreen.tscn
 msgid "More maps come in a later version."
 msgstr ""
@@ -755,7 +776,7 @@ msgid "One rubber per joint"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
-msgid "One sensor per beam"
+msgid "One sensor or Memory cell per beam"
 msgstr ""
 
 #: libs/NodeRunner.App/Builders/CreatureBuilder.cs
@@ -878,6 +899,10 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Redo"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Remembers one number from one tick to the next."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs
@@ -1492,11 +1517,23 @@ msgid "swaps"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "target"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "tick"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "touch"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "value"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "write"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
@@ -1751,11 +1788,23 @@ msgid "{0}: strength"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "{0}: target"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: tick"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
 msgid "{0}: touch"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "{0}: value"
+msgstr ""
+
+#: libs/NodeRunner.App/ViewModels/PartKindDisplays.cs
+msgid "{0}: write"
 msgstr ""
 
 #: libs/NodeRunner.App/ViewModels/SignalFlowPresentationViewModel.cs

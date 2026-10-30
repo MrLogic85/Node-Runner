@@ -318,7 +318,7 @@ public sealed class CreatureBuilderTests
     }
 
     [Fact]
-    public void ALink_OnAPairAlreadyJoined_OrOnASensorsBeam_IsRefusedWithWhy()
+    public void ALink_OnAPairAlreadyJoined_OrOnABeamWithAPart_IsRefusedWithWhy()
     {
         var builder = PairBuilder();
         var (a, b) = (builder.Nodes[0].Id, builder.Nodes[1].Id);
@@ -335,9 +335,9 @@ public sealed class CreatureBuilderTests
         builder.CanAddPiston(d, b, out var onPiston).ShouldBeFalse();
         onPiston.ShouldBe(CreatureBuilder.PistonJoinsTheseNodesReason);
         builder.CanAddPiston(a, b, out var pistonOnSensor).ShouldBeFalse();
-        pistonOnSensor.ShouldBe(CreatureBuilder.SensorSitsOnThisBeamReason);
+        pistonOnSensor.ShouldBe(CreatureBuilder.PartSitsOnThisBeamReason);
         builder.CanAddSpring(b, a, out var springOnSensor).ShouldBeFalse();
-        springOnSensor.ShouldBe(CreatureBuilder.SensorSitsOnThisBeamReason);
+        springOnSensor.ShouldBe(CreatureBuilder.PartSitsOnThisBeamReason);
         builder.CanAddSpring(a, a, out _).ShouldBeFalse();
         builder.CanAddSpring(c, d, out _).ShouldBeTrue();
         Should.Throw<ArgumentException>(() => builder.AddBeam(b, a));
@@ -345,6 +345,11 @@ public sealed class CreatureBuilderTests
         Should.Throw<ArgumentException>(() => builder.AddPiston(a, b));
         Should.Throw<ArgumentOutOfRangeException>(() => builder.RemovePart(999));
         builder.Parts.Count.ShouldBe(8);
+
+        var e = builder.AddNode(new Vector2D(180, 0));
+        builder.AddMemoryCell(builder.AddBeam(b, e));
+        builder.CanAddPiston(b, e, out var pistonOnCell).ShouldBeFalse();
+        pistonOnCell.ShouldBe(CreatureBuilder.PartSitsOnThisBeamReason);
     }
 
     // Any link replaces a link of another kind on its pair, with its default settings, and a
@@ -389,8 +394,8 @@ public sealed class CreatureBuilderTests
         builder.MoveSensor(tilt, third, out var none).ShouldBeTrue();
 
         refusedId.ShouldBe(0);
-        refused.ShouldBe(CreatureBuilder.OneSensorPerBeamReason);
-        taken.ShouldBe(CreatureBuilder.OneSensorPerBeamReason);
+        refused.ShouldBe(CreatureBuilder.OnePartPerBeamReason);
+        taken.ShouldBe(CreatureBuilder.OnePartPerBeamReason);
         none.ShouldBeNull();
         builder.Sensors.ShouldBe(
         [
@@ -428,20 +433,21 @@ public sealed class CreatureBuilderTests
     }
 
     // Nodes 1 (0,0), 2 (120,0), 3 (240,0), 4 (0,120), 5 (120,120), 6 (240,120); beams 7 (1–2), 8 (2–3),
-    // 9 (1–4), 10 (2–5), 11 (3–6); every other part on them.
+    // 9 (1–4), 10 (2–5), 11 (3–6); every other part on them, a Memory cell on beam 9.
     private static EveryPartIds EveryPart()
     {
         var builder = new CreatureBuilder();
         var n = new[] { (0, 0), (120, 0), (240, 0), (0, 120), (120, 120), (240, 120) }.Select(p => builder.AddNode(new Vector2D(p.Item1, p.Item2))).ToArray();
         var b12 = builder.AddBeam(n[0], n[1]);
         var b23 = builder.AddBeam(n[1], n[2]);
-        builder.AddBeam(n[0], n[3]);
+        var b14 = builder.AddBeam(n[0], n[3]);
         builder.AddBeam(n[1], n[4]);
         builder.AddBeam(n[2], n[5]);
         var piston = builder.AddPiston(n[3], n[4]);
         var spring = builder.AddSpring(n[4], n[5]);
         builder.AddSensor(b12, SensorKind.Accelerometer, out var accelerometer, out _);
         builder.AddSensor(b23, SensorKind.Camera, out var camera, out _);
+        builder.AddMemoryCell(b14);
         return new EveryPartIds(
             builder,
             piston,
@@ -474,7 +480,7 @@ public sealed class CreatureBuilderTests
         int Camera);
 
     // What removing part takes with it, worked out from the creature: a joint takes its links, the parts
-    // on it and the sensors on its beams; a beam takes its sensor.
+    // on it and the sensor or Memory cell on each of its beams; a beam takes its own.
     private static IEnumerable<int> GoesWith(CreatureDef creature, IPartDef part)
     {
         if (part is NodeDef node)
@@ -485,11 +491,11 @@ public sealed class CreatureBuilderTests
                 .. creature.Pistons.Where(piston => piston.NodeA == node.Id || piston.NodeB == node.Id).Select(piston => piston.Id),
                 .. creature.Springs.Where(spring => spring.NodeA == node.Id || spring.NodeB == node.Id).Select(spring => spring.Id),
                 .. CreatureDef.JointPartDefs(node.Id, creature.Parts).Select(jointPart => jointPart.Id),
-                .. creature.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(sensor => sensor.Id),
+                .. creature.BeamParts.Where(beamPart => beams.Contains(beamPart.BeamId)).Select(beamPart => beamPart.Id),
             ];
         }
 
-        return creature.Sensors.Where(sensor => sensor.BeamId == part.Id).Select(sensor => sensor.Id);
+        return creature.BeamParts.Where(beamPart => beamPart.BeamId == part.Id).Select(beamPart => beamPart.Id);
     }
 
     private static void ShouldHaveSides(CreatureBuilder builder, int partId, int? fixedLink, int? targetLink)

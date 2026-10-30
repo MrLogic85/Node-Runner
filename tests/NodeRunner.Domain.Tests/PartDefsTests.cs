@@ -16,6 +16,9 @@ public sealed class PartDefsTests
             Refuses.Invalid(() => link(5, 1, 1));
         }
 
+        Refuses.OutOfRange(() => new MemoryCellDef(0, 4));
+        Refuses.OutOfRange(() => new MemoryCellDef(6, 0));
+
         Func<int, int, IPartDef>[] jointParts = [(id, node) => new WheelDef(id, node), (id, node) => new TouchSensorDef(id, node), (id, node) => new RubberDef(id, node)];
         foreach (var jointPart in jointParts)
         {
@@ -174,6 +177,7 @@ public sealed class PartDefsTests
         stepper.WithSettings(100000, 4, 3).ShouldBe(new StepperDef(6, 1, 4, 5, "Ratchet", 100000, 4, 3));
         stepper.WithLinks(5, null).ShouldBe(new StepperDef(6, 1, 5, null, "Ratchet", 200000, 6, 1));
         stepper.WithName("Clock").ShouldBe(new StepperDef(6, 1, 4, 5, "Clock", 200000, 6, 1));
+        new MemoryCellDef(6, 4, "Latch").WithName("Hold").ShouldBe(new MemoryCellDef(6, 4, "Hold"));
         var brake = new BrakeDef(6, 1, 4, 5, "Grip", 1000);
         brake.WithStrength(BrakeDef.LockedStrength).ShouldBe(new BrakeDef(6, 1, 4, 5, "Grip", BrakeDef.LockedStrength));
         brake.WithLinks(5, null).ShouldBe(new BrakeDef(6, 1, 5, null, "Grip", 1000));

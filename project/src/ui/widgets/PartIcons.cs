@@ -24,5 +24,6 @@ public static class PartIcons
         PartKind.Brake => UiIconId.PartBrake,
         PartKind.AngleSensor => UiIconId.PartAngleSensor,
         PartKind.Stepper => UiIconId.PartStepper,
+        PartKind.MemoryCell => UiIconId.PartMemoryCell,
     };
 }

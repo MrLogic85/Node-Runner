@@ -181,7 +181,8 @@ public sealed class SignalFlowPresentationViewModelTests
         viewModel.InputBars.ShouldBe([PortRange.MinusOneToOne, PortRange.MinusOneToOne, .. Enumerable.Repeat(PortRange.ZeroToOne, 6)]);
     }
 
-    // Every driven part kind gets one dial at its drive, in port order, with that port's range and live value.
+    // Every driven part kind gets one dial at its drive, a Memory cell at its target, in port order, with
+    // that port's range and live value. Five parts take three dials and a chip.
     [Fact]
     public void ShowPorts_DialsEachDrivenPartsDrive_AndCountsTheOutputs()
     {
@@ -189,24 +190,31 @@ public sealed class SignalFlowPresentationViewModelTests
         var values = NetworkPortValues.Sample(PortedCreature.Layout, PortedCreature.Network(), PortedCreature.Readings());
         var drives = PortedCreature.Layout.Outputs
             .Select((port, index) => (port, index))
-            .Where(output => output.port.Signal != PortSignal.Strength)
+            .Where(output => output.port.Signal is not (PortSignal.Strength or PortSignal.Write))
             .ToArray();
 
         viewModel.ShowPorts(PortedCreature.Def, values);
 
-        drives.Select(drive => drive.port.PartId).ShouldBe([PortedCreature.Servo, PortedCreature.Piston, PortedCreature.VelocityMotor, PortedCreature.Stepper], ignoreOrder: true);
-        viewModel.OutputsNote.ShouldBe(UiText.Number(7));
-        viewModel.OutputDials.ShouldBe(drives.Select(drive => PortedCreature.Ports.Single(entry => entry.Port == drive.port).Range));
-        viewModel.OutputValues.ShouldBe(drives.Select(drive => values.Outputs![drive.index]));
-        viewModel.MoreOutputs.ShouldBeNull("Exactly four driven parts all get a dial.");
+        drives.Select(drive => drive.port.PartId).ShouldBe([PortedCreature.Servo, PortedCreature.Piston, PortedCreature.VelocityMotor, PortedCreature.Stepper, PortedCreature.MemoryCell], ignoreOrder: true);
+        drives[^1].port.Channel.ShouldBe(NetworkPorts.MemoryCellTargetChannel);
+        viewModel.OutputsNote.ShouldBe(UiText.Number(9));
+        viewModel.OutputDials.ShouldBe(drives[..3].Select(drive => PortedCreature.Ports.Single(entry => entry.Port == drive.port).Range));
+        viewModel.OutputValues.ShouldBe(drives[..3].Select(drive => values.Outputs![drive.index]));
+        viewModel.MoreOutputs.ShouldBe(UiText.Format("+{0}", 2));
     }
 
-    // Past four parts the last dial makes room for a chip counting the rest.
+    // Four parts all get a dial; past four the last dial makes room for a chip counting the rest.
     [Fact]
     public void ShowPorts_WithFiveDrivenParts_DialsThree_AndCountsTheRestInAChip()
     {
         var viewModel = new SignalFlowPresentationViewModel();
+        var four = Pistons(4);
         var creature = Pistons(5);
+
+        viewModel.ShowPorts(four, NetworkPortValues.Sample(NetworkPorts.Of(four), null, []));
+
+        viewModel.OutputDials.Count.ShouldBe(4);
+        viewModel.MoreOutputs.ShouldBeNull();
 
         viewModel.ShowPorts(creature, NetworkPortValues.Sample(NetworkPorts.Of(creature), null, []));
 
@@ -227,8 +235,8 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.ShowPorts(PortedCreature.Def, NetworkPortValues.Sample(PortedCreature.Layout, null, []));
 
-        viewModel.OutputsNote.ShouldBe(UiText.Number(7));
-        viewModel.OutputDials.Count.ShouldBe(4);
+        viewModel.OutputsNote.ShouldBe(UiText.Number(9));
+        viewModel.OutputDials.Count.ShouldBe(3);
         viewModel.OutputValues.ShouldAllBe(value => double.IsNaN(value));
         changed.ShouldBe([nameof(SignalFlowPresentationViewModel.InputBars), nameof(SignalFlowPresentationViewModel.OutputDials), nameof(SignalFlowPresentationViewModel.NetworkSize)]);
         changed.Clear();
@@ -267,7 +275,7 @@ public sealed class SignalFlowPresentationViewModelTests
 
         viewModel.ShowPorts(PortedCreature.Def, NetworkPortValues.Sample(PortedCreature.Layout, null, []));
 
-        viewModel.NetworkSize.ShouldBe(UiText.Counted("{0} parameter", "{0} parameters", (inputs * 7) + 7));
+        viewModel.NetworkSize.ShouldBe(UiText.Counted("{0} parameter", "{0} parameters", (inputs * 9) + 9));
         changed.ShouldContain(nameof(SignalFlowPresentationViewModel.NetworkSize));
         changed.Clear();
 

@@ -345,6 +345,7 @@ are not repeated. The last column owns the detail (BM =
 | Rail says Beam and Move; Links tab | Links and Parts tools | BM → Interactions |
 | Part counts ("1 left") | Unlimited | BM → Parts tray |
 | Core part | Sensors on beams | WV → Sensors |
+| No Memory cell | A Memory cell in the Sensors tab, on a beam like a sensor, drawn as its glyph | BM → Interactions, WV → Sensors |
 | Piston: one cylinder as long as its travel; Spring: one damper body | A three-part telescope, starting past a Fixed Servo's housing | WV → Piston, Spring |
 | Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top | WV → Draw layers, BM → Interactions |
 | "Sensors go on a beam" | Each part names itself: "Cameras go on a beam" | BM → Interactions |

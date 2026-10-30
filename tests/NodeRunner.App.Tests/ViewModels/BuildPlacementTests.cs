@@ -9,7 +9,7 @@ namespace NodeRunner.App.Tests.ViewModels;
 /// <summary>Dropping a part from the Parts tray onto the drawing, and a Servo's links.</summary>
 public sealed class BuildPlacementTests
 {
-    private static readonly UiText _oneSensorPerBeam = UiText.Plain("One sensor per beam");
+    private static readonly UiText _onePartPerBeam = UiText.Plain("One sensor or Memory cell per beam");
 
     [Fact]
     public void ASensor_GoesOnAnyFreeBeam_WithAFreshId_OrIsRefusedWithANoteWhereItLanded()
@@ -28,9 +28,9 @@ public sealed class BuildPlacementTests
         (changes(), build.PlacementNote).ShouldBe((2, null));
 
         build.CanPlacePart(BuildPart.Accelerometer, Beam(4), out var taken).ShouldBeFalse();
-        taken.ShouldBe(_oneSensorPerBeam);
+        taken.ShouldBe(_onePartPerBeam);
         build.PlacePart(BuildPart.Accelerometer, Beam(4)).ShouldBeNull();
-        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Beam(4), _oneSensorPerBeam));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Beam(4), _onePartPerBeam));
         build.PlacePart(BuildPart.Accelerometer, Joint(1)).ShouldBeNull();
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(1), UiText.Plain("Accelerometers go on a beam")));
         build.CanvasNotes()[0].ShouldBe(build.PlacementNote);
@@ -65,6 +65,38 @@ public sealed class BuildPlacementTests
 
         (PartTray.SensorKindOf(BuildPart.Camera), PartTray.SensorKindOf(BuildPart.Servo)).ShouldBe((SensorKind.Camera, null));
         (PartTray.IsAvailable(BuildPart.Accelerometer), PartTray.IsAvailable(BuildPart.Battery)).ShouldBe((true, false));
+    }
+
+    // A Memory cell goes from the Sensors tab onto a free beam, selected; a beam holds one part, so a
+    // cell and a sensor refuse each other's beam. Its Part settings name it and its beam, with no sliders.
+    [Fact]
+    public void AMemoryCell_GoesOnAFreeBeam_OnePartPerBeam_AndItsPanelNamesItsBeam()
+    {
+        var build = TwoBeams();
+        var freshId = build.Snapshot().NextPartId;
+        PartTray.Groups()[1].Rows.ShouldContain(row => row.Part == BuildPart.MemoryCell);
+        PartTray.IsAvailable(BuildPart.MemoryCell).ShouldBeTrue();
+
+        build.PlacePart(BuildPart.MemoryCell, Beam(4)).ShouldBe(freshId);
+        build.MemoryCells.ShouldBe([new MemoryCellDef(freshId, 4)]);
+        build.Selection.Parts.ShouldBe([new CreatureElementSelection(CreatureElementKind.MemoryCell, freshId)]);
+        var panel = new BuildPresentationViewModel(build).SinglePart.ShouldNotBeNull();
+        (panel.Kind, panel.Name, panel.ConnectionsValue, panel.Note, panel.Settings.Count)
+            .ShouldBe((PartKind.MemoryCell, UiText.Format("Memory {0}", 1), UiText.Format("Beam {0}", 1), PartInfo.MemoryCell, 0));
+
+        build.CanPlacePart(BuildPart.MemoryCell, Beam(4), out var taken).ShouldBeFalse();
+        taken.ShouldBe(_onePartPerBeam);
+        build.CanPlacePart(BuildPart.Accelerometer, Beam(4), out var sensorTaken).ShouldBeFalse();
+        sensorTaken.ShouldBe(_onePartPerBeam);
+        build.PlacePart(BuildPart.Camera, Beam(5)).ShouldNotBeNull();
+        build.CanPlacePart(BuildPart.MemoryCell, Beam(5), out var onSensor).ShouldBeFalse();
+        onSensor.ShouldBe(_onePartPerBeam);
+        build.PlacePart(BuildPart.MemoryCell, Joint(1)).ShouldBeNull();
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(1), CreatureBuilder.MemoryCellsGoOnABeamReason));
+
+        build = Loaded(TwoBeamsDef(), locked: true);
+        build.PlacePart(BuildPart.MemoryCell, Beam(4)).ShouldBeNull();
+        build.MemoryCells.ShouldBeEmpty();
     }
 
     // The canvas marks these takes and refusals on the parts themselves.

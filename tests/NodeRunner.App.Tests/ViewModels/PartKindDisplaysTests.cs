@@ -13,10 +13,10 @@ public sealed class PartKindDisplaysTests
         PartKindDisplays.All.Select(display => display.Title.Message).ShouldBe(
         [
             "Joint", "Beam", "Accelerometer", "Camera", "Servo", "Piston", "Spring", "Wheel", "Touch sensor", "Rubber",
-            "Motor", "Brake", "Angle sensor", "Stepper",
+            "Motor", "Brake", "Angle sensor", "Stepper", "Memory cell",
         ]);
         PartKindDisplays.All.Select(display => display.DefaultName(2)).ShouldBe(
-            new[] { "Joint", "Beam", "Accel", "Camera", "Servo", "Piston", "Spring", "Wheel", "Touch", "Rubber", "Motor", "Brake", "Angle", "Stepper" }
+            new[] { "Joint", "Beam", "Accel", "Camera", "Servo", "Piston", "Spring", "Wheel", "Touch", "Rubber", "Motor", "Brake", "Angle", "Stepper", "Memory" }
                 .Select(name => UiText.Format(name + " {0}", 2)));
     }
 

@@ -738,6 +738,7 @@ public partial class BuildScreen : Control
         BuildPart.Accelerometer => UiIconId.PartAccelerometer,
         BuildPart.Camera => UiIconId.PartCamera,
         BuildPart.Pulse => UiIconId.PartPulse,
+        BuildPart.MemoryCell => UiIconId.PartMemoryCell,
         BuildPart.Battery => UiIconId.PartBattery,
         BuildPart.Generator => UiIconId.PartGenerator,
         BuildPart.FuelTank => UiIconId.PartFuel,

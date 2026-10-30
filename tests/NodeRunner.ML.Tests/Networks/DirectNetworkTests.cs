@@ -62,7 +62,8 @@ public sealed class DirectNetworkTests
     }
 
     // A part added to a trained creature changes nothing yet: new inputs (Touch, Angle sensor) get zero
-    // weights, a new output starts silent, a Strength output almost passive, and a new Stepper does not step.
+    // weights, a new output starts silent, a Strength output almost passive, a new Stepper does not step, and a
+    // new Memory cell's target is 0 and its write almost passive, so its value stays 0.
     // Weights are output by output, then the biases.
     [Fact]
     public void NewPorts_StartWithoutChangingTheTrainedGait()
@@ -70,6 +71,7 @@ public sealed class DirectNetworkTests
         var withSensor = _ports with { Inputs = [.. _ports.Inputs, .. NetworkPorts.AngleSensorInputs(9)] };
         var mixed = WithOutputs(NetworkPort.Output(9, "position", PortSignal.Length), NetworkPort.Output(9, "strength", PortSignal.Strength));
         var stepper = new NetworkPortLayout([.. _ports.Inputs, .. NetworkPorts.StepperInputs(9)], [.. _ports.Outputs, .. NetworkPorts.StepperOutputs(9)]);
+        var memoryCell = new NetworkPortLayout([.. _ports.Inputs, .. NetworkPorts.MemoryCellInputs(9)], [.. _ports.Outputs, .. NetworkPorts.MemoryCellOutputs(9)]);
         foreach (var (grown, expected) in new (NetworkPortLayout, double[])[]
         {
             (_ports with { Inputs = [.. _ports.Inputs, NetworkPort.Input(7, "centre")] }, [0.5, -0.25, 0.75, 0, 0.1]),
@@ -77,6 +79,7 @@ public sealed class DirectNetworkTests
             (withSensor, [0.5, -0.25, 0.75, 0, 0, 0, 0.1]),
             (mixed, [0.5, -0.25, 0.75, 0, 0, 0, 0, 0, 0, 0.1, 0, PortSignals.PassiveStrengthBias]),
             (stepper, [0.5, -0.25, 0.75, 0, 0, 0, .. new double[6], 0.1, 0]),
+            (memoryCell, [0.5, -0.25, 0.75, 0, .. new double[8], 0.1, 0, PortSignals.PassiveStrengthBias]),
         })
         {
             DirectNetwork.Compile(Saved, grown).ShouldBe(expected);
@@ -90,6 +93,9 @@ public sealed class DirectNetworkTests
         outputs[1].ShouldBe(0.5);
         outputs[2].ShouldBe(0.018, 0.001);
         DirectNetwork.Build(DirectNetwork.Refit(Saved, stepper), stepper).Forward([1, -1, 1, 0.5, 0.5, 0.5])[1].ShouldBe(0);
+        var cell = DirectNetwork.Build(DirectNetwork.Refit(Saved, memoryCell), memoryCell).Forward([1, -1, 1, 0]);
+        cell[1].ShouldBe(0);
+        cell[2].ShouldBe(0.018, 0.001);
 
         var touch = DirectNetwork.Refit(Saved, _ports with { Inputs = [.. _ports.Inputs, NetworkPorts.TouchInput(9)] });
         Ids(touch).ShouldBe([(1, 2, "angle:5"), (2, 2, "speed:5"), (3, 6, "along"), (5, 9, "touch"), (4, 2, "target:5")]);

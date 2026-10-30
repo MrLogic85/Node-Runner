@@ -79,7 +79,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 |---|---|---|
 | `nodes[]` | `{ id, position: { x, y }, name }` | Joints. `name` is `null` until renamed. A joint's radius follows from its parts and is not saved. |
 | `beams[]` | `{ id, nodeA, nodeB, name }` | Beams between two node ids. |
-| `sensors[]` | `{ id, beamId, kind, name, aim, rays, spread, range }` | One sensor per beam. `kind` is `accelerometer` or `camera`. A Camera's `aim` is its centre ray from its beam, `rays` its odd ray count (1, 3 or 5), `spread` the radians between its outer rays and `range` its rays' length in world units; all four are `null` for other kinds. |
+| `sensors[]` | `{ id, beamId, kind, name, aim, rays, spread, range }` | At most one per beam, counting `memoryCells[]`. `kind` is `accelerometer` or `camera`. A Camera's `aim` is its centre ray from its beam, `rays` its odd ray count (1, 3 or 5), `spread` the radians between its outer rays and `range` its rays' length in world units; all four are `null` for other kinds. |
 | `servos[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, range, start, maxSpeed, riseTime }` | Servo joint motors. `fixedLinkId` and `targetLinkId` name a Beam, Piston or Spring touching `nodeId` or the Wheel on `nodeId`, or `null` once that link or Wheel is deleted (training is then blocked until the player picks one). `strength` in world torque units (N·m × 10⁴), `range` rad, `maxSpeed` rad/s, `start` 0–1, `riseTime` s. |
 | `pistons[]` | `{ id, nodeA, nodeB, name, strength, stroke, start, maxSpeed, riseTime }` | Pistons between two node ids. `strength` in world force units (100 per N), `stroke` (0, 2], `start` 0–1, `maxSpeed` world units/s (100 per m/s), `riseTime` s (missing reads as 0.2). |
 | `springs[]` | `{ id, nodeA, nodeB, name, stiffness, damping, stroke, coilLength }` | Springs between two node ids. `stiffness` N/m and `damping` N·s/m, both the same number in world units; `stroke` (0, 2] and `coilLength` 0…1, missing reads as a new Spring's 1 and ⅔. |
@@ -90,6 +90,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `brakes[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength }` | Brakes: a Servo's sides and slot, no ports. `strength` in world torque units (N·m × 10⁴), above 0, or `"Infinity"` when Locked. |
 | `angleSensors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name }` | Angle sensors: a Servo's sides and slot, three inputs, no settings. |
 | `steppers[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, stepsPerTurn, maxFrequency }` | Steppers: a Servo's sides and slot. `strength` in world torque units (N·m × 10⁴), above 0; `stepsPerTurn` a whole number 2–24; `maxFrequency` steps per second, above 0. |
+| `memoryCells[]` | `{ id, beamId, name }` | Memory cells on a beam id, at most one per beam, counting `sensors[]` (`docs/CREATURE_MODEL.md` → "Memory cell"). No settings; the number a cell holds is never saved. |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training` (meaning of latest and best: `docs/TRAINING_LOOP.md` → "Latest
@@ -217,6 +218,7 @@ Current `creation.json` migrations:
 | 15 | 16 | `training.brain` becomes `training.network`, unchanged. A file without training has nothing to move; one with both keys fails to load. |
 | 16 | 17 | Add required `grid: { sizeCm: 50, snap: false }`, the grid every Creation was built on, whatever `settings.json` holds. |
 | 17 | 18 | A non-null `trainSettings` gets `runLengthMode: "fixed"` and `runLengthRange: null`: every older generation ran one length. |
+| 18 | 19 | Add required `creature.memoryCells: []`. |
 
 Two changes of meaning need no migration, as no migration could keep the
 old meaning:

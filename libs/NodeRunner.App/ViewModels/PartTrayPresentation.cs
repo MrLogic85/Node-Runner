@@ -16,6 +16,7 @@ public enum BuildPart
     Accelerometer,
     Camera,
     Pulse,
+    MemoryCell,
     Battery,
     Generator,
     FuelTank,
@@ -114,6 +115,7 @@ public static class PartTray
         BuildPart.TouchSensor => PartInfo.Touch,
         BuildPart.Rubber => PartInfo.Rubber,
         BuildPart.AngleSensor => PartInfo.AngleSensor,
+        BuildPart.MemoryCell => PartInfo.MemoryCell,
         _ => null,
     };
 
@@ -182,6 +184,7 @@ public static class PartTray
             Available(BuildPart.TouchSensor, UiText.Plain("Touch sensor")),
             Available(BuildPart.AngleSensor, UiText.Plain("Angle sensor")),
             Locked(BuildPart.Pulse, UiText.Plain("Pulse"), "0.14.5"),
+            Available(BuildPart.MemoryCell, UiText.Plain("Memory cell")),
         ]),
         new(UiText.Plain("Blocks"),
         [

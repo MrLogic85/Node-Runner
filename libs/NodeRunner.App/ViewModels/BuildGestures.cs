@@ -245,8 +245,9 @@ public sealed class BuildGestures
 
         if (_build.DrawnPartAt(position, TargetsOf(placing)) is { } drawn)
         {
-            return drawn.Kind == CreatureElementKind.Sensor
-                ? new CreatureElementSelection(CreatureElementKind.Beam, _build.Sensors.Single(sensor => sensor.Id == drawn.Id).BeamId)
+            // A part dropped on a sensor or Memory cell is dropped on its beam.
+            return _build.FindPart(drawn.Id) is IBeamPartDef beamPart
+                ? new CreatureElementSelection(CreatureElementKind.Beam, beamPart.BeamId)
                 : drawn;
         }
 
@@ -857,7 +858,7 @@ public sealed class BuildGestures
         [
             .. _build.Nodes.Where(node => Inside(node.Position) && _build.JointPartsAt(node.Id).Count == 0).Select(node => new CreatureElementSelection(CreatureElementKind.Node, node.Id)),
             .. links.Select(link => new CreatureElementSelection(link.Kind, link.Id)),
-            .. _build.Sensors.Where(sensor => beams.Contains(sensor.BeamId)).Select(CreatureElementSelection.Of),
+            .. _build.BeamParts.Where(part => beams.Contains(part.BeamId)).Select(CreatureElementSelection.Of),
             .. _build.JointParts.Where(part => Inside(NodeById(part.NodeId).Position)).Select(CreatureElementSelection.Of),
         ]);
     }

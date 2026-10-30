@@ -41,15 +41,15 @@ public readonly record struct CreatureThumbnailFit(double Scale, Vector2D Offset
         }
 
         var extents = creature.Nodes.Select(node => (node.Position, Reach: creature.NodeRadius(node.Id))).ToList();
-        foreach (var sensor in creature.Sensors)
+        foreach (var part in creature.BeamParts)
         {
-            var beam = creature.Beams[creature.BeamIndexOf(sensor.BeamId)];
+            var beam = creature.Beams[creature.BeamIndexOf(part.BeamId)];
             var a = creature.Nodes[creature.NodeIndexOf(beam.NodeA)].Position;
             var b = creature.Nodes[creature.NodeIndexOf(beam.NodeB)].Position;
             var centre = SensorPicture.Centre(a, b, creature.CoveredRadius(beam.NodeA), creature.CoveredRadius(beam.NodeB));
 
             // The picture is a square turned with its beam, so its corners reach half its diagonal.
-            extents.Add((centre, SensorPicture.SizeOf(sensor.Kind) * Math.Sqrt(2) / 2));
+            extents.Add((centre, SensorPicture.SizeOf(part) * Math.Sqrt(2) / 2));
         }
 
         return new CanvasRect(

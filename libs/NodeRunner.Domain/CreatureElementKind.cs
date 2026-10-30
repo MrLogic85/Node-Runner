@@ -15,4 +15,5 @@ public enum CreatureElementKind
     Brake,
     AngleSensor,
     Stepper,
+    MemoryCell,
 }

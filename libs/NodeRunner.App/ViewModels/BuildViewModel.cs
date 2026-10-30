@@ -413,6 +413,11 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<SensorDef> Sensors => _builder.Sensors;
 
+    public IReadOnlyList<MemoryCellDef> MemoryCells => _builder.MemoryCells;
+
+    /// <summary>Every part on a beam: the <see cref="Sensors"/>, then the <see cref="MemoryCells"/>.</summary>
+    public IReadOnlyList<IBeamPartDef> BeamParts => _builder.BeamParts;
+
     public IReadOnlyList<ServoDef> Servos => _builder.Servos;
 
     public IReadOnlyList<VelocityMotorDef> VelocityMotors => _builder.VelocityMotors;
@@ -633,7 +638,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public CreatureElementSelection? DrawnPartAt(Vector2D position, PlacingTargets targets)
     {
         var groups = DrawGroups();
-        var hit = groups.PartAt(position, nodeId => NodeById(nodeId).Position, _builder.HingeParts, _builder.Wheels, _builder.Sensors, RaisedIn(groups, Selection, targets));
+        var hit = groups.PartAt(position, nodeId => NodeById(nodeId).Position, _builder.HingeParts, _builder.Wheels, BeamParts, RaisedIn(groups, Selection, targets));
         return hit is not null && _builder.FindPart(hit.Id) is IJointPartDef part
             ? new CreatureElementSelection(CreatureElementKind.Node, part.NodeId)
             : hit;
@@ -843,6 +848,8 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     public int AngleSensorIndexOf(int angleSensorId) => _builder.AngleSensorIndexOf(angleSensorId);
 
     public int StepperIndexOf(int stepperId) => _builder.StepperIndexOf(stepperId);
+
+    public int MemoryCellIndexOf(int memoryCellId) => _builder.MemoryCellIndexOf(memoryCellId);
 
     public double NodeRadius(int nodeId) => _builder.NodeRadius(nodeId);
 

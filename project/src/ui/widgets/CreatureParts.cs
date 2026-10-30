@@ -10,7 +10,7 @@ namespace NodeRunner.Ui.Widgets;
 /// <summary>
 /// A creature shown still, made of the same part visuals Training draws: one
 /// <see cref="JointPart"/>, <see cref="ServoPart"/>, <see cref="VelocityMotorPart"/>, <see cref="BrakePart"/>, <see cref="StepperPart"/>, <see cref="AngleSensorPart"/>, <see cref="WheelPart"/>, <see cref="BeamPart"/>, <see cref="PistonPart"/>,
-/// <see cref="SpringPart"/> and <see cref="SensorPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
+/// <see cref="SpringPart"/>, <see cref="SensorPart"/> and <see cref="MemoryCellPart"/> per part, and one <see cref="HatchPart"/> for the rigid hatch, each on
 /// its <see cref="CreatureLayers"/> layer. Its points are creature units; its owner places it and
 /// hands it what to show after every change. Build's <see cref="BuildCanvas"/> shows its edits
 /// with <see cref="CreatureMarks"/>; a <see cref="CreatureThumbnail"/> shows the creature plain.
@@ -28,17 +28,20 @@ public partial class CreatureParts : Node2D
     private readonly Dictionary<int, PistonPart> _pistons = [];
     private readonly Dictionary<int, SpringPart> _springs = [];
     private readonly Dictionary<int, SensorPart> _sensors = [];
+    private readonly Dictionary<int, MemoryCellPart> _memoryCells = [];
 
     // What each visual shows: a part, or a dragged joint part's preview on a joint's slot.
     private readonly Dictionary<PartVisual, Shown> _shown = [];
     private readonly HatchPart _hatch = new();
     private readonly SensorPart _previewSensor = new() { Visible = false };
+    private readonly MemoryCellPart _previewMemoryCell = new() { Visible = false };
     private float _pixelScale;
 
     public CreatureParts()
     {
         AddChild(_hatch);
         AddChild(_previewSensor);
+        AddChild(_previewMemoryCell);
     }
 
     /// <summary>The theme of the world it is in (<see cref="VisualTheme.For"/>).</summary>
@@ -74,6 +77,7 @@ public partial class CreatureParts : Node2D
         ShowPistons(shape, nodes, marks);
         ShowSprings(shape, nodes, marks);
         ShowSensors(shape, nodes, marks);
+        ShowMemoryCells(shape, nodes, marks);
         ShowHatch(shape, nodes);
         ShowDrawGroups(shape, marks);
         PartVisual.RedrawOnNewPixelScale(this, ref _pixelScale);
@@ -431,14 +435,14 @@ public partial class CreatureParts : Node2D
     }
 
     private static float HousingReach(CreatureShape shape, Dictionary<int, NodeDef> nodes, LinkRef link) =>
-        ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => CreatureDef.CoveredRadius(nodeId, shape.JointMotors), link, SensorLength(shape, link));
+        ServoGeometry.HousingReach(nodes.Values.ToArray(), nodeId => CreatureDef.CoveredRadius(nodeId, shape.JointMotors), link, BeamPartLength(shape, link));
 
     // A Servo's housing is drawn over its Fixed link, so a Piston's or Spring's telescope starts past it.
     private static float LinkCover(CreatureShape shape, Dictionary<int, NodeDef> nodes, LinkRef link, int nodeId) =>
         ServoGeometry.LinkCover(nodes.Values.ToArray(), id => CreatureDef.CoveredRadius(id, shape.JointMotors), shape.Servos, link, nodeId);
 
-    private static float SensorLength(CreatureShape shape, LinkRef link) =>
-        link.Kind == CreatureElementKind.Beam && shape.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
+    private static float BeamPartLength(CreatureShape shape, LinkRef link) =>
+        link.Kind == CreatureElementKind.Beam && CreatureDef.BeamPartOn(link.Id, shape.BeamParts) is { } part ? (float)SensorPicture.SizeOf(part) : 0;
 
     private static float RelativeAngle(float fixedAngle, float targetAngle) =>
         Mathf.Atan2(Mathf.Sin(targetAngle - fixedAngle), Mathf.Cos(targetAngle - fixedAngle));
@@ -542,17 +546,48 @@ public partial class CreatureParts : Node2D
         }
     }
 
+    // Each Memory cell as its glyph on its beam, upright on the beam's built up side as a sensor is,
+    // and the one a tray drag would place on the beam under the finger.
+    private void ShowMemoryCells(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
+    {
+        Prune(_memoryCells, shape.MemoryCells.Select(memoryCell => memoryCell.Id));
+        var beams = shape.Beams.ToDictionary(beam => beam.Id);
+        foreach (var memoryCell in shape.MemoryCells)
+        {
+            var part = PartFor(_memoryCells, memoryCell.Id);
+            var beam = beams[memoryCell.BeamId];
+            PlaceOnBeam(part, shape, nodes[beam.NodeA], nodes[beam.NodeB]);
+            part.Selected = marks.Selected.Contains(CreatureElementKind.MemoryCell, memoryCell.Id);
+        }
+
+        _previewMemoryCell.Visible = marks.PreviewMemoryCell is not null;
+        _previewMemoryCell.Theme = Theme;
+        if (marks.PreviewMemoryCell is { } previewBeam)
+        {
+            PlaceOnBeam(_previewMemoryCell, shape, nodes[previewBeam.NodeA], nodes[previewBeam.NodeB]);
+        }
+    }
+
     private static void PlaceSensor(SensorPart part, CreatureShape shape, NodeDef jointA, NodeDef jointB, SensorKind kind, double? aim, Vector2D? weightOffset)
     {
         var (nodeA, nodeB) = (jointA.Position, jointB.Position);
         var beamRotation = (float)CameraRays.BeamAngle(nodeA, nodeB);
         var upSign = Accelerometer.UpSign(nodeA, nodeB);
-        var pictureRotation = beamRotation + (upSign == 1 ? Mathf.Pi : 0);
-        part.Position = ToGodot(SensorPicture.Centre(nodeA, nodeB, CreatureDef.CoveredRadius(jointA.Id, shape.JointMotors), CreatureDef.CoveredRadius(jointB.Id, shape.JointMotors)));
-        part.Rotation = pictureRotation;
+        var pictureRotation = PlaceOnBeam(part, shape, jointA, jointB);
         part.Kind = kind;
         part.WeightOffset = weightOffset ?? Accelerometer.RestWeightOffset(beamRotation, upSign);
         part.CameraAim = Vector2.FromAngle((float)(aim ?? SensorDef.DefaultAim(nodeA, nodeB)) + beamRotation - pictureRotation);
+    }
+
+    // Puts a beam part's picture on its beam (SensorPicture.Centre), turned so its top faces the beam's
+    // built up side, and returns that turn.
+    private static float PlaceOnBeam(PartVisual part, CreatureShape shape, NodeDef jointA, NodeDef jointB)
+    {
+        var (nodeA, nodeB) = (jointA.Position, jointB.Position);
+        var pictureRotation = (float)CameraRays.BeamAngle(nodeA, nodeB) + (Accelerometer.UpSign(nodeA, nodeB) == 1 ? Mathf.Pi : 0);
+        part.Position = ToGodot(SensorPicture.Centre(nodeA, nodeB, CreatureDef.CoveredRadius(jointA.Id, shape.JointMotors), CreatureDef.CoveredRadius(jointB.Id, shape.JointMotors)));
+        part.Rotation = pictureRotation;
+        return pictureRotation;
     }
 
     // Puts each part in its draw group and on the surface CreatureMarks.Raised
@@ -576,6 +611,11 @@ public partial class CreatureParts : Node2D
         if (marks.PreviewSensor is ({ } previewBeam, _, _))
         {
             _previewSensor.Place(groups, previewBeam.Id, raised: true);
+        }
+
+        if (marks.PreviewMemoryCell is { } cellBeam)
+        {
+            _previewMemoryCell.Place(groups, cellBeam.Id, raised: true);
         }
     }
 

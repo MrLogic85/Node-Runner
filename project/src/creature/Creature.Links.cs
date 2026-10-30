@@ -274,15 +274,15 @@ public partial class Creature
         }
 
         var link = definition.Link(fixedLinkId);
-        return ServoGeometry.HousingReach(definition.Nodes, definition.CoveredRadius, link, SensorLength(definition, link));
+        return ServoGeometry.HousingReach(definition.Nodes, definition.CoveredRadius, link, BeamPartLength(definition, link));
     }
 
     // A Servo's housing is drawn over its Fixed link, so a Piston's or Spring's telescope starts past it.
     private static float LinkCover(CreatureDef definition, LinkRef link, int nodeId) =>
         ServoGeometry.LinkCover(definition.Nodes, definition.CoveredRadius, definition.Servos, link, nodeId);
 
-    private static float SensorLength(CreatureDef definition, LinkRef link) =>
-        link.Kind == CreatureElementKind.Beam && definition.Sensors.FirstOrDefault(sensor => sensor.BeamId == link.Id) is { } sensor ? (float)SensorPicture.SizeOf(sensor.Kind) : 0;
+    private static float BeamPartLength(CreatureDef definition, LinkRef link) =>
+        link.Kind == CreatureElementKind.Beam && definition.BeamPartOn(link.Id) is { } part ? (float)SensorPicture.SizeOf(part) : 0;
 
     // A Piston pushes on its two node bodies; its only body is the hidden end-stop cylinder. Its
     // picture is a child of the creature, on the Links layer over the beams.

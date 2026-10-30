@@ -32,7 +32,7 @@ public sealed partial class CreatureBuilder
         PartKind.Spring => _springParameters,
         PartKind.Wheel => _wheelParameters,
         PartKind.Camera => _cameraParameters,
-        PartKind.Node or PartKind.Beam or PartKind.Accelerometer or PartKind.TouchSensor or PartKind.Rubber or PartKind.AngleSensor => [],
+        PartKind.Node or PartKind.Beam or PartKind.Accelerometer or PartKind.TouchSensor or PartKind.Rubber or PartKind.AngleSensor or PartKind.MemoryCell => [],
     };
 
     /// <summary>

@@ -5,7 +5,7 @@ public sealed class RaisedPartsTests
 {
     // Joint 1 has its Wheel face raised but not its ring; joint 2 is raised; beam 6 is raised, with the Camera on it.
     private static readonly RaisedParts _raised = new(
-        Links: new HashSet<int> { 6 }, Joints: new HashSet<int> { 2 }, Sensors: new HashSet<int>(), Wheels: new HashSet<int> { 1 });
+        Links: new HashSet<int> { 6 }, Joints: new HashSet<int> { 2 }, BeamParts: new HashSet<int>(), Wheels: new HashSet<int> { 1 });
 
     [Fact]
     public void Contains_RaisesEachKindWithWhatItDrawsWith()
@@ -27,7 +27,7 @@ public sealed class RaisedPartsTests
     [Fact]
     public void Contains_RaisesASelectedSensorOrOneOnARaisedBeam()
     {
-        var selectedAccelerometer = _raised with { Sensors = new HashSet<int> { 7 } };
+        var selectedAccelerometer = _raised with { BeamParts = new HashSet<int> { 7 } };
 
         selectedAccelerometer.Contains(EveryPartKind.Creature.FindPart(7)!).ShouldBeTrue();
         selectedAccelerometer.Contains(EveryPartKind.Creature.FindPart(8)!).ShouldBeTrue();

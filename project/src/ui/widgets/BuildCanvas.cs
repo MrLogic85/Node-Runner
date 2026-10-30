@@ -375,6 +375,7 @@ public partial class BuildCanvas : Node2D
 
         (BeamDef, SensorKind, double?)? previewSensor = null;
         (BuildPart, int)? previewJointPart = null;
+        BeamDef? previewMemoryCell = null;
         if (_gestures.MovedSensorPreview is { } moved)
         {
             previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(moved.BeamId)], moved.Kind, moved.Aim);
@@ -384,6 +385,12 @@ public partial class BuildCanvas : Node2D
             && _viewModel.CanPlacePart(part, hover, out _))
         {
             previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(hover.Id)], kind, null);
+        }
+        else if (_partDrag == BuildPart.MemoryCell
+            && _dropHover is { Kind: CreatureElementKind.Beam } cellHover
+            && _viewModel.CanPlacePart(BuildPart.MemoryCell, cellHover, out _))
+        {
+            previewMemoryCell = _viewModel.Beams[_viewModel.BeamIndexOf(cellHover.Id)];
         }
         else if (_partDrag is { } jointPart && PartTray.IsJointPart(jointPart)
             && _dropHover is { Kind: CreatureElementKind.Node } jointHover
@@ -402,6 +409,7 @@ public partial class BuildCanvas : Node2D
                 ShowsAsLoose,
                 _sensorMotion.WeightOffset,
                 previewSensor,
+                previewMemoryCell,
                 previewJointPart,
                 ShowsTooShort: true,
                 targets,

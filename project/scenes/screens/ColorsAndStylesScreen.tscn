@@ -2818,6 +2818,26 @@ script = ExtResource("shell_4_label")
 TextStyle = 16
 TextColor = 8
 
+[node name="MemoryCell" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
+layout_mode = 2
+custom_minimum_size = Vector2(112, 0)
+theme_override_constants/separation = 4
+
+[node name="Glyph" type="Control" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/MemoryCell" groups=["inventory_icon"]]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+script = ExtResource("cs_icon")
+IconId = 76
+IconSize = 3
+
+[node name="Name" type="Label" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs/MemoryCell"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "part_memory_cell"
+script = ExtResource("shell_4_label")
+TextStyle = 16
+TextColor = 8
+
 [node name="Touch" type="VBoxContainer" parent="UiFrame/MarginContainer/Card/Shell/Scroll/ContentFrame/Content/IconSet/PartGlyphs"]
 layout_mode = 2
 custom_minimum_size = Vector2(112, 0)

@@ -27,6 +27,7 @@ public sealed class CreatureShape
         List<BrakeDef> brakes = [];
         List<AngleSensorDef> angleSensors = [];
         List<StepperDef> steppers = [];
+        List<MemoryCellDef> memoryCells = [];
         foreach (var part in parts)
         {
             byId[part.Id] = part;
@@ -71,6 +72,9 @@ public sealed class CreatureShape
                 case StepperDef stepper:
                     steppers.Add(stepper);
                     break;
+                case MemoryCellDef memoryCell:
+                    memoryCells.Add(memoryCell);
+                    break;
                 default:
                     GD.PushError($"{part.PartKind} {part.Id} has no list in CreatureShape and is not drawn.");
                     break;
@@ -91,6 +95,8 @@ public sealed class CreatureShape
         Brakes = brakes;
         AngleSensors = angleSensors;
         Steppers = steppers;
+        MemoryCells = memoryCells;
+        BeamParts = [.. sensors, .. memoryCells];
     }
 
     public IReadOnlyDictionary<int, IPartDef> PartById { get; }
@@ -132,4 +138,9 @@ public sealed class CreatureShape
 
     /// <summary>Every part on a joint's slots: the hinge parts, Wheels, Touch sensors and Rubbers.</summary>
     public IReadOnlyList<IJointPartDef> JointParts => [.. HingeParts, .. Wheels, .. TouchSensors, .. Rubbers];
+
+    public IReadOnlyList<MemoryCellDef> MemoryCells { get; }
+
+    /// <summary>Every part on a beam: the sensors, then the Memory cells.</summary>
+    public IReadOnlyList<IBeamPartDef> BeamParts { get; }
 }

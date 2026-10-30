@@ -154,6 +154,33 @@ public sealed class NewPortExplorationTests
         ShouldSpread(explored, 3, 0, GenerationZero.WeightSpread);
     }
 
+    // A new Memory cell reads as new while its write has bias −4 exactly; its children draw its target and
+    // write from 0, as generation 0 does, and a trained cell is left.
+    [Fact]
+    public void Explore_RedrawsANewMemoryCell_WhileItsWriteIsPassive_AndLeavesATrainedOne()
+    {
+        var ports = new NetworkPortLayout(
+            [NetworkPorts.TouchInput(5), .. NetworkPorts.MemoryCellInputs(3), .. NetworkPorts.MemoryCellInputs(4)],
+            [.. NetworkPorts.MemoryCellOutputs(3), .. NetworkPorts.MemoryCellOutputs(4)]);
+        // Weights (4 outputs × 3 inputs), then biases: cell 3 trained, cell 4 as a refit leaves it.
+        double[] elite = [0.6, 0.2, 0, -0.4, 0.9, 0, 0, 0, 0, 0, 0, 0, 0.3, -1.5, 0, PortSignals.PassiveStrengthBias];
+        var generation = Generation(elite, 4001);
+
+        var explored = NewPortExploration.Explore(generation, 1, ports, [], new Random(14))[1..];
+
+        for (var slot = 0; slot < explored.Length; slot++)
+        {
+            foreach (var trained in (int[])[0, 1, 3, 4, 12, 13])
+            {
+                explored[slot][trained].ShouldBe(generation[slot + 1][trained]);
+            }
+        }
+
+        ShouldSpread(explored, 14, 0, GenerationZero.BiasSpread);
+        ShouldSpread(explored, 15, 0, GenerationZero.BiasSpread);
+        ShouldSpread(explored, 6, 0, GenerationZero.WeightSpread);
+    }
+
     [Fact]
     public void Explore_RefusesGenomesThatDoNotMatchThePorts_AndAnEliteCountOutsideTheGeneration()
     {

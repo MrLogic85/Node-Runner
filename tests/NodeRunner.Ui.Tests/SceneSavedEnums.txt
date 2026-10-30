@@ -68,6 +68,7 @@ NodeRunner.Ui.Lib.UiIconId.PartCamera=46
 NodeRunner.Ui.Lib.UiIconId.PartCore=43
 NodeRunner.Ui.Lib.UiIconId.PartFuel=44
 NodeRunner.Ui.Lib.UiIconId.PartGenerator=45
+NodeRunner.Ui.Lib.UiIconId.PartMemoryCell=76
 NodeRunner.Ui.Lib.UiIconId.PartNode=47
 NodeRunner.Ui.Lib.UiIconId.PartPiston=48
 NodeRunner.Ui.Lib.UiIconId.PartPulse=67

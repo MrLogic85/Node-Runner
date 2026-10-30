@@ -6,13 +6,13 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// Placing parts from the tray and moving a sensor to another beam: one rule
-/// for where a sensor goes, and a good drop is one Undo step that selects the part.
+/// for where a sensor or Memory cell goes, and a good drop is one Undo step that selects the part.
 /// </summary>
 public sealed partial class BuildViewModel
 {
     /// <summary>
     /// Whether a tray part dropped on <paramref name="target"/> would be placed there; if
-    /// not, <paramref name="reason"/> says why. Sensors go on a beam that has none yet, and joint
+    /// not, <paramref name="reason"/> says why. Sensors and Memory cells go on a beam with neither yet, and joint
     /// parts on a joint whose slot for them is free: one Wheel, one hinge part, one Touch sensor and one Rubber.
     /// </summary>
     public bool CanPlacePart(BuildPart part, CreatureElementSelection target, [NotNullWhen(false)] out UiText? reason)
@@ -25,7 +25,7 @@ public sealed partial class BuildViewModel
             return false;
         }
 
-        if (!PartTray.IsAvailable(part) || (PartTray.SensorKindOf(part) is null && !PartTray.IsJointPart(part)))
+        if (!PartTray.IsAvailable(part) || (PartTray.SensorKindOf(part) is null && !PartTray.IsJointPart(part) && part != BuildPart.MemoryCell))
         {
             reason = PartTray.ComingLater;
             return false;
@@ -119,6 +119,12 @@ public sealed partial class BuildViewModel
             return _builder.CanAddRubber(target.Id, out reason);
         }
 
+        // Ids are unique across kinds, so the builder refuses a target that is no beam.
+        if (part == BuildPart.MemoryCell)
+        {
+            return _builder.CanAddMemoryCell(target.Id, out reason);
+        }
+
         return TakesSensor(PartTray.SensorKindOf(part)!.Value, target, movingSensorId: null, out reason);
     }
 
@@ -201,6 +207,13 @@ public sealed partial class BuildViewModel
             var rubberId = _history.Change(() => _builder.AddRubber(target.Id));
             SelectPlaced(PartSet.Of(new(CreatureElementKind.Rubber, rubberId)), select);
             return rubberId;
+        }
+
+        if (part == BuildPart.MemoryCell)
+        {
+            var memoryCellId = _history.Change(() => _builder.AddMemoryCell(target.Id));
+            SelectPlaced(PartSet.Of(new(CreatureElementKind.MemoryCell, memoryCellId)), select);
+            return memoryCellId;
         }
 
         var sensorId = _history.Change(() =>
@@ -336,7 +349,7 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// The one rule for where a sensor goes, placed or moved: on a beam (<see
-    /// cref="GoesOnABeamReason"/>) the builder lets it mount on (<see cref="CreatureBuilder.CanMountSensor"/>).
+    /// cref="GoesOnABeamReason"/>) the builder lets it mount on (<see cref="CreatureBuilder.CanMountOnBeam"/>).
     /// </summary>
     private bool TakesSensor(SensorKind kind, [NotNullWhen(true)] CreatureElementSelection? target, int? movingSensorId, [NotNullWhen(false)] out UiText? reason)
     {
@@ -346,7 +359,7 @@ public sealed partial class BuildViewModel
             return false;
         }
 
-        return _builder.CanMountSensor(target.Id, movingSensorId, out reason);
+        return _builder.CanMountOnBeam(target.Id, movingSensorId, out reason);
     }
 
     private bool SensorExists(int sensorId) => _builder.Sensors.Any(sensor => sensor.Id == sensorId);
