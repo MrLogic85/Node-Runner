@@ -114,7 +114,7 @@ public sealed class BuildPlacementTests
         var moving = build.PlacingTargetsOf(null, sensor);
         moving.Beams.ShouldBe([4]);
         moving.RefusedBeams.ShouldBe([5]);
-        moving.MovingSensor.ShouldBe(sensor);
+        moving.MovingBeamPart.ShouldBe(sensor);
 
         build.PlacePart(BuildPart.Wheel, Joint(3)).ShouldNotBeNull();
         // One per slot: a Servo goes beside the Wheel, and a Wheel beside the Servo.

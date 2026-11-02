@@ -145,11 +145,11 @@ name for a node. Build opens in Joint, locked or not.
     → Rubber, Touch sensor), so their joint selects them by the stack
     rule. Their panel shows only Name and the note, and they cannot be
     dragged to another joint.
-- **Moving a sensor:** drag its picture to another beam, in any
-  tool, locked or not. It keeps its id, name and settings, so its ports
-  and trained weights stay (`CreatureBuilder.MoveSensor`); a Camera keeps
-  the direction it looks in the world. A refused drop leaves it with the
-  reason as a note; a drop on empty canvas leaves it silently.
+- **Moving a sensor or Memory cell:** drag its picture to another beam,
+  in any tool, locked or not. It keeps its id, name and settings, so its
+  ports and trained weights stay (`CreatureBuilder.MoveBeamPart`); a
+  Camera keeps the direction it looks in the world. A refused drop leaves
+  it with the reason as a note; a drop on empty canvas leaves it silently.
 - **Camera aim:** a Camera selected alone shows an Aim handle
   along its centre ray, in any tool. Dragging it turns the camera toward
   the finger; the aim is saved relative to the beam. The handle is hit

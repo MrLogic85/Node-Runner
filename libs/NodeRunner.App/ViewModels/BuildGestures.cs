@@ -63,7 +63,7 @@ public sealed class BuildGestures
     private bool _dragging;
     private int? _pressedNode;
     private int? _pressedBeam;
-    private int? _pressedSensor;
+    private CreatureElementSelection? _pressedBeamPart;
     private CreatureElementSelection? _pressedLink;
     private PartSet? _selectionBefore;
     private SelectionHandle? _pressedHandle;
@@ -171,18 +171,18 @@ public sealed class BuildGestures
     /// <summary>The link of another kind a link drag would replace if released now.</summary>
     public int? ReplacedLinkId { get; private set; }
 
-    /// <summary>The sensor a drag is moving to another beam.</summary>
-    public int? MovingSensorId { get; private set; }
+    /// <summary>The sensor or Memory cell a drag is moving to another beam.</summary>
+    public int? MovingBeamPartId { get; private set; }
 
-    /// <summary>What <see cref="MovingSensorId"/> would land on if released now (<see cref="DropTargetAt"/>); null over empty canvas.</summary>
-    public CreatureElementSelection? SensorDropTarget { get; private set; }
+    /// <summary>What <see cref="MovingBeamPartId"/> would land on if released now (<see cref="DropTargetAt"/>); null over empty canvas.</summary>
+    public CreatureElementSelection? BeamPartDropTarget { get; private set; }
 
-    /// <summary>Where the pointer is while <see cref="MovingSensorId"/> is dragged, in canvas units: the end of the line from the sensor.</summary>
-    public Vector2D? SensorDragEnd { get; private set; }
+    /// <summary>Where the pointer is while <see cref="MovingBeamPartId"/> is dragged, in canvas units: the end of the line from the part.</summary>
+    public Vector2D? BeamPartDragEnd { get; private set; }
 
-    /// <summary>The moving sensor as it would be if released now: on another beam that takes it, else null.</summary>
-    public SensorDef? MovedSensorPreview =>
-        MovingSensorId is { } sensor ? _build.SensorMovePreview(sensor, SensorDropTarget) : null;
+    /// <summary>The moving sensor or Memory cell as it would be if released now: on another beam that takes it, else null.</summary>
+    public IBeamPartDef? MovedBeamPartPreview =>
+        MovingBeamPartId is { } moving ? _build.BeamPartMovePreview(moving, BeamPartDropTarget) : null;
 
     /// <summary>The corners of the Select tool's box while it is dragged.</summary>
     public (Vector2D Start, Vector2D End)? SelectionBox { get; private set; }
@@ -233,7 +233,7 @@ public sealed class BuildGestures
     /// then a beam within reach. Null over empty canvas. A joint part being placed
     /// (<paramref name="placing"/>) is marked by a ring round each joint, so it lands on a joint
     /// anywhere inside that ring first (<see cref="PlacingTargets.JointRingOf"/>): a Servo's
-    /// at its housing, a Wheel's at a new Wheel's size, a Touch sensor's round its cushion. <paramref name="placing"/> is null for a moved sensor.
+    /// at its housing, a Wheel's at a new Wheel's size, a Touch sensor's round its cushion. <paramref name="placing"/> is null for a moved sensor or Memory cell.
     /// </summary>
     public CreatureElementSelection? DropTargetAt(Vector2D viewPosition, BuildPart? placing)
     {
@@ -263,10 +263,10 @@ public sealed class BuildGestures
     }
 
     /// <summary>
-    /// What rises with the part being placed (<paramref name="placing"/>) or else the sensor a drag
+    /// What rises with the part being placed (<paramref name="placing"/>) or else the sensor or Memory cell a drag
     /// moves, for the canvas to draw and a touch to hit on the selected surface.
     /// </summary>
-    public PlacingTargets TargetsOf(BuildPart? placing) => _build.PlacingTargetsOf(placing, placing is null ? MovingSensorId : null);
+    public PlacingTargets TargetsOf(BuildPart? placing) => _build.PlacingTargetsOf(placing, placing is null ? MovingBeamPartId : null);
 
     /// <summary>The joint nearest <paramref name="position"/> within the ring the joint part being placed draws round it (<paramref name="targets"/>), or null.</summary>
     private int? JointInPlacingRing(Vector2D position, PlacingTargets targets) =>
@@ -390,8 +390,8 @@ public sealed class BuildGestures
             case { Kind: CreatureElementKind.Node } joint:
                 _pressedNode = joint.Id;
                 break;
-            case { Kind: CreatureElementKind.Sensor } sensor:
-                _pressedSensor = sensor.Id;
+            case { Kind: CreatureElementKind.Sensor or CreatureElementKind.MemoryCell } beamPart:
+                _pressedBeamPart = beamPart;
                 break;
             case { Kind: CreatureElementKind.Beam } beam:
                 _pressedBeam = beam.Id;
@@ -475,9 +475,9 @@ public sealed class BuildGestures
                 _build.ClearSelection();
                 SelectionBox = (_pressPosition, _pressPosition);
             }
-            else if (_press == SharedPress.Sensor)
+            else if (_press == SharedPress.BeamPart)
             {
-                MovingSensorId = _pressedSensor;
+                MovingBeamPartId = _pressedBeamPart?.Id;
             }
         }
 
@@ -511,10 +511,10 @@ public sealed class BuildGestures
             SelectionBox = (box.Start, position);
             Changed?.Invoke(this, EventArgs.Empty);
         }
-        else if (MovingSensorId is not null)
+        else if (MovingBeamPartId is not null)
         {
-            SensorDragEnd = position;
-            SensorDropTarget = DropTargetAt(viewPosition, placing: null);
+            BeamPartDragEnd = position;
+            BeamPartDropTarget = DropTargetAt(viewPosition, placing: null);
             Changed?.Invoke(this, EventArgs.Empty);
         }
         else if (_press == SharedPress.Pan)
@@ -550,9 +550,9 @@ public sealed class BuildGestures
         {
             CompleteSelectionBox(box.Start, position);
         }
-        else if (MovingSensorId is { } sensor)
+        else if (MovingBeamPartId is { } moving)
         {
-            _build.MoveSensor(sensor, DropTargetAt(viewPosition, placing: null));
+            _build.MoveBeamPart(moving, DropTargetAt(viewPosition, placing: null));
         }
         else if (_pressedHandle == SelectionHandle.Rotate && _dragLayout is { } turned)
         {
@@ -592,7 +592,7 @@ public sealed class BuildGestures
 
     // What a press does once it drags, the same in every tool apart from a Beams link drag:
     // a selected joint drags the selection, a press inside a group's frame drags the group, an
-    // unselected joint is moved alone, a sensor is moved to another beam, and any other
+    // unselected joint is moved alone, a sensor or Memory cell is moved to another beam, and any other
     // press draws a box in Select and pans elsewhere. Taps are settled on release (Tap).
     private void PressShared(Vector2D viewPosition)
     {
@@ -608,9 +608,9 @@ public sealed class BuildGestures
         {
             _press = SharedPress.Move;
         }
-        else if (_pressedSensor is not null)
+        else if (_pressedBeamPart is not null)
         {
-            _press = SharedPress.Sensor;
+            _press = SharedPress.BeamPart;
         }
         else
         {
@@ -670,7 +670,7 @@ public sealed class BuildGestures
     }
 
     private CreatureElementSelection? PressedElement() =>
-        _pressedSensor is { } sensor ? new(CreatureElementKind.Sensor, sensor)
+        _pressedBeamPart is { } beamPart ? beamPart
         : _pressedLink is { } link ? link
         : _pressedBeam is { } beam ? new(CreatureElementKind.Beam, beam)
         : null;
@@ -893,16 +893,16 @@ public sealed class BuildGestures
         _aimStart = null;
         _pressedNode = null;
         _pressedBeam = null;
-        _pressedSensor = null;
+        _pressedBeamPart = null;
         _pressedLink = null;
         BeamStartNodeId = null;
         BeamEnd = null;
         BeamTargetNodeId = null;
         RefusedTargetNodeId = null;
         ReplacedLinkId = null;
-        MovingSensorId = null;
-        SensorDropTarget = null;
-        SensorDragEnd = null;
+        MovingBeamPartId = null;
+        BeamPartDropTarget = null;
+        BeamPartDragEnd = null;
         SelectionBox = null;
     }
 
@@ -937,7 +937,7 @@ public sealed class BuildGestures
         Pan,
         Box,
 
-        /// <summary>On a sensor's picture: a drag moves the sensor to another beam.</summary>
-        Sensor,
+        /// <summary>On a sensor's or Memory cell's picture: a drag moves it to another beam.</summary>
+        BeamPart,
     }
 }

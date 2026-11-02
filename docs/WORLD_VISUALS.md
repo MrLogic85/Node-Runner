@@ -326,10 +326,11 @@ each creature gets its whole set of layers; links past
   lands. The part also shows itself where it would land, a hinge part
   with the sides it would take. A picked part marks the same targets from
   the moment it is picked, so a tap can find them.
-- **Moving a sensor:** no tile follows the finger. The sensor stays on its
-  beam, drawn as selected, beams are outlined as for a tray drag, and its
-  picture shows on a beam that takes it. A drag line ties it to the
-  finger, with an arrow ring pointing along the move when it fits.
+- **Moving a sensor or Memory cell:** no tile follows the finger. The
+  part stays on its beam, drawn as selected, beams are outlined as for a
+  tray drag, and its picture shows on a beam that takes it. A drag line
+  ties it to the finger, with an arrow ring pointing along the move when
+  it fits.
 - **Callouts:** a note out past its part, joined by a leader in its
   colour, at screen size. Near an edge it slides along the edge, never to
   the part's other side. Overlapping callouts stack, most important

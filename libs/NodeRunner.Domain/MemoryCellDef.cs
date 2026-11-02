@@ -36,4 +36,6 @@ public sealed record MemoryCellDef : IBeamPartDef
     IPartDef IPartDef.WithName(string? name) => WithName(name);
 
     public MemoryCellDef WithName(string? name) => new(Id, BeamId, name);
+
+    public MemoryCellDef OnBeam(int beamId) => new(Id, beamId, Name);
 }

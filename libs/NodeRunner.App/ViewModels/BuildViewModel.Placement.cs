@@ -5,7 +5,7 @@ using NodeRunner.Domain;
 namespace NodeRunner.App.ViewModels;
 
 /// <summary>
-/// Placing parts from the tray and moving a sensor to another beam: one rule
+/// Placing parts from the tray and moving a sensor or Memory cell to another beam: one rule
 /// for where a sensor or Memory cell goes, and a good drop is one Undo step that selects the part.
 /// </summary>
 public sealed partial class BuildViewModel
@@ -119,13 +119,12 @@ public sealed partial class BuildViewModel
             return _builder.CanAddRubber(target.Id, out reason);
         }
 
-        // Ids are unique across kinds, so the builder refuses a target that is no beam.
         if (part == BuildPart.MemoryCell)
         {
-            return _builder.CanAddMemoryCell(target.Id, out reason);
+            return TakesBeamPart(CreatureBuilder.MemoryCellsGoOnABeamReason, target, movingBeamPartId: null, out reason);
         }
 
-        return TakesSensor(PartTray.SensorKindOf(part)!.Value, target, movingSensorId: null, out reason);
+        return TakesBeamPart(GoesOnABeamReason(PartTray.SensorKindOf(part)!.Value), target, movingBeamPartId: null, out reason);
     }
 
     /// <summary>
@@ -238,13 +237,13 @@ public sealed partial class BuildViewModel
     }
 
     /// <summary>
-    /// Whether the sensor dragged onto <paramref name="target"/> would move there: onto a
-    /// beam no other sensor sits on, its own included. If not, <paramref name="reason"/> says why.
-    /// A move keeps the sensor's network ports, so a locked Creation moves sensors too. The sensor
+    /// Whether the sensor or Memory cell dragged onto <paramref name="target"/> would move there: onto a
+    /// beam no other sensor or Memory cell sits on, its own included. If not, <paramref name="reason"/> says why.
+    /// A move keeps the part's network ports, so a locked Creation moves them too. The part
     /// must exist.
     /// </summary>
-    public bool CanMoveSensor(int sensorId, [NotNullWhen(true)] CreatureElementSelection? target, [NotNullWhen(false)] out UiText? reason) =>
-        TakesSensor(_builder.Sensors[_builder.SensorIndexOf(sensorId)].Kind, target, sensorId, out reason);
+    public bool CanMoveBeamPart(int partId, [NotNullWhen(true)] CreatureElementSelection? target, [NotNullWhen(false)] out UiText? reason) =>
+        TakesBeamPart(GoesOnABeamReason(ExistingBeamPart(partId)), target, partId, out reason);
 
     /// <summary>
     /// The radius a ring that marks joint <paramref name="nodeId"/> is drawn round, at its
@@ -269,9 +268,9 @@ public sealed partial class BuildViewModel
 
     /// <summary>
     /// The beams or joints that would take or refuse <paramref name="part"/> from the tray, or else
-    /// the beams that would take or refuse the sensor <paramref name="movingSensorId"/> a drag moves.
+    /// the beams that would take or refuse the sensor or Memory cell <paramref name="movingBeamPartId"/> a drag moves.
     /// </summary>
-    public PlacingTargets PlacingTargetsOf(BuildPart? part, int? movingSensorId)
+    public PlacingTargets PlacingTargetsOf(BuildPart? part, int? movingBeamPartId)
     {
         if (part is { } placing)
         {
@@ -294,75 +293,76 @@ public sealed partial class BuildViewModel
             return PlacingTargets.None with { Beams = beams, RefusedBeams = Beams.Where(beam => !beams.Contains(beam.Id)).Select(beam => beam.Id).ToHashSet() };
         }
 
-        if (movingSensorId is not { } sensor || !SensorExists(sensor))
+        if (movingBeamPartId is not { } moving || FindBeamPart(moving) is null)
         {
             return PlacingTargets.None;
         }
 
-        var takes = Beams.Where(beam => CanMoveSensor(sensor, new CreatureElementSelection(CreatureElementKind.Beam, beam.Id), out _)).Select(beam => beam.Id).ToHashSet();
-        return new PlacingTargets(takes, new HashSet<int>(), sensor)
+        var takes = Beams.Where(beam => CanMoveBeamPart(moving, new CreatureElementSelection(CreatureElementKind.Beam, beam.Id), out _)).Select(beam => beam.Id).ToHashSet();
+        return new PlacingTargets(takes, new HashSet<int>(), moving)
         {
             RefusedBeams = Beams.Where(beam => !takes.Contains(beam.Id)).Select(beam => beam.Id).ToHashSet(),
         };
     }
 
     /// <summary>
-    /// The sensor as a drop on <paramref name="target"/> would leave it, for its preview:
-    /// null when the drop would be refused or keep it where it is, or the sensor or the beam under
+    /// The sensor or Memory cell as a drop on <paramref name="target"/> would leave it, for its preview:
+    /// null when the drop would be refused or keep it where it is, or the part or the beam under
     /// it is gone mid-drag.
     /// </summary>
-    public SensorDef? SensorMovePreview(int sensorId, CreatureElementSelection? target) =>
-        SensorExists(sensorId) && target is not null && Exists(target)
-        && CanMoveSensor(sensorId, target, out _) && SensorBeam(sensorId) != target.Id
-            ? _builder.SensorMovedTo(sensorId, target.Id)
+    public IBeamPartDef? BeamPartMovePreview(int partId, CreatureElementSelection? target) =>
+        FindBeamPart(partId) is { } part && target is not null && Exists(target)
+        && CanMoveBeamPart(partId, target, out _) && part.BeamId != target.Id
+            ? _builder.BeamPartMovedTo(partId, target.Id)
             : null;
 
     /// <summary>
-    /// Moves the sensor dragged onto <paramref name="target"/> there, keeping its id, ports
-    /// and settings (<see cref="CreatureBuilder.SensorMovedTo"/>), and selects it. A drop on empty
+    /// Moves the sensor or Memory cell dragged onto <paramref name="target"/> there, keeping its id, ports
+    /// and settings (<see cref="CreatureBuilder.BeamPartMovedTo"/>), and selects it. A drop on empty
     /// canvas (<paramref name="target"/> null) leaves it and says nothing, as <see cref="PlacePart"/>
     /// does; a refused drop leaves it and shows why as <see cref="PlacementNote"/> at the part it was
-    /// dropped on. A sensor gone mid-drag moves nowhere.
+    /// dropped on. A part gone mid-drag moves nowhere.
     /// </summary>
-    public bool MoveSensor(int sensorId, CreatureElementSelection? target)
+    public bool MoveBeamPart(int partId, CreatureElementSelection? target)
     {
         PlacementNote = null;
-        if (!SensorExists(sensorId) || target is null)
+        if (FindBeamPart(partId) is not { } part || target is null)
         {
             return false;
         }
 
-        if (!CanMoveSensor(sensorId, target, out var reason))
+        if (!CanMoveBeamPart(partId, target, out var reason))
         {
             PlacementNote = new CanvasNote(CanvasNoteKind.Danger, target, reason);
             return false;
         }
 
-        if (SensorBeam(sensorId) != target.Id)
+        if (part.BeamId != target.Id)
         {
-            _history.Change(() => _builder.MoveSensor(sensorId, target.Id, out _));
+            _history.Change(() => _builder.MoveBeamPart(partId, target.Id, out _));
         }
 
-        SelectPlaced(PartSet.Of(new(CreatureElementKind.Sensor, sensorId)), select: true);
+        SelectPlaced(PartSet.Of(CreatureElementSelection.Of(part)), select: true);
         return true;
     }
 
     /// <summary>
-    /// The one rule for where a sensor goes, placed or moved: on a beam (<see
-    /// cref="GoesOnABeamReason"/>) the builder lets it mount on (<see cref="CreatureBuilder.CanMountOnBeam"/>).
+    /// The one rule for where a sensor or Memory cell goes, placed or moved: on a beam (else
+    /// <paramref name="goesOnABeam"/>) the builder lets it mount on (<see cref="CreatureBuilder.CanMountOnBeam"/>).
     /// </summary>
-    private bool TakesSensor(SensorKind kind, [NotNullWhen(true)] CreatureElementSelection? target, int? movingSensorId, [NotNullWhen(false)] out UiText? reason)
+    private bool TakesBeamPart(UiText goesOnABeam, [NotNullWhen(true)] CreatureElementSelection? target, int? movingBeamPartId, [NotNullWhen(false)] out UiText? reason)
     {
         if (target is not { Kind: CreatureElementKind.Beam })
         {
-            reason = GoesOnABeamReason(kind);
+            reason = goesOnABeam;
             return false;
         }
 
-        return _builder.CanMountOnBeam(target.Id, movingSensorId, out reason);
+        return _builder.CanMountOnBeam(target.Id, movingBeamPartId, out reason);
     }
 
-    private bool SensorExists(int sensorId) => _builder.Sensors.Any(sensor => sensor.Id == sensorId);
+    private IBeamPartDef? FindBeamPart(int partId) => _builder.FindPart(partId) as IBeamPartDef;
 
-    private int SensorBeam(int sensorId) => _builder.Sensors[_builder.SensorIndexOf(sensorId)].BeamId;
+    private IBeamPartDef ExistingBeamPart(int partId) =>
+        FindBeamPart(partId) ?? throw new ArgumentException("Part id must point to an existing sensor or Memory cell.", nameof(partId));
 }

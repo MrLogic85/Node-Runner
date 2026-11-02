@@ -148,7 +148,7 @@ public sealed class BuildJointPartTests
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(2), UiText.Plain(onePerSlot)));
         build.JointPartsAt(2).ShouldHaveSingleItem();
 
-        var targets = build.PlacingTargetsOf(part, movingSensorId: null);
+        var targets = build.PlacingTargetsOf(part, movingBeamPartId: null);
         targets.Joints.ShouldBe([1, 3], ignoreOrder: true);
         targets.RefusedJoints.ShouldBe([2]);
         SelectionMarks.JointHalo(targets.JointRingOf(1)).ShouldBe(halo);
@@ -335,11 +335,11 @@ public sealed class BuildJointPartTests
         var build = Loaded(TwoBeamsDef(new AngleSensorDef(6, 2, fixedLinkId: 4, targetLinkId: 5)));
         foreach (var refused in new[] { BuildPart.AngleSensor, BuildPart.Servo, BuildPart.Brake })
         {
-            SelectionMarks.JointHalo(build.PlacingTargetsOf(refused, movingSensorId: null).RefusedRingOf(2)).ShouldBe(28);
+            SelectionMarks.JointHalo(build.PlacingTargetsOf(refused, movingBeamPartId: null).RefusedRingOf(2)).ShouldBe(28);
         }
 
         new[] { BuildPart.Rubber, BuildPart.TouchSensor, BuildPart.Wheel }
-            .Select(part => SelectionMarks.JointHalo(build.PlacingTargetsOf(part, movingSensorId: null).JointRingOf(2)))
+            .Select(part => SelectionMarks.JointHalo(build.PlacingTargetsOf(part, movingBeamPartId: null).JointRingOf(2)))
             .ShouldBe([31, 33, 43]);
         SelectionMarks.JointHalo(build.RingRadiusAt(2, build.NodeRadius(2))).ShouldBe(28);
         build.RingRadiusAt(1, build.NodeRadius(1)).ShouldBe(NodeDef.PlainJointRadius);
@@ -351,11 +351,11 @@ public sealed class BuildJointPartTests
         build = TwoBeams();
         build.PlacePart(BuildPart.Servo, Joint(1));
         build.PlacePart(BuildPart.Wheel, Joint(3));
-        var touch = build.PlacingTargetsOf(BuildPart.TouchSensor, movingSensorId: null);
+        var touch = build.PlacingTargetsOf(BuildPart.TouchSensor, movingBeamPartId: null);
         touch.JointRingOf(1).ShouldBe(JointMotor.Radius + TouchSensorDef.Cushion);
         touch.JointRingOf(3).ShouldBe(WheelDef.DefaultRadius + TouchSensorDef.Cushion);
-        build.PlacingTargetsOf(BuildPart.Rubber, movingSensorId: null).JointRingOf(3).ShouldBe(WheelDef.DefaultRadius + RubberDef.Skin);
-        build.PlacingTargetsOf(BuildPart.Servo, movingSensorId: null).JointRingOf(3).ShouldBe(JointMotor.Radius);
+        build.PlacingTargetsOf(BuildPart.Rubber, movingBeamPartId: null).JointRingOf(3).ShouldBe(WheelDef.DefaultRadius + RubberDef.Skin);
+        build.PlacingTargetsOf(BuildPart.Servo, movingBeamPartId: null).JointRingOf(3).ShouldBe(JointMotor.Radius);
         var gestures = new BuildGestures(build);
         var edge = SelectionMarks.JointHalo(touch.JointRingOf(3));
         gestures.DropTargetAt(new Vector2D(200, edge), BuildPart.TouchSensor).ShouldBe(Joint(3));
