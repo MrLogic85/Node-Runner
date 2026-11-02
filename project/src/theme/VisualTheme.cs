@@ -188,6 +188,9 @@ public sealed class VisualTheme
     /// <summary>The lines of a sensor's picture on its beam.</summary>
     public Color SensorLine => ColorOf(UiTokens.Color.Accent);
 
+    /// <summary>The tick at the top of a Memory cell's dial, where its needle stands for 0.</summary>
+    public Color MemoryCellZeroTick => ColorOf(UiTokens.Color.Muted);
+
     /// <summary>A Touch sensor's cushion at rest: <c>accent</c> at <c>alpha_soft</c>, a soft glow round its joint.</summary>
     public Color TouchCushion => ColorOf(UiTokens.Color.Accent) with { A = AlphaOf(UiTokens.Alpha.Soft) };
 

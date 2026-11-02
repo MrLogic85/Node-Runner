@@ -234,9 +234,10 @@ selected), upright on the beam's built-up side and turning with it.
 - **Camera:** a body, lens ring and hood, looking along its aim. Its rays
   leave from the picture's edge. In Training the followed shadow draws
   only rays that hit the ground, dashed `halo` to a ring at the hit.
-- **Memory cell:** drawn the same way, as its glyph, brackets round a
-  dot, on a `panel` square. It draws no live value; the part callout and
-  Status panel show its ports.
+- **Memory cell:** a barometer, a round case with a half-dial whose
+  needle shows `m`: upright for 0, a quarter turn right at 1 and left at
+  −1. Its 0 tick is `muted`. It shows the `m` the network reads next, so
+  in Build, and at every trial start, the needle is upright.
 
 ## Selection marks
 

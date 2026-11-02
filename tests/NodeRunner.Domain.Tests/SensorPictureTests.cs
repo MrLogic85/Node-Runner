@@ -17,6 +17,18 @@ public sealed class SensorPictureTests
             .Select(at => SensorPicture.Contains(kind, at, new Vector2D(0, 0), new Vector2D(0, 100), _hub, _hub)).ShouldBe([true, false, true, false]);
     }
 
+    // A Memory cell's tap area is its own square, not a sensor's.
+    [Fact]
+    public void Contains_UsesTheMemoryCellsOwnSquare()
+    {
+        var size = SensorPicture.SizeOf(new MemoryCellDef(1, 2));
+        var half = size / 2;
+
+        size.ShouldNotBe(SensorPicture.AccelerometerSize);
+        new[] { new Vector2D(half - 1, 50), new(half + 1, 50), new(0, 50 + half - 1), new(0, 50 + half + 1) }
+            .Select(at => SensorPicture.Contains(size, at, new Vector2D(0, 0), new Vector2D(0, 100), _hub, _hub)).ShouldBe([true, false, true, false]);
+    }
+
     // A motor (27) on A and a hub (15) on B, 200 apart: edges at 27 and 185, so the picture shifts 6 towards B.
     [Fact]
     public void Centre_SitsMidwayBetweenWhatCoversEachEnd()

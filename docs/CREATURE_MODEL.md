@@ -190,7 +190,8 @@ record the reason here.
 - **Each tick** the network runs with the current `m` as `value`, then
   `m = m + write · (target − m)`: write 0 keeps `m`, 1 takes the target.
   The loop runs outside the network, which stays feed-forward.
-- `m` is 0 at every trial start and is never saved.
+- `m` is 0 at every trial start and is never saved. On the creature it is
+  a barometer whose needle shows `m` (`docs/WORLD_VISUALS.md` → "Sensors").
 - **A new cell changes nothing:** its target starts at 0 and `m` at 0, so
   `m` stays exactly 0 until training moves its weights.
 
