@@ -146,6 +146,9 @@ public static class PartTray
         _ => null,
     };
 
+    /// <summary>Whether a tray part can be placed: a sensor, a joint part or a Memory cell.</summary>
+    public static bool IsPlaceable(BuildPart part) => SensorKindOf(part) is not null || IsJointPart(part) || part == BuildPart.MemoryCell;
+
     /// <summary>Whether a tray part goes on a joint rather than on a beam.</summary>
     public static bool IsJointPart(BuildPart part) => part is BuildPart.Servo or BuildPart.Stepper or BuildPart.VelocityMotor or BuildPart.Brake or BuildPart.Wheel or BuildPart.TouchSensor or BuildPart.Rubber or BuildPart.AngleSensor;
 

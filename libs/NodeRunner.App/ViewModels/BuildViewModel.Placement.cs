@@ -25,7 +25,7 @@ public sealed partial class BuildViewModel
             return false;
         }
 
-        if (!PartTray.IsAvailable(part) || (PartTray.SensorKindOf(part) is null && !PartTray.IsJointPart(part) && part != BuildPart.MemoryCell))
+        if (!PartTray.IsAvailable(part) || !PartTray.IsPlaceable(part))
         {
             reason = PartTray.ComingLater;
             return false;
