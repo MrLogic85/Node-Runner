@@ -693,9 +693,9 @@ public partial class BuildScreen : Control
         Apply();
     }
 
-    /// <summary>The part a tray row can be dragged out as: an available sensor or joint part, or null.</summary>
+    /// <summary>The part a tray row can be dragged out as: an available part that can be placed, or null.</summary>
     public static BuildPart? DraggablePart(PartTrayRow row) =>
-        row.IsAvailable && (PartTray.SensorKindOf(row.Part) is not null || PartTray.IsJointPart(row.Part)) ? row.Part : null;
+        row.IsAvailable && PartTray.IsPlaceable(row.Part) ? row.Part : null;
 
     /// <summary>Lifts the part out of its row: the canvas takes the drop, and the row's glyph floats above the finger.</summary>
     private Variant StartPartDrag(UiPartRow row, BuildPart part)
