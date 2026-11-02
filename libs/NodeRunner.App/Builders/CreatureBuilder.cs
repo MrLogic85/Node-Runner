@@ -585,18 +585,18 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// Moves a sensor to another beam unless that beam already has a sensor or Memory cell, as
-    /// <see cref="SensorMovedTo"/> shows it.
+    /// Moves a sensor or Memory cell to another beam unless that beam already has a sensor or Memory cell, as
+    /// <see cref="BeamPartMovedTo"/> shows it.
     /// </summary>
-    public bool MoveSensor(int sensorId, int beamId, [NotNullWhen(false)] out UiText? reason)
+    public bool MoveBeamPart(int partId, int beamId, [NotNullWhen(false)] out UiText? reason)
     {
-        var moved = SensorMovedTo(sensorId, beamId);
-        if (!CanMountOnBeam(beamId, sensorId, out reason))
+        var moved = BeamPartMovedTo(partId, beamId);
+        if (!CanMountOnBeam(beamId, partId, out reason))
         {
             return false;
         }
 
-        _sensors[SensorIndexOf(sensorId)] = moved;
+        Replace(moved);
         return true;
     }
 
@@ -618,14 +618,24 @@ public sealed partial class CreatureBuilder
     }
 
     /// <summary>
-    /// The sensor as it would be on <paramref name="beamId"/>: the same id, so the same network
-    /// ports, kind, name and settings. A Camera keeps the world direction it looks in as built, so
+    /// The sensor or Memory cell as it would be on <paramref name="beamId"/>: the same id, so the same
+    /// network ports, kind, name and settings. A Camera keeps the world direction it looks in as built, so
     /// its aim along the new beam changes.
     /// </summary>
-    public SensorDef SensorMovedTo(int sensorId, int beamId)
+    public IBeamPartDef BeamPartMovedTo(int partId, int beamId)
     {
-        var sensor = _sensors[SensorIndexOf(sensorId)];
+        var part = ExistingPart(partId);
         ValidateBeamId(beamId);
+        return part switch
+        {
+            SensorDef sensor => SensorMovedTo(sensor, beamId),
+            MemoryCellDef memoryCell => memoryCell.OnBeam(beamId),
+            _ => throw new ArgumentException("Part id must point to an existing sensor or Memory cell.", nameof(partId)),
+        };
+    }
+
+    private SensorDef SensorMovedTo(SensorDef sensor, int beamId)
+    {
         double? aim = null;
         if (sensor.Aim is { } beamAim)
         {

@@ -390,8 +390,8 @@ public sealed class CreatureBuilderTests
 
         builder.AddSensor(level, SensorKind.Camera, out var refusedId, out var refused).ShouldBeFalse();
         builder.AddSensor(down, SensorKind.Camera, out var camera, out _).ShouldBeTrue();
-        builder.MoveSensor(tilt, down, out var taken).ShouldBeFalse();
-        builder.MoveSensor(tilt, third, out var none).ShouldBeTrue();
+        builder.MoveBeamPart(tilt, down, out var taken).ShouldBeFalse();
+        builder.MoveBeamPart(tilt, third, out var none).ShouldBeTrue();
 
         refusedId.ShouldBe(0);
         refused.ShouldBe(CreatureBuilder.OnePartPerBeamReason);
@@ -403,11 +403,29 @@ public sealed class CreatureBuilderTests
             new SensorDef(camera, down, SensorKind.Camera, aim: SensorDef.DefaultAim(new Vector2D(90, 0), new Vector2D(90, 90))),
         ]);
         var before = builder.Sensors.ToList();
-        builder.MoveSensor(camera, down, out _).ShouldBeTrue();
+        builder.MoveBeamPart(camera, down, out _).ShouldBeTrue();
         builder.Sensors.ShouldBe(before);
         builder.RemovePart(tilt);
         builder.RemovePart(down);
         builder.Sensors.ShouldBeEmpty();
+    }
+
+    // A Memory cell moves as a sensor does, keeping its id and name, and never onto a beam with a part.
+    [Fact]
+    public void MemoryCells_MoveKeepingTheirIdAndName_ButNotOntoABeamWithAPart()
+    {
+        var builder = TwoBeams(out var level, out var down);
+        var third = builder.AddBeam(builder.Nodes[0].Id, builder.Nodes[2].Id);
+        var cell = builder.AddMemoryCell(level);
+        builder.Rename(cell, "Count");
+        builder.AddSensor(down, SensorKind.Accelerometer, out _, out _);
+
+        builder.MoveBeamPart(cell, down, out var taken).ShouldBeFalse();
+        builder.MoveBeamPart(cell, third, out var none).ShouldBeTrue();
+
+        taken.ShouldBe(CreatureBuilder.OnePartPerBeamReason);
+        none.ShouldBeNull();
+        builder.MemoryCells.ShouldBe([new MemoryCellDef(cell, third, "Count")]);
     }
 
     // A Camera keeps the world direction it looks in as built: level → down turns the beam by
@@ -415,7 +433,7 @@ public sealed class CreatureBuilderTests
     [Theory]
     [InlineData(false, 0.3 - (Math.PI / 2))]
     [InlineData(true, 0.3 + (Math.PI / 2))]
-    public void MoveSensor_Camera_KeepsTheWorldDirectionItLooksIn_AndItsSettings(bool fromTheDownBeam, double expectedAim)
+    public void MoveBeamPart_Camera_KeepsTheWorldDirectionItLooksIn_AndItsSettings(bool fromTheDownBeam, double expectedAim)
     {
         var builder = TwoBeams(out var level, out var down);
         var (from, to) = fromTheDownBeam ? (down, level) : (level, down);
@@ -425,7 +443,7 @@ public sealed class CreatureBuilderTests
         builder.SetParameter(camera, PartParameterId.Spread, 0.5);
         builder.SetParameter(camera, PartParameterId.CameraRange, 300);
 
-        builder.MoveSensor(camera, to, out _).ShouldBeTrue();
+        builder.MoveBeamPart(camera, to, out _).ShouldBeTrue();
 
         var moved = builder.Sensors.Single();
         moved.Aim!.Value.ShouldBe(expectedAim, 1e-9);

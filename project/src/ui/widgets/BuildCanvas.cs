@@ -367,18 +367,23 @@ public partial class BuildCanvas : Node2D
 
         var caught = _gestures.SelectionBoxCatches;
         var selected = caught.Count > 0 ? caught : _viewModel.Selection;
-        // A sensor being moved looks selected, so its preview never reads as a copy.
-        if (_gestures.MovingSensorId is { } moving)
+        // A sensor or Memory cell being moved looks selected, so its preview never reads as a copy.
+        if (_gestures.MovingBeamPartId is { } moving && _viewModel.FindPart(moving) is { } movingPart)
         {
-            selected = new PartSet([.. selected.Parts, new CreatureElementSelection(CreatureElementKind.Sensor, moving)]);
+            selected = new PartSet([.. selected.Parts, CreatureElementSelection.Of(movingPart)]);
         }
 
         (BeamDef, SensorKind, double?)? previewSensor = null;
         (BuildPart, int)? previewJointPart = null;
         BeamDef? previewMemoryCell = null;
-        if (_gestures.MovedSensorPreview is { } moved)
+        var moved = _gestures.MovedBeamPartPreview;
+        if (moved is SensorDef movedSensor)
         {
-            previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(moved.BeamId)], moved.Kind, moved.Aim);
+            previewSensor = (_viewModel.Beams[_viewModel.BeamIndexOf(movedSensor.BeamId)], movedSensor.Kind, movedSensor.Aim);
+        }
+        else if (moved is MemoryCellDef movedCell)
+        {
+            previewMemoryCell = _viewModel.Beams[_viewModel.BeamIndexOf(movedCell.BeamId)];
         }
         else if (_partDrag is { } part && PartTray.SensorKindOf(part) is { } kind
             && _dropHover is { Kind: CreatureElementKind.Beam } hover
@@ -444,7 +449,7 @@ public partial class BuildCanvas : Node2D
         DrawInvalidBeamMarkers(canvas);
         DrawBeamPreview(canvas);
         DrawBeamEndRings(canvas);
-        DrawSensorMoveLine(canvas);
+        DrawBeamPartMoveLine(canvas);
         DrawSelectionFrame(canvas);
     }
 
@@ -494,9 +499,9 @@ public partial class BuildCanvas : Node2D
         PistonDrawing.DrawStroke(canvas, ViewTransform(), Theme, ToGodot(NodeById(nodeA).Position), ToGodot(NodeById(nodeB).Position), (float)shortest, (float)longest, tickHalf, (float?)rest);
 
     // The tray part being placed: one dragged from the tray, or one picked to tap into place, which
-    // shows where it goes the same way from the moment it is picked. Null while a sensor is
+    // shows where it goes the same way from the moment it is picked. Null while a sensor or Memory cell is
     // moved, so only the move's targets show.
-    private BuildPart? PlacingPart => _gestures?.MovingSensorId is null ? _partDrag ?? _viewModel?.PickedPart : null;
+    private BuildPart? PlacingPart => _gestures?.MovingBeamPartId is null ? _partDrag ?? _viewModel?.PickedPart : null;
 
 
     /// <summary>Where each Accelerometer's beam is now, in creature units, for <see cref="BuildSensorMotion"/>.</summary>

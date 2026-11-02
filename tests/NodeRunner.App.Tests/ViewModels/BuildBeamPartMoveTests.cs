@@ -7,10 +7,10 @@ using static NodeRunner.App.Tests.ViewModels.BuildFixtures;
 namespace NodeRunner.App.Tests.ViewModels;
 
 /// <summary>
-/// A sensor moves to another beam and keeps what the network learned about it: its id, so its
+/// A sensor or Memory cell moves to another beam and keeps what the network learned about it: its id, so its
 /// ports and weights, on locked Creations too.
 /// </summary>
-public sealed class BuildSensorMoveTests
+public sealed class BuildBeamPartMoveTests
 {
     [Fact]
     public void OnALockedCreation_AMovedSensor_IsAnUndoStep_AndKeepsItsPortsAndTrainedWeights()
@@ -22,7 +22,7 @@ public sealed class BuildSensorMoveTests
         build.LoadCreation(creation);
         var before = build.Snapshot();
 
-        build.MoveSensor(21, Beam(11)).ShouldBeTrue();
+        build.MoveBeamPart(21, Beam(11)).ShouldBeTrue();
         var after = build.Snapshot();
         after.Sensors.Single(sensor => sensor.Id == 21).BeamId.ShouldBe(11);
         build.IsLocked.ShouldBeTrue();
@@ -31,11 +31,33 @@ public sealed class BuildSensorMoveTests
         build.Redo();
         build.Snapshot().Sensors.ShouldBe(after.Sensors);
 
-        build.MoveSensor(20, Beam(12)).ShouldBeTrue();
+        build.MoveBeamPart(20, Beam(12)).ShouldBeTrue();
         build.SingleSelectedId(CreatureElementKind.Sensor).ShouldBe(20);
         var updated = new CreationUpdateCoordinator(repository).ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
         updated.Creature.Sensors.Select(sensor => (sensor.Id, sensor.BeamId)).ShouldBe([(20, 12), (21, 11)]);
         NetworkPorts.Of(updated.Creature).Inputs.ShouldBe(NetworkPorts.Of(creation.Creature).Inputs);
+        updated.Training!.Network.Neurons.ShouldBe(creation.Training!.Network.Neurons);
+        updated.Training.Network.Connections.ShouldBe(creation.Training.Network.Connections);
+    }
+
+    [Fact]
+    public void OnALockedCreation_AMovedMemoryCell_KeepsItsPortsAndTrainedWeights()
+    {
+        // Memory cell 32 on beam 11, and a free beam 31 to move it to.
+        var withCell = new CreatureDef([.. Creature().Parts, new BeamDef(31, 1, 4), new MemoryCellDef(32, 11, "Count")], nextPartId: 33);
+        var repository = new InMemoryCreationRepository();
+        var creation = new CreationDef(Guid.NewGuid(), "Walker", withCell, TestTraining.StateFor(withCell, 3));
+        repository.Save(creation);
+        var build = new BuildViewModel();
+        build.LoadCreation(creation);
+
+        build.MoveBeamPart(32, Beam(31)).ShouldBeTrue();
+        build.IsLocked.ShouldBeTrue();
+        build.SingleSelectedId(CreatureElementKind.MemoryCell).ShouldBe(32);
+        var updated = new CreationUpdateCoordinator(repository).ApplyEdit(creation.Id, build.Snapshot(), build.OpenedNetwork)!;
+        updated.Creature.MemoryCells.ShouldBe([new MemoryCellDef(32, 31, "Count")]);
+        NetworkPorts.Of(updated.Creature).Inputs.ShouldBe(NetworkPorts.Of(creation.Creature).Inputs);
+        NetworkPorts.Of(updated.Creature).Outputs.ShouldBe(NetworkPorts.Of(creation.Creature).Outputs);
         updated.Training!.Network.Neurons.ShouldBe(creation.Training!.Network.Neurons);
         updated.Training.Network.Connections.ShouldBe(creation.Training.Network.Connections);
     }
@@ -46,21 +68,21 @@ public sealed class BuildSensorMoveTests
         var build = Loaded(Creature());
         var before = build.Snapshot().Sensors;
 
-        build.MoveSensor(20, Beam(12)).ShouldBeFalse();
+        build.MoveBeamPart(20, Beam(12)).ShouldBeFalse();
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Beam(12), UiText.Plain("One sensor or Memory cell per beam")));
-        build.MoveSensor(20, Joint(4)).ShouldBeFalse();
+        build.MoveBeamPart(20, Joint(4)).ShouldBeFalse();
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(4), UiText.Plain("Cameras go on a beam")));
-        build.MoveSensor(20, null).ShouldBeFalse();
+        build.MoveBeamPart(20, null).ShouldBeFalse();
         build.PlacementNote.ShouldBeNull();
-        build.MoveSensor(20, Beam(10)).ShouldBeTrue();
+        build.MoveBeamPart(20, Beam(10)).ShouldBeTrue();
         build.PlacementNote.ShouldBeNull();
         build.Snapshot().Sensors.ShouldBe(before);
         build.CanUndo.ShouldBeFalse();
 
         build.SelectOnly(CreatureElementKind.Sensor, 20);
         build.DeleteSelectedParts();
-        build.SensorMovePreview(20, Beam(11)).ShouldBeNull();
-        build.MoveSensor(20, Beam(11)).ShouldBeFalse();
+        build.BeamPartMovePreview(20, Beam(11)).ShouldBeNull();
+        build.MoveBeamPart(20, Beam(11)).ShouldBeFalse();
         build.PlacementNote.ShouldBeNull();
     }
 

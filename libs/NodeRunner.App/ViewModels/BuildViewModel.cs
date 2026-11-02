@@ -85,6 +85,14 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
     };
 
+    /// <summary>Why a sensor or Memory cell moved onto anything but a beam is refused.</summary>
+    public static UiText GoesOnABeamReason(IBeamPartDef part) => part switch
+    {
+        SensorDef sensor => GoesOnABeamReason(sensor.Kind),
+        MemoryCellDef => CreatureBuilder.MemoryCellsGoOnABeamReason,
+        _ => throw new ArgumentOutOfRangeException(nameof(part), part, null),
+    };
+
     /// <summary>Why a locked Creation refuses an edit that would change its network: see <see cref="IsLocked"/>.</summary>
     public static UiText LockedReason { get; } = UiText.Plain("The creation is locked to avoid changes to the network, unlock to enable.");
 
@@ -568,7 +576,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>Where the sensor <paramref name="sensorId"/> sits on its beam and senses from (<see cref="SensorPicture.Centre"/>).</summary>
     public Vector2D SensorCentre(int sensorId) => SensorCentreOn(Sensors.Single(sensor => sensor.Id == sensorId).BeamId);
 
-    /// <summary>Where a sensor sits on the beam <paramref name="beamId"/> (<see cref="SensorPicture.Centre"/>).</summary>
+    /// <summary>Where a sensor or Memory cell sits on the beam <paramref name="beamId"/> (<see cref="SensorPicture.Centre"/>).</summary>
     public Vector2D SensorCentreOn(int beamId)
     {
         var beam = Beams[BeamIndexOf(beamId)];
@@ -656,7 +664,7 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
     /// <summary>
     /// What the canvas draws on the selected surface, which a touch hits there too
     /// (<see cref="DrawnPartAt"/>): what belongs with <paramref name="selected"/>, a joint part
-    /// as its joint, and the <paramref name="targets"/> alone, with the moved sensor.
+    /// as its joint, and the <paramref name="targets"/> alone, with the moved sensor or Memory cell.
     /// </summary>
     public RaisedParts RaisedParts(PartSet selected, PlacingTargets targets) => RaisedIn(DrawGroups(), selected, targets);
 
@@ -665,9 +673,9 @@ public sealed partial class BuildViewModel : INotifyPropertyChanged
         ArgumentNullException.ThrowIfNull(selected);
         ArgumentNullException.ThrowIfNull(targets);
         var parts = selected.Parts;
-        if (targets.MovingSensor is { } moving)
+        if (targets.MovingBeamPart is { } moving && _builder.FindPart(moving) is { } part)
         {
-            parts = parts.Append(new CreatureElementSelection(CreatureElementKind.Sensor, moving));
+            parts = parts.Append(CreatureElementSelection.Of(part));
         }
 
         return groups.Raised(parts, _builder.JointParts, targets.Beams, targets.Joints);

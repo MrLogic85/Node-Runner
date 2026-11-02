@@ -263,7 +263,7 @@ public class BuildGesturesTests
         sensorGestures.Press(new Vector2D(300, 300), 1);
         sensorGestures.Release(new Vector2D(100, 150), 0);
         sensorGestures.Release(new Vector2D(300, 300), 1);
-        sensorGestures.MovingSensorId.ShouldBeNull();
+        sensorGestures.MovingBeamPartId.ShouldBeNull();
         sensors.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
         sensors.CanUndo.ShouldBeFalse();
     }
@@ -850,15 +850,15 @@ public class BuildGesturesTests
         var (_, gestures) = SensorsOnThreeBeams();
         gestures.Press(new Vector2D(100, 0));
         gestures.Drag(new Vector2D(100, 150));
-        gestures.MovingSensorId.ShouldBe(6);
-        gestures.MovedSensorPreview.ShouldBe(new SensorDef(6, 7, SensorKind.Accelerometer));
+        gestures.MovingBeamPartId.ShouldBe(6);
+        gestures.MovedBeamPartPreview.ShouldBe(new SensorDef(6, 7, SensorKind.Accelerometer));
 
         // The Camera's beam is taken, and its own beam is where it already is.
         gestures.Drag(new Vector2D(200, 75));
-        gestures.SensorDropTarget.ShouldBe(Beam(8));
-        gestures.MovedSensorPreview.ShouldBeNull();
+        gestures.BeamPartDropTarget.ShouldBe(Beam(8));
+        gestures.MovedBeamPartPreview.ShouldBeNull();
         gestures.Drag(new Vector2D(100, 0));
-        gestures.MovedSensorPreview.ShouldBeNull();
+        gestures.MovedBeamPartPreview.ShouldBeNull();
 
         (_, gestures) = SensorsOnThreeBeams();
         gestures.View.ZoomAbout(new Vector2D(0, 0), 2);
@@ -870,10 +870,10 @@ public class BuildGesturesTests
 
         // Both over empty canvas: the drop target stays, but the line still follows the finger.
         gestures.Drag(new Vector2D(450, 450));
-        gestures.SensorDragEnd.ShouldBe(new Vector2D(200, 200));
+        gestures.BeamPartDragEnd.ShouldBe(new Vector2D(200, 200));
         redraws.ShouldBe(1);
         gestures.Release(new Vector2D(450, 450));
-        gestures.SensorDragEnd.ShouldBeNull();
+        gestures.BeamPartDragEnd.ShouldBeNull();
     }
 
     [Fact]
@@ -885,11 +885,46 @@ public class BuildGesturesTests
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
         build.PlacementNote!.Target.ShouldBe(Beam(8));
         build.CanUndo.ShouldBeFalse();
-        gestures.MovingSensorId.ShouldBeNull();
+        gestures.MovingBeamPartId.ShouldBeNull();
 
         gestures.DragAcross(new Vector2D(100, 0), new Vector2D(100, 300));
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
         build.PlacementNote.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(BuildTool.Joint, false)]
+    [InlineData(BuildTool.Select, true)]
+    public void DraggingAMemoryCell_MovesItAsASensorMoves_InAnyToolAndWhenLocked(BuildTool tool, bool locked)
+    {
+        var (build, gestures) = MemoryCellOnThreeBeams(locked);
+        build.ActiveTool = tool;
+
+        gestures.Press(new Vector2D(100, 0));
+        gestures.Drag(new Vector2D(100, 150));
+        gestures.MovingBeamPartId.ShouldBe(6);
+        gestures.MovedBeamPartPreview.ShouldBe(new MemoryCellDef(6, 7, "Count"));
+        var targets = gestures.TargetsOf(null);
+        targets.Beams.ShouldBe([5, 7], ignoreOrder: true);
+        targets.RefusedBeams.ShouldBe([8]);
+        build.RaisedParts(PartSet.None, targets).BeamParts.ShouldContain(6);
+        gestures.Drag(new Vector2D(200, 75));
+        gestures.MovedBeamPartPreview.ShouldBeNull();
+        gestures.Release(new Vector2D(200, 75));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Beam(8), UiText.Plain("One sensor or Memory cell per beam")));
+
+        gestures.DragAcross(new Vector2D(100, 0), new Vector2D(0, 150));
+        build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, Joint(3), UiText.Plain("Memory cells go on a beam")));
+        gestures.DragAcross(new Vector2D(100, 0), new Vector2D(100, 300));
+        build.PlacementNote.ShouldBeNull();
+        build.MemoryCells.ShouldBe([new MemoryCellDef(6, 5, "Count")]);
+        build.CanUndo.ShouldBeFalse();
+
+        gestures.DragAcross(new Vector2D(100, 0), new Vector2D(100, 150));
+        build.MemoryCells.ShouldBe([new MemoryCellDef(6, 7, "Count")]);
+        build.SingleSelectedId(CreatureElementKind.MemoryCell).ShouldBe(6);
+        build.Undo();
+        build.MemoryCells.ShouldBe([new MemoryCellDef(6, 5, "Count")]);
     }
 
     [Theory]
@@ -906,8 +941,8 @@ public class BuildGesturesTests
 
         gestures.Press(new Vector2D(100, 0));
         gestures.Drag(new Vector2D(100, 130));
-        gestures.SensorDropTarget.ShouldBe(link);
-        gestures.MovedSensorPreview.ShouldBeNull();
+        gestures.BeamPartDropTarget.ShouldBe(link);
+        gestures.MovedBeamPartPreview.ShouldBeNull();
         gestures.Release(new Vector2D(100, 130));
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
         build.PlacementNote.ShouldBe(new CanvasNote(CanvasNoteKind.Danger, link, BuildViewModel.GoesOnABeamReason(SensorKind.Accelerometer)));
@@ -915,7 +950,7 @@ public class BuildGesturesTests
 
         gestures.Press(new Vector2D(100, 0));
         gestures.Drag(new Vector2D(100, 150));
-        gestures.SensorDropTarget.ShouldBe(Beam(7));
+        gestures.BeamPartDropTarget.ShouldBe(Beam(7));
         gestures.Release(new Vector2D(100, 150));
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(7);
         build.PlacementNote.ShouldBeNull();
@@ -930,11 +965,11 @@ public class BuildGesturesTests
         gestures.Drag(new Vector2D(100, 150));
         build.PlacingTargetsOf(null, 6).Beams.ShouldContain(7);
         build.DeleteSelectedParts();
-        gestures.MovedSensorPreview.ShouldBeNull();
+        gestures.MovedBeamPartPreview.ShouldBeNull();
         build.PlacingTargetsOf(null, 6).ShouldBeSameAs(PlacingTargets.None);
         gestures.Release(new Vector2D(100, 150));
         build.Sensors.Select(sensor => sensor.Id).ShouldBe([9]);
-        gestures.MovingSensorId.ShouldBeNull();
+        gestures.MovingBeamPartId.ShouldBeNull();
         build.Undo();
         build.Sensors.Select(sensor => sensor.Id).ShouldBe([6, 9]);
 
@@ -943,10 +978,10 @@ public class BuildGesturesTests
         gestures.Press(new Vector2D(100, 0));
         gestures.Drag(new Vector2D(100, 150));
         build.DeleteSelectedParts();
-        gestures.MovedSensorPreview.ShouldBeNull();
+        gestures.MovedBeamPartPreview.ShouldBeNull();
         gestures.Release(new Vector2D(100, 150));
         build.Sensors.Single(sensor => sensor.Id == 6).BeamId.ShouldBe(5);
-        gestures.MovingSensorId.ShouldBeNull();
+        gestures.MovingBeamPartId.ShouldBeNull();
     }
 
     private static Vector2D[] Positions(BuildViewModel build) => [.. build.Nodes.Select(node => node.Position)];
@@ -994,6 +1029,21 @@ public class BuildGesturesTests
         builder.AddNode(new Vector2D(0, 150));
         builder.AddNode(new Vector2D(200, 150));
         builder.AddSensor(builder.AddBeam(1, 2), SensorKind.Accelerometer, out _, out _);
+        builder.AddBeam(3, 4);
+        builder.AddSensor(builder.AddBeam(2, 4), SensorKind.Camera, out _, out _);
+        var build = Loaded(builder.Build(), locked);
+        return (build, new BuildGestures(build));
+    }
+
+    // As SensorsOnThreeBeams, with Memory cell 6, "Count", on beam 5 in place of the Accelerometer.
+    private static (BuildViewModel Build, BuildGestures Gestures) MemoryCellOnThreeBeams(bool locked)
+    {
+        var builder = new CreatureBuilder();
+        builder.AddNode(new Vector2D(0, 0));
+        builder.AddNode(new Vector2D(200, 0));
+        builder.AddNode(new Vector2D(0, 150));
+        builder.AddNode(new Vector2D(200, 150));
+        builder.Rename(builder.AddMemoryCell(builder.AddBeam(1, 2)), "Count");
         builder.AddBeam(3, 4);
         builder.AddSensor(builder.AddBeam(2, 4), SensorKind.Camera, out _, out _);
         var build = Loaded(builder.Build(), locked);
