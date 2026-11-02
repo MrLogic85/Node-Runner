@@ -14,8 +14,8 @@ public static class SensorPicture
     /// <summary>The Camera picture's side, in canvas units: twice the first size so it reads on a phone.</summary>
     public const double CameraSize = 44;
 
-    /// <summary>The Memory cell glyph's side, in canvas units: an Accelerometer's.</summary>
-    public const double MemoryCellSize = AccelerometerSize;
+    /// <summary>The Memory cell barometer's side, in canvas units: between the other two, so its needle reads on a phone.</summary>
+    public const double MemoryCellSize = 32;
 
     /// <summary>The picture's side of <paramref name="part"/>, in canvas units.</summary>
     public static double SizeOf(IBeamPartDef part) => part switch

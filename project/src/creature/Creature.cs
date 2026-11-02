@@ -752,10 +752,12 @@ public partial class Creature : Node2D
             var upSign = Accelerometer.UpSign(
                 definition.Nodes[definition.NodeIndexOf(beam.NodeA)].Position,
                 definition.Nodes[definition.NodeIndexOf(beam.NodeB)].Position);
+            var cell = i;
             var visual = new MemoryCellVisual
             {
                 Name = $"MemoryCell{i}Picture",
                 Theme = Theme,
+                ReadValue = () => _memoryValues[cell],
                 Position = PictureOnBeam(definition, beamIndex),
                 Rotation = upSign == 1 ? Mathf.Pi : 0,
             };

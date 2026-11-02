@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws a sensor on its beam as a small picture of the real thing, and a Memory cell as its glyph. Callers pass the draw transform
+/// Draws a sensor on its beam as a small picture of the real thing, and a Memory cell as a barometer. Callers pass the draw transform
 /// they are in, set so the origin is
 /// the picture's centre on its beam (<see cref="SensorPicture.Centre"/>) and -y is the sensor's top (the beam's built up side). Each picture fits its
 /// <see cref="SensorPicture.SizeOf(IBeamPartDef)"/> square, which is also its tap area. Everything is
@@ -41,13 +41,13 @@ public static class SensorDrawing
     private const float _hoodWide = 9;
     private const float _lensRadius = 5;
 
-    // The Memory cell: its glyph, brackets round a dot, on a panel square that fills its picture.
-    private const float _cellHalf = (float)(SensorPicture.MemoryCellSize / 2);
-    private const float _cellRadius = 5;
-    private const float _bracketHalfHeight = 7.5f;
-    private const float _bracketX = 7;
-    private const float _bracketArm = 3;
-    private const float _cellDotRadius = 2.8f;
+    // The Memory cell: a barometer, a round case with a centred half-dial whose hub is the case's centre.
+    private const float _caseRadius = (float)(SensorPicture.MemoryCellSize / 2) - 1.5f;
+    private const float _dialRadius = 9;
+    private const float _needleLength = 8;
+    private const float _zeroTickLength = 4;
+    private const float _hubRadius = 2.2f;
+    private const int _dialSegments = 16;
 
     private const int _cornerSegments = 4;
 
@@ -99,29 +99,26 @@ public static class SensorDrawing
         pen.Ring(bodyCentre.Rotated(turn), _lensRadius, line, _line);
     }
 
-    /// <summary>A Memory cell: its glyph, brackets round a dot, on a <c>panel</c> square. It draws no live value.</summary>
-    public static void DrawMemoryCell(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, bool selected)
+    /// <summary>
+    /// A Memory cell as a barometer whose needle shows <paramref name="value"/>, its m: upright for 0,
+    /// a quarter turn right at +1 and left at −1, clamped past them (<see cref="UiDial.NeedleTurn"/>).
+    /// </summary>
+    public static void DrawMemoryCell(CanvasItem canvas, Transform2D drawTransform, VisualTheme theme, double value, bool selected)
     {
         ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(theme);
         using var pen = UiPixelPen.Begin(canvas, drawTransform);
         var line = LineColor(theme, selected);
-        pen.Polygon(RoundedRect(Vector2.Zero, _cellHalf, _cellHalf, _cellRadius), theme.SensorFill);
-        foreach (var side in new[] { -1f, 1f })
+        pen.Disc(Vector2.Zero, _caseRadius, theme.SensorFill);
+        pen.Ring(Vector2.Zero, _caseRadius, line, _line);
+        pen.Arc(Vector2.Zero, _dialRadius, -Mathf.Pi, 0, _dialSegments, line, _line * 0.75f);
+        pen.Line(new Vector2(0, -_dialRadius - (_zeroTickLength / 2)), new Vector2(0, -_dialRadius + (_zeroTickLength / 2)), theme.MemoryCellZeroTick, _line * 0.75f);
+        if (UiDial.NeedleTurn(value, centred: true) is { } turn)
         {
-            var x = side * _bracketX;
-            pen.Polyline(
-                [
-                    new Vector2(x - (side * _bracketArm), -_bracketHalfHeight),
-                    new Vector2(x, -_bracketHalfHeight),
-                    new Vector2(x, _bracketHalfHeight),
-                    new Vector2(x - (side * _bracketArm), _bracketHalfHeight),
-                ],
-                line,
-                _line);
+            pen.Line(Vector2.Zero, Vector2.FromAngle(turn - (Mathf.Pi / 2)) * _needleLength, line, _line);
         }
 
-        pen.Disc(Vector2.Zero, _cellDotRadius, line);
+        pen.Disc(Vector2.Zero, _hubRadius, line);
     }
 
     /// <summary>A selected camera's rays in Build, from <paramref name="origin"/> to each end.</summary>

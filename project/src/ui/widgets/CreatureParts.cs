@@ -546,7 +546,7 @@ public partial class CreatureParts : Node2D
         }
     }
 
-    // Each Memory cell as its glyph on its beam, upright on the beam's built up side as a sensor is,
+    // Each Memory cell as its barometer on its beam, upright on the beam's built up side as a sensor is,
     // and the one a tray drag would place on the beam under the finger.
     private void ShowMemoryCells(CreatureShape shape, Dictionary<int, NodeDef> nodes, CreatureMarks marks)
     {

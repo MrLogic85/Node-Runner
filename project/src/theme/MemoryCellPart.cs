@@ -8,10 +8,19 @@ namespace NodeRunner.Theme;
 /// </summary>
 public partial class MemoryCellPart : PartVisual
 {
+    private double _value;
+
     public MemoryCellPart()
         : base(DrawSlot.Sensor)
     {
     }
 
-    public override void _Draw() => SensorDrawing.DrawMemoryCell(this, Godot.Transform2D.Identity, Theme, Selected);
+    /// <summary>The m its needle shows; 0 is upright.</summary>
+    public double Value
+    {
+        get => _value;
+        set => Change(ref _value, value);
+    }
+
+    public override void _Draw() => SensorDrawing.DrawMemoryCell(this, Godot.Transform2D.Identity, Theme, Value, Selected);
 }
