@@ -134,7 +134,8 @@ last.
   in Claude Code's nested `hooks` shape, as the existing reviewers do:
   Claude Code drops an agent whose hooks are flat.
   `design-lead` is no reviewer and keeps plain `Bash`, since it runs the
-  app and writes screenshots and mockups in `.scratch/`.
+  app and writes screenshots and mockups in `.scratch/`, and has `Skill`
+  for `desktop-check`, `android-check` and `render-mockup`.
 - The `LSP` tool runs `csharp-ls`, pinned in `dotnet-tools.json`, from
   the `node-runner-csharp` plugin that `.claude/settings.json` enables
   from `.claude/marketplace/`; `LspConfigSpec` checks the chain.
