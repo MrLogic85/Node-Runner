@@ -59,9 +59,10 @@ public sealed class NetworkPortsTests
         Refuses.OutOfRange(() => NetworkPorts.CameraChannels(rays + 1));
     }
 
-    // Readings pass through; motions, frequencies and what a Memory cell remembers are signed; lengths,
-    // strengths and its write are shares. A new port starts passive: its Strength or write about 2%
-    // (sigmoid of −4), everything else at 0. Only what drives a motion or force is powered.
+    // Readings pass through; motions, frequencies and what a Memory cell remembers are signed; lengths and
+    // strengths are shares, and the cell's write is a rate; the cell's outputs are damped. A new port starts
+    // passive: its Strength at sigmoid(−4), about 2%, its write at −4 · k so its damped sigmoid is again about
+    // 2%, everything else at 0. Only what drives a motion or force is powered.
     [Fact]
     public void PortSignals_GiveEachSignalItsActivationAndPassiveBias()
     {
@@ -70,7 +71,7 @@ public sealed class NetworkPortsTests
             (PortSignal.Reading, NeuronActivation.Identity, 0.0), (PortSignal.Velocity, NeuronActivation.Tanh, 0),
             (PortSignal.Position, NeuronActivation.Tanh, 0), (PortSignal.Frequency, NeuronActivation.Tanh, 0),
             (PortSignal.Length, NeuronActivation.Sigmoid, 0), (PortSignal.Strength, NeuronActivation.Sigmoid, -4),
-            (PortSignal.Remember, NeuronActivation.Tanh, 0), (PortSignal.Write, NeuronActivation.Sigmoid, -4),
+            (PortSignal.Remember, NeuronActivation.DampedTanh, 0), (PortSignal.Write, NeuronActivation.DampedSigmoid, -16),
         })
         {
             (PortSignals.Activation(signal), PortSignals.PassiveBias(signal)).ShouldBe((activation, bias), $"{signal}");

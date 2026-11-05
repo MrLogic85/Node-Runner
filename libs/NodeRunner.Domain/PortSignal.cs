@@ -38,8 +38,8 @@ public enum PortSignal
     Remember,
 
     /// <summary>
-    /// How much of the way a Memory cell moves to its <see cref="Remember"/> target this tick, 0…1
-    /// (<c>NodeRunner.Mechanics.MemoryCell</c>). Not a <see cref="Strength"/>: it is a share of a distance, not of a force.
+    /// How fast a Memory cell moves to its <see cref="Remember"/> target, 0…1 of its full rate
+    /// (<c>NodeRunner.Mechanics.MemoryCell</c>). Not a <see cref="Strength"/>: it is a rate, not a share of a force.
     /// </summary>
     Write,
 }

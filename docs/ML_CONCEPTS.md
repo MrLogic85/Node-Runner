@@ -25,7 +25,8 @@ sensor off are #960.
 - **What:** The nonlinearity between layers. Without it, a deep network
   collapses to a single linear map.
 - **Where:** `libs/NodeRunner.ML/Activation.cs` (`Tanh`, `ReLU`,
-  `Sigmoid`); each output uses its signal's activation
+  `Sigmoid`, and a Memory cell's `DampedTanh` and `DampedSigmoid`); each
+  output uses its signal's activation
   (`docs/CREATURE_MODEL.md` → Output conventions).
 - **How we show it:** Swapping the activation of a trained network and
   watching its behaviour change (#960).
@@ -75,8 +76,9 @@ sensor off are #960.
   (Touch sensor, Angle sensor), and Servo, Motor, Stepper and Piston
   readings (`docs/CREATURE_MODEL.md`). There is no speed or elevation
   input: the network learns movement from what its parts feel. Pulse, a
-  rhythm input, is #527. A Memory cell feeds back what the network wrote
-  last tick (`docs/CREATURE_MODEL.md` → "Memory cell").
+  rhythm input, is #527. A Memory cell feeds back the number the network
+  has been moving towards its target (`docs/CREATURE_MODEL.md` → "Memory
+  cell").
 - **Why a turning angle reads as sine and cosine:** a Motor, a Stepper or
   the joint under an Angle sensor may turn round and round, so a plain
   angle would jump from one end to the other after each full turn, and

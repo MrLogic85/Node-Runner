@@ -179,17 +179,20 @@ record the reason here.
 
 ### Memory cell
 
-- **Beginner:** A note the network writes to itself: one number it sets
-  on one tick and reads back on the next, so it can act on what happened
-  a moment ago.
+- **Beginner:** A note the network writes to itself: one number it moves
+  towards a value and reads back every tick, so it can act on what
+  happened a moment ago.
 - `MemoryCellDef`, saved under `memoryCells`; Mechanics: `MemoryCell`. It
   sits on a beam as a sensor does, with no settings.
 - **Ports:** input `value`, which reads the number `m` (−1…1); outputs
-  `target` (−1…1), what to remember, and `write` (0…1), how much of the
-  way to move `m` towards it.
+  `target` (−1…1), what to remember, and `write` (0…1), how fast to move
+  `m` towards it.
 - **Each tick** the network runs with the current `m` as `value`, then
-  `m = m + write · (target − m)`: write 0 keeps `m`, 1 takes the target.
-  The loop runs outside the network, which stays feed-forward.
+  `m = m + write · Δt / T · (target − m)`, with Δt the fixed physics step
+  and T = 1 s (`MemoryCell.WriteTime`). Write 0 keeps `m`; at write 1, `m`
+  covers 63% of its way to a steady target in 1 s and 95% in 3 s, like a
+  Piston's rise time. The loop runs outside the network, which stays
+  feed-forward.
 - `m` is 0 at every trial start and is never saved. On the creature it is
   a barometer whose needle shows `m` (`docs/WORLD_VISUALS.md` → "Sensors").
 - **A new cell changes nothing:** its target starts at 0 and `m` at 0, so
@@ -472,13 +475,17 @@ triangle that loses a beam to a tear can fold again.
     Build; the output is the network's choice of how much of it to use.
   - **Frequency** uses `tanh`: −1…1 of a Stepper's Max frequency,
     counter-clockwise positive; 0 stands still.
-  - A Memory cell's **target** uses `tanh` and its **write** `sigmoid`:
-    the share of the way `m` moves, not a Strength.
+  - A Memory cell's **target** uses `dampedTanh` and its **write**
+    `dampedSigmoid`: `tanh` and `sigmoid` of the sum divided by k = 4
+    (`PortSignals.TanhDamping` and `SigmoidDamping`), so they can rest
+    between their ends instead of saturating. Write is the rate `m` moves
+    at, not a Strength.
   - **New ports start almost passive:** when a part joins a trained
-    network, its incoming weights are 0 and a new strength or write output
-    starts at bias −4, about 2% force or write. Position, velocity, length and frequency
-    outputs start at bias 0: a length output asks for the middle of its
-    travel, and a Stepper stands still. The trained gait therefore never
+    network, its incoming weights are 0, a new strength output starts at
+    bias −4, about 2% force, and a write output at −4 · k = −16, the
+    same 2%. Position, velocity, length and frequency outputs start at
+    bias 0: a length output asks for the middle of its travel, and a
+    Stepper stands still. The trained gait therefore never
     breaks; training explores the new port (`docs/TRAINING_LOOP.md` →
     "New ports are explored"). Generation 0 starts its own way
     (`docs/TRAINING_LOOP.md` → Generations → Generation 0).

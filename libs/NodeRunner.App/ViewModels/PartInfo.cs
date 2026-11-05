@@ -32,5 +32,5 @@ public static class PartInfo
 
     public static UiText Rubber { get; } = UiText.Plain("Doubles a joint's friction.");
 
-    public static UiText MemoryCell { get; } = UiText.Plain("Remembers one number from one tick to the next.");
+    public static UiText MemoryCell { get; } = UiText.Plain("Holds one number that the network moves towards a value over time.");
 }

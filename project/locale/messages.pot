@@ -476,6 +476,10 @@ msgstr ""
 msgid "Hills"
 msgstr ""
 
+#: libs/NodeRunner.App/ViewModels/PartInfo.cs
+msgid "Holds one number that the network moves towards a value over time."
+msgstr ""
+
 #: libs/NodeRunner.App/ViewModels/PartParameters.cs
 msgid "How far it can see"
 msgstr ""
@@ -899,10 +903,6 @@ msgstr ""
 
 #: project/scenes/screens/BuildScreen.tscn
 msgid "Redo"
-msgstr ""
-
-#: libs/NodeRunner.App/ViewModels/PartInfo.cs
-msgid "Remembers one number from one tick to the next."
 msgstr ""
 
 #: project/src/hosts/CreationActions.cs

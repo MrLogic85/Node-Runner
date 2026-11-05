@@ -6,7 +6,7 @@ namespace NodeRunner.ML.Networks;
 /// The first generation of a new Creation. Its base network has no weights and holds the
 /// built pose at <see cref="FullStrengthBias"/>, each Stepper still: each length output's bias asks for the Piston's
 /// drawn length, like a robot that starts stiff in its default pose
-/// and learns offsets from it. A Memory cell's write starts at bias 0, not the −4 a cell added to a
+/// and learns offsets from it. A Memory cell's write starts at bias 0, not the −16 a cell added to a
 /// trained network gets, so the noisy shadows use the cell from the start; its target is 0, so the
 /// reference's cell still stays at 0. The last shadow runs it unchanged, as a
 /// reference near 0; every other shadow is a wide random perturbation of it. Parts added to a

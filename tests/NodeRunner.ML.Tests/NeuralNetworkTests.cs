@@ -31,6 +31,12 @@ public sealed class NeuralNetworkTests
         perOutput.CaptureActivations([0.5])[1].ShouldBe(output);
         perOutput.Clone().OutputActivations.ShouldBe([Activation.Tanh, Activation.Sigmoid]);
 
+        // A Memory cell's outputs take their sum divided by k = 4, pinned as literals (PortSignals.TanhDamping).
+        var damped = NeuralNetwork.FromGenome([1, 2], [2, -3, 1, 0.5], Activation.Tanh, [Activation.DampedTanh, Activation.DampedSigmoid]);
+        var dampedOutput = damped.Forward([0.5]);
+        dampedOutput[0].ShouldBe(Math.Tanh(0.5), _tolerance);
+        dampedOutput[1].ShouldBe(1 / (1 + Math.Exp(0.25)), _tolerance);
+
         var deep = NeuralNetwork.FromGenome([2, 2, 1], [1, 0, 0, 1, 0, 0, 1, -1, 0], Activation.Tanh);
         var activations = deep.CaptureActivations([0.25, -0.75]);
         activations.Length.ShouldBe(3);

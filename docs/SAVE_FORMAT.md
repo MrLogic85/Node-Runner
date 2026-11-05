@@ -117,7 +117,7 @@ output.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `neurons[]` | `{ id, kind, partId, channel, layer, bias, activation }` | `kind` is `input`, `output` or `hidden`. An input or output neuron names its port by `partId` and `channel`; a hidden neuron has both `null`. Inputs sit in layer 0 with bias 0 and `identity`; other neurons in layer 1 or later. `activation` is `identity`, `tanh`, `sigmoid` or `relu`; a direct-network output uses its port's signal activation, and resuming training fails loud (`DirectNetwork.Compile`) if it does not match. |
+| `neurons[]` | `{ id, kind, partId, channel, layer, bias, activation }` | `kind` is `input`, `output` or `hidden`. An input or output neuron names its port by `partId` and `channel`; a hidden neuron has both `null`. Inputs sit in layer 0 with bias 0 and `identity`; other neurons in layer 1 or later. `activation` is `identity`, `tanh`, `sigmoid`, `relu`, `dampedTanh` or `dampedSigmoid` (a Memory cell's outputs, `docs/CREATURE_MODEL.md` → Output conventions); a direct-network output uses its port's signal activation, and resuming training fails loud (`DirectNetwork.Compile`) if it does not match. |
 | `connections[]` | `{ from, to, weight, enabled }` | A connection gene between two neuron ids, from a lower layer to a higher one; at most one per pair. A disabled gene keeps its weight but carries no signal. |
 | `nextNeuronId` | int | The next free neuron id. Higher than every id in use; ids are never reused. |
 
@@ -219,6 +219,7 @@ Current `creation.json` migrations:
 | 16 | 17 | Add required `grid: { sizeCm: 50, snap: false }`, the grid every Creation was built on, whatever `settings.json` holds. |
 | 17 | 18 | A non-null `trainSettings` gets `runLengthMode: "fixed"` and `runLengthRange: null`: every older generation ran one length. |
 | 18 | 19 | Add required `creature.memoryCells: []`. |
+| 19 | 20 | A Memory cell's `target` output goes from `tanh` to `dampedTanh` and its `write` from `sigmoid` to `dampedSigmoid`, which divide their sum by k = 4. Its `bias` and the `weight` of every connection into it, enabled or not, are multiplied by 4: a trained network's outputs stay the same, and a new cell's −4 write bias becomes −16 and stays new. |
 
 Two changes of meaning need no migration, as no migration could keep the
 old meaning:

@@ -5,4 +5,6 @@ public enum Activation
     Tanh,
     ReLU,
     Sigmoid,
+    DampedTanh,
+    DampedSigmoid,
 }

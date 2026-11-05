@@ -79,7 +79,7 @@ public sealed class DirectNetworkTests
             (withSensor, [0.5, -0.25, 0.75, 0, 0, 0, 0.1]),
             (mixed, [0.5, -0.25, 0.75, 0, 0, 0, 0, 0, 0, 0.1, 0, PortSignals.PassiveStrengthBias]),
             (stepper, [0.5, -0.25, 0.75, 0, 0, 0, .. new double[6], 0.1, 0]),
-            (memoryCell, [0.5, -0.25, 0.75, 0, .. new double[8], 0.1, 0, PortSignals.PassiveStrengthBias]),
+            (memoryCell, [0.5, -0.25, 0.75, 0, .. new double[8], 0.1, 0, PortSignals.PassiveWriteBias]),
         })
         {
             DirectNetwork.Compile(Saved, grown).ShouldBe(expected);

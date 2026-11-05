@@ -677,7 +677,9 @@
                       "identity",
                       "tanh",
                       "sigmoid",
-                      "relu"
+                      "relu",
+                      "dampedTanh",
+                      "dampedSigmoid"
                     ]
                   }
                 },

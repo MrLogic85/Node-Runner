@@ -208,7 +208,7 @@ public partial class Creature : Node2D
         // The network read each cell's m this tick; the new m is what it reads on the next.
         for (var i = 0; i < _memoryValues.Length; i++)
         {
-            _memoryValues[i] = MemoryCell.Next(_memoryValues[i], _outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]]);
+            _memoryValues[i] = MemoryCell.Next(_memoryValues[i], _outputValues[_outputPortOf[output]], _outputValues[_outputPortOf[output + 1]], delta);
             output += 2;
         }
     }
