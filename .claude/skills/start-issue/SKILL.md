@@ -29,7 +29,7 @@ description: Start or resume work on a Node Runner GitHub issue by reading its s
    | Closed | Report that it is closed and stop. |
    | A parent (it has sub-issues) | Pick an open sub-issue that is Ready, or In progress without a branch, and start it with this skill; if none is, report the sub-issues' Statuses and stop. |
    | Idea or Needs decision | Ask the human the open question. Once answered, record the answer in the body, set Needs review and route again. If nobody answers, post the question as an issue comment and stop. |
-   | Needs design | Run `design-lead` on it, post its proposal on the issue, and ask the human to approve it; the Status that follows is in `docs/ISSUES.md` → "Status". Stop until it is approved. |
+   | Needs design | Run `design-lead` with "Design" and the issue, post its proposal on the issue, and ask the human to approve it; the Status that follows is in `docs/ISSUES.md` → "Status". Stop until it is approved. |
    | Needs review | Run the `review-issue` skill. If the Status changed, route again; if it is still Needs review, report the open findings and stop. |
    | Blocked with every blocker closed | Set Ready (`docs/ISSUES.md` → "Status") and route again. |
    | Blocked, or Ready or In progress with an open blocker | Set Blocked if it is not, report the blocker and stop. |
