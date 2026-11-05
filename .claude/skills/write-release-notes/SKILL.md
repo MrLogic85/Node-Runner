@@ -5,8 +5,8 @@ description: Write docs/release-notes/X.Y.Z.md, the player-facing text and scree
 
 # Write release notes
 
-Read `.claude/rules/release-notes.md` first: it owns what goes in the
-notes. Read `LOCAL_CONFIG.md` for the `gh` login.
+Rules: `.claude/rules/release-notes.md`; read it first. Read
+`LOCAL_CONFIG.md` for the `gh` login.
 
 1. List the rule's "Sources". For a milestone, `prev` is the newest
    release reachable from `main`, and the fixes already shipped are on
@@ -20,14 +20,14 @@ notes. Read `LOCAL_CONFIG.md` for the `gh` login.
    git log --oneline "$prev"..origin/release/"${prev%.*}"   # fixes already shipped
    ```
 
-   For a fix release, list the fix branch's commits since the newest
-   `vX.Y.*` tag.
-2. Choose and check what goes in by the rule's "Focus", "Fixes" and
-   "Check", then write `docs/release-notes/X.Y.Z.md` in its "Shape".
-3. Take the pictures the rule's "Images" asks for with the `android-check`
-   skill, then upload each and use the `https://github.com/user-attachments/…`
-   URL it returns. The token goes through standard input, so it never
-   shows in the process list:
+   For a fix release: the fix branch's commits since the newest `vX.Y.*`
+   tag.
+2. Choose and check what goes in per the rule's "Focus", "Fixes" and
+   "Check". Write `docs/release-notes/X.Y.Z.md` in its "Shape".
+3. Take the pictures the rule's "Images" asks for with the
+   `android-check` skill. Upload each and use the
+   `https://github.com/user-attachments/…` URL it returns. The token goes
+   through standard input, so it never shows in the process list:
 
    ```bash
    png=.scratch/notes-1.png
