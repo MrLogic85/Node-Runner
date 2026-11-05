@@ -115,7 +115,7 @@ public sealed class AgentFilesSpec : IDisposable
     [InlineData(_reviewer, "tools:", "effort: high\ntools:", "sets effort")]
     [InlineData(_reviewer, AgentFiles.ReviewerTools, "Read, Bash", "a reviewer has tools")]
     [InlineData(_reviewer, AgentFiles.ReviewerLspHookScript, "guard-edit.sh", "a reviewer registers reviewer-bash.sh and reviewer-lsp.sh")]
-    [InlineData(_reviewer, "with no other levels", "with your own levels", "## Output holds AgentFiles.FindingsFormat")]
+    [InlineData(_reviewer, "no other levels", "your own levels", "## Output holds AgentFiles.FindingsFormat")]
     [InlineData(_lead, "\n    Stop:\n    - hooks:\n        - type: command\n          command: \"./done.sh\"", "", "hooks must use Claude Code's shape")]
     [InlineData(_lead, "    - hooks:\n        - type: command\n          command:", "    - type: command\n      bash:", "hooks must use Claude Code's shape")]
     public void Fixture_WithOneRuleBroken_NamesTheFileAndRule(string agent, string from, string to, string expected)
