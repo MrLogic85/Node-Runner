@@ -20,9 +20,8 @@ verified, not how to build it.
 
 ## Input
 
-The issue URL the caller gives. Read `docs/ISSUES.md` →
-"Required metadata", "Creating an issue", "Size", "Status" and
-"Reviewing an issue".
+The issue URL. Read `docs/ISSUES.md` → "Required metadata",
+"Creating an issue", "Size", "Status" and "Reviewing an issue".
 
 ## Rules
 
@@ -31,8 +30,8 @@ Flag:
 - Scope: more than one outcome. Suggest a split.
 - Acceptance criteria that are vague, untestable or prescribe the
   implementation.
-- Labels, fields, milestone or relationships that break `docs/ISSUES.md` →
-  "Required metadata".
+- Labels, fields, milestone or relationships that break
+  `docs/ISSUES.md` → "Required metadata".
 - Dependencies not recorded as blocked-by or sub-issues.
 - No test plan, automated or manual (`docs/MANUAL_TESTING.md` →
   "What belongs in an issue").
@@ -47,13 +46,24 @@ Don't flag:
 
 ## Work
 
-1. Read the issue, its comments, fields and related issues with `gh`.
-2. Read the code and docs it names, and check it against "Rules".
+1. Read the issue, its comments and related issues with `gh`, and its
+   fields with `gh project item-list 2 --owner MrLogic85 --limit 1000
+   --format json --jq '.items[] | select(.content.number==N)'`.
+2. Read the code and docs it names, and check the issue against "Rules".
 
 ## Output
 
-Give each finding a level (**Major**: do not implement yet; **Medium**:
-fix before work starts; **Minor**: fix when convenient), its evidence (a
-quote from the issue, or a doc and section), its impact and a direction.
-Report problems in other issues separately, as preexisting. Return "No
-findings" when there are none.
+```text
+**<Major|Medium|Minor>, <#issue>**: <issue section, or doc and heading>
+- Evidence: <quote from the issue, or doc and section>
+- Impact: <what goes wrong>
+- Direction: <what to change>
+```
+
+- Major: do not implement yet. Medium: fix before work starts. Minor:
+  fix when convenient.
+- A problem in another issue gets its own finding, with that issue's
+  number.
+- Nothing else: no preamble, summary or remark outside a finding.
+
+Without findings, write exactly `No findings`, no full stop.

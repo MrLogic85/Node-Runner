@@ -33,25 +33,22 @@ internal static class AgentFiles
     internal const string FindingsFormat = """
         Report only problems in your focus worth acting on, judged by this
         repository's rules rather than stricter ones of your own, and prefer
-        fixing code to documenting a limit. Give each finding in this shape,
-        with no other levels, labels or headings:
+        fixing code to documenting a limit.
 
         ```text
         **<Major|Medium|Minor>, <new|preexisting>**: `<file>:<lines>`
-        - Evidence: what the code or text says or does.
-        - Impact: what goes wrong because of it.
-        - Direction: what to change.
+        - Evidence: <what the code or text says or does>
+        - Impact: <what goes wrong>
+        - Direction: <what to change>
         ```
 
-        - Major is wrong behaviour, a wrong statement or a broken rule;
-          Medium a risk or gap worth fixing now; Minor a small fix.
-        - A finding is new when the diff adds or changes the lines it is
-          about, and preexisting otherwise.
-        - Write no preamble, no summary, no account of what you read or ran,
-          and no remark outside a finding.
+        - Major: wrong behaviour or statement, or a broken rule. Medium: a
+          risk or gap to fix now. Minor: a small fix.
+        - New: the diff adds or changes those lines. Preexisting: otherwise.
+        - Nothing else: no other levels or headings, no preamble, summary,
+          account of your work or remark outside a finding.
 
-        With no findings, write exactly `No findings`, with no full stop, in
-        their place.
+        Without findings, write exactly `No findings`, no full stop.
         """;
 
     internal const string IssueReviewer = "issue-reviewer";

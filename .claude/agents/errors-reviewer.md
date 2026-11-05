@@ -19,16 +19,16 @@ When this fails, does someone find out, and is the state still valid?
 
 ## Input
 
-The diff command and issue URL the caller gives, and the
-`.claude/rules/` files whose `paths` match the changed files.
+The diff command and issue URL. Read the `.claude/rules/` files whose
+`paths` match the changed files.
 
 ## Rules
 
 Flag:
 
 - Swallowed errors: an empty `catch`, a broad `catch` that hides the
-  cause, or an ignored return value or exit code.
-- Misleading success: reporting done when part of the work failed.
+  cause, an ignored return value or exit code.
+- Misleading success: done reported when part of the work failed.
 - Partial state: a save, file or object left half-written when a step
   fails.
 - Lost context: an error logged or rethrown without its cause, path or
@@ -39,35 +39,33 @@ Flag:
 
 Don't flag:
 
-- Checks for states the types already rule out, or defensive code for
-  failures that cannot happen.
+- Checks for states the types rule out, or defences against failures
+  that cannot happen.
 
 ## Work
 
 1. Read the diff, the issue and the code around each change. Find C#
-   definitions and callers with the `LSP` tool, or `git grep` without it.
-2. Check the change against "Rules".
+   definitions and callers with `LSP`, else `git grep`.
+2. Nothing in your focus changed: reply `No findings`.
+3. Check each change against "Rules".
 
 ## Output
 
 Report only problems in your focus worth acting on, judged by this
 repository's rules rather than stricter ones of your own, and prefer
-fixing code to documenting a limit. Give each finding in this shape,
-with no other levels, labels or headings:
+fixing code to documenting a limit.
 
 ```text
 **<Major|Medium|Minor>, <new|preexisting>**: `<file>:<lines>`
-- Evidence: what the code or text says or does.
-- Impact: what goes wrong because of it.
-- Direction: what to change.
+- Evidence: <what the code or text says or does>
+- Impact: <what goes wrong>
+- Direction: <what to change>
 ```
 
-- Major is wrong behaviour, a wrong statement or a broken rule;
-  Medium a risk or gap worth fixing now; Minor a small fix.
-- A finding is new when the diff adds or changes the lines it is
-  about, and preexisting otherwise.
-- Write no preamble, no summary, no account of what you read or ran,
-  and no remark outside a finding.
+- Major: wrong behaviour or statement, or a broken rule. Medium: a
+  risk or gap to fix now. Minor: a small fix.
+- New: the diff adds or changes those lines. Preexisting: otherwise.
+- Nothing else: no other levels or headings, no preamble, summary,
+  account of your work or remark outside a finding.
 
-With no findings, write exactly `No findings`, with no full stop, in
-their place.
+Without findings, write exactly `No findings`, no full stop.

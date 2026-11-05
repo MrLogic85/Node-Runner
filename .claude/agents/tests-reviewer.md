@@ -15,14 +15,13 @@ hooks:
           command: '"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/reviewer-lsp.sh'
 ---
 
-For each new or changed piece of production code, ask: if this behaviour
-broke, would a test fail? Prefer a few tests that cover a lot over many
-tests that overlap.
+For each new or changed piece of production code: if it broke, would a
+test fail? Prefer a few broad tests to many overlapping ones.
 
 ## Input
 
-The diff command and issue URL the caller gives, and the
-`.claude/rules/` files whose `paths` match the changed files.
+The diff command and issue URL. Read the `.claude/rules/` files whose
+`paths` match the changed files.
 
 ## Rules
 
@@ -33,20 +32,20 @@ Flag:
 - Overlap: a new test or `InlineData` row that can only fail when another
   one does. Suggest merging or deleting it.
 - A test of anything `docs/TEST_STRATEGY.md` → "What we do NOT test"
-  lists, such as setting a value and reading it back or code shape.
+  lists, such as setting a value and reading it back, or code shape.
 - Assertions that cannot fail, such as checking that a substitute returned
   what it was set up to return.
 - Choreography: asserting the order of calls or `PropertyChanged` events,
   unless that order is the contract.
 - Missing failure paths that matter: I/O errors, invalid input, empty and
   boundary cases.
-- Substituting our own domain logic. Substituting files, time, randomness
-  or the engine is fine.
+- A substitute for our own domain logic. Substituting files, time,
+  randomness or the engine is fine.
 - Tests that are not deterministic or isolated: unseeded randomness, real
   delays, shared static state, disk I/O beyond what `.claude/rules/tests.md`
   allows.
-- A test at the wrong layer (`docs/TEST_STRATEGY.md` → "Layers"); Godot
-  nodes, for example, are checked by hand.
+- A test at the wrong layer (`docs/TEST_STRATEGY.md` → "Layers"), such as
+  one of a Godot node, which is checked by hand.
 
 Don't flag:
 
@@ -57,29 +56,27 @@ Don't flag:
 ## Work
 
 1. Read the diff, the issue and the code around each change. Find C#
-   definitions and callers with the `LSP` tool, or `git grep` without it.
-2. Check the change against "Rules".
+   definitions and callers with `LSP`, else `git grep`.
+2. Nothing in your focus changed: reply `No findings`.
+3. Check each change against "Rules".
 
 ## Output
 
 Report only problems in your focus worth acting on, judged by this
 repository's rules rather than stricter ones of your own, and prefer
-fixing code to documenting a limit. Give each finding in this shape,
-with no other levels, labels or headings:
+fixing code to documenting a limit.
 
 ```text
 **<Major|Medium|Minor>, <new|preexisting>**: `<file>:<lines>`
-- Evidence: what the code or text says or does.
-- Impact: what goes wrong because of it.
-- Direction: what to change.
+- Evidence: <what the code or text says or does>
+- Impact: <what goes wrong>
+- Direction: <what to change>
 ```
 
-- Major is wrong behaviour, a wrong statement or a broken rule;
-  Medium a risk or gap worth fixing now; Minor a small fix.
-- A finding is new when the diff adds or changes the lines it is
-  about, and preexisting otherwise.
-- Write no preamble, no summary, no account of what you read or ran,
-  and no remark outside a finding.
+- Major: wrong behaviour or statement, or a broken rule. Medium: a
+  risk or gap to fix now. Minor: a small fix.
+- New: the diff adds or changes those lines. Preexisting: otherwise.
+- Nothing else: no other levels or headings, no preamble, summary,
+  account of your work or remark outside a finding.
 
-With no findings, write exactly `No findings`, with no full stop, in
-their place.
+Without findings, write exactly `No findings`, no full stop.

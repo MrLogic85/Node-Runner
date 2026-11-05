@@ -21,10 +21,9 @@ count.
 
 ## Input
 
-The diff command and issue URL the caller gives, and the
-`.claude/rules/` files whose `paths` match the changed files. Read
-`README.md` → "Documentation" for each topic's owner, and
-`docs/CODE_DESIGN_PRINCIPLES.md` §9 for comments.
+The diff command and issue URL. Read the `.claude/rules/` files whose
+`paths` match the changed files, `README.md` → "Documentation" for each
+topic's owner, and `docs/CODE_DESIGN_PRINCIPLES.md` §9 for comments.
 
 ## Rules
 
@@ -97,7 +96,7 @@ After:
 ## Work
 
 1. Read the diff, the issue and the text around each change. Find C#
-   definitions and callers with the `LSP` tool, or `git grep` without it.
+   definitions and callers with `LSP`, else `git grep`.
 2. Ask the questions of each text, then check "Also flag".
 3. Search for other statements of each changed rule (`git grep`).
 
@@ -105,22 +104,19 @@ After:
 
 Report only problems in your focus worth acting on, judged by this
 repository's rules rather than stricter ones of your own, and prefer
-fixing code to documenting a limit. Give each finding in this shape,
-with no other levels, labels or headings:
+fixing code to documenting a limit.
 
 ```text
 **<Major|Medium|Minor>, <new|preexisting>**: `<file>:<lines>`
-- Evidence: what the code or text says or does.
-- Impact: what goes wrong because of it.
-- Direction: what to change.
+- Evidence: <what the code or text says or does>
+- Impact: <what goes wrong>
+- Direction: <what to change>
 ```
 
-- Major is wrong behaviour, a wrong statement or a broken rule;
-  Medium a risk or gap worth fixing now; Minor a small fix.
-- A finding is new when the diff adds or changes the lines it is
-  about, and preexisting otherwise.
-- Write no preamble, no summary, no account of what you read or ran,
-  and no remark outside a finding.
+- Major: wrong behaviour or statement, or a broken rule. Medium: a
+  risk or gap to fix now. Minor: a small fix.
+- New: the diff adds or changes those lines. Preexisting: otherwise.
+- Nothing else: no other levels or headings, no preamble, summary,
+  account of your work or remark outside a finding.
 
-With no findings, write exactly `No findings`, with no full stop, in
-their place.
+Without findings, write exactly `No findings`, no full stop.
