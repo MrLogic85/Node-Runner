@@ -5,23 +5,27 @@ description: Change what Node Runner saves in creation.json, progression.json or
 
 # Change a saved shape
 
-`docs/SAVE_FORMAT.md` → "Versions and migration" owns the rules.
+Rules: `docs/SAVE_FORMAT.md` → "Versions and migration".
 
-1. Decide by "Changing a saved shape" whether the change needs a
-   migration. If not, record why in "Versions and migration" and skip
-   steps 3–5.
-2. Change the record and its section in `docs/SAVE_FORMAT.md` →
-   "`creation.json`", "`progression.json`" or "`settings.json`".
-   `SaveFormatTests` then fails and prints where it wrote the new schema;
+1. Decide per "Changing a saved shape" whether the change needs a
+   migration. No: record why in "Versions and migration" and skip steps
+   3–5.
+2. Change the record and its section in `docs/SAVE_FORMAT.md`
+   ("`creation.json`", "`progression.json`" or "`settings.json`").
+   `SaveFormatTests` then fails and prints where it wrote the new schema:
    copy that file over its `docs/save-schema/` copy and read the diff.
-3. Append a `SaveMigration` to the file's list
-   (`FileCreationRepository.Format` for `creation.json`,
-   `FileProgressionRepository.Format` for `progression.json`,
-   `FileSettingsRepository.Format` for `settings.json`), and list it
-   in "Versions and migration" as the `creation.json` migrations are.
+3. Append a `SaveMigration` to the file's list, and list it in "Versions
+   and migration" as the `creation.json` migrations are:
+
+   | File | List |
+   |---|---|
+   | `creation.json` | `FileCreationRepository.Format` |
+   | `progression.json` | `FileProgressionRepository.Format` |
+   | `settings.json` | `FileSettingsRepository.Format` |
+
 4. Add a test that loads a file in the previous version.
-5. For `creation.json`, make the new version's share dictionary, then run
-   again to build it in:
+5. `creation.json` only: make the new version's share dictionary, then
+   run again to build it in:
 
    ```bash
    NODE_RUNNER_UPDATE_SHARE_DICTIONARY=1 dotnet test tests/NodeRunner.App.Tests --filter ShareDictionaryTests
@@ -37,5 +41,5 @@ description: Change what Node Runner saves in creation.json, progression.json or
    dotnet test tests/NodeRunner.App.Tests   # the 0.13.0 fixtures must still load
    ```
 
-7. Plan a manual check that an older save loads on a device
-   (`plan-manual-tests`).
+7. Plan a manual check that an older save loads on a device with the
+   `plan-manual-tests` skill.
