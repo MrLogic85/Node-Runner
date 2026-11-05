@@ -25,8 +25,8 @@ not apply:
       PR. For a UI-touching change, `design-lead`'s "insufficient
       evidence" blocks until a rerun reports evidence, or a human waiver
       is recorded in the PR.
-- [ ] Docs and the matching `.claude/rules/` files updated where
-      behaviour, architecture or a rule changed
+- [ ] Docs and the matching `.claude/rules/` files updated where a rule
+      changed
 - [ ] A change to a saved shape follows `docs/SAVE_FORMAT.md` →
       "Versions and migration"
 - [ ] A breaking public API change is noted in the PR, and a change to
@@ -97,27 +97,14 @@ changes what the push sends, run `git push` as its own command. Tags, deletes, d
 
 ## Agent, rule and skill files
 
-Each kind of file holds one kind of content, and says nothing another
-already says, except the copies "Findings format" names:
-
-| File | Holds |
-|---|---|
-| `AGENTS.md` | Hard rules no script can check, and facts an agent would not guess |
-| Docs | A topic, in the owner `README.md` → "Documentation" names, for the audience it names (below) |
-| `.claude/rules/<topic>.md` | A layer's code rules, loaded when a file its `paths` match is read |
-| `.claude/agents/<name>.md` | One agent's focus, inputs, work and output |
-| `.claude/skills/<name>/SKILL.md` | A procedure's steps, naming the doc heading that owns each rule |
-| Hooks | Rules on actions (see "Hooks") |
-| Arch tests | Rules on file contents, in `NodeRunner.Arch.Tests` |
-
-A rule a script can check lives in a hook or an arch test, not only in
-prose, and each denial or failure says what to do instead.
+`.claude/agents/docs-reviewer.md` → "Questions" says which file holds
+what. Only the copies "Findings format" names repeat another file.
 
 `README.md` → "Documentation" names each doc's audience. A doc for
-agents is terse and addressed by heading. A doc for humans explains, and
-links to the agent doc for a rule rather than restating it. A doc for
-both is terse, with the why a human needs; split it only where the two
-pull against each other, keeping one owner per topic.
+agents is terse. A doc for humans explains, and links to the agent doc
+for a rule rather than restating it. A doc for both is terse, with the
+why a human needs; split it only where the two pull against each other,
+keeping one owner per topic.
 
 `AgentFilesSpec`, `RuleFilesSpec`, `SkillFilesSpec` and `DocReferencesSpec`
 in `NodeRunner.Arch.Tests` check the rules below; no script checks the
@@ -148,10 +135,10 @@ last.
   at most 64 characters, and a one-line `description` of at most 1024
   characters saying what it does and when to use it, since the model
   matches tasks against it. A skill the instructions name exists.
-- A skill, agent or rule names each doc by an existing heading, as
-  `` `docs/X.md` → "Heading" `` or `` `docs/X.md` §9 ``, so an agent
-  reads only that section. A whole doc is named only as a topic's owner:
-  `` `docs/X.md` owns … ``.
+- A skill, agent or rule names only existing docs and agent files. A
+  heading, as `` `docs/X.md` → "Heading" ``, or section, as
+  `` `docs/X.md` §9 ``, is optional and must exist; a subsection such as
+  §9.2 is no section.
 - Committed instructions require only the tools `README.md` → "Tools"
   marks as required, and name a fallback for a recommended one, such as
   `git grep` for `rg`.

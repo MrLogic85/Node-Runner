@@ -87,11 +87,11 @@ Talk to me in my language.
 - `issues/`: a read-only archive of the old file-based tracker.
 
 `docs/ARCHITECTURE.md` owns the layers, and
-`docs/CODE_DESIGN_PRINCIPLES.md` §9 where rules and procedures live. Claude
-Code loads a `.claude/rules/` file when you read a file its `paths`
-match; read the matching rules yourself before creating a file there, or
-when you work from a diff alone. When a directive names a skill, use it
-even if it did not load by itself.
+`.claude/agents/docs-reviewer.md` → "Questions" where rules and
+procedures live. Claude Code loads a `.claude/rules/` file when you read
+a file its `paths` match; read the matching rules yourself before
+creating a file there, or when you work from a diff alone. When a
+directive names a skill, use it even if it did not load by itself.
 
 ## Machine-local setup
 

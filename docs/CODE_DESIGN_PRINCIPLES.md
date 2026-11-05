@@ -97,7 +97,7 @@ them.
 - Release builds clamp or log rather than crash.
 - Never `catch (Exception) { }`.
 
-## 9. Comments and docs
+## 9. Comments
 
 Comment intent, not mechanics. Assume the reader knows C#, not why
 *this* algorithm cares about *that* invariant:
@@ -120,17 +120,8 @@ generation++;
 - Doc comments (`///`) go only on public API and subtle internals, with
   `<param>` and `<returns>` only where they add to the summary.
 
-Ask four questions of every text you write, change or make wrong:
-
-1. **What does it add; is it needed?** Delete text no reader acts on:
-   generic advice, a restatement without a why of what code, tests or CI
-   enforce, and history that no longer guides a decision. A change
-   removes what it makes unneeded, not only adds.
-2. **Is it right and clear?** One clear sentence beats two.
-3. **Is it said somewhere else?** Nothing is written twice; other files
-   link to the owner, which `README.md` → "Documentation" names.
-4. **Is it in the right place?** Each file has one responsibility, as
-   `docs/REVIEW.md` → "Agent, rule and skill files" lists.
+Read `.claude/agents/docs-reviewer.md` → "Questions" before writing any
+text.
 
 ## 10. Testing
 

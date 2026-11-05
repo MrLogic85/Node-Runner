@@ -1,8 +1,8 @@
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Agent files name the doc heading they mean: docs/REVIEW.md → "Agent, rule and skill files". The
-/// fixtures live in a temp directory, so Claude Code does not load them as skills.
+/// Agent files name only existing docs, headings and sections: docs/REVIEW.md → "Agent, rule and
+/// skill files". The fixtures live in a temp directory, so Claude Code does not load them as skills.
 /// </summary>
 public sealed class DocReferencesSpec : IDisposable
 {
@@ -14,6 +14,8 @@ public sealed class DocReferencesSpec : IDisposable
         Directory.CreateDirectory(Path.GetDirectoryName(Skill)!);
         File.WriteAllText(Path.Combine(_root, "docs", "RULES.md"), "# Rules\n\n## Status\n\n## 9. Comments and docs\n\n### Parent issues\n\n```\n## Size\n```\n");
         File.WriteAllText(Path.Combine(_root, "README.md"), "# Readme\n\n## Tools\n");
+        Directory.CreateDirectory(Path.Combine(_root, ".claude", "agents"));
+        File.WriteAllText(Path.Combine(_root, ".claude", "agents", "fixture.md"), "## Rules\n\n### Questions\n");
     }
 
     private string Skill => Path.Combine(_root, ".claude", "skills", "fixture", "SKILL.md");
@@ -29,14 +31,14 @@ public sealed class DocReferencesSpec : IDisposable
     }
 
     [Fact]
-    public void Fixture_WithEveryReferenceNamingAHeading_HasNoProblems()
+    public void Fixture_WithEveryReferenceToAnExistingDocHeadingOrSection_HasNoProblems()
     {
         File.WriteAllText(Skill, """
             Read `docs/RULES.md` → "Status", `docs/RULES.md` →
-              "Status" and "Parent issues", and `docs/RULES.md` §9's questions.
-            `docs/RULES.md` owns the rules. See `README.md` → "Tools", write `docs/X.md` → "Heading", and read `LOCAL_CONFIG.md`.
+              "Status" and "Parent issues", and `docs/RULES.md` §9's rules.
+            See `README.md` → "Tools", write `docs/X.md` → "Heading", and read `LOCAL_CONFIG.md`.
+            Read `docs/RULES.md`. Read `docs/RULES.md` and `README.md` first. Read `.claude/agents/fixture.md` → "Questions".
             """);
-        Directory.CreateDirectory(Path.Combine(_root, ".claude", "agents"));
         File.WriteAllText(Path.Combine(_root, ".claude", "agents", "local_device.md"), "Read `docs/RULES.md`.\n");
 
         var problems = DocReferences.Problems(_root);
@@ -45,14 +47,13 @@ public sealed class DocReferencesSpec : IDisposable
     }
 
     [Theory]
-    [InlineData("Read `docs/RULES.md` first.", "`docs/RULES.md` names no heading; write")]
-    [InlineData("`docs/RULES.md` owned the rules.", "`docs/RULES.md` names no heading; write")]
     [InlineData("Read `docs/RULES.md` → \"Statuses\".", "`docs/RULES.md` → \"Statuses\" names \"Statuses\", which is no heading")]
     [InlineData("Read `docs/RULES.md` → \"Status\" and \"Size\".", "`docs/RULES.md` → \"Status\" and \"Size\" names \"Size\", which is no heading")]
     [InlineData("Read `docs/RULES.md` §4.", "`docs/RULES.md` §4 names §4, which is no \"4. …\" heading")]
-    [InlineData("Read `docs/RULES.md` §9.2.", "`docs/RULES.md` names no heading; write")]
-    [InlineData("Read `docs/RULES.md` §91.2.", "`docs/RULES.md` names no heading; write")]
+    [InlineData("Read `docs/RULES.md` §9.2.", "`docs/RULES.md` §9.2 names a subsection, which is no heading; write")]
+    [InlineData("Read `docs/RULES.md` §91.2.", "`docs/RULES.md` §91.2 names a subsection, which is no heading; write")]
     [InlineData("Read `docs/GONE.md` → \"Status\".", "`docs/GONE.md` → \"Status\" names a doc that does not exist")]
+    [InlineData("Read `.claude/agents/fixture.md` → \"Answers\".", "`.claude/agents/fixture.md` → \"Answers\" names \"Answers\", which is no heading")]
     public void Fixture_WithABrokenReference_NamesTheFileAndReference(string text, string expected)
     {
         File.WriteAllText(Skill, text);
