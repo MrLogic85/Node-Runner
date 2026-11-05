@@ -9,36 +9,41 @@ Rules: `docs/REVIEW.md` → "Choosing reviewers", "Review receipts" and
 "Definition of Done".
 
 1. Fix the exact change under review, as "Review receipts" measures it:
-   - before the commit: stage it with `git add -A`, or name its paths
-     when an untracked file that is not part of it must stay out, then
-     `git diff --cached "$(.github/scripts/review-receipt.sh base)"`;
-   - after it: `git diff "$(.github/scripts/review-receipt.sh base)" HEAD`;
-   - someone else's PR: `gh pr diff N`.
-2. Select the reviewers by "Choosing reviewers".
-3. Run the selected agents in parallel as subagents, each with this
-   prompt; run `design-lead` after the others have finished ("Choosing
-   reviewers"), and in its prompt replace `Reply with findings only.`
-   with a sentence saying whether the phone is free. If it is, claim any
-   device lock before `design-lead` starts and release it when it
-   returns:
+   - Before the commit: `git add -A`, or name its paths when an untracked
+     file that is not part of it must stay out, then
+     `git diff --cached "$(.github/scripts/review-receipt.sh base)"`.
+   - After it: `git diff "$(.github/scripts/review-receipt.sh base)" HEAD`.
+   - Someone else's PR: `gh pr diff N`.
+2. Select the reviewers by "Choosing reviewers"; skip the others.
+3. Run them in parallel as subagents with this prompt:
 
    ```text
    Review `<diff command>` for <issue URL>. Reply with findings only.
    ```
-4. Judge each finding as "Definition of Done" says: fix it, or dismiss it
+
+   Run `design-lead` after the others finish ("Choosing reviewers"), and
+   replace `Reply with findings only.` with `The phone is <free|busy>.`
+   Free: claim any device lock before `design-lead` starts and release
+   it when it returns.
+4. Judge each finding per "Definition of Done": fix it, or dismiss it
    with a short reason. File an issue with the `create-issue` skill only
    where it asks for one.
-5. After a fix that changes behaviour or design, repeat steps 1, 3 and 4
-   on the new diff with only the reviewers the fix selects ("Review
-   receipts").
-6. For your own change, record the receipt. Write each reviewer's
-   findings and their dispositions, or "No findings", and for each fix
-   whether it was re-reviewed or simple, to
-   `.scratch/review.md`, stage the change as in step 1, then run:
+5. A fix changes behaviour or design: repeat steps 1, 3 and 4 on the new
+   diff with only the reviewers the fix selects ("Review receipts").
+6. Your own change only: write the receipt's file, `.scratch/review.md`,
+   one line per finding, or per reviewer without findings, naming every
+   reviewer that ran:
+
+   ```text
+   **<reviewer>**: No findings
+   **<reviewer>**, <level>: <finding> — <fixed, re-reviewed | fixed, simple | dismissed: <reason>>
+   ```
+
+   Stage the change as in step 1, record the receipt and keep the file
+   for the PR body:
 
    ```bash
    .github/scripts/review-receipt.sh write --reviewers docs-reviewer,tests-reviewer .scratch/review.md
    ```
 
-   naming every reviewer that ran. Keep the file for the PR body.
 7. Commit and ship it with the `ship-pr` skill.
