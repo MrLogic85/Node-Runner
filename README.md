@@ -86,7 +86,7 @@ scripts' `gh` login needs the `project` scope (`docs/ISSUES.md` →
 | How parts and the arena look | [`docs/WORLD_VISUALS.md`](docs/WORLD_VISUALS.md) | Agents |
 | Text and translation | [`docs/LOCALIZATION.md`](docs/LOCALIZATION.md) | Agents |
 | Save format and project stage | [`docs/SAVE_FORMAT.md`](docs/SAVE_FORMAT.md) | Both |
-| Code and doc rules | [`docs/CODE_DESIGN_PRINCIPLES.md`](docs/CODE_DESIGN_PRINCIPLES.md) | Agents |
+| Code and comment rules | [`docs/CODE_DESIGN_PRINCIPLES.md`](docs/CODE_DESIGN_PRINCIPLES.md) | Agents |
 | Automated tests | [`docs/TEST_STRATEGY.md`](docs/TEST_STRATEGY.md) | Agents |
 | Manual tests | [`docs/MANUAL_TESTING.md`](docs/MANUAL_TESTING.md) | Agents |
 | Issues, labels and project fields | [`docs/ISSUES.md`](docs/ISSUES.md) | Agents |

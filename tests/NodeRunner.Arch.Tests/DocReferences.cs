@@ -3,8 +3,8 @@ using System.Text.RegularExpressions;
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Checks that agent files name the doc heading they mean: docs/REVIEW.md → "Agent, rule and skill
-/// files". An agent sent to a whole doc reads all of it, and a renamed heading leaves the link stale.
+/// Checks that agent files name only existing docs, headings and sections: docs/REVIEW.md → "Agent,
+/// rule and skill files". A renamed heading would otherwise leave the link stale.
 /// </summary>
 internal static partial class DocReferences
 {
@@ -16,8 +16,8 @@ internal static partial class DocReferences
     private static readonly string[] _folders = [".claude/skills", ".claude/agents", ".claude/rules"];
 
     /// <summary>
-    /// Every doc reference under <paramref name="root"/> that names no existing heading and does not
-    /// name the doc as its topic's owner.
+    /// Every doc reference under <paramref name="root"/> to a missing doc, heading or section, or to a
+    /// subsection.
     /// </summary>
     internal static List<string> Problems(string root)
     {
@@ -53,10 +53,10 @@ internal static partial class DocReferences
 
                 var named = reference.Groups["heading"].Captures.Select(capture => capture.Value).ToList();
                 var section = reference.Groups["section"].Value;
-                var owns = Owner().IsMatch(text, reference.Index + reference.Length);
-                if (named.Count == 0 && section.Length == 0 && !owns)
+                var subsection = Subsection().Match(text, reference.Index + reference.Length);
+                if (subsection.Success)
                 {
-                    problems.Add($"{shown}: {quoted} names no heading; {_howToWrite}, or `docs/X.md` owns … for the topic's owner.");
+                    problems.Add($"{shown}: {quoted}{subsection.Value} names a subsection, which is no heading; {_howToWrite}.");
                 }
 
                 foreach (var heading in named.Where(heading => !known.Contains(heading)))
@@ -97,9 +97,9 @@ internal static partial class DocReferences
         return [.. headings];
     }
 
-    // A whole doc is named only as its topic's owner: "`docs/X.md` owns …".
-    [GeneratedRegex(@"\G owns\b")]
-    private static partial Regex Owner();
+    // The section number Reference leaves unread, such as the "§9.2" of a subsection.
+    [GeneratedRegex(@"\G §\d+(?:\.\d+)+")]
+    private static partial Regex Subsection();
 
     [GeneratedRegex(@"\s+")]
     private static partial Regex Whitespace();
@@ -107,8 +107,8 @@ internal static partial class DocReferences
     [GeneratedRegex(@"^#{1,6} (.+)$")]
     private static partial Regex HeadingLine();
 
-    // A doc, then "→" and one or more quoted headings ("A", "B" and "C"), or a § section number;
-    // a subsection such as §9.2 is no section, so the reference reads as naming no heading.
-    [GeneratedRegex("""`(?<doc>(?:docs/[\w./-]+|README|AGENTS)\.md)`(?: → "(?<heading>[^"]+)"(?:(?:, | and | or )"(?<heading>[^"]+)")*| §(?<section>\d+)(?!\d|\.\d))?""")]
+    // A doc or agent file, then "→" and one or more quoted headings ("A", "B" and "C"), or a § section number;
+    // a subsection such as §9.2 is no section, so Subsection reads it.
+    [GeneratedRegex("""`(?<doc>(?:docs/[\w./-]+|\.claude/agents/[\w-]+|README|AGENTS)\.md)`(?: → "(?<heading>[^"]+)"(?:(?:, | and | or )"(?<heading>[^"]+)")*| §(?<section>\d+)(?!\d|\.\d))?""")]
     private static partial Regex Reference();
 }
