@@ -163,6 +163,8 @@ public static class DirectNetwork
         NeuronActivation.Tanh => Activation.Tanh,
         NeuronActivation.Sigmoid => Activation.Sigmoid,
         NeuronActivation.Relu => Activation.ReLU,
+        NeuronActivation.DampedTanh => Activation.DampedTanh,
+        NeuronActivation.DampedSigmoid => Activation.DampedSigmoid,
         _ => throw new NotSupportedException($"An output cannot use {activation}."),
     };
 

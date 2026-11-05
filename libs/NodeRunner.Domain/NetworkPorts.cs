@@ -102,7 +102,7 @@ public static class NetworkPorts
     /// <summary>A Memory cell's target output key: what to remember.</summary>
     public const string MemoryCellTargetChannel = "target";
 
-    /// <summary>A Memory cell's write output key: how much of the way to its target it moves this tick.</summary>
+    /// <summary>A Memory cell's write output key: how fast <c>m</c> moves to its target.</summary>
     public const string MemoryCellWriteChannel = "write";
 
     public static NetworkPortLayout Of(CreatureDef creature)

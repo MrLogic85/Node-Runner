@@ -163,7 +163,7 @@ public sealed class NewPortExplorationTests
             [NetworkPorts.TouchInput(5), .. NetworkPorts.MemoryCellInputs(3), .. NetworkPorts.MemoryCellInputs(4)],
             [.. NetworkPorts.MemoryCellOutputs(3), .. NetworkPorts.MemoryCellOutputs(4)]);
         // Weights (4 outputs × 3 inputs), then biases: cell 3 trained, cell 4 as a refit leaves it.
-        double[] elite = [0.6, 0.2, 0, -0.4, 0.9, 0, 0, 0, 0, 0, 0, 0, 0.3, -1.5, 0, PortSignals.PassiveStrengthBias];
+        double[] elite = [0.6, 0.2, 0, -0.4, 0.9, 0, 0, 0, 0, 0, 0, 0, 0.3, -1.5, 0, PortSignals.PassiveWriteBias];
         var generation = Generation(elite, 4001);
 
         var explored = NewPortExploration.Explore(generation, 1, ports, [], new Random(14))[1..];

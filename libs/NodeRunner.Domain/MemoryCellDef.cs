@@ -1,7 +1,7 @@
 namespace NodeRunner.Domain;
 
 /// <summary>
-/// A Memory cell: one number, <c>m</c>, the network writes one tick and reads back the next. It sits on a
+/// A Memory cell: one number, <c>m</c>, the network moves towards a target and reads back every tick. It sits on a
 /// beam as a beam sensor does but reads nothing from it, and has no settings. Its ports are
 /// <see cref="NetworkPorts.MemoryCellInputs"/> and <see cref="NetworkPorts.MemoryCellOutputs"/>; <c>m</c> itself is never saved
 /// (<c>NodeRunner.Mechanics.MemoryCell</c>). See docs/CREATURE_MODEL.md → "Memory cell".

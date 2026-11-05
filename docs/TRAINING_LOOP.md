@@ -181,6 +181,8 @@ layer owns that. "Locked" means "has trained at least one generation".
     σ 1.5 saturates the outputs into visible, decisive motion. Backprop
     would need a different start
     ([#955](https://github.com/MrLogic85/Node-Runner/issues/955)).
+  - A Memory cell's damped outputs take the same noise unscaled, so they
+    saturate far less and can rest between their ends.
 - **New ports are explored.** A part or sensor added to a trained network
   starts almost passive (`docs/CREATURE_MODEL.md` → "New ports start
   almost passive"), so mutation alone would take hundreds of generations
@@ -191,8 +193,9 @@ layer owns that. "Locked" means "has trained at least one generation".
   nothing.
   - Which ports are new is read from the elite, so nothing is saved. A
     powered part is new while its strength bias is exactly −4, a Memory
-    cell while its write bias is, or a Stepper while its frequency bias and every weight into it are exactly
-    0; all its outputs' genes are redrawn. An input is new while every
+    cell while its write bias is exactly −16, or a Stepper while its
+    frequency bias and every weight into it are exactly 0; all its
+    outputs' genes are redrawn. An input is new while every
     weight out of it is exactly 0; its weights are redrawn. A disabled
     connection is never redrawn.
   - Once an explored child becomes the elite, its ports read as used and

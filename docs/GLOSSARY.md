@@ -96,8 +96,8 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Link** — A joint-to-joint part a hinge part may use as a side: Beam,
   Piston or Spring. Say Links for the group and Beam for a beam.
 - **Memory cell** — A network part on a beam holding one number, `m`, that
-  the network writes one tick (its target and write outputs) and reads
-  back the next (its value input).
+  the network moves towards its target output at the rate its write output
+  sets, and reads back each tick (its value input).
 - **Motor** — A joint motor that turns its Target side at the speed the
   network picks, round and round if it likes. Code and saves call it the
   Velocity motor (`VelocityMotorDef`, `velocityMotors`).

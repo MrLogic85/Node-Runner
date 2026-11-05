@@ -21,7 +21,7 @@ public sealed class FileCreationRepository : ICreationRepository
     /// <c>creation.json</c>'s versions. Add a migration here when its shape changes
     /// (docs/SAVE_FORMAT.md → "Versions and migration").
     /// </summary>
-    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray, AddAngleSensorsArray, AddSteppersArray, StepperPowerBecomesFrequency, NetworkKeyFromBrain, AddGrid, AddRunLengthMode, AddMemoryCellsArray]);
+    public static VersionedSaveFile<CreationDef> Format { get; } = new([AddServosArray, PistonStrokeFromShortest, SpringTravel, AddWheelsArray, CameraSettings, AddTouchSensorsArray, PistonTargetLengthSigmoid, DropWheelGrip, AddRubbersArray, AddVelocityMotorsArray, AddBrakesArray, AddAngleSensorsArray, AddSteppersArray, StepperPowerBecomesFrequency, NetworkKeyFromBrain, AddGrid, AddRunLengthMode, AddMemoryCellsArray, MemoryCellOutputsDamped]);
 
     private readonly string _directoryPath;
     private readonly VersionedSaveFile<CreationDef> _format;
@@ -286,6 +286,77 @@ public sealed class FileCreationRepository : ICreationRepository
         }
 
         creature["memoryCells"] ??= new JsonArray();
+    }
+
+    // Up to version 19 a Memory cell's target was tanh and its write sigmoid; they are now dampedTanh and
+    // dampedSigmoid, which divide their sum by their k. Multiplying an output's bias and every weight into it
+    // by its k keeps a trained network's outputs the same, and a new cell's −4 write bias becomes the −16 that
+    // still marks it new. A disabled connection scales too, so mutation can enable it as it was. The k's are
+    // version 20's, not PortSignals'.
+    private static void MemoryCellOutputsDamped(JsonObject file)
+    {
+        const double targetK = 4;
+        const double writeK = 4;
+
+        // A file without training, or with one the strict load refuses, has no network to change.
+        if (file["training"] is not JsonObject training || training["network"] is not JsonObject network)
+        {
+            return;
+        }
+
+        if (network["neurons"] is not JsonArray neurons || network["connections"] is not JsonArray connections)
+        {
+            throw new InvalidDataException("creation.json has a network without neurons or connections.");
+        }
+
+        if (file["creature"] is not JsonObject creature || creature["memoryCells"] is not JsonArray cells)
+        {
+            throw new InvalidDataException("creation.json is missing its creature's memoryCells.");
+        }
+
+        var cellIds = cells
+            .Select(cell => cell is JsonObject entry
+                ? IntOf(entry["id"], "memory cell id")
+                : throw new InvalidDataException("creation.json has a Memory cell that is not an object."))
+            .ToHashSet();
+        var kByNeuron = new Dictionary<int, double>();
+        foreach (var node in neurons)
+        {
+            if (node is not JsonObject neuron)
+            {
+                throw new InvalidDataException("creation.json has a neuron that is not an object.");
+            }
+
+            // Any other activation already fails to compile (DirectNetwork.Compile).
+            (string Activation, double K)? damped = (TextOf(neuron["channel"]), TextOf(neuron["activation"])) switch
+            {
+                (NetworkPorts.MemoryCellTargetChannel, "tanh") => ("dampedTanh", targetK),
+                (NetworkPorts.MemoryCellWriteChannel, "sigmoid") => ("dampedSigmoid", writeK),
+                _ => null,
+            };
+            if (damped is { } to
+                && TextOf(neuron["kind"]) == "output"
+                && neuron["partId"] is { } partId
+                && cellIds.Contains(IntOf(partId, "neuron partId")))
+            {
+                neuron["activation"] = to.Activation;
+                neuron["bias"] = to.K * NumberOf(neuron["bias"], "neuron bias");
+                kByNeuron[IntOf(neuron["id"], "neuron id")] = to.K;
+            }
+        }
+
+        foreach (var node in connections)
+        {
+            if (node is not JsonObject connection)
+            {
+                throw new InvalidDataException("creation.json has a connection that is not an object.");
+            }
+
+            if (kByNeuron.TryGetValue(IntOf(connection["to"], "connection to"), out var k))
+            {
+                connection["weight"] = k * NumberOf(connection["weight"], "connection weight");
+            }
+        }
     }
 
     // Up to version 7 a Piston's target-length output was tanh, −1 shortest … +1 longest, and is now

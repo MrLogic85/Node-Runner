@@ -1,3 +1,5 @@
+using NodeRunner.Domain;
+
 namespace NodeRunner.ML;
 
 public sealed class NeuralNetwork
@@ -214,6 +216,8 @@ public sealed class NeuralNetwork
             Activation.Tanh => Math.Tanh(value),
             Activation.ReLU => Math.Max(0, value),
             Activation.Sigmoid => 1 / (1 + Math.Exp(-value)),
+            Activation.DampedTanh => Math.Tanh(value / PortSignals.TanhDamping),
+            Activation.DampedSigmoid => 1 / (1 + Math.Exp(-value / PortSignals.SigmoidDamping)),
             _ => throw new ArgumentOutOfRangeException(nameof(activation), activation, "Unknown activation."),
         };
     }

@@ -20,7 +20,7 @@ public sealed class NetworkPortDisplayTests
 
         foreach (var port in layout.Outputs)
         {
-            var activation = PortSignals.Activation(port.Signal) == NeuronActivation.Sigmoid ? PortRange.ZeroToOne : PortRange.MinusOneToOne;
+            var activation = PortSignals.Activation(port.Signal) is NeuronActivation.Sigmoid or NeuronActivation.DampedSigmoid ? PortRange.ZeroToOne : PortRange.MinusOneToOne;
             PortedCreature.Ports.Single(entry => entry.Port == port).Range.ShouldBe(activation, port.ToString());
         }
     }

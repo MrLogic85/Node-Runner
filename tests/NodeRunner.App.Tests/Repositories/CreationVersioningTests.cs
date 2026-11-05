@@ -346,6 +346,21 @@ public sealed class CreationVersioningTests : IDisposable
         JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
     }
 
+    // Version 19 saved a Memory cell's target as tanh and its write as sigmoid; version 20 divides their sum by
+    // k = 4 and multiplies their bias and every weight into them, enabled or not, by 4, so each output stays
+    // the same. A new cell's −4 write becomes −16, so it is still new. The other neurons and connections are untouched.
+    [Fact]
+    public void AVersion19Save_DampsItsMemoryCellOutputs_WithTheirBiasAndWeightsTimesFour()
+    {
+        var current = TrainedWalkerWithMemoryCells();
+        var path = WriteCreation(Version19(current).ToJsonString());
+
+        var creation = new FileCreationRepository(new TestStorageLocation(_directory)).List().ShouldHaveSingleItem();
+
+        JsonNode.DeepEquals(JsonNode.Parse(File.ReadAllText(path)), current).ShouldBeTrue();
+        Should.NotThrow(() => DirectNetwork.Compile(creation.Training!.Network, NetworkPorts.Of(creation.Creature)));
+    }
+
     // A save its version could not have written, one newer than the app or one that fails the strict
     // load is skipped and left as it is, and the others still list. One row for each way a migration
     // or the strict load refuses one (docs/SAVE_FORMAT.md → "Versions and migration").
@@ -375,6 +390,9 @@ public sealed class CreationVersioningTests : IDisposable
     [InlineData("v13", "-creature")]
     [InlineData("v14", "-creature.steppers")]
     [InlineData("v15", "training.network=@training.brain")]
+    [InlineData("v19", "-creature.memoryCells")]
+    [InlineData("v19", "creature.memoryCells=[5]")]
+    [InlineData("v19", "training.network.connections.0.weight=\"heavy\"")]
     [InlineData("current", "-creature.steppers")]
     [InlineData("current", "-creature.memoryCells")]
     [InlineData("current", "unknown=1")]
@@ -502,6 +520,8 @@ public sealed class CreationVersioningTests : IDisposable
                 withAStepper[_versionField] = 14;
                 NetworkUnderItsOldKey(withAStepper);
                 return withAStepper;
+            case "v19":
+                return Version19(TrainedWalkerWithMemoryCells());
             case "current trainSettings":
                 return CurrentWalkerWithTrainSettings();
             case "current":
@@ -621,6 +641,66 @@ public sealed class CreationVersioningTests : IDisposable
         var stepperId = builder.AddStepper(joint);
         var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(walker.WithCreature(builder.Build(), walker.Training)))!.AsObject();
         return (file, stepperId);
+    }
+
+    // The trained walker with a trained Memory cell, the last connection into each of its outputs disabled, and a
+    // new one its network has passive neurons for, as the current version writes it.
+    private static JsonObject TrainedWalkerWithMemoryCells()
+    {
+        var walker = LoadFixture013("trained-walker.creation.json");
+        var builder = new CreatureBuilder(walker.Creature);
+        var beams = walker.Creature.Beams.Where(beam => builder.CanAddMemoryCell(beam.Id, out _)).Select(beam => beam.Id).ToArray();
+        var trainedCell = builder.AddMemoryCell(beams[0]);
+        builder.AddMemoryCell(beams[1]);
+        var creature = builder.Build();
+        var training = walker.Training!;
+        var network = DirectNetwork.Refit(training.Network, NetworkPorts.Of(creature));
+        var file = JsonNode.Parse(FileCreationRepository.Format.Serialize(
+            walker.WithCreature(creature, new TrainingStateDef(network, training.Generation, training.Latest, training.Best))))!.AsObject();
+
+        // The refit gave the trained cell passive neurons and weights; train them.
+        var saved = file["training"]!["network"]!.AsObject();
+        foreach (var (channel, bias, weight) in new[] { (NetworkPorts.MemoryCellTargetChannel, 1.2, 0.4), (NetworkPorts.MemoryCellWriteChannel, -2, -0.2) })
+        {
+            var neuron = saved["neurons"]!.AsArray().Single(neuron => neuron!["partId"]?.GetValue<int>() == trainedCell && neuron["channel"]!.GetValue<string>() == channel)!;
+            neuron["bias"] = bias;
+            var id = neuron["id"]!.GetValue<int>();
+            var connections = saved["connections"]!.AsArray().Where(connection => connection!["to"]!.GetValue<int>() == id).ToArray();
+            foreach (var connection in connections)
+            {
+                connection!["weight"] = weight * connection["from"]!.GetValue<int>();
+            }
+
+            connections[^1]!["enabled"] = false;
+        }
+
+        return file;
+    }
+
+    // A current file as version 19 wrote it: its Memory cells' outputs undamped, their bias and every weight into them a quarter.
+    private static JsonObject Version19(JsonObject current)
+    {
+        var file = current.DeepClone().AsObject();
+        file[_versionField] = 19;
+        var network = file["training"]!["network"]!.AsObject();
+        var cells = file["creature"]!["memoryCells"]!.AsArray().Select(cell => cell!["id"]!.GetValue<int>()).ToHashSet();
+        var outputs = new HashSet<int>();
+        foreach (var neuron in network["neurons"]!.AsArray().Select(neuron => neuron!.AsObject()))
+        {
+            if (neuron["kind"]!.GetValue<string>() == "output" && neuron["partId"]?.GetValue<int>() is { } partId && cells.Contains(partId))
+            {
+                neuron["activation"] = neuron["activation"]!.GetValue<string>() == "dampedTanh" ? "tanh" : "sigmoid";
+                neuron["bias"] = neuron["bias"]!.GetValue<double>() / 4;
+                outputs.Add(neuron["id"]!.GetValue<int>());
+            }
+        }
+
+        foreach (var connection in network["connections"]!.AsArray().Where(connection => outputs.Contains(connection!["to"]!.GetValue<int>())))
+        {
+            connection!["weight"] = connection["weight"]!.GetValue<double>() / 4;
+        }
+
+        return file;
     }
 
     // Moves a current file's network back under the key versions before 16 saved it in.
