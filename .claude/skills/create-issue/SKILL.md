@@ -5,21 +5,21 @@ description: File a new Node Runner GitHub issue with its labels, project fields
 
 # Create an issue
 
-`docs/ISSUES.md` owns the rules. Read `LOCAL_CONFIG.md` first for the
-`gh` login.
+Rules: `docs/ISSUES.md`. Read `LOCAL_CONFIG.md` first for the `gh`
+login.
 
-1. If it is a simple problem found outside the current task
-   (`docs/ISSUES.md` → "Creating an issue"), fix it in your current change
-   and stop; with no current change, file it as a *quick fix* below.
+1. A simple problem outside the current task (`docs/ISSUES.md` →
+   "Creating an issue"): fix it in your current change and stop. No
+   current change: file it below as a *quick fix*.
 2. Search for a duplicate: `gh issue list --state all --search "<words>"`.
-   If one exists, comment there instead; for a quick fix, also set it
-   **Ready** unless it is In progress, and start it as step 7 says.
-3. Write the body to `.scratch/issue.md`: the outcome, the context with
-   evidence (files, lines, logs, issue numbers), acceptance criteria and a
-   test plan. Title it as `docs/ISSUES.md` → "Creating an issue"
-   says.
-4. Create it with the labels "Required metadata" asks for, the milestone
-   if it belongs to one, and its parent and blockers:
+   Found: comment there. A quick fix: also set it Ready unless it is In
+   progress, and start it as step 7 says. Otherwise stop.
+3. Write `.scratch/issue.md`: outcome, context with evidence (files,
+   lines, logs, issue numbers), acceptance criteria and test plan. Title
+   it per "Creating an issue".
+4. Create it with the labels "Required metadata" asks for, its milestone
+   if it has one, its parent and its blockers, then delete
+   `.scratch/issue.md`:
 
    ```bash
    gh issue create --title "…" --body-file .scratch/issue.md \
@@ -27,12 +27,11 @@ description: File a new Node Runner GitHub issue with its labels, project fields
      [--parent P] [--blocked-by B1,B2]
    ```
 
-   Then delete `.scratch/issue.md`.
-5. Set Status, Priority and Size as "Creating an issue", "Status" and
-   "Size" say, Status **Ready** for a quick fix:
+5. Set Status, Priority and Size per "Creating an issue", "Status" and
+   "Size"; a quick fix is Ready:
    `.github/scripts/issue-fields.sh N --status … --priority … [--size …]`.
 6. Run `.github/scripts/issue-audit.sh` and fix what it lists for the new
    issue.
-7. Tell the human its number, and start a quick fix with the
-   `start-issue` skill: at once, or once the human agrees if it came up
-   in a conversation with them.
+7. Reply `Filed #N: <title>`. Start a quick fix with the `start-issue`
+   skill: at once, or once the human agrees if it came up in a
+   conversation with them.
