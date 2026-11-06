@@ -28,7 +28,7 @@ public enum UiIconSize
 /// <summary>Central icon registry, resource loader, and control tinting helpers.</summary>
 public static class UiIcons
 {
-    /// <summary>One folder holds every icon; the file name's prefix says its kind (docs/UI_DIRECTION.md → "Buttons and icons").</summary>
+    /// <summary>One folder holds every icon; the file name's prefix says its kind (docs/UI_DIRECTION.md → "Components").</summary>
     public const string Root = "res://assets/icons/";
     public const string IconPrefix = "icon_";
     public const string PartPrefix = "part_";

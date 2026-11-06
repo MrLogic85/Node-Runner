@@ -5,11 +5,9 @@ description: Change Node Runner's launcher icon or Android launch splash and che
 
 # Change the app icon
 
-Rules: `docs/UI_DIRECTION.md` → "App icon" for the design,
-`docs/RELEASING.md` → "App icon" for the files.
+Rules: `docs/RELEASING.md` → "App icon". The SVGs are the design.
 
-1. Agree the change with the human and the `design-lead` agent. The
-   design changes: update `docs/UI_DIRECTION.md` → "App icon" first.
+1. Agree the change with the human and the `design-lead` agent.
 2. Edit the SVGs in `project/assets/icons/app/` per `docs/RELEASING.md`
    → "App icon", starting with the one that owns the art.
 3. Run the icon tests:

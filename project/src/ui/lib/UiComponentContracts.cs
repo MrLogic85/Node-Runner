@@ -118,8 +118,13 @@ public static class UiComponentContracts
         };
 
     /// <summary>
-    /// Reference entries with no component of their own; <c>docs/UI_DIRECTION.md</c>
-    /// ("Reference component mapping") says what builds each one instead.
+    /// Reference entries with no component of their own, and what builds each one instead:
+    /// <c>c_inspector</c> is Build's Part settings panel, authored in its scene; <c>c_panel_head</c>
+    /// is <c>UiSidePanel</c>'s own header; <c>c_rows</c> is a plain container with a <c>space-1</c>
+    /// gap and an optional danger Delete; <c>c_status</c> is Build's readiness chip, a <c>UiChip</c>;
+    /// <c>c_fact_row</c> is an authored row of a <c>UiIcon</c> and two <c>UiLabel</c>s, as on
+    /// Import, whose trailing count's <c>BaselineOf</c> names the label before it; and
+    /// <c>c_field_line</c> is <c>UiTextField</c>'s one line: its error, or else its muted fact.
     /// </summary>
     public static IReadOnlyList<string> ReferenceEntriesWithoutComponent { get; } =
         ["c_panel_head", "c_inspector", "c_rows", "c_status", "c_fact_row", "c_field_line"];
