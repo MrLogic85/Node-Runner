@@ -40,7 +40,7 @@ are `.claude/rules/theme.md`. A part's shapes and sizes are its code
   joint shows a ring and cross; a hinge part or Wheel on a loose joint
   shows the error in its own look instead. A beam too short to train gets
   a "Too short" callout.
-- **A tear is said once, at the tear** (`docs/CREATURE_MODEL.md` → Beam →
+- **A tear is said once, at the tear** (`docs/CREATURE_MODEL.md` → "Body" →
   Tearing), and the creature shows the rest. On the followed creature the
   torn end flashes and a `danger` ring leaves the joint, on physics ticks
   so Pause holds them, and an undone triangle's hatch fades. A beam torn

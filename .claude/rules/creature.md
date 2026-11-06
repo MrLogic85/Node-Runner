@@ -93,7 +93,7 @@ these rules by number, so keep the numbering.
     it lands instead of passing through the ground; a beam gone at both
     ends turns that shape into a capsule and falls, never hidden or
     disabled. A `HingeWeld` is released the same way. What tears is
-    `docs/CREATURE_MODEL.md` → "Beam" (Tearing).
+    `docs/CREATURE_MODEL.md` → "Body" (Tearing).
 18. **Read bodies once a tick.** `ReadBodies` keeps every beam's transform
     and node's position for the physics frame, so the tear check and the
     measures share one read; `Build` and `ResetPose` clear it.

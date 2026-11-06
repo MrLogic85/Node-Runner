@@ -80,17 +80,18 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Cushion** — The band a Touch sensor feels in, outside its joint.
 - **Fixed / Target** — The two sides a hinge part uses: Target turns
   against Fixed. Each is a link, or the Wheel on its joint. See:
-  `docs/CREATURE_MODEL.md` → "Servo".
+  `docs/CREATURE_MODEL.md` → "Parts".
 - **Hinge part** — A joint motor, Brake or Angle sensor: a part that works
   between a Fixed and a Target side, one per joint (`IHingePartDef`). See:
-  `docs/CREATURE_MODEL.md` → Node → One part per slot.
+  `docs/CREATURE_MODEL.md` → "Parts" → One part per slot.
 - **Hub** — The circle at every joint's centre where links end and a
   Piston's or Spring's travel is measured from, whatever sits on the joint
-  (`NodeDef.HubRadius`). See: `docs/CREATURE_MODEL.md` → Node.
+  (`NodeDef.HubRadius`). See: `docs/CREATURE_MODEL.md` → "Parts" →
+  Which radius counts.
 - **Joint** — A point where links meet and can turn; in code a node
   (`NodeDef`). A plain joint is passive; a hinge part, a Wheel, a Rubber
   and a Touch sensor can each sit on it. Not a Godot physics joint. See:
-  `docs/CREATURE_MODEL.md` → Node.
+  `docs/CREATURE_MODEL.md` → "Parts".
 - **Joint motor** — A powered hinge part: a Servo, a Motor or a Stepper
   (`IJointMotorDef`, `JointMotor`).
 - **Link** — A joint-to-joint part a hinge part may use as a side: Beam,
@@ -133,7 +134,7 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
 - **Stroke** — How far a Piston or Spring travels between its end stops.
 - **Tear** — A beam end letting go of its joint in Simulate and Training
   after the joint has pulled too far from it; the creature goes on as its
-  **main piece**. See: `docs/CREATURE_MODEL.md` → Beam → Tearing.
+  **main piece**. See: `docs/CREATURE_MODEL.md` → "Body" → Tearing.
 - **Tick input** — A Stepper's input that shows when it steps next. Not a
   **Tick**.
 - **Touch sensor** — A sensor on a joint that reads how close the joint is

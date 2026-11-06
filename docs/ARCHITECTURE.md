@@ -84,7 +84,7 @@ Node Runner/
 Physics runs at a fixed 60 Hz (`_physics_process`). Each tick
 `TrialController` first records the trial (`TrialMeasurement`,
 `docs/TRAINING_LOOP.md` → Trial). The creature then lets go of any beam
-end past the tear limit (`docs/CREATURE_MODEL.md` → Beam → Tearing), and
+end past the tear limit (`docs/CREATURE_MODEL.md` → "Body" → Tearing), and
 each Spring sets its rest length and each Brake holds, network or not.
 With no network each Stepper holds its notch and the tick ends; with one:
 

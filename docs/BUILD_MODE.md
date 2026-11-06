@@ -134,15 +134,15 @@ name for a node. Build opens in Joint, locked or not.
 - **Placing a part.** Each part knows where it goes and refuses anywhere
   else with its own canvas note (`CreatureBuilder.*Reason`). A beam sensor
   or Memory cell goes on a beam, one part per beam. A joint part goes on a
-  joint, one per slot (`docs/CREATURE_MODEL.md` → Node → One part per
+  joint, one per slot (`docs/CREATURE_MODEL.md` → "Parts" → One part per
   slot): the hinge part slot (joint motor, Brake or Angle sensor), Wheel,
   Rubber and Touch sensor. A hinge part picks its sides as
-  `docs/CREATURE_MODEL.md` → "Servo" says; with fewer than two sides it is
+  `docs/CREATURE_MODEL.md` → "Parts" says; with fewer than two sides it is
   placed anyway and its note asks for another link or a Wheel: drop
   first, finish later. A placement is one Undo step, and a drop selects
   the part.
   - **Rubber and Touch sensor** add no tap area (`docs/CREATURE_MODEL.md`
-    → Rubber, Touch sensor), so their joint selects them by the stack
+    → "Parts" → Which radius counts), so their joint selects them by the stack
     rule. Their panel shows only Name and the note, and they cannot be
     dragged to another joint.
 - **Moving a sensor or Memory cell:** drag its picture to another beam,

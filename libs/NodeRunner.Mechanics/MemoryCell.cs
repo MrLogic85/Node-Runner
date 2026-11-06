@@ -7,14 +7,14 @@ namespace NodeRunner.Mechanics;
 /// Each tick the network runs with the current <c>m</c> as the cell's value input, then <see cref="Next"/>
 /// moves <c>m</c> toward the target output at a rate the write output sets, and the network reads the new
 /// <c>m</c> on the next tick. <c>m</c> is <see cref="Start"/> at every trial start and is never saved. The loop
-/// runs outside the network, so the network stays feed-forward. See docs/CREATURE_MODEL.md → "Memory cell".
+/// runs outside the network, so the network stays feed-forward. See docs/CREATURE_MODEL.md → "Part decisions".
 /// </summary>
 public static class MemoryCell
 {
     /// <summary>What <c>m</c> holds at every trial start.</summary>
     public const double Start = 0;
 
-    /// <summary>The time constant of a full write, in seconds (docs/CREATURE_MODEL.md → "Memory cell").</summary>
+    /// <summary>The time constant of a full write, in seconds (docs/CREATURE_MODEL.md → "Part decisions").</summary>
     public const double WriteTime = 1;
 
     /// <summary>

@@ -2,7 +2,7 @@ namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// How hard a Piston's or Spring's end stop holds before it slides
-/// (<c>docs/CREATURE_MODEL.md</c> → Piston).
+/// (<c>docs/CREATURE_MODEL.md</c> → "Part decisions").
 /// </summary>
 public static class EndStop
 {

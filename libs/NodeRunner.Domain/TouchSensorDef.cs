@@ -5,7 +5,7 @@ namespace NodeRunner.Domain;
 /// touching the ground (<c>NodeRunner.Mechanics.Touch.Reading</c>). It sits on a node, not a
 /// beam, since a node is a body of its own. It takes its own joint-part slot beside a Servo
 /// and a Wheel, adds no radius and has no settings. Its one input is <see cref="NetworkPorts.TouchChannel"/>. See
-/// docs/CREATURE_MODEL.md → "Touch sensor".
+/// docs/CREATURE_MODEL.md → "Part decisions".
 /// </summary>
 public sealed record TouchSensorDef : IJointPartDef
 {

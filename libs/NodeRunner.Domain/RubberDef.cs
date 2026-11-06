@@ -4,7 +4,7 @@ namespace NodeRunner.Domain;
 /// A Rubber: a passive part on one node that makes it grip the ground better
 /// (<c>NodeRunner.Mechanics.Rubber</c>). It takes its own joint-part slot beside a Servo, a Wheel
 /// and a Touch sensor, adds no radius, weight or network ports, and has no settings. See
-/// docs/CREATURE_MODEL.md → "Rubber".
+/// docs/CREATURE_MODEL.md → "Part decisions".
 /// </summary>
 public sealed record RubberDef : IJointPartDef
 {

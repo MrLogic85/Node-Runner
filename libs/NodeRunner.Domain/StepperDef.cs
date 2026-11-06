@@ -5,7 +5,7 @@ namespace NodeRunner.Domain;
 /// notches against its Fixed side and, at the rate the network picks, lets go and pushes it on to the next notch.
 /// Its sides follow the Servo's rules: a link at the joint or the joint's Wheel, not both the same,
 /// either null once that part is deleted. It shares the joint's hinge-part slot with a Servo, a Velocity motor,
-/// a Brake and an Angle sensor; see <see cref="JointMotor"/>. See docs/CREATURE_MODEL.md → "Stepper".
+/// a Brake and an Angle sensor; see <see cref="JointMotor"/>. See docs/CREATURE_MODEL.md → "Part decisions".
 /// </summary>
 public sealed record StepperDef : IJointMotorDef
 {

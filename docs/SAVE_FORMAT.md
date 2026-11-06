@@ -86,11 +86,11 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `wheels[]` | `{ id, nodeId, name, radius }` | Wheels on a node id. `radius` in world units, 40–100 (0.4–1 m). Its weight follows from `radius` and is not saved. |
 | `touchSensors[]` | `{ id, nodeId, name }` | Touch sensors on a node id, at most one per node. No settings. |
 | `rubbers[]` | `{ id, nodeId, name }` | Rubbers on a node id, at most one per node: the joint, or its Wheel's tyre, grips the ground. No settings. |
-| `velocityMotors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, maxSpeed, riseTime }` | Motors: a Servo's sides and units, without `range` or `start`. One per node (`docs/CREATURE_MODEL.md` → Node → One part per slot). |
+| `velocityMotors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, maxSpeed, riseTime }` | Motors: a Servo's sides and units, without `range` or `start`. One per node (`docs/CREATURE_MODEL.md` → "Parts" → One part per slot). |
 | `brakes[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength }` | Brakes: a Servo's sides and slot, no ports. `strength` in world torque units (N·m × 10⁴), above 0, or `"Infinity"` when Locked. |
 | `angleSensors[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name }` | Angle sensors: a Servo's sides and slot, three inputs, no settings. |
 | `steppers[]` | `{ id, nodeId, fixedLinkId, targetLinkId, name, strength, stepsPerTurn, maxFrequency }` | Steppers: a Servo's sides and slot. `strength` in world torque units (N·m × 10⁴), above 0; `stepsPerTurn` a whole number 2–24; `maxFrequency` steps per second, above 0. |
-| `memoryCells[]` | `{ id, beamId, name }` | Memory cells on a beam id, at most one per beam, counting `sensors[]` (`docs/CREATURE_MODEL.md` → "Memory cell"). No settings; the number a cell holds is never saved. |
+| `memoryCells[]` | `{ id, beamId, name }` | Memory cells on a beam id, at most one per beam, counting `sensors[]` (`docs/CREATURE_MODEL.md` → "Parts" → One part per slot). No settings; the number a cell holds is never saved. |
 | `nextPartId` | int | The next free part id. Higher than every id in use; removed ids are never reused. |
 
 `training` (meaning of latest and best: `docs/TRAINING_LOOP.md` → "Latest
@@ -225,7 +225,7 @@ Two changes of meaning need no migration, as no migration could keep the
 old meaning:
 
 - **Links end at the hub, and sensors sit by what covers the joint**
-  (`docs/CREATURE_MODEL.md` → Node, Sensor): the saved shape is the same, but a saved creature with a
+  (`docs/CREATURE_MODEL.md` → "Parts" → Which radius counts): the saved shape is the same, but a saved creature with a
   Wheel or Servo moves and senses a little differently.
 - **The centre is the average of the joints** (`docs/TRAINING_LOOP.md` →
   Trial): a saved `training.best.distance` measured from the average of

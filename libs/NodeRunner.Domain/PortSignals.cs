@@ -14,7 +14,7 @@ namespace NodeRunner.Domain;
 /// <item>Strength uses <c>sigmoid</c>: 0…1 of the part's Strength setting, which stays the maximum.
 /// A new strength output starts at bias −4, about 2% force, with no dead zone below it.</item>
 /// <item>Write uses <c>dampedSigmoid</c>: 0…1 of a Memory cell's full rate. A new write output
-/// starts at bias −4 · k, about 2% like a strength (docs/CREATURE_MODEL.md → "Memory cell").</item>
+/// starts at bias −4 · k, about 2% like a strength.</item>
 /// </list>
 /// How an output's value becomes a physical demand is the sim's (<c>OutputSignals</c> in
 /// NodeRunner.Mechanics). Stateless. See docs/CREATURE_MODEL.md.

@@ -360,10 +360,10 @@ are not repeated. The last column owns the detail (BM =
 | Ruler hanging from the ground line | Distance and height scales on the view's bottom and left edges | WV → Training arena, TL → Scales |
 | Targets pinned top right with a chevron; achievement targets | Best stays on the ground, nothing off screen, until #488 | WV → Training arena |
 | UI size multiplies the canvas | Pixels per unit | UI size |
-| Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim | `docs/CREATURE_MODEL.md` → Camera |
+| Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim | `docs/CREATURE_MODEL.md` → "Part decisions" |
 | Velocity motor | Motor; Velocity motor only in code and the save format | `docs/GLOSSARY.md` |
 | Stepper as a Servo with a dashed dial | A detent wheel with a pawl; its own glyph | WV → Stepper |
-| Servo Max speed in °/s | In rpm, like the Motor's | `docs/CREATURE_MODEL.md` → Servo |
+| Servo Max speed in °/s | In rpm, like the Motor's | `PartParameters` |
 | Max speed always under Advanced | The Motor's is basic | BM → Parameters |
 | Brake "Max strength 30 N·m" | "Strength", ending in Locked | `PartParameters` |
 | Brake "Power: None: passive" | No Power row until the Power budget (#460) | — |

@@ -2,7 +2,7 @@ namespace NodeRunner.Mechanics;
 
 /// <summary>
 /// A Rubber's grip: its joint's friction against the ground, twice a bare joint's 1. See
-/// docs/CREATURE_MODEL.md → "Rubber".
+/// docs/CREATURE_MODEL.md → "Part decisions".
 /// </summary>
 public static class Rubber
 {
