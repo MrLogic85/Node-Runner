@@ -7,7 +7,7 @@ using NodeRunner.Ui.Lib;
 
 namespace NodeRunner.Ui.Tests;
 
-/// <summary>The Angle sensor's ring and arc (<c>docs/WORLD_VISUALS.md</c> → Angle sensor), checked on its geometry.</summary>
+/// <summary>The Angle sensor's ring and arc (<c>docs/WORLD_VISUALS.md</c> → "Part decisions"), checked on its geometry.</summary>
 public sealed class AngleSensorGeometryTests
 {
     private const float _tolerance = 1e-4f;

@@ -7,7 +7,7 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// An Angle sensor's picture: a ring that stands in for its joint's, at a plain joint's size,
 /// and an arc round it between the Fixed side's direction and the Target side's that fills and empties
-/// with each turn (<see cref="Sweep"/>, <c>docs/WORLD_VISUALS.md</c> → Angle sensor).
+/// with each turn (<see cref="Sweep"/>, <c>docs/WORLD_VISUALS.md</c> → "Part decisions").
 /// Angles are Godot rotations, clockwise on screen, as the sides' are (<c>HingePartSides.FixedRotation</c>);
 /// the network's angle (<see cref="Mechanics.AngleSensor"/>) is counter-clockwise on screen, so it is
 /// the Fixed rotation minus the Target rotation.

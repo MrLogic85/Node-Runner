@@ -5,7 +5,7 @@ using NodeRunner.Ui.Lib;
 namespace NodeRunner.Theme;
 
 /// <summary>
-/// Draws a Spring between two joints as a coilover; <c>docs/WORLD_VISUALS.md</c> → "Spring" owns its look.
+/// Draws a Spring between two joints as a coilover; <c>docs/WORLD_VISUALS.md</c> → "Part decisions" owns its look.
 /// Each side of the helix is one call of the same wire. The damper inside the coil is a
 /// three-part telescope like a Piston's, narrower and in <c>line-strong</c>, placed by
 /// <see cref="TelescopeGeometry"/>.

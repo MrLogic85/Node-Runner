@@ -9,7 +9,7 @@ namespace NodeRunner.Creature;
 // pinned is checked by the rule in Mechanics.Tear, in beam order, end A before end B. A torn end's pin
 // lets go of both bodies and the end gets a collider so it lands; a beam torn at both ends leaves
 // the creature and falls on its own. Everything else keeps its slot, so network ports and the arrays the
-// creature runs on never shift. How a tear looks is docs/WORLD_VISUALS.md → Tear.
+// creature runs on never shift. How a tear looks is docs/WORLD_VISUALS.md → "Parts".
 public partial class Creature
 {
     private const double _hatchFadeSeconds = 0.2;

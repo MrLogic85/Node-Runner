@@ -2,7 +2,7 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// Where a Piston's or Spring's three-part telescope sits: an outer cylinder at joint A, a
-/// middle stage and a rod. <c>docs/WORLD_VISUALS.md</c> → "Piston" owns the rule. All lengths are
+/// middle stage and a rod. <c>docs/WORLD_VISUALS.md</c> → "Part decisions" owns the rule. All lengths are
 /// world units from joint A's centre.
 /// </summary>
 public static class TelescopeGeometry
