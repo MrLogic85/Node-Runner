@@ -115,7 +115,7 @@ record the reason here.
     inputs keep their last values.
   - **Memory cell:** a tear does not affect it.
   - The trial's score freezes at the first tear (`docs/TRAINING_LOOP.md` →
-    Trial). How a tear looks is `docs/WORLD_VISUALS.md` → Tear.
+    Trial). How a tear looks is `docs/WORLD_VISUALS.md` → "Parts".
 
 ### Sensor
 
@@ -194,7 +194,7 @@ record the reason here.
   Piston's rise time. The loop runs outside the network, which stays
   feed-forward.
 - `m` is 0 at every trial start and is never saved. On the creature it is
-  a barometer whose needle shows `m` (`docs/WORLD_VISUALS.md` → "Sensors").
+  a barometer whose needle shows `m` (`docs/WORLD_VISUALS.md` → "Part decisions").
 - **A new cell changes nothing:** its target starts at 0 and `m` at 0, so
   `m` stays exactly 0 until training moves its weights.
 

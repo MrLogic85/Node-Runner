@@ -10,7 +10,7 @@ public sealed record NodeDef : IPartDef
     /// <summary>
     /// A plain joint's radius: it is drawn and collides at this size, unless a joint part
     /// makes it bigger (<see cref="CreatureDef.JointRadius"/>). Its look is in
-    /// docs/WORLD_VISUALS.md → "Joint".
+    /// docs/WORLD_VISUALS.md → "Part decisions".
     /// </summary>
     public const double PlainJointRadius = 15;
 

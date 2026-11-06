@@ -9,7 +9,7 @@ namespace NodeRunner.Theme;
 /// <c>panel</c> disc, standing in for its joint's ring or a Wheel's hub, and round it an <c>accent</c>
 /// arc between the Fixed side's direction and the Target side's that fills and empties with each
 /// <see cref="Turn"/> (<see cref="AngleSensorGeometry"/>).
-/// Both draw over the links, the arc with a knock-out edge (<c>docs/WORLD_VISUALS.md</c> → Angle sensor).
+/// Both draw over the links, the arc with a knock-out edge (<c>docs/WORLD_VISUALS.md</c> → "Part decisions").
 /// A sensor missing a side draws its ring in <c>danger</c> with the "!" badge and no arc.
 /// Selected, it draws a halo outside the arc.
 /// </summary>

@@ -74,7 +74,7 @@ public sealed record AngleSensorDef : IHingePartDef
 
     /// <summary>
     /// The space between the joint's outermost part and its arc's inner edge. See docs/WORLD_VISUALS.md →
-    /// "Angle sensor".
+    /// "Part decisions".
     /// </summary>
     public const double ArcGap = SelectionMarks.Gap + 4;
 
@@ -82,7 +82,7 @@ public sealed record AngleSensorDef : IHingePartDef
     /// Its arc's centre line, shared by its picture and the Build rings that clear it:
     /// <see cref="ArcGap"/> outside the joint's outermost part, a Touch sensor's cushion over a
     /// Rubber's skin over its ring, a plain joint's. A Wheel on the joint changes nothing, so on its joint
-    /// the arc lies over the tyre's inside and tubes. See docs/WORLD_VISUALS.md → "Angle sensor".
+    /// the arc lies over the tyre's inside and tubes. See docs/WORLD_VISUALS.md → "Part decisions".
     /// </summary>
     public static double ArcRadius(bool rubber, bool touch) =>
         NodeDef.PlainJointRadius

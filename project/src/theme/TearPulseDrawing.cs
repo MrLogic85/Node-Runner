@@ -5,7 +5,7 @@ namespace NodeRunner.Theme;
 
 /// <summary>
 /// Draws the pulse a joint gives when a beam end lets go of it: a <c>danger</c> ring that
-/// grows out from the joint's ring and fades as it goes (<c>docs/WORLD_VISUALS.md</c> → Tear).
+/// grows out from the joint's ring and fades as it goes (<c>docs/WORLD_VISUALS.md</c> → "Parts").
 /// </summary>
 public static class TearPulseDrawing
 {

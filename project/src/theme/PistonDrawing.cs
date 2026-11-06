@@ -7,7 +7,7 @@ namespace NodeRunner.Theme;
 /// <summary>
 /// Draws a Piston between two joints as a three-part telescope: a thin <c>accent</c> rod from hub to hub,
 /// a middle stage and an outer cylinder at its first joint, and a cap at its second.
-/// <c>docs/WORLD_VISUALS.md</c> → "Piston" owns its look, and <see cref="TelescopeGeometry"/>
+/// <c>docs/WORLD_VISUALS.md</c> → "Part decisions" owns its look, and <see cref="TelescopeGeometry"/>
 /// places the parts. Selected, it gets the beam's two <c>halo</c> lines,
 /// which stop at the joints' hubs or join a selected joint's halo. Its stroke ticks are
 /// drawn apart, by <see cref="DrawStroke"/>, so a view can put them over the joints. Drawn in window
