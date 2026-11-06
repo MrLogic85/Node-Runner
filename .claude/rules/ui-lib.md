@@ -92,9 +92,6 @@ rules. `docs/UI_DIRECTION.md` owns how it looks.
 - Many strokes of one colour go in one `pen.Strokes` call: on
   Compatibility each draw call builds its own buffer, which costs a phone
   its frame.
-- A part visual bakes the pixel scale into its strokes, so every view that
-  holds parts calls `PartVisual.RedrawOnNewPixelScale` whenever it may have
-  zoomed, including while paused.
 - Keep `StyleBoxFlat.AntiAliasing` on: `DrawStyleBox` feathers correctly.
 
 ## Icon filtering
