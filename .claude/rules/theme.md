@@ -28,8 +28,7 @@ owns how parts look and their draw order.
    whole to the selected surface while selected or raised; never on a
    separate layer. `JointPart` draws the marks of the Touch sensor's
    cushion and the Rubber's skin. Two exceptions:
-   - A Wheel's mark is one of its `JointPart`'s bands
-     (`docs/WORLD_VISUALS.md` → "Selection marks").
+   - A Wheel's mark is one of its `JointPart`'s bands.
    - A selected joint motor's, Brake's or Angle sensor's Fixed and Target
      link bands lie along other parts' links, so the Build canvas draws
      them on `CreatureLayers.SelectedUnderlays`, under the selected
@@ -40,3 +39,7 @@ owns how parts look and their draw order.
    normally in `_Draw`; the handle redraws its world on a theme change.
    A value kept outside `_Draw`, such as a `Polygon2D`'s colour or a
    `Modulate`, is set through `VisualTheme.Bind`.
+5. **Strokes follow `.claude/rules/ui-lib.md` → "Drawing".** A part
+   visual bakes the pixel scale into its strokes, so every view that holds
+   parts calls `PartVisual.RedrawOnNewPixelScale` whenever it may have
+   zoomed, including while paused.
