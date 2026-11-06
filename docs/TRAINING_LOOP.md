@@ -43,7 +43,7 @@ layer owns that. "Locked" means "has trained at least one generation".
 
 - `TrialMeasurement` records every tick of a trial into a `TrialResult`.
   *The centre* is the average position of the creature's joints; after a
-  tear only the main piece counts (`docs/CREATURE_MODEL.md` → Beam →
+  tear only the main piece counts (`docs/CREATURE_MODEL.md` → "Body" →
   Tearing).
   - `Distance`: the **running maximum** forward distance of the centre
     from its start. This is the fitness: it rewards peak progress without

@@ -5,7 +5,7 @@ namespace NodeRunner.Domain;
 /// its Fixed and Target sides and how fast it changes (<c>NodeRunner.Mechanics.AngleSensor</c>). It fills
 /// the joint's hinge-part slot and takes its sides by the Servo's rules (<see cref="IHingePartDef"/>),
 /// but it is no joint motor: it has inputs only and applies no force, so it is not in
-/// <see cref="CreatureDef.JointMotors"/>. It has no settings. See docs/CREATURE_MODEL.md → "Angle sensor".
+/// <see cref="CreatureDef.JointMotors"/>. It has no settings. See docs/CREATURE_MODEL.md → "Part decisions".
 /// </summary>
 public sealed record AngleSensorDef : IHingePartDef
 {

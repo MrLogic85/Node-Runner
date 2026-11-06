@@ -77,8 +77,8 @@ sensor off are #960.
   readings (`docs/CREATURE_MODEL.md`). There is no speed or elevation
   input: the network learns movement from what its parts feel. Pulse, a
   rhythm input, is #527. A Memory cell feeds back the number the network
-  has been moving towards its target (`docs/CREATURE_MODEL.md` → "Memory
-  cell").
+  has been moving towards its target (`docs/CREATURE_MODEL.md` → "Part
+  decisions").
 - **Why a turning angle reads as sine and cosine:** a Motor, a Stepper or
   the joint under an Angle sensor may turn round and round, so a plain
   angle would jump from one end to the other after each full turn, and

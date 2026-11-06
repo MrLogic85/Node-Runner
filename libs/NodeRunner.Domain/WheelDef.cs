@@ -4,7 +4,7 @@ namespace NodeRunner.Domain;
 /// A Wheel: a passive joint part on one node, a disc that turns freely on it and rolls on the
 /// ground. It has no network ports and draws no power; a Servo or Velocity motor on its joint can drive
 /// it, and a Brake can hold it. Its <see cref="Radius"/> sets how big it is drawn and collides, and what it weighs
-/// (<c>NodeRunner.Mechanics.Wheel.Mass</c>). See docs/CREATURE_MODEL.md → "Wheel".
+/// (<c>NodeRunner.Mechanics.Wheel.Mass</c>). See docs/CREATURE_MODEL.md → "Part decisions".
 /// </summary>
 public sealed record WheelDef : IJointPartDef
 {
