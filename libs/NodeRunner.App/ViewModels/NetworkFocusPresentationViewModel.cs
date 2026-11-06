@@ -5,7 +5,7 @@ namespace NodeRunner.App.ViewModels;
 /// NetworkFocus on the direct network: an Inputs column and an Outputs column, the enabled
 /// connections between them and live activations. Nothing is selected at first; tapping an
 /// output names the inputs that drive it most, and tapping an input names the outputs it drives
-/// most. Its look is in docs/UI_DIRECTION.md → "NetworkFocus"; hidden layers are #549.
+/// most. Its look is in docs/UI_DIRECTION.md → "Screen decisions"; hidden layers are #549.
 /// </summary>
 public sealed class NetworkFocusPresentationViewModel : INotifyPropertyChanged
 {

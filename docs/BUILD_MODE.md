@@ -181,7 +181,7 @@ name for a node. Build opens in Joint, locked or not.
   frame; the group keeps its shape, and keeping it inside the area wins,
   so at an edge it may sit off the grid. Rotate and Scale do not snap,
   and a joint already placed stays where it is when the grid changes.
-  Build's grid menu (`docs/UI_DIRECTION.md` → "Build") changes the size
+  Build's grid menu (`docs/UI_DIRECTION.md` → "Screen decisions") changes the size
   and snap at once, and they save with Build's other edits, also on a
   locked Creation, since the grid is not part of the creature.
 - **View:** `CanvasView` holds zoom and pan, which are never saved. Build
@@ -314,7 +314,7 @@ Only training needs a finished creature, and `CreatureReadiness`
 is the single source of truth for that (rules: `docs/CREATURE_MODEL.md`);
 the UI shows its messages and never repeats its rules. Build's readiness
 chip shortens them to one line and treats an empty canvas as a start, not
-a blocker (`docs/UI_DIRECTION.md` → "Build").
+a blocker (`docs/UI_DIRECTION.md` → "Screen decisions").
 
 The play button is dimmed until the creature can train, but still answers
 a tap: it starts nothing and puts a note on each blocker at that

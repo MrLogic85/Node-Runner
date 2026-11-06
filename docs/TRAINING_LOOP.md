@@ -299,7 +299,7 @@ layer owns that. "Locked" means "has trained at least one generation".
     creation (`ICreationUpdateCoordinator.Get`) waits for them, so Build
     opened right after Training never shows a stale lock.
 - The top bar shows the creation's name, the status
-  (`docs/UI_DIRECTION.md` → "Training") and the Network and Stats
+  (`docs/UI_DIRECTION.md` → "Screen decisions") and the Network and Stats
   buttons. Beside the arena the **Status** panel shows the Inputs →
   Network → Outputs → Distance stages
   (`SignalFlowPresentationViewModel`). Inputs counts the input ports and
