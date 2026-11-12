@@ -237,7 +237,8 @@ choices each screen made, and the precedents a new screen looks to.
     only it opens something; the other stages are plain frames.
   - A stage's empty-state line is Body `muted`, not Caption like the
     header note, so a sentence stays readable on a phone.
-  - Only the followed shadow's strip cell is marked (`accent`).
+  - Only the followed shadow's strip cell is marked (`accent`), since
+    the lead changes too often to mark.
   - While the run is paused the subtitle reads "Paused · {map}" and the
     Pause icon replaces the `accent` dot, so the pause shows in shape and
     word, not colour alone.
@@ -269,11 +270,11 @@ The last column owns the detail (BM = `docs/BUILD_MODE.md`, CM =
 | "Sensors go on a beam" | Each part names itself: "Cameras go on a beam" | BM → Interactions |
 | Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with other joint parts; its own glyph | CM → Parts, WV → Part decisions |
 | "Senses" for the brain's inputs | "Inputs", the machine-learning word | Screen decisions |
-| The eight most active senses as bars | The inputs that fit, in port order, with a chip for the rest; the order never moves | TL → The Training scene |
+| The eight most active senses as bars | The inputs that fit, in port order, with a chip for the rest; the order never moves | TL → Scene decisions |
 | Output dials in `accent` | In `output`, like the callout's output bars | WV → Training arena |
-| The followed shadow about 43% from the left | Its centre in the middle, the ground never above 80% down | TL → The Training scene |
-| Callout above the whole creature; ground always 80% down | Callout docked at the arena top; the camera keeps a shelf for it | WV → Training arena, TL → The Training scene |
-| Ruler hanging from the ground line | Distance and height scales on the view's bottom and left edges | WV → Training arena, TL → The Training scene |
+| The followed shadow about 43% from the left | Its centre in the middle, the ground never above 80% down | TL → Scene decisions |
+| Callout above the whole creature; ground always 80% down | Callout docked at the arena top; the camera keeps a shelf for it | WV → Training arena, TL → Scene decisions |
+| Ruler hanging from the ground line | Distance and height scales on the view's bottom and left edges | WV → Training arena, TL → Scene decisions |
 | Targets pinned top right with a chevron | Best stays on the ground; nothing is drawn off screen | WV → Training arena |
 | UI size multiplies the canvas | Pixels per unit | UI size |
 | Camera rays as five cells | A Rays slider that snaps to 1, 3 or 5, so a centre ray always follows the aim | CM → Part decisions |

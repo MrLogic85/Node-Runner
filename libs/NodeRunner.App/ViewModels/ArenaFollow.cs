@@ -7,7 +7,7 @@ namespace NodeRunner.App.ViewModels;
 /// point (<see cref="Shown"/>) eases toward the aim, which makes a glide start gently. Both stages
 /// trail a moving target, so the aim leads it by the creature's eased speed times that lag: at any
 /// steady speed the shown point stays on the centre. <see cref="ArenaFraming"/> runs one per axis
-/// and frames the view from them. See <c>docs/TRAINING_LOOP.md</c> → "The Training scene".
+/// and frames the view from them. See <c>docs/TRAINING_LOOP.md</c> → "Scene decisions".
 /// </summary>
 public sealed class ArenaFollow
 {

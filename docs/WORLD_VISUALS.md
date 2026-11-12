@@ -190,21 +190,22 @@ Choices for one part, which other parts need not follow.
 
 - **Background:** plain; motion reads against the scales.
 - **Scales:** distance along the view's bottom edge, height up the left,
-  behind the creatures, with no grid (`docs/TRAINING_LOOP.md` → Scales).
-  Labels are cut off by the view's edges rather than fading, so none
-  blinks as the view shakes.
+  behind the creatures, with no grid (`docs/TRAINING_LOOP.md` → "Scene
+  decisions"). Labels are cut off by the view's edges rather than fading,
+  so none blinks as the view shakes.
 - **Best and crash markers:** a dashed line up to a flag, "Best 4.2 m",
   and "Crash 3.4 m" in `danger` one row lower, so the two never cover
   each other. A flag always flies right of its line and is cut off at the
   view's edge. Each fades while a part callout shows. When each shows is
-  `docs/TRAINING_LOOP.md` → Training scene.
+  `docs/TRAINING_LOOP.md` → "Scene decisions".
 - **Start sign:** an `ink` signpost reading "Start" at 0 m, sized in the
   world, so it zooms with the creatures.
 - **Part callout:** each selected part of the followed shadow keeps its
   selection look, and its name shows in a `halo` callout docked at the
   arena top, over the view's middle. It never moves; only its leader
-  follows the part (`docs/TRAINING_LOOP.md` → Camera). Several selected
-  parts share one callout, a row each in their stack order.
+  follows the part (`docs/TRAINING_LOOP.md` → "Scene decisions").
+  Several selected parts share one callout, a row each in their stack
+  order.
 - **Port bars:** under the part's name, a line of its inputs in `accent`
   and one of its outputs in `output`, each led by a muted **IN** or
   **OUT**, so colour is never the only cue. A −1…1 port fills from a tick

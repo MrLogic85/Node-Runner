@@ -2,8 +2,8 @@
 
 How Build behaves: its tools, gestures, selection, panels and validation.
 How it looks is in `docs/UI_DIRECTION.md` and `docs/WORLD_VISUALS.md`; when
-a Creation is locked is in `docs/TRAINING_LOOP.md` → Product lifecycle
-boundary. What each part is, and which have network ports, is in
+a Creation is locked is in `docs/TRAINING_LOOP.md` → "Product lifecycle
+boundary". What each part is, and which have network ports, is in
 `docs/CREATURE_MODEL.md`. `reference design/components/Build/`,
 `BuildLocked/` and `Navigation/` are its guide.
 
@@ -15,7 +15,7 @@ Wherever a rule here says *joint motor* or *hinge part*
 - Build always edits a saved creation: + New saves an empty "Untitled
   Creation" in the player's language before Build opens. Build and
   Training share only the save; the play button saves and opens
-  Train setup (`docs/TRAINING_LOOP.md` step 1).
+  Train setup (`docs/TRAINING_LOOP.md` → "Product lifecycle boundary").
 - **Autosave.** There is no Save button. Edits are saved once they
   have settled for 0.5 s, and when Build is left or the app pauses or
   closes. A failed save keeps the edits and retries on the next save; Back,
@@ -40,7 +40,7 @@ Wherever a rule here says *joint motor* or *hinge part*
     change the network" on each part that blocks it; Delete also shows
     the notification.
   - The padlock unlocks it for this visit and keeps the training
-    (`docs/TRAINING_LOOP.md` step 6).
+    (`docs/TRAINING_LOOP.md` → "Product lifecycle boundary").
 - **Overflow menu.** It follows training, not the lock. Stats and Reset
   training show only on a trained creation, Copy creation and Share build
   only when something is drawn, and Power budget and Delete

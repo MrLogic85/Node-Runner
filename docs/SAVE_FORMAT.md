@@ -228,7 +228,7 @@ old meaning:
   (`docs/CREATURE_MODEL.md` → "Parts" → Which radius counts): the saved shape is the same, but a saved creature with a
   Wheel or Servo moves and senses a little differently.
 - **The centre is the average of the joints** (`docs/TRAINING_LOOP.md` →
-  Trial): a saved `training.best.distance` measured from the average of
+  "Trial"): a saved `training.best.distance` measured from the average of
   the beams' midpoints is compared as-is with new scores. The two agree
   for a creature that moves without turning or changing shape and differ
   a little for one that does.

@@ -12,7 +12,7 @@ namespace NodeRunner.ML.Networks;
 /// reference near 0; every other shadow is a wide random perturbation of it. Parts added to a
 /// trained network later start almost passive instead (<see cref="DirectNetwork"/>), and every
 /// child of a trained elite redraws them as generation 0 would (<see cref="NewPortExploration"/>).
-/// See docs/TRAINING_LOOP.md.
+/// See docs/TRAINING_LOOP.md → "Generations".
 /// </summary>
 public static class GenerationZero
 {

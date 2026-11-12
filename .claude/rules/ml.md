@@ -6,7 +6,9 @@ paths:
 
 # ML rules — `libs/NodeRunner.ML`
 
-The neural-network and genetic-algorithm engine.
+The neural-network and genetic-algorithm engine. `docs/TRAINING_LOOP.md`
+owns how training uses it: the fitness, the elite, generation 0,
+new-port exploration and the warm start.
 
 ## Rules
 

@@ -17,7 +17,7 @@ public partial class Creature
     /// node collider. An intact beam has no collider; a torn beam's shape is left
     /// out on purpose: the score freezes at the first tear, and after it only the
     /// blow-up check reads this, which follows the main piece's nodes
-    /// (docs/TRAINING_LOOP.md → Trial → Tears). Godot's Y grows downward, so this
+    /// (docs/TRAINING_LOOP.md → "Trial"). Godot's Y grows downward, so this
     /// is the largest Y. Returns negative infinity for a creature with no nodes.
     /// After a tear, of the main piece's nodes only.
     /// </summary>

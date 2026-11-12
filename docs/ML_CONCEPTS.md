@@ -36,7 +36,7 @@ sensor off are #960.
 - **What:** Search weights by simulating a population, keeping the fit
   ones, recombining them, mutating a bit, repeating.
 - **Where:** `libs/NodeRunner.ML/Ga/GeneticAlgorithm.cs`; how Training
-  uses it is `docs/TRAINING_LOOP.md` → Generations.
+  uses it is `docs/TRAINING_LOOP.md` → "Generations".
 - **How we show it:** Every candidate races at once as a shadow behind the
   followed creature, the best marker moves forward, and mutations produce
   weird outliers.
@@ -47,7 +47,7 @@ sensor off are #960.
   of fitness is the most important design decision in evolutionary ML.*
 - **Where:** `libs/NodeRunner.ML/Ga/TrialMeasurement.cs`
 - **How we show it:** Fitness is how far the creature's centre got, but
-  the app shows where its front ended (`docs/TRAINING_LOOP.md` → Trial),
+  the app shows where its front ended (`docs/TRAINING_LOOP.md` → "Trial"),
   so the number on screen matches the distance scale; the GA ranks by a
   number the player does not see directly. Several fitness functions at
   once, each winner a parent of the next generation, are #317 and #546.
