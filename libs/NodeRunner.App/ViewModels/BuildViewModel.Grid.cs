@@ -4,7 +4,7 @@ namespace NodeRunner.App.ViewModels;
 
 /// <summary>
 /// The open Creation's grid: its size draws the grid, and with snap on, placed and moved joints
-/// land on it. See `docs/BUILD_MODE.md` → "Interactions".
+/// land on it. See `docs/BUILD_MODE.md` → "Rules".
 /// </summary>
 public sealed partial class BuildViewModel
 {
@@ -20,7 +20,7 @@ public sealed partial class BuildViewModel
     /// <summary>
     /// Draws the grid at <paramref name="grid"/>'s size and snaps joints to it when it says so. It
     /// moves no placed joint: snapping applies when a joint is next placed or moved. It is no Undo
-    /// step, locked or not (`docs/BUILD_MODE.md` → "Interactions").
+    /// step, locked or not (`docs/BUILD_MODE.md` → "Rules").
     /// </summary>
     public void UseGrid(BuildGridDef grid)
     {

@@ -368,6 +368,12 @@ public sealed class BuildGestures
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    // What a press does once it drags is settled by where it starts, first match wins: a handle; in
+    // Links with a link picked, an unselected joint, which starts that link; a selected joint, or one
+    // with a selected part, which drags the selection; inside a group's frame, which drags the group;
+    // an unselected joint, which is selected alone (or its top part is) and moved; a sensor or Memory
+    // cell, which moves to another beam. Any other press draws a box in Select and pans elsewhere
+    // (PressShared).
     private void StartToolGesture(int pointer, Vector2D viewPosition)
     {
         ResetTool();
@@ -590,10 +596,7 @@ public sealed class BuildGestures
         }
     }
 
-    // What a press does once it drags, the same in every tool apart from a Beams link drag:
-    // a selected joint drags the selection, a press inside a group's frame drags the group, an
-    // unselected joint is moved alone, a sensor or Memory cell is moved to another beam, and any other
-    // press draws a box in Select and pans elsewhere. Taps are settled on release (Tap).
+    // The rest of StartToolGesture's order, the same in every tool. Taps are settled on release (Tap).
     private void PressShared(Vector2D viewPosition)
     {
         if (_pressedNodeWasSelected)

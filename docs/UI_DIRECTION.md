@@ -261,13 +261,13 @@ The last column owns the detail (BM = `docs/BUILD_MODE.md`, CM =
 | Reference | Ours | Owner |
 | --- | --- | --- |
 | Start training in the top bar | Play at the bottom of Build's rail in both states | — |
-| Rail says Beam and Move; Links tab | Links and Parts tools | BM → Interactions |
-| Part counts ("1 left") | Unlimited | BM → Parts tray |
+| Rail says Beam and Move; Links tab | Links and Parts tools | BM → Decisions |
+| Part counts ("1 left") | Unlimited | BM → Decisions |
 | Core part | Sensors on beams | CM → Parts |
-| No Memory cell | A Memory cell in the Sensors tab, on a beam like a sensor, drawn as a barometer | BM → Interactions, WV → Part decisions |
+| No Memory cell | A Memory cell in the Sensors tab, on a beam like a sensor, drawn as a barometer | BM → Rules, WV → Part decisions |
 | Piston: one cylinder as long as its travel; Spring: one damper body | A three-part telescope, starting past a Fixed Servo's housing | WV → Part decisions |
-| Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top | WV → Draw layers, BM → Interactions |
-| "Sensors go on a beam" | Each part names itself: "Cameras go on a beam" | BM → Interactions |
+| Draw order by kind; taps hit joints first | Draw groups per link; a tap hits what is drawn on top | WV → Draw layers, BM → Rules |
+| "Sensors go on a beam" | Each part names itself: "Cameras go on a beam" | BM → Rules |
 | Touch sensor on a beam; a joint holds one part | Touch sensor on a joint, as a cushion, sharing the joint with other joint parts; its own glyph | CM → Parts, WV → Part decisions |
 | "Senses" for the brain's inputs | "Inputs", the machine-learning word | Screen decisions |
 | The eight most active senses as bars | The inputs that fit, in port order, with a chip for the rest; the order never moves | TL → Scene decisions |
@@ -281,7 +281,7 @@ The last column owns the detail (BM = `docs/BUILD_MODE.md`, CM =
 | Velocity motor | Motor; Velocity motor only in code and the save format | `docs/GLOSSARY.md` |
 | Stepper as a Servo with a dashed dial | A detent wheel with a pawl; its own glyph | WV → Part decisions |
 | Servo Max speed in °/s | In rpm, like the Motor's | `PartParameters` |
-| Max speed always under Advanced | The Motor's is basic | BM → Parameters |
+| Max speed always under Advanced | The Motor's is basic | BM → Decisions |
 | Brake "Max strength 30 N·m" | "Strength", ending in Locked | `PartParameters` |
 | Neon the default theme | Use phone the default | `docs/SAVE_FORMAT.md` |
 | A theme card's picture has a corner circle; a line under the cards names the phone's theme | Neither: the circle read as a radio beside the check, and the screen already shows the phone's theme | — |

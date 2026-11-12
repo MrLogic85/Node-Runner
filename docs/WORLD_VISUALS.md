@@ -152,7 +152,7 @@ Choices for one part, which other parts need not follow.
   placed or a sensor moved, the targets that take it rise with their
   marks.
 - A touch hits what is drawn on top (`docs/BUILD_MODE.md` →
-  Interactions).
+  "Rules").
 - In Training the best and crash markers and the start sign are behind
   the ground, the shadows above it, and the followed creature above every
   shadow, each creature with its whole set of layers.

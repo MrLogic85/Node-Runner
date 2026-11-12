@@ -4,7 +4,7 @@ The rules every part of a Node Runner creature follows, the choices only
 one part makes, and the contract between parts and the network. The parts
 are in `docs/GLOSSARY.md` → "Creature anatomy"; how they look is in
 `docs/WORLD_VISUALS.md`, and where each can be placed in
-`docs/BUILD_MODE.md` → "Placing a part". Each part's behaviour as built is
+`docs/BUILD_MODE.md` → "Rules". Each part's behaviour as built is
 its Mechanics class (`libs/NodeRunner.Mechanics/`), its settings its
 `*Def` and `PartParameters`, and its ports `NetworkPorts`.
 
@@ -152,7 +152,7 @@ Choices for one part, which other parts need not follow.
   centre ray always points along the aim. Ray keys are symmetric around
   the centre, so the inner rays' keys survive a change of count and keep
   their weights; a change of count adds or removes ports, so a locked
-  creation cannot change it (`docs/BUILD_MODE.md` → "Locked Build"). The
+  creation cannot change it (`docs/BUILD_MODE.md` → "Rules"). The
   hit input tells far ground, whose nearness is almost 0, from none. Why
   nothing seen reads 0 is in `docs/ML_CONCEPTS.md` → "Feature engineering
   / observation design".
