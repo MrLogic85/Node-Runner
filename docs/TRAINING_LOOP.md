@@ -14,7 +14,7 @@ code each rule names. How training looks is in `docs/UI_DIRECTION.md` and
   (`CreationLock.IsLocked`). The lock follows from the saved training and
   is not stored, so `Evolver` knows nothing of it.
 - Only what changes the network is locked, so a trained network cannot be
-  lost by accident. `docs/BUILD_MODE.md` → "Locked Build" says what Build
+  lost by accident. `docs/BUILD_MODE.md` → "Rules" says what Build
   still allows.
 - Saving never needs a finished creature; only training does
   (`CreatureReadiness`). Saving an edit keeps the training and refits its
@@ -268,7 +268,7 @@ and their code hold the layout, numbers and copy.
 - **Start sign:** points the way to go, so a creature that walks backwards,
   and so shows 0 m, is seen to have gone the wrong way.
 - **Selection:** a tap on the arena selects a part of the followed shadow
-  with Build's hit rules (`docs/BUILD_MODE.md` → "Interactions"), and a
+  with Build's hit rules (`docs/BUILD_MODE.md` → "Rules"), and a
   part takes a tap within a minimum on-screen reach, so it stays easy to
   hit zoomed out.
 - **Status panel** (`SignalFlowPresentationViewModel`):

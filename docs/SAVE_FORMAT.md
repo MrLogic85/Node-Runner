@@ -57,7 +57,7 @@ Creation deletes its folder.
   of a path, so any name reads back as typed. The one exception: half of a
   UTF-16 surrogate pair is written as `U+FFFD`.
 - The format has no length cap, so any saved name loads unchanged. The
-  game's own limits are in `docs/BUILD_MODE.md` → "Names".
+  game's own limits are in `docs/BUILD_MODE.md` → "Rules".
 
 ## `creation.json`
 
@@ -71,7 +71,7 @@ Schema: [`save-schema/creation.schema.json`](save-schema/creation.schema.json).
 | `creature` | object | The drawn body; see below. |
 | `training` | object or `null` | `null` until a generation has finished. |
 | `trainSettings` | `{ shadows, runLengthSeconds, runLengthMode, runLengthRange }` or `null` | Train setup's values from its last Start; `shadows` is 2–100, `runLengthSeconds` (the Fixed length) 5–60. `runLengthMode` is `"fixed"` or `"ranged"`. `runLengthRange` is `{ lowSeconds, highSeconds }`, `null` until Ranged is first chosen and required while it is; each end is clamped to 5–60 and moved to the nearest 5 s step, a tie up, and inverted ends swap, so a hand-edited range still loads. `null` until the first Start; until then Train setup uses the Shadows default from `settings.json` and 10 s. |
-| `grid` | `{ sizeCm, snap }` | Build's grid for this Creation (`docs/BUILD_MODE.md` → "Interactions"): `sizeCm` 25, 50 or 100, any other number loading as the nearest, a tie as the larger; `snap` whether placed and moved joints land on it. A new Creation copies `settings.json`'s, so, unlike `trainSettings`, a later change to Settings leaves it as it is. |
+| `grid` | `{ sizeCm, snap }` | Build's grid for this Creation (`docs/BUILD_MODE.md` → "Rules"): `sizeCm` 25, 50 or 100, any other number loading as the nearest, a tie as the larger; `snap` whether placed and moved joints land on it. A new Creation copies `settings.json`'s, so, unlike `trainSettings`, a later change to Settings leaves it as it is. |
 
 `creature` (what each part means: `docs/CREATURE_MODEL.md`):
 
@@ -324,7 +324,7 @@ owns it.
   Build area or a setting off its slider
   (`CreatureBuilder.IsWithinBuildLimits`).
 - The saved copy gets a new id and the name the player gives it on Import
-  (`docs/BUILD_MODE.md` → "Names").
+  (`docs/BUILD_MODE.md` → "Rules").
 
 ## Writing and reading
 

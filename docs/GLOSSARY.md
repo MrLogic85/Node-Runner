@@ -27,12 +27,12 @@ textbook terms (population, candidate, genome).
   can go down. See: `docs/TRAINING_LOOP.md` → "Latest and best ever".
 - **Links tool** — The Build rail tool that draws the picked link, such as
   a Beam or a Piston. The UI says "Links"; in code it is `BuildTool.Beam`.
-  See: `docs/BUILD_MODE.md` → Interactions.
+  See: `docs/BUILD_MODE.md` → "Rules".
 - **Locked** — A Creation that has trained at least one generation, so
   Build keeps what the trained network needs (`CreationLock.IsLocked`).
   See: `docs/TRAINING_LOOP.md` → "Product lifecycle boundary".
 - **Parts tool** — The Build rail tool that opens the Parts tray when
-  nothing is selected. See: `docs/BUILD_MODE.md` → Interactions.
+  nothing is selected. See: `docs/BUILD_MODE.md` → "Rules".
 - **Run length** — How long one trial lasts, set in Train setup: one
   length, or with Ranged a range each generation draws its length from.
 - **Run length mode** — Fixed, Ranged or Power, chosen in Train setup.

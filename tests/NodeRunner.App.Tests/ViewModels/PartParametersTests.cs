@@ -9,7 +9,7 @@ public sealed class PartParametersTests
     [Fact]
     public void EverySetting_IsBasicOrAdvanced_AsDesigned_AndEveryPanelSettingHasAHelpTextOfItsOwn()
     {
-        // docs/BUILD_MODE.md → "Parameters" owns which settings are Advanced.
+        // Pins which settings are Advanced; docs/BUILD_MODE.md → "Decisions" says why a Motor's Max speed is basic.
         PartParameterId[] advanced =
         [
             PartParameterId.StartPosition,
