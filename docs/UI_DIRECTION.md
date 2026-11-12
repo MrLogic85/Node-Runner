@@ -283,6 +283,6 @@ The last column owns the detail (BM = `docs/BUILD_MODE.md`, CM =
 | Servo Max speed in °/s | In rpm, like the Motor's | `PartParameters` |
 | Max speed always under Advanced | The Motor's is basic | BM → Decisions |
 | Brake "Max strength 30 N·m" | "Strength", ending in Locked | `PartParameters` |
-| Neon the default theme | Use phone the default | `docs/SAVE_FORMAT.md` |
+| Neon the default theme | Use phone the default | `SettingsDef` |
 | A theme card's picture has a corner circle; a line under the cards names the phone's theme | Neither: the circle read as a radio beside the check, and the screen already shows the phone's theme | — |
 | `UiSidePanel`'s collapsed title at 0.08em | Label letter spacing | — |

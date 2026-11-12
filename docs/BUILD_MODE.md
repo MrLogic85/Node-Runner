@@ -100,10 +100,10 @@ Wherever a rule here says *joint motor* or *hinge part*
     creature fits the Training view and saves and share codes hold short
     numbers. A group move stops at the edge, and a turn or scale that would
     leave it is ignored.
-12. **The grid** (`docs/SAVE_FORMAT.md` → "`creation.json`") fills the
-    area exactly, and the area stays measured in its own cells
-    (`BuildAreaCell`). With Snap on, a placed joint goes to the nearest
-    grid point that keeps it inside the area. A moved selection moves so
+12. **The grid** (`BuildGridDef`) fills the area exactly, and the area
+    stays measured in its own cells (`BuildAreaCell`). With Snap on, a
+    placed joint goes to the nearest grid point that keeps it inside the
+    area. A moved selection moves so
     that the joint nearest a grid point lands on it, the lowest id on a
     tie; the group keeps its shape, and staying inside the area wins, so
     at an edge it may sit off the grid. Rotate and Scale do not snap, and

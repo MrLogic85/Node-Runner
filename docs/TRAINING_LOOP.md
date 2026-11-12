@@ -30,7 +30,8 @@ code each rule names. How training looks is in `docs/UI_DIRECTION.md` and
 - Build's play button autosaves and opens Train setup, locked or not.
   Start saves Train setup's values and opens Training in its place, so
   Back from Training returns to Build. Back from Train setup discards its
-  changes. Its defaults are in `docs/SAVE_FORMAT.md` → "`settings.json`".
+  changes. Its defaults are `TrainSettingsDef.Default`, with the Shadows
+  default from Settings (`SettingsDef`).
 - Simulate plays the saved network with one shadow until the player leaves
   and saves nothing, not even the settings. An untrained Creation has no
   Simulate, so Start trains.

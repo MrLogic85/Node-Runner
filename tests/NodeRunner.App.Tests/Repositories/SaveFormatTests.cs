@@ -9,9 +9,10 @@ using NodeRunner.ML.Networks;
 namespace NodeRunner.App.Tests.Repositories;
 
 /// <summary>
-/// Guards docs/SAVE_FORMAT.md. A failing schema test means the saved shape changed: update the doc
-/// and docs/save-schema/ in the same change (the test writes the new schema to the test output
-/// folder). The example file checks that a real file loads.
+/// Guards docs/SAVE_FORMAT.md → "Rules": the records are the shape. A failing schema test means the
+/// saved shape changed: update docs/save-schema/ in the same change, as the change-saved-shape skill
+/// says (the test writes the new schema to the test output folder). The example file checks that a
+/// real file loads.
 /// </summary>
 public sealed class SaveFormatTests : IDisposable
 {
@@ -47,7 +48,7 @@ public sealed class SaveFormatTests : IDisposable
 
         var actualPath = $"{committedPath}.actual";
         File.WriteAllText(actualPath, generated + "\n");
-        Assert.Fail($"The saved shape behind {name} changed. Update docs/SAVE_FORMAT.md and docs/save-schema/{name} (new schema: {actualPath}).");
+        Assert.Fail($"The saved shape behind {name} changed. Update docs/save-schema/{name} with the change-saved-shape skill (new schema: {actualPath}).");
     }
 
     // A file with a null part is skipped, never thrown out of List.

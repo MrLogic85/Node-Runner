@@ -5,7 +5,7 @@ namespace NodeRunner.App.Repositories;
 
 /// <summary>
 /// Keeps each Creation in its own folder, <c>&lt;id&gt;/creation.json</c>, under the storage location.
-/// The layout and every field are owned by docs/SAVE_FORMAT.md.
+/// The layout is in docs/SAVE_FORMAT.md → "Layout"; the fields are the records'.
 /// </summary>
 public sealed class FileCreationRepository : ICreationRepository
 {
@@ -44,6 +44,7 @@ public sealed class FileCreationRepository : ICreationRepository
         _format = format;
     }
 
+    // Up to version 1 a creature had no Servos.
     private static void AddServosArray(JsonObject file)
     {
         if (file["creature"] is not JsonObject creature)
