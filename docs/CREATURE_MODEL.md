@@ -125,7 +125,7 @@ Every part follows these rules.
     gone at both ends, its inputs keep their last values. A tear does not
     affect a Memory cell.
   - The trial's score freezes at the first tear (`docs/TRAINING_LOOP.md` →
-    Trial). How a tear looks is `docs/WORLD_VISUALS.md` → "Parts".
+    "Trial"). How a tear looks is `docs/WORLD_VISUALS.md` → "Parts".
 
 ### Air drag
 
@@ -266,8 +266,8 @@ Choices for one part, which other parts need not follow.
     length output asks for the middle of its travel, and a Stepper stands
     still. The trained gait therefore never breaks; training explores the
     new port (`docs/TRAINING_LOOP.md` → "New ports are explored").
-    Generation 0 starts its own way (`docs/TRAINING_LOOP.md` → Generations
-    → Generation 0).
+    Generation 0 starts its own way (`docs/TRAINING_LOOP.md` →
+    "Generations").
   - **A rebuild keeps the network:** saving a Build edit to a trained
     creature refits its network to the new ports (`DirectNetwork.Refit`).
     Ports match by part id, channel and direction: a kept port keeps its

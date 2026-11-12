@@ -83,7 +83,7 @@ Node Runner/
 
 Physics runs at a fixed 60 Hz (`_physics_process`). Each tick
 `TrialController` first records the trial (`TrialMeasurement`,
-`docs/TRAINING_LOOP.md` → Trial). The creature then lets go of any beam
+`docs/TRAINING_LOOP.md` → "Trial"). The creature then lets go of any beam
 end past the tear limit (`docs/CREATURE_MODEL.md` → "Body" → Tearing), and
 each Spring sets its rest length and each Brake holds, network or not.
 With no network each Stepper holds its notch and the tick ends; with one:
@@ -142,4 +142,4 @@ managers hold no UI.
 Physics runs on Godot's thread. `Evolver` runs a whole generation at once
 in parallel slots of one scene: parallel evaluation, not multithreaded
 physics. The training save is the one thread-pool write
-(`docs/TRAINING_LOOP.md` → Save).
+(`docs/TRAINING_LOOP.md` → "The Training scene").

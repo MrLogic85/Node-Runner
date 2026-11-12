@@ -38,6 +38,8 @@ Flag:
 - NaN, infinity or overflow on edge inputs: zeros, an empty population,
   extreme weights.
 - Behaviour that contradicts a concept `docs/ML_CONCEPTS.md` owns.
+- Training that breaks a rule in `docs/TRAINING_LOOP.md`: the fitness,
+  the elite, generation 0, new-port exploration or the warm start.
 
 Don't flag:
 

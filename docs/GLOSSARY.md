@@ -22,7 +22,7 @@ textbook terms (population, candidate, genome).
   calls the saved item a creature. See: `docs/CREATURE_MODEL.md`.
 - **Followed shadow** — The one shadow drawn in full; the camera frames it
   and it feeds the network view and the Status panel. See:
-  `docs/TRAINING_LOOP.md` → Generations.
+  `docs/TRAINING_LOOP.md` → "Generations".
 - **Latest** — The best trial of the most recently finished generation; it
   can go down. See: `docs/TRAINING_LOOP.md` → "Latest and best ever".
 - **Links tool** — The Build rail tool that draws the picked link, such as
@@ -39,19 +39,19 @@ textbook terms (population, candidate, genome).
   Fixed runs every generation at one Run length; Ranged draws each
   generation's from a range, so a creature does not learn to fit one
   length. Power is shown disabled until battery parts exist. See:
-  `docs/TRAINING_LOOP.md` → Generations.
+  `docs/TRAINING_LOOP.md` → "Generations".
 - **Shadow** — One of the copies that race at once in a generation; the
   App's word for the GA's candidate. See: `docs/TRAINING_LOOP.md` →
-  Generations.
+  "Generations".
 - **Shadow strip** — Training's row of cells, one per shadow, that ranks
   them and picks the followed one. See: `docs/TRAINING_LOOP.md` →
-  Generations.
+  "Generations".
 - **Share code** — One line of text holding a creation's build, which Share
   build copies and Import creation reads (`CreationShareCode`). See:
   `docs/SAVE_FORMAT.md` → "Share code".
 - **Shown distance** — The distance the player reads: how far ahead of its
   start the creature's front-most point is. Not the fitness, which follows
-  the centre. See: `docs/TRAINING_LOOP.md` → Trial.
+  the centre. See: `docs/TRAINING_LOOP.md` → "Trial".
 - **Simulate** — Plays a Creation's saved network with one shadow and saves
   nothing. See: `docs/TRAINING_LOOP.md` → "Product lifecycle boundary".
 - **Train setup** — The screen between Build and Training that sets Shadows,
@@ -167,8 +167,12 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   to neuron ids, a weight, and whether it is enabled.
 - **Crossover** — Combines two parent genomes into a child; training uses
   uniform crossover.
+- **Elite** — A genome the GA keeps unchanged into the next generation,
+  the fittest of the last one; Training follows it as shadow 1. Not the
+  fitness, which is how a trial is scored. See: `docs/TRAINING_LOOP.md` →
+  "Generations".
 - **Fitness** — A trial's score; higher is better. It is how far the
-  creature's centre got.
+  creature's centre got. See: `docs/TRAINING_LOOP.md` → "Trial".
 - **Genome** — The flat `double[]` of a network's weights and biases that
   the GA mutates and recombines (`DirectNetwork`).
 - **Generation** — One GA cycle: evaluate, select, recombine, mutate.
@@ -197,4 +201,4 @@ contract; `docs/WORLD_VISUALS.md` owns how parts look.
   and powered parts, then the physics step. See: `docs/ARCHITECTURE.md` →
   "The tick".
 - **Trial** — One shadow's run of Run length, measured by
-  `TrialMeasurement`. See: `docs/TRAINING_LOOP.md` → Trial.
+  `TrialMeasurement`. See: `docs/TRAINING_LOOP.md` → "Trial".

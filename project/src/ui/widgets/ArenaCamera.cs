@@ -7,7 +7,7 @@ namespace NodeRunner.Ui.Widgets;
 /// The Training arena's camera: it frames the followed creature through
 /// <see cref="ArenaFraming"/>, and while a part callout shows keeps a <see cref="Shelf"/> for it.
 /// The framing does all the smoothing, so the camera's own is off. See
-/// <c>docs/TRAINING_LOOP.md</c> → "The Training scene" → Camera.
+/// <c>docs/TRAINING_LOOP.md</c> → "Scene decisions".
 /// </summary>
 public partial class ArenaCamera : Camera2D
 {

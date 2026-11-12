@@ -35,7 +35,7 @@ public readonly record struct FramedCreature(double CentreX, double CentreY, dou
 /// first, toward <see cref="ShelfGroundFromTop"/> but never into the <see cref="ScaleBand"/> along
 /// the bottom, and zooms out only for the rest. All sizes are in
 /// world units; the view's size is the size it shows at zoom 1. See
-/// <c>docs/TRAINING_LOOP.md</c> → "The Training scene".
+/// <c>docs/TRAINING_LOOP.md</c> → "Scene decisions".
 /// </summary>
 public sealed class ArenaFraming
 {

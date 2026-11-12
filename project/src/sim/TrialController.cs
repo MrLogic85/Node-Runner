@@ -65,7 +65,7 @@ public partial class TrialController : Node
         // Must run its _PhysicsProcess before any Creature's (default
         // priority 0), so a trial always begins before its creature drives
         // that tick, whether it started inside a tick or between ticks
-        // (docs/TRAINING_LOOP.md, "The same network runs the same trial").
+        // (docs/TRAINING_LOOP.md → "Trial").
         ProcessPhysicsPriority = -100;
     }
 
