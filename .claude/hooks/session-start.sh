@@ -23,7 +23,8 @@ Could not record the session's state, so the after-push check for emulators and 
 
 # The C# language server the LSP tool starts is a local dotnet tool (#1352). Restoring it takes a
 # fraction of a second once it is in the NuGet cache, but a download can stall, so the hook waits
-# at most NODE_RUNNER_RESTORE_WAIT seconds and leaves the restore running after that.
+# at most NODE_RUNNER_RESTORE_WAIT seconds and leaves the restore running after that. A fractional
+# sleep is not POSIX, but macOS and GNU sleep accept it.
 if [ $fresh = 1 ] && [ -f "$root/dotnet-tools.json" ] && command -v dotnet >/dev/null 2>&1; then
   (cd "$root" && exec dotnet tool restore) </dev/null >/dev/null 2>&1 &
   restore=$! tenths=0 limit=$((${NODE_RUNNER_RESTORE_WAIT:-10} * 10))

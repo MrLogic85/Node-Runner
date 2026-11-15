@@ -33,9 +33,7 @@ not apply:
       `AGENTS.md`, `docs/ARCHITECTURE.md` or `docs/TEST_STRATEGY.md` has a
       paragraph in the PR saying why
 - [ ] No secrets, credentials or personal data
-- [ ] PR title follows "PR title and commit hygiene"
 - [ ] Manual testing decided and done per `docs/MANUAL_TESTING.md`
-- [ ] Squash auto-merge enabled (see "Auto-merge")
 
 ## Choosing reviewers
 
@@ -63,9 +61,8 @@ runs the app, which would overlap their builds and tests.
 `AgentFiles.FindingsFormat` in `NodeRunner.Arch.Tests` holds the format,
 with what each level means. Each code reviewer's `## Output` copies it
 word for word, because agents do not reliably follow a link and fall
-back on their own style. `AgentFilesSpec` fails when a copy differs.
-`issue-reviewer` and `design-lead` are no code reviewers and give their
-own shape in their `## Output`.
+back on their own style. `issue-reviewer` and `design-lead` are no code
+reviewers and give their own shape in their `## Output`.
 
 ## Review receipts
 
@@ -75,25 +72,15 @@ with no uncommitted change to a tracked file. Untracked files stay out,
 as they stay out of the commit, so a human's untracked work need not be
 staged or moved.
 
-When no new finding is left unaddressed, `.github/scripts/review-receipt.sh
-write` records a receipt in `.git/review-receipts/`: the branch, base and
-tree, the reviewers that ran, and each finding with its disposition. It
-refuses while a tracked file has unstaged changes.
-
-The receipt's key hashes the diff from the merge base with `main` or
-`origin/main`, so committing the reviewed content, or rebasing it onto a
-newer `main` without touching its files, keeps it valid. Any other
-change needs a new receipt. After a simple, local fix, such as a rename,
-a reworded line or a test the finding spelled out, the receipt needs no
-new review; after a fix that changes behaviour or design, the reviewers
-the fix selects run again. The receipt says which applied. An empty
-change needs no receipt.
-
+When no new finding is left unaddressed,
+`.github/scripts/review-receipt.sh write` records a receipt, and
 `guard-bash.sh` denies a `git push` of a branch unless a receipt matches
-what the branch holds. A commit earlier in the same command is
-measured, unless it names paths; after any other git command that
-changes what the push sends, run `git push` as its own command. Tags, deletes, dry runs and
-`release/vX.Y` branches (`docs/RELEASING.md`) pass.
+what it holds. Committing the reviewed change, or rebasing it onto a
+newer `main` without touching its files, keeps the receipt valid; any
+other change needs a new one. After a simple, local fix, such as a
+rename, a reworded line or a test the finding spelled out, the receipt
+needs no new review; after a fix that changes behaviour or design, the
+reviewers the fix selects run again. The receipt says which applied.
 
 ## Agent, rule and skill files
 
@@ -107,73 +94,38 @@ why a human needs; split it only where the two pull against each other,
 keeping one owner per topic.
 
 `AgentFilesSpec`, `RuleFilesSpec`, `SkillFilesSpec` and `DocReferencesSpec`
-in `NodeRunner.Arch.Tests` check the rules below; no script checks the
-last.
+in `NodeRunner.Arch.Tests` check the frontmatter, folders and references
+of these files, and say what to fix. Their messages do not say these:
 
-- Each agent is one `.claude/agents/<name>.md`. The folder holds nothing
-  else but git-ignored `local_*` agents and dot-files.
-- An agent's frontmatter has `name` (the file's `<name>`), a one-line
-  `description`, `tools` and `model` (`sonnet`, `opus` or `haiku`), and
-  may add `hooks`; nothing else. A value with `: ` or ` #` is invalid
-  YAML unless quoted; prefer ` — `.
-- A reviewer (`*-reviewer`) has `tools: Read, Grep, Glob, Bash, LSP` and
-  registers `reviewer-bash.sh` and `reviewer-lsp.sh` in its frontmatter
-  in Claude Code's nested `hooks` shape, as the existing reviewers do:
-  Claude Code drops an agent whose hooks are flat.
-  `design-lead` is no reviewer and keeps plain `Bash`, since it runs the
+- `design-lead` is no reviewer: it keeps plain `Bash`, since it runs the
   app and writes screenshots and mockups in `.scratch/`, and has `Skill`
   for `desktop-check`, `android-check` and `render-mockup`.
 - The `LSP` tool runs `csharp-ls`, pinned in `dotnet-tools.json`, from
   the `node-runner-csharp` plugin that `.claude/settings.json` enables
   from `.claude/marketplace/`; `LspConfigSpec` checks the chain.
-- A rule in `.claude/rules/<topic>.md` has frontmatter with only `paths`:
-  at least one quoted glob, one per line, each an existing file or
-  `<folder>/**`.
-- Each skill is `.claude/skills/<name>/SKILL.md`. Its frontmatter has
-  only `name`, the folder's name in lowercase letters, digits and hyphens
-  (a git-ignored `local_*` skill keeps its underscore),
-  at most 64 characters, and a one-line `description` of at most 1024
-  characters saying what it does and when to use it, since the model
-  matches tasks against it. A skill the instructions name exists.
-- A skill, agent or rule names only existing docs and agent files. A
-  heading, as `` `docs/X.md` → "Heading" ``, or section, as
-  `` `docs/X.md` §9 ``, is optional and must exist; a subsection such as
-  §9.2 is no section.
 - Committed instructions require only the tools `README.md` → "Tools"
   marks as required, and name a fallback for a recommended one, such as
   `git grep` for `rg`.
 
 ## Hooks
 
+Hooks hold what an instruction alone does not reliably hold.
 `.claude/settings.json` registers the scripts in `.claude/hooks/` for
-every agent; only `reviewer-bash.sh` and `reviewer-lsp.sh` are
-registered by each reviewer's frontmatter. They hold what an
-instruction alone does not reliably hold:
+every agent, except `reviewer-bash.sh` and `reviewer-lsp.sh`, which each
+reviewer's frontmatter registers.
 
-| Event | Script | Does |
-| --- | --- | --- |
-| `SessionStart` | `session-start.sh` | Tells the agent the branch and any uncommitted changes, records the running emulators, and runs `dotnet tool restore` for the `LSP` tool, waiting at most `NODE_RUNNER_RESTORE_WAIT` seconds (10 by default) |
-| `PreToolUse` on `Bash` | `guard-bash.sh` | Denies the git commands `AGENTS.md` → "Working copy" forbids, a commit or push to `main`, a push without a review receipt, `gh pr create` without `--title`, and a PR title CI would reject |
-| `PreToolUse` on `Bash`, in reviewers | `reviewer-bash.sh` | Allows only commands that read or build, such as read-only `git` and `gh`, `rg`, `dotnet build` and `dotnet test`; denies the rest and every redirect into a file |
-| `PreToolUse` on `LSP`, in reviewers | `reviewer-lsp.sh` | Allows only lookups, so a reviewer stays read-only if the tool gains an operation that writes |
-| `PreToolUse` on edits | `guard-edit.sh` | Denies writes into `/tmp` and `issues/` |
-| `PostToolUse` on `Bash` | `after-push.sh` | After a `git push`, reminds the agent once of each emulator or `build/` APK that appeared during the session |
-| `SessionEnd` | `session-end.sh` | Removes the session's state in `.git/agent-hooks/` |
-
-The hooks guard against mistakes, not intent: `guard-bash.sh` reads
-simple commands and allows what it cannot read, while `reviewer-bash.sh`
-denies it.
+Review agents only read: `reviewer-bash.sh` allows only commands that
+read or build, and `reviewer-lsp.sh` only lookups, so a review never
+changes what it reviews. The hooks guard against mistakes, not intent:
+`guard-bash.sh` reads simple commands and allows what it cannot read,
+while `reviewer-bash.sh` denies it.
 
 A hook is a bash script that needs only bash, `git`, `jq` and POSIX
-tools, plus a fractional `sleep`, which macOS and GNU accept (`session-start.sh` also runs `dotnet` when installed). It writes
-its verdict in Claude Code's JSON shape and always exits 0, allowing the
-call when `jq` is missing, because exit code 2 denies a `PreToolUse`
-call and any other failure shows the human a hook error. The settings command is
-`"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"/.claude/hooks/<name>.sh`:
-quoted for paths with spaces, and found from the repository root when
-`CLAUDE_PROJECT_DIR` is unset. `guard-bash.sh` copies CI's PR title rule.
-The specs in `NodeRunner.Arch.Tests/Hooks/` run each hook against a
-throwaway repository and check the registrations and the title rule.
+tools. It writes its verdict in Claude Code's JSON shape and always
+exits 0, allowing the call when `jq` is missing, because exit code 2
+denies a `PreToolUse` call and any other failure shows the human a hook
+error. The specs in `NodeRunner.Arch.Tests/Hooks/` run each hook against
+a throwaway repository and check the registrations.
 
 ## Merge gates
 
@@ -186,21 +138,19 @@ first; the CI run on `main` catches the rare semantic conflict.
 ## Auto-merge
 
 Every PR enables squash auto-merge when it opens. The author does not
-wait for the checks or the merge, but still owns the PR: when the next
-task starts and before the session ends, check the PRs it opened and the
-latest run on `main`, fix failing checks, and answer every review comment
-with a fix or a reason; don't resolve threads you didn't address. If
-auto-merge cannot be enabled, keep the PR open, report the blocker, and
-never bypass the required checks. A PR into `release/vX.Y` is merged by
-hand (`docs/RELEASING.md` → "Fix releases").
+wait for the checks or the merge, but still owns the PR: fix failing
+checks, and answer every review comment with a fix or a reason; don't
+resolve threads you didn't address. If auto-merge cannot be enabled, keep
+the PR open, report the blocker, and never bypass the required checks. A
+PR into `release/vX.Y` is merged by hand (`docs/RELEASING.md` → "Fix
+releases").
 
 ## PR title and commit hygiene
 
 - Format: `type(#123): Description`, for example
   `feat(#11): Add feedforward neural network`. A PR closing several
-  issues lists them: `refactor(#497, #498): Description`.
-- Types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `build`,
-  `ci`, `perf`, `style`, `revert`.
+  issues lists them: `refactor(#497, #498): Description`. CI's `PR title`
+  check holds the types.
 - The description starts with an uppercase letter.
 - The squash commit takes the PR title as its subject, so commits inside
   a PR may be messy.
