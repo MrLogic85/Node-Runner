@@ -1,7 +1,8 @@
 namespace NodeRunner.Arch.Tests;
 
 /// <summary>
-/// Checks the agent-file rules in docs/REVIEW.md → "Agent, rule and skill files": a broken one silently
+/// Checks the frontmatter and folder rules of agent files, which docs/REVIEW.md → "Agent, rule and skill
+/// files" leaves to the specs: a broken one silently
 /// removes an agent from Claude Code. Reads only the frontmatter keys
 /// these files use; it is not a YAML parser.
 /// </summary>
@@ -181,7 +182,7 @@ internal static class AgentFiles
         if (name.EndsWith("-reviewer", StringComparison.Ordinal)
             && !string.Join('\n', lines[1..end]).Contains(ReviewerHook.ReplaceLineEndings("\n"), StringComparison.Ordinal))
         {
-            problems.Add($"{shown}: a reviewer registers {ReviewerHookScript} and {ReviewerLspHookScript} with the hooks block in docs/REVIEW.md → \"Agent, rule and skill files\".");
+            problems.Add($"{shown}: a reviewer registers {ReviewerHookScript} and {ReviewerLspHookScript} in Claude Code's nested hooks shape, as AgentFiles.ReviewerHook gives it.");
         }
 
         if (values.ContainsKey("hooks"))
